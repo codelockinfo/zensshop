@@ -1,0 +1,10 @@
+# Basic .htaccess for Milano E-commerce
+# Apache 2.4+ compatible
+
+# Prevent Directory Listing
+Options -Indexes
+
+# Protect Config Files (Apache 2.4 syntax)
+<FilesMatch "^(config|\.htaccess|\.env)">
+    Require all denied
+</FilesMatch>

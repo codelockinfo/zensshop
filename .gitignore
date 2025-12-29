@@ -1,0 +1,36 @@
+# Dependencies
+/vendor/
+composer.lock
+
+# Configuration (if sensitive)
+config/database.php
+config/email.php
+
+# Database exports (can be large)
+*.sql
+!database/schema.sql
+!database/add_*.sql
+
+# Uploads
+assets/images/products/*
+!assets/images/products/.gitkeep
+
+# Logs
+*.log
+logs/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Temporary files
+*.tmp
+*.temp
+

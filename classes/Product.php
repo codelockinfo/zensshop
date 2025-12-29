@@ -1,0 +1,342 @@
+<?php
+/**
+ * Product Management Class
+ */
+
+require_once __DIR__ . '/Database.php';
+require_once __DIR__ . '/RetryHandler.php';
+
+class Product {
+    private $db;
+    private $retryHandler;
+    
+    public function __construct() {
+        $this->db = Database::getInstance();
+        $this->retryHandler = new RetryHandler();
+    }
+    
+    /**
+     * Get all products with filters
+     */
+    public function getAll($filters = []) {
+        $sql = "SELECT DISTINCT p.*, GROUP_CONCAT(DISTINCT c.name SEPARATOR ', ') as category_names
+                FROM products p 
+                LEFT JOIN product_categories pc ON p.id = pc.product_id
+                LEFT JOIN categories c ON pc.category_id = c.id 
+                WHERE p.status = 'active'";
+        $params = [];
+        
+        if (!empty($filters['category_id'])) {
+            $sql .= " AND EXISTS (
+                SELECT 1 FROM product_categories pc2 
+                WHERE pc2.product_id = p.id AND pc2.category_id = ?
+            )";
+            $params[] = $filters['category_id'];
+        }
+        
+        if (!empty($filters['category_slug'])) {
+            $sql .= " AND EXISTS (
+                SELECT 1 FROM product_categories pc2 
+                INNER JOIN categories c2 ON pc2.category_id = c2.id
+                WHERE pc2.product_id = p.id AND c2.slug = ?
+            )";
+            $params[] = $filters['category_slug'];
+        }
+        
+        if (!empty($filters['status'])) {
+            $sql .= " AND p.status = ?";
+            $params[] = $filters['status'];
+        }
+        
+        if (!empty($filters['featured'])) {
+            $sql .= " AND p.featured = 1";
+        }
+        
+        if (!empty($filters['search'])) {
+            $sql .= " AND (p.name LIKE ? OR p.description LIKE ?)";
+            $searchTerm = "%{$filters['search']}%";
+            $params[] = $searchTerm;
+            $params[] = $searchTerm;
+        }
+        
+        $sql .= " ORDER BY p.created_at DESC";
+        
+        if (!empty($filters['limit'])) {
+            $limit = (int)$filters['limit'];
+            if (!empty($filters['offset'])) {
+                $offset = (int)$filters['offset'];
+                $sql .= " LIMIT {$offset}, {$limit}";
+            } else {
+                $sql .= " LIMIT {$limit}";
+            }
+        }
+        
+        return $this->db->fetchAll($sql, $params);
+    }
+    
+    /**
+     * Get product by ID
+     */
+    public function getById($id) {
+        return $this->db->fetchOne(
+            "SELECT p.*, c.name as category_name 
+             FROM products p 
+             LEFT JOIN categories c ON p.category_id = c.id 
+             WHERE p.id = ?",
+            [$id]
+        );
+    }
+    
+    /**
+     * Get product by slug
+     */
+    public function getBySlug($slug) {
+        return $this->db->fetchOne(
+            "SELECT DISTINCT p.*, GROUP_CONCAT(DISTINCT c.name SEPARATOR ', ') as category_names
+             FROM products p 
+             LEFT JOIN product_categories pc ON p.id = pc.product_id
+             LEFT JOIN categories c ON pc.category_id = c.id 
+             WHERE p.slug = ?
+             GROUP BY p.id",
+            [$slug]
+        );
+    }
+    
+    /**
+     * Create product with retry logic
+     */
+    public function create($data) {
+        return $this->retryHandler->executeWithRetry(
+            function() use ($data) {
+                // Generate slug from name
+                $slug = $this->generateSlug($data['name']);
+                
+                // Handle images
+                $images = [];
+                if (!empty($data['images'])) {
+                    $images = is_array($data['images']) ? $data['images'] : json_decode($data['images'], true);
+                }
+                $imagesJson = json_encode($images);
+                $featuredImage = !empty($images[0]) ? $images[0] : null;
+                
+                // Get primary category_id (first one if multiple)
+                $primaryCategoryId = null;
+                if (!empty($data['category_ids']) && is_array($data['category_ids'])) {
+                    $primaryCategoryId = $data['category_ids'][0];
+                } elseif (!empty($data['category_id'])) {
+                    $primaryCategoryId = $data['category_id'];
+                }
+                
+                // Insert product
+                $productId = $this->db->insert(
+                    "INSERT INTO products 
+                    (name, slug, sku, description, short_description, category_id, price, sale_price, 
+                     stock_quantity, stock_status, images, featured_image, gender, brand, status, featured) 
+                    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+                    [
+                        $data['name'],
+                        $slug,
+                        $data['sku'] ?? null,
+                        $data['description'] ?? null,
+                        $data['short_description'] ?? null,
+                        $primaryCategoryId,
+                        $data['price'] ?? 0,
+                        $data['sale_price'] ?? null,
+                        $data['stock_quantity'] ?? 0,
+                        $data['stock_status'] ?? 'in_stock',
+                        $imagesJson,
+                        $featuredImage,
+                        $data['gender'] ?? 'unisex',
+                        $data['brand'] ?? null,
+                        $data['status'] ?? 'draft',
+                        $data['featured'] ?? 0
+                    ]
+                );
+                
+                // Insert product categories (many-to-many)
+                if (!empty($data['category_ids']) && is_array($data['category_ids'])) {
+                    foreach ($data['category_ids'] as $categoryId) {
+                        if ($categoryId) {
+                            try {
+                                $this->db->insert(
+                                    "INSERT INTO product_categories (product_id, category_id) VALUES (?, ?)",
+                                    [$productId, $categoryId]
+                                );
+                            } catch (Exception $e) {
+                                // Ignore duplicate key errors
+                            }
+                        }
+                    }
+                } elseif ($primaryCategoryId) {
+                    // Fallback: use primary category
+                    try {
+                        $this->db->insert(
+                            "INSERT INTO product_categories (product_id, category_id) VALUES (?, ?)",
+                            [$productId, $primaryCategoryId]
+                        );
+                    } catch (Exception $e) {
+                        // Ignore duplicate key errors
+                    }
+                }
+                
+                return $productId;
+            },
+            'Create Product',
+            ['data' => $data]
+        );
+    }
+    
+    /**
+     * Update product with retry logic
+     */
+    public function update($id, $data) {
+        return $this->retryHandler->executeWithRetry(
+            function() use ($id, $data) {
+                // Build update query dynamically
+                $fields = [];
+                $params = [];
+                
+                $allowedFields = ['name', 'description', 'short_description', 'category_id', 'price', 
+                                 'sale_price', 'stock_quantity', 'stock_status', 'images', 'featured_image',
+                                 'gender', 'brand', 'status', 'featured'];
+                
+                // Handle category_id (use first category if multiple)
+                if (isset($data['category_ids']) && is_array($data['category_ids']) && !empty($data['category_ids'])) {
+                    $data['category_id'] = $data['category_ids'][0];
+                }
+                
+                foreach ($allowedFields as $field) {
+                    if (isset($data[$field])) {
+                        $fields[] = "{$field} = ?";
+                        
+                        if ($field === 'images' && is_array($data[$field])) {
+                            $params[] = json_encode($data[$field]);
+                        } else {
+                            $params[] = $data[$field];
+                        }
+                    }
+                }
+                
+                // Update slug if name changed
+                if (isset($data['name'])) {
+                    $fields[] = "slug = ?";
+                    $params[] = $this->generateSlugForUpdate($data['name'], $id);
+                }
+                
+                if (empty($fields)) {
+                    return true;
+                }
+                
+                $params[] = $id;
+                
+                $sql = "UPDATE products SET " . implode(', ', $fields) . " WHERE id = ?";
+                $this->db->execute($sql, $params);
+                
+                // Update product categories (many-to-many)
+                if (isset($data['category_ids']) && is_array($data['category_ids'])) {
+                    // Delete existing relationships
+                    $this->db->execute("DELETE FROM product_categories WHERE product_id = ?", [$id]);
+                    
+                    // Insert new relationships
+                    foreach ($data['category_ids'] as $categoryId) {
+                        if ($categoryId) {
+                            try {
+                                $this->db->insert(
+                                    "INSERT INTO product_categories (product_id, category_id) VALUES (?, ?)",
+                                    [$id, $categoryId]
+                                );
+                            } catch (Exception $e) {
+                                // Ignore duplicate key errors
+                            }
+                        }
+                    }
+                }
+                
+                return true;
+            },
+            'Update Product',
+            ['id' => $id, 'data' => $data]
+        );
+    }
+    
+    /**
+     * Delete product
+     */
+    public function delete($id) {
+        return $this->db->execute(
+            "DELETE FROM products WHERE id = ?",
+            [$id]
+        );
+    }
+    
+    /**
+     * Generate URL-friendly slug
+     */
+    private function generateSlug($name) {
+        $slug = strtolower(trim($name));
+        $slug = preg_replace('/[^a-z0-9-]+/', '-', $slug);
+        $slug = preg_replace('/-+/', '-', $slug);
+        $slug = trim($slug, '-');
+        
+        // Ensure uniqueness
+        $originalSlug = $slug;
+        $counter = 1;
+        while ($this->db->fetchOne("SELECT id FROM products WHERE slug = ?", [$slug])) {
+            $slug = $originalSlug . '-' . $counter;
+            $counter++;
+        }
+        
+        return $slug;
+    }
+    
+    /**
+     * Generate URL-friendly slug for update (exclude current product)
+     */
+    private function generateSlugForUpdate($name, $excludeId) {
+        $slug = strtolower(trim($name));
+        $slug = preg_replace('/[^a-z0-9-]+/', '-', $slug);
+        $slug = preg_replace('/-+/', '-', $slug);
+        $slug = trim($slug, '-');
+        
+        // Ensure uniqueness (excluding current product)
+        $originalSlug = $slug;
+        $counter = 1;
+        while ($existing = $this->db->fetchOne("SELECT id FROM products WHERE slug = ? AND id != ?", [$slug, $excludeId])) {
+            $slug = $originalSlug . '-' . $counter;
+            $counter++;
+        }
+        
+        return $slug;
+    }
+    
+    /**
+     * Get best selling products
+     */
+    public function getBestSelling($limit = 6) {
+        return $this->db->fetchAll(
+            "SELECT p.*, c.name as category_name 
+             FROM products p 
+             LEFT JOIN categories c ON p.category_id = c.id 
+             WHERE p.status = 'active' 
+             ORDER BY p.review_count DESC, p.rating DESC, p.created_at DESC 
+             LIMIT ?",
+            [$limit]
+        );
+    }
+    
+    /**
+     * Get trending products
+     */
+    public function getTrending($limit = 6) {
+        return $this->db->fetchAll(
+            "SELECT p.*, c.name as category_name 
+             FROM products p 
+             LEFT JOIN categories c ON p.category_id = c.id 
+             WHERE p.status = 'active' AND p.featured = 1 
+             ORDER BY p.created_at DESC 
+             LIMIT ?",
+            [$limit]
+        );
+    }
+}
+
