@@ -390,7 +390,7 @@ $_COOKIE['recently_viewed'] = json_encode($recentIds);
                 </div>
             </div>
             
-            <button class="bg-white border-2 border-gray-300 px-6 py-2 rounded-lg hover:border-primary transition mb-6">
+            <button onclick="openReviewModal()" class="bg-white border-2 border-gray-300 px-6 py-2 rounded-lg hover:border-primary transition mb-6">
                 Write A Review
             </button>
             
@@ -398,27 +398,20 @@ $_COOKIE['recently_viewed'] = json_encode($recentIds);
             <div class="space-y-6">
                 <div class="flex items-center justify-between mb-4">
                     <h3 class="font-semibold">Most Recent</h3>
-                    <select class="border rounded px-3 py-1">
-                        <option>Most Recent</option>
-                        <option>Oldest First</option>
-                        <option>Highest Rating</option>
-                        <option>Lowest Rating</option>
+                    <select class="border rounded px-3 py-1" id="reviewSort" onchange="loadReviews()">
+                        <option value="recent">Most Recent</option>
+                        <option value="oldest">Oldest First</option>
+                        <option value="highest">Highest Rating</option>
+                        <option value="lowest">Lowest Rating</option>
                     </select>
                 </div>
                 
-                <!-- Sample Review -->
-                <div class="border-b pb-6">
-                    <div class="flex items-center mb-2">
-                        <div class="flex items-center mr-4">
-                            <?php for ($i = 0; $i < 5; $i++): ?>
-                            <i class="fas fa-star text-yellow-400 text-sm"></i>
-                            <?php endfor; ?>
-                        </div>
-                        <span class="font-semibold">john</span>
-                        <span class="text-gray-500 text-sm ml-4"><?php echo date('m/d/Y'); ?></span>
+                <!-- Reviews List Container -->
+                <div id="reviewsList">
+                    <div class="text-center text-gray-500 py-8">
+                        <i class="fas fa-spinner fa-spin text-2xl mb-2"></i>
+                        <p>Loading reviews...</p>
                     </div>
-                    <h4 class="font-semibold mb-2">Effortless Maxi Dress.</h4>
-                    <p class="text-gray-700">This maxi dress is perfect for both lounging and going out. The flowy design is so flattering, and the fabric feels cool on the skin. Perfect for summer days!</p>
                 </div>
             </div>
         </div>
@@ -570,57 +563,66 @@ function toggleSection(sectionId) {
 
 function addToCartFromDetail(productId) {
     const quantity = 1;
-    const size = selectedSize || 'M';
-    const color = selectedColor || 'Indigo';
     
-    fetch('/oecom/api/cart.php', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ 
-            product_id: productId, 
-            quantity: quantity,
-            size: size,
-            color: color
+    // Use global addToCart function if available
+    if (typeof addToCart === 'function') {
+        addToCart(productId, quantity);
+    } else {
+        // Fallback to direct API call
+        fetch('/oecom/api/cart.php', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ 
+                product_id: productId, 
+                quantity: quantity
+            })
         })
-    })
-    .then(response => response.json())
-    .then(data => {
-        if (data.success) {
-            // Open side cart
-            const sideCart = document.getElementById('sideCart');
-            const cartOverlay = document.getElementById('cartOverlay');
-            if (sideCart && cartOverlay) {
-                sideCart.classList.remove('translate-x-full');
-                cartOverlay.classList.remove('hidden');
-                document.body.style.overflow = 'hidden';
-            }
-            // Update cart UI
-            if (typeof updateCartUI === 'function') {
-                updateCartUI();
-            }
-            if (typeof updateCartCount === 'function') {
-                updateCartCount();
-            }
-            // Show success notification
-            if (typeof showNotification === 'function') {
-                showNotification('Product added to cart!', 'success');
-            }
-        } else {
-            if (typeof showNotification === 'function') {
-                showNotification(data.message || 'Failed to add product to cart', 'error');
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                // Refresh cart data
+                if (typeof refreshCart === 'function') {
+                    refreshCart();
+                } else if (typeof loadCart === 'function') {
+                    loadCart();
+                }
+                
+                // Open side cart
+                const sideCart = document.getElementById('sideCart');
+                const cartOverlay = document.getElementById('cartOverlay');
+                if (sideCart && cartOverlay) {
+                    sideCart.classList.remove('translate-x-full');
+                    cartOverlay.classList.remove('hidden');
+                    document.body.style.overflow = 'hidden';
+                }
+                
+                // Show success notification
+                if (typeof showNotificationModal === 'function') {
+                    showNotificationModal('Product added to cart!', 'success');
+                } else if (typeof showNotification === 'function') {
+                    showNotification('Product added to cart!', 'success');
+                }
             } else {
-                alert(data.message || 'Failed to add product to cart');
+                if (typeof showNotificationModal === 'function') {
+                    showNotificationModal(data.message || 'Failed to add product to cart', 'error');
+                } else if (typeof showNotification === 'function') {
+                    showNotification(data.message || 'Failed to add product to cart', 'error');
+                } else {
+                    alert(data.message || 'Failed to add product to cart');
+                }
             }
-        }
-    })
-    .catch(error => {
-        console.error('Error:', error);
-        if (typeof showNotification === 'function') {
-            showNotification('An error occurred while adding the product to cart', 'error');
-        } else {
-            alert('An error occurred while adding the product to cart');
-        }
-    });
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            if (typeof showNotificationModal === 'function') {
+                showNotificationModal('An error occurred while adding the product to cart', 'error');
+            } else if (typeof showNotification === 'function') {
+                showNotification('An error occurred while adding the product to cart', 'error');
+            } else {
+                alert('An error occurred while adding the product to cart');
+            }
+        });
+    }
 }
 
 function buyNow(productId) {
@@ -643,7 +645,289 @@ function buyNow(productId) {
         alert('An error occurred');
     });
 }
+
+// Review Modal Functions
+let selectedRating = 0;
+
+function setRating(rating) {
+    selectedRating = rating;
+    document.getElementById('reviewRating').value = rating;
+    
+    // Update star display
+    const stars = document.querySelectorAll('.star-rating-btn');
+    stars.forEach((star, index) => {
+        const starIcon = star.querySelector('i');
+        if (index < rating) {
+            starIcon.classList.remove('far', 'text-gray-300');
+            starIcon.classList.add('fas', 'text-yellow-400');
+        } else {
+            starIcon.classList.remove('fas', 'text-yellow-400');
+            starIcon.classList.add('far', 'text-gray-300');
+        }
+    });
+    
+    // Update rating text
+    const ratingTexts = ['', 'Poor', 'Fair', 'Good', 'Very Good', 'Excellent'];
+    document.getElementById('ratingText').textContent = ratingTexts[rating] || 'Click to rate';
+}
+
+function openReviewModal() {
+    document.getElementById('reviewModal').classList.remove('hidden');
+    document.body.style.overflow = 'hidden';
+}
+
+function closeReviewModal() {
+    document.getElementById('reviewModal').classList.add('hidden');
+    document.body.style.overflow = '';
+    // Reset form
+    document.getElementById('reviewForm').reset();
+    selectedRating = 0;
+    document.getElementById('reviewRating').value = '';
+    // Reset stars
+    document.querySelectorAll('.star-rating-btn i').forEach(icon => {
+        icon.classList.remove('fas', 'text-yellow-400');
+        icon.classList.add('far', 'text-gray-300');
+    });
+    document.getElementById('ratingText').textContent = 'Click to rate';
+}
+
+function submitReview(event) {
+    event.preventDefault();
+    
+    if (selectedRating === 0) {
+        if (typeof showNotificationModal === 'function') {
+            showNotificationModal('Please select a rating before submitting your review.', 'info', 'Rating Required');
+        } else {
+            alert('Please select a rating');
+        }
+        return;
+    }
+    
+    const formData = {
+        product_id: document.getElementById('reviewProductId').value,
+        user_name: document.getElementById('reviewName').value,
+        user_email: document.getElementById('reviewEmail').value,
+        rating: selectedRating,
+        title: document.getElementById('reviewTitle').value,
+        comment: document.getElementById('reviewComment').value
+    };
+    
+    // Disable submit button
+    const submitBtn = event.target.querySelector('button[type="submit"]');
+    submitBtn.disabled = true;
+    submitBtn.textContent = 'Submitting...';
+    
+    fetch('/oecom/api/reviews.php', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(formData)
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            closeReviewModal();
+            // Show success notification
+            if (typeof showNotificationModal === 'function') {
+                showNotificationModal('Thank you for your review! It has been submitted successfully.', 'success', 'Review Submitted');
+            } else {
+                alert('Thank you for your review! It has been submitted successfully.');
+            }
+            // Reload reviews
+            loadReviews();
+            // Reload page to update rating after a short delay
+            setTimeout(() => {
+                window.location.reload();
+            }, 2000);
+        } else {
+            if (typeof showNotificationModal === 'function') {
+                showNotificationModal(data.message || 'Failed to submit review. Please try again.', 'error', 'Error');
+            } else {
+                alert(data.message || 'Failed to submit review. Please try again.');
+            }
+            submitBtn.disabled = false;
+            submitBtn.textContent = 'Submit Review';
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        if (typeof showNotificationModal === 'function') {
+            showNotificationModal('An error occurred while submitting your review. Please try again.', 'error', 'Error');
+        } else {
+            alert('An error occurred while submitting your review. Please try again.');
+        }
+        submitBtn.disabled = false;
+        submitBtn.textContent = 'Submit Review';
+    });
+}
+
+function loadReviews() {
+    const productId = <?php echo $productData['id']; ?>;
+    const sortBy = document.getElementById('reviewSort')?.value || 'recent';
+    
+    let sortOrder = 'ORDER BY created_at DESC';
+    if (sortBy === 'oldest') {
+        sortOrder = 'ORDER BY created_at ASC';
+    } else if (sortBy === 'highest') {
+        sortOrder = 'ORDER BY rating DESC, created_at DESC';
+    } else if (sortBy === 'lowest') {
+        sortOrder = 'ORDER BY rating ASC, created_at DESC';
+    }
+    
+    fetch(`/oecom/api/reviews.php?product_id=${productId}&sort=${sortBy}`)
+        .then(response => response.json())
+        .then(data => {
+            const reviewsList = document.getElementById('reviewsList');
+            
+            if (data.success && data.reviews && data.reviews.length > 0) {
+                reviewsList.innerHTML = data.reviews.map(review => {
+                    const date = new Date(review.created_at);
+                    const formattedDate = date.toLocaleDateString('en-US', { month: '2-digit', day: '2-digit', year: 'numeric' });
+                    
+                    let stars = '';
+                    for (let i = 1; i <= 5; i++) {
+                        if (i <= review.rating) {
+                            stars += '<i class="fas fa-star text-yellow-400 text-sm"></i>';
+                        } else {
+                            stars += '<i class="fas fa-star text-gray-300 text-sm"></i>';
+                        }
+                    }
+                    
+                    return `
+                        <div class="border-b pb-6 mb-6">
+                            <div class="flex items-center mb-2">
+                                <div class="flex items-center mr-4">
+                                    ${stars}
+                                </div>
+                                <span class="font-semibold">${escapeHtml(review.user_name)}</span>
+                                <span class="text-gray-500 text-sm ml-4">${formattedDate}</span>
+                            </div>
+                            ${review.title ? `<h4 class="font-semibold mb-2">${escapeHtml(review.title)}</h4>` : ''}
+                            <p class="text-gray-700">${escapeHtml(review.comment)}</p>
+                        </div>
+                    `;
+                }).join('');
+            } else {
+                reviewsList.innerHTML = '<div class="text-center text-gray-500 py-8"><p>No reviews yet. Be the first to review this product!</p></div>';
+            }
+        })
+        .catch(error => {
+            console.error('Error loading reviews:', error);
+            document.getElementById('reviewsList').innerHTML = '<div class="text-center text-gray-500 py-8"><p>Unable to load reviews.</p></div>';
+        });
+}
+
+function escapeHtml(text) {
+    const div = document.createElement('div');
+    div.textContent = text;
+    return div.innerHTML;
+}
+
+// Load reviews on page load
+document.addEventListener('DOMContentLoaded', function() {
+    loadReviews();
+    
+    // Close modal on overlay click
+    const reviewModal = document.getElementById('reviewModal');
+    if (reviewModal) {
+        reviewModal.addEventListener('click', function(e) {
+            if (e.target === this) {
+                closeReviewModal();
+            }
+        });
+    }
+});
 </script>
+
+<!-- Review Modal -->
+<div id="reviewModal" class="hidden fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
+    <div class="bg-white rounded-lg max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+        <div class="p-6">
+            <div class="flex items-center justify-between mb-6">
+                <h2 class="text-2xl font-heading font-bold">Write A Review</h2>
+                <button onclick="closeReviewModal()" class="text-gray-500 hover:text-gray-800">
+                    <i class="fas fa-times text-2xl"></i>
+                </button>
+            </div>
+            
+            <form id="reviewForm" onsubmit="submitReview(event)">
+                <input type="hidden" id="reviewProductId" value="<?php echo $productData['id']; ?>">
+                
+                <!-- Rating -->
+                <div class="mb-6">
+                    <label class="block text-gray-700 font-semibold mb-3">Your Rating *</label>
+                    <div class="flex items-center space-x-2" id="starRating">
+                        <?php for ($i = 1; $i <= 5; $i++): ?>
+                        <button type="button" 
+                                onclick="setRating(<?php echo $i; ?>)" 
+                                class="star-rating-btn text-3xl text-gray-300 hover:text-yellow-400 transition"
+                                data-rating="<?php echo $i; ?>">
+                            <i class="far fa-star"></i>
+                        </button>
+                        <?php endfor; ?>
+                    </div>
+                    <input type="hidden" id="reviewRating" name="rating" required>
+                    <p class="text-sm text-gray-500 mt-2" id="ratingText">Click to rate</p>
+                </div>
+                
+                <!-- Name -->
+                <div class="mb-4">
+                    <label for="reviewName" class="block text-gray-700 font-semibold mb-2">Your Name *</label>
+                    <input type="text" 
+                           id="reviewName" 
+                           name="user_name" 
+                           required
+                           class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary">
+                </div>
+                
+                <!-- Email -->
+                <div class="mb-4">
+                    <label for="reviewEmail" class="block text-gray-700 font-semibold mb-2">Your Email *</label>
+                    <input type="email" 
+                           id="reviewEmail" 
+                           name="user_email" 
+                           required
+                           class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary">
+                </div>
+                
+                <!-- Review Title -->
+                <div class="mb-4">
+                    <label for="reviewTitle" class="block text-gray-700 font-semibold mb-2">Review Title</label>
+                    <input type="text" 
+                           id="reviewTitle" 
+                           name="title" 
+                           placeholder="Summarize your review"
+                           class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary">
+                </div>
+                
+                <!-- Review Comment -->
+                <div class="mb-6">
+                    <label for="reviewComment" class="block text-gray-700 font-semibold mb-2">Your Review *</label>
+                    <textarea id="reviewComment" 
+                              name="comment" 
+                              rows="5" 
+                              required
+                              placeholder="Share your experience with this product..."
+                              class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary"></textarea>
+                </div>
+                
+                <!-- Submit Button -->
+                <div class="flex items-center justify-end space-x-4">
+                    <button type="button" 
+                            onclick="closeReviewModal()" 
+                            class="px-6 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 transition">
+                        Cancel
+                    </button>
+                    <button type="submit" 
+                            class="px-6 py-2 bg-primary text-white rounded-lg hover:bg-primary-dark transition">
+                        Submit Review
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
 
 <?php require_once __DIR__ . '/includes/footer.php'; ?>
 

@@ -21,14 +21,26 @@ function initializeProductCards() {
     
     // Quick view buttons
     document.querySelectorAll('.quick-view-btn').forEach(btn => {
+        // If it's already a link, don't override it
+        if (btn.tagName === 'A') {
+            return;
+        }
+        
         const newBtn = btn.cloneNode(true);
         btn.parentNode.replaceChild(newBtn, btn);
         
         newBtn.addEventListener('click', function(e) {
             e.preventDefault();
             e.stopPropagation();
+            const productSlug = this.getAttribute('data-product-slug');
             const productId = this.getAttribute('data-product-id');
-            showQuickView(productId);
+            
+            if (productSlug) {
+                // Navigate to product detail page
+                window.location.href = '/oecom/product.php?slug=' + encodeURIComponent(productSlug);
+            } else {
+                showQuickView(productId);
+            }
         });
     });
     
@@ -65,26 +77,54 @@ function initializeProductCards() {
 }
 
 function toggleWishlist(productId, button) {
-    const icon = button.querySelector('i');
-    if (icon.classList.contains('fas')) {
-        icon.classList.remove('fas');
-        icon.classList.add('far');
-        button.classList.remove('bg-red-500', 'text-white');
-        button.classList.add('bg-white');
-        showNotification('Removed from wishlist', 'info');
+    // Use global toggleWishlist function if available
+    if (typeof window.toggleWishlist === 'function') {
+        window.toggleWishlist(productId, button);
     } else {
-        icon.classList.remove('far');
-        icon.classList.add('fas');
-        button.classList.add('bg-red-500', 'text-white');
-        button.classList.remove('bg-white');
-        showNotification('Added to wishlist', 'success');
+        // Fallback to simple toggle
+        const icon = button.querySelector('i');
+        if (icon.classList.contains('fas')) {
+            icon.classList.remove('fas');
+            icon.classList.add('far');
+            button.classList.remove('bg-red-500', 'text-white');
+            button.classList.add('bg-white');
+            if (typeof showNotification === 'function') {
+                showNotification('Removed from wishlist', 'info');
+            }
+        } else {
+            icon.classList.remove('far');
+            icon.classList.add('fas');
+            button.classList.add('bg-red-500', 'text-white');
+            button.classList.remove('bg-white');
+            if (typeof showNotification === 'function') {
+                showNotification('Added to wishlist', 'success');
+            }
+        }
     }
 }
 
 function showQuickView(productId) {
-    // Open quick view modal (you can implement this later)
-    showNotification('Quick view feature coming soon', 'info');
-    // window.location.href = '/oecom/product.php?id=' + productId;
+    // Try to get slug from the button or navigate by ID
+    const btn = document.querySelector(`[data-product-id="${productId}"]`);
+    const slug = btn ? btn.getAttribute('data-product-slug') : null;
+    
+    if (slug) {
+        window.location.href = '/oecom/product.php?slug=' + encodeURIComponent(slug);
+    } else {
+        // Fallback: try to fetch product by ID and redirect
+        fetch('/oecom/api/products.php?id=' + productId)
+            .then(response => response.json())
+            .then(data => {
+                if (data.success && data.product && data.product.slug) {
+                    window.location.href = '/oecom/product.php?slug=' + encodeURIComponent(data.product.slug);
+                } else {
+                    showNotification('Product not found', 'error');
+                }
+            })
+            .catch(() => {
+                showNotification('Unable to load product', 'error');
+            });
+    }
 }
 
 function addToCompare(productId) {

@@ -530,3 +530,120 @@ a:hover {
   }
 }
 
+/* Notification Modal Styles */
+.notification-modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.5);
+  z-index: 9999;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1rem;
+  animation: fadeIn 0.2s ease-out;
+}
+
+.notification-modal {
+  background: white;
+  border-radius: 1rem;
+  box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+  max-width: 400px;
+  width: 100%;
+  overflow: hidden;
+  animation: slideUp 0.3s ease-out;
+}
+
+@keyframes slideUp {
+  from {
+    transform: translateY(20px);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+.notification-modal-header {
+  padding: 1.5rem;
+  text-align: center;
+  border-bottom: 1px solid var(--color-gray-200);
+}
+
+.notification-modal-icon {
+  width: 64px;
+  height: 64px;
+  margin: 0 auto 1rem;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 2rem;
+  color: white;
+  background: linear-gradient(135deg, var(--color-primary) 0%, var(--color-primary-light) 100%);
+}
+
+.notification-modal-icon.success {
+  background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+}
+
+.notification-modal-icon.error {
+  background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+}
+
+.notification-modal-icon.info {
+  background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+}
+
+.notification-modal-title {
+  font-size: 1.25rem;
+  font-weight: 600;
+  color: var(--color-gray-900);
+  margin-bottom: 0.5rem;
+}
+
+.notification-modal-body {
+  padding: 1.5rem;
+  text-align: center;
+}
+
+.notification-modal-message {
+  color: var(--color-gray-700);
+  line-height: 1.6;
+  margin-bottom: 1.5rem;
+}
+
+.notification-modal-footer {
+  padding: 1rem 1.5rem 1.5rem;
+  display: flex;
+  justify-content: center;
+}
+
+.notification-modal-btn {
+  padding: 0.75rem 2rem;
+  border-radius: 0.5rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  border: none;
+  font-size: 1rem;
+}
+
+.notification-modal-btn.primary {
+  background: var(--color-primary);
+  color: white;
+}
+
+.notification-modal-btn.primary:hover {
+  background: var(--color-primary-dark);
+}
+
+.notification-modal-btn.secondary {
+  background: var(--color-gray-200);
+  color: var(--color-gray-700);
+}
+
+.notification-modal-btn.secondary:hover {
+  background: var(--color-gray-300);
+}
+

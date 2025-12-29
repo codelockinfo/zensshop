@@ -16,6 +16,10 @@ define('UPLOAD_URL', SITE_URL . '/assets/images/products/');
 define('CART_COOKIE_NAME', 'cart_items');
 define('CART_COOKIE_EXPIRY', 2592000); // 30 days
 
+// Wishlist Cookie
+define('WISHLIST_COOKIE_NAME', 'wishlist_items');
+define('WISHLIST_COOKIE_EXPIRY', 2592000); // 30 days
+
 // Retry Configuration
 define('MAX_RETRY_ATTEMPTS', 2);
 define('RETRY_DELAY_SECONDS', 2); // Base delay for exponential backoff

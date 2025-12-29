@@ -20,6 +20,8 @@ function setupCartUI() {
     // Open cart
     if (cartBtn) {
         cartBtn.addEventListener('click', function() {
+            // Refresh cart data when opening
+            refreshCart();
             sideCart.classList.remove('translate-x-full');
             cartOverlay.classList.remove('hidden');
             document.body.style.overflow = 'hidden';
@@ -57,12 +59,61 @@ function loadCart() {
     const cartCookie = getCookie('cart_items');
     if (cartCookie) {
         try {
-            cartData = JSON.parse(cartCookie);
-            updateCartUI();
+            // Try parsing as-is first
+            let parsed = null;
+            try {
+                parsed = JSON.parse(cartCookie);
+            } catch (e1) {
+                // Try URL decoding
+                try {
+                    parsed = JSON.parse(decodeURIComponent(cartCookie));
+                } catch (e2) {
+                    console.error('Error parsing cart cookie:', e2);
+                    parsed = null;
+                }
+            }
+            
+            if (parsed && Array.isArray(parsed)) {
+                cartData = parsed;
+            } else {
+                cartData = [];
+            }
         } catch (e) {
             console.error('Error parsing cart cookie:', e);
             cartData = [];
         }
+    } else {
+        cartData = [];
+    }
+    
+    updateCartUI();
+    updateCartCount();
+}
+
+// Refresh cart from API
+async function refreshCart() {
+    try {
+        const response = await fetch('/oecom/api/cart.php', {
+            method: 'GET',
+            headers: {
+                'Content-Type': 'application/json',
+            }
+        });
+        
+        const data = await response.json();
+        
+        if (data.success && Array.isArray(data.cart)) {
+            cartData = data.cart;
+            updateCartUI();
+            updateCartCount();
+        } else {
+            // Fallback to cookie
+            loadCart();
+        }
+    } catch (error) {
+        console.error('Error refreshing cart:', error);
+        // Fallback to cookie
+        loadCart();
     }
 }
 
@@ -83,13 +134,17 @@ async function addToCart(productId, quantity = 1) {
         
         const data = await response.json();
         
-        if (data.success) {
+        if (data.success && Array.isArray(data.cart)) {
             cartData = data.cart;
             updateCartUI();
             updateCartCount();
             
             // Show success message
-            showNotification('Product added to cart!', 'success');
+            if (typeof showNotificationModal === 'function') {
+                showNotificationModal('Product added to cart!', 'success');
+            } else if (typeof showNotification === 'function') {
+                showNotification('Product added to cart!', 'success');
+            }
             
             // Open cart panel
             const sideCart = document.getElementById('sideCart');
@@ -100,7 +155,11 @@ async function addToCart(productId, quantity = 1) {
                 document.body.style.overflow = 'hidden';
             }
         } else {
-            showNotification(data.message || 'Failed to add product to cart', 'error');
+            if (typeof showNotificationModal === 'function') {
+                showNotificationModal(data.message || 'Failed to add product to cart', 'error');
+            } else if (typeof showNotification === 'function') {
+                showNotification(data.message || 'Failed to add product to cart', 'error');
+            }
         }
     } catch (error) {
         console.error('Error adding to cart:', error);
@@ -125,12 +184,16 @@ async function updateCartItem(productId, quantity) {
         
         const data = await response.json();
         
-        if (data.success) {
+        if (data.success && Array.isArray(data.cart)) {
             cartData = data.cart;
             updateCartUI();
             updateCartCount();
         } else {
-            showNotification(data.message || 'Failed to update cart', 'error');
+            if (typeof showNotificationModal === 'function') {
+                showNotificationModal(data.message || 'Failed to update cart', 'error');
+            } else if (typeof showNotification === 'function') {
+                showNotification(data.message || 'Failed to update cart', 'error');
+            }
         }
     } catch (error) {
         console.error('Error updating cart:', error);
@@ -155,12 +218,20 @@ async function removeFromCart(productId) {
         const data = await response.json();
         
         if (data.success) {
-            cartData = data.cart;
+            cartData = Array.isArray(data.cart) ? data.cart : [];
             updateCartUI();
             updateCartCount();
-            showNotification('Product removed from cart', 'success');
+            if (typeof showNotificationModal === 'function') {
+                showNotificationModal('Product removed from cart', 'success');
+            } else if (typeof showNotification === 'function') {
+                showNotification('Product removed from cart', 'success');
+            }
         } else {
-            showNotification(data.message || 'Failed to remove product', 'error');
+            if (typeof showNotificationModal === 'function') {
+                showNotificationModal(data.message || 'Failed to remove product', 'error');
+            } else if (typeof showNotification === 'function') {
+                showNotification(data.message || 'Failed to remove product', 'error');
+            }
         }
     } catch (error) {
         console.error('Error removing from cart:', error);
@@ -190,24 +261,43 @@ function updateCartUI() {
     let total = 0;
     
     cartData.forEach(item => {
-        const itemTotal = item.price * item.quantity;
+        // Ensure we have valid data
+        if (!item || !item.product_id || !item.name) {
+            console.warn('Invalid cart item:', item);
+            return;
+        }
+        
+        const itemPrice = parseFloat(item.price) || 0;
+        const itemQuantity = parseInt(item.quantity) || 1;
+        const itemTotal = itemPrice * itemQuantity;
         total += itemTotal;
+        
+        // Get image URL - handle both relative and absolute paths
+        let imageUrl = item.image || '';
+        if (!imageUrl || imageUrl === 'null' || imageUrl === 'undefined' || imageUrl === '') {
+            // Use placeholder SVG
+            imageUrl = 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iODAiIGhlaWdodD0iODAiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+PHJlY3Qgd2lkdGg9IjgwIiBoZWlnaHQ9IjgwIiBmaWxsPSIjRjNGNEY2Ii8+PGNpcmNsZSBjeD0iNDAiIGN5PSI0MCIgcj0iMjAiIGZpbGw9IiM5QjdBOEEiLz48L3N2Zz4=';
+        } else if (imageUrl.indexOf('http') !== 0 && imageUrl.indexOf('/') !== 0 && imageUrl.indexOf('data:') !== 0) {
+            imageUrl = '/oecom/assets/images/uploads/' + imageUrl;
+        } else if (imageUrl.indexOf('/oecom') !== 0 && imageUrl.indexOf('http') !== 0 && imageUrl.indexOf('data:') !== 0) {
+            imageUrl = '/oecom' + imageUrl;
+        }
         
         html += `
             <div class="flex items-center space-x-4 mb-4 pb-4 border-b" data-product-id="${item.product_id}">
-                <img src="${item.image || 'https://via.placeholder.com/80'}" alt="${item.name}" class="w-20 h-20 object-cover rounded">
+                <img src="${escapeHtml(imageUrl)}" alt="${escapeHtml(item.name)}" class="w-20 h-20 object-cover rounded" onerror="this.src='data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iODAiIGhlaWdodD0iODAiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+PHJlY3Qgd2lkdGg9IjgwIiBoZWlnaHQ9IjgwIiBmaWxsPSIjRjNGNEY2Ii8+PGNpcmNsZSBjeD0iNDAiIGN5PSI0MCIgcj0iMjAiIGZpbGw9IiM5QjdBOEEiLz48L3N2Zz4='">
                 <div class="flex-1">
-                    <h4 class="font-semibold">${item.name}</h4>
-                    <p class="text-gray-600">${formatCurrency(item.price)}</p>
+                    <h4 class="font-semibold text-sm">${escapeHtml(item.name)}</h4>
+                    <p class="text-gray-600 text-sm">${formatCurrency(itemPrice)}</p>
                     <div class="flex items-center space-x-2 mt-2">
-                        <button onclick="updateCartItem(${item.product_id}, ${item.quantity - 1})" class="w-8 h-8 border rounded flex items-center justify-center hover:bg-gray-100">-</button>
-                        <span class="w-8 text-center">${item.quantity}</span>
-                        <button onclick="updateCartItem(${item.product_id}, ${item.quantity + 1})" class="w-8 h-8 border rounded flex items-center justify-center hover:bg-gray-100">+</button>
+                        <button onclick="updateCartItem(${item.product_id}, ${itemQuantity - 1})" class="w-8 h-8 border rounded flex items-center justify-center hover:bg-gray-100 text-sm">-</button>
+                        <span class="w-8 text-center text-sm">${itemQuantity}</span>
+                        <button onclick="updateCartItem(${item.product_id}, ${itemQuantity + 1})" class="w-8 h-8 border rounded flex items-center justify-center hover:bg-gray-100 text-sm">+</button>
                     </div>
                 </div>
                 <div class="text-right">
-                    <p class="font-semibold">${formatCurrency(itemTotal)}</p>
-                    <button onclick="removeFromCart(${item.product_id})" class="text-red-500 hover:text-red-700 mt-2">
+                    <p class="font-semibold text-sm">${formatCurrency(itemTotal)}</p>
+                    <button onclick="removeFromCart(${item.product_id})" class="text-red-500 hover:text-red-700 mt-2 text-sm" title="Remove">
                         <i class="fas fa-trash"></i>
                     </button>
                 </div>
@@ -238,7 +328,13 @@ function getCookie(name) {
 
 // Show notification
 function showNotification(message, type = 'info') {
-    // Create notification element
+    // Use custom modal if available
+    if (typeof showNotificationModal === 'function') {
+        showNotificationModal(message, type);
+        return;
+    }
+    
+    // Fallback to simple notification
     const notification = document.createElement('div');
     notification.className = `fixed top-4 right-4 z-50 px-6 py-4 rounded-lg shadow-lg ${
         type === 'success' ? 'bg-green-500' : 
@@ -259,8 +355,23 @@ function showNotification(message, type = 'info') {
     }, 3000);
 }
 
+// Escape HTML
+function escapeHtml(text) {
+    const div = document.createElement('div');
+    div.textContent = text;
+    return div.innerHTML;
+}
+
+// Format currency
+function formatCurrency(amount) {
+    return '$' + parseFloat(amount).toFixed(2);
+}
+
 // Make functions globally available
 window.addToCart = addToCart;
 window.updateCartItem = updateCartItem;
 window.removeFromCart = removeFromCart;
+window.refreshCart = refreshCart;
+window.updateCartUI = updateCartUI;
+window.updateCartCount = updateCartCount;
 

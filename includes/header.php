@@ -207,7 +207,7 @@ $cartCount = $cart->getCount();
                     <!-- Wishlist -->
                     <a href="/oecom/wishlist.php" class="text-gray-800 hover:text-primary transition relative">
                         <i class="fas fa-heart text-xl"></i>
-                        <span class="absolute -top-2 -right-2 bg-red-500 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center">0</span>
+                        <span class="wishlist-count absolute -top-2 -right-2 bg-red-500 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center">0</span>
                     </a>
                     
                     <!-- Cart -->

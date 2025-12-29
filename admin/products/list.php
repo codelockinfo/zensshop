@@ -1,6 +1,7 @@
 <?php
 require_once __DIR__ . '/../../classes/Auth.php';
 require_once __DIR__ . '/../../classes/Product.php';
+require_once __DIR__ . '/../../classes/Database.php';
 require_once __DIR__ . '/../../includes/functions.php';
 
 $auth = new Auth();
@@ -10,9 +11,28 @@ $pageTitle = 'Product List';
 require_once __DIR__ . '/../../includes/admin-header.php';
 
 $product = new Product();
+$db = Database::getInstance();
 $search = $_GET['search'] ?? '';
-$filters = ['search' => $search];
-$products = $product->getAll($filters);
+
+// For admin, get ALL products regardless of status
+$sql = "SELECT DISTINCT p.*, GROUP_CONCAT(DISTINCT c.name SEPARATOR ', ') as category_names
+        FROM products p 
+        LEFT JOIN product_categories pc ON p.id = pc.product_id
+        LEFT JOIN categories c ON pc.category_id = c.id 
+        WHERE 1=1";
+$params = [];
+
+if (!empty($search)) {
+    $sql .= " AND (p.name LIKE ? OR p.description LIKE ? OR p.sku LIKE ?)";
+    $searchTerm = "%{$search}%";
+    $params[] = $searchTerm;
+    $params[] = $searchTerm;
+    $params[] = $searchTerm;
+}
+
+$sql .= " GROUP BY p.id ORDER BY p.created_at DESC";
+
+$products = $db->fetchAll($sql, $params);
 ?>
 
 <div class="mb-6">

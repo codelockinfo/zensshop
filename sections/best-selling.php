@@ -27,8 +27,10 @@ $products = $product->getBestSelling(12); // Get more products for slider
                     <div class="min-w-[280px] md:min-w-[300px] px-3">
                         <div class="product-card bg-white rounded-lg overflow-hidden shadow-md hover:shadow-xl transition-all duration-300 group relative">
                             <div class="relative overflow-hidden">
-                                <img src="<?php echo htmlspecialchars($mainImage); ?>" alt="<?php echo htmlspecialchars($item['name']); ?>" 
-                                     class="w-full h-64 object-cover group-hover:scale-110 transition-transform duration-500">
+                                <a href="/oecom/product.php?slug=<?php echo urlencode($item['slug'] ?? ''); ?>">
+                                    <img src="<?php echo htmlspecialchars($mainImage); ?>" alt="<?php echo htmlspecialchars($item['name']); ?>" 
+                                         class="w-full h-64 object-cover group-hover:scale-110 transition-transform duration-500">
+                                </a>
                                 
                                 <!-- Discount Badge -->
                                 <?php if ($discount > 0): ?>
@@ -44,11 +46,13 @@ $products = $product->getBestSelling(12); // Get more products for slider
                                 
                                 <!-- Hover Action Buttons -->
                                 <div class="product-actions absolute right-2 top-12 flex flex-col gap-2 opacity-0 group-hover:opacity-100 transition-opacity duration-300 z-30">
-                                    <button class="w-10 h-10 bg-white rounded-full flex items-center justify-center hover:bg-primary hover:text-white transition shadow-lg quick-view-btn" 
-                                            data-product-id="<?php echo $item['id']; ?>"
-                                            title="Quick View">
+                                    <a href="/oecom/product.php?slug=<?php echo urlencode($item['slug'] ?? ''); ?>" 
+                                       class="w-10 h-10 bg-white rounded-full flex items-center justify-center hover:bg-primary hover:text-white transition shadow-lg quick-view-btn" 
+                                       data-product-id="<?php echo $item['id']; ?>"
+                                       data-product-slug="<?php echo htmlspecialchars($item['slug'] ?? ''); ?>"
+                                       title="Quick View">
                                         <i class="fas fa-eye"></i>
-                                    </button>
+                                    </a>
                                     <button class="w-10 h-10 bg-white rounded-full flex items-center justify-center hover:bg-primary hover:text-white transition shadow-lg compare-btn" 
                                             data-product-id="<?php echo $item['id']; ?>"
                                             title="Compare">
@@ -62,7 +66,11 @@ $products = $product->getBestSelling(12); // Get more products for slider
                                 </div>
                             </div>
                             <div class="p-4">
-                                <h3 class="font-semibold text-gray-800 mb-2 line-clamp-2 min-h-[48px]"><?php echo htmlspecialchars($item['name']); ?></h3>
+                                <h3 class="font-semibold text-gray-800 mb-2 line-clamp-2 min-h-[48px]">
+                                    <a href="/oecom/product.php?slug=<?php echo urlencode($item['slug'] ?? ''); ?>" class="hover:text-primary transition">
+                                        <?php echo htmlspecialchars($item['name']); ?>
+                                    </a>
+                                </h3>
                                 <div class="flex items-center mb-3">
                                     <div class="flex text-yellow-400">
                                         <?php 

@@ -122,10 +122,30 @@
     <!-- Cart Overlay -->
     <div class="hidden fixed inset-0 bg-black bg-opacity-50 z-40" id="cartOverlay"></div>
     
+    <!-- Notification Modal -->
+    <div id="notificationModal" class="hidden notification-modal-overlay">
+        <div class="notification-modal">
+            <div class="notification-modal-header">
+                <div class="notification-modal-icon" id="notificationIcon">
+                    <i class="fas fa-check-circle"></i>
+                </div>
+                <h3 class="notification-modal-title" id="notificationTitle">Success</h3>
+            </div>
+            <div class="notification-modal-body">
+                <p class="notification-modal-message" id="notificationMessage"></p>
+            </div>
+            <div class="notification-modal-footer">
+                <button class="notification-modal-btn primary" id="notificationOkBtn" onclick="closeNotificationModal()">OK</button>
+            </div>
+        </div>
+    </div>
+    
     <!-- Scripts -->
     <script src="/oecom/assets/js/main.js"></script>
     <script src="/oecom/assets/js/cart.js"></script>
     <script src="/oecom/assets/js/product-cards.js"></script>
+    <script src="/oecom/assets/js/wishlist.js"></script>
+    <script src="/oecom/assets/js/notification.js"></script>
 </body>
 </html>
 

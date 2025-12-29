@@ -46,6 +46,49 @@ class Cart {
             }
         }
         
+        // Ensure all items have required fields and proper image URLs
+        foreach ($cartItems as &$item) {
+            // Ensure product_id exists
+            if (empty($item['product_id'])) {
+                continue;
+            }
+            
+            // If image is missing or invalid, fetch from product
+            if (empty($item['image']) || $item['image'] === 'null' || $item['image'] === 'undefined') {
+                $product = $this->product->getById($item['product_id']);
+                if ($product) {
+                    if (!empty($product['featured_image'])) {
+                        $item['image'] = $product['featured_image'];
+                    } else {
+                        $images = json_decode($product['images'] ?? '[]', true);
+                        if (!empty($images[0])) {
+                            $item['image'] = $images[0];
+                        }
+                    }
+                    
+                    // Ensure name and price are set
+                    if (empty($item['name'])) {
+                        $item['name'] = $product['name'];
+                    }
+                    if (empty($item['price'])) {
+                        $item['price'] = $product['sale_price'] ?? $product['price'];
+                    }
+                }
+            }
+            
+            // Convert to full URL if needed
+            if (!empty($item['image']) && strpos($item['image'], 'http') !== 0 && strpos($item['image'], '/') !== 0) {
+                $item['image'] = '/oecom/assets/images/uploads/' . $item['image'];
+            }
+        }
+        unset($item);
+        
+        // Remove invalid items
+        $cartItems = array_filter($cartItems, function($item) {
+            return !empty($item['product_id']) && !empty($item['name']);
+        });
+        $cartItems = array_values($cartItems); // Re-index
+        
         return $cartItems;
     }
     
@@ -63,12 +106,31 @@ class Cart {
         
         $cartItems = [];
         foreach ($items as $item) {
+            // Get product image
+            $productImage = '';
+            if (!empty($item['featured_image'])) {
+                $productImage = $item['featured_image'];
+            } else {
+                $product = $this->product->getById($item['product_id']);
+                if ($product) {
+                    $images = json_decode($product['images'] ?? '[]', true);
+                    if (!empty($images[0])) {
+                        $productImage = $images[0];
+                    }
+                }
+            }
+            
+            // Convert to full URL if needed
+            if (!empty($productImage) && strpos($productImage, 'http') !== 0 && strpos($productImage, '/') !== 0) {
+                $productImage = '/oecom/assets/images/uploads/' . $productImage;
+            }
+            
             $cartItems[] = [
                 'product_id' => $item['product_id'],
                 'quantity' => $item['quantity'],
                 'name' => $item['name'],
                 'price' => $item['sale_price'] ?? $item['price'],
-                'image' => $item['featured_image']
+                'image' => $productImage
             ];
         }
         
@@ -104,12 +166,28 @@ class Cart {
         
         // Add new item if not found
         if (!$found) {
+            // Get product image
+            $productImage = '';
+            if (!empty($product['featured_image'])) {
+                $productImage = $product['featured_image'];
+            } else {
+                $images = json_decode($product['images'] ?? '[]', true);
+                if (!empty($images[0])) {
+                    $productImage = $images[0];
+                }
+            }
+            
+            // Convert to full URL if needed
+            if (!empty($productImage) && strpos($productImage, 'http') !== 0 && strpos($productImage, '/') !== 0) {
+                $productImage = '/oecom/assets/images/uploads/' . $productImage;
+            }
+            
             $cartItems[] = [
                 'product_id' => $productId,
                 'quantity' => $quantity,
                 'name' => $product['name'],
                 'price' => $product['sale_price'] ?? $product['price'],
-                'image' => $product['featured_image']
+                'image' => $productImage
             ];
         }
         
