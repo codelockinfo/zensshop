@@ -6,6 +6,25 @@ if (!isset($baseUrl) && function_exists('getBaseUrl')) {
     require_once __DIR__ . '/functions.php';
     $baseUrl = getBaseUrl();
 }
+
+// Ensure url() function is available
+if (!function_exists('url')) {
+    function url($path = '') {
+        $baseUrl = getBaseUrl();
+        $path = ltrim($path, '/');
+        $queryString = '';
+        if (strpos($path, '?') !== false) {
+            $parts = explode('?', $path, 2);
+            $path = $parts[0];
+            $queryString = '?' . $parts[1];
+        }
+        $path = preg_replace('/\.php$/', '', $path);
+        if (empty($path)) {
+            return $baseUrl . '/' . $queryString;
+        }
+        return $baseUrl . '/' . $path . $queryString;
+    }
+}
 ?>
     <!-- Footer -->
     <footer class="bg-white text-black mt-20 relative">
@@ -15,7 +34,7 @@ if (!isset($baseUrl) && function_exists('getBaseUrl')) {
                 <div class="column w-full md:w-1/2 lg:w-1/5 px-4 mb-8 lg:mb-0">
                     <h3 class="text-lg font-sans font-bold mb-4 text-black">About us</h3>
                     <p class="text-black mb-4 text-sm leading-relaxed">We only carry designs we believe in ethically and aesthetically – original, authentic pieces that are made to last.</p>
-                    <a href="<?php echo $baseUrl; ?>/about.php" class="text-black underline hover:no-underline transition text-sm mb-4 inline-block">Learn more</a>
+                    <a href="<?php echo url('about.php'); ?>" class="text-black underline hover:no-underline transition text-sm mb-4 inline-block">Learn more</a>
                     <div class="space-y-2 text-black mt-4">
                         <p class="flex items-center text-sm"><i class="fas fa-map-marker-alt mr-2 text-sm"></i>Street Address 2571 Oakridge</p>
                         <p class="flex items-center text-sm"><i class="fas fa-phone mr-2 text-sm"></i>+1 (973) 435-3638</p>
@@ -44,11 +63,11 @@ if (!isset($baseUrl) && function_exists('getBaseUrl')) {
                 <div>
                     <h3 class="text-xl font-heading font-bold mb-4">Our Company</h3>
                     <ul class="space-y-2 text-gray-400">
-                        <li><a href="<?php echo $baseUrl; ?>/about.php" class="hover:text-white transition">About Us</a></li>
-                        <li><a href="<?php echo $baseUrl; ?>/contact.php" class="hover:text-white transition">Contact Us</a></li>
-                        <li><a href="<?php echo $baseUrl; ?>/store.php" class="hover:text-white transition">Our Store</a></li>
-                        <li><a href="<?php echo $baseUrl; ?>/location.php" class="hover:text-white transition">Store Location</a></li>
-                        <li><a href="<?php echo $baseUrl; ?>/faq.php" class="hover:text-white transition">FAQ</a></li>
+                        <li><a href="<?php echo url('about.php'); ?>" class="hover:text-white transition">About Us</a></li>
+                        <li><a href="<?php echo url('contact.php'); ?>" class="hover:text-white transition">Contact Us</a></li>
+                        <li><a href="<?php echo url('store.php'); ?>" class="hover:text-white transition">Our Store</a></li>
+                        <li><a href="<?php echo url('location.php'); ?>" class="hover:text-white transition">Store Location</a></li>
+                        <li><a href="<?php echo url('faq.php'); ?>" class="hover:text-white transition">FAQ</a></li>
                     </ul>
                 </div>
                 
@@ -56,12 +75,12 @@ if (!isset($baseUrl) && function_exists('getBaseUrl')) {
                 <div>
                     <h3 class="text-xl font-heading font-bold mb-4">Quick links</h3>
                     <ul class="space-y-2 text-gray-400">
-                        <li><a href="<?php echo $baseUrl; ?>/privacy.php" class="hover:text-white transition">Privacy Policy</a></li>
-                        <li><a href="<?php echo $baseUrl; ?>/terms.php" class="hover:text-white transition">Terms & Conditions</a></li>
-                        <li><a href="<?php echo $baseUrl; ?>/sale.php" class="hover:text-white transition">Sale</a></li>
-                        <li><a href="<?php echo $baseUrl; ?>/size-guide.php" class="hover:text-white transition">Size guide</a></li>
-                        <li><a href="<?php echo $baseUrl; ?>/wishlist.php" class="hover:text-white transition">Wishlist</a></li>
-                        <li><a href="<?php echo $baseUrl; ?>/compare.php" class="hover:text-white transition">Compare</a></li>
+                        <li><a href="<?php echo url('privacy.php'); ?>" class="hover:text-white transition">Privacy Policy</a></li>
+                        <li><a href="<?php echo url('terms.php'); ?>" class="hover:text-white transition">Terms & Conditions</a></li>
+                        <li><a href="<?php echo url('sale.php'); ?>" class="hover:text-white transition">Sale</a></li>
+                        <li><a href="<?php echo url('size-guide.php'); ?>" class="hover:text-white transition">Size guide</a></li>
+                        <li><a href="<?php echo url('wishlist.php'); ?>" class="hover:text-white transition">Wishlist</a></li>
+                        <li><a href="<?php echo url('compare.php'); ?>" class="hover:text-white transition">Compare</a></li>
                     </ul>
                 </div>
                 
@@ -69,11 +88,11 @@ if (!isset($baseUrl) && function_exists('getBaseUrl')) {
                 <div>
                     <h3 class="text-xl font-heading font-bold mb-4">Shop Categories</h3>
                     <ul class="space-y-2 text-gray-400">
-                        <li><a href="<?php echo $baseUrl; ?>/category.php?cat=bracelets" class="hover:text-white transition">Bracelets</a></li>
-                        <li><a href="<?php echo $baseUrl; ?>/category.php?cat=earrings" class="hover:text-white transition">Earrings</a></li>
-                        <li><a href="<?php echo $baseUrl; ?>/category.php?cat=rings" class="hover:text-white transition">Rings</a></li>
-                        <li><a href="<?php echo $baseUrl; ?>/category.php?cat=necklaces" class="hover:text-white transition">Necklaces</a></li>
-                        <li><a href="<?php echo $baseUrl; ?>/category.php?cat=jewelry-sets" class="hover:text-white transition">Jewelry Sets</a></li>
+                        <li><a href="<?php echo url('category.php?cat=bracelets'); ?>" class="hover:text-white transition">Bracelets</a></li>
+                        <li><a href="<?php echo url('category.php?cat=earrings'); ?>" class="hover:text-white transition">Earrings</a></li>
+                        <li><a href="<?php echo url('category.php?cat=rings'); ?>" class="hover:text-white transition">Rings</a></li>
+                        <li><a href="<?php echo url('category.php?cat=necklaces'); ?>" class="hover:text-white transition">Necklaces</a></li>
+                        <li><a href="<?php echo url('category.php?cat=jewelry-sets'); ?>" class="hover:text-white transition">Jewelry Sets</a></li>
                     </ul>
                 </div>
                 
@@ -210,12 +229,12 @@ if (!isset($baseUrl) && function_exists('getBaseUrl')) {
                     <span class="text-lg font-semibold">Total:</span>
                     <span class="text-xl font-bold" id="cartTotal">$0.00</span>
                 </div>
-                <a href="<?php echo $baseUrl; ?>/cart.php" class="block w-full bg-primary text-white text-center py-3 rounded-lg hover:bg-primary-dark transition mb-2">
-                    View Cart
-                </a>
-                <a href="<?php echo $baseUrl; ?>/checkout.php" class="block w-full bg-black text-white text-center py-3 rounded-lg hover:bg-gray-800 transition">
-                    Checkout
-                </a>
+                        <a href="<?php echo url('cart.php'); ?>" class="block w-full bg-primary text-white text-center py-3 rounded-lg hover:bg-primary-dark transition mb-2">
+                            View Cart
+                        </a>
+                        <a href="<?php echo url('checkout.php'); ?>" class="block w-full bg-black text-white text-center py-3 rounded-lg hover:bg-gray-800 transition">
+                            Checkout
+                        </a>
             </div>
         </div>
     </div>

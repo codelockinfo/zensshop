@@ -93,7 +93,8 @@ function loadCart() {
 // Refresh cart from API
 async function refreshCart() {
     try {
-        const response = await fetch((typeof BASE_URL !== 'undefined' ? BASE_URL : '/zensshop') + '/api/cart.php', {
+        const baseUrl = typeof BASE_URL !== 'undefined' ? BASE_URL : window.location.pathname.split('/').slice(0, -1).join('/') || '';
+        const response = await fetch(baseUrl + '/api/cart.php', {
             method: 'GET',
             headers: {
                 'Content-Type': 'application/json',
@@ -120,7 +121,8 @@ async function refreshCart() {
 // Add to cart
 async function addToCart(productId, quantity = 1) {
     try {
-        const response = await fetch((typeof BASE_URL !== 'undefined' ? BASE_URL : '/zensshop') + '/api/cart.php', {
+        const baseUrl = typeof BASE_URL !== 'undefined' ? BASE_URL : window.location.pathname.split('/').slice(0, -1).join('/') || '';
+        const response = await fetch(baseUrl + '/api/cart.php', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
@@ -170,7 +172,8 @@ async function addToCart(productId, quantity = 1) {
 // Update cart item quantity
 async function updateCartItem(productId, quantity) {
     try {
-        const response = await fetch((typeof BASE_URL !== 'undefined' ? BASE_URL : '/zensshop') + '/api/cart.php', {
+        const baseUrl = typeof BASE_URL !== 'undefined' ? BASE_URL : window.location.pathname.split('/').slice(0, -1).join('/') || '';
+        const response = await fetch(baseUrl + '/api/cart.php', {
             method: 'PUT',
             headers: {
                 'Content-Type': 'application/json',
@@ -204,7 +207,8 @@ async function updateCartItem(productId, quantity) {
 // Remove from cart
 async function removeFromCart(productId) {
     try {
-        const response = await fetch((typeof BASE_URL !== 'undefined' ? BASE_URL : '/zensshop') + '/api/cart.php', {
+        const baseUrl = typeof BASE_URL !== 'undefined' ? BASE_URL : window.location.pathname.split('/').slice(0, -1).join('/') || '';
+        const response = await fetch(baseUrl + '/api/cart.php', {
             method: 'DELETE',
             headers: {
                 'Content-Type': 'application/json',
@@ -278,10 +282,10 @@ function updateCartUI() {
             // Use placeholder SVG
             imageUrl = 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iODAiIGhlaWdodD0iODAiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+PHJlY3Qgd2lkdGg9IjgwIiBoZWlnaHQ9IjgwIiBmaWxsPSIjRjNGNEY2Ii8+PGNpcmNsZSBjeD0iNDAiIGN5PSI0MCIgcj0iMjAiIGZpbGw9IiM5QjdBOEEiLz48L3N2Zz4=';
         } else if (imageUrl.indexOf('http') !== 0 && imageUrl.indexOf('/') !== 0 && imageUrl.indexOf('data:') !== 0) {
-            const baseUrl = typeof BASE_URL !== 'undefined' ? BASE_URL : '/zensshop';
+            const baseUrl = typeof BASE_URL !== 'undefined' ? BASE_URL : window.location.pathname.split('/').slice(0, -1).join('/') || '';
             imageUrl = baseUrl + '/assets/images/uploads/' + imageUrl;
         } else if (imageUrl.indexOf('/') !== 0 && imageUrl.indexOf('http') !== 0 && imageUrl.indexOf('data:') !== 0) {
-            const baseUrl = typeof BASE_URL !== 'undefined' ? BASE_URL : '/zensshop';
+            const baseUrl = typeof BASE_URL !== 'undefined' ? BASE_URL : window.location.pathname.split('/').slice(0, -1).join('/') || '';
             imageUrl = baseUrl + imageUrl;
         }
         
