@@ -60,16 +60,6 @@ if (!function_exists('url')) {
                 </div>
                 
                 <!-- Our Company -->
-<<<<<<< HEAD
-                <div class="column w-full md:w-1/2 lg:w-1/5 px-4 mb-8 lg:mb-0">
-                    <h3 class="text-lg font-sans mb-4 text-black nav-link">Our Company</h3>
-                    <ul class="space-y-2 text-black">
-                        <li><a href="<?php echo $baseUrl; ?>/about.php" class="hover:underline transition text-sm">About Us</a></li>
-                        <li><a href="<?php echo $baseUrl; ?>/contact.php" class="hover:underline transition text-sm">Contact Us</a></li>
-                        <li><a href="<?php echo $baseUrl; ?>/store.php" class="hover:underline transition text-sm">Our Store</a></li>
-                        <li><a href="<?php echo $baseUrl; ?>/location.php" class="hover:underline transition text-sm">Store Location</a></li>
-                        <li><a href="<?php echo $baseUrl; ?>/faq.php" class="hover:underline transition text-sm">FAQ</a></li>
-=======
                 <div>
                     <h3 class="text-xl font-heading font-bold mb-4">Our Company</h3>
                     <ul class="space-y-2 text-gray-400">
@@ -78,22 +68,10 @@ if (!function_exists('url')) {
                         <li><a href="<?php echo url('store.php'); ?>" class="hover:text-white transition">Our Store</a></li>
                         <li><a href="<?php echo url('location.php'); ?>" class="hover:text-white transition">Store Location</a></li>
                         <li><a href="<?php echo url('faq.php'); ?>" class="hover:text-white transition">FAQ</a></li>
->>>>>>> 5aa54fc0cb148caa3bfa1b1934e77cd32de95694
                     </ul>
                 </div>
                 
                 <!-- Quick Links -->
-<<<<<<< HEAD
-                <div class="column w-full md:w-1/2 lg:w-1/5 px-4 mb-8 lg:mb-0">
-                    <h3 class="text-lg font-sans mb-4 text-black nav-link">Quick links</h3>
-                    <ul class="space-y-2 text-black">
-                        <li><a href="<?php echo $baseUrl; ?>/privacy.php" class="hover:underline transition text-sm">Privacy Policy</a></li>
-                        <li><a href="<?php echo $baseUrl; ?>/terms.php" class="hover:underline transition text-sm">Terms & Conditions</a></li>
-                        <li><a href="<?php echo $baseUrl; ?>/sale.php" class="hover:underline transition text-sm">Sale</a></li>
-                        <li><a href="<?php echo $baseUrl; ?>/size-guide.php" class="hover:underline transition text-sm">Size guide</a></li>
-                        <li><a href="<?php echo $baseUrl; ?>/wishlist.php" class="hover:underline transition text-sm">Wishlist</a></li>
-                        <li><a href="<?php echo $baseUrl; ?>/compare.php" class="hover:underline transition text-sm">Compare</a></li>
-=======
                 <div>
                     <h3 class="text-xl font-heading font-bold mb-4">Quick links</h3>
                     <ul class="space-y-2 text-gray-400">
@@ -103,21 +81,10 @@ if (!function_exists('url')) {
                         <li><a href="<?php echo url('size-guide.php'); ?>" class="hover:text-white transition">Size guide</a></li>
                         <li><a href="<?php echo url('wishlist.php'); ?>" class="hover:text-white transition">Wishlist</a></li>
                         <li><a href="<?php echo url('compare.php'); ?>" class="hover:text-white transition">Compare</a></li>
->>>>>>> 5aa54fc0cb148caa3bfa1b1934e77cd32de95694
                     </ul>
                 </div>
                 
                 <!-- Shop Categories -->
-<<<<<<< HEAD
-                <div class="column w-full md:w-1/2 lg:w-1/5 px-4 mb-8 lg:mb-0">
-                    <h3 class="text-lg font-sans mb-4 text-black nav-link">Shop Categories</h3>
-                    <ul class="space-y-2 text-black">
-                        <li><a href="<?php echo $baseUrl; ?>/category.php?cat=bracelets" class="hover:underline transition text-sm">Bracelets</a></li>
-                        <li><a href="<?php echo $baseUrl; ?>/category.php?cat=earrings" class="hover:underline transition text-sm">Earrings</a></li>
-                        <li><a href="<?php echo $baseUrl; ?>/category.php?cat=rings" class="hover:underline transition text-sm">Rings</a></li>
-                        <li><a href="<?php echo $baseUrl; ?>/category.php?cat=necklaces" class="hover:underline transition text-sm">Necklaces</a></li>
-                        <li><a href="<?php echo $baseUrl; ?>/category.php?cat=jewelry-sets" class="hover:underline transition text-sm">Jewelry Sets</a></li>
-=======
                 <div>
                     <h3 class="text-xl font-heading font-bold mb-4">Shop Categories</h3>
                     <ul class="space-y-2 text-gray-400">
@@ -126,7 +93,6 @@ if (!function_exists('url')) {
                         <li><a href="<?php echo url('category.php?cat=rings'); ?>" class="hover:text-white transition">Rings</a></li>
                         <li><a href="<?php echo url('category.php?cat=necklaces'); ?>" class="hover:text-white transition">Necklaces</a></li>
                         <li><a href="<?php echo url('category.php?cat=jewelry-sets'); ?>" class="hover:text-white transition">Jewelry Sets</a></li>
->>>>>>> 5aa54fc0cb148caa3bfa1b1934e77cd32de95694
                     </ul>
                 </div>
                 
