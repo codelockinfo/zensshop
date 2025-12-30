@@ -29,7 +29,7 @@ if (!isset($baseUrl)) {
                 </button>
                 
                 <p class="text-xs text-gray-500 text-center">
-                    By subscribing, you agree to our <a href="<?php echo url('privacy.php'); ?>" class="underline">Privacy Policy</a> and consent to receive updates from our company.
+                    By subscribing, you agree to our <a href="<?php echo $baseUrl; ?>/privacy.php" class="underline">Privacy Policy</a> and consent to receive updates from our company.
                 </p>
             </form>
         </div>
@@ -42,8 +42,8 @@ document.getElementById('newsletterForm')?.addEventListener('submit', async func
     const email = this.querySelector('input[name="email"]').value;
     
     try {
-        const baseUrl = typeof BASE_URL !== 'undefined' ? BASE_URL : '<?php echo isset($baseUrl) ? $baseUrl : (function_exists("getBaseUrl") ? getBaseUrl() : "/zensshop"); ?>';
-        const response = await fetch(baseUrl + '/api/newsletter', {
+        const baseUrl = typeof BASE_URL !== 'undefined' ? BASE_URL : '<?php echo $baseUrl; ?>';
+        const response = await fetch(baseUrl + '/api/newsletter.php', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ email: email })

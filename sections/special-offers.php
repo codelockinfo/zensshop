@@ -6,22 +6,22 @@ $offers = [
     [
         'title' => 'Limited Time Deals',
         'image' => 'https://images.unsplash.com/photo-1603561591411-07134e71a2a9?w=600&h=400&fit=crop',
-        'link' => url('shop.php?filter=deals')
+        'link' => $baseUrl . '/shop.php?filter=deals'
     ],
     [
         'title' => 'Glamorous Essence',
         'image' => 'https://images.unsplash.com/photo-1611591437281-460bfbe1220a?w=600&h=400&fit=crop',
-        'link' => url('shop.php?filter=glamorous')
+        'link' => $baseUrl . '/shop.php?filter=glamorous'
     ],
     [
         'title' => 'Ethereal Beauty',
         'image' => 'https://images.unsplash.com/photo-1599643478518-a784e5dc4c8f?w=600&h=400&fit=crop',
-        'link' => url('shop.php?filter=ethereal')
+        'link' => $baseUrl . '/shop.php?filter=ethereal'
     ],
     [
         'title' => 'Delicate Sparkle',
         'image' => 'https://images.unsplash.com/photo-1605100804763-247f67b3557e?w=600&h=400&fit=crop',
-        'link' => url('shop.php?filter=sparkle')
+        'link' => $baseUrl . '/shop.php?filter=sparkle'
     ]
 ];
 ?>

@@ -10,15 +10,12 @@ require_once __DIR__ . '/includes/functions.php';
 $product = new Product();
 $db = Database::getInstance();
 
-// Get base URL for redirects
-$baseUrl = getBaseUrl();
-
 // Get product slug from URL
 $slug = $_GET['slug'] ?? '';
 
 if (empty($slug)) {
     ob_end_clean(); // Clear any buffered output
-    header('Location: ' . $baseUrl . '/');
+    header('Location: <?php echo $baseUrl; ?>/');
     exit;
 }
 
@@ -27,7 +24,7 @@ $productData = $product->getBySlug($slug);
 
 if (!$productData || $productData['status'] !== 'active') {
     ob_end_clean(); // Clear any buffered output
-    header('Location: ' . $baseUrl . '/');
+    header('Location: <?php echo $baseUrl; ?>/');
     exit;
 }
 

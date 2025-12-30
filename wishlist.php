@@ -73,7 +73,7 @@ require_once __DIR__ . '/includes/header.php';
                     </button>
                     
                     <!-- Product Image -->
-                    <a href="<?php echo url('product.php?slug=' . urlencode($item['slug'] ?? '')); ?>">
+                    <a href="<?php echo $baseUrl; ?>/product.php?slug=<?php echo htmlspecialchars($item['slug'] ?? ''); ?>">
                         <div class="relative overflow-hidden bg-gray-100" style="padding-top: 100%;">
                             <?php 
                             $imageUrl = $item['image'] ?? '';

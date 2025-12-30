@@ -6,25 +6,6 @@ if (!isset($baseUrl) && function_exists('getBaseUrl')) {
     require_once __DIR__ . '/functions.php';
     $baseUrl = getBaseUrl();
 }
-
-// Ensure url() function is available
-if (!function_exists('url')) {
-    function url($path = '') {
-        $baseUrl = getBaseUrl();
-        $path = ltrim($path, '/');
-        $queryString = '';
-        if (strpos($path, '?') !== false) {
-            $parts = explode('?', $path, 2);
-            $path = $parts[0];
-            $queryString = '?' . $parts[1];
-        }
-        $path = preg_replace('/\.php$/', '', $path);
-        if (empty($path)) {
-            return $baseUrl . '/' . $queryString;
-        }
-        return $baseUrl . '/' . $path . $queryString;
-    }
-}
 ?>
     <!-- Footer -->
     <footer class="bg-white text-black mt-20 relative">
@@ -34,71 +15,71 @@ if (!function_exists('url')) {
                 <div class="column w-full md:w-1/2 lg:w-1/5 px-4 mb-8 lg:mb-0">
                     <h3 class="text-lg font-sans font-bold mb-4 text-black">About us</h3>
                     <p class="text-black mb-4 text-sm leading-relaxed">We only carry designs we believe in ethically and aesthetically – original, authentic pieces that are made to last.</p>
-                    <a href="<?php echo url('about.php'); ?>" class="text-black underline hover:no-underline transition text-sm mb-4 inline-block">Learn more</a>
+                    <a href="<?php echo $baseUrl; ?>/about.php" class="text-black underline hover:no-underline transition text-sm mb-4 inline-block">Learn more</a>
                     <div class="space-y-2 text-black mt-4">
                         <p class="flex items-center text-sm"><i class="fas fa-map-marker-alt mr-2 text-sm"></i>Street Address 2571 Oakridge</p>
                         <p class="flex items-center text-sm"><i class="fas fa-phone mr-2 text-sm"></i>+1 (973) 435-3638</p>
                         <p class="flex items-center text-sm"><i class="fas fa-envelope mr-2 text-sm"></i>info@fashionwomen.com</p>
                     </div>
                     <div class="flex space-x-3 mt-4">
-                        <a href="#" class="footer-social-icon w-8 h-8 rounded-full border border-gray-300 bg-white flex items-center justify-center hover:bg-gray-100 transition">
-                            <i class="fab fa-facebook-f text-sm text-gray-700"></i>
+                        <a href="#" class="footer-social-icon w-8 h-8 rounded-full border border-black bg-white flex items-center justify-center hover:bg-black transition">
+                            <i class="fab fa-facebook-f text-sm text-black hover:text-white transition"></i>
                         </a>
-                        <a href="#" class="footer-social-icon w-8 h-8 rounded-full border border-gray-300 bg-white flex items-center justify-center hover:bg-gray-100 transition">
-                            <i class="fab fa-instagram text-sm text-gray-700"></i>
+                        <a href="#" class="footer-social-icon w-8 h-8 rounded-full border border-black bg-white flex items-center justify-center hover:bg-black transition">
+                            <i class="fab fa-instagram text-sm text-black hover:text-white transition"></i>
                         </a>
-                        <a href="#" class="footer-social-icon w-8 h-8 rounded-full border border-gray-300 bg-white flex items-center justify-center hover:bg-gray-100 transition">
-                            <i class="fab fa-tiktok text-sm text-gray-700"></i>
+                        <a href="#" class="footer-social-icon w-8 h-8 rounded-full border border-black bg-white flex items-center justify-center hover:bg-black transition">
+                            <i class="fab fa-tiktok text-sm text-black hover:text-white transition"></i>
                         </a>
-                        <a href="#" class="footer-social-icon w-8 h-8 rounded-full border border-gray-300 bg-white flex items-center justify-center hover:bg-gray-100 transition">
-                            <i class="fab fa-youtube text-sm text-gray-700"></i>
+                        <a href="#" class="footer-social-icon w-8 h-8 rounded-full border border-black bg-white flex items-center justify-center hover:bg-black transition">
+                            <i class="fab fa-youtube text-sm text-black hover:text-white transition"></i>
                         </a>
-                        <a href="#" class="footer-social-icon w-8 h-8 rounded-full border border-gray-300 bg-white flex items-center justify-center hover:bg-gray-100 transition">
-                            <i class="fab fa-pinterest-p text-sm text-gray-700"></i>
+                        <a href="#" class="footer-social-icon w-8 h-8 rounded-full border border-black bg-white flex items-center justify-center hover:bg-black transition">
+                            <i class="fab fa-pinterest-p text-sm text-black hover:text-white transition"></i>
                         </a>
                     </div>
                 </div>
                 
                 <!-- Our Company -->
-                <div>
-                    <h3 class="text-xl font-heading font-bold mb-4">Our Company</h3>
-                    <ul class="space-y-2 text-gray-400">
-                        <li><a href="<?php echo url('about.php'); ?>" class="hover:text-white transition">About Us</a></li>
-                        <li><a href="<?php echo url('contact.php'); ?>" class="hover:text-white transition">Contact Us</a></li>
-                        <li><a href="<?php echo url('store.php'); ?>" class="hover:text-white transition">Our Store</a></li>
-                        <li><a href="<?php echo url('location.php'); ?>" class="hover:text-white transition">Store Location</a></li>
-                        <li><a href="<?php echo url('faq.php'); ?>" class="hover:text-white transition">FAQ</a></li>
+                <div class="column w-full md:w-1/2 lg:w-1/5 px-4 mb-8 lg:mb-0">
+                    <h3 class="text-lg font-sans font-bold mb-4 text-black">Our Company</h3>
+                    <ul class="space-y-2 text-black">
+                        <li><a href="<?php echo $baseUrl; ?>/about.php" class="hover:underline transition text-sm">About Us</a></li>
+                        <li><a href="<?php echo $baseUrl; ?>/contact.php" class="hover:underline transition text-sm">Contact Us</a></li>
+                        <li><a href="<?php echo $baseUrl; ?>/store.php" class="hover:underline transition text-sm">Our Store</a></li>
+                        <li><a href="<?php echo $baseUrl; ?>/location.php" class="hover:underline transition text-sm">Store Location</a></li>
+                        <li><a href="<?php echo $baseUrl; ?>/faq.php" class="hover:underline transition text-sm">FAQ</a></li>
                     </ul>
                 </div>
                 
                 <!-- Quick Links -->
-                <div>
-                    <h3 class="text-xl font-heading font-bold mb-4">Quick links</h3>
-                    <ul class="space-y-2 text-gray-400">
-                        <li><a href="<?php echo url('privacy.php'); ?>" class="hover:text-white transition">Privacy Policy</a></li>
-                        <li><a href="<?php echo url('terms.php'); ?>" class="hover:text-white transition">Terms & Conditions</a></li>
-                        <li><a href="<?php echo url('sale.php'); ?>" class="hover:text-white transition">Sale</a></li>
-                        <li><a href="<?php echo url('size-guide.php'); ?>" class="hover:text-white transition">Size guide</a></li>
-                        <li><a href="<?php echo url('wishlist.php'); ?>" class="hover:text-white transition">Wishlist</a></li>
-                        <li><a href="<?php echo url('compare.php'); ?>" class="hover:text-white transition">Compare</a></li>
+                <div class="column w-full md:w-1/2 lg:w-1/5 px-4 mb-8 lg:mb-0">
+                    <h3 class="text-lg font-sans font-bold mb-4 text-black">Quick links</h3>
+                    <ul class="space-y-2 text-black">
+                        <li><a href="<?php echo $baseUrl; ?>/privacy.php" class="hover:underline transition text-sm">Privacy Policy</a></li>
+                        <li><a href="<?php echo $baseUrl; ?>/terms.php" class="hover:underline transition text-sm">Terms & Conditions</a></li>
+                        <li><a href="<?php echo $baseUrl; ?>/sale.php" class="hover:underline transition text-sm">Sale</a></li>
+                        <li><a href="<?php echo $baseUrl; ?>/size-guide.php" class="hover:underline transition text-sm">Size guide</a></li>
+                        <li><a href="<?php echo $baseUrl; ?>/wishlist.php" class="hover:underline transition text-sm">Wishlist</a></li>
+                        <li><a href="<?php echo $baseUrl; ?>/compare.php" class="hover:underline transition text-sm">Compare</a></li>
                     </ul>
                 </div>
                 
                 <!-- Shop Categories -->
-                <div>
-                    <h3 class="text-xl font-heading font-bold mb-4">Shop Categories</h3>
-                    <ul class="space-y-2 text-gray-400">
-                        <li><a href="<?php echo url('category.php?cat=bracelets'); ?>" class="hover:text-white transition">Bracelets</a></li>
-                        <li><a href="<?php echo url('category.php?cat=earrings'); ?>" class="hover:text-white transition">Earrings</a></li>
-                        <li><a href="<?php echo url('category.php?cat=rings'); ?>" class="hover:text-white transition">Rings</a></li>
-                        <li><a href="<?php echo url('category.php?cat=necklaces'); ?>" class="hover:text-white transition">Necklaces</a></li>
-                        <li><a href="<?php echo url('category.php?cat=jewelry-sets'); ?>" class="hover:text-white transition">Jewelry Sets</a></li>
+                <div class="column w-full md:w-1/2 lg:w-1/5 px-4 mb-8 lg:mb-0">
+                    <h3 class="text-lg font-sans font-bold mb-4 text-black">Shop Categories</h3>
+                    <ul class="space-y-2 text-black">
+                        <li><a href="<?php echo $baseUrl; ?>/category.php?cat=bracelets" class="hover:underline transition text-sm">Bracelets</a></li>
+                        <li><a href="<?php echo $baseUrl; ?>/category.php?cat=earrings" class="hover:underline transition text-sm">Earrings</a></li>
+                        <li><a href="<?php echo $baseUrl; ?>/category.php?cat=rings" class="hover:underline transition text-sm">Rings</a></li>
+                        <li><a href="<?php echo $baseUrl; ?>/category.php?cat=necklaces" class="hover:underline transition text-sm">Necklaces</a></li>
+                        <li><a href="<?php echo $baseUrl; ?>/category.php?cat=jewelry-sets" class="hover:underline transition text-sm">Jewelry Sets</a></li>
                     </ul>
                 </div>
                 
                 <!-- Follow Us -->
                 <div class="column w-full md:w-1/2 lg:w-1/5 px-4 mb-8 lg:mb-0">
-                    <h3 class="text-lg font-sans mb-4 text-black nav-link">Follow Us</h3>
+                    <h3 class="text-lg font-sans font-bold mb-4 text-black">Follow Us</h3>
                     <ul class="space-y-2 text-black">
                         <li><a href="#" class="hover:underline transition text-sm">Facebook</a></li>
                         <li><a href="#" class="hover:underline transition text-sm">Instagram</a></li>
@@ -200,10 +181,7 @@ if (!function_exists('url')) {
         
         <!-- Back to Top Button -->
         <button id="backToTop" class="fixed bottom-8 right-8 w-12 h-12 bg-black text-white rounded-full flex items-center justify-center hover:bg-gray-800 transition shadow-lg z-40 hidden">
-            <svg width="14" height="14" viewBox="0 0 14 14" fill="none" xmlns="http://www.w3.org/2000/svg">
-                <path d="M7 10L7 4M7 4L3 8M7 4L11 8" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
-                <path d="M7 8L7 2M7 2L3 6M7 2L11 6" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" opacity="0.7"/>
-            </svg>
+            <i class="fas fa-chevron-up text-lg"></i>
         </button>
     </footer>
     
@@ -232,12 +210,12 @@ if (!function_exists('url')) {
                     <span class="text-lg font-semibold">Total:</span>
                     <span class="text-xl font-bold" id="cartTotal">$0.00</span>
                 </div>
-                        <a href="<?php echo url('cart.php'); ?>" class="block w-full bg-primary text-white text-center py-3 rounded-lg hover:bg-primary-dark transition mb-2">
-                            View Cart
-                        </a>
-                        <a href="<?php echo url('checkout.php'); ?>" class="block w-full bg-black text-white text-center py-3 rounded-lg hover:bg-gray-800 transition">
-                            Checkout
-                        </a>
+                <a href="<?php echo $baseUrl; ?>/cart.php" class="block w-full bg-primary text-white text-center py-3 rounded-lg hover:bg-primary-dark transition mb-2">
+                    View Cart
+                </a>
+                <a href="<?php echo $baseUrl; ?>/checkout.php" class="block w-full bg-black text-white text-center py-3 rounded-lg hover:bg-gray-800 transition">
+                    Checkout
+                </a>
             </div>
         </div>
     </div>
