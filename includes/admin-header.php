@@ -37,7 +37,25 @@ $currentUser = $auth->getCurrentUser();
         </div>
         
         <div class="flex items-center space-x-4">
-            <input type="text" placeholder="Search here..." class="px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm">
+            <!-- Search Container -->
+            <div class="relative admin-search-container">
+                <input type="text" 
+                       id="adminSearchInput"
+                       placeholder="Search here..." 
+                       class="px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm w-64"
+                       autocomplete="off">
+                <div id="adminSearchResults" class="admin-search-results hidden">
+                    <div class="admin-search-loading hidden">
+                        <div class="flex items-center justify-center p-4">
+                            <i class="fas fa-spinner fa-spin text-gray-400"></i>
+                            <span class="ml-2 text-sm text-gray-500">Searching...</span>
+                        </div>
+                    </div>
+                    <div id="adminSearchResultsContent" class="admin-search-results-content">
+                        <!-- Results will be populated here -->
+                    </div>
+                </div>
+            </div>
             <button class="text-gray-600 hover:text-gray-800">
                 <i class="fas fa-globe text-xl"></i>
             </button>

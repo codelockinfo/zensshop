@@ -138,6 +138,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
 // Now include header after POST processing
 $pageTitle = 'Edit Product';
+require_once __DIR__ . '/../../includes/functions.php';
 require_once __DIR__ . '/../../includes/admin-header.php';
 
 $categories = $db->fetchAll("SELECT * FROM categories WHERE status = 'active' ORDER BY name");
