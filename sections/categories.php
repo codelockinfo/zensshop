@@ -41,3 +41,4 @@ $categories = $db->fetchAll(
     </div>
 </section>
 
+

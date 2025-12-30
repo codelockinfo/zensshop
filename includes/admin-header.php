@@ -58,10 +58,16 @@ $currentUser = $auth->getCurrentUser();
                 <div class="flex items-center space-x-2 cursor-pointer user-profile-trigger">
                     <?php 
                     $profileImage = $currentUser['profile_image'] ?? null;
-                    if ($profileImage && file_exists(__DIR__ . '/../' . ltrim($profileImage, '/'))) {
-                        $imageUrl = $profileImage;
-                    } else {
-                        $imageUrl = '/oecom/assets/images/default-avatar.svg';
+                    $imageUrl = '/oecom/assets/images/default-avatar.svg';
+                    
+                    if ($profileImage) {
+                        // Remove leading slash and convert to file path
+                        $imagePath = str_replace('/oecom/', '', $profileImage);
+                        $fullPath = __DIR__ . '/../' . $imagePath;
+                        
+                        if (file_exists($fullPath)) {
+                            $imageUrl = $profileImage;
+                        }
                     }
                     ?>
                     <img src="<?php echo htmlspecialchars($imageUrl); ?>" 

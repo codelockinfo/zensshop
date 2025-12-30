@@ -98,3 +98,4 @@ document.addEventListener('DOMContentLoaded', function() {
 window.showNotificationModal = showNotificationModal;
 window.closeNotificationModal = closeNotificationModal;
 
+

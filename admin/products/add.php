@@ -78,6 +78,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             }
         }
         
+        // Handle variants data
+        if (!empty($_POST['variants_data'])) {
+            $variantsData = json_decode($_POST['variants_data'], true);
+            if (is_array($variantsData)) {
+                $data['variants'] = $variantsData;
+            }
+        }
+        
         $productId = $retryHandler->executeWithRetry(
             function() use ($product, $data) {
                 return $product->create($data);
@@ -233,18 +241,46 @@ $categories = $db->fetchAll("SELECT * FROM categories WHERE status = 'active' OR
         </div>
         
         <div class="admin-card">
-            <h2 class="text-xl font-bold mb-4">Add size</h2>
-            <select class="admin-form-select mb-4">
-                <option>EU - 44</option>
-            </select>
-            <div class="flex flex-wrap gap-2">
-                <button type="button" class="px-4 py-2 border rounded hover:bg-gray-100">EU - 38.5</button>
-                <button type="button" class="px-4 py-2 border rounded hover:bg-gray-100">EU - 39</button>
-                <button type="button" class="px-4 py-2 border rounded hover:bg-gray-100">EU - 40</button>
-                <button type="button" class="px-4 py-2 border rounded hover:bg-gray-100">EU - 41.5</button>
-                <button type="button" class="px-4 py-2 border rounded hover:bg-gray-100">EU - 42</button>
-                <button type="button" class="px-4 py-2 border rounded hover:bg-gray-100">EU - 43</button>
+            <h2 class="text-xl font-bold mb-4">Product Variants</h2>
+            <p class="text-sm text-gray-600 mb-4">Add variant options like Size, Color, Material, etc. (Maximum 2 options)</p>
+            
+            <!-- Variant Options Container -->
+            <div id="variantOptionsContainer" class="space-y-4 mb-4">
+                <!-- Variant options will be added here dynamically -->
             </div>
+            
+            <!-- Add Variant Option Button -->
+            <button type="button" 
+                    id="addVariantOptionBtn" 
+                    class="admin-btn border border-blue-500 text-blue-500 mb-4"
+                    onclick="addVariantOption()">
+                <i class="fas fa-plus mr-2"></i>Add Variant Option
+            </button>
+            
+            <!-- Generated Variants Table -->
+            <div id="variantsTableContainer" class="hidden">
+                <h3 class="text-lg font-semibold mb-3">Generated Variants</h3>
+                <div class="overflow-x-auto">
+                    <table class="w-full border-collapse border border-gray-300">
+                        <thead>
+                            <tr class="bg-gray-100">
+                                <th class="border border-gray-300 px-3 py-2 text-left">Variant</th>
+                                <th class="border border-gray-300 px-3 py-2 text-left">SKU</th>
+                                <th class="border border-gray-300 px-3 py-2 text-left">Price</th>
+                                <th class="border border-gray-300 px-3 py-2 text-left">Sale Price</th>
+                                <th class="border border-gray-300 px-3 py-2 text-left">Stock</th>
+                                <th class="border border-gray-300 px-3 py-2 text-left">Image</th>
+                            </tr>
+                        </thead>
+                        <tbody id="variantsTableBody">
+                            <!-- Variants will be added here -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+            
+            <!-- Hidden input to store variants data -->
+            <input type="hidden" name="variants_data" id="variantsDataInput" value="">
         </div>
         
         <div class="admin-card">
@@ -324,6 +360,7 @@ $categories = $db->fetchAll("SELECT * FROM categories WHERE status = 'active' OR
 </div>
 
 <script src="/oecom/assets/js/admin-image-upload.js"></script>
+<script src="/oecom/assets/js/product-variants.js"></script>
 
 <?php require_once __DIR__ . '/../../includes/admin-footer.php'; ?>
 

@@ -2,3 +2,4 @@
 ALTER TABLE `users` 
 ADD COLUMN `profile_image` varchar(255) DEFAULT NULL AFTER `email`;
 
+
