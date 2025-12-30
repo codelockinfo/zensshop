@@ -27,6 +27,7 @@
     
     <script src="/oecom/assets/js/admin.js"></script>
     <script src="/oecom/assets/js/admin-confirm.js"></script>
+    <script src="/oecom/assets/js/admin-search.js"></script>
     <?php endif; ?>
 </body>
 </html>
