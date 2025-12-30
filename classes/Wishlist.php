@@ -81,7 +81,13 @@ class Wishlist {
             
             // Convert to full URL if needed
             if (!empty($item['image']) && strpos($item['image'], 'http') !== 0 && strpos($item['image'], '/') !== 0 && strpos($item['image'], 'data:') !== 0) {
-                $item['image'] = '/oecom/assets/images/uploads/' . $item['image'];
+                if (defined('UPLOAD_URL')) {
+                    $item['image'] = UPLOAD_URL . '/' . $item['image'];
+                } else {
+                    require_once __DIR__ . '/../includes/functions.php';
+                    $baseUrl = getBaseUrl();
+                    $item['image'] = $baseUrl . '/assets/images/uploads/' . $item['image'];
+                }
             }
         }
         unset($item);
@@ -125,7 +131,13 @@ class Wishlist {
             
             // Convert to full URL if needed
             if (!empty($productImage) && strpos($productImage, 'http') !== 0 && strpos($productImage, '/') !== 0) {
-                $productImage = '/oecom/assets/images/uploads/' . $productImage;
+                if (defined('UPLOAD_URL')) {
+                    $productImage = UPLOAD_URL . '/' . $productImage;
+                } else {
+                    require_once __DIR__ . '/../includes/functions.php';
+                    $baseUrl = getBaseUrl();
+                    $productImage = $baseUrl . '/assets/images/uploads/' . $productImage;
+                }
             }
             
             $wishlistItems[] = [
@@ -176,7 +188,13 @@ class Wishlist {
         
         // Convert to full URL if needed
         if (!empty($productImage) && strpos($productImage, 'http') !== 0 && strpos($productImage, '/') !== 0) {
-            $productImage = '/oecom/assets/images/uploads/' . $productImage;
+            if (defined('UPLOAD_URL')) {
+                $productImage = UPLOAD_URL . '/' . $productImage;
+            } else {
+                require_once __DIR__ . '/../includes/functions.php';
+                $baseUrl = getBaseUrl();
+                $productImage = $baseUrl . '/assets/images/uploads/' . $productImage;
+            }
         }
         
         // Add new item

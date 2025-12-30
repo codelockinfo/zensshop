@@ -1,6 +1,8 @@
 <?php
 require_once __DIR__ . '/../classes/Auth.php';
+require_once __DIR__ . '/../includes/functions.php';
 
+$baseUrl = getBaseUrl();
 $auth = new Auth();
 $error = '';
 $success = '';
@@ -71,7 +73,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['new_password'])) {
         
         <?php if ($step === 'success'): ?>
         <div class="text-center">
-            <a href="/oecom/admin/index.php" class="inline-block bg-blue-500 text-white px-6 py-2 rounded-lg hover:bg-blue-600 transition">
+            <a href="<?php echo $baseUrl; ?>/admin/index.php" class="inline-block bg-blue-500 text-white px-6 py-2 rounded-lg hover:bg-blue-600 transition">
                 Go to Login
             </a>
         </div>
@@ -143,7 +145,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['new_password'])) {
         <?php endif; ?>
         
         <div class="mt-6 text-center">
-            <a href="/oecom/admin/forgot-password.php" class="text-blue-500 hover:text-blue-700">
+            <a href="<?php echo $baseUrl; ?>/admin/forgot-password.php" class="text-blue-500 hover:text-blue-700">
                 ← Back
             </a>
         </div>

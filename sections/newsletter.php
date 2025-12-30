@@ -1,3 +1,9 @@
+<?php
+if (!isset($baseUrl)) {
+    require_once __DIR__ . '/../includes/functions.php';
+    $baseUrl = getBaseUrl();
+}
+?>
 <section class="py-16 md:py-24 bg-gray-100 relative overflow-hidden">
     <div class="absolute inset-0 bg-cover bg-center opacity-20" style="background-image: url('https://images.unsplash.com/photo-1611591437281-460bfbe1220a?w=1200');"></div>
     
@@ -23,7 +29,7 @@
                 </button>
                 
                 <p class="text-xs text-gray-500 text-center">
-                    By subscribing, you agree to our <a href="/oecom/privacy.php" class="underline">Privacy Policy</a> and consent to receive updates from our company.
+                    By subscribing, you agree to our <a href="<?php echo $baseUrl; ?>/privacy.php" class="underline">Privacy Policy</a> and consent to receive updates from our company.
                 </p>
             </form>
         </div>
@@ -36,7 +42,8 @@ document.getElementById('newsletterForm')?.addEventListener('submit', async func
     const email = this.querySelector('input[name="email"]').value;
     
     try {
-        const response = await fetch('/oecom/api/newsletter.php', {
+        const baseUrl = typeof BASE_URL !== 'undefined' ? BASE_URL : '<?php echo $baseUrl; ?>';
+        const response = await fetch(baseUrl + '/api/newsletter.php', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ email: email })

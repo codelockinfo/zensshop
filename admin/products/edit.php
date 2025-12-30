@@ -3,7 +3,9 @@ require_once __DIR__ . '/../../classes/Auth.php';
 require_once __DIR__ . '/../../classes/Product.php';
 require_once __DIR__ . '/../../classes/Database.php';
 require_once __DIR__ . '/../../classes/RetryHandler.php';
+require_once __DIR__ . '/../../includes/functions.php';
 
+$baseUrl = getBaseUrl();
 $auth = new Auth();
 $auth->requireLogin();
 
@@ -15,14 +17,14 @@ $success = '';
 // Get product ID
 $productId = $_GET['id'] ?? null;
 if (!$productId) {
-    header('Location: /oecom/admin/products/list.php');
+    header('Location: ' . $baseUrl . '/admin/products/list.php');
     exit;
 }
 
 // Get product data
 $productData = $product->getById($productId);
 if (!$productData) {
-    header('Location: /oecom/admin/products/list.php');
+    header('Location: ' . $baseUrl . '/admin/products/list.php');
     exit;
 }
 
@@ -89,7 +91,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     $destination = $uploadDir . $newName;
                     
                     if (move_uploaded_file($tmpName, $destination)) {
-                        $uploadedImages[] = '/oecom/assets/images/uploads/' . $newName;
+                        $uploadedImages[] = $baseUrl . '/assets/images/uploads/' . $newName;
                     }
                 }
             }
@@ -129,7 +131,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         );
         
         // Redirect after successful update
-        header('Location: /oecom/admin/products/list.php?success=updated');
+        header('Location: ' . $baseUrl . '/admin/products/list.php?success=updated');
         exit;
     } catch (Exception $e) {
         $error = $e->getMessage();
@@ -383,7 +385,7 @@ $existingVariants = $product->getVariants($productId);
             <button type="submit" class="admin-btn admin-btn-primary flex-1">
                 Update product
             </button>
-            <a href="/oecom/admin/products/list.php" class="admin-btn border border-gray-300 text-gray-600 flex-1 text-center">
+            <a href="<?php echo $baseUrl; ?>/admin/products/list.php" class="admin-btn border border-gray-300 text-gray-600 flex-1 text-center">
                 Cancel
             </a>
         </div>
@@ -391,8 +393,11 @@ $existingVariants = $product->getVariants($productId);
     </div>
 </div>
 
-<script src="/oecom/assets/js/admin-image-upload.js"></script>
-<script src="/oecom/assets/js/product-variants.js"></script>
+<script>
+const BASE_URL = '<?php echo $baseUrl; ?>';
+</script>
+<script src="<?php echo $baseUrl; ?>/assets/js/admin-image-upload.js"></script>
+<script src="<?php echo $baseUrl; ?>/assets/js/product-variants.js"></script>
 <script>
 // Initialize with existing images
 document.addEventListener('DOMContentLoaded', function() {

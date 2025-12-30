@@ -1,13 +1,15 @@
 <?php
 require_once __DIR__ . '/../classes/Auth.php';
+require_once __DIR__ . '/../includes/functions.php';
 
+$baseUrl = getBaseUrl();
 $auth = new Auth();
 $error = '';
 $success = '';
 
 // Redirect if already logged in
 if ($auth->isLoggedIn()) {
-    header('Location: /oecom/admin/dashboard.php');
+    header('Location: ' . $baseUrl . '/admin/dashboard.php');
     exit;
 }
 
@@ -18,7 +20,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     
     try {
         $auth->login($email, $password);
-        header('Location: /oecom/admin/dashboard.php');
+        header('Location: ' . $baseUrl . '/admin/dashboard.php');
         exit;
     } catch (Exception $e) {
         $error = $e->getMessage();
@@ -78,7 +80,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             </div>
             
             <div class="mb-6">
-                <a href="/oecom/admin/forgot-password.php" class="text-blue-500 hover:text-blue-700 text-sm">
+                <a href="<?php echo $baseUrl; ?>/admin/forgot-password.php" class="text-blue-500 hover:text-blue-700 text-sm">
                     Forgot password?
                 </a>
             </div>
@@ -92,7 +94,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         <div class="mt-6 text-center">
             <p class="text-gray-600">
                 Don't have an account? 
-                <a href="/oecom/admin/register.php" class="text-blue-500 hover:text-blue-700">
+                <a href="<?php echo $baseUrl; ?>/admin/register.php" class="text-blue-500 hover:text-blue-700">
                     Register here
                 </a>
             </p>

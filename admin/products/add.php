@@ -3,7 +3,9 @@ require_once __DIR__ . '/../../classes/Auth.php';
 require_once __DIR__ . '/../../classes/Product.php';
 require_once __DIR__ . '/../../classes/Database.php';
 require_once __DIR__ . '/../../classes/RetryHandler.php';
+require_once __DIR__ . '/../../includes/functions.php';
 
+$baseUrl = getBaseUrl();
 $auth = new Auth();
 $auth->requireLogin();
 
@@ -65,7 +67,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     $destination = $uploadDir . $newName;
                     
                     if (move_uploaded_file($tmpName, $destination)) {
-                        $uploadedImages[] = '/oecom/assets/images/uploads/' . $newName;
+                        $uploadedImages[] = $baseUrl . '/assets/images/uploads/' . $newName;
                     }
                 }
             }
@@ -95,7 +97,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         );
         
         // Redirect before any output
-        header('Location: /oecom/admin/products/list.php');
+        header('Location: ' . $baseUrl . '/admin/products/list.php');
         exit;
     } catch (Exception $e) {
         $error = $e->getMessage();
@@ -359,8 +361,11 @@ $categories = $db->fetchAll("SELECT * FROM categories WHERE status = 'active' OR
     </div>
 </div>
 
-<script src="/oecom/assets/js/admin-image-upload.js"></script>
-<script src="/oecom/assets/js/product-variants.js"></script>
+<script>
+const BASE_URL = '<?php echo $baseUrl; ?>';
+</script>
+<script src="<?php echo $baseUrl; ?>/assets/js/admin-image-upload.js"></script>
+<script src="<?php echo $baseUrl; ?>/assets/js/product-variants.js"></script>
 
 <?php require_once __DIR__ . '/../../includes/admin-footer.php'; ?>
 

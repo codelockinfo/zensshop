@@ -15,7 +15,7 @@ $slug = $_GET['slug'] ?? '';
 
 if (empty($slug)) {
     ob_end_clean(); // Clear any buffered output
-    header('Location: /oecom/');
+    header('Location: <?php echo $baseUrl; ?>/');
     exit;
 }
 
@@ -24,7 +24,7 @@ $productData = $product->getBySlug($slug);
 
 if (!$productData || $productData['status'] !== 'active') {
     ob_end_clean(); // Clear any buffered output
-    header('Location: /oecom/');
+    header('Location: <?php echo $baseUrl; ?>/');
     exit;
 }
 
@@ -128,9 +128,9 @@ $_COOKIE['recently_viewed'] = json_encode($recentIds);
     <div class="container mx-auto px-4">
         <!-- Breadcrumbs -->
         <nav class="text-sm text-gray-600 mb-6">
-            <a href="/oecom/" class="hover:text-primary">Home</a> > 
+            <a href="<?php echo $baseUrl; ?>/" class="hover:text-primary">Home</a> > 
             <?php if ($primaryCategory): ?>
-            <a href="/oecom/shop.php?category=<?php echo urlencode($primaryCategory['slug']); ?>" class="hover:text-primary">
+            <a href="<?php echo $baseUrl; ?>/shop.php?category=<?php echo urlencode($primaryCategory['slug']); ?>" class="hover:text-primary">
                 <?php echo htmlspecialchars($primaryCategory['name']); ?>
             </a> > 
             <?php endif; ?>
@@ -430,7 +430,7 @@ $_COOKIE['recently_viewed'] = json_encode($recentIds);
                     $itemOriginalPrice = !empty($item['sale_price']) ? $item['price'] : null;
                     $itemDiscount = $itemOriginalPrice && $itemOriginalPrice > 0 ? round((($itemOriginalPrice - $itemPrice) / $itemOriginalPrice) * 100) : 0;
                 ?>
-                <a href="/oecom/product.php?slug=<?php echo urlencode($item['slug'] ?? ''); ?>" class="group">
+                <a href="<?php echo $baseUrl; ?>/product.php?slug=<?php echo urlencode($item['slug'] ?? ''); ?>" class="group">
                     <div class="bg-white rounded-lg overflow-hidden shadow-md hover:shadow-xl transition-all duration-300 relative">
                         <div class="relative overflow-hidden">
                             <img src="<?php echo htmlspecialchars($itemImage); ?>" 
@@ -478,7 +478,7 @@ $_COOKIE['recently_viewed'] = json_encode($recentIds);
                     $itemImage = getProductImage($item);
                     $itemPrice = $item['sale_price'] ?? $item['price'] ?? 0;
                 ?>
-                <a href="/oecom/product.php?slug=<?php echo urlencode($item['slug'] ?? ''); ?>" class="group">
+                <a href="<?php echo $baseUrl; ?>/product.php?slug=<?php echo urlencode($item['slug'] ?? ''); ?>" class="group">
                     <div class="bg-white rounded-lg overflow-hidden shadow-md hover:shadow-xl transition-all duration-300 relative">
                         <div class="relative overflow-hidden">
                             <img src="<?php echo htmlspecialchars($itemImage); ?>" 
@@ -569,7 +569,7 @@ function addToCartFromDetail(productId) {
         addToCart(productId, quantity);
     } else {
         // Fallback to direct API call
-        fetch('/oecom/api/cart.php', {
+        fetch('<?php echo $baseUrl; ?>/api/cart.php', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ 
@@ -627,7 +627,7 @@ function addToCartFromDetail(productId) {
 
 function buyNow(productId) {
     // Add to cart and redirect to checkout
-    fetch('/oecom/api/cart.php', {
+    fetch('<?php echo $baseUrl; ?>/api/cart.php', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ product_id: productId, quantity: 1 })
@@ -635,7 +635,7 @@ function buyNow(productId) {
     .then(response => response.json())
     .then(data => {
         if (data.success) {
-            window.location.href = '/oecom/checkout.php';
+            window.location.href = '<?php echo $baseUrl; ?>/checkout.php';
         } else {
             alert(data.message || 'Failed to add product to cart');
         }
@@ -717,7 +717,7 @@ function submitReview(event) {
     submitBtn.disabled = true;
     submitBtn.textContent = 'Submitting...';
     
-    fetch('/oecom/api/reviews.php', {
+    fetch('<?php echo $baseUrl; ?>/api/reviews.php', {
         method: 'POST',
         headers: {
             'Content-Type': 'application/json'
@@ -775,7 +775,7 @@ function loadReviews() {
         sortOrder = 'ORDER BY rating ASC, created_at DESC';
     }
     
-    fetch(`/oecom/api/reviews.php?product_id=${productId}&sort=${sortBy}`)
+    fetch(`<?php echo $baseUrl; ?>/api/reviews.php?product_id=${productId}&sort=${sortBy}`)
         .then(response => response.json())
         .then(data => {
             const reviewsList = document.getElementById('reviewsList');

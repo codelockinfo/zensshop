@@ -1,6 +1,8 @@
 <?php
 require_once __DIR__ . '/../classes/Auth.php';
+require_once __DIR__ . '/../includes/functions.php';
 
+$baseUrl = getBaseUrl();
 $auth = new Auth();
 $error = '';
 $success = '';
@@ -45,7 +47,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['email'])) {
             <?php echo htmlspecialchars($success); ?>
         </div>
         <div class="text-center">
-            <a href="/oecom/admin/verify-otp.php" class="text-blue-500 hover:text-blue-700">
+            <a href="<?php echo $baseUrl; ?>/admin/verify-otp.php" class="text-blue-500 hover:text-blue-700">
                 Go to OTP Verification →
             </a>
         </div>
@@ -72,7 +74,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['email'])) {
         <?php endif; ?>
         
         <div class="mt-6 text-center">
-            <a href="/oecom/admin/index.php" class="text-blue-500 hover:text-blue-700">
+            <a href="<?php echo $baseUrl; ?>/admin/index.php" class="text-blue-500 hover:text-blue-700">
                 ← Back to Login
             </a>
         </div>

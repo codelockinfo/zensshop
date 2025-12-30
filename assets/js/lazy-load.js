@@ -37,7 +37,8 @@ async function loadSection(sectionId, endpoint) {
     if (!sectionElement) return;
     
     try {
-        const response = await fetch(`/oecom/api/sections.php?section=${endpoint}`);
+        const baseUrl = typeof BASE_URL !== 'undefined' ? BASE_URL : '/zensshop';
+        const response = await fetch(`${baseUrl}/api/sections.php?section=${endpoint}`);
         const html = await response.text();
         
         if (html) {

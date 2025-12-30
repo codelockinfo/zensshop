@@ -4,6 +4,7 @@ require_once __DIR__ . '/includes/header.php';
 require_once __DIR__ . '/classes/Database.php';
 require_once __DIR__ . '/includes/functions.php';
 
+$baseUrl = getBaseUrl();
 $db = Database::getInstance();
 // Get all active categories
 $categories = $db->fetchAll(
@@ -37,13 +38,13 @@ $categories = $db->fetchAll(
                     } elseif (strpos($category['image'], '/') === 0) {
                         $categoryImage = $category['image'];
                     } else {
-                        $categoryImage = '/oecom/assets/images/uploads/' . $category['image'];
+                        $categoryImage = $baseUrl . '/assets/images/uploads/' . $category['image'];
                     }
                 } else {
                     // Use inline SVG placeholder to prevent external requests and reload loops
                     $categoryImage = 'data:image/svg+xml;base64,' . base64_encode('<svg width="400" height="500" viewBox="0 0 400 500" xmlns="http://www.w3.org/2000/svg"><rect width="400" height="500" fill="#F3F4F6"/><circle cx="200" cy="200" r="50" fill="#9B7A8A"/><path d="M100 350C100 300 150 250 200 250C250 250 300 300 300 350" fill="#9B7A8A"/></svg>');
                 }
-                $categoryUrl = '/oecom/shop.php?category=' . urlencode($category['slug']);
+                $categoryUrl = $baseUrl . '/shop.php?category=' . urlencode($category['slug']);
             ?>
             <a href="<?php echo htmlspecialchars($categoryUrl); ?>" class="group">
                 <div class="relative overflow-hidden rounded-lg bg-gray-100 aspect-[3/4] mb-3">

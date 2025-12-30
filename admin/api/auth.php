@@ -5,14 +5,16 @@
 
 header('Content-Type: application/json');
 require_once __DIR__ . '/../../classes/Auth.php';
+require_once __DIR__ . '/../../includes/functions.php';
 
+$baseUrl = getBaseUrl();
 $auth = new Auth();
 $action = $_GET['action'] ?? '';
 
 switch ($action) {
     case 'logout':
         $auth->logout();
-        header('Location: /oecom/admin/index.php');
+        header('Location: ' . $baseUrl . '/admin/index.php');
         exit;
         break;
         

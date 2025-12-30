@@ -25,9 +25,9 @@
         </div>
     </div>
     
-    <script src="/oecom/assets/js/admin.js"></script>
-    <script src="/oecom/assets/js/admin-confirm.js"></script>
-    <script src="/oecom/assets/js/admin-search.js"></script>
+    <script src="<?php echo isset($baseUrl) ? $baseUrl : getBaseUrl(); ?>/assets/js/admin.js"></script>
+    <script src="<?php echo isset($baseUrl) ? $baseUrl : getBaseUrl(); ?>/assets/js/admin-confirm.js"></script>
+    <script src="<?php echo isset($baseUrl) ? $baseUrl : getBaseUrl(); ?>/assets/js/admin-search.js"></script>
     <?php endif; ?>
 </body>
 </html>
