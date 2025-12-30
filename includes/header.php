@@ -305,10 +305,24 @@ if (!function_exists('url')) {
                     </a>
                     
                     <!-- Cart -->
-                    <button class="text-black hover:text-gray-600 transition relative focus:outline-none header-icon" id="cartBtn">
-                        <i class="fas fa-shopping-cart text-lg"></i>
-                        <span class="absolute -top-1.5 -right-1.5 bg-red-500 text-white text-xs rounded-full w-4 h-4 flex items-center justify-center cart-count font-medium" style="font-size: 10px;"><?php echo $cartCount; ?></span>
-                    </button>
+                    <?php
+                    // Check if we're on checkout or cart page
+                    $currentPage = basename($_SERVER['PHP_SELF']);
+                    $requestUri = isset($_SERVER['REQUEST_URI']) ? $_SERVER['REQUEST_URI'] : '';
+                    $isCheckoutPage = ($currentPage === 'checkout.php' || strpos($requestUri, '/checkout') !== false);
+                    $isCartPage = ($currentPage === 'cart.php' || strpos($requestUri, '/cart') !== false);
+                    
+                    if ($isCheckoutPage || $isCartPage): ?>
+                        <a href="<?php echo url('cart'); ?>" class="text-black hover:text-gray-600 transition relative focus:outline-none header-icon inline-block">
+                            <i class="fas fa-shopping-cart text-lg"></i>
+                            <span class="absolute -top-1.5 -right-1.5 bg-red-500 text-white text-xs rounded-full w-4 h-4 flex items-center justify-center cart-count font-medium" style="font-size: 10px;"><?php echo $cartCount; ?></span>
+                        </a>
+                    <?php else: ?>
+                        <button class="text-black hover:text-gray-600 transition relative focus:outline-none header-icon" id="cartBtn">
+                            <i class="fas fa-shopping-cart text-lg"></i>
+                            <span class="absolute -top-1.5 -right-1.5 bg-red-500 text-white text-xs rounded-full w-4 h-4 flex items-center justify-center cart-count font-medium" style="font-size: 10px;"><?php echo $cartCount; ?></span>
+                        </button>
+                    <?php endif; ?>
                 </div>
                 
                 <!-- Mobile Menu Button -->

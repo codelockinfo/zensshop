@@ -45,9 +45,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['upload_profile'])) {
         
         // Delete old profile image if exists
         if (!empty($currentUser['profile_image'])) {
+            // Normalize the URL (fix old /oecom/ paths)
+            $oldImage = normalizeImageUrl($currentUser['profile_image']);
+            
             // Remove base URL prefix and convert to file path
-            $oldImagePath = str_replace($baseUrl . '/', '', $currentUser['profile_image']);
-            $oldImagePath = __DIR__ . '/../' . $oldImagePath;
+            $oldImagePath = str_replace($baseUrl . '/', '', $oldImage);
+            $oldImagePath = preg_replace('#^[^/]+/#', '', $oldImagePath); // Remove any leading directory
+            $oldImagePath = __DIR__ . '/../' . ltrim($oldImagePath, '/');
             $oldImagePath = str_replace('\\', '/', $oldImagePath);
             if (file_exists($oldImagePath)) {
                 @unlink($oldImagePath);
@@ -72,7 +76,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['upload_profile'])) {
         );
         
         // Redirect to refresh the page and show updated image
-        header('Location: ' . $baseUrl . '/admin/account.php?success=image_updated');
+        header('Location: ' . url('admin/account.php?success=image_updated'));
         exit;
     } catch (Exception $e) {
         $error = $e->getMessage();
@@ -163,12 +167,16 @@ require_once __DIR__ . '/../includes/admin-header.php';
                 $imageUrl = $baseUrl . '/assets/images/default-avatar.svg';
                 
                 if ($profileImage) {
+                    // Normalize the URL (fix old /oecom/ paths)
+                    $profileImage = normalizeImageUrl($profileImage);
+                    
                     // Remove base URL prefix and convert to file path
                     $imagePath = str_replace($baseUrl . '/', '', $profileImage);
-                    $fullPath = __DIR__ . '/../' . $imagePath;
+                    $imagePath = preg_replace('#^[^/]+/#', '', $imagePath); // Remove any leading directory
+                    $fullPath = __DIR__ . '/../' . ltrim($imagePath, '/');
                     
                     if (file_exists($fullPath)) {
-                        $imageUrl = $profileImage;
+                        $imageUrl = $baseUrl . '/' . ltrim($imagePath, '/');
                     }
                 }
                 ?>

@@ -124,6 +124,21 @@ class Auth {
         );
         
         if ($user) {
+            // Fix old /oecom/ paths in profile_image
+            $profileImage = $user['profile_image'] ?? null;
+            if (!empty($profileImage) && strpos($profileImage, '/oecom/') !== false) {
+                require_once __DIR__ . '/../includes/functions.php';
+                $normalizedImage = normalizeImageUrl($profileImage);
+                
+                // Update database with corrected path
+                $this->db->execute(
+                    "UPDATE users SET profile_image = ? WHERE id = ?",
+                    [$normalizedImage, $user['id']]
+                );
+                
+                $user['profile_image'] = $normalizedImage;
+            }
+            
             return $user;
         }
         

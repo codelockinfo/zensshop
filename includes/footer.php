@@ -232,7 +232,7 @@ if (!function_exists('url')) {
                         <a href="<?php echo url('cart.php'); ?>" class="block w-full bg-primary text-white text-center py-3 rounded-lg hover:bg-primary-dark transition mb-2">
                             View Cart
                         </a>
-                        <a href="<?php echo url('checkout.php'); ?>" class="block w-full bg-black text-white text-center py-3 rounded-lg hover:bg-gray-800 transition">
+                        <a href="<?php echo url('checkout'); ?>" class="block w-full bg-black text-white text-center py-3 rounded-lg hover:bg-gray-800 transition">
                             Checkout
                         </a>
             </div>
