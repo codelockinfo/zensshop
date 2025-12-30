@@ -26,13 +26,76 @@ $cartCount = $cart->getCount();
 </head>
 <body class="font-body">
     <!-- Top Bar -->
-    <div class="bg-black text-white text-sm py-2">
+    <div class="bg-black text-white text-sm py-2" style="padding: 12px 0;">
         <div class="container mx-auto px-4 flex justify-between items-center">
-            <div>
-                <span>100% secure online payment</span>
+            <div class="relative flex-1 overflow-hidden flex items-center" style="min-height: 20px; gap: 20px;">
+                <div class="arrow">
+                <!-- Left Arrow -->
+                <button class="top-bar-arrow top-bar-arrow-left flex-shrink-0 mr-2 text-gray-500 hover:text-white transition" id="topBarPrev" aria-label="Previous">
+                    <i class="fas fa-chevron-left text-xs"></i>
+                </button>
+
+                <!-- Right Arrow -->
+                <button class="top-bar-arrow top-bar-arrow-right flex-shrink-0 ml-2 text-gray-500 hover:text-white transition" id="topBarNext" aria-label="Next">
+                    <i class="fas fa-chevron-right text-xs"></i>
+                </button>
+                </div>
+                
+                <!-- Slider Container -->
+                <div class="relative flex-1 overflow-hidden">
+                    <div class="top-bar-slider flex transition-transform duration-500 ease-in-out" id="topBarSlider">
+                        <div class="top-bar-slide flex-shrink-0 w-full flex items-center">
+                            <span>100% secure online payment</span>
+                        </div>
+                        <div class="top-bar-slide flex-shrink-0 w-full flex items-center">
+                            <span>Free Shipping for all order over $99</span>
+                        </div>
+                        <div class="top-bar-slide flex-shrink-0 w-full flex items-center">
+                            <span>Sign up for 10% off your first order.<a href="/zensshop/signup.php" class="hover:text-gray-300 transition">Sign up</a></span>
+                        </div>
+                    </div>
+                </div>  
             </div>
-            <div>
-                <a href="/oecom/contact.php" class="hover:text-gray-300">Contact Us</a>
+            <div class="flex items-center space-x-4">
+                <a href="/oecom/contact.php" class="hover:text-gray-300 transition">Contact Us</a>
+                <a href="/oecom/about.php" class="hover:text-gray-300 transition">About Us</a>
+                <a href="/oecom/help.php" class="hover:text-gray-300 transition">Help Center</a>
+                <a href="/oecom/store.php" class="hover:text-gray-300 transition">Our Store</a>
+                <!-- Currency/Region Selector -->
+                <div class="relative ml-4 pl-4 border-l border-gray-700">
+                    <button class="flex items-center space-x-2 hover:text-gray-300 transition cursor-pointer focus:outline-none" id="currencySelector">
+                        <span class="text-base leading-none" id="selectedFlag" style="font-size: 16px; line-height: 1;">🇺🇸</span>
+                        <span id="selectedCurrency" class="text-sm whitespace-nowrap">United States (USD $)</span>
+                        <i class="fas fa-chevron-down text-xs ml-1"></i>
+                    </button>
+                    <!-- Currency Dropdown -->
+                    <div class="absolute right-0 top-full mt-2 bg-white text-black shadow-lg rounded-lg py-1 min-w-[240px] hidden z-50 border border-gray-200" id="currencyDropdown">
+                        <a href="#" class="block px-4 py-2.5 hover:bg-gray-50 transition currency-option" data-flag="🇨🇳" data-currency="China (CNY ¥)">
+                            <div class="flex items-center space-x-3">
+                                <span class="text-base leading-none" style="font-size: 16px; line-height: 1;">🇨🇳</span>
+                                <span class="text-sm">China (CNY ¥)</span>
+                            </div>
+                        </a>
+                        <a href="#" class="block px-4 py-2.5 hover:bg-gray-50 transition currency-option" data-flag="🇫🇷" data-currency="France (EUR €)">
+                            <div class="flex items-center space-x-3">
+                                <span class="text-base leading-none" style="font-size: 16px; line-height: 1;">🇫🇷</span>
+                                <span class="text-sm">France (EUR €)</span>
+                            </div>
+                        </a>
+                        <a href="#" class="block px-4 py-2.5 hover:bg-gray-50 transition currency-option" data-flag="🇬🇧" data-currency="United Kingdom (GBP £)">
+                            <div class="flex items-center space-x-3">
+                                <span class="text-base leading-none" style="font-size: 16px; line-height: 1;">🇬🇧</span>
+                                <span class="text-sm">United Kingdom (GBP £)</span>
+                            </div>
+                        </a>
+                        <a href="#" class="block px-4 py-2.5 hover:bg-gray-50 transition currency-option" data-flag="🇺🇸" data-currency="United States (USD $)">
+                            <div class="flex items-center space-x-3">
+                                <span class="text-base leading-none" style="font-size: 16px; line-height: 1;">🇺🇸</span>
+                                <span class="text-sm">United States (USD $)</span>
+                            </div>
+                        </a>
+                    </div>
+                </div>
             </div>
         </div>
     </div>
@@ -46,15 +109,15 @@ $cartCount = $cart->getCount();
                     <a href="/oecom/" class="text-3xl font-heading font-bold text-black">milano</a>
                 </div>
                 
-                <!-- Desktop Navigation -->
-                <div class="hidden md:flex items-center space-x-8">
-                    <a href="/oecom/" class="text-gray-800 hover:text-primary transition relative group">
+                <!-- Desktop Navigation - Centered -->
+                <div class="hidden md:flex items-center space-x-8 absolute left-1/2 transform -translate-x-1/2 z-10">
+                    <a href="/oecom/" class="text-black hover:text-gray-600 transition relative group font-sans text-md nav-link">
                         Home
                         <i class="fas fa-chevron-down text-xs ml-1"></i>
                     </a>
                     <!-- Shop with Dropdown -->
                     <div class="relative shop-menu-parent">
-                        <a href="/oecom/collections.php" class="text-gray-800 hover:text-primary transition relative group flex items-center">
+                        <a href="/oecom/collections.php" class="text-black hover:text-gray-600 transition relative group flex items-center font-sans text-md nav-link">
                             Shop
                             <i class="fas fa-chevron-down text-xs ml-1"></i>
                         </a>
@@ -70,7 +133,7 @@ $cartCount = $cart->getCount();
                     </div>
                     <!-- Products with Mega Menu -->
                     <div class="relative mega-menu-parent">
-                        <a href="/oecom/products.php" class="text-gray-800 hover:text-primary transition flex items-center">
+                        <a href="/oecom/products.php" class="text-black hover:text-gray-600 transition flex items-center font-sans text-md nav-link">
                             Products
                             <i class="fas fa-chevron-down text-xs ml-1"></i>
                         </a>
@@ -145,7 +208,7 @@ $cartCount = $cart->getCount();
                     </div>
                     <!-- Pages with Dropdown Menu -->
                     <div class="relative pages-menu-parent">
-                        <a href="/oecom/pages.php" class="text-gray-800 hover:text-primary transition flex items-center">
+                        <a href="/oecom/pages.php" class="text-black hover:text-gray-600 transition flex items-center font-sans text-md nav-link">
                             Pages
                             <i class="fas fa-chevron-down text-xs ml-1"></i>
                         </a>
@@ -185,23 +248,23 @@ $cartCount = $cart->getCount();
                             </ul>
                         </div>
                     </div>
-                    <a href="/oecom/blog.php" class="text-gray-800 hover:text-primary transition relative group">
+                    <a href="/oecom/blog.php" class="text-black hover:text-gray-600 transition relative group font-sans text-md nav-link">
                         Blog
                         <i class="fas fa-chevron-down text-xs ml-1"></i>
                     </a>
-                    <a href="#" class="text-gray-800 hover:text-primary transition">Buy Theme!</a>
+                        <a href="#" class="text-black hover:text-gray-600 transition font-sans text-md nav-link">Buy Theme!</a>
                 </div>
                 
                 <!-- Right Icons -->
-                <div class="flex items-center space-x-4">
+                <div class="flex items-center space-x-5">
                     <!-- Search -->
-                    <button class="text-gray-800 hover:text-primary transition" id="searchBtn">
-                        <i class="fas fa-search text-xl"></i>
+                    <button class="text-black hover:text-gray-600 transition focus:outline-none header-icon" id="searchBtn">
+                        <i class="fas fa-search text-lg"></i>
                     </button>
                     
                     <!-- User Account -->
-                    <a href="/oecom/account.php" class="text-gray-800 hover:text-primary transition">
-                        <i class="fas fa-user text-xl"></i>
+                    <a href="/oecom/account.php" class="text-black hover:text-gray-600 transition header-icon">
+                        <i class="fas fa-user text-lg"></i>
                     </a>
                     
                     <!-- Wishlist -->
@@ -211,17 +274,10 @@ $cartCount = $cart->getCount();
                     </a>
                     
                     <!-- Cart -->
-                    <button class="text-gray-800 hover:text-primary transition relative" id="cartBtn">
-                        <i class="fas fa-shopping-cart text-xl"></i>
-                        <span class="absolute -top-2 -right-2 bg-red-500 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center cart-count"><?php echo $cartCount; ?></span>
+                    <button class="text-black hover:text-gray-600 transition relative focus:outline-none header-icon" id="cartBtn">
+                        <i class="fas fa-shopping-cart text-lg"></i>
+                        <span class="absolute -top-1.5 -right-1.5 bg-red-500 text-white text-xs rounded-full w-4 h-4 flex items-center justify-center cart-count font-medium" style="font-size: 10px;"><?php echo $cartCount; ?></span>
                     </button>
-                    
-                    <!-- Language/Currency -->
-                    <select class="text-gray-800 border-none bg-transparent cursor-pointer focus:outline-none">
-                        <option>United States (USD $)</option>
-                        <option>United Kingdom (GBP £)</option>
-                        <option>Europe (EUR €)</option>
-                    </select>
                 </div>
                 
                 <!-- Mobile Menu Button -->

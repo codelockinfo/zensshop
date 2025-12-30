@@ -212,6 +212,95 @@ a:hover {
   box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
 }
 
+/* Header Navigation Styling */
+nav .container {
+  position: relative;
+}
+
+/* Badge Styling for Icons */
+.wishlist-count,
+.cart-count {
+  font-weight: 500;
+  line-height: 1;
+}
+
+/* Header Icon Styling */
+.header-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+}
+
+.header-icon i {
+  font-size: 18px;
+  line-height: 1;
+}
+
+/* Footer Styling */
+footer {
+  border-top: 1px solid #e5e7eb;
+}
+
+.footer-social-icon {
+  transition: all 0.3s ease;
+}
+
+.footer-social-icon:hover {
+  transform: translateY(-2px);
+}
+
+.footer-social-icon i {
+  color: black;
+}
+
+.footer-social-icon:hover i {
+  color: white;
+}
+
+#backToTop {
+  transition: all 0.3s ease;
+}
+
+#backToTop:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 10px 20px rgba(0, 0, 0, 0.2);
+}
+
+/* Footer Bottom Section */
+footer .icon.icon--full-color {
+  width: 38px;
+  height: 24px;
+  display: block;
+}
+
+footer .list-unstyled {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+/* Currency Selector Flag Image */
+footer .localization-flags {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid #d1d5db;
+  border-radius: 50%;
+  overflow: hidden;
+}
+
+footer .localization-flags img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+#currencyDropdown {
+  z-index: 99;
+}
+
 /* Mega Menu Styles */
 .mega-menu {
   position: absolute;
@@ -355,11 +444,23 @@ a:hover {
   position: relative;
   height: 600px;
 }
+.hero-slide p {
+  color: var(--color-white);
+  font-size: 18px;
+}
+
+.hero-slide h1 {
+  color: var(--color-white);
+}
 
 @media (min-width: 768px) {
   .hero-slider {
     height: 700px;
   }
+}
+
+#categories-section .grid {
+  gap: 60px !important;
 }
 
 /* Best Selling Slider Styles */
@@ -647,3 +748,35 @@ a:hover {
   background: var(--color-gray-300);
 }
 
+/* Currency Selector Flag Styling */
+#currencySelector span[class*="text-base"],
+.currency-option span[class*="text-base"] {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 20px;
+  height: 20px;
+  font-size: 16px;
+  line-height: 1;
+  flex-shrink: 0;
+}
+
+#currencySelector {
+  padding: 2px 0;
+}
+
+#currencyDropdown {
+  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+}
+
+.currency-option {
+  cursor: pointer;
+}
+
+.currency-option:active {
+  background-color: #f3f4f6;
+}
+
+.nav-link {
+  font-weight: 600;
+}
