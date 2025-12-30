@@ -24,6 +24,34 @@ function getBaseUrl() {
 }
 
 /**
+ * Generate clean URL without .php extension
+ */
+function url($path = '') {
+    $baseUrl = getBaseUrl();
+    
+    // Remove leading slash if present
+    $path = ltrim($path, '/');
+    
+    // Handle query strings
+    $queryString = '';
+    if (strpos($path, '?') !== false) {
+        $parts = explode('?', $path, 2);
+        $path = $parts[0];
+        $queryString = '?' . $parts[1];
+    }
+    
+    // Remove .php extension if present
+    $path = preg_replace('/\.php$/', '', $path);
+    
+    // If path is empty, return base URL
+    if (empty($path)) {
+        return $baseUrl . '/' . $queryString;
+    }
+    
+    return $baseUrl . '/' . $path . $queryString;
+}
+
+/**
  * Get full image URL from relative path
  */
 function getImageUrl($path) {

@@ -37,7 +37,8 @@ function initializeProductCards() {
             
             if (productSlug) {
                 // Navigate to product detail page
-                window.location.href = (typeof BASE_URL !== 'undefined' ? BASE_URL : '/zensshop') + '/product.php?slug=' + encodeURIComponent(productSlug);
+                const baseUrl = typeof BASE_URL !== 'undefined' ? BASE_URL : window.location.pathname.split('/').slice(0, -1).join('/') || '';
+                window.location.href = baseUrl + '/product?slug=' + encodeURIComponent(productSlug);
             } else {
                 showQuickView(productId);
             }
@@ -109,15 +110,16 @@ function showQuickView(productId) {
     const slug = btn ? btn.getAttribute('data-product-slug') : null;
     
     if (slug) {
-        window.location.href = (typeof BASE_URL !== 'undefined' ? BASE_URL : '/zensshop') + '/product.php?slug=' + encodeURIComponent(slug);
+        const baseUrl = typeof BASE_URL !== 'undefined' ? BASE_URL : window.location.pathname.split('/').slice(0, -1).join('/') || '';
+        window.location.href = baseUrl + '/product?slug=' + encodeURIComponent(slug);
     } else {
         // Fallback: try to fetch product by ID and redirect
-        const baseUrl = typeof BASE_URL !== 'undefined' ? BASE_URL : '/zensshop';
+        const baseUrl = typeof BASE_URL !== 'undefined' ? BASE_URL : window.location.pathname.split('/').slice(0, -1).join('/') || '';
         fetch(baseUrl + '/api/products.php?id=' + productId)
             .then(response => response.json())
             .then(data => {
                 if (data.success && data.product && data.product.slug) {
-                    window.location.href = baseUrl + '/product.php?slug=' + encodeURIComponent(data.product.slug);
+                    window.location.href = baseUrl + '/product?slug=' + encodeURIComponent(data.product.slug);
                 } else {
                     showNotification('Product not found', 'error');
                 }

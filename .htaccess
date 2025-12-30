@@ -9,8 +9,25 @@ Options -Indexes
     Require all denied
 </FilesMatch>
 
+# Enable Rewrite Engine
+RewriteEngine On
+
 # Redirect /oecom/ to actual directory name (/zensshop/)
 # This handles cases where old URLs are accessed
-RewriteEngine On
 RewriteCond %{REQUEST_URI} ^/oecom/(.*)$
 RewriteRule ^oecom/(.*)$ /zensshop/$1 [R=301,L]
+
+# Remove .php extension from URLs
+# If the request is for a .php file, redirect to URL without extension
+RewriteCond %{THE_REQUEST} \s/+(.+?)\.php[\s?] [NC]
+RewriteRule ^ /%1? [R=301,L]
+
+# If the requested file doesn't exist and doesn't have .php extension, try adding .php
+RewriteCond %{REQUEST_FILENAME} !-f
+RewriteCond %{REQUEST_FILENAME} !-d
+RewriteCond %{REQUEST_FILENAME}.php -f
+RewriteRule ^(.*)$ $1.php [L]
+
+# Prevent direct access to .php files (optional - uncomment if you want to force clean URLs)
+# RewriteCond %{THE_REQUEST} \s/+(.+?)\.php[\s?] [NC]
+# RewriteRule ^ /%1 [R=301,L]

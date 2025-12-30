@@ -10,6 +10,25 @@ $cartCount = $cart->getCount();
 
 // Get base URL using the centralized function
 $baseUrl = getBaseUrl();
+
+// Ensure url() function is available
+if (!function_exists('url')) {
+    function url($path = '') {
+        $baseUrl = getBaseUrl();
+        $path = ltrim($path, '/');
+        $queryString = '';
+        if (strpos($path, '?') !== false) {
+            $parts = explode('?', $path, 2);
+            $path = $parts[0];
+            $queryString = '?' . $parts[1];
+        }
+        $path = preg_replace('/\.php$/', '', $path);
+        if (empty($path)) {
+            return $baseUrl . '/' . $queryString;
+        }
+        return $baseUrl . '/' . $path . $queryString;
+    }
+}
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -69,10 +88,10 @@ $baseUrl = getBaseUrl();
                 </div>  
             </div>
             <div class="flex items-center space-x-4">
-                <a href="<?php echo $baseUrl; ?>/contact.php" class="hover:text-gray-300 transition">Contact Us</a>
-                <a href="<?php echo $baseUrl; ?>/about.php" class="hover:text-gray-300 transition">About Us</a>
-                <a href="<?php echo $baseUrl; ?>/help.php" class="hover:text-gray-300 transition">Help Center</a>
-                <a href="<?php echo $baseUrl; ?>/store.php" class="hover:text-gray-300 transition">Our Store</a>
+                <a href="<?php echo url('contact.php'); ?>" class="hover:text-gray-300 transition">Contact Us</a>
+                <a href="<?php echo url('about.php'); ?>" class="hover:text-gray-300 transition">About Us</a>
+                <a href="<?php echo url('help.php'); ?>" class="hover:text-gray-300 transition">Help Center</a>
+                <a href="<?php echo url('store.php'); ?>" class="hover:text-gray-300 transition">Our Store</a>
                 <!-- Currency/Region Selector -->
                 <div class="relative ml-4 pl-4 border-l border-gray-700">
                     <button class="flex items-center space-x-2 hover:text-gray-300 transition cursor-pointer focus:outline-none" id="currencySelector">
@@ -129,23 +148,23 @@ $baseUrl = getBaseUrl();
                     </a>
                     <!-- Shop with Dropdown -->
                     <div class="relative shop-menu-parent">
-                        <a href="<?php echo $baseUrl; ?>/collections.php" class="text-black hover:text-gray-600 transition relative group flex items-center font-sans text-md nav-link">
+                        <a href="<?php echo url('collections.php'); ?>" class="text-black hover:text-gray-600 transition relative group flex items-center font-sans text-md nav-link">
                             Shop
                             <i class="fas fa-chevron-down text-xs ml-1"></i>
                         </a>
                         <!-- Shop Dropdown Menu -->
                         <div class="shop-dropdown absolute top-full left-0 mt-2 bg-white shadow-lg rounded-lg py-2 min-w-[200px] hidden z-50 border border-gray-200">
-                            <a href="<?php echo $baseUrl; ?>/collections.php" class="block px-4 py-2 text-gray-700 hover:bg-gray-50 hover:text-primary transition">
+                            <a href="<?php echo url('collections.php'); ?>" class="block px-4 py-2 text-gray-700 hover:bg-gray-50 hover:text-primary transition">
                                 Collections
                             </a>
-                            <a href="<?php echo $baseUrl; ?>/shop.php" class="block px-4 py-2 text-gray-700 hover:bg-gray-50 hover:text-primary transition">
+                            <a href="<?php echo url('shop.php'); ?>" class="block px-4 py-2 text-gray-700 hover:bg-gray-50 hover:text-primary transition">
                                 All Products
                             </a>
                         </div>
                     </div>
                     <!-- Products with Mega Menu -->
                     <div class="relative mega-menu-parent">
-                        <a href="<?php echo $baseUrl; ?>/products.php" class="text-black hover:text-gray-600 transition flex items-center font-sans text-md nav-link">
+                        <a href="<?php echo url('products.php'); ?>" class="text-black hover:text-gray-600 transition flex items-center font-sans text-md nav-link">
                             Products
                             <i class="fas fa-chevron-down text-xs ml-1"></i>
                         </a>
@@ -156,18 +175,18 @@ $baseUrl = getBaseUrl();
                                 <div>
                                     <h3 class="font-bold text-gray-900 mb-4 text-lg">Shop Layouts</h3>
                                     <ul class="space-y-3">
-                                        <li><a href="<?php echo $baseUrl; ?>/shop.php?layout=filter-left" class="text-gray-600 hover:text-primary transition">Filter left sidebar</a></li>
-                                        <li><a href="<?php echo $baseUrl; ?>/shop.php?layout=filter-right" class="text-gray-600 hover:text-primary transition">Filter right sidebar</a></li>
+                                        <li><a href="<?php echo url('shop.php?layout=filter-left'); ?>" class="text-gray-600 hover:text-primary transition">Filter left sidebar</a></li>
+                                        <li><a href="<?php echo url('shop.php?layout=filter-right'); ?>" class="text-gray-600 hover:text-primary transition">Filter right sidebar</a></li>
                                         <li>
-                                            <a href="<?php echo $baseUrl; ?>/shop.php?layout=horizontal" class="text-gray-600 hover:text-primary transition flex items-center">
+                                            <a href="<?php echo url('shop.php?layout=horizontal'); ?>" class="text-gray-600 hover:text-primary transition flex items-center">
                                                 Horizontal filter
                                                 <span class="ml-2 bg-red-500 text-white text-xs px-2 py-0.5 rounded-full">HOT</span>
                                             </a>
                                         </li>
-                                        <li><a href="<?php echo $baseUrl; ?>/shop.php?layout=drawer" class="text-gray-600 hover:text-primary transition">Filter drawer</a></li>
-                                        <li><a href="<?php echo $baseUrl; ?>/shop.php?layout=grid-3" class="text-gray-600 hover:text-primary transition">Grid 3 columns</a></li>
-                                        <li><a href="<?php echo $baseUrl; ?>/shop.php?layout=grid-4" class="text-gray-600 hover:text-primary transition">Grid 4 columns</a></li>
-                                        <li><a href="<?php echo $baseUrl; ?>/shop.php" class="text-gray-600 hover:text-primary transition">All collections</a></li>
+                                        <li><a href="<?php echo url('shop.php?layout=drawer'); ?>" class="text-gray-600 hover:text-primary transition">Filter drawer</a></li>
+                                        <li><a href="<?php echo url('shop.php?layout=grid-3'); ?>" class="text-gray-600 hover:text-primary transition">Grid 3 columns</a></li>
+                                        <li><a href="<?php echo url('shop.php?layout=grid-4'); ?>" class="text-gray-600 hover:text-primary transition">Grid 4 columns</a></li>
+                                        <li><a href="<?php echo url('shop.php'); ?>" class="text-gray-600 hover:text-primary transition">All collections</a></li>
                                     </ul>
                                 </div>
                                 
@@ -175,24 +194,24 @@ $baseUrl = getBaseUrl();
                                 <div>
                                     <h3 class="font-bold text-gray-900 mb-4 text-lg">Shop Pages</h3>
                                     <ul class="space-y-3">
-                                        <li><a href="<?php echo $baseUrl; ?>/collection-v1.php" class="text-gray-600 hover:text-primary transition">Collection list v1</a></li>
+                                        <li><a href="<?php echo url('collection-v1.php'); ?>" class="text-gray-600 hover:text-primary transition">Collection list v1</a></li>
                                         <li>
-                                            <a href="<?php echo $baseUrl; ?>/collection-v2.php" class="text-gray-600 hover:text-primary transition flex items-center">
+                                            <a href="<?php echo url('collection-v2.php'); ?>" class="text-gray-600 hover:text-primary transition flex items-center">
                                                 Collection list v2
                                                 <span class="ml-2 bg-blue-500 text-white text-xs px-2 py-0.5 rounded-full">NEW</span>
                                             </a>
                                         </li>
-                                        <li><a href="<?php echo $baseUrl; ?>/shop.php?scroll=infinity" class="text-gray-600 hover:text-primary transition">Infinity scroll</a></li>
-                                        <li><a href="<?php echo $baseUrl; ?>/shop.php?load=more" class="text-gray-600 hover:text-primary transition">Load more button</a></li>
-                                        <li><a href="<?php echo $baseUrl; ?>/shop.php?pagination=1" class="text-gray-600 hover:text-primary transition">Pagination page</a></li>
-                                        <li><a href="<?php echo $baseUrl; ?>/banner-collection.php" class="text-gray-600 hover:text-primary transition">Banner collection</a></li>
+                                        <li><a href="<?php echo url('shop.php?scroll=infinity'); ?>" class="text-gray-600 hover:text-primary transition">Infinity scroll</a></li>
+                                        <li><a href="<?php echo url('shop.php?load=more'); ?>" class="text-gray-600 hover:text-primary transition">Load more button</a></li>
+                                        <li><a href="<?php echo url('shop.php?pagination=1'); ?>" class="text-gray-600 hover:text-primary transition">Pagination page</a></li>
+                                        <li><a href="<?php echo url('banner-collection.php'); ?>" class="text-gray-600 hover:text-primary transition">Banner collection</a></li>
                                     </ul>
                                 </div>
                                 
                                 <!-- Column 3: Featured Categories -->
                                 <div class="space-y-4">
                                     <!-- Bracelets Card -->
-                                    <a href="<?php echo $baseUrl; ?>/category.php?slug=bracelets" class="block category-card">
+                                    <a href="<?php echo url('category.php?slug=bracelets'); ?>" class="block category-card">
                                         <div class="relative overflow-hidden rounded-lg mb-2">
                                             <img src="https://images.unsplash.com/photo-1611591437281-460bfbe1220a?w=300&h=400&fit=crop" 
                                                  alt="Bracelets" 
@@ -204,7 +223,7 @@ $baseUrl = getBaseUrl();
                                     </a>
                                     
                                     <!-- Rings Card -->
-                                    <a href="<?php echo $baseUrl; ?>/category.php?slug=rings" class="block category-card">
+                                    <a href="<?php echo url('category.php?slug=rings'); ?>" class="block category-card">
                                         <div class="relative overflow-hidden rounded-lg mb-2">
                                             <img src="https://images.unsplash.com/photo-1603561591411-07134e71a2a9?w=300&h=400&fit=crop" 
                                                  alt="Rings" 
@@ -220,7 +239,7 @@ $baseUrl = getBaseUrl();
                     </div>
                     <!-- Pages with Dropdown Menu -->
                     <div class="relative pages-menu-parent">
-                        <a href="<?php echo $baseUrl; ?>/pages.php" class="text-black hover:text-gray-600 transition flex items-center font-sans text-md nav-link">
+                        <a href="<?php echo url('pages.php'); ?>" class="text-black hover:text-gray-600 transition flex items-center font-sans text-md nav-link">
                             Pages
                             <i class="fas fa-chevron-down text-xs ml-1"></i>
                         </a>
@@ -228,39 +247,39 @@ $baseUrl = getBaseUrl();
                         <div class="pages-dropdown">
                             <ul class="space-y-2">
                                 <li>
-                                    <a href="<?php echo $baseUrl; ?>/about.php" class="text-gray-600 hover:text-primary transition block py-2 px-4">About us</a>
+                                    <a href="<?php echo url('about.php'); ?>" class="text-gray-600 hover:text-primary transition block py-2 px-4">About us</a>
                                 </li>
                                 <li>
-                                    <a href="<?php echo $baseUrl; ?>/contact.php" class="text-gray-600 hover:text-primary transition block py-2 px-4">Contact us</a>
+                                    <a href="<?php echo url('contact.php'); ?>" class="text-gray-600 hover:text-primary transition block py-2 px-4">Contact us</a>
                                 </li>
                                 <li>
-                                    <a href="<?php echo $baseUrl; ?>/sale.php" class="text-gray-600 hover:text-primary transition flex items-center py-2 px-4">
+                                    <a href="<?php echo url('sale.php'); ?>" class="text-gray-600 hover:text-primary transition flex items-center py-2 px-4">
                                         Sale
                                         <span class="ml-2 bg-red-500 text-white text-xs px-2 py-0.5 rounded-full">HOT</span>
                                     </a>
                                 </li>
                                 <li>
-                                    <a href="<?php echo $baseUrl; ?>/store.php" class="text-gray-600 hover:text-primary transition block py-2 px-4">Our store</a>
+                                    <a href="<?php echo url('store.php'); ?>" class="text-gray-600 hover:text-primary transition block py-2 px-4">Our store</a>
                                 </li>
                                 <li>
-                                    <a href="<?php echo $baseUrl; ?>/faq.php" class="text-gray-600 hover:text-primary transition block py-2 px-4">FAQ</a>
+                                    <a href="<?php echo url('faq.php'); ?>" class="text-gray-600 hover:text-primary transition block py-2 px-4">FAQ</a>
                                 </li>
                                 <li>
-                                    <a href="<?php echo $baseUrl; ?>/wishlist.php" class="text-gray-600 hover:text-primary transition block py-2 px-4">Wishlist</a>
+                                    <a href="<?php echo url('wishlist.php'); ?>" class="text-gray-600 hover:text-primary transition block py-2 px-4">Wishlist</a>
                                 </li>
                                 <li>
-                                    <a href="<?php echo $baseUrl; ?>/compare.php" class="text-gray-600 hover:text-primary transition block py-2 px-4">Compare</a>
+                                    <a href="<?php echo url('compare.php'); ?>" class="text-gray-600 hover:text-primary transition block py-2 px-4">Compare</a>
                                 </li>
                                 <li>
-                                    <a href="<?php echo $baseUrl; ?>/location.php" class="text-gray-600 hover:text-primary transition block py-2 px-4">Store location</a>
+                                    <a href="<?php echo url('location.php'); ?>" class="text-gray-600 hover:text-primary transition block py-2 px-4">Store location</a>
                                 </li>
                                 <li>
-                                    <a href="<?php echo $baseUrl; ?>/recently-viewed.php" class="text-gray-600 hover:text-primary transition block py-2 px-4">Recently viewed products</a>
+                                    <a href="<?php echo url('recently-viewed.php'); ?>" class="text-gray-600 hover:text-primary transition block py-2 px-4">Recently viewed products</a>
                                 </li>
                             </ul>
                         </div>
                     </div>
-                    <a href="<?php echo $baseUrl; ?>/blog.php" class="text-black hover:text-gray-600 transition relative group font-sans text-md nav-link">
+                    <a href="<?php echo url('blog.php'); ?>" class="text-black hover:text-gray-600 transition relative group font-sans text-md nav-link">
                         Blog
                         <i class="fas fa-chevron-down text-xs ml-1"></i>
                     </a>
@@ -275,12 +294,12 @@ $baseUrl = getBaseUrl();
                     </button>
                     
                     <!-- User Account -->
-                    <a href="<?php echo $baseUrl; ?>/account.php" class="text-black hover:text-gray-600 transition header-icon">
+                    <a href="<?php echo url('account.php'); ?>" class="text-black hover:text-gray-600 transition header-icon">
                         <i class="fas fa-user text-lg"></i>
                     </a>
                     
                     <!-- Wishlist -->
-                    <a href="<?php echo $baseUrl; ?>/wishlist.php" class="text-gray-800 hover:text-primary transition relative">
+                    <a href="<?php echo url('wishlist.php'); ?>" class="text-gray-800 hover:text-primary transition relative">
                         <i class="fas fa-heart text-xl"></i>
                         <span class="wishlist-count absolute -top-2 -right-2 bg-red-500 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center">0</span>
                     </a>
@@ -301,11 +320,11 @@ $baseUrl = getBaseUrl();
             <!-- Mobile Navigation -->
             <div class="hidden md:hidden pb-4" id="mobileMenu">
                 <div class="flex flex-col space-y-4">
-                    <a href="<?php echo $baseUrl; ?>/" class="text-gray-800 hover:text-primary transition">Home</a>
-                    <a href="<?php echo $baseUrl; ?>/shop.php" class="text-gray-800 hover:text-primary transition">Shop</a>
-                    <a href="<?php echo $baseUrl; ?>/products.php" class="text-gray-800 hover:text-primary transition">Products</a>
-                    <a href="<?php echo $baseUrl; ?>/pages.php" class="text-gray-800 hover:text-primary transition">Pages</a>
-                    <a href="<?php echo $baseUrl; ?>/blog.php" class="text-gray-800 hover:text-primary transition">Blog</a>
+                    <a href="<?php echo url(''); ?>" class="text-gray-800 hover:text-primary transition">Home</a>
+                    <a href="<?php echo url('shop.php'); ?>" class="text-gray-800 hover:text-primary transition">Shop</a>
+                    <a href="<?php echo url('products.php'); ?>" class="text-gray-800 hover:text-primary transition">Products</a>
+                    <a href="<?php echo url('pages.php'); ?>" class="text-gray-800 hover:text-primary transition">Pages</a>
+                    <a href="<?php echo url('blog.php'); ?>" class="text-gray-800 hover:text-primary transition">Blog</a>
                 </div>
             </div>
         </div>

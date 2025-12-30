@@ -24,7 +24,7 @@ $products = $product->getTrending(6);
             ?>
             <div class="product-card bg-white rounded-lg overflow-hidden shadow-md hover:shadow-xl transition-all duration-300 group relative">
                 <div class="relative overflow-hidden">
-                    <a href="<?php echo $baseUrl; ?>/product.php?slug=<?php echo urlencode($item['slug'] ?? ''); ?>">
+                    <a href="<?php echo url('product.php?slug=' . urlencode($item['slug'] ?? '')); ?>">
                         <img src="<?php echo htmlspecialchars($mainImage); ?>" alt="<?php echo htmlspecialchars($item['name']); ?>" 
                              class="w-full h-64 object-cover group-hover:scale-110 transition-transform duration-500">
                     </a>

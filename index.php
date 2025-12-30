@@ -1,7 +1,8 @@
 <?php
-// Enable error reporting for debugging (remove in production)
-error_reporting(E_ALL);
-ini_set('display_errors', 1);
+// Disable error reporting in production for better performance
+error_reporting(0);
+ini_set('display_errors', 0);
+ini_set('log_errors', 1);
 
 $pageTitle = 'Home';
 require_once __DIR__ . '/includes/header.php';
