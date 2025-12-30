@@ -56,9 +56,9 @@ $products = $db->fetchAll($sql, $params);
                    placeholder="Search here..." 
                    value="<?php echo htmlspecialchars($search); ?>"
                    class="border rounded px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500">
-            <a href="<?php echo $baseUrl; ?>/admin/products/add.php" class="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600 transition">
-                + Add new
-            </a>
+            <a href="<?php echo url('admin/products/add.php'); ?>" class="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600 transition">
+                    + Add new
+                </a>
         </div>
     </div>
 </div>
@@ -102,10 +102,10 @@ $products = $db->fetchAll($sql, $params);
                 <td><?php echo date('m/d/Y', strtotime($item['created_at'])); ?></td>
                 <td>
                     <div class="flex items-center space-x-2">
-                        <a href="<?php echo $baseUrl; ?>/admin/products/view.php?id=<?php echo $item['id']; ?>" class="text-blue-500 hover:text-blue-700">
+                        <a href="<?php echo url('admin/products/view.php?id=' . $item['id']); ?>" class="text-blue-500 hover:text-blue-700">
                             <i class="fas fa-eye"></i>
                         </a>
-                        <a href="<?php echo $baseUrl; ?>/admin/products/edit.php?id=<?php echo $item['id']; ?>" class="text-green-500 hover:text-green-700">
+                        <a href="<?php echo url('admin/products/edit.php?id=' . $item['id']); ?>" class="text-green-500 hover:text-green-700">
                             <i class="fas fa-edit"></i>
                         </a>
                         <button onclick="deleteProduct(<?php echo $item['id']; ?>)" class="text-red-500 hover:text-red-700">
@@ -120,10 +120,13 @@ $products = $db->fetchAll($sql, $params);
 </div>
 
 <script>
-const BASE_URL = '<?php echo $baseUrl; ?>';
+// BASE_URL is already declared in admin-header.php, so check if it exists first
+if (typeof BASE_URL === 'undefined') {
+    const BASE_URL = '<?php echo $baseUrl; ?>';
+}
 function deleteProduct(id) {
     showConfirmModal('Are you sure you want to delete this product? This action cannot be undone.', function() {
-        fetch(BASE_URL + '/admin/api/products.php', {
+        fetch(BASE_URL + '/admin/api/products', {
             method: 'DELETE',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ id: id })

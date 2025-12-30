@@ -117,7 +117,8 @@ function initializeImageUpload() {
         const formData = new FormData();
         formData.append('image', file);
         
-        const uploadUrl = (typeof BASE_URL !== 'undefined' ? BASE_URL : '/zensshop') + '/admin/api/upload.php';
+        const baseUrl = typeof BASE_URL !== 'undefined' ? BASE_URL : window.location.pathname.split('/').slice(0, -1).join('/') || '';
+        const uploadUrl = baseUrl + '/admin/api/upload';
         fetch(uploadUrl, {
             method: 'POST',
             body: formData

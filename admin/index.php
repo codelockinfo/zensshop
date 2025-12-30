@@ -9,7 +9,7 @@ $success = '';
 
 // Redirect if already logged in
 if ($auth->isLoggedIn()) {
-    header('Location: ' . $baseUrl . '/admin/dashboard.php');
+    header('Location: ' . $baseUrl . '/admin/dashboard');
     exit;
 }
 
@@ -20,7 +20,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     
     try {
         $auth->login($email, $password);
-        header('Location: ' . $baseUrl . '/admin/dashboard.php');
+        header('Location: ' . $baseUrl . '/admin/dashboard');
         exit;
     } catch (Exception $e) {
         $error = $e->getMessage();

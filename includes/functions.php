@@ -64,6 +64,11 @@ function getImageUrl($path) {
         return $path;
     }
     
+    // If it's a base64 data URI, return as is
+    if (strpos($path, 'data:image') === 0 || strpos($path, 'data:') === 0) {
+        return $path;
+    }
+    
     // If starts with /, it's already a relative path from root
     if (strpos($path, '/') === 0) {
         return $path;

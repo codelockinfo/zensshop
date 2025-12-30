@@ -25,7 +25,8 @@
         searchResultsContent.innerHTML = '';
         
         // Fetch search results
-        const searchUrl = (typeof BASE_URL !== 'undefined' ? BASE_URL : '/zensshop') + '/admin/api/search.php?q=' + encodeURIComponent(query);
+        const baseUrl = typeof BASE_URL !== 'undefined' ? BASE_URL : window.location.pathname.split('/').slice(0, -1).join('/') || '';
+        const searchUrl = baseUrl + '/admin/api/search?q=' + encodeURIComponent(query);
         fetch(searchUrl)
             .then(response => response.json())
             .then(data => {
@@ -57,7 +58,8 @@
             `;
             
             data.products.forEach(product => {
-                const defaultImage = (typeof BASE_URL !== 'undefined' ? BASE_URL : '/zensshop') + '/assets/images/default-product.svg';
+                const baseUrl = typeof BASE_URL !== 'undefined' ? BASE_URL : window.location.pathname.split('/').slice(0, -1).join('/') || '';
+                const defaultImage = baseUrl + '/assets/images/default-product.svg';
                 const imageUrl = product.image || defaultImage;
                 html += `
                     <a href="${product.url}" class="admin-search-item">

@@ -394,7 +394,10 @@ $existingVariants = $product->getVariants($productId);
 </div>
 
 <script>
-const BASE_URL = '<?php echo $baseUrl; ?>';
+// BASE_URL is already declared in admin-header.php, so check if it exists first
+if (typeof BASE_URL === 'undefined') {
+    const BASE_URL = '<?php echo $baseUrl; ?>';
+}
 </script>
 <script src="<?php echo $baseUrl; ?>/assets/js/admin-image-upload.js"></script>
 <script src="<?php echo $baseUrl; ?>/assets/js/product-variants.js"></script>

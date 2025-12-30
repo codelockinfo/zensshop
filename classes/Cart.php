@@ -77,7 +77,7 @@ class Cart {
             }
             
             // Convert to full URL if needed
-            if (!empty($item['image']) && strpos($item['image'], 'http') !== 0 && strpos($item['image'], '/') !== 0) {
+            if (!empty($item['image']) && strpos($item['image'], 'http') !== 0 && strpos($item['image'], '/') !== 0 && strpos($item['image'], 'data:') !== 0) {
                 if (defined('UPLOAD_URL')) {
                     $item['image'] = UPLOAD_URL . '/' . $item['image'];
                 } else {
@@ -126,8 +126,8 @@ class Cart {
                 }
             }
             
-            // Convert to full URL if needed
-            if (!empty($productImage) && strpos($productImage, 'http') !== 0 && strpos($productImage, '/') !== 0) {
+            // Convert to full URL if needed (but not for base64 data URIs)
+            if (!empty($productImage) && strpos($productImage, 'http') !== 0 && strpos($productImage, '/') !== 0 && strpos($productImage, 'data:') !== 0) {
                 if (defined('UPLOAD_URL')) {
                     $productImage = UPLOAD_URL . '/' . $productImage;
                 } else {
@@ -189,8 +189,8 @@ class Cart {
                 }
             }
             
-            // Convert to full URL if needed
-            if (!empty($productImage) && strpos($productImage, 'http') !== 0 && strpos($productImage, '/') !== 0) {
+            // Convert to full URL if needed (but not for base64 data URIs)
+            if (!empty($productImage) && strpos($productImage, 'http') !== 0 && strpos($productImage, '/') !== 0 && strpos($productImage, 'data:') !== 0) {
                 if (defined('UPLOAD_URL')) {
                     $productImage = UPLOAD_URL . '/' . $productImage;
                 } else {

@@ -95,10 +95,13 @@ $orders = $order->getAll($filters);
 </div>
 
 <script>
-const BASE_URL = '<?php echo $baseUrl; ?>';
+// BASE_URL is already declared in admin-header.php, so check if it exists first
+if (typeof BASE_URL === 'undefined') {
+    const BASE_URL = '<?php echo $baseUrl; ?>';
+}
 function deleteOrder(id) {
     showConfirmModal('Are you sure you want to delete this order? This action cannot be undone.', function() {
-        fetch(BASE_URL + '/admin/api/orders.php', {
+        fetch(BASE_URL + '/admin/api/orders', {
             method: 'DELETE',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ id: id })

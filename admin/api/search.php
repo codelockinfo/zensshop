@@ -57,8 +57,8 @@ try {
             'sku' => $product['sku'],
             'price' => $product['price'],
             'status' => $product['status'],
-            'image' => $product['featured_image'] ?: $baseUrl . '/assets/images/default-product.svg',
-            'url' => $baseUrl . "/admin/products/edit.php?id={$product['id']}"
+            'image' => !empty($product['featured_image']) ? getImageUrl($product['featured_image']) : ($baseUrl . '/assets/images/default-product.svg'),
+            'url' => url("admin/products/edit.php?id={$product['id']}")
         ];
     }
     
@@ -79,7 +79,7 @@ try {
             'slug' => $category['slug'],
             'image' => $category['image'] ?: $baseUrl . '/assets/images/default-category.svg',
             'status' => $category['status'],
-            'url' => $baseUrl . "/admin/categories/manage.php?id={$category['id']}"
+            'url' => url("admin/categories/manage.php?id={$category['id']}")
         ];
     }
     
@@ -113,7 +113,7 @@ try {
             'customer_name' => $order['customer_name'] ?: 'Guest',
             'customer_email' => $order['customer_email'] ?: '',
             'created_at' => $order['created_at'],
-            'url' => $baseUrl . "/admin/orders/detail.php?id={$order['id']}"
+            'url' => url("admin/orders/detail.php?id={$order['id']}")
         ];
     }
     
@@ -136,7 +136,7 @@ try {
                 'email' => $customer['email'],
                 'phone' => $customer['phone'] ?? '',
                 'created_at' => $customer['created_at'],
-                'url' => $baseUrl . "/admin/customers/view.php?id={$customer['id']}"
+                'url' => url("admin/customers/view.php?id={$customer['id']}")
             ];
         }
     } catch (Exception $e) {

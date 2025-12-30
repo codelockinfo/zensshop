@@ -10,6 +10,25 @@ $currentUser = $auth->getCurrentUser();
 
 // Get base URL using the centralized function
 $baseUrl = getBaseUrl();
+
+// Ensure url() function is available
+if (!function_exists('url')) {
+    function url($path = '') {
+        $baseUrl = getBaseUrl();
+        $path = ltrim($path, '/');
+        $queryString = '';
+        if (strpos($path, '?') !== false) {
+            $parts = explode('?', $path, 2);
+            $path = $parts[0];
+            $queryString = '?' . $parts[1];
+        }
+        $path = preg_replace('/\.php$/', '', $path);
+        if (empty($path)) {
+            return $baseUrl . '/' . $queryString;
+        }
+        return $baseUrl . '/' . $path . $queryString;
+    }
+}
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -88,15 +107,26 @@ $baseUrl = getBaseUrl();
                 <div class="flex items-center space-x-2 cursor-pointer user-profile-trigger">
                     <?php 
                     $profileImage = $currentUser['profile_image'] ?? null;
-                    $imageUrl = '<?php echo $baseUrl; ?>/assets/images/default-avatar.svg';
+                    $imageUrl = $baseUrl . '/assets/images/default-avatar.svg';
                     
                     if ($profileImage) {
-                        // Remove leading slash and convert to file path
-                        $imagePath = str_replace('<?php echo $baseUrl; ?>/', '', $profileImage);
-                        $fullPath = __DIR__ . '/../' . $imagePath;
-                        
-                        if (file_exists($fullPath)) {
+                        // Check if it's already a full URL
+                        if (strpos($profileImage, 'http://') === 0 || strpos($profileImage, 'https://') === 0) {
                             $imageUrl = $profileImage;
+                        } elseif (strpos($profileImage, 'data:image') === 0) {
+                            // It's a base64 data URI, use it directly
+                            $imageUrl = $profileImage;
+                        } elseif (strpos($profileImage, '/') === 0) {
+                            // It's already a path from root
+                            $imageUrl = $profileImage;
+                        } else {
+                            // Remove base URL prefix if present and convert to file path
+                            $imagePath = str_replace($baseUrl . '/', '', $profileImage);
+                            $fullPath = __DIR__ . '/../' . ltrim($imagePath, '/');
+                            
+                            if (file_exists($fullPath)) {
+                                $imageUrl = $baseUrl . '/' . ltrim($imagePath, '/');
+                            }
                         }
                     }
                     ?>
@@ -146,7 +176,7 @@ $baseUrl = getBaseUrl();
                             </a>
                         </li>
                         <li class="border-t border-gray-200 mt-1 pt-1">
-                            <a href="<?php echo $baseUrl; ?>/admin/api/auth.php?action=logout" class="user-dropdown-item text-red-600 hover:text-red-700">
+                            <a href="<?php echo url('admin/api/auth.php?action=logout'); ?>" class="user-dropdown-item text-red-600 hover:text-red-700">
                                 <i class="fas fa-sign-out-alt w-5"></i>
                                 <span>Log out</span>
                             </a>
