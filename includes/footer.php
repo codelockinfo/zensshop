@@ -1,3 +1,12 @@
+<?php
+// Ensure baseUrl is available
+if (!isset($baseUrl) && function_exists('getBaseUrl')) {
+    $baseUrl = getBaseUrl();
+} elseif (!isset($baseUrl)) {
+    require_once __DIR__ . '/functions.php';
+    $baseUrl = getBaseUrl();
+}
+?>
     <!-- Footer -->
     <footer class="bg-white text-black mt-20 relative">
         <div class="container mx-auto px-4 py-12">
@@ -6,7 +15,7 @@
                 <div class="column w-full md:w-1/2 lg:w-1/5 px-4 mb-8 lg:mb-0">
                     <h3 class="text-lg font-sans font-bold mb-4 text-black">About us</h3>
                     <p class="text-black mb-4 text-sm leading-relaxed">We only carry designs we believe in ethically and aesthetically – original, authentic pieces that are made to last.</p>
-                    <a href="/zensshop/about.php" class="text-black underline hover:no-underline transition text-sm mb-4 inline-block">Learn more</a>
+                    <a href="<?php echo $baseUrl; ?>/about.php" class="text-black underline hover:no-underline transition text-sm mb-4 inline-block">Learn more</a>
                     <div class="space-y-2 text-black mt-4">
                         <p class="flex items-center text-sm"><i class="fas fa-map-marker-alt mr-2 text-sm"></i>Street Address 2571 Oakridge</p>
                         <p class="flex items-center text-sm"><i class="fas fa-phone mr-2 text-sm"></i>+1 (973) 435-3638</p>
@@ -35,11 +44,11 @@
                 <div>
                     <h3 class="text-xl font-heading font-bold mb-4">Our Company</h3>
                     <ul class="space-y-2 text-gray-400">
-                        <li><a href="/oecom/about.php" class="hover:text-white transition">About Us</a></li>
-                        <li><a href="/oecom/contact.php" class="hover:text-white transition">Contact Us</a></li>
-                        <li><a href="/oecom/store.php" class="hover:text-white transition">Our Store</a></li>
-                        <li><a href="/oecom/location.php" class="hover:text-white transition">Store Location</a></li>
-                        <li><a href="/oecom/faq.php" class="hover:text-white transition">FAQ</a></li>
+                        <li><a href="<?php echo $baseUrl; ?>/about.php" class="hover:text-white transition">About Us</a></li>
+                        <li><a href="<?php echo $baseUrl; ?>/contact.php" class="hover:text-white transition">Contact Us</a></li>
+                        <li><a href="<?php echo $baseUrl; ?>/store.php" class="hover:text-white transition">Our Store</a></li>
+                        <li><a href="<?php echo $baseUrl; ?>/location.php" class="hover:text-white transition">Store Location</a></li>
+                        <li><a href="<?php echo $baseUrl; ?>/faq.php" class="hover:text-white transition">FAQ</a></li>
                     </ul>
                 </div>
                 
@@ -47,12 +56,12 @@
                 <div>
                     <h3 class="text-xl font-heading font-bold mb-4">Quick links</h3>
                     <ul class="space-y-2 text-gray-400">
-                        <li><a href="/oecom/privacy.php" class="hover:text-white transition">Privacy Policy</a></li>
-                        <li><a href="/oecom/terms.php" class="hover:text-white transition">Terms & Conditions</a></li>
-                        <li><a href="/oecom/sale.php" class="hover:text-white transition">Sale</a></li>
-                        <li><a href="/oecom/size-guide.php" class="hover:text-white transition">Size guide</a></li>
-                        <li><a href="/oecom/wishlist.php" class="hover:text-white transition">Wishlist</a></li>
-                        <li><a href="/oecom/compare.php" class="hover:text-white transition">Compare</a></li>
+                        <li><a href="<?php echo $baseUrl; ?>/privacy.php" class="hover:text-white transition">Privacy Policy</a></li>
+                        <li><a href="<?php echo $baseUrl; ?>/terms.php" class="hover:text-white transition">Terms & Conditions</a></li>
+                        <li><a href="<?php echo $baseUrl; ?>/sale.php" class="hover:text-white transition">Sale</a></li>
+                        <li><a href="<?php echo $baseUrl; ?>/size-guide.php" class="hover:text-white transition">Size guide</a></li>
+                        <li><a href="<?php echo $baseUrl; ?>/wishlist.php" class="hover:text-white transition">Wishlist</a></li>
+                        <li><a href="<?php echo $baseUrl; ?>/compare.php" class="hover:text-white transition">Compare</a></li>
                     </ul>
                 </div>
                 
@@ -60,11 +69,11 @@
                 <div>
                     <h3 class="text-xl font-heading font-bold mb-4">Shop Categories</h3>
                     <ul class="space-y-2 text-gray-400">
-                        <li><a href="/oecom/category.php?cat=bracelets" class="hover:text-white transition">Bracelets</a></li>
-                        <li><a href="/oecom/category.php?cat=earrings" class="hover:text-white transition">Earrings</a></li>
-                        <li><a href="/oecom/category.php?cat=rings" class="hover:text-white transition">Rings</a></li>
-                        <li><a href="/oecom/category.php?cat=necklaces" class="hover:text-white transition">Necklaces</a></li>
-                        <li><a href="/oecom/category.php?cat=jewelry-sets" class="hover:text-white transition">Jewelry Sets</a></li>
+                        <li><a href="<?php echo $baseUrl; ?>/category.php?cat=bracelets" class="hover:text-white transition">Bracelets</a></li>
+                        <li><a href="<?php echo $baseUrl; ?>/category.php?cat=earrings" class="hover:text-white transition">Earrings</a></li>
+                        <li><a href="<?php echo $baseUrl; ?>/category.php?cat=rings" class="hover:text-white transition">Rings</a></li>
+                        <li><a href="<?php echo $baseUrl; ?>/category.php?cat=necklaces" class="hover:text-white transition">Necklaces</a></li>
+                        <li><a href="<?php echo $baseUrl; ?>/category.php?cat=jewelry-sets" class="hover:text-white transition">Jewelry Sets</a></li>
                     </ul>
                 </div>
                 
@@ -201,10 +210,10 @@
                     <span class="text-lg font-semibold">Total:</span>
                     <span class="text-xl font-bold" id="cartTotal">$0.00</span>
                 </div>
-                <a href="/oecom/cart.php" class="block w-full bg-primary text-white text-center py-3 rounded-lg hover:bg-primary-dark transition mb-2">
+                <a href="<?php echo $baseUrl; ?>/cart.php" class="block w-full bg-primary text-white text-center py-3 rounded-lg hover:bg-primary-dark transition mb-2">
                     View Cart
                 </a>
-                <a href="/oecom/checkout.php" class="block w-full bg-black text-white text-center py-3 rounded-lg hover:bg-gray-800 transition">
+                <a href="<?php echo $baseUrl; ?>/checkout.php" class="block w-full bg-black text-white text-center py-3 rounded-lg hover:bg-gray-800 transition">
                     Checkout
                 </a>
             </div>
@@ -233,11 +242,11 @@
     </div>
     
     <!-- Scripts -->
-    <script src="/oecom/assets/js/main.js"></script>
-    <script src="/oecom/assets/js/cart.js"></script>
-    <script src="/oecom/assets/js/product-cards.js"></script>
-    <script src="/oecom/assets/js/wishlist.js"></script>
-    <script src="/oecom/assets/js/notification.js"></script>
+    <script src="<?php echo $baseUrl; ?>/assets/js/main.js"></script>
+    <script src="<?php echo $baseUrl; ?>/assets/js/cart.js"></script>
+    <script src="<?php echo $baseUrl; ?>/assets/js/product-cards.js"></script>
+    <script src="<?php echo $baseUrl; ?>/assets/js/wishlist.js"></script>
+    <script src="<?php echo $baseUrl; ?>/assets/js/notification.js"></script>
 </body>
 </html>
 

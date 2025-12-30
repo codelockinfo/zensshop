@@ -5,8 +5,11 @@
 
 require_once __DIR__ . '/../../classes/Auth.php';
 require_once __DIR__ . '/../../classes/Database.php';
+require_once __DIR__ . '/../../includes/functions.php';
 
 header('Content-Type: application/json');
+
+$baseUrl = getBaseUrl();
 
 $auth = new Auth();
 $auth->requireLogin();
@@ -64,7 +67,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         }
         
         // Return relative path
-        $relativePath = '/oecom/assets/images/uploads/' . $filename;
+        $relativePath = $baseUrl . '/assets/images/uploads/' . $filename;
         
         echo json_encode([
             'success' => true,

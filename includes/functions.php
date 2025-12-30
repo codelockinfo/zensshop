@@ -3,6 +3,26 @@
  * Helper Functions
  */
 
+// Load constants if not already loaded
+if (!defined('SITE_URL')) {
+    require_once __DIR__ . '/../config/constants.php';
+}
+
+/**
+ * Get base URL for the site
+ * ALWAYS returns /zensshop/ based on actual file system directory
+ * This ensures consistency regardless of access path (/oecom/ or /zensshop/)
+ */
+function getBaseUrl() {
+    // ALWAYS use the actual file system directory name (zensshop)
+    // This ensures all URLs point to /zensshop/ even when accessed via /oecom/
+    $projectRoot = dirname(__DIR__);
+    $projectDir = basename($projectRoot);
+    
+    // Return the actual directory name (should be 'zensshop')
+    return '/' . $projectDir;
+}
+
 /**
  * Get full image URL from relative path
  */
@@ -22,7 +42,8 @@ function getImageUrl($path) {
     }
     
     // Otherwise, prepend base path
-    return '/oecom/assets/images/uploads/' . $path;
+    $baseUrl = getBaseUrl();
+    return $baseUrl . '/assets/images/uploads/' . $path;
 }
 
 /**

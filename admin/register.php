@@ -1,13 +1,15 @@
 <?php
 require_once __DIR__ . '/../classes/Auth.php';
+require_once __DIR__ . '/../includes/functions.php';
 
+$baseUrl = getBaseUrl();
 $auth = new Auth();
 $error = '';
 $success = '';
 
 // Redirect if already logged in
 if ($auth->isLoggedIn()) {
-    header('Location: /oecom/admin/dashboard.php');
+    header('Location: ' . $baseUrl . '/admin/dashboard.php');
     exit;
 }
 
@@ -115,7 +117,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         <div class="mt-6 text-center">
             <p class="text-gray-600">
                 Already have an account? 
-                <a href="/oecom/admin/index.php" class="text-blue-500 hover:text-blue-700">
+                <a href="<?php echo $baseUrl; ?>/admin/index.php" class="text-blue-500 hover:text-blue-700">
                     Login here
                 </a>
             </p>

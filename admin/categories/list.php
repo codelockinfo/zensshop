@@ -1,7 +1,9 @@
 <?php
 require_once __DIR__ . '/../../classes/Auth.php';
 require_once __DIR__ . '/../../classes/Database.php';
+require_once __DIR__ . '/../../includes/functions.php';
 
+$baseUrl = getBaseUrl();
 $auth = new Auth();
 $auth->requireLogin();
 
@@ -18,7 +20,7 @@ $categories = $db->fetchAll("SELECT * FROM categories ORDER BY sort_order ASC");
 </div>
 
 <div class="admin-card mb-6">
-    <a href="/oecom/admin/categories/manage.php" class="admin-btn admin-btn-primary">
+    <a href="<?php echo $baseUrl; ?>/admin/categories/manage.php" class="admin-btn admin-btn-primary">
         + Add Category
     </a>
 </div>
@@ -49,7 +51,7 @@ $categories = $db->fetchAll("SELECT * FROM categories ORDER BY sort_order ASC");
                 <td><?php echo $cat['sort_order']; ?></td>
                 <td>
                     <div class="flex items-center space-x-2">
-                        <a href="/oecom/admin/categories/manage.php?id=<?php echo $cat['id']; ?>" class="text-green-500 hover:text-green-700">
+                        <a href="<?php echo $baseUrl; ?>/admin/categories/manage.php?id=<?php echo $cat['id']; ?>" class="text-green-500 hover:text-green-700">
                             <i class="fas fa-edit"></i>
                         </a>
                         <button onclick="deleteCategory(<?php echo $cat['id']; ?>)" class="text-red-500 hover:text-red-700">
@@ -64,9 +66,10 @@ $categories = $db->fetchAll("SELECT * FROM categories ORDER BY sort_order ASC");
 </div>
 
 <script>
+const BASE_URL = '<?php echo $baseUrl; ?>';
 function deleteCategory(id) {
     showConfirmModal('Are you sure you want to delete this category? This action cannot be undone.', function() {
-        fetch('/oecom/admin/api/categories.php', {
+        fetch(BASE_URL + '/admin/api/categories.php', {
             method: 'DELETE',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ id: id })

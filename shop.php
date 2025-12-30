@@ -103,7 +103,7 @@ $maxPriceRange = $priceRange['max_price'] ?? 1000;
     <div class="container mx-auto px-4">
         <div class="text-center">
             <nav class="text-sm text-gray-600 mb-4">
-                <a href="/oecom/" class="hover:text-primary">Home</a> > 
+                <a href="<?php echo $baseUrl; ?>/" class="hover:text-primary">Home</a> > 
                 <span class="text-gray-900"><?php echo htmlspecialchars($category['name'] ?? ''); ?></span>
             </nav>
             <h1 class="text-4xl md:text-6xl font-heading font-bold mb-4"><?php echo htmlspecialchars($category['name'] ?? ''); ?></h1>
@@ -118,7 +118,7 @@ $maxPriceRange = $priceRange['max_price'] ?? 1000;
     <div class="container mx-auto px-4">
         <div class="text-center">
             <nav class="text-sm text-gray-600 mb-4">
-                <a href="/oecom/" class="hover:text-primary">Home</a> > 
+                <a href="<?php echo $baseUrl; ?>/" class="hover:text-primary">Home</a> > 
                 <span class="text-gray-900">Shop</span>
             </nav>
             <h1 class="text-4xl md:text-6xl font-heading font-bold mb-4">Shop</h1>
@@ -142,11 +142,11 @@ $maxPriceRange = $priceRange['max_price'] ?? 1000;
                             <i class="fas fa-chevron-down text-sm" id="category-arrow"></i>
                         </h3>
                         <div id="category-filter" class="space-y-2">
-                            <a href="/oecom/shop.php" class="block text-gray-600 hover:text-primary transition <?php echo !$categorySlug ? 'font-semibold text-primary' : ''; ?>">
+                            <a href="<?php echo $baseUrl; ?>/shop.php" class="block text-gray-600 hover:text-primary transition <?php echo !$categorySlug ? 'font-semibold text-primary' : ''; ?>">
                                 All Categories
                             </a>
                             <?php foreach ($categories as $cat): ?>
-                            <a href="/oecom/shop.php?category=<?php echo urlencode($cat['slug'] ?? ''); ?>" 
+                            <a href="<?php echo $baseUrl; ?>/shop.php?category=<?php echo urlencode($cat['slug'] ?? ''); ?>" 
                                class="block text-gray-600 hover:text-primary transition <?php echo $categorySlug === ($cat['slug'] ?? '') ? 'font-semibold text-primary' : ''; ?>">
                                 <?php echo htmlspecialchars($cat['name'] ?? ''); ?> (<?php echo $cat['product_count'] ?? 0; ?>)
                             </a>
@@ -249,7 +249,7 @@ $maxPriceRange = $priceRange['max_price'] ?? 1000;
                     ?>
                     <div class="product-card bg-white rounded-lg overflow-hidden shadow-md hover:shadow-xl transition-all duration-300 group relative">
                         <div class="relative overflow-hidden">
-                            <a href="/oecom/product.php?slug=<?php echo urlencode($itemSlug); ?>">
+                            <a href="<?php echo $baseUrl; ?>/product.php?slug=<?php echo urlencode($itemSlug); ?>">
                                 <img src="<?php echo htmlspecialchars($mainImage); ?>" 
                                      alt="<?php echo htmlspecialchars($itemName); ?>" 
                                      class="w-full h-64 object-cover group-hover:scale-110 transition-transform duration-500">
@@ -269,7 +269,7 @@ $maxPriceRange = $priceRange['max_price'] ?? 1000;
                         
                         <div class="p-4">
                             <h3 class="font-semibold text-lg mb-2">
-                                <a href="/oecom/product.php?slug=<?php echo urlencode($itemSlug); ?>" class="hover:text-primary transition">
+                                <a href="<?php echo $baseUrl; ?>/product.php?slug=<?php echo urlencode($itemSlug); ?>" class="hover:text-primary transition">
                                     <?php echo htmlspecialchars($itemName); ?>
                                 </a>
                             </h3>
@@ -386,7 +386,7 @@ function applyFilters() {
     // Reset to page 1
     params.delete('page');
     
-    window.location.href = '/oecom/shop.php?' + params.toString();
+    window.location.href = '<?php echo $baseUrl; ?>/shop.php?' + params.toString();
 }
 
 function setView(view) {
@@ -411,7 +411,7 @@ function addToCart(productId) {
     if (typeof addToCart === 'function') {
         window.addToCart(productId, 1);
     } else {
-        fetch('/oecom/api/cart.php', {
+        fetch('<?php echo $baseUrl; ?>/api/cart.php', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ product_id: productId, quantity: 1 })

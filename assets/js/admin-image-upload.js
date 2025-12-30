@@ -117,7 +117,8 @@ function initializeImageUpload() {
         const formData = new FormData();
         formData.append('image', file);
         
-        fetch('/oecom/admin/api/upload.php', {
+        const uploadUrl = (typeof BASE_URL !== 'undefined' ? BASE_URL : '/zensshop') + '/admin/api/upload.php';
+        fetch(uploadUrl, {
             method: 'POST',
             body: formData
         })

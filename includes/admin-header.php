@@ -1,7 +1,15 @@
 <?php
+// Load functions if not already loaded
+if (!function_exists('getBaseUrl')) {
+    require_once __DIR__ . '/functions.php';
+}
+
 require_once __DIR__ . '/../classes/Auth.php';
 $auth = new Auth();
 $currentUser = $auth->getCurrentUser();
+
+// Get base URL using the centralized function
+$baseUrl = getBaseUrl();
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -17,7 +25,11 @@ $currentUser = $auth->getCurrentUser();
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     
     <!-- Custom CSS -->
-    <link rel="stylesheet" href="/oecom/assets/css/admin.css">
+    <link rel="stylesheet" href="<?php echo $baseUrl; ?>/assets/css/admin.css">
+    <script>
+    // Make BASE_URL available globally for all admin pages
+    const BASE_URL = '<?php echo $baseUrl; ?>';
+    </script>
 </head>
 <body class="bg-gray-100">
     <?php if ($currentUser): ?>
@@ -27,7 +39,7 @@ $currentUser = $auth->getCurrentUser();
             <button class="text-gray-600 hover:text-gray-800" id="sidebarToggle">
                 <i class="fas fa-bars text-xl"></i>
             </button>
-            <a href="/oecom/admin/dashboard.php" class="flex items-center space-x-2 text-gray-600 hover:text-gray-800">
+            <a href="<?php echo $baseUrl; ?>/admin/dashboard.php" class="flex items-center space-x-2 text-gray-600 hover:text-gray-800">
                 <i class="fas fa-arrow-left text-sm"></i>
             </a>
             <div class="flex items-center space-x-2">
@@ -76,11 +88,11 @@ $currentUser = $auth->getCurrentUser();
                 <div class="flex items-center space-x-2 cursor-pointer user-profile-trigger">
                     <?php 
                     $profileImage = $currentUser['profile_image'] ?? null;
-                    $imageUrl = '/oecom/assets/images/default-avatar.svg';
+                    $imageUrl = '<?php echo $baseUrl; ?>/assets/images/default-avatar.svg';
                     
                     if ($profileImage) {
                         // Remove leading slash and convert to file path
-                        $imagePath = str_replace('/oecom/', '', $profileImage);
+                        $imagePath = str_replace('<?php echo $baseUrl; ?>/', '', $profileImage);
                         $fullPath = __DIR__ . '/../' . $imagePath;
                         
                         if (file_exists($fullPath)) {
@@ -91,7 +103,7 @@ $currentUser = $auth->getCurrentUser();
                     <img src="<?php echo htmlspecialchars($imageUrl); ?>" 
                          alt="User" 
                          class="w-10 h-10 rounded-full object-cover border-2 border-gray-300"
-                         onerror="this.src='/oecom/assets/images/default-avatar.svg'">
+                         onerror="this.src='<?php echo $baseUrl; ?>/assets/images/default-avatar.svg'">
                     <div>
                         <p class="text-sm font-semibold"><?php echo htmlspecialchars($currentUser['name']); ?></p>
                         <p class="text-xs text-gray-500">Admin</p>
@@ -103,38 +115,38 @@ $currentUser = $auth->getCurrentUser();
                 <div class="user-dropdown-menu">
                     <ul class="space-y-1">
                         <li>
-                            <a href="/oecom/admin/account.php" class="user-dropdown-item">
+                            <a href="<?php echo $baseUrl; ?>/admin/account.php" class="user-dropdown-item">
                                 <i class="fas fa-user w-5"></i>
                                 <span>Account</span>
                             </a>
                         </li>
                         <li>
-                            <a href="/oecom/admin/inbox.php" class="user-dropdown-item">
+                            <a href="<?php echo $baseUrl; ?>/admin/inbox.php" class="user-dropdown-item">
                                 <i class="fas fa-envelope w-5"></i>
                                 <span>Inbox</span>
                                 <span class="ml-auto bg-red-500 text-white text-xs px-2 py-0.5 rounded-full">27</span>
                             </a>
                         </li>
                         <li>
-                            <a href="/oecom/admin/taskboard.php" class="user-dropdown-item">
+                            <a href="<?php echo $baseUrl; ?>/admin/taskboard.php" class="user-dropdown-item">
                                 <i class="fas fa-clipboard-list w-5"></i>
                                 <span>Taskboard</span>
                             </a>
                         </li>
                         <li>
-                            <a href="/oecom/admin/settings.php" class="user-dropdown-item">
+                            <a href="<?php echo $baseUrl; ?>/admin/settings.php" class="user-dropdown-item">
                                 <i class="fas fa-cog w-5"></i>
                                 <span>Setting</span>
                             </a>
                         </li>
                         <li>
-                            <a href="/oecom/admin/support.php" class="user-dropdown-item">
+                            <a href="<?php echo $baseUrl; ?>/admin/support.php" class="user-dropdown-item">
                                 <i class="fas fa-headset w-5"></i>
                                 <span>Support</span>
                             </a>
                         </li>
                         <li class="border-t border-gray-200 mt-1 pt-1">
-                            <a href="/oecom/admin/api/auth.php?action=logout" class="user-dropdown-item text-red-600 hover:text-red-700">
+                            <a href="<?php echo $baseUrl; ?>/admin/api/auth.php?action=logout" class="user-dropdown-item text-red-600 hover:text-red-700">
                                 <i class="fas fa-sign-out-alt w-5"></i>
                                 <span>Log out</span>
                             </a>
@@ -150,7 +162,7 @@ $currentUser = $auth->getCurrentUser();
         <div class="p-4">
             <div class="mb-8 sidebar-section">
                 <h3 class="sidebar-section-title mb-4">MAIN HOME</h3>
-                <a href="/oecom/admin/dashboard.php" class="sidebar-menu-item flex items-center space-x-3 py-2 px-4 <?php echo basename($_SERVER['PHP_SELF']) === 'dashboard.php' ? 'bg-gray-700' : ''; ?>" title="Dashboard">
+                <a href="<?php echo $baseUrl; ?>/admin/dashboard.php" class="sidebar-menu-item flex items-center space-x-3 py-2 px-4 <?php echo basename($_SERVER['PHP_SELF']) === 'dashboard.php' ? 'bg-gray-700' : ''; ?>" title="Dashboard">
                     <i class="fas fa-th-large text-lg"></i>
                     <span class="sidebar-menu-text">Dashboard</span>
                 </a>
@@ -158,63 +170,63 @@ $currentUser = $auth->getCurrentUser();
             
             <div class="mb-8 sidebar-section">
                 <h3 class="sidebar-section-title mb-4">ALL PAGE</h3>
-                <a href="/oecom/admin/products/list.php" class="sidebar-menu-item flex items-center space-x-3 py-2 px-4 <?php echo strpos($_SERVER['PHP_SELF'], 'products') !== false ? 'bg-gray-700' : ''; ?>" title="Ecommerce">
+                <a href="<?php echo $baseUrl; ?>/admin/products/list.php" class="sidebar-menu-item flex items-center space-x-3 py-2 px-4 <?php echo strpos($_SERVER['PHP_SELF'], 'products') !== false ? 'bg-gray-700' : ''; ?>" title="Ecommerce">
                     <i class="fas fa-shopping-cart text-lg"></i>
                     <span class="sidebar-menu-text">Ecommerce</span>
                 </a>
                 <div class="sidebar-submenu mt-2 space-y-1">
-                    <a href="/oecom/admin/products/add.php" class="flex items-center space-x-2 py-1 px-4 text-sm" title="Add Product">
+                    <a href="<?php echo $baseUrl; ?>/admin/products/add.php" class="flex items-center space-x-2 py-1 px-4 text-sm" title="Add Product">
                         <i class="fas fa-gem text-xs"></i>
                         <span>Add Product</span>
                     </a>
-                    <a href="/oecom/admin/products/list.php" class="flex items-center space-x-2 py-1 px-4 text-sm" title="Product List">
+                    <a href="<?php echo $baseUrl; ?>/admin/products/list.php" class="flex items-center space-x-2 py-1 px-4 text-sm" title="Product List">
                         <i class="fas fa-gem text-xs"></i>
                         <span>Product List</span>
                     </a>
                 </div>
                 <!-- Category with Submenu -->
                 <div class="category-menu-parent mt-2">
-                    <a href="/oecom/admin/categories/list.php" class="sidebar-menu-item flex items-center space-x-3 py-2 px-4 <?php echo strpos($_SERVER['PHP_SELF'], 'categories') !== false ? 'bg-gray-700' : ''; ?>" title="Category">
+                    <a href="<?php echo $baseUrl; ?>/admin/categories/list.php" class="sidebar-menu-item flex items-center space-x-3 py-2 px-4 <?php echo strpos($_SERVER['PHP_SELF'], 'categories') !== false ? 'bg-gray-700' : ''; ?>" title="Category">
                         <i class="fas fa-layer-group text-lg"></i>
                         <span class="sidebar-menu-text">Category</span>
                         <i class="fas fa-chevron-up text-xs ml-auto category-arrow"></i>
                     </a>
                     <div class="sidebar-submenu mt-2 space-y-1 <?php echo strpos($_SERVER['PHP_SELF'], 'categories') !== false ? '' : 'hidden'; ?>">
-                        <a href="/oecom/admin/categories/list.php" class="flex items-center space-x-2 py-1 px-4 text-sm <?php echo basename($_SERVER['PHP_SELF']) === 'list.php' && strpos($_SERVER['PHP_SELF'], 'categories') !== false ? 'bg-gray-700' : ''; ?>" title="Category List">
+                        <a href="<?php echo $baseUrl; ?>/admin/categories/list.php" class="flex items-center space-x-2 py-1 px-4 text-sm <?php echo basename($_SERVER['PHP_SELF']) === 'list.php' && strpos($_SERVER['PHP_SELF'], 'categories') !== false ? 'bg-gray-700' : ''; ?>" title="Category List">
                             <i class="fas fa-gem text-xs"></i>
                             <span>Category List</span>
                         </a>
-                        <a href="/oecom/admin/categories/manage.php" class="flex items-center space-x-2 py-1 px-4 text-sm <?php echo basename($_SERVER['PHP_SELF']) === 'manage.php' ? 'bg-gray-700' : ''; ?>" title="New Category">
+                        <a href="<?php echo $baseUrl; ?>/admin/categories/manage.php" class="flex items-center space-x-2 py-1 px-4 text-sm <?php echo basename($_SERVER['PHP_SELF']) === 'manage.php' ? 'bg-gray-700' : ''; ?>" title="New Category">
                             <i class="fas fa-gem text-xs"></i>
                             <span>New Category</span>
                         </a>
                     </div>
                 </div>
-                <a href="/oecom/admin/orders/list.php" class="sidebar-menu-item flex items-center space-x-3 py-2 px-4 mt-2 <?php echo strpos($_SERVER['PHP_SELF'], 'orders') !== false ? 'bg-gray-700' : ''; ?>" title="Order">
+                <a href="<?php echo $baseUrl; ?>/admin/orders/list.php" class="sidebar-menu-item flex items-center space-x-3 py-2 px-4 mt-2 <?php echo strpos($_SERVER['PHP_SELF'], 'orders') !== false ? 'bg-gray-700' : ''; ?>" title="Order">
                     <i class="fas fa-file-alt text-lg"></i>
                     <span class="sidebar-menu-text">Order</span>
                 </a>
                 <div class="sidebar-submenu mt-2 space-y-1">
-                    <a href="/oecom/admin/orders/list.php" class="flex items-center space-x-2 py-1 px-4 text-sm" title="Order List">
+                    <a href="<?php echo $baseUrl; ?>/admin/orders/list.php" class="flex items-center space-x-2 py-1 px-4 text-sm" title="Order List">
                         <i class="fas fa-gem text-xs"></i>
                         <span>Order List</span>
                     </a>
                 </div>
-                <a href="/oecom/admin/discounts/manage.php" class="sidebar-menu-item flex items-center space-x-3 py-2 px-4 mt-2" title="Discounts">
+                <a href="<?php echo $baseUrl; ?>/admin/discounts/manage.php" class="sidebar-menu-item flex items-center space-x-3 py-2 px-4 mt-2" title="Discounts">
                     <i class="fas fa-tag text-lg"></i>
                     <span class="sidebar-menu-text">Discounts</span>
                 </a>
-                <a href="/oecom/admin/customers/list.php" class="sidebar-menu-item flex items-center space-x-3 py-2 px-4 mt-2 <?php echo strpos($_SERVER['PHP_SELF'], 'customers') !== false ? 'bg-primary-light text-primary-dark' : ''; ?>" title="Customers">
+                <a href="<?php echo $baseUrl; ?>/admin/customers/list.php" class="sidebar-menu-item flex items-center space-x-3 py-2 px-4 mt-2 <?php echo strpos($_SERVER['PHP_SELF'], 'customers') !== false ? 'bg-primary-light text-primary-dark' : ''; ?>" title="Customers">
                     <i class="fas fa-users text-lg"></i>
                     <span class="sidebar-menu-text">Customers</span>
                 </a>
                 <div class="sidebar-submenu mt-2 space-y-1">
-                    <a href="/oecom/admin/customers/list.php" class="flex items-center space-x-2 py-1 px-4 text-sm" title="Customer List">
+                    <a href="<?php echo $baseUrl; ?>/admin/customers/list.php" class="flex items-center space-x-2 py-1 px-4 text-sm" title="Customer List">
                         <i class="fas fa-gem text-xs"></i>
                         <span>Customer List</span>
                     </a>
                 </div>
-                <a href="/oecom/admin/report.php" class="sidebar-menu-item flex items-center space-x-3 py-2 px-4 mt-2 <?php echo basename($_SERVER['PHP_SELF']) === 'report.php' ? 'bg-gray-700' : ''; ?>" title="Report">
+                <a href="<?php echo $baseUrl; ?>/admin/report.php" class="sidebar-menu-item flex items-center space-x-3 py-2 px-4 mt-2 <?php echo basename($_SERVER['PHP_SELF']) === 'report.php' ? 'bg-gray-700' : ''; ?>" title="Report">
                     <i class="fas fa-chart-bar text-lg"></i>
                     <span class="sidebar-menu-text">Report</span>
                 </a>

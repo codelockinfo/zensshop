@@ -6,8 +6,11 @@
 
 require_once __DIR__ . '/../../classes/Auth.php';
 require_once __DIR__ . '/../../classes/Database.php';
+require_once __DIR__ . '/../../includes/functions.php';
 
 header('Content-Type: application/json');
+
+$baseUrl = getBaseUrl();
 
 $auth = new Auth();
 if (!$auth->isLoggedIn()) {
@@ -54,8 +57,8 @@ try {
             'sku' => $product['sku'],
             'price' => $product['price'],
             'status' => $product['status'],
-            'image' => $product['featured_image'] ?: '/oecom/assets/images/default-product.svg',
-            'url' => "/oecom/admin/products/edit.php?id={$product['id']}"
+            'image' => $product['featured_image'] ?: $baseUrl . '/assets/images/default-product.svg',
+            'url' => $baseUrl . "/admin/products/edit.php?id={$product['id']}"
         ];
     }
     
@@ -74,9 +77,9 @@ try {
             'id' => $category['id'],
             'name' => $category['name'],
             'slug' => $category['slug'],
-            'image' => $category['image'] ?: '/oecom/assets/images/default-category.svg',
+            'image' => $category['image'] ?: $baseUrl . '/assets/images/default-category.svg',
             'status' => $category['status'],
-            'url' => "/oecom/admin/categories/manage.php?id={$category['id']}"
+            'url' => $baseUrl . "/admin/categories/manage.php?id={$category['id']}"
         ];
     }
     
@@ -110,7 +113,7 @@ try {
             'customer_name' => $order['customer_name'] ?: 'Guest',
             'customer_email' => $order['customer_email'] ?: '',
             'created_at' => $order['created_at'],
-            'url' => "/oecom/admin/orders/detail.php?id={$order['id']}"
+            'url' => $baseUrl . "/admin/orders/detail.php?id={$order['id']}"
         ];
     }
     
@@ -133,7 +136,7 @@ try {
                 'email' => $customer['email'],
                 'phone' => $customer['phone'] ?? '',
                 'created_at' => $customer['created_at'],
-                'url' => "/oecom/admin/customers/view.php?id={$customer['id']}"
+                'url' => $baseUrl . "/admin/customers/view.php?id={$customer['id']}"
             ];
         }
     } catch (Exception $e) {

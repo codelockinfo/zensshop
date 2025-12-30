@@ -1,7 +1,9 @@
 <?php
 require_once __DIR__ . '/../classes/Auth.php';
 require_once __DIR__ . '/../classes/Database.php';
+require_once __DIR__ . '/../includes/functions.php';
 
+$baseUrl = getBaseUrl();
 $auth = new Auth();
 $auth->requireLogin();
 
@@ -43,8 +45,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['upload_profile'])) {
         
         // Delete old profile image if exists
         if (!empty($currentUser['profile_image'])) {
-            // Remove /oecom/ prefix and convert to file path
-            $oldImagePath = str_replace('/oecom/', '', $currentUser['profile_image']);
+            // Remove base URL prefix and convert to file path
+            $oldImagePath = str_replace($baseUrl . '/', '', $currentUser['profile_image']);
             $oldImagePath = __DIR__ . '/../' . $oldImagePath;
             $oldImagePath = str_replace('\\', '/', $oldImagePath);
             if (file_exists($oldImagePath)) {
@@ -63,14 +65,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['upload_profile'])) {
         }
         
         // Update database
-        $profileImagePath = '/oecom/assets/images/profiles/' . $filename;
+        $profileImagePath = $baseUrl . '/assets/images/profiles/' . $filename;
         $db->execute(
             "UPDATE users SET profile_image = ? WHERE id = ?",
             [$profileImagePath, $currentUser['id']]
         );
         
         // Redirect to refresh the page and show updated image
-        header('Location: /oecom/admin/account.php?success=image_updated');
+        header('Location: ' . $baseUrl . '/admin/account.php?success=image_updated');
         exit;
     } catch (Exception $e) {
         $error = $e->getMessage();
@@ -158,11 +160,11 @@ require_once __DIR__ . '/../includes/admin-header.php';
             <div class="relative mb-4">
                 <?php 
                 $profileImage = $currentUser['profile_image'] ?? null;
-                $imageUrl = '/oecom/assets/images/default-avatar.svg';
+                $imageUrl = $baseUrl . '/assets/images/default-avatar.svg';
                 
                 if ($profileImage) {
-                    // Remove leading slash and convert to file path
-                    $imagePath = str_replace('/oecom/', '', $profileImage);
+                    // Remove base URL prefix and convert to file path
+                    $imagePath = str_replace($baseUrl . '/', '', $profileImage);
                     $fullPath = __DIR__ . '/../' . $imagePath;
                     
                     if (file_exists($fullPath)) {

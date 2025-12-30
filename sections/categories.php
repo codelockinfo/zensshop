@@ -1,7 +1,9 @@
 <?php
 require_once __DIR__ . '/../classes/Database.php';
 require_once __DIR__ . '/../classes/Product.php';
+require_once __DIR__ . '/../includes/functions.php';
 
+$baseUrl = getBaseUrl();
 $db = Database::getInstance();
 $categories = $db->fetchAll(
     "SELECT * FROM categories WHERE status = 'active' ORDER BY sort_order ASC LIMIT 6"
@@ -29,7 +31,7 @@ $categories = $db->fetchAll(
             foreach ($categories as $index => $category): 
                 $image = $categoryImages[$index % count($categoryImages)];
             ?>
-            <a href="/oecom/category.php?slug=<?php echo $category['slug']; ?>" class="group text-center">
+            <a href="<?php echo $baseUrl; ?>/category.php?slug=<?php echo $category['slug']; ?>" class="group text-center">
                 <div class="relative mb-4 overflow-hidden rounded-full aspect-square">
                     <img src="<?php echo $image; ?>" alt="<?php echo htmlspecialchars($category['name']); ?>" 
                          class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-300">

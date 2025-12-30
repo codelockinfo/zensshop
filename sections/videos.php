@@ -1,4 +1,7 @@
 <?php
+require_once __DIR__ . '/../includes/functions.php';
+$baseUrl = getBaseUrl();
+
 // Video section with auto-playing videos
 // Note: Replace video URLs with your actual video files
 // For production, upload videos to your server or use a CDN
@@ -8,28 +11,28 @@ $videos = [
         'subtitle' => 'SPECIAL 50% OFF',
         'video' => 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4', // Dummy video - replace with actual
         'poster' => 'https://images.unsplash.com/photo-1603561591411-07134e71a2a9?w=600&h=800&fit=crop',
-        'link' => '/oecom/shop.php?filter=deals'
+        'link' => $baseUrl . '/shop.php?filter=deals'
     ],
     [
         'title' => 'Glamorous Essence',
         'subtitle' => 'EXCLUSIVE DESIGNS',
         'video' => 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ElephantsDream.mp4', // Dummy video - replace with actual
         'poster' => 'https://images.unsplash.com/photo-1611591437281-460bfbe1220a?w=600&h=800&fit=crop',
-        'link' => '/oecom/shop.php?filter=glamorous'
+        'link' => $baseUrl . '/shop.php?filter=glamorous'
     ],
     [
         'title' => 'Ethereal Beauty',
         'subtitle' => 'HANDCRAFTED PERFECTION',
         'video' => 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerBlazes.mp4', // Dummy video - replace with actual
         'poster' => 'https://images.unsplash.com/photo-1599643478518-a784e5dc4c8f?w=600&h=800&fit=crop',
-        'link' => '/oecom/shop.php?filter=ethereal'
+        'link' => $baseUrl . '/shop.php?filter=ethereal'
     ],
     [
         'title' => 'Delicate Sparkle',
         'subtitle' => 'GRACEFUL BEAUTY',
         'video' => 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerEscapes.mp4', // Dummy video - replace with actual
         'poster' => 'https://images.unsplash.com/photo-1605100804763-247f67b3557e?w=600&h=800&fit=crop',
-        'link' => '/oecom/shop.php?filter=sparkle'
+        'link' => $baseUrl . '/shop.php?filter=sparkle'
     ]
 ];
 ?>

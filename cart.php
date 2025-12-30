@@ -17,7 +17,7 @@ $cartTotal = $cart->getTotal();
             <i class="fas fa-shopping-cart text-6xl text-gray-300 mb-4"></i>
             <h2 class="text-2xl font-bold mb-2">Your cart is empty</h2>
             <p class="text-gray-600 mb-6">Start adding some products to your cart!</p>
-            <a href="/oecom/" class="inline-block bg-primary text-white px-6 py-3 rounded-lg hover:bg-primary-dark transition">
+            <a href="<?php echo $baseUrl; ?>/" class="inline-block bg-primary text-white px-6 py-3 rounded-lg hover:bg-primary-dark transition">
                 Continue Shopping
             </a>
         </div>
@@ -77,11 +77,11 @@ $cartTotal = $cart->getTotal();
                             <span>$<?php echo number_format($cartTotal, 2); ?></span>
                         </div>
                     </div>
-                    <a href="/oecom/checkout.php" 
+                    <a href="<?php echo $baseUrl; ?>/checkout.php" 
                        class="block w-full bg-primary text-white text-center py-3 rounded-lg hover:bg-primary-dark transition mb-4">
                         Proceed to Checkout
                     </a>
-                    <a href="/oecom/" 
+                    <a href="<?php echo $baseUrl; ?>/" 
                        class="block w-full text-center py-3 border border-gray-300 rounded-lg hover:bg-gray-50 transition">
                         Continue Shopping
                     </a>

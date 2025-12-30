@@ -1,7 +1,9 @@
 <?php
 require_once __DIR__ . '/../../classes/Auth.php';
 require_once __DIR__ . '/../../classes/Database.php';
+require_once __DIR__ . '/../../includes/functions.php';
 
+$baseUrl = getBaseUrl();
 $auth = new Auth();
 $auth->requireLogin();
 
@@ -36,7 +38,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 [$name, $slug, $description, $status, $sortOrder]
             );
             // Redirect before any output
-            header('Location: /oecom/admin/categories/list.php');
+            header('Location: ' . $baseUrl . '/admin/categories/list.php');
             exit;
         }
     } catch (Exception $e) {
@@ -137,7 +139,7 @@ require_once __DIR__ . '/../../includes/admin-header.php';
             <button type="submit" class="admin-btn admin-btn-primary px-6 py-2.5">
                 Save
             </button>
-            <a href="/oecom/admin/categories/list.php" class="admin-btn border border-gray-300 text-gray-600 px-6 py-2.5">
+            <a href="<?php echo $baseUrl; ?>/admin/categories/list.php" class="admin-btn border border-gray-300 text-gray-600 px-6 py-2.5">
                 Cancel
             </a>
         </div>

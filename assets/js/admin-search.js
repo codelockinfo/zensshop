@@ -25,7 +25,8 @@
         searchResultsContent.innerHTML = '';
         
         // Fetch search results
-        fetch(`/oecom/admin/api/search.php?q=${encodeURIComponent(query)}`)
+        const searchUrl = (typeof BASE_URL !== 'undefined' ? BASE_URL : '/zensshop') + '/admin/api/search.php?q=' + encodeURIComponent(query);
+        fetch(searchUrl)
             .then(response => response.json())
             .then(data => {
                 displaySearchResults(data);
@@ -56,10 +57,11 @@
             `;
             
             data.products.forEach(product => {
-                const imageUrl = product.image || '/oecom/assets/images/default-product.svg';
+                const defaultImage = (typeof BASE_URL !== 'undefined' ? BASE_URL : '/zensshop') + '/assets/images/default-product.svg';
+                const imageUrl = product.image || defaultImage;
                 html += `
                     <a href="${product.url}" class="admin-search-item">
-                        <img src="${imageUrl}" alt="${escapeHtml(product.name)}" class="admin-search-item-image" onerror="this.src='/oecom/assets/images/default-product.svg'">
+                        <img src="${imageUrl}" alt="${escapeHtml(product.name)}" class="admin-search-item-image" onerror="this.src='" + defaultImage + "'">
                         <div class="admin-search-item-content">
                             <div class="admin-search-item-title">${escapeHtml(product.name)}</div>
                             <div class="admin-search-item-meta">

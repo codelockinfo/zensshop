@@ -2,7 +2,9 @@
 require_once __DIR__ . '/../../classes/Auth.php';
 require_once __DIR__ . '/../../classes/Customer.php';
 require_once __DIR__ . '/../../classes/Order.php';
+require_once __DIR__ . '/../../includes/functions.php';
 
+$baseUrl = getBaseUrl();
 $auth = new Auth();
 $auth->requireLogin();
 
@@ -19,7 +21,7 @@ $customerEmail = $_GET['email'] ?? null;
 if ($customerId) {
     $customerData = $customer->getById($customerId);
     if (!$customerData) {
-        header('Location: /oecom/admin/customers/list.php');
+        header('Location: ' . $baseUrl . '/admin/customers/list.php');
         exit;
     }
     $customerData['is_registered'] = true;
@@ -27,12 +29,12 @@ if ($customerId) {
 } else if ($customerEmail) {
     $customerData = $customer->getCustomerByEmail($customerEmail);
     if (!$customerData) {
-        header('Location: /oecom/admin/customers/list.php');
+        header('Location: ' . $baseUrl . '/admin/customers/list.php');
         exit;
     }
     $orders = $customer->getCustomerOrders(null, $customerEmail);
 } else {
-    header('Location: /oecom/admin/customers/list.php');
+    header('Location: ' . $baseUrl . '/admin/customers/list.php');
     exit;
 }
 ?>
@@ -46,7 +48,7 @@ if ($customerId) {
                 <p class="text-gray-600 text-sm mt-1">View customer information and orders</p>
             </div>
             <div class="flex items-center space-x-3">
-                <a href="/oecom/admin/customers/list.php" class="admin-btn bg-gray-500 text-white">
+                <a href="<?php echo $baseUrl; ?>/admin/customers/list.php" class="admin-btn bg-gray-500 text-white">
                     <i class="fas fa-arrow-left mr-2"></i>Back to List
                 </a>
             </div>
@@ -187,7 +189,7 @@ if ($customerId) {
                                 <?php foreach ($orders as $orderItem): ?>
                                 <tr class="border-b border-gray-100 hover:bg-gray-50">
                                     <td class="py-4 px-4">
-                                        <a href="/oecom/admin/orders/list.php?search=<?php echo urlencode($orderItem['order_number']); ?>" 
+                                        <a href="<?php echo $baseUrl; ?>/admin/orders/list.php?search=<?php echo urlencode($orderItem['order_number']); ?>" 
                                            class="text-primary hover:underline font-semibold">
                                             #<?php echo htmlspecialchars($orderItem['order_number']); ?>
                                         </a>
@@ -218,7 +220,7 @@ if ($customerId) {
                                         <span class="font-semibold text-gray-800">$<?php echo number_format($orderItem['total_amount'], 2); ?></span>
                                     </td>
                                     <td class="py-4 px-4 text-center">
-                                        <a href="/oecom/admin/orders/list.php?search=<?php echo urlencode($orderItem['order_number']); ?>" 
+                                        <a href="<?php echo $baseUrl; ?>/admin/orders/list.php?search=<?php echo urlencode($orderItem['order_number']); ?>" 
                                            class="admin-btn bg-blue-500 text-white text-sm px-3 py-1">
                                             <i class="fas fa-eye mr-1"></i>View
                                         </a>

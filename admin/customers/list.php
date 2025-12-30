@@ -118,7 +118,7 @@ $customers = $customer->getAllCustomers($filters);
                 </td>
                 <td>
                     <div class="flex items-center space-x-2">
-                        <a href="/oecom/admin/customers/view.php?<?php echo $item['id'] ? 'id=' . $item['id'] : 'email=' . urlencode($item['email']); ?>" class="text-blue-500 hover:text-blue-700">
+                        <a href="<?php echo $baseUrl; ?>/admin/customers/view.php?<?php echo $item['id'] ? 'id=' . $item['id'] : 'email=' . urlencode($item['email']); ?>" class="text-blue-500 hover:text-blue-700">
                             <i class="fas fa-eye"></i>
                         </a>
                     </div>

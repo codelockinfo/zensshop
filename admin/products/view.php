@@ -4,6 +4,7 @@ require_once __DIR__ . '/../../classes/Product.php';
 require_once __DIR__ . '/../../classes/Database.php';
 require_once __DIR__ . '/../../includes/functions.php';
 
+$baseUrl = getBaseUrl();
 $auth = new Auth();
 $auth->requireLogin();
 
@@ -15,14 +16,14 @@ $product = new Product();
 // Get product ID
 $productId = $_GET['id'] ?? null;
 if (!$productId) {
-    header('Location: /oecom/admin/products/list.php');
+    header('Location: ' . $baseUrl . '/admin/products/list.php');
     exit;
 }
 
 // Get product data
 $productData = $product->getById($productId);
 if (!$productData) {
-    header('Location: /oecom/admin/products/list.php');
+    header('Location: ' . $baseUrl . '/admin/products/list.php');
     exit;
 }
 
@@ -38,10 +39,10 @@ $mainImage = getProductImage($productData);
             <p class="text-gray-600">Dashboard > Ecommerce > View product</p>
         </div>
         <div class="flex items-center space-x-3">
-            <a href="/oecom/admin/products/edit.php?id=<?php echo $productId; ?>" class="admin-btn admin-btn-primary">
+            <a href="<?php echo $baseUrl; ?>/admin/products/edit.php?id=<?php echo $productId; ?>" class="admin-btn admin-btn-primary">
                 <i class="fas fa-edit mr-2"></i> Edit Product
             </a>
-            <a href="/oecom/admin/products/list.php" class="admin-btn border border-gray-300 text-gray-600">
+            <a href="<?php echo $baseUrl; ?>/admin/products/list.php" class="admin-btn border border-gray-300 text-gray-600">
                 <i class="fas fa-arrow-left mr-2"></i> Back to List
             </a>
         </div>

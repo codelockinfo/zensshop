@@ -1,7 +1,9 @@
 <?php
 require_once __DIR__ . '/../../classes/Auth.php';
 require_once __DIR__ . '/../../classes/Order.php';
+require_once __DIR__ . '/../../includes/functions.php';
 
+$baseUrl = getBaseUrl();
 $auth = new Auth();
 $auth->requireLogin();
 
@@ -75,10 +77,10 @@ $orders = $order->getAll($filters);
                 </td>
                 <td>
                     <div class="flex items-center space-x-2">
-                        <a href="/oecom/admin/orders/detail.php?id=<?php echo $item['id']; ?>" class="text-blue-500 hover:text-blue-700">
+                        <a href="<?php echo $baseUrl; ?>/admin/orders/detail.php?id=<?php echo $item['id']; ?>" class="text-blue-500 hover:text-blue-700">
                             <i class="fas fa-eye"></i>
                         </a>
-                        <a href="/oecom/admin/orders/edit.php?id=<?php echo $item['id']; ?>" class="text-green-500 hover:text-green-700">
+                        <a href="<?php echo $baseUrl; ?>/admin/orders/edit.php?id=<?php echo $item['id']; ?>" class="text-green-500 hover:text-green-700">
                             <i class="fas fa-edit"></i>
                         </a>
                         <button onclick="deleteOrder(<?php echo $item['id']; ?>)" class="text-red-500 hover:text-red-700">
@@ -93,9 +95,10 @@ $orders = $order->getAll($filters);
 </div>
 
 <script>
+const BASE_URL = '<?php echo $baseUrl; ?>';
 function deleteOrder(id) {
     showConfirmModal('Are you sure you want to delete this order? This action cannot be undone.', function() {
-        fetch('/oecom/admin/api/orders.php', {
+        fetch(BASE_URL + '/admin/api/orders.php', {
             method: 'DELETE',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ id: id })

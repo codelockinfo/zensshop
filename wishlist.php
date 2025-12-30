@@ -8,6 +8,7 @@ require_once __DIR__ . '/classes/Product.php';
 require_once __DIR__ . '/classes/Database.php';
 require_once __DIR__ . '/includes/functions.php';
 
+$baseUrl = getBaseUrl();
 $wishlist = new Wishlist();
 $product = new Product();
 $db = Database::getInstance();
@@ -38,7 +39,7 @@ require_once __DIR__ . '/includes/header.php';
 <div class="bg-gray-50 py-4">
     <div class="container mx-auto px-4">
         <nav class="text-sm text-gray-600">
-            <a href="/oecom/" class="hover:text-primary">Home</a>
+            <a href="<?php echo $baseUrl; ?>/" class="hover:text-primary">Home</a>
             <span class="mx-2">></span>
             <span class="text-gray-900">Wishlist</span>
         </nav>
@@ -55,7 +56,7 @@ require_once __DIR__ . '/includes/header.php';
             <i class="fas fa-heart text-6xl text-gray-300 mb-4"></i>
             <h2 class="text-2xl font-heading font-bold mb-2">Your wishlist is empty</h2>
             <p class="text-gray-600 mb-6">Start adding products you love to your wishlist!</p>
-            <a href="/oecom/shop.php" class="inline-block bg-primary text-white px-8 py-3 rounded-lg hover:bg-primary-dark transition">
+            <a href="<?php echo $baseUrl; ?>/shop.php" class="inline-block bg-primary text-white px-8 py-3 rounded-lg hover:bg-primary-dark transition">
                 Continue Shopping
             </a>
         </div>
@@ -72,16 +73,16 @@ require_once __DIR__ . '/includes/header.php';
                     </button>
                     
                     <!-- Product Image -->
-                    <a href="/oecom/product.php?slug=<?php echo htmlspecialchars($item['slug'] ?? ''); ?>">
+                    <a href="<?php echo $baseUrl; ?>/product.php?slug=<?php echo htmlspecialchars($item['slug'] ?? ''); ?>">
                         <div class="relative overflow-hidden bg-gray-100" style="padding-top: 100%;">
                             <?php 
                             $imageUrl = $item['image'] ?? '';
                             if (empty($imageUrl) || $imageUrl === 'null' || $imageUrl === 'undefined') {
                                 $imageUrl = 'data:image/svg+xml;base64,' . base64_encode('<svg width="400" height="400" xmlns="http://www.w3.org/2000/svg"><rect width="400" height="400" fill="#F3F4F6"/><circle cx="200" cy="200" r="60" fill="#9B7A8A"/></svg>');
                             } elseif (strpos($imageUrl, 'http') !== 0 && strpos($imageUrl, '/') !== 0 && strpos($imageUrl, 'data:') !== 0) {
-                                $imageUrl = '/oecom/assets/images/uploads/' . $imageUrl;
-                            } elseif (strpos($imageUrl, '/oecom') !== 0 && strpos($imageUrl, 'http') !== 0 && strpos($imageUrl, 'data:') !== 0) {
-                                $imageUrl = '/oecom' . $imageUrl;
+                                $imageUrl = $baseUrl . '/assets/images/uploads/' . $imageUrl;
+                            } elseif (strpos($imageUrl, '/') !== 0 && strpos($imageUrl, 'http') !== 0 && strpos($imageUrl, 'data:') !== 0) {
+                                $imageUrl = $baseUrl . $imageUrl;
                             }
                             ?>
                             <img src="<?php echo htmlspecialchars($imageUrl); ?>" 
@@ -94,10 +95,10 @@ require_once __DIR__ . '/includes/header.php';
                     <!-- Product Info -->
                     <div class="p-6">
                         <h3 class="text-lg font-heading font-semibold mb-2">
-                            <a href="/oecom/product.php?slug=<?php echo htmlspecialchars($item['slug'] ?? ''); ?>" 
+                                <a href="<?php echo $baseUrl; ?>/product.php?slug=<?php echo htmlspecialchars($item['slug'] ?? ''); ?>" 
                                class="hover:text-primary transition">
-                                <?php echo htmlspecialchars($item['name'] ?? 'Product'); ?>
-                            </a>
+                                    <?php echo htmlspecialchars($item['name'] ?? 'Product'); ?>
+                                </a>
                         </h3>
                         
                         <!-- Rating -->
@@ -168,7 +169,7 @@ require_once __DIR__ . '/includes/header.php';
                         </button>
                         
                         <!-- Product Image -->
-                        <a href="/oecom/product.php?slug=<?php echo htmlspecialchars($recentProduct['slug'] ?? ''); ?>">
+                        <a href="<?php echo $baseUrl; ?>/product.php?slug=<?php echo htmlspecialchars($recentProduct['slug'] ?? ''); ?>">
                             <div class="relative overflow-hidden bg-gray-100" style="padding-top: 100%;">
                                 <img src="<?php echo htmlspecialchars($recentImage); ?>" 
                                      alt="<?php echo htmlspecialchars($recentProduct['name'] ?? 'Product'); ?>"
@@ -180,7 +181,7 @@ require_once __DIR__ . '/includes/header.php';
                         <!-- Product Info -->
                         <div class="p-4">
                             <h3 class="text-base font-heading font-semibold mb-2 line-clamp-2">
-                                <a href="/oecom/product.php?slug=<?php echo htmlspecialchars($recentProduct['slug'] ?? ''); ?>" 
+                                <a href="<?php echo $baseUrl; ?>/product.php?slug=<?php echo htmlspecialchars($recentProduct['slug'] ?? ''); ?>" 
                                    class="hover:text-primary transition">
                                     <?php echo htmlspecialchars($recentProduct['name'] ?? 'Product'); ?>
                                 </a>

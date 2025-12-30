@@ -142,7 +142,9 @@ class Auth {
      */
     public function requireLogin() {
         if (!$this->isLoggedIn()) {
-            header('Location: /oecom/admin/index.php');
+            require_once __DIR__ . '/../includes/functions.php';
+            $baseUrl = getBaseUrl();
+            header('Location: ' . $baseUrl . '/admin/index.php');
             exit;
         }
     }

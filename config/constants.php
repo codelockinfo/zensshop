@@ -5,7 +5,10 @@
 
 // Site Configuration
 define('SITE_NAME', 'Milano');
-define('SITE_URL', 'http://localhost/oecom');
+// Always use actual file system directory name (zensshop)
+// This ensures SITE_URL is always /zensshop/ regardless of access path
+$projectDir = basename(dirname(__DIR__));
+define('SITE_URL', 'http://localhost/' . $projectDir);
 define('BASE_PATH', dirname(__DIR__));
 
 // Paths
