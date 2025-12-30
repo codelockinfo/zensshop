@@ -17,3 +17,4 @@ if (empty($products)) {
     echo "</ul>";
 }
 
+

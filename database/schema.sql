@@ -186,3 +186,4 @@ INSERT INTO `categories` (`name`, `slug`, `description`, `sort_order`, `status`)
 ('Rings', 'rings', 'Rings collection', 5, 'active'),
 ('Best Sellers', 'best-sellers', 'Best selling products', 6, 'active');
 
+

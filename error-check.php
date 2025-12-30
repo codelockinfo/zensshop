@@ -13,3 +13,4 @@ ini_set('error_log', __DIR__ . '/error.log');
 echo "Error reporting enabled. Access your page now and check for errors.\n";
 echo "Error log location: " . __DIR__ . "/error.log\n";
 
+

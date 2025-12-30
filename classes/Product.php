@@ -179,6 +179,11 @@ class Product {
                     }
                 }
                 
+                // Handle variants if provided
+                if (!empty($data['variants']) && is_array($data['variants'])) {
+                    $this->saveVariants($productId, $data['variants']);
+                }
+                
                 return $productId;
             },
             'Create Product',
@@ -336,6 +341,130 @@ class Product {
              ORDER BY p.created_at DESC 
              LIMIT ?",
             [$limit]
+        );
+    }
+    
+    /**
+     * Save product variants
+     */
+    public function saveVariants($productId, $variantsData) {
+        if (empty($variantsData['options']) || empty($variantsData['variants'])) {
+            return;
+        }
+        
+        // Save variant options (e.g., Size, Color)
+        foreach ($variantsData['options'] as $index => $option) {
+            if (empty($option['name']) || empty($option['values'])) {
+                continue;
+            }
+            
+            $this->db->insert(
+                "INSERT INTO product_variant_options (product_id, option_name, option_values, display_order) 
+                 VALUES (?, ?, ?, ?)",
+                [
+                    $productId,
+                    $option['name'],
+                    json_encode($option['values']),
+                    $index
+                ]
+            );
+        }
+        
+        // Save individual variants
+        foreach ($variantsData['variants'] as $variant) {
+            if (empty($variant['attributes'])) {
+                continue;
+            }
+            
+            $this->db->insert(
+                "INSERT INTO product_variants 
+                (product_id, sku, price, sale_price, stock_quantity, stock_status, image, variant_attributes, is_default) 
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)",
+                [
+                    $productId,
+                    $variant['sku'] ?? null,
+                    !empty($variant['price']) ? $variant['price'] : null,
+                    !empty($variant['sale_price']) ? $variant['sale_price'] : null,
+                    $variant['stock_quantity'] ?? 0,
+                    $variant['stock_status'] ?? 'in_stock',
+                    $variant['image'] ?? null,
+                    json_encode($variant['attributes']),
+                    $variant['is_default'] ?? 0
+                ]
+            );
+        }
+    }
+    
+    /**
+     * Get product variants
+     */
+    public function getVariants($productId) {
+        try {
+            // Get variant options
+            $options = $this->db->fetchAll(
+                "SELECT * FROM product_variant_options WHERE product_id = ? ORDER BY display_order",
+                [$productId]
+            );
+        } catch (Exception $e) {
+            // Table might not exist or query failed
+            $options = [];
+        }
+        
+        try {
+            // Get variants
+            $variants = $this->db->fetchAll(
+                "SELECT * FROM product_variants WHERE product_id = ? ORDER BY is_default DESC, id ASC",
+                [$productId]
+            );
+        } catch (Exception $e) {
+            // Table might not exist or query failed
+            $variants = [];
+        }
+        
+        // Decode JSON fields
+        if (is_array($options)) {
+            foreach ($options as &$option) {
+                if (isset($option['option_values'])) {
+                    $decoded = json_decode($option['option_values'], true);
+                    $option['option_values'] = is_array($decoded) ? $decoded : [];
+                } else {
+                    $option['option_values'] = [];
+                }
+            }
+        } else {
+            $options = [];
+        }
+        
+        if (is_array($variants)) {
+            foreach ($variants as &$variant) {
+                if (isset($variant['variant_attributes'])) {
+                    $decoded = json_decode($variant['variant_attributes'], true);
+                    $variant['variant_attributes'] = is_array($decoded) ? $decoded : [];
+                } else {
+                    $variant['variant_attributes'] = [];
+                }
+            }
+        } else {
+            $variants = [];
+        }
+        
+        return [
+            'options' => $options,
+            'variants' => $variants
+        ];
+    }
+    
+    /**
+     * Delete product variants
+     */
+    public function deleteVariants($productId) {
+        $this->db->execute(
+            "DELETE FROM product_variant_options WHERE product_id = ?",
+            [$productId]
+        );
+        $this->db->execute(
+            "DELETE FROM product_variants WHERE product_id = ?",
+            [$productId]
         );
     }
 }

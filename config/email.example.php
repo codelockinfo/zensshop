@@ -11,3 +11,4 @@ define('SMTP_PASS', 'your-app-password');
 define('SMTP_FROM_EMAIL', 'your-email@gmail.com');
 define('SMTP_FROM_NAME', 'Milano Store');
 
+

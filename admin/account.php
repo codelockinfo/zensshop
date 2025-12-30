@@ -5,23 +5,20 @@ require_once __DIR__ . '/../classes/Database.php';
 $auth = new Auth();
 $auth->requireLogin();
 
-$pageTitle = 'Account';
-require_once __DIR__ . '/../includes/admin-header.php';
-
 $db = Database::getInstance();
 $currentUser = $auth->getCurrentUser();
 $error = '';
 $success = '';
 
-// Handle profile image upload
-if ($_SERVER['REQUEST_METHOD'] === 'POST' && !empty($_FILES['profile_image']['name'])) {
+// Handle profile image upload (before header to allow redirects)
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['upload_profile'])) {
     try {
-        $file = $_FILES['profile_image'];
-        
-        // Validate file
-        if ($file['error'] !== UPLOAD_ERR_OK) {
-            throw new Exception('File upload error: ' . $file['error']);
+        // Check if file was uploaded
+        if (empty($_FILES['profile_image']['name']) || $_FILES['profile_image']['error'] !== UPLOAD_ERR_OK) {
+            throw new Exception('Please select an image file to upload.');
         }
+        
+        $file = $_FILES['profile_image'];
         
         // Validate file type
         $allowedTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/gif', 'image/webp'];
@@ -46,7 +43,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && !empty($_FILES['profile_image']['na
         
         // Delete old profile image if exists
         if (!empty($currentUser['profile_image'])) {
-            $oldImagePath = __DIR__ . '/../' . ltrim($currentUser['profile_image'], '/');
+            // Remove /oecom/ prefix and convert to file path
+            $oldImagePath = str_replace('/oecom/', '', $currentUser['profile_image']);
+            $oldImagePath = __DIR__ . '/../' . $oldImagePath;
+            $oldImagePath = str_replace('\\', '/', $oldImagePath);
             if (file_exists($oldImagePath)) {
                 @unlink($oldImagePath);
             }
@@ -69,16 +69,16 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && !empty($_FILES['profile_image']['na
             [$profileImagePath, $currentUser['id']]
         );
         
-        $success = 'Profile image updated successfully!';
-        // Reload user data
-        $currentUser = $auth->getCurrentUser();
+        // Redirect to refresh the page and show updated image
+        header('Location: /oecom/admin/account.php?success=image_updated');
+        exit;
     } catch (Exception $e) {
         $error = $e->getMessage();
     }
 }
 
-// Handle form submission (account info and password)
-if ($_SERVER['REQUEST_METHOD'] === 'POST' && empty($_FILES['profile_image']['name']) && !isset($_POST['upload_profile'])) {
+// Handle form submission (account info and password) - before header
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && !isset($_POST['upload_profile'])) {
     try {
         $name = $_POST['name'] ?? '';
         $email = $_POST['email'] ?? '';
@@ -120,6 +120,16 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && empty($_FILES['profile_image']['nam
         $error = $e->getMessage();
     }
 }
+
+// Check for success message from redirect
+if (isset($_GET['success']) && $_GET['success'] === 'image_updated') {
+    $success = 'Profile image updated successfully!';
+    // Reload user data to get updated profile_image
+    $currentUser = $auth->getCurrentUser();
+}
+
+$pageTitle = 'Account';
+require_once __DIR__ . '/../includes/admin-header.php';
 ?>
 
 <div class="mb-6">
@@ -148,10 +158,16 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && empty($_FILES['profile_image']['nam
             <div class="relative mb-4">
                 <?php 
                 $profileImage = $currentUser['profile_image'] ?? null;
-                if ($profileImage && file_exists(__DIR__ . '/../' . ltrim($profileImage, '/'))) {
-                    $imageUrl = $profileImage;
-                } else {
-                    $imageUrl = '/oecom/assets/images/default-avatar.svg';
+                $imageUrl = '/oecom/assets/images/default-avatar.svg';
+                
+                if ($profileImage) {
+                    // Remove leading slash and convert to file path
+                    $imagePath = str_replace('/oecom/', '', $profileImage);
+                    $fullPath = __DIR__ . '/../' . $imagePath;
+                    
+                    if (file_exists($fullPath)) {
+                        $imageUrl = $profileImage;
+                    }
                 }
                 ?>
                 <img src="<?php echo htmlspecialchars($imageUrl); ?>" 
@@ -266,6 +282,24 @@ function previewProfileImage(input) {
         reader.readAsDataURL(input.files[0]);
     }
 }
+
+// Auto-submit form when Save Image button is clicked
+document.addEventListener('DOMContentLoaded', function() {
+    const saveBtn = document.getElementById('saveProfileBtn');
+    if (saveBtn) {
+        saveBtn.addEventListener('click', function(e) {
+            const form = this.closest('form');
+            if (form) {
+                const fileInput = document.getElementById('profileImageInput');
+                if (!fileInput.files || !fileInput.files[0]) {
+                    e.preventDefault();
+                    alert('Please select an image file first.');
+                    return false;
+                }
+            }
+        });
+    }
+});
 </script>
 
 <?php require_once __DIR__ . '/../includes/admin-footer.php'; ?>

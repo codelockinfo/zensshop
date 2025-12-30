@@ -145,3 +145,4 @@ $totalCustomers = $db->fetchOne("SELECT COUNT(DISTINCT customer_email) as count 
 
 <?php require_once __DIR__ . '/../includes/admin-footer.php'; ?>
 
+

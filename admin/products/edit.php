@@ -104,9 +104,25 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             }
         }
         
+        // Handle variants data
+        if (!empty($_POST['variants_data'])) {
+            $variantsData = json_decode($_POST['variants_data'], true);
+            if (is_array($variantsData)) {
+                $data['variants'] = $variantsData;
+            }
+        }
+        
         $retryHandler->executeWithRetry(
             function() use ($product, $productId, $data) {
-                return $product->update($productId, $data);
+                // Delete existing variants first
+                $product->deleteVariants($productId);
+                // Update product
+                $product->update($productId, $data);
+                // Save new variants
+                if (!empty($data['variants'])) {
+                    $product->saveVariants($productId, $data['variants']);
+                }
+                return true;
             },
             'Update Product',
             ['id' => $productId, 'data' => $data]
@@ -135,6 +151,9 @@ $existingCategoryIds = array_column($existingCategoryIds, 'category_id');
 
 // Parse existing images
 $existingImages = json_decode($productData['images'] ?? '[]', true);
+
+// Get existing variants
+$existingVariants = $product->getVariants($productId);
 ?>
 
 <div class="mb-6">
@@ -252,18 +271,46 @@ $existingImages = json_decode($productData['images'] ?? '[]', true);
         </div>
         
         <div class="admin-card">
-            <h2 class="text-xl font-bold mb-4">Add size</h2>
-            <select class="admin-form-select mb-4">
-                <option>EU - 44</option>
-            </select>
-            <div class="flex flex-wrap gap-2">
-                <button type="button" class="px-4 py-2 border rounded hover:bg-gray-100">EU - 38.5</button>
-                <button type="button" class="px-4 py-2 border rounded hover:bg-gray-100">EU - 39</button>
-                <button type="button" class="px-4 py-2 border rounded hover:bg-gray-100">EU - 40</button>
-                <button type="button" class="px-4 py-2 border rounded hover:bg-gray-100">EU - 41.5</button>
-                <button type="button" class="px-4 py-2 border rounded hover:bg-gray-100">EU - 42</button>
-                <button type="button" class="px-4 py-2 border rounded hover:bg-gray-100">EU - 43</button>
+            <h2 class="text-xl font-bold mb-4">Product Variants</h2>
+            <p class="text-sm text-gray-600 mb-4">Add variant options like Size, Color, Material, etc. (Maximum 2 options)</p>
+            
+            <!-- Variant Options Container -->
+            <div id="variantOptionsContainer" class="space-y-4 mb-4">
+                <!-- Variant options will be added here dynamically -->
             </div>
+            
+            <!-- Add Variant Option Button -->
+            <button type="button" 
+                    id="addVariantOptionBtn" 
+                    class="admin-btn border border-blue-500 text-blue-500 mb-4"
+                    onclick="addVariantOption()">
+                <i class="fas fa-plus mr-2"></i>Add Variant Option
+            </button>
+            
+            <!-- Generated Variants Table -->
+            <div id="variantsTableContainer" class="hidden">
+                <h3 class="text-lg font-semibold mb-3">Generated Variants</h3>
+                <div class="overflow-x-auto">
+                    <table class="w-full border-collapse border border-gray-300">
+                        <thead>
+                            <tr class="bg-gray-100">
+                                <th class="border border-gray-300 px-3 py-2 text-left">Variant</th>
+                                <th class="border border-gray-300 px-3 py-2 text-left">SKU</th>
+                                <th class="border border-gray-300 px-3 py-2 text-left">Price</th>
+                                <th class="border border-gray-300 px-3 py-2 text-left">Sale Price</th>
+                                <th class="border border-gray-300 px-3 py-2 text-left">Stock</th>
+                                <th class="border border-gray-300 px-3 py-2 text-left">Image</th>
+                            </tr>
+                        </thead>
+                        <tbody id="variantsTableBody">
+                            <!-- Variants will be added here -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+            
+            <!-- Hidden input to store variants data -->
+            <input type="hidden" name="variants_data" id="variantsDataInput" value="">
         </div>
         
         <div class="admin-card">
@@ -344,6 +391,7 @@ $existingImages = json_decode($productData['images'] ?? '[]', true);
 </div>
 
 <script src="/oecom/assets/js/admin-image-upload.js"></script>
+<script src="/oecom/assets/js/product-variants.js"></script>
 <script>
 // Initialize with existing images
 document.addEventListener('DOMContentLoaded', function() {
@@ -353,7 +401,106 @@ document.addEventListener('DOMContentLoaded', function() {
     if (existingImages && existingImages.length > 0 && imagesInput) {
         imagesInput.value = JSON.stringify(existingImages);
     }
+    
+    // Initialize variants with existing data
+    const existingVariants = <?php echo json_encode($existingVariants); ?>;
+    if (existingVariants && existingVariants.options && existingVariants.options.length > 0) {
+        initializeVariantsFromData(existingVariants);
+    }
 });
+
+/**
+ * Initialize variants from existing data
+ */
+function initializeVariantsFromData(variantsData) {
+    // Clear any existing options
+    variantOptions = [];
+    generatedVariants = [];
+    
+    // Add variant options
+    variantsData.options.forEach((option, index) => {
+        // Add the option card
+        addVariantOption();
+        
+        // Wait for DOM to update
+        setTimeout(() => {
+            const card = document.querySelector(`[data-option-index="${index}"]`);
+            if (card) {
+                // Set option name
+                const nameSelect = card.querySelector('select[id$="_name"]');
+                const nameInput = card.querySelector('input[id$="_name_custom"]');
+                
+                if (commonOptionNames.includes(option.option_name)) {
+                    if (nameSelect) {
+                        nameSelect.value = option.option_name;
+                        updateVariantOptionName(index);
+                    }
+                } else {
+                    if (nameInput) {
+                        nameInput.value = option.option_name;
+                        updateVariantOptionName(index);
+                    }
+                }
+                
+                // Add tags for option values
+                const tagContainer = card.querySelector(`[id$="_tags"]`);
+                
+                if (option.option_values && Array.isArray(option.option_values)) {
+                    option.option_values.forEach(value => {
+                        if (tagContainer && value) {
+                            // Use the same escapeHtml function from product-variants.js
+                            const escapedValue = value.replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+                            const tagHtml = `
+                                <span class="tag-item" data-value="${escapedValue}">
+                                    <span class="tag-text">${escapedValue}</span>
+                                    <button type="button" class="tag-remove" onclick="removeTag(${index}, '${escapedValue}')">
+                                        <i class="fas fa-times"></i>
+                                    </button>
+                                </span>
+                            `;
+                            tagContainer.insertAdjacentHTML('beforeend', tagHtml);
+                        }
+                    });
+                    
+                    // Update variant options array
+                    if (variantOptions[index]) {
+                        variantOptions[index].name = option.option_name;
+                        variantOptions[index].values = option.option_values || [];
+                    }
+                }
+            }
+        }, 100 * (index + 1));
+    });
+    
+    // After all options are loaded, generate variants and populate with existing data
+    setTimeout(() => {
+        generateVariants();
+        
+        // Populate existing variant data
+        if (variantsData.variants && variantsData.variants.length > 0) {
+            variantsData.variants.forEach((existingVariant, idx) => {
+                // Find matching variant in generated variants
+                const matchingVariant = generatedVariants.find(v => {
+                    return JSON.stringify(v.attributes) === JSON.stringify(existingVariant.variant_attributes);
+                });
+                
+                if (matchingVariant) {
+                    matchingVariant.sku = existingVariant.sku || '';
+                    matchingVariant.price = existingVariant.price || '';
+                    matchingVariant.sale_price = existingVariant.sale_price || '';
+                    matchingVariant.stock_quantity = existingVariant.stock_quantity || 0;
+                    matchingVariant.stock_status = existingVariant.stock_status || 'in_stock';
+                    matchingVariant.image = existingVariant.image || '';
+                    matchingVariant.is_default = existingVariant.is_default || 0;
+                }
+            });
+            
+            // Re-render table with populated data
+            renderVariantsTable();
+            updateVariantsDataInput();
+        }
+    }, 500);
+}
 </script>
 
 <?php require_once __DIR__ . '/../../includes/admin-footer.php'; ?>

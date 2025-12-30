@@ -117,11 +117,23 @@ class Auth {
             return null;
         }
         
+        // Fetch from database to get latest data including profile_image
+        $user = $this->db->fetchOne(
+            "SELECT id, name, email, role, profile_image FROM users WHERE id = ?",
+            [$_SESSION['user_id']]
+        );
+        
+        if ($user) {
+            return $user;
+        }
+        
+        // Fallback to session data if database fetch fails
         return [
             'id' => $_SESSION['user_id'],
             'name' => $_SESSION['user_name'],
             'email' => $_SESSION['user_email'],
-            'role' => $_SESSION['user_role']
+            'role' => $_SESSION['user_role'],
+            'profile_image' => null
         ];
     }
     

@@ -24,3 +24,4 @@ ON DUPLICATE KEY UPDATE `product_id` = `product_id`;
 -- Note: We keep category_id in products table for backward compatibility
 -- But product_categories table is the primary source for category relationships
 
+
