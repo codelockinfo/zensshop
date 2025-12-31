@@ -135,6 +135,14 @@ $tax = 0;
 $total = $subtotal + $finalShipping - $discountAmount + $tax;
 ?>
 
+<style>
+/* Hide announcement bar and header on checkout page */
+.bg-black.text-white.text-sm.py-2,
+nav.bg-white.sticky.top-0 {
+    display: none !important;
+}
+</style>
+
 <section class="py-8 md:py-12 bg-gray-50 min-h-screen">
     <div class="container mx-auto px-4">
         <!-- Progress Indicator -->

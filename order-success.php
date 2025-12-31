@@ -53,6 +53,12 @@ require_once __DIR__ . '/includes/header.php';
 ?>
 
 <style>
+/* Hide announcement bar and header on order success page */
+.bg-black.text-white.text-sm.py-2,
+nav.bg-white.sticky.top-0 {
+    display: none !important;
+}
+
     .order-timeline {
         position: relative;
         padding-left: 2rem;
