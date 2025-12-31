@@ -10,8 +10,8 @@ $products = $product->getBestSelling(12); // Get more products for slider
 <section>
     <div class="container mx-auto px-4">
         <div class="text-center mb-12">
-            <h2 class="text-4xl font-heading font-bold mb-4">Best Selling</h2>
-            <p class="text-gray-600 text-lg max-w-2xl mx-auto">Unmatched design—superior performance and customer satisfaction in one.</p>
+            <h2 class="text-3xl font-heading font-bold mb-4">Best Selling</h2>
+            <p class="text-gray-600 text-md max-w-2xl mx-auto">Unmatched design—superior performance and customer satisfaction in one.</p>
         </div>
         
         <!-- Product Slider Container -->
