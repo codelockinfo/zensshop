@@ -110,6 +110,9 @@ if (!function_exists('url')) {
                     $imageUrl = $baseUrl . '/assets/images/default-avatar.svg';
                     
                     if ($profileImage) {
+                        // Normalize the URL (fix old /oecom/ paths)
+                        $profileImage = normalizeImageUrl($profileImage);
+                        
                         // Check if it's already a full URL
                         if (strpos($profileImage, 'http://') === 0 || strpos($profileImage, 'https://') === 0) {
                             $imageUrl = $profileImage;
@@ -120,8 +123,9 @@ if (!function_exists('url')) {
                             // It's already a path from root
                             $imageUrl = $profileImage;
                         } else {
-                            // Remove base URL prefix if present and convert to file path
+                            // Remove any base URL prefix and convert to file path
                             $imagePath = str_replace($baseUrl . '/', '', $profileImage);
+                            $imagePath = preg_replace('#^[^/]+/#', '', $imagePath); // Remove any leading directory
                             $fullPath = __DIR__ . '/../' . ltrim($imagePath, '/');
                             
                             if (file_exists($fullPath)) {

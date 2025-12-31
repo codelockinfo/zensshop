@@ -103,3 +103,20 @@ function getProductImage($product, $index = 0) {
     return 'data:image/svg+xml;base64,' . base64_encode('<svg width="300" height="300" viewBox="0 0 300 300" xmlns="http://www.w3.org/2000/svg"><rect width="300" height="300" fill="#F3F4F6"/><circle cx="150" cy="150" r="40" fill="#9B7A8A"/><path d="M80 250C80 220 110 190 150 190C190 190 220 220 220 250" fill="#9B7A8A"/></svg>');
 }
 
+/**
+ * Normalize image URL - fixes old /oecom/ paths
+ */
+function normalizeImageUrl($url) {
+    if (empty($url)) {
+        return $url;
+    }
+    
+    // Replace old /oecom/ paths with current base URL
+    if (strpos($url, '/oecom/') !== false) {
+        $baseUrl = getBaseUrl();
+        $url = str_replace('/oecom/', $baseUrl . '/', $url);
+    }
+    
+    return $url;
+}
+

@@ -93,7 +93,16 @@ class RetryHandler {
             
             $message .= "<h3>Stack Trace:</h3><pre>" . htmlspecialchars($exception->getTraceAsString()) . "</pre>";
             
-            $this->emailService->send(ADMIN_EMAIL, $subject, $message);
+            // Only send email if ADMIN_EMAIL is defined and email service is configured
+            if (defined('ADMIN_EMAIL') && !empty(ADMIN_EMAIL)) {
+                try {
+                    $this->emailService->send(ADMIN_EMAIL, $subject, $message);
+                } catch (Exception $emailError) {
+                    error_log("Failed to send error notification email: " . $emailError->getMessage());
+                }
+            } else {
+                error_log("ADMIN_EMAIL not configured. Error notification email not sent.");
+            }
             
         } catch (Exception $e) {
             error_log("Failed to send error notification email: " . $e->getMessage());

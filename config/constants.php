@@ -34,3 +34,6 @@ define('OTP_LENGTH', 6);
 // Session Configuration
 define('SESSION_LIFETIME', 3600); // 1 hour
 
+// Admin Email (for error notifications)
+define('ADMIN_EMAIL', 'admin@milano.com'); // Change this to your admin email
+

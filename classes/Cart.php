@@ -54,7 +54,7 @@ class Cart {
             }
             
             // If image is missing or invalid, fetch from product
-            if (empty($item['image']) || $item['image'] === 'null' || $item['image'] === 'undefined') {
+            if (empty($item['image']) || $item['image'] === 'null' || $item['image'] === 'undefined' || empty($item['slug'])) {
                 $product = $this->product->getById($item['product_id']);
                 if ($product) {
                     if (!empty($product['featured_image'])) {
@@ -66,12 +66,15 @@ class Cart {
                         }
                     }
                     
-                    // Ensure name and price are set
+                    // Ensure name, price, and slug are set
                     if (empty($item['name'])) {
                         $item['name'] = $product['name'];
                     }
                     if (empty($item['price'])) {
                         $item['price'] = $product['sale_price'] ?? $product['price'];
+                    }
+                    if (empty($item['slug'])) {
+                        $item['slug'] = $product['slug'] ?? '';
                     }
                 }
             }
@@ -103,7 +106,7 @@ class Cart {
      */
     private function getCartFromDB($userId) {
         $items = $this->db->fetchAll(
-            "SELECT c.*, p.name, p.price, p.sale_price, p.featured_image, p.stock_quantity, p.stock_status
+            "SELECT c.*, p.name, p.price, p.sale_price, p.featured_image, p.stock_quantity, p.stock_status, p.slug
              FROM cart c
              INNER JOIN products p ON c.product_id = p.id
              WHERE c.user_id = ?",
@@ -142,7 +145,8 @@ class Cart {
                 'quantity' => $item['quantity'],
                 'name' => $item['name'],
                 'price' => $item['sale_price'] ?? $item['price'],
-                'image' => $productImage
+                'image' => $productImage,
+                'slug' => $item['slug'] ?? ''
             ];
         }
         
@@ -156,10 +160,15 @@ class Cart {
         // Get product
         $product = $this->product->getById($productId);
         if (!$product) {
+            error_log("Cart::addItem - Product ID $productId not found in database");
             throw new Exception("Product not found");
         }
         
+        error_log("Cart::addItem - Product found: " . ($product['name'] ?? 'N/A') . " (ID: $productId)");
+        error_log("Cart::addItem - Stock status: " . ($product['stock_status'] ?? 'N/A'));
+        
         if ($product['stock_status'] !== 'in_stock') {
+            error_log("Cart::addItem - Product ID $productId is out of stock");
             throw new Exception("Product is out of stock");
         }
         
@@ -205,12 +214,16 @@ class Cart {
                 'quantity' => $quantity,
                 'name' => $product['name'],
                 'price' => $product['sale_price'] ?? $product['price'],
-                'image' => $productImage
+                'image' => $productImage,
+                'slug' => $product['slug'] ?? ''
             ];
         }
         
         // Save to cookie
         $this->saveCartToCookie($cartItems);
+        
+        error_log("Cart::addItem - Cart items after save: " . count($cartItems) . " items");
+        error_log("Cart::addItem - Returning cart: " . json_encode($cartItems));
         
         // Save to database if user is logged in
         if (isset($_SESSION['user_id'])) {
@@ -271,16 +284,23 @@ class Cart {
      * Clear cart
      */
     public function clear() {
-        // Only clear cookie if headers haven't been sent yet
+        // Clear cookie
         if (!headers_sent()) {
             setcookie(CART_COOKIE_NAME, '', time() - 3600, '/');
         }
+        unset($_COOKIE[CART_COOKIE_NAME]);
         
+        // Clear from database if user is logged in
         if (isset($_SESSION['user_id'])) {
-            $this->db->execute(
-                "DELETE FROM cart WHERE user_id = ?",
-                [$_SESSION['user_id']]
-            );
+            try {
+                $this->db->execute(
+                    "DELETE FROM cart WHERE user_id = ?",
+                    [$_SESSION['user_id']]
+                );
+            } catch (Exception $e) {
+                // Table might not exist, ignore
+                error_log("Could not clear cart from database: " . $e->getMessage());
+            }
         }
     }
     

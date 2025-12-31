@@ -314,10 +314,10 @@ $_COOKIE['recently_viewed'] = json_encode($recentIds);
                 <!-- Guarantee -->
                 <div class="mt-6 pt-6 border-t">
                     <p class="text-sm text-gray-600 text-center">Guarantee Safe Checkout</p>
-                    <div class="flex justify-center space-x-4 mt-4">
-                        <img src="https://via.placeholder.com/60x40/1a5d3a/ffffff?text=VISA" alt="Visa" class="h-8">
-                        <img src="https://via.placeholder.com/60x40/1a5d3a/ffffff?text=MC" alt="Mastercard" class="h-8">
-                        <img src="https://via.placeholder.com/60x40/1a5d3a/ffffff?text=AMEX" alt="American Express" class="h-8">
+                    <div class="flex justify-center items-center space-x-4 mt-4">
+                        <img src="<?php echo $baseUrl; ?>/assets/images/checkout-image/Visa_Inc._logo.svg.png" alt="Visa" class="h-8 object-contain">
+                        <img src="<?php echo $baseUrl; ?>/assets/images/checkout-image/Mastercard-logo.svg.png" alt="Mastercard" class="h-8 object-contain">
+                        <img src="<?php echo $baseUrl; ?>/assets/images/checkout-image/American_Express_logo.svg.png" alt="American Express" class="h-8 object-contain">
                     </div>
                 </div>
             </div>
@@ -638,7 +638,7 @@ function buyNow(productId) {
     .then(response => response.json())
     .then(data => {
         if (data.success) {
-            window.location.href = '<?php echo $baseUrl; ?>/checkout.php';
+            window.location.href = '<?php echo url('checkout'); ?>';
         } else {
             alert(data.message || 'Failed to add product to cart');
         }

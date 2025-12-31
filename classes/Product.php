@@ -216,6 +216,12 @@ class Product {
                         
                         if ($field === 'images' && is_array($data[$field])) {
                             $params[] = json_encode($data[$field]);
+                        } elseif ($field === 'featured') {
+                            // Ensure featured is an integer (0 or 1)
+                            $params[] = (int)$data[$field];
+                        } elseif ($field === 'category_id' && ($data[$field] === null || $data[$field] === '')) {
+                            // Handle NULL category_id properly
+                            $params[] = null;
                         } else {
                             $params[] = $data[$field];
                         }
@@ -232,9 +238,19 @@ class Product {
                     return true;
                 }
                 
+                // Validate that we have the correct number of parameters
                 $params[] = $id;
                 
+                // Build SQL query
                 $sql = "UPDATE products SET " . implode(', ', $fields) . " WHERE id = ?";
+                
+                // Validate SQL and params count match
+                $placeholders = substr_count($sql, '?');
+                if ($placeholders !== count($params)) {
+                    error_log("SQL Parameter Mismatch: SQL has {$placeholders} placeholders but " . count($params) . " parameters provided. SQL: {$sql}");
+                    throw new Exception("SQL parameter count mismatch");
+                }
+                
                 $this->db->execute($sql, $params);
                 
                 // Update product categories (many-to-many)
@@ -353,45 +369,55 @@ class Product {
         }
         
         // Save variant options (e.g., Size, Color)
-        foreach ($variantsData['options'] as $index => $option) {
-            if (empty($option['name']) || empty($option['values'])) {
-                continue;
+        try {
+            foreach ($variantsData['options'] as $index => $option) {
+                if (empty($option['name']) || empty($option['values'])) {
+                    continue;
+                }
+                
+                $this->db->insert(
+                    "INSERT INTO product_variant_options (product_id, option_name, option_values, display_order) 
+                     VALUES (?, ?, ?, ?)",
+                    [
+                        $productId,
+                        $option['name'],
+                        json_encode($option['values']),
+                        $index
+                    ]
+                );
             }
-            
-            $this->db->insert(
-                "INSERT INTO product_variant_options (product_id, option_name, option_values, display_order) 
-                 VALUES (?, ?, ?, ?)",
-                [
-                    $productId,
-                    $option['name'],
-                    json_encode($option['values']),
-                    $index
-                ]
-            );
+        } catch (Exception $e) {
+            // Table might not exist, log and continue
+            error_log("Could not save variant options (table may not exist): " . $e->getMessage());
         }
         
         // Save individual variants
-        foreach ($variantsData['variants'] as $variant) {
-            if (empty($variant['attributes'])) {
-                continue;
+        try {
+            foreach ($variantsData['variants'] as $variant) {
+                if (empty($variant['attributes'])) {
+                    continue;
+                }
+                
+                $this->db->insert(
+                    "INSERT INTO product_variants 
+                    (product_id, sku, price, sale_price, stock_quantity, stock_status, image, variant_attributes, is_default) 
+                    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)",
+                    [
+                        $productId,
+                        $variant['sku'] ?? null,
+                        !empty($variant['price']) ? $variant['price'] : null,
+                        !empty($variant['sale_price']) ? $variant['sale_price'] : null,
+                        $variant['stock_quantity'] ?? 0,
+                        $variant['stock_status'] ?? 'in_stock',
+                        $variant['image'] ?? null,
+                        json_encode($variant['attributes']),
+                        $variant['is_default'] ?? 0
+                    ]
+                );
             }
-            
-            $this->db->insert(
-                "INSERT INTO product_variants 
-                (product_id, sku, price, sale_price, stock_quantity, stock_status, image, variant_attributes, is_default) 
-                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)",
-                [
-                    $productId,
-                    $variant['sku'] ?? null,
-                    !empty($variant['price']) ? $variant['price'] : null,
-                    !empty($variant['sale_price']) ? $variant['sale_price'] : null,
-                    $variant['stock_quantity'] ?? 0,
-                    $variant['stock_status'] ?? 'in_stock',
-                    $variant['image'] ?? null,
-                    json_encode($variant['attributes']),
-                    $variant['is_default'] ?? 0
-                ]
-            );
+        } catch (Exception $e) {
+            // Table might not exist, log and continue
+            error_log("Could not save variants (table may not exist): " . $e->getMessage());
         }
     }
     
@@ -458,14 +484,25 @@ class Product {
      * Delete product variants
      */
     public function deleteVariants($productId) {
-        $this->db->execute(
-            "DELETE FROM product_variant_options WHERE product_id = ?",
-            [$productId]
-        );
-        $this->db->execute(
-            "DELETE FROM product_variants WHERE product_id = ?",
-            [$productId]
-        );
+        try {
+            $this->db->execute(
+                "DELETE FROM product_variant_options WHERE product_id = ?",
+                [$productId]
+            );
+        } catch (Exception $e) {
+            // Table might not exist, ignore the error
+            error_log("Could not delete variant options (table may not exist): " . $e->getMessage());
+        }
+        
+        try {
+            $this->db->execute(
+                "DELETE FROM product_variants WHERE product_id = ?",
+                [$productId]
+            );
+        } catch (Exception $e) {
+            // Table might not exist, ignore the error
+            error_log("Could not delete variants (table may not exist): " . $e->getMessage());
+        }
     }
 }
 

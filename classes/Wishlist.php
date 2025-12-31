@@ -31,7 +31,7 @@ class Wishlist {
         // Try to get from cookie first
         if (isset($_COOKIE[WISHLIST_COOKIE_NAME])) {
             $wishlistData = json_decode($_COOKIE[WISHLIST_COOKIE_NAME], true);
-            if (is_array($wishlistData)) {
+            if (is_array($wishlistData) && !empty($wishlistData)) {
                 $wishlistItems = $wishlistData;
             }
         }

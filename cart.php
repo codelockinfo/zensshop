@@ -25,26 +25,35 @@ $cartTotal = $cart->getTotal();
         
         <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
             <!-- Cart Items -->
-            <div class="lg:col-span-2 space-y-4">
-                <?php foreach ($cartItems as $item): ?>
-                <div class="bg-white rounded-lg p-6 flex flex-col md:flex-row items-start md:items-center space-y-4 md:space-y-0 md:space-x-6">
-                    <img src="<?php echo htmlspecialchars($item['image'] ?? 'https://via.placeholder.com/150'); ?>" 
-                         alt="<?php echo htmlspecialchars($item['name']); ?>" 
-                         class="w-32 h-32 object-cover rounded">
+            <div class="lg:col-span-2 space-y-4" id="cartItemsContainer">
+                <?php foreach ($cartItems as $item): 
+                    $productSlug = $item['slug'] ?? '';
+                    $productUrl = !empty($productSlug) ? url('product?slug=' . urlencode($productSlug)) : '#';
+                ?>
+                <div class="bg-white rounded-lg p-6 flex flex-col md:flex-row items-start md:items-center space-y-4 md:space-y-0 md:space-x-6 cart-item" data-product-id="<?php echo $item['product_id']; ?>">
+                    <a href="<?php echo $productUrl; ?>">
+                        <img src="<?php echo htmlspecialchars($item['image'] ?? 'https://via.placeholder.com/150'); ?>" 
+                             alt="<?php echo htmlspecialchars($item['name']); ?>" 
+                             class="w-32 h-32 object-cover rounded">
+                    </a>
                     <div class="flex-1">
-                        <h3 class="text-xl font-semibold mb-2"><?php echo htmlspecialchars($item['name']); ?></h3>
-                        <p class="text-gray-600">Price: $<?php echo number_format($item['price'], 2); ?></p>
+                        <h3 class="text-xl font-semibold mb-2">
+                            <a href="<?php echo $productUrl; ?>" class="hover:text-primary transition">
+                                <?php echo htmlspecialchars($item['name']); ?>
+                            </a>
+                        </h3>
+                        <p class="text-gray-600">Price: $<span class="item-price"><?php echo number_format($item['price'], 2); ?></span></p>
                     </div>
                     <div class="flex items-center space-x-4">
                         <div class="flex items-center border rounded">
-                            <button onclick="updateCartItem(<?php echo $item['product_id']; ?>, <?php echo $item['quantity'] - 1; ?>)" 
+                            <button onclick="decrementCartItem(<?php echo $item['product_id']; ?>)" 
                                     class="px-4 py-2 hover:bg-gray-100">-</button>
-                            <span class="px-4 py-2"><?php echo $item['quantity']; ?></span>
-                            <button onclick="updateCartItem(<?php echo $item['product_id']; ?>, <?php echo $item['quantity'] + 1; ?>)" 
+                            <span class="px-4 py-2 item-quantity" data-product-id="<?php echo $item['product_id']; ?>"><?php echo $item['quantity']; ?></span>
+                            <button onclick="incrementCartItem(<?php echo $item['product_id']; ?>)" 
                                     class="px-4 py-2 hover:bg-gray-100">+</button>
                         </div>
-                        <p class="text-xl font-bold w-24 text-right">
-                            $<?php echo number_format($item['price'] * $item['quantity'], 2); ?>
+                        <p class="text-xl font-bold w-24 text-right item-total">
+                            $<span><?php echo number_format($item['price'] * $item['quantity'], 2); ?></span>
                         </p>
                         <button onclick="removeFromCart(<?php echo $item['product_id']; ?>)" 
                                 class="text-red-500 hover:text-red-700">
@@ -62,7 +71,7 @@ $cartTotal = $cart->getTotal();
                     <div class="space-y-4 mb-6">
                         <div class="flex justify-between">
                             <span>Subtotal</span>
-                            <span>$<?php echo number_format($cartTotal, 2); ?></span>
+                            <span id="cartSubtotal">$<?php echo number_format($cartTotal, 2); ?></span>
                         </div>
                         <div class="flex justify-between">
                             <span>Shipping</span>
@@ -74,10 +83,10 @@ $cartTotal = $cart->getTotal();
                         </div>
                         <div class="border-t pt-4 flex justify-between text-xl font-bold">
                             <span>Total</span>
-                            <span>$<?php echo number_format($cartTotal, 2); ?></span>
+                            <span id="cartTotal">$<?php echo number_format($cartTotal, 2); ?></span>
                         </div>
                     </div>
-                    <a href="<?php echo $baseUrl; ?>/checkout.php" 
+                    <a href="<?php echo url('checkout'); ?>" 
                        class="block w-full bg-primary text-white text-center py-3 rounded-lg hover:bg-primary-dark transition mb-4">
                         Proceed to Checkout
                     </a>
@@ -92,6 +101,34 @@ $cartTotal = $cart->getTotal();
         <?php endif; ?>
     </div>
 </section>
+
+<script>
+// Helper functions to increment/decrement cart items
+function incrementCartItem(productId) {
+    const quantitySpan = document.querySelector(`.item-quantity[data-product-id="${productId}"]`);
+    if (quantitySpan) {
+        const currentQuantity = parseInt(quantitySpan.textContent) || 1;
+        if (typeof updateCartItem === 'function') {
+            updateCartItem(productId, currentQuantity + 1);
+        }
+    }
+}
+
+function decrementCartItem(productId) {
+    const quantitySpan = document.querySelector(`.item-quantity[data-product-id="${productId}"]`);
+    if (quantitySpan) {
+        const currentQuantity = parseInt(quantitySpan.textContent) || 1;
+        const newQuantity = Math.max(1, currentQuantity - 1);
+        if (typeof updateCartItem === 'function') {
+            updateCartItem(productId, newQuantity);
+        }
+    }
+}
+
+// Make functions globally available
+window.incrementCartItem = incrementCartItem;
+window.decrementCartItem = decrementCartItem;
+</script>
 
 <?php require_once __DIR__ . '/includes/footer.php'; ?>
 
