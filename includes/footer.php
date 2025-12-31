@@ -215,12 +215,12 @@ if (!isset($baseUrl) && function_exists('getBaseUrl')) {
                     <span class="text-lg font-semibold">Total:</span>
                     <span class="text-xl font-bold" id="cartTotal">$0.00</span>
                 </div>
-                <a href="<?php echo $baseUrl; ?>/cart.php" class="block w-full bg-primary text-white text-center py-3 rounded-lg hover:bg-primary-dark transition mb-2">
-                    View Cart
-                </a>
-                <a href="<?php echo $baseUrl; ?>/checkout.php" class="block w-full bg-black text-white text-center py-3 rounded-lg hover:bg-gray-800 transition">
-                    Checkout
-                </a>
+                <a href="<?php echo url('cart.php'); ?>" class="block w-full bg-primary text-white text-center py-3 rounded-lg hover:bg-primary-dark transition mb-2">
+                            View Cart
+                        </a>
+                        <a href="<?php echo url('checkout'); ?>" class="block w-full bg-black text-white text-center py-3 rounded-lg hover:bg-gray-800 transition">
+                            Checkout
+                        </a>
             </div>
         </div>
     </div>
