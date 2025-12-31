@@ -21,6 +21,7 @@ $allowedSections = [
     'videos',
     'trending',
     'philosophy',
+    'features',
     'newsletter'
 ];
 

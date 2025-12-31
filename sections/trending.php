@@ -4,25 +4,30 @@ require_once __DIR__ . '/../includes/functions.php';
 
     $baseUrl = getBaseUrl();
 $product = new Product();
-$products = $product->getTrending(6);
+$products = $product->getTrending(6); // Get more products for slider
 ?>
 
-<section class="py-16 md:py-24 bg-white">
+<section id="trending-section" class="py-16 md:py-24 bg-white">
     <div class="container mx-auto px-4">
         <div class="text-center mb-12">
-            <h2 class="text-4xl md:text-5xl font-heading font-bold mb-4">Trending Jewelry</h2>
+            <h2 class="text-4xl font-heading font-bold mb-4">Trending Jewelry</h2>
             <p class="text-gray-600 text-lg max-w-2xl mx-auto">Unmatched design—superior performance and customer satisfaction in one.</p>
         </div>
         
-        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-6">
-            <?php foreach ($products as $item): 
+        <!-- Product Slider Container -->
+        <div class="relative">
+            <!-- Slider Wrapper -->
+            <div class="best-selling-slider overflow-hidden">
+                <div class="flex" id="trendingSlider" style="will-change: transform;">
+                    <?php foreach ($products as $item): 
                 $mainImage = getProductImage($item);
                 $price = $item['sale_price'] ?? $item['price'];
                 $originalPrice = $item['sale_price'] ? $item['price'] : null;
                 $discount = $originalPrice ? round((($originalPrice - $price) / $originalPrice) * 100) : 0;
                 $hasTimer = ($discount > 0 && $item['id'] % 2 == 0); // Show timer on some discounted items
             ?>
-            <div class="product-card bg-white rounded-lg overflow-hidden shadow-md hover:shadow-xl transition-all duration-300 group relative">
+                    <div class="min-w-[280px] md:min-w-[300px] my-2">
+                        <div class="product-card bg-white rounded-lg overflow-hidden shadow-md transition-all duration-300 group relative">
                 <div class="relative overflow-hidden">
                     <a href="<?php echo url('product.php?slug=' . urlencode($item['slug'] ?? '')); ?>">
                         <img src="<?php echo htmlspecialchars($mainImage); ?>" alt="<?php echo htmlspecialchars($item['name']); ?>" 
@@ -35,44 +40,45 @@ $products = $product->getTrending(6);
                     <?php endif; ?>
                     
                     <!-- Wishlist Icon (Always Visible) -->
-                    <button class="absolute top-2 right-2 w-10 h-10 bg-white rounded-full flex items-center justify-center hover:bg-red-500 hover:text-white transition z-20 wishlist-btn" 
+                    <button class="absolute top-2 right-2 w-10 h-10 bg-white rounded-full flex items-center justify-center hover:bg-black hover:text-white transition z-20 wishlist-btn" 
                             data-product-id="<?php echo $item['id']; ?>"
                             title="Add to Wishlist">
-                        <i class="fas fa-heart"></i>
+                        <i class="far fa-heart"></i>
+                        <span class="product-tooltip">Add to Wishlist</span>
                     </button>
                     
                     <!-- Timer (for some discounted items) -->
                     <?php if ($hasTimer): ?>
-                    <div class="absolute bottom-2 left-2 right-2 bg-red-500 text-white px-2 py-1 text-xs font-semibold rounded text-center countdown-timer" 
+                    <div class="absolute bottom-2 left-2 right-2 bg-red-500 text-white px-2 py-1 text-xs font-semibold h-8 text-center countdown-timer" 
                          data-product-id="<?php echo $item['id']; ?>">
                         <span class="countdown-days">00</span> d : <span class="countdown-hours">00</span> h : <span class="countdown-minutes">00</span> m : <span class="countdown-seconds">00</span> s
                     </div>
                     <?php endif; ?>
                     
                     <!-- Hover Action Buttons -->
-                    <div class="product-actions absolute right-2 top-12 flex flex-col gap-2 opacity-0 group-hover:opacity-100 transition-opacity duration-300 z-30">
+                    <div class="product-actions absolute right-2 top-12 flex flex-col mt-2 gap-2 opacity-0 group-hover:opacity-100 transition-opacity duration-300 z-30">
                         <a href="<?php echo $baseUrl; ?>/product.php?slug=<?php echo urlencode($item['slug'] ?? ''); ?>" 
-                           class="w-10 h-10 bg-white rounded-full flex items-center justify-center hover:bg-primary hover:text-white transition shadow-lg quick-view-btn" 
+                           class="product-action-btn w-10 h-10 bg-white rounded-full flex items-center justify-center hover:bg-black hover:text-white transition shadow-lg quick-view-btn relative group" 
                            data-product-id="<?php echo $item['id']; ?>"
-                           data-product-slug="<?php echo htmlspecialchars($item['slug'] ?? ''); ?>"
-                           title="Quick View">
+                           data-product-slug="<?php echo htmlspecialchars($item['slug'] ?? ''); ?>">
                             <i class="fas fa-eye"></i>
+                            <span class="product-tooltip">Quick View</span>
                         </a>
-                        <button class="w-10 h-10 bg-white rounded-full flex items-center justify-center hover:bg-primary hover:text-white transition shadow-lg compare-btn" 
-                                data-product-id="<?php echo $item['id']; ?>"
-                                title="Compare">
+                        <button class="product-action-btn w-10 h-10 bg-white rounded-full flex items-center justify-center hover:bg-black hover:text-white transition shadow-lg compare-btn relative group" 
+                                data-product-id="<?php echo $item['id']; ?>">
                             <i class="fas fa-layer-group"></i>
+                            <span class="product-tooltip">Compare</span>
                         </button>
-                        <button class="w-10 h-10 bg-white rounded-full flex items-center justify-center hover:bg-primary hover:text-white transition shadow-lg add-to-cart-hover-btn" 
-                                data-product-id="<?php echo $item['id']; ?>"
-                                title="Add to Cart">
+                        <button class="product-action-btn w-10 h-10 bg-white rounded-full flex items-center justify-center hover:bg-black hover:text-white transition shadow-lg add-to-cart-hover-btn relative group" 
+                                data-product-id="<?php echo $item['id']; ?>">
                             <i class="fas fa-shopping-cart"></i>
+                            <span class="product-tooltip">Add to Cart</span>
                         </button>
                     </div>
                 </div>
                 
                 <div class="p-4">
-                    <h3 class="font-semibold text-gray-800 mb-2 line-clamp-2 min-h-[48px]">
+                    <h3 class="font-semibold text-gray-800 mb-2 line-clamp-2">
                         <a href="<?php echo $baseUrl; ?>/product.php?slug=<?php echo urlencode($item['slug'] ?? ''); ?>" class="hover:text-primary transition">
                             <?php echo htmlspecialchars($item['name']); ?>
                         </a>
@@ -88,16 +94,35 @@ $products = $product->getTrending(6);
                         </div>
                     </div>
                     <div class="flex items-center justify-between">
-                        <div>
+                        <div class="flex items-center gap-2">
+                        <p class="text-sm font-bold <?php echo $discount > 0 ? 'text-red-500' : 'text-[var(--color-primary)]'; ?>">$<?php echo number_format($price, 2); ?></p>
                             <?php if ($originalPrice): ?>
-                            <span class="text-gray-400 line-through text-sm block">$<?php echo number_format($originalPrice, 2); ?></span>
+                            <span class="text-gray-400 line-through text-xs block">$<?php echo number_format($originalPrice, 2); ?></span>
                             <?php endif; ?>
-                            <p class="text-xl font-bold <?php echo $discount > 0 ? 'text-red-500' : 'text-primary'; ?>">$<?php echo number_format($price, 2); ?></p>
                         </div>
                     </div>
                 </div>
             </div>
-            <?php endforeach; ?>
+                    </div>
+                    <?php endforeach; ?>
+                    
+                    <?php if (empty($products)): ?>
+                    <div class="min-w-full text-center py-12">
+                        <p class="text-gray-500">No products available at the moment.</p>
+                    </div>
+                    <?php endif; ?>
+                </div>
+            </div>
+            
+            <?php if (!empty($products)): ?>
+            <!-- Navigation Arrows -->
+            <button class="absolute left-3 top-1/2 -translate-y-1/2 bg-white shadow-lg rounded-full w-12 h-12 flex items-center justify-center text-gray-800 hover:text-primary hover:bg-gray-50 transition z-10 trending-prev" id="trendingPrev">
+                <i class="fas fa-chevron-left"></i>
+            </button>
+            <button class="absolute right-3 top-1/2 -translate-y-1/2 bg-white shadow-lg rounded-full w-12 h-12 flex items-center justify-center text-gray-800 hover:text-primary hover:bg-gray-50 transition z-10 trending-next" id="trendingNext">
+                <i class="fas fa-chevron-right"></i>
+            </button>
+            <?php endif; ?>
         </div>
     </div>
 </section>

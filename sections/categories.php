@@ -13,8 +13,8 @@ $categories = $db->fetchAll(
 <section class="py-16 md:py-24 bg-white">
     <div class="container mx-auto px-4">
         <div class="text-center mb-12">
-            <h2 class="text-4xl md:text-5xl font-heading font-bold mb-4">Shop By Category</h2>
-            <p class="text-gray-600 text-lg max-w-2xl mx-auto">Express your style with our standout collection—fashion meets sophistication.</p>
+            <h2 class="text-3xl font-heading font-bold mb-4">Shop By Category</h2>
+            <p class="text-gray-600 text-md max-w-2xl mx-auto">Express your style with our standout collection—fashion meets sophistication.</p>
         </div>
         
         <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-6">
@@ -36,7 +36,7 @@ $categories = $db->fetchAll(
                     <img src="<?php echo $image; ?>" alt="<?php echo htmlspecialchars($category['name']); ?>" 
                          class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-300">
                 </div>
-                <h3 class="text-lg font-semibold text-gray-800 group-hover:text-primary transition"><?php echo htmlspecialchars($category['name']); ?></h3>
+                <h3 class="text-md font-semibold text-gray-800 group-hover:text-primary transition"><?php echo htmlspecialchars($category['name']); ?></h3>
             </a>
             <?php endforeach; ?>
         </div>

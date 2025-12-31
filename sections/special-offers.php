@@ -35,9 +35,9 @@ $offers = [
                      class="w-full h-64 object-cover group-hover:scale-110 transition-transform duration-500">
                 <div class="absolute inset-0 bg-black bg-opacity-40 group-hover:bg-opacity-50 transition"></div>
                 <div class="absolute inset-0 flex flex-col items-center justify-center text-white p-6">
-                    <h3 class="text-2xl font-heading font-bold mb-4"><?php echo htmlspecialchars($offer['title']); ?></h3>
+                    <h3 class="text-2xl font-heading font-bold text-white mb-4"><?php echo htmlspecialchars($offer['title']); ?></h3>
                     <a href="<?php echo $offer['link']; ?>" 
-                       class="bg-white text-black px-6 py-2 rounded hover:bg-gray-100 transition">
+                       class="inline-block border border-white px-8 py-3 rounded hover:bg-white hover:text-black transition">
                         Shop Now
                     </a>
                 </div>

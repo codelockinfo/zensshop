@@ -94,36 +94,53 @@ if (!function_exists('url')) {
                 <a href="<?php echo url('store.php'); ?>" class="hover:text-gray-300 transition">Our Store</a>
                 <!-- Currency/Region Selector -->
                 <div class="relative ml-4 pl-4 border-l border-gray-700">
-                    <button class="flex items-center space-x-2 hover:text-gray-300 transition cursor-pointer focus:outline-none" id="currencySelector">
-                        <span class="text-base leading-none" id="selectedFlag" style="font-size: 16px; line-height: 1;">🇺🇸</span>
-                        <span id="selectedCurrency" class="text-sm whitespace-nowrap">United States (USD $)</span>
-                        <i class="fas fa-chevron-down text-xs ml-1"></i>
+                    <button class="flex items-center gap-2 hover:text-gray-300 transition cursor-pointer focus:outline-none whitespace-nowrap" id="currencySelector">
+                        <span class="flex items-center gap-2">
+                            <span class="rounded-full border border-gray-300 overflow-hidden" style="width: 20px; height: 20px; display: inline-flex; align-items: center; justify-content: center;">
+                                <img src="https://cdn.shopify.com/static/images/flags/us.svg" alt="United States" id="selectedFlagImg" class="w-full h-full object-cover" style="width: 20px; height: 20px;">
+                            </span>
+                            <span class="text-sm">
+                                <span class="text-gray-400" id="countryCode"></span>
+                                <span id="selectedCurrency" class="text-white">United States (USD $)</span>
+                            </span>
+                        </span>
+                        <svg class="icon-down flex-shrink-0" width="10" height="6" style="margin-left: 4px;">
+                            <path d="M1 1l4 4 4-4" stroke="currentColor" stroke-width="1.5" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+                        </svg>
                     </button>
                     <!-- Currency Dropdown -->
                     <div class="absolute right-0 top-full mt-2 bg-white text-black shadow-lg rounded-lg py-1 min-w-[240px] hidden z-50 border border-gray-200" id="currencyDropdown">
-                        <a href="#" class="block px-4 py-2.5 hover:bg-gray-50 transition currency-option" data-flag="🇨🇳" data-currency="China (CNY ¥)">
-                            <div class="flex items-center space-x-3">
-                                <span class="text-base leading-none" style="font-size: 16px; line-height: 1;">🇨🇳</span>
+                        <a href="#" class="block px-4 py-2.5 hover:bg-gray-50 transition currency-option" data-flag="https://cdn.shopify.com/static/images/flags/cn.svg" data-code="cn" data-currency="China (CNY ¥)">
+                            <span class="flex items-center gap-2">
+                                <span class="rounded-full border border-gray-300 overflow-hidden" style="width: 20px; height: 20px; display: inline-flex; align-items: center; justify-content: center;">
+                                    <img src="https://cdn.shopify.com/static/images/flags/cn.svg" alt="China" class="w-full h-full object-cover" style="width: 20px; height: 20px;">
+                                </span>
                                 <span class="text-sm">China (CNY ¥)</span>
-                            </div>
+                            </span>
                         </a>
-                        <a href="#" class="block px-4 py-2.5 hover:bg-gray-50 transition currency-option" data-flag="🇫🇷" data-currency="France (EUR €)">
-                            <div class="flex items-center space-x-3">
-                                <span class="text-base leading-none" style="font-size: 16px; line-height: 1;">🇫🇷</span>
+                        <a href="#" class="block px-4 py-2.5 hover:bg-gray-50 transition currency-option" data-flag="https://cdn.shopify.com/static/images/flags/fr.svg" data-code="fr" data-currency="France (EUR €)">
+                            <span class="flex items-center gap-2">
+                                <span class="rounded-full border border-gray-300 overflow-hidden" style="width: 20px; height: 20px; display: inline-flex; align-items: center; justify-content: center;">
+                                    <img src="https://cdn.shopify.com/static/images/flags/fr.svg" alt="France" class="w-full h-full object-cover" style="width: 20px; height: 20px;">
+                                </span>
                                 <span class="text-sm">France (EUR €)</span>
-                            </div>
+                            </span>
                         </a>
-                        <a href="#" class="block px-4 py-2.5 hover:bg-gray-50 transition currency-option" data-flag="🇬🇧" data-currency="United Kingdom (GBP £)">
-                            <div class="flex items-center space-x-3">
-                                <span class="text-base leading-none" style="font-size: 16px; line-height: 1;">🇬🇧</span>
+                        <a href="#" class="block px-4 py-2.5 hover:bg-gray-50 transition currency-option" data-flag="https://cdn.shopify.com/static/images/flags/gb.svg" data-code="gb" data-currency="United Kingdom (GBP £)">
+                            <span class="flex items-center gap-2">
+                                <span class="rounded-full border border-gray-300 overflow-hidden" style="width: 20px; height: 20px; display: inline-flex; align-items: center; justify-content: center;">
+                                    <img src="https://cdn.shopify.com/static/images/flags/gb.svg" alt="United Kingdom" class="w-full h-full object-cover" style="width: 20px; height: 20px;">
+                                </span>
                                 <span class="text-sm">United Kingdom (GBP £)</span>
-                            </div>
+                            </span>
                         </a>
-                        <a href="#" class="block px-4 py-2.5 hover:bg-gray-50 transition currency-option" data-flag="🇺🇸" data-currency="United States (USD $)">
-                            <div class="flex items-center space-x-3">
-                                <span class="text-base leading-none" style="font-size: 16px; line-height: 1;">🇺🇸</span>
+                        <a href="#" class="block px-4 py-2.5 hover:bg-gray-50 transition currency-option" data-flag="https://cdn.shopify.com/static/images/flags/us.svg" data-code="us" data-currency="United States (USD $)">
+                            <span class="flex items-center gap-2">
+                                <span class="rounded-full border border-gray-300 overflow-hidden" style="width: 20px; height: 20px; display: inline-flex; align-items: center; justify-content: center;">
+                                    <img src="https://cdn.shopify.com/static/images/flags/us.svg" alt="United States" class="w-full h-full object-cover" style="width: 20px; height: 20px;">
+                                </span>
                                 <span class="text-sm">United States (USD $)</span>
-                            </div>
+                            </span>
                         </a>
                     </div>
                 </div>

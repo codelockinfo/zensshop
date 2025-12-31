@@ -98,10 +98,12 @@ document.addEventListener('DOMContentLoaded', function() {
     // Currency Selector Dropdown
     const currencySelector = document.getElementById('currencySelector');
     const currencyDropdown = document.getElementById('currencyDropdown');
-    const selectedFlag = document.getElementById('selectedFlag');
-    const selectedCurrency = document.getElementById('selectedCurrency');
     
-    if (currencySelector && currencyDropdown && selectedFlag && selectedCurrency) {
+    if (currencySelector && currencyDropdown) {
+        const selectedFlagImg = document.getElementById('selectedFlagImg');
+        const countryCode = document.getElementById('countryCode');
+        const selectedCurrency = document.getElementById('selectedCurrency');
+        
         // Toggle dropdown on button click
         currencySelector.addEventListener('click', function(e) {
             e.stopPropagation();
@@ -126,11 +128,20 @@ document.addEventListener('DOMContentLoaded', function() {
                 e.stopPropagation();
                 
                 const flag = this.getAttribute('data-flag');
+                const code = this.getAttribute('data-code');
                 const currency = this.getAttribute('data-currency');
                 
-                if (flag && currency) {
-                    selectedFlag.textContent = flag;
-                    selectedCurrency.textContent = currency;
+                if (flag && code && currency) {
+                    if (selectedFlagImg) {
+                        selectedFlagImg.src = flag;
+                        selectedFlagImg.alt = currency.split(' (')[0];
+                    }
+                    if (countryCode) {
+                        countryCode.textContent = code;
+                    }
+                    if (selectedCurrency) {
+                        selectedCurrency.textContent = currency;
+                    }
                 }
                 
                 currencyDropdown.classList.add('hidden');
