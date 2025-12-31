@@ -190,9 +190,9 @@ $_COOKIE['recently_viewed'] = json_encode($recentIds);
                 <!-- Price -->
                 <div class="mb-6">
                     <?php if ($originalPrice): ?>
-                    <span class="text-2xl text-gray-400 line-through mr-2">$<?php echo number_format($originalPrice, 2); ?></span>
+                    <span class="text-2xl text-gray-400 line-through mr-2"><?php echo format_currency($originalPrice); ?></span>
                     <?php endif; ?>
-                    <span class="text-4xl font-bold text-gray-900">$<?php echo number_format($price, 2); ?></span>
+                    <span class="text-4xl font-bold text-gray-900"><?php echo format_currency($price); ?></span>
                 </div>
                 
                 <!-- Description -->
@@ -214,7 +214,7 @@ $_COOKIE['recently_viewed'] = json_encode($recentIds);
                     </div>
                     <div class="flex items-center text-gray-700">
                         <i class="fas fa-shipping-fast mr-2 text-primary"></i>
-                        <span>Free shipping & returns: On all orders over $150.</span>
+                        <span>Free shipping & returns: On all orders over <?php echo format_currency(150); ?>.</span>
                     </div>
                     <div class="flex items-center text-gray-700">
                         <i class="fas fa-eye mr-2 text-primary"></i>
@@ -344,7 +344,7 @@ $_COOKIE['recently_viewed'] = json_encode($recentIds);
                         <i class="fas fa-plus text-gray-400" id="shipping-icon"></i>
                     </button>
                     <div id="shipping-content" class="hidden pb-4 text-gray-700">
-                        <p>We offer free shipping on all orders over $150. Standard shipping takes 3-5 business days. International shipping may take 7-14 business days.</p>
+                        <p>We offer free shipping on all orders over <?php echo format_currency(150); ?>. Standard shipping takes 3-5 business days. International shipping may take 7-14 business days.</p>
                         <p class="mt-2">Returns are accepted within 30 days of purchase. Items must be unworn and in original packaging.</p>
                     </div>
                 </div>
@@ -457,9 +457,9 @@ $_COOKIE['recently_viewed'] = json_encode($recentIds);
                             </div>
                             <div class="flex items-center justify-between">
                                 <?php if ($itemOriginalPrice): ?>
-                                <span class="text-gray-400 line-through text-sm mr-2">$<?php echo number_format($itemOriginalPrice, 2); ?></span>
+                                <span class="text-gray-400 line-through text-sm mr-2"><?php echo format_currency($itemOriginalPrice); ?></span>
                                 <?php endif; ?>
-                                <span class="font-bold text-primary">$<?php echo number_format($itemPrice, 2); ?></span>
+                                <span class="font-bold text-primary"><?php echo format_currency($itemPrice); ?></span>
                             </div>
                         </div>
                     </div>
@@ -500,7 +500,7 @@ $_COOKIE['recently_viewed'] = json_encode($recentIds);
                                 <i class="fas fa-star text-yellow-400 text-xs"></i>
                                 <?php endfor; ?>
                             </div>
-                            <span class="font-bold text-primary">$<?php echo number_format($itemPrice, 2); ?></span>
+                            <span class="font-bold text-primary"><?php echo format_currency($itemPrice); ?></span>
                         </div>
                     </div>
                 </a>

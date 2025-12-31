@@ -84,9 +84,9 @@ $products = $product->getBestSelling(12); // Get more products for slider
                                 </div>
                                 <div>
                                     <?php if ($originalPrice): ?>
-                                    <span class="text-gray-400 line-through text-sm block">$<?php echo number_format($originalPrice, 2); ?></span>
+                                    <span class="text-gray-400 line-through text-sm block"><?php echo format_currency($originalPrice); ?></span>
                                     <?php endif; ?>
-                                    <p class="text-xl font-bold <?php echo $discount > 0 ? 'text-red-500' : 'text-primary'; ?>">$<?php echo number_format($price, 2); ?></p>
+                                    <p class="text-xl font-bold <?php echo $discount > 0 ? 'text-red-500' : 'text-primary'; ?>"><?php echo format_currency($price); ?></p>
                                 </div>
                             </div>
                         </div>

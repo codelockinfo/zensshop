@@ -37,3 +37,8 @@ define('SESSION_LIFETIME', 3600); // 1 hour
 // Admin Email (for error notifications)
 define('ADMIN_EMAIL', 'admin@milano.com'); // Change this to your admin email
 
+// Razorpay Configuration
+define('RAZORPAY_KEY_ID', getenv('RAZORPAY_KEY_ID') ?: 'rzp_test_RfbZw5apB4THcH');
+define('RAZORPAY_KEY_SECRET', getenv('RAZORPAY_KEY_SECRET') ?: 'CEpjpNKALClK7tuKFf20D9VM');
+define('RAZORPAY_MODE', getenv('RAZORPAY_MODE') ?: 'test'); // 'test' or 'live'
+

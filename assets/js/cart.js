@@ -294,8 +294,8 @@ async function updateCartItem(productId, quantity) {
                     if (data.total !== undefined) {
                         const cartSubtotal = document.getElementById('cartSubtotal');
                         const cartTotal = document.getElementById('cartTotal');
-                        if (cartSubtotal) cartSubtotal.textContent = '$' + parseFloat(data.total).toFixed(2);
-                        if (cartTotal) cartTotal.textContent = '$' + parseFloat(data.total).toFixed(2);
+                        if (cartSubtotal) cartSubtotal.textContent = formatCurrency(data.total);
+                        if (cartTotal) cartTotal.textContent = formatCurrency(data.total);
                     }
                 } else {
                     // Item not found, reload page
@@ -391,8 +391,8 @@ async function removeFromCart(productId) {
                         if (data.total !== undefined) {
                             const cartSubtotal = document.getElementById('cartSubtotal');
                             const cartTotal = document.getElementById('cartTotal');
-                            if (cartSubtotal) cartSubtotal.textContent = '$' + parseFloat(data.total).toFixed(2);
-                            if (cartTotal) cartTotal.textContent = '$' + parseFloat(data.total).toFixed(2);
+                            if (cartSubtotal) cartSubtotal.textContent = formatCurrency(data.total);
+                            if (cartTotal) cartTotal.textContent = formatCurrency(data.total);
                         }
                         
                         // Check if cart is empty
@@ -455,7 +455,7 @@ function updateCartUI() {
                 <p>Your cart is empty</p>
             </div>
         `;
-        if (cartTotal) cartTotal.textContent = '$0.00';
+        if (cartTotal) cartTotal.textContent = formatCurrency(0);
         return;
     }
     
@@ -575,7 +575,8 @@ function escapeHtml(text) {
 
 // Format currency
 function formatCurrency(amount) {
-    return '$' + parseFloat(amount).toFixed(2);
+    const symbol = typeof CURRENCY_SYMBOL !== 'undefined' ? CURRENCY_SYMBOL : '₹';
+    return symbol + parseFloat(amount).toFixed(2);
 }
 
 // Make functions globally available

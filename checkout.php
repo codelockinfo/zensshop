@@ -77,14 +77,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['place_order'])) {
                 'city' => trim($_POST['city'] ?? ''),
                 'state' => trim($_POST['state'] ?? ''),
                 'zip' => trim($_POST['zip'] ?? ''),
-                'country' => trim($_POST['country'] ?? 'US')
+                'country' => trim($_POST['country_name'] ?? $_POST['country'] ?? 'India')
             ],
             'shipping_address' => [
                 'street' => trim($_POST['address'] ?? ''),
                 'city' => trim($_POST['city'] ?? ''),
                 'state' => trim($_POST['state'] ?? ''),
                 'zip' => trim($_POST['zip'] ?? ''),
-                'country' => trim($_POST['country'] ?? 'US')
+                'country' => trim($_POST['country_name'] ?? $_POST['country'] ?? 'India')
             ],
             'items' => [],
             'discount_amount' => $discountAmount,
@@ -168,8 +168,32 @@ $total = $subtotal + $finalShipping - $discountAmount + $tax;
             </div>
         </div>
 
+        <!-- Error Message Container -->
+        <div id="errorMessageContainer" class="hidden mb-6 max-w-6xl mx-auto">
+            <div class="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded">
+                <div class="flex items-center justify-between">
+                    <span id="errorMessageText"></span>
+                    <button onclick="hideErrorMessage()" class="text-red-700 hover:text-red-900 ml-4">
+                        <i class="fas fa-times"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Success Message Container -->
+        <div id="successMessageContainer" class="hidden mb-6 max-w-6xl mx-auto">
+            <div class="bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded">
+                <div class="flex items-center justify-between">
+                    <span id="successMessageText"></span>
+                    <button onclick="hideSuccessMessage()" class="text-green-700 hover:text-green-900 ml-4">
+                        <i class="fas fa-times"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+
         <?php if ($error): ?>
-        <div class="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-6 max-w-4xl mx-auto">
+        <div class="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-6 max-w-6xl mx-auto">
             <?php echo htmlspecialchars($error); ?>
         </div>
         <?php endif; ?>
@@ -223,6 +247,7 @@ $total = $subtotal + $finalShipping - $discountAmount + $tax;
                                         <?php
                                         // Comprehensive phone country codes
                                         $phoneCodes = [
+                                            '+91' => ['🇮🇳', '+91', 'IN'], // India - First
                                             '+1' => ['🇺🇸', '+1', 'US'], '+44' => ['🇬🇧', '+44', 'GB'], '+61' => ['🇦🇺', '+61', 'AU'], 
                                             '+49' => ['🇩🇪', '+49', 'DE'], '+33' => ['🇫🇷', '+33', 'FR'], '+39' => ['🇮🇹', '+39', 'IT'], 
                                             '+34' => ['🇪🇸', '+34', 'ES'], '+31' => ['🇳🇱', '+31', 'NL'], '+32' => ['🇧🇪', '+32', 'BE'], 
@@ -237,7 +262,7 @@ $total = $subtotal + $finalShipping - $discountAmount + $tax;
                                             '+423' => ['🇱🇮', '+423', 'LI'], '+377' => ['🇲🇨', '+377', 'MC'], '+376' => ['🇦🇩', '+376', 'AD'], 
                                             '+378' => ['🇸🇲', '+378', 'SM'],
                                             '+81' => ['🇯🇵', '+81', 'JP'], '+86' => ['🇨🇳', '+86', 'CN'], '+82' => ['🇰🇷', '+82', 'KR'], 
-                                            '+91' => ['🇮🇳', '+91', 'IN'], '+65' => ['🇸🇬', '+65', 'SG'], '+60' => ['🇲🇾', '+60', 'MY'], 
+                                           
                                             '+66' => ['🇹🇭', '+66', 'TH'], '+63' => ['🇵🇭', '+63', 'PH'], '+62' => ['🇮🇩', '+62', 'ID'], 
                                             '+84' => ['🇻🇳', '+84', 'VN'], '+852' => ['🇭🇰', '+852', 'HK'], '+886' => ['🇹🇼', '+886', 'TW'],
                                             '+64' => ['🇳🇿', '+64', 'NZ'], '+27' => ['🇿🇦', '+27', 'ZA'], '+20' => ['🇪🇬', '+20', 'EG'], 
@@ -262,7 +287,7 @@ $total = $subtotal + $finalShipping - $discountAmount + $tax;
                                             '+689' => ['🇵🇫', '+689', 'PF'],
                                         ];
                                         
-                                        $selectedCode = $_POST['phone_code'] ?? '+1';
+                                        $selectedCode = $_POST['phone_code'] ?? '+91'; // Default to India
                                         foreach ($phoneCodes as $code => $data) {
                                             $flag = $data[0];
                                             $display = $flag . ' ' . $code;
@@ -313,8 +338,48 @@ $total = $subtotal + $finalShipping - $discountAmount + $tax;
                                 <div>
                                     <label class="block text-sm font-semibold mb-2 text-gray-700">Country</label>
                                     <div class="relative country-dropdown-wrapper">
-                                        <!-- Hidden input for form submission -->
+                                        <!-- Hidden inputs for form submission -->
                                         <input type="hidden" name="country" id="countryInput" value="<?php echo htmlspecialchars($_POST['country'] ?? ''); ?>" required>
+                                        <?php
+                                        // Get country name from POST or lookup from code
+                                        $selectedCountryCode = $_POST['country'] ?? '';
+                                        $selectedCountryName = $_POST['country_name'] ?? '';
+                                        if ($selectedCountryCode && !$selectedCountryName) {
+                                            $countryLookup = [
+                                                'US' => 'United States', 'GB' => 'United Kingdom', 'CA' => 'Canada', 'AU' => 'Australia',
+                                                'DE' => 'Germany', 'FR' => 'France', 'IT' => 'Italy', 'ES' => 'Spain',
+                                                'NL' => 'Netherlands', 'BE' => 'Belgium', 'CH' => 'Switzerland', 'AT' => 'Austria',
+                                                'SE' => 'Sweden', 'NO' => 'Norway', 'DK' => 'Denmark', 'FI' => 'Finland',
+                                                'PL' => 'Poland', 'CZ' => 'Czech Republic', 'IE' => 'Ireland', 'PT' => 'Portugal',
+                                                'GR' => 'Greece', 'RO' => 'Romania', 'HU' => 'Hungary', 'BG' => 'Bulgaria',
+                                                'HR' => 'Croatia', 'SK' => 'Slovakia', 'SI' => 'Slovenia', 'LT' => 'Lithuania',
+                                                'LV' => 'Latvia', 'EE' => 'Estonia', 'LU' => 'Luxembourg', 'MT' => 'Malta',
+                                                'CY' => 'Cyprus', 'IS' => 'Iceland', 'LI' => 'Liechtenstein', 'MC' => 'Monaco',
+                                                'AD' => 'Andorra', 'SM' => 'San Marino', 'VA' => 'Vatican City',
+                                                'JP' => 'Japan', 'CN' => 'China', 'KR' => 'South Korea', 'IN' => 'India',
+                                                'SG' => 'Singapore', 'MY' => 'Malaysia', 'TH' => 'Thailand', 'PH' => 'Philippines',
+                                                'ID' => 'Indonesia', 'VN' => 'Vietnam', 'HK' => 'Hong Kong', 'TW' => 'Taiwan',
+                                                'NZ' => 'New Zealand', 'ZA' => 'South Africa', 'EG' => 'Egypt', 'AE' => 'United Arab Emirates',
+                                                'SA' => 'Saudi Arabia', 'IL' => 'Israel', 'TR' => 'Turkey', 'RU' => 'Russia',
+                                                'BR' => 'Brazil', 'MX' => 'Mexico', 'AR' => 'Argentina', 'CL' => 'Chile',
+                                                'CO' => 'Colombia', 'PE' => 'Peru', 'VE' => 'Venezuela', 'EC' => 'Ecuador',
+                                                'UY' => 'Uruguay', 'PY' => 'Paraguay', 'BO' => 'Bolivia', 'CR' => 'Costa Rica',
+                                                'PA' => 'Panama', 'GT' => 'Guatemala', 'DO' => 'Dominican Republic', 'CU' => 'Cuba',
+                                                'JM' => 'Jamaica', 'TT' => 'Trinidad and Tobago', 'BB' => 'Barbados', 'BS' => 'Bahamas',
+                                                'NG' => 'Nigeria', 'KE' => 'Kenya', 'GH' => 'Ghana', 'TZ' => 'Tanzania',
+                                                'ET' => 'Ethiopia', 'UG' => 'Uganda', 'MA' => 'Morocco', 'TN' => 'Tunisia',
+                                                'DZ' => 'Algeria', 'LY' => 'Libya', 'SD' => 'Sudan', 'AO' => 'Angola',
+                                                'MZ' => 'Mozambique', 'ZM' => 'Zambia', 'ZW' => 'Zimbabwe', 'BW' => 'Botswana',
+                                                'NA' => 'Namibia', 'MU' => 'Mauritius', 'SC' => 'Seychelles', 'MV' => 'Maldives',
+                                                'BD' => 'Bangladesh', 'PK' => 'Pakistan', 'LK' => 'Sri Lanka', 'NP' => 'Nepal',
+                                                'BT' => 'Bhutan', 'MM' => 'Myanmar', 'KH' => 'Cambodia', 'LA' => 'Laos',
+                                                'BN' => 'Brunei', 'FJ' => 'Fiji', 'PG' => 'Papua New Guinea', 'NC' => 'New Caledonia',
+                                                'PF' => 'French Polynesia', 'GU' => 'Guam', 'AS' => 'American Samoa',
+                                            ];
+                                            $selectedCountryName = $countryLookup[$selectedCountryCode] ?? $selectedCountryCode;
+                                        }
+                                        ?>
+                                        <input type="hidden" name="country_name" id="countryNameInput" value="<?php echo htmlspecialchars($selectedCountryName); ?>">
                                         
                                         <!-- Custom dropdown button -->
                                         <button type="button" id="countryDropdownBtn" 
@@ -504,7 +569,7 @@ $total = $subtotal + $finalShipping - $discountAmount + $tax;
                                     <h3 class="font-semibold text-sm text-gray-800"><?php echo htmlspecialchars($item['name']); ?></h3>
                                     <p class="text-xs text-gray-500"><?php echo $item['quantity']; ?>x</p>
                                 </div>
-                                <p class="font-bold text-gray-800">$<?php echo number_format($item['price'] * $item['quantity'], 2); ?></p>
+                                <p class="font-bold text-gray-800"><?php echo format_currency($item['price'] * $item['quantity']); ?></p>
                             </div>
                             <?php endforeach; ?>
                         </div>
@@ -529,21 +594,21 @@ $total = $subtotal + $finalShipping - $discountAmount + $tax;
                         <div class="border-t pt-4 space-y-2 mb-6">
                             <div class="flex justify-between text-sm">
                                 <span class="text-gray-600">Subtotal</span>
-                                <span class="font-semibold">$<?php echo number_format($subtotal, 2); ?></span>
+                                <span class="font-semibold"><?php echo format_currency($subtotal); ?></span>
                             </div>
                             <div class="flex justify-between text-sm">
                                 <span class="text-gray-600">Shipping</span>
-                                <span class="font-semibold">$<?php echo number_format($finalShipping, 2); ?></span>
+                                <span class="font-semibold"><?php echo format_currency($finalShipping); ?></span>
                             </div>
                             <?php if ($discountAmount > 0): ?>
                             <div class="flex justify-between text-sm">
                                 <span class="text-gray-600">Discount</span>
-                                <span class="font-semibold text-green-600">-$<?php echo number_format($discountAmount, 2); ?></span>
+                                <span class="font-semibold text-green-600">-<?php echo format_currency($discountAmount); ?></span>
                             </div>
                             <?php endif; ?>
                             <div class="flex justify-between text-lg font-bold pt-2 border-t">
                                 <span>Total</span>
-                                <span>$<?php echo number_format($total, 2); ?></span>
+                                <span><?php echo format_currency($total); ?></span>
                             </div>
                         </div>
                         
@@ -558,9 +623,10 @@ $total = $subtotal + $finalShipping - $discountAmount + $tax;
                         <input type="hidden" name="payment_method" value="credit_card">
                         
                         <!-- Pay Now Button -->
-                        <button type="submit" name="place_order" class="w-full bg-blue-600 text-white py-4 px-6 rounded-lg hover:bg-blue-700 transition font-semibold mb-4">
+                        <button type="button" id="razorpayPayButton" class="w-full bg-blue-600 text-white py-4 px-6 rounded-lg hover:bg-blue-700 transition font-semibold mb-4">
                             Pay Now
                         </button>
+                        <input type="hidden" name="place_order" value="1">
                         
                         <!-- Security Message -->
                         <div class="text-center text-xs text-gray-500">
@@ -654,14 +720,18 @@ function updateShipping() {
     }
     
     // Select country
+    const countryNameInput = document.getElementById('countryNameInput');
     countryOptions.forEach(option => {
         option.addEventListener('click', function() {
             const code = this.getAttribute('data-code');
             const name = this.getAttribute('data-name');
             const flag = this.getAttribute('data-flag');
             
-            // Update hidden input
+            // Update hidden inputs
             countryInput.value = code;
+            if (countryNameInput) {
+                countryNameInput.value = name;
+            }
             
             // Update display text
             countryDisplayText.textContent = flag + ' ' + name;
@@ -708,7 +778,288 @@ function updateShipping() {
         });
     }
 })();
+
+// Error/Success Message Functions
+let errorMessageTimeout = null;
+let successMessageTimeout = null;
+
+function showErrorMessage(message) {
+    const container = document.getElementById('errorMessageContainer');
+    const text = document.getElementById('errorMessageText');
+    if (container && text) {
+        // Clear any existing timeout
+        if (errorMessageTimeout) {
+            clearTimeout(errorMessageTimeout);
+            errorMessageTimeout = null;
+        }
+        
+        text.textContent = message;
+        container.classList.remove('hidden');
+        // Scroll to top to show error
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+        
+        // Auto-hide after 5 seconds
+        errorMessageTimeout = setTimeout(function() {
+            hideErrorMessage();
+        }, 5000);
+    }
+}
+
+function hideErrorMessage() {
+    const container = document.getElementById('errorMessageContainer');
+    if (container) {
+        container.classList.add('hidden');
+        // Clear timeout if message is manually closed
+        if (errorMessageTimeout) {
+            clearTimeout(errorMessageTimeout);
+            errorMessageTimeout = null;
+        }
+    }
+}
+
+function showSuccessMessage(message) {
+    const container = document.getElementById('successMessageContainer');
+    const text = document.getElementById('successMessageText');
+    if (container && text) {
+        // Clear any existing timeout
+        if (successMessageTimeout) {
+            clearTimeout(successMessageTimeout);
+            successMessageTimeout = null;
+        }
+        
+        text.textContent = message;
+        container.classList.remove('hidden');
+        // Scroll to top to show success
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+        
+        // Auto-hide after 5 seconds
+        successMessageTimeout = setTimeout(function() {
+            hideSuccessMessage();
+        }, 5000);
+    }
+}
+
+function hideSuccessMessage() {
+    const container = document.getElementById('successMessageContainer');
+    if (container) {
+        container.classList.add('hidden');
+        // Clear timeout if message is manually closed
+        if (successMessageTimeout) {
+            clearTimeout(successMessageTimeout);
+            successMessageTimeout = null;
+        }
+    }
+}
+
+// Razorpay Integration
+const razorpayBaseUrl = '<?php echo $baseUrl; ?>';
+const razorpayCartTotal = <?php echo $cartTotal; ?>;
+const razorpayShippingAmount = <?php echo $shippingAmount; ?>;
+const razorpayDiscountAmount = <?php echo $discountAmount; ?>;
+const razorpayTotal = razorpayCartTotal + razorpayShippingAmount - razorpayDiscountAmount;
+
+document.getElementById('razorpayPayButton').addEventListener('click', async function(e) {
+    e.preventDefault();
+    
+    // Validate form fields
+    const customerName = document.querySelector('input[name="customer_name"]').value.trim();
+    const customerEmail = document.querySelector('input[name="customer_email"]').value.trim();
+    const customerPhone = document.querySelector('input[name="phone"]').value.trim();
+    const phoneCode = document.querySelector('select[name="phone_code"]').value;
+    const address = document.querySelector('input[name="address"]').value.trim();
+    const city = document.querySelector('input[name="city"]').value.trim();
+    const state = document.querySelector('input[name="state"]').value.trim();
+    const zip = document.querySelector('input[name="zip"]').value.trim();
+    const countryCode = document.querySelector('input[name="country"]').value.trim();
+    const countryName = document.querySelector('input[name="country_name"]').value.trim();
+    const country = countryName || countryCode; // Use full name if available, otherwise use code
+    const deliveryType = document.querySelector('input[name="delivery_type"]:checked').value;
+    
+    // Hide any previous error messages
+    hideErrorMessage();
+    
+    if (!customerName || !customerEmail || !customerPhone || !address || !city || !state || !zip || !countryCode) {
+        console.error('[RAZORPAY] Validation failed: Missing required fields');
+        showErrorMessage('Please fill in all required fields');
+        return;
+    }
+    
+    // Validate email
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(customerEmail)) {
+        console.error('[RAZORPAY] Validation failed: Invalid email address');
+        showErrorMessage('Please enter a valid email address');
+        return;
+    }
+    
+    // Calculate final shipping and total based on delivery type
+    const finalShipping = deliveryType === 'pickup' ? 0 : razorpayShippingAmount;
+    const finalTotal = razorpayCartTotal + finalShipping - razorpayDiscountAmount;
+    
+    console.log('[RAZORPAY] Starting payment process');
+    console.log('[RAZORPAY] Cart total:', razorpayCartTotal);
+    console.log('[RAZORPAY] Shipping:', finalShipping);
+    console.log('[RAZORPAY] Discount:', razorpayDiscountAmount);
+    console.log('[RAZORPAY] Final total:', finalTotal);
+    console.log('[RAZORPAY] Delivery type:', deliveryType);
+    
+    // Disable button to prevent double clicks
+    const button = this;
+    button.disabled = true;
+    button.textContent = 'Processing...';
+    
+    try {
+        // Create Razorpay order
+        const requestData = {
+            customer_name: customerName,
+            customer_email: customerEmail,
+            customer_phone: phoneCode + ' ' + customerPhone,
+            amount: finalTotal,
+            shipping_amount: finalShipping,
+            discount_amount: razorpayDiscountAmount
+        };
+        
+        console.log('[RAZORPAY] Sending order request:', requestData);
+        
+        const orderResponse = await fetch(razorpayBaseUrl + '/api/razorpay/create-order.php', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify(requestData)
+        });
+        
+        const orderData = await orderResponse.json();
+        
+        if (!orderData.success) {
+            console.error('[RAZORPAY] Failed to create order:', orderData);
+            console.error('[RAZORPAY] Error message:', orderData.message);
+            if (orderData.debug) {
+                console.error('[RAZORPAY] Debug info:', orderData.debug);
+            }
+            const errorMsg = orderData.message || 'Failed to create payment order';
+            showErrorMessage(errorMsg);
+            button.disabled = false;
+            button.textContent = 'Pay Now';
+            return;
+        }
+        
+        console.log('[RAZORPAY] Order created successfully:', orderData);
+        
+        // Prepare order data for verification
+        const orderInfo = {
+            customer_name: customerName,
+            customer_email: customerEmail,
+            customer_phone: phoneCode + ' ' + customerPhone,
+            billing_address: {
+                street: address,
+                city: city,
+                state: state,
+                zip: zip,
+                country: country
+            },
+            shipping_address: {
+                street: address,
+                city: city,
+                state: state,
+                zip: zip,
+                country: country
+            },
+            discount_amount: razorpayDiscountAmount,
+            shipping_amount: deliveryType === 'pickup' ? 0 : razorpayShippingAmount,
+            tax_amount: 0
+        };
+        
+        // Razorpay options
+        const options = {
+            key: orderData.razorpay_key,
+            amount: orderData.amount,
+            currency: orderData.currency,
+            name: '<?php echo SITE_NAME; ?>',
+            description: 'Order Payment',
+            order_id: orderData.order_id,
+            handler: async function(response) {
+                try {
+                    // Verify payment
+                    const verifyResponse = await fetch(razorpayBaseUrl + '/api/razorpay/verify-payment.php', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify({
+                            razorpay_payment_id: response.razorpay_payment_id,
+                            razorpay_order_id: response.razorpay_order_id,
+                            razorpay_signature: response.razorpay_signature,
+                            order_data: orderInfo
+                        })
+                    });
+                    
+                    const verifyData = await verifyResponse.json();
+                    
+                    if (verifyData.success) {
+                        console.log('[RAZORPAY] Payment verified successfully:', verifyData);
+                        console.log('[RAZORPAY] Order ID:', verifyData.order_id);
+                        
+                        // Ensure order_id exists
+                        if (!verifyData.order_id) {
+                            console.error('[RAZORPAY] No order_id in response:', verifyData);
+                            throw new Error('Order ID not received from server');
+                        }
+                        
+                        // Redirect to success page with order ID
+                        // Use clean URL format (without .php) to avoid .htaccess redirect issues
+                        const successUrl = razorpayBaseUrl + '/order-success?id=' + encodeURIComponent(verifyData.order_id);
+                        console.log('[RAZORPAY] Redirecting to:', successUrl);
+                        console.log('[RAZORPAY] Order ID being passed:', verifyData.order_id);
+                        console.log('[RAZORPAY] Full verify response:', verifyData);
+                        // Use window.location.replace to prevent back button issues
+                        window.location.replace(successUrl);
+                    } else {
+                        console.error('[RAZORPAY] Payment verification failed:', verifyData);
+                        console.error('[RAZORPAY] Error message:', verifyData.message);
+                        showErrorMessage('Payment verification failed: ' + (verifyData.message || 'Unknown error'));
+                        button.disabled = false;
+                        button.textContent = 'Pay Now';
+                    }
+                } catch (error) {
+                    console.error('[RAZORPAY] Payment verification error:', error);
+                    showErrorMessage('An error occurred while verifying payment. Please contact support.');
+                    button.disabled = false;
+                    button.textContent = 'Pay Now';
+                }
+            },
+            prefill: {
+                name: customerName,
+                email: customerEmail,
+                contact: phoneCode + customerPhone
+            },
+            theme: {
+                color: '#2563eb'
+            },
+            modal: {
+                ondismiss: function() {
+                    button.disabled = false;
+                    button.textContent = 'Pay Now';
+                }
+            }
+        };
+        
+        const razorpay = new Razorpay(options);
+        razorpay.open();
+        
+    } catch (error) {
+        console.error('[RAZORPAY] Payment error:', error);
+        console.error('[RAZORPAY] Error message:', error.message);
+        console.error('[RAZORPAY] Error stack:', error.stack);
+        showErrorMessage('An error occurred: ' + (error.message || 'Unknown error. Please try again.'));
+        button.disabled = false;
+        button.textContent = 'Pay Now';
+    }
+});
 </script>
+
+<!-- Razorpay Checkout Script -->
+<script src="https://checkout.razorpay.com/v1/checkout.js"></script>
 
 <style>
 .delivery-option-card {

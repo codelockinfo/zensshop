@@ -289,9 +289,9 @@ $maxPriceRange = $priceRange['max_price'] ?? 1000;
                             <div class="flex items-center justify-between">
                                 <div>
                                     <?php if ($originalPrice): ?>
-                                    <span class="text-gray-400 line-through mr-2">$<?php echo number_format($originalPrice, 2); ?></span>
+                                    <span class="text-gray-400 line-through mr-2"><?php echo format_currency($originalPrice); ?></span>
                                     <?php endif; ?>
-                                    <span class="text-xl font-bold text-primary">$<?php echo number_format($price, 2); ?></span>
+                                    <span class="text-xl font-bold text-primary"><?php echo format_currency($price); ?></span>
                                 </div>
                                 <button onclick="addToCart(<?php echo $itemId; ?>)" 
                                         class="bg-primary text-white px-4 py-2 rounded hover:bg-primary-dark transition">
