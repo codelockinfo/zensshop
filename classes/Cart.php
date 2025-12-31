@@ -160,10 +160,15 @@ class Cart {
         // Get product
         $product = $this->product->getById($productId);
         if (!$product) {
+            error_log("Cart::addItem - Product ID $productId not found in database");
             throw new Exception("Product not found");
         }
         
+        error_log("Cart::addItem - Product found: " . ($product['name'] ?? 'N/A') . " (ID: $productId)");
+        error_log("Cart::addItem - Stock status: " . ($product['stock_status'] ?? 'N/A'));
+        
         if ($product['stock_status'] !== 'in_stock') {
+            error_log("Cart::addItem - Product ID $productId is out of stock");
             throw new Exception("Product is out of stock");
         }
         
@@ -216,6 +221,9 @@ class Cart {
         
         // Save to cookie
         $this->saveCartToCookie($cartItems);
+        
+        error_log("Cart::addItem - Cart items after save: " . count($cartItems) . " items");
+        error_log("Cart::addItem - Returning cart: " . json_encode($cartItems));
         
         // Save to database if user is logged in
         if (isset($_SESSION['user_id'])) {

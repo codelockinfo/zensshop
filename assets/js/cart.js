@@ -105,6 +105,18 @@ async function refreshCart() {
         
         if (data.success && Array.isArray(data.cart)) {
             cartData = data.cart;
+            
+            // Update cookie from API response if cookie_data is provided
+            if (data.cookie_data) {
+                try {
+                    const expiry = new Date();
+                    expiry.setTime(expiry.getTime() + (30 * 24 * 60 * 60 * 1000));
+                    document.cookie = `cart_items=${encodeURIComponent(data.cookie_data)}; expires=${expiry.toUTCString()}; path=/; SameSite=Lax`;
+                } catch (e) {
+                    console.error('[CART] Error updating cookie from refresh:', e);
+                }
+            }
+            
             updateCartUI();
             updateCartCount();
         } else {
@@ -122,21 +134,50 @@ async function refreshCart() {
 async function addToCart(productId, quantity = 1) {
     try {
         const baseUrl = typeof BASE_URL !== 'undefined' ? BASE_URL : window.location.pathname.split('/').slice(0, -1).join('/') || '';
+        const requestBody = {
+            product_id: productId,
+            quantity: quantity
+        };
+        
         const response = await fetch(baseUrl + '/api/cart.php', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
             },
-            body: JSON.stringify({
-                product_id: productId,
-                quantity: quantity
-            })
+            body: JSON.stringify(requestBody)
         });
         
         const data = await response.json();
         
         if (data.success && Array.isArray(data.cart)) {
             cartData = data.cart;
+            
+            // ALWAYS set cookie via JavaScript from response data - MUST be before any return
+            if (data.cookie_data) {
+                try {
+                    const expiry = new Date();
+                    expiry.setTime(expiry.getTime() + (30 * 24 * 60 * 60 * 1000)); // 30 days
+                    // Always use path=/ for cookies - works for all subdirectories
+                    const cookieString = `cart_items=${encodeURIComponent(data.cookie_data)}; expires=${expiry.toUTCString()}; path=/; SameSite=Lax`;
+                    document.cookie = cookieString;
+                } catch (e) {
+                    console.error('[CART] Error setting cookie:', e);
+                }
+            } else if (data.cart && Array.isArray(data.cart)) {
+                // Fallback: set cookie from cart data
+                try {
+                    const cookieData = JSON.stringify(data.cart);
+                    const expiry = new Date();
+                    expiry.setTime(expiry.getTime() + (30 * 24 * 60 * 60 * 1000));
+                    const cookieString = `cart_items=${encodeURIComponent(cookieData)}; expires=${expiry.toUTCString()}; path=/; SameSite=Lax`;
+                    document.cookie = cookieString;
+                } catch (e) {
+                    console.error('[CART] Error setting cookie (fallback):', e);
+                }
+            }
+            
+            // Reload cart from cookie to ensure UI is updated with latest data
+            loadCart();
             
             // Check if we're on the cart page
             const isCartPage = window.location.pathname.includes('/cart') || document.querySelector('.cart-item');
@@ -147,6 +188,7 @@ async function addToCart(productId, quantity = 1) {
                 return;
             }
             
+            // Ensure UI is updated (loadCart already does this, but double-check)
             updateCartUI();
             updateCartCount();
             
@@ -201,6 +243,29 @@ async function updateCartItem(productId, quantity) {
         
         if (data.success && Array.isArray(data.cart)) {
             cartData = data.cart;
+            
+            // ALWAYS set cookie via JavaScript from response data
+            if (data.cookie_data) {
+                try {
+                    const expiry = new Date();
+                    expiry.setTime(expiry.getTime() + (30 * 24 * 60 * 60 * 1000));
+                    document.cookie = `cart_items=${encodeURIComponent(data.cookie_data)}; expires=${expiry.toUTCString()}; path=/; SameSite=Lax`;
+                } catch (e) {
+                    console.error('[CART] Error updating cookie:', e);
+                }
+            } else if (data.cart) {
+                try {
+                    const cookieData = JSON.stringify(data.cart);
+                    const expiry = new Date();
+                    expiry.setTime(expiry.getTime() + (30 * 24 * 60 * 60 * 1000));
+                    document.cookie = `cart_items=${encodeURIComponent(cookieData)}; expires=${expiry.toUTCString()}; path=/; SameSite=Lax`;
+                } catch (e) {
+                    console.error('[CART] Error updating cookie (fallback):', e);
+                }
+            }
+            
+            // Reload cart from cookie to update UI
+            loadCart();
             
             // Check if we're on the cart page
             const isCartPage = window.location.pathname.includes('/cart') || document.querySelector('.cart-item');
@@ -287,6 +352,29 @@ async function removeFromCart(productId) {
         
         if (data.success) {
             cartData = Array.isArray(data.cart) ? data.cart : [];
+            
+            // ALWAYS set cookie via JavaScript from response data
+            if (data.cookie_data) {
+                try {
+                    const expiry = new Date();
+                    expiry.setTime(expiry.getTime() + (30 * 24 * 60 * 60 * 1000));
+                    document.cookie = `cart_items=${encodeURIComponent(data.cookie_data)}; expires=${expiry.toUTCString()}; path=/; SameSite=Lax`;
+                } catch (e) {
+                    console.error('[CART] Error updating cookie (remove):', e);
+                }
+            } else if (data.cart) {
+                try {
+                    const cookieData = JSON.stringify(data.cart);
+                    const expiry = new Date();
+                    expiry.setTime(expiry.getTime() + (30 * 24 * 60 * 60 * 1000));
+                    document.cookie = `cart_items=${encodeURIComponent(cookieData)}; expires=${expiry.toUTCString()}; path=/; SameSite=Lax`;
+                } catch (e) {
+                    console.error('[CART] Error updating cookie (remove fallback):', e);
+                }
+            }
+            
+            // Reload cart from cookie to update UI
+            loadCart();
             
             if (isCartPage) {
                 // Remove item from cart page DOM immediately

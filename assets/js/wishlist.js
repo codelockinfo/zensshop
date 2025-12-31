@@ -39,6 +39,12 @@ function initializeWishlistButtons() {
 
 // Load wishlist from cookie
 function loadWishlist() {
+    // Clear any old cookies with wrong path first
+    const oldPaths = ['/zensshop', '/oecom'];
+    oldPaths.forEach(path => {
+        document.cookie = `wishlist_items=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=${path}; SameSite=Lax`;
+    });
+    
     const wishlistCookie = getCookie('wishlist_items');
     if (wishlistCookie) {
         try {
@@ -56,7 +62,7 @@ function loadWishlist() {
                 }
             }
             
-            if (parsed && Array.isArray(parsed)) {
+            if (parsed && Array.isArray(parsed) && parsed.length > 0) {
                 wishlistData = parsed;
             } else {
                 wishlistData = [];
@@ -75,6 +81,12 @@ function loadWishlist() {
 // Refresh wishlist from API
 async function refreshWishlist() {
     try {
+        // Clear old cookies with wrong paths first
+        const oldPaths = ['/zensshop', '/oecom'];
+        oldPaths.forEach(path => {
+            document.cookie = `wishlist_items=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=${path}; SameSite=Lax`;
+        });
+        
         const response = await fetch((typeof BASE_URL !== 'undefined' ? BASE_URL : '/zensshop') + '/api/wishlist.php', {
             method: 'GET',
             headers: {
@@ -86,6 +98,15 @@ async function refreshWishlist() {
         
         if (data.success && Array.isArray(data.wishlist)) {
             wishlistData = data.wishlist;
+            
+            // Update cookie with correct path
+            if (wishlistData.length > 0) {
+                const cookieData = JSON.stringify(wishlistData);
+                const expiry = new Date();
+                expiry.setTime(expiry.getTime() + (30 * 24 * 60 * 60 * 1000));
+                document.cookie = `wishlist_items=${encodeURIComponent(cookieData)}; expires=${expiry.toUTCString()}; path=/; SameSite=Lax`;
+            }
+            
             updateWishlistCount();
         } else {
             // Fallback to cookie
@@ -119,9 +140,41 @@ async function toggleWishlist(productId, button) {
         
         if (data.success && Array.isArray(data.wishlist)) {
             wishlistData = data.wishlist;
+            
+            // ALWAYS set cookie via JavaScript from response data - MUST be before any return
+            if (data.cookie_data) {
+                try {
+                    const expiry = new Date();
+                    expiry.setTime(expiry.getTime() + (30 * 24 * 60 * 60 * 1000)); // 30 days
+                    // Always use path=/ for cookies - works for all subdirectories
+                    const cookieString = `wishlist_items=${encodeURIComponent(data.cookie_data)}; expires=${expiry.toUTCString()}; path=/; SameSite=Lax`;
+                    document.cookie = cookieString;
+                } catch (e) {
+                    console.error('[WISHLIST] Error setting cookie:', e);
+                }
+            } else if (data.wishlist && Array.isArray(data.wishlist)) {
+                try {
+                    const cookieData = JSON.stringify(data.wishlist);
+                    const expiry = new Date();
+                    expiry.setTime(expiry.getTime() + (30 * 24 * 60 * 60 * 1000));
+                    const cookieString = `wishlist_items=${encodeURIComponent(cookieData)}; expires=${expiry.toUTCString()}; path=/; SameSite=Lax`;
+                    document.cookie = cookieString;
+                } catch (e) {
+                    console.error('[WISHLIST] Error setting cookie (fallback):', e);
+                }
+            }
+            
+            // Update wishlist data
+            wishlistData = data.wishlist || [];
             updateWishlistCount();
             
-            // Update button state
+            // Reload page if on wishlist page to show updated items
+            if (window.location.pathname.includes('wishlist') || window.location.pathname.includes('wishlist.php')) {
+                window.location.reload();
+                return;
+            }
+            
+            // Update button state (only if not on wishlist page)
             if (button) {
                 const icon = button.querySelector('i');
                 if (icon) {
@@ -182,11 +235,38 @@ async function removeFromWishlist(productId) {
         
         if (data.success && Array.isArray(data.wishlist)) {
             wishlistData = data.wishlist;
+            
+            // ALWAYS set cookie via JavaScript from response data - MUST be before any return
+            if (data.cookie_data) {
+                try {
+                    const expiry = new Date();
+                    expiry.setTime(expiry.getTime() + (30 * 24 * 60 * 60 * 1000)); // 30 days
+                    // Always use path=/ for cookies - works for all subdirectories
+                    const cookieString = `wishlist_items=${encodeURIComponent(data.cookie_data)}; expires=${expiry.toUTCString()}; path=/; SameSite=Lax`;
+                    document.cookie = cookieString;
+                } catch (e) {
+                    console.error('[WISHLIST] Error setting cookie:', e);
+                }
+            } else if (data.wishlist && Array.isArray(data.wishlist)) {
+                try {
+                    const cookieData = JSON.stringify(data.wishlist);
+                    const expiry = new Date();
+                    expiry.setTime(expiry.getTime() + (30 * 24 * 60 * 60 * 1000));
+                    const cookieString = `wishlist_items=${encodeURIComponent(cookieData)}; expires=${expiry.toUTCString()}; path=/; SameSite=Lax`;
+                    document.cookie = cookieString;
+                } catch (e) {
+                    console.error('[WISHLIST] Error setting cookie (fallback):', e);
+                }
+            }
+            
+            // Update wishlist data
+            wishlistData = data.wishlist || [];
             updateWishlistCount();
             
-            // Reload page if on wishlist page
-            if (window.location.pathname.includes('wishlist.php')) {
+            // Reload page if on wishlist page to show updated items
+            if (window.location.pathname.includes('wishlist') || window.location.pathname.includes('wishlist.php')) {
                 window.location.reload();
+                return;
             }
             
             if (typeof showNotificationModal === 'function') {
