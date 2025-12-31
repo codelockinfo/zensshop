@@ -42,7 +42,7 @@ $cartTotal = $cart->getTotal();
                                 <?php echo htmlspecialchars($item['name']); ?>
                             </a>
                         </h3>
-                        <p class="text-gray-600">Price: $<span class="item-price"><?php echo number_format($item['price'], 2); ?></span></p>
+                        <p class="text-gray-600">Price: <span class="item-price"><?php echo format_currency($item['price']); ?></span></p>
                     </div>
                     <div class="flex items-center space-x-4">
                         <div class="flex items-center border rounded">
@@ -53,7 +53,7 @@ $cartTotal = $cart->getTotal();
                                     class="px-4 py-2 hover:bg-gray-100">+</button>
                         </div>
                         <p class="text-xl font-bold w-24 text-right item-total">
-                            $<span><?php echo number_format($item['price'] * $item['quantity'], 2); ?></span>
+                            <span><?php echo format_currency($item['price'] * $item['quantity']); ?></span>
                         </p>
                         <button onclick="removeFromCart(<?php echo $item['product_id']; ?>)" 
                                 class="text-red-500 hover:text-red-700">
@@ -71,19 +71,19 @@ $cartTotal = $cart->getTotal();
                     <div class="space-y-4 mb-6">
                         <div class="flex justify-between">
                             <span>Subtotal</span>
-                            <span id="cartSubtotal">$<?php echo number_format($cartTotal, 2); ?></span>
+                            <span id="cartSubtotal"><?php echo format_currency($cartTotal); ?></span>
                         </div>
                         <div class="flex justify-between">
                             <span>Shipping</span>
-                            <span>$0.00</span>
+                            <span><?php echo format_currency(0); ?></span>
                         </div>
                         <div class="flex justify-between">
                             <span>Tax</span>
-                            <span>$0.00</span>
+                            <span><?php echo format_currency(0); ?></span>
                         </div>
                         <div class="border-t pt-4 flex justify-between text-xl font-bold">
                             <span>Total</span>
-                            <span id="cartTotal">$<?php echo number_format($cartTotal, 2); ?></span>
+                            <span id="cartTotal"><?php echo format_currency($cartTotal); ?></span>
                         </div>
                     </div>
                     <a href="<?php echo url('checkout'); ?>" 

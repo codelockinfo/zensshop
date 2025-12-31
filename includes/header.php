@@ -53,6 +53,8 @@ if (!function_exists('url')) {
     <script>
     // Make BASE_URL available globally for all frontend pages
     const BASE_URL = '<?php echo $baseUrl; ?>';
+    // Make currency symbol available globally
+    const CURRENCY_SYMBOL = '<?php echo defined("CURRENCY_SYMBOL") ? CURRENCY_SYMBOL : "₹"; ?>';
     </script>
 </head>
 <body class="font-body">

@@ -97,6 +97,7 @@ $products = $product->getTrending(6); // Get more products for slider
                         <div class="flex items-center gap-2">
                         <p class="text-sm font-bold <?php echo $discount > 0 ? 'text-red-500' : 'text-[var(--color-primary)]'; ?>">$<?php echo number_format($price, 2); ?></p>
                             <?php if ($originalPrice): ?>
+                            <span class="text-gray-400 line-through text-sm block"><?php echo format_currency($originalPrice); ?></span>
                             <span class="text-gray-400 line-through text-xs block">$<?php echo number_format($originalPrice, 2); ?></span>
                             <?php endif; ?>
                         </div>

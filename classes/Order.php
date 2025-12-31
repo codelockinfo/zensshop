@@ -104,8 +104,8 @@ class Order {
             (order_number, user_id, customer_name, customer_email, customer_phone,
              billing_address, shipping_address, subtotal, discount_amount, 
              shipping_amount, tax_amount, total_amount, payment_method, 
-             payment_status, order_status) 
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+             payment_status, order_status, razorpay_payment_id, razorpay_order_id) 
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
             [
                 $orderNumber,
                 $data['user_id'] ?? null,
@@ -121,7 +121,9 @@ class Order {
                 $totalAmount,
                 $data['payment_method'] ?? null,
                 $data['payment_status'] ?? 'pending',
-                'pending'
+                'pending',
+                $data['razorpay_payment_id'] ?? null,
+                $data['razorpay_order_id'] ?? null
             ]
         );
         
