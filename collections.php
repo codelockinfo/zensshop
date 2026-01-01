@@ -16,8 +16,8 @@ $categories = $db->fetchAll(
     <div class="container mx-auto px-4">
         <!-- Page Header -->
         <div class="text-center mb-12">
-            <h1 class="text-4xl md:text-5xl font-heading font-bold mb-4">Collections List</h1>
-            <p class="text-gray-600 text-lg max-w-3xl mx-auto">
+            <h1 class="text-3xl md:text-4xl font-heading font-bold mb-4">Collections List</h1>
+            <p class="text-gray-600 text-md max-w-3xl mx-auto">
                 Explore our thoughtfully curated collections: Sweaters, Handbags, Denim, and more—each perfect for enhancing every style on every special occasion and daily wear.
             </p>
         </div>
@@ -47,17 +47,20 @@ $categories = $db->fetchAll(
                 $categoryUrl = $baseUrl . '/shop.php?category=' . urlencode($category['slug']);
             ?>
             <a href="<?php echo htmlspecialchars($categoryUrl); ?>" class="group">
-                <div class="relative overflow-hidden rounded-lg bg-gray-100 aspect-[3/4] mb-3">
+                <div class="relative overflow-hidden rounded-xl bg-gray-100 aspect-[3/4]">
                     <img src="<?php echo htmlspecialchars($categoryImage); ?>" 
                          alt="<?php echo htmlspecialchars($category['name']); ?>"
                          class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
                          onerror="if(!this.dataset.fallback) { this.dataset.fallback='1'; this.onerror=null; this.src='data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNDAwIiBoZWlnaHQ9IjUwMCIgdmlld0JveD0iMCAwIDQwMCA1MDAiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+PHJlY3Qgd2lkdGg9IjQwMCIgaGVpZ2h0PSI1MDAiIGZpbGw9IiNGM0Y0RjYiLz48Y2lyY2xlIGN4PSIyMDAiIGN5PSIyMDAiIHI9IjUwIiBmaWxsPSIjOUI3QThBIi8+PHBhdGggZD0iTTEwMCAzNTBDMTAwIDMwMCAxNTAgMjUwIDIwMCAyNTBDMjUwIDI1MCAzMDAgMzAwIDMwMCAzNTAiIGZpbGw9IiM5QjdBOEEiLz48L3N2Zz4='; }">
                     <div class="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-10 transition-all duration-300"></div>
-                </div>
-                <div class="text-center">
-                    <h3 class="text-lg font-semibold text-gray-900 group-hover:text-primary transition">
-                        <?php echo htmlspecialchars($category['name']); ?>
-                    </h3>
+                    <!-- Collection Name Overlay Button -->
+                    <div class="absolute bottom-0 left-0 right-0 p-4 flex items-center justify-center">
+                        <div class="bg-white px-6 py-3 w-full max-w-[85%]" style="border-radius: 50px;">
+                            <h3 class="text-center text-md font-semibold text-gray-900">
+                                <?php echo htmlspecialchars($category['name']); ?>
+                            </h3>
+                        </div>
+                    </div>
                 </div>
             </a>
             <?php endforeach; ?>

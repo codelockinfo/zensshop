@@ -58,7 +58,7 @@ $salesByStatus = $db->fetchAll("
 <div class="admin-card mb-6">
     <div class="flex items-center space-x-4">
         <label class="admin-form-label mb-0">Date Range:</label>
-        <select id="dateRange" class="admin-form-select" style="width: auto; min-width: 200px;" onchange="window.location.href='?range=' + this.value">
+        <select id="dateRange" class="admin-form-select" style="width: auto; min-width: 250px;" onchange="window.location.href='?range=' + this.value">
             <option value="7" <?php echo $dateRange === '7' ? 'selected' : ''; ?>>Last 7 days</option>
             <option value="30" <?php echo $dateRange === '30' ? 'selected' : ''; ?>>Last 30 days</option>
             <option value="365" <?php echo $dateRange === '365' ? 'selected' : ''; ?>>Last year</option>

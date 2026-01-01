@@ -143,6 +143,7 @@ function initializeBestSellingSlider() {
     // Wait a bit for DOM to be ready and images to load
     setTimeout(function() {
         const slider = document.getElementById('bestSellingSlider');
+        const sliderWrapper = slider ? slider.parentElement : null;
         const prevBtn = document.getElementById('bestSellingPrev');
         const nextBtn = document.getElementById('bestSellingNext');
         
@@ -164,6 +165,15 @@ function initializeBestSellingSlider() {
         
         let currentIndex = 0;
         
+        // Drag/swipe variables
+        let isDragging = false;
+        let startX = 0;
+        let currentX = 0;
+        let initialTranslate = 0;
+        let currentTranslate = 0;
+        let prevBtnRef = null;
+        let nextBtnRef = null;
+        
         function getItemsPerView() {
             if (window.innerWidth >= 1280) return 6;
             if (window.innerWidth >= 1024) return 4;
@@ -171,7 +181,25 @@ function initializeBestSellingSlider() {
             return 1;
         }
         
-        function updateSlider() {
+        function getMaxIndex() {
+            if (!slider.children.length) return 0;
+            const firstItem = slider.children[0];
+            if (!firstItem) return 0;
+            
+            const itemWidth = firstItem.offsetWidth || 300;
+            const gap = 24;
+            const itemWidthWithGap = itemWidth + gap;
+            
+            const container = slider.parentElement;
+            const containerWidth = container ? container.offsetWidth : window.innerWidth;
+            
+            const totalItems = slider.children.length;
+            const itemsPerView = Math.floor(containerWidth / itemWidthWithGap) || 1;
+            
+            return totalItems > itemsPerView ? totalItems - itemsPerView : 0;
+        }
+        
+        function updateSlider(disableTransition = false) {
             if (!slider.children.length) return;
             
             // Calculate scroll position based on actual dimensions
@@ -179,22 +207,8 @@ function initializeBestSellingSlider() {
             if (!firstItem) return;
             
             const itemWidth = firstItem.offsetWidth || 300;
-            const gap = 24; // 1.5rem gap
-            const itemWidthWithGap = itemWidth + gap;
-            
-            // Get actual container width (the overflow-hidden wrapper)
-            const container = slider.parentElement;
-            const containerWidth = container ? container.offsetWidth : window.innerWidth;
-            
-            // Calculate how many items fit in the container
-            const itemsPerView = Math.floor(containerWidth / itemWidthWithGap) || 1;
-            
-            // Calculate total width of all items
-            const totalItems = slider.children.length;
-            
-            // Calculate maxIndex: allow scrolling until the last item is visible
-            // If we have 12 items and 4 fit per view, we can scroll to index 8 (showing items 8,9,10,11)
-            const maxIndex = totalItems > itemsPerView ? totalItems - itemsPerView : 0;
+            const gap = 24;
+            const maxIndex = getMaxIndex();
             
             // Clamp currentIndex to valid range
             if (currentIndex > maxIndex) {
@@ -204,31 +218,163 @@ function initializeBestSellingSlider() {
                 currentIndex = 0;
             }
             
-            // Calculate scroll position
-            const translateX = -currentIndex * itemWidth;
+            // Calculate scroll position - account for CSS gap (1.5rem = 24px)
+            // When at maxIndex, ensure last item aligns with container edge
+            let translateX;
+            if (currentIndex === maxIndex && maxIndex > 0) {
+                // At max position, calculate to align last item with right edge
+                const container = slider.parentElement;
+                const containerWidth = container ? container.offsetWidth : window.innerWidth;
+                const totalItems = slider.children.length;
+                const totalSliderWidth = totalItems * itemWidth + (totalItems - 1) * gap;
+                translateX = containerWidth - totalSliderWidth;
+            } else {
+                translateX = -currentIndex * (itemWidth + gap);
+            }
+            
+            translateX += (isDragging ? currentTranslate : 0);
             
             slider.style.transform = `translateX(${translateX}px)`;
-            slider.style.transition = 'transform 0.5s ease-in-out';
+            if (!disableTransition) {
+                slider.style.transition = 'transform 0.5s ease-in-out';
+            } else {
+                slider.style.transition = 'none';
+            }
             
             // Show/hide navigation buttons
-            if (prevBtn) {
-                prevBtn.style.display = currentIndex === 0 ? 'none' : 'flex';
+            const btnPrev = prevBtnRef || document.getElementById('bestSellingPrev');
+            const btnNext = nextBtnRef || document.getElementById('bestSellingNext');
+            if (btnPrev) {
+                btnPrev.style.display = currentIndex === 0 ? 'none' : 'flex';
             }
-            if (nextBtn) {
-                // Show next button if we can still scroll
-                nextBtn.style.display = currentIndex < maxIndex ? 'flex' : 'none';
+            if (btnNext) {
+                btnNext.style.display = currentIndex < maxIndex ? 'flex' : 'none';
             }
         }
         
-        // Remove existing event listeners by cloning buttons
+        // Drag/Swipe functions
+        function getPositionX(e) {
+            return e.type.includes('mouse') ? e.clientX : e.touches[0].clientX;
+        }
+        
+        function startDrag(e) {
+            // Don't start drag if clicking on a link, button, or interactive element
+            const target = e.target.closest('a, button, .wishlist-btn, .product-action-btn');
+            if (target) return;
+            
+            isDragging = true;
+            startX = getPositionX(e);
+            const firstItem = slider.children[0];
+            if (!firstItem) {
+                isDragging = false;
+                return;
+            }
+            const itemWidth = firstItem.offsetWidth || 300;
+            const gap = 24;
+            initialTranslate = -currentIndex * (itemWidth + gap);
+            currentTranslate = 0;
+            
+            if (sliderWrapper) {
+                sliderWrapper.style.cursor = 'grabbing';
+                sliderWrapper.style.userSelect = 'none';
+            }
+            
+            // Add event listeners to document for better drag handling
+            if (e.type === 'touchstart') {
+                document.addEventListener('touchmove', drag, { passive: false });
+                document.addEventListener('touchend', endDrag);
+            } else {
+                document.addEventListener('mousemove', drag);
+                document.addEventListener('mouseup', endDrag);
+            }
+        }
+        
+        function drag(e) {
+            if (!isDragging) return;
+            e.preventDefault();
+            e.stopPropagation();
+            
+            currentX = getPositionX(e);
+            const dragDistance = currentX - startX;
+            
+            const firstItem = slider.children[0];
+            if (!firstItem) return;
+            const itemWidth = firstItem.offsetWidth || 300;
+            const gap = 24;
+            const maxIndex = getMaxIndex();
+            
+            // Calculate constraints - account for CSS gap
+            const maxTranslate = 0; // Can't drag past start
+            const minTranslate = -maxIndex * (itemWidth + gap); // Can't drag past end
+            
+            // Apply drag distance with constraints
+            currentTranslate = dragDistance;
+            const newTranslate = initialTranslate + currentTranslate;
+            
+            if (newTranslate > maxTranslate) {
+                currentTranslate = maxTranslate - initialTranslate;
+            } else if (newTranslate < minTranslate) {
+                currentTranslate = minTranslate - initialTranslate;
+            }
+            
+            slider.style.transition = 'none';
+            updateSlider(true);
+        }
+        
+        function endDrag(e) {
+            if (!isDragging) return;
+            
+            // Remove event listeners
+            document.removeEventListener('touchmove', drag);
+            document.removeEventListener('touchend', endDrag);
+            document.removeEventListener('mousemove', drag);
+            document.removeEventListener('mouseup', endDrag);
+            
+            isDragging = false;
+            
+            if (sliderWrapper) {
+                sliderWrapper.style.cursor = 'grab';
+                sliderWrapper.style.userSelect = '';
+            }
+            
+            // Determine if we should snap to next/prev slide
+            const firstItem = slider.children[0];
+            if (!firstItem) {
+                currentTranslate = 0;
+                updateSlider();
+                return;
+            }
+            
+            const itemWidth = firstItem.offsetWidth || 300;
+            const threshold = itemWidth * 0.25; // 25% of item width to trigger slide
+            
+            if (Math.abs(currentTranslate) > threshold) {
+                if (currentTranslate < 0 && currentIndex < getMaxIndex()) {
+                    // Swipe left - go to next
+                    currentIndex++;
+                } else if (currentTranslate > 0 && currentIndex > 0) {
+                    // Swipe right - go to prev
+                    currentIndex--;
+                }
+            }
+            
+            currentTranslate = 0;
+            updateSlider();
+        }
+        
+        // Remove existing event listeners by cloning buttons and storing references
         if (prevBtn && nextBtn) {
             const newPrevBtn = prevBtn.cloneNode(true);
             const newNextBtn = nextBtn.cloneNode(true);
             prevBtn.parentNode.replaceChild(newPrevBtn, prevBtn);
             nextBtn.parentNode.replaceChild(newNextBtn, nextBtn);
             
+            prevBtnRef = newPrevBtn;
+            nextBtnRef = newNextBtn;
+            
             newPrevBtn.addEventListener('click', function(e) {
                 e.preventDefault();
+                e.stopPropagation();
                 if (currentIndex > 0) {
                     currentIndex--;
                     updateSlider();
@@ -237,26 +383,19 @@ function initializeBestSellingSlider() {
             
             newNextBtn.addEventListener('click', function(e) {
                 e.preventDefault();
-                // Use the same calculation as updateSlider
-                const firstItem = slider.children[0];
-                if (!firstItem) return;
-                
-                const itemWidth = firstItem.offsetWidth || 300;
-                const gap = 24;
-                const itemWidthWithGap = itemWidth + gap;
-                
-                const container = slider.parentElement;
-                const containerWidth = container ? container.offsetWidth : window.innerWidth;
-                
-                const totalItems = slider.children.length;
-                const itemsPerView = Math.floor(containerWidth / itemWidthWithGap) || 1;
-                const maxIndex = totalItems > itemsPerView ? totalItems - itemsPerView : 0;
-                
-                if (currentIndex < maxIndex) {
+                e.stopPropagation();
+                if (currentIndex < getMaxIndex()) {
                     currentIndex++;
                     updateSlider();
                 }
             });
+        }
+        
+        // Add drag/swipe event listeners
+        if (sliderWrapper) {
+            sliderWrapper.style.cursor = 'grab';
+            sliderWrapper.addEventListener('touchstart', startDrag, { passive: false });
+            sliderWrapper.addEventListener('mousedown', startDrag);
         }
         
         // Handle window resize
@@ -308,6 +447,7 @@ function initializeTrendingSlider() {
     // Wait a bit for DOM to be ready and images to load
     setTimeout(function() {
         const slider = document.getElementById('trendingSlider');
+        const sliderWrapper = slider ? slider.parentElement : null;
         const prevBtn = document.getElementById('trendingPrev');
         const nextBtn = document.getElementById('trendingNext');
         
@@ -329,7 +469,41 @@ function initializeTrendingSlider() {
         
         let currentIndex = 0;
         
-        function updateSlider() {
+        // Drag/swipe variables
+        let isDragging = false;
+        let startX = 0;
+        let currentX = 0;
+        let initialTranslate = 0;
+        let currentTranslate = 0;
+        let prevBtnRef = null;
+        let nextBtnRef = null;
+        
+        function getItemsPerView() {
+            if (window.innerWidth >= 1280) return 6;
+            if (window.innerWidth >= 1024) return 4;
+            if (window.innerWidth >= 640) return 2;
+            return 1;
+        }
+        
+        function getMaxIndex() {
+            if (!slider.children.length) return 0;
+            const firstItem = slider.children[0];
+            if (!firstItem) return 0;
+            
+            const itemWidth = firstItem.offsetWidth || 300;
+            const gap = 24;
+            const itemWidthWithGap = itemWidth + gap;
+            
+            const container = slider.parentElement;
+            const containerWidth = container ? container.offsetWidth : window.innerWidth;
+            
+            const totalItems = slider.children.length;
+            const itemsPerView = Math.floor(containerWidth / itemWidthWithGap) || 1;
+            
+            return totalItems > itemsPerView ? totalItems - itemsPerView : 0;
+        }
+        
+        function updateSlider(disableTransition = false) {
             if (!slider.children.length) return;
             
             // Calculate scroll position based on actual dimensions
@@ -337,21 +511,8 @@ function initializeTrendingSlider() {
             if (!firstItem) return;
             
             const itemWidth = firstItem.offsetWidth || 300;
-            const gap = 24; // 1.5rem gap
-            const itemWidthWithGap = itemWidth + gap;
-            
-            // Get actual container width (the overflow-hidden wrapper)
-            const container = slider.parentElement;
-            const containerWidth = container ? container.offsetWidth : window.innerWidth;
-            
-            // Calculate how many items fit in the container
-            const itemsPerView = Math.floor(containerWidth / itemWidthWithGap) || 1;
-            
-            // Calculate total width of all items
-            const totalItems = slider.children.length;
-            
-            // Calculate maxIndex: allow scrolling until the last item is visible
-            const maxIndex = totalItems > itemsPerView ? totalItems - itemsPerView : 0;
+            const gap = 24;
+            const maxIndex = getMaxIndex();
             
             // Clamp currentIndex to valid range
             if (currentIndex > maxIndex) {
@@ -361,31 +522,163 @@ function initializeTrendingSlider() {
                 currentIndex = 0;
             }
             
-            // Calculate scroll position
-            const translateX = -currentIndex * itemWidth;
+            // Calculate scroll position - account for CSS gap (1.5rem = 24px)
+            // When at maxIndex, ensure last item aligns with container edge
+            let translateX;
+            if (currentIndex === maxIndex && maxIndex > 0) {
+                // At max position, calculate to align last item with right edge
+                const container = slider.parentElement;
+                const containerWidth = container ? container.offsetWidth : window.innerWidth;
+                const totalItems = slider.children.length;
+                const totalSliderWidth = totalItems * itemWidth + (totalItems - 1) * gap;
+                translateX = containerWidth - totalSliderWidth;
+            } else {
+                translateX = -currentIndex * (itemWidth + gap);
+            }
+            
+            translateX += (isDragging ? currentTranslate : 0);
             
             slider.style.transform = `translateX(${translateX}px)`;
-            slider.style.transition = 'transform 0.5s ease-in-out';
+            if (!disableTransition) {
+                slider.style.transition = 'transform 0.5s ease-in-out';
+            } else {
+                slider.style.transition = 'none';
+            }
             
             // Show/hide navigation buttons
-            if (prevBtn) {
-                prevBtn.style.display = currentIndex === 0 ? 'none' : 'flex';
+            const btnPrev = prevBtnRef || document.getElementById('trendingPrev');
+            const btnNext = nextBtnRef || document.getElementById('trendingNext');
+            if (btnPrev) {
+                btnPrev.style.display = currentIndex === 0 ? 'none' : 'flex';
             }
-            if (nextBtn) {
-                // Show next button if we can still scroll
-                nextBtn.style.display = currentIndex < maxIndex ? 'flex' : 'none';
+            if (btnNext) {
+                btnNext.style.display = currentIndex < maxIndex ? 'flex' : 'none';
             }
         }
         
-        // Remove existing event listeners by cloning buttons
+        // Drag/Swipe functions
+        function getPositionX(e) {
+            return e.type.includes('mouse') ? e.clientX : e.touches[0].clientX;
+        }
+        
+        function startDrag(e) {
+            // Don't start drag if clicking on a link, button, or interactive element
+            const target = e.target.closest('a, button, .wishlist-btn, .product-action-btn');
+            if (target) return;
+            
+            isDragging = true;
+            startX = getPositionX(e);
+            const firstItem = slider.children[0];
+            if (!firstItem) {
+                isDragging = false;
+                return;
+            }
+            const itemWidth = firstItem.offsetWidth || 300;
+            const gap = 24;
+            initialTranslate = -currentIndex * (itemWidth + gap);
+            currentTranslate = 0;
+            
+            if (sliderWrapper) {
+                sliderWrapper.style.cursor = 'grabbing';
+                sliderWrapper.style.userSelect = 'none';
+            }
+            
+            // Add event listeners to document for better drag handling
+            if (e.type === 'touchstart') {
+                document.addEventListener('touchmove', drag, { passive: false });
+                document.addEventListener('touchend', endDrag);
+            } else {
+                document.addEventListener('mousemove', drag);
+                document.addEventListener('mouseup', endDrag);
+            }
+        }
+        
+        function drag(e) {
+            if (!isDragging) return;
+            e.preventDefault();
+            e.stopPropagation();
+            
+            currentX = getPositionX(e);
+            const dragDistance = currentX - startX;
+            
+            const firstItem = slider.children[0];
+            if (!firstItem) return;
+            const itemWidth = firstItem.offsetWidth || 300;
+            const gap = 24;
+            const maxIndex = getMaxIndex();
+            
+            // Calculate constraints - account for CSS gap
+            const maxTranslate = 0; // Can't drag past start
+            const minTranslate = -maxIndex * (itemWidth + gap); // Can't drag past end
+            
+            // Apply drag distance with constraints
+            currentTranslate = dragDistance;
+            const newTranslate = initialTranslate + currentTranslate;
+            
+            if (newTranslate > maxTranslate) {
+                currentTranslate = maxTranslate - initialTranslate;
+            } else if (newTranslate < minTranslate) {
+                currentTranslate = minTranslate - initialTranslate;
+            }
+            
+            slider.style.transition = 'none';
+            updateSlider(true);
+        }
+        
+        function endDrag(e) {
+            if (!isDragging) return;
+            
+            // Remove event listeners
+            document.removeEventListener('touchmove', drag);
+            document.removeEventListener('touchend', endDrag);
+            document.removeEventListener('mousemove', drag);
+            document.removeEventListener('mouseup', endDrag);
+            
+            isDragging = false;
+            
+            if (sliderWrapper) {
+                sliderWrapper.style.cursor = 'grab';
+                sliderWrapper.style.userSelect = '';
+            }
+            
+            // Determine if we should snap to next/prev slide
+            const firstItem = slider.children[0];
+            if (!firstItem) {
+                currentTranslate = 0;
+                updateSlider();
+                return;
+            }
+            
+            const itemWidth = firstItem.offsetWidth || 300;
+            const threshold = itemWidth * 0.25; // 25% of item width to trigger slide
+            
+            if (Math.abs(currentTranslate) > threshold) {
+                if (currentTranslate < 0 && currentIndex < getMaxIndex()) {
+                    // Swipe left - go to next
+                    currentIndex++;
+                } else if (currentTranslate > 0 && currentIndex > 0) {
+                    // Swipe right - go to prev
+                    currentIndex--;
+                }
+            }
+            
+            currentTranslate = 0;
+            updateSlider();
+        }
+        
+        // Remove existing event listeners by cloning buttons and storing references
         if (prevBtn && nextBtn) {
             const newPrevBtn = prevBtn.cloneNode(true);
             const newNextBtn = nextBtn.cloneNode(true);
             prevBtn.parentNode.replaceChild(newPrevBtn, prevBtn);
             nextBtn.parentNode.replaceChild(newNextBtn, nextBtn);
             
+            prevBtnRef = newPrevBtn;
+            nextBtnRef = newNextBtn;
+            
             newPrevBtn.addEventListener('click', function(e) {
                 e.preventDefault();
+                e.stopPropagation();
                 if (currentIndex > 0) {
                     currentIndex--;
                     updateSlider();
@@ -394,24 +687,19 @@ function initializeTrendingSlider() {
             
             newNextBtn.addEventListener('click', function(e) {
                 e.preventDefault();
-                const container = slider.parentElement;
-                const containerWidth = container ? container.offsetWidth : window.innerWidth;
-                
-                const totalItems = slider.children.length;
-                const firstItem = slider.children[0];
-                if (!firstItem) return;
-                
-                const itemWidth = firstItem.offsetWidth || 300;
-                const gap = 24;
-                const itemWidthWithGap = itemWidth + gap;
-                const itemsPerView = Math.floor(containerWidth / itemWidthWithGap) || 1;
-                const maxIndex = totalItems > itemsPerView ? totalItems - itemsPerView : 0;
-                
-                if (currentIndex < maxIndex) {
+                e.stopPropagation();
+                if (currentIndex < getMaxIndex()) {
                     currentIndex++;
                     updateSlider();
                 }
             });
+        }
+        
+        // Add drag/swipe event listeners
+        if (sliderWrapper) {
+            sliderWrapper.style.cursor = 'grab';
+            sliderWrapper.addEventListener('touchstart', startDrag, { passive: false });
+            sliderWrapper.addEventListener('mousedown', startDrag);
         }
         
         // Handle window resize

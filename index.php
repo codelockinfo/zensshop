@@ -16,8 +16,8 @@ require_once __DIR__ . '/includes/header.php';
             <div class="absolute inset-0 bg-black bg-opacity-30"></div>
             <div class="container mx-auto px-4 h-full flex items-center relative z-10">
                 <div class="max-w-md text-white">
-                    <p class="text-md uppercase tracking-wider mb-2">NEW ARRIVALS</p>
-                    <h1 class="text-5xl font-heading font-bold mb-6">Get Extra 15% Off</h1>
+                    <p class="text-md md:text-lg uppercase tracking-wider mb-2">NEW ARRIVALS</p>
+                    <h1 class="text-4xl md:text-5xl font-heading font-bold mb-6">Get Extra 15% Off</h1>
                     <a href="<?php echo $baseUrl; ?>/shop.php" class="inline-block border border-white px-8 py-3 hover:bg-white hover:text-black transition banner-btn">
                         Shop Collection
                     </a>
@@ -30,8 +30,8 @@ require_once __DIR__ . '/includes/header.php';
             <div class="absolute inset-0 bg-black bg-opacity-30"></div>
             <div class="container mx-auto px-4 h-full flex items-center relative z-10">
                 <div class="max-w-md text-white">
-                    <p class="text-md uppercase tracking-wider mb-2">TRENDING NOW</p>
-                    <h1 class="text-5xl font-heading font-bold mb-6">Elegant Jewelry Collection</h1>
+                    <p class="text-md md:text-lg uppercase tracking-wider mb-2">TRENDING NOW</p>
+                    <h1 class="text-4xl md:text-5xl font-heading font-bold mb-6">Elegant Jewelry Collection</h1>
                     <a href="<?php echo $baseUrl; ?>/shop.php" class="inline-block border border-white px-8 py-3 hover:bg-white hover:text-black transition banner-btn">
                         Explore Now
                     </a>
@@ -44,8 +44,8 @@ require_once __DIR__ . '/includes/header.php';
             <div class="absolute inset-0 bg-black bg-opacity-30"></div>
             <div class="container mx-auto px-4 h-full flex items-center relative z-10">
                 <div class="max-w-md text-white">
-                    <p class="text-md uppercase tracking-wider mb-2">LIMITED TIME</p>
-                    <h1 class="text-5xl font-heading font-bold mb-6">Premium Quality, Best Prices</h1>
+                    <p class="text-md md:text-lg uppercase tracking-wider mb-2">LIMITED TIME</p>
+                    <h1 class="text-4xl md:text-5xl font-heading font-bold mb-6">Premium Quality, Best Prices</h1>
                     <a href="<?php echo $baseUrl; ?>/shop.php" class="inline-block border border-white px-8 py-3 hover:bg-white hover:text-black transition banner-btn">
                         Shop Now
                     </a>
@@ -62,10 +62,10 @@ require_once __DIR__ . '/includes/header.php';
         </button>
         
         <!-- Slide Indicators -->
-        <div class="absolute bottom-4 left-1/2 transform -translate-x-1/2 z-20 flex space-x-2">
-            <button class="hero-indicator w-3 h-3 rounded-full bg-white bg-opacity-50 hover:bg-opacity-75 transition" data-slide="0"></button>
-            <button class="hero-indicator w-3 h-3 rounded-full bg-white bg-opacity-50 hover:bg-opacity-75 transition" data-slide="1"></button>
-            <button class="hero-indicator w-3 h-3 rounded-full bg-white bg-opacity-50 hover:bg-opacity-75 transition" data-slide="2"></button>
+        <div class="absolute bottom-4 left-1/2 transform -translate-x-1/2 z-20 flex items-center space-x-2">
+            <button class="hero-indicator active" data-slide="0"></button>
+            <button class="hero-indicator" data-slide="1"></button>
+            <button class="hero-indicator" data-slide="2"></button>
         </div>
     </div>
 </section>
@@ -89,8 +89,7 @@ document.addEventListener('DOMContentLoaded', function() {
             slide.classList.remove('active');
             slide.style.display = 'none';
             if (indicators[i]) {
-                indicators[i].classList.remove('bg-white');
-                indicators[i].classList.add('bg-opacity-50');
+                indicators[i].classList.remove('active');
             }
         });
         
@@ -99,8 +98,7 @@ document.addEventListener('DOMContentLoaded', function() {
             slides[index].classList.add('active');
             slides[index].style.display = 'block';
             if (indicators[index]) {
-                indicators[index].classList.add('bg-white');
-                indicators[index].classList.remove('bg-opacity-50');
+                indicators[index].classList.add('active');
             }
         }
         

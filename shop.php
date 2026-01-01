@@ -106,9 +106,9 @@ $maxPriceRange = $priceRange['max_price'] ?? 1000;
                 <a href="<?php echo $baseUrl; ?>/" class="hover:text-primary">Home</a> > 
                 <span class="text-gray-900"><?php echo htmlspecialchars($category['name'] ?? ''); ?></span>
             </nav>
-            <h1 class="text-4xl md:text-6xl font-heading font-bold mb-4"><?php echo htmlspecialchars($category['name'] ?? ''); ?></h1>
+            <h1 class="text-2xl md:text-4xl font-heading font-bold mb-4"><?php echo htmlspecialchars($category['name'] ?? ''); ?></h1>
             <?php if (!empty($category['description'])): ?>
-            <p class="text-lg text-gray-600 max-w-2xl mx-auto"><?php echo htmlspecialchars($category['description'] ?? ''); ?></p>
+            <p class="text-sm text-gray-600 max-w-2xl mx-auto"><?php echo htmlspecialchars($category['description'] ?? ''); ?></p>
             <?php endif; ?>
         </div>
     </div>
@@ -121,8 +121,8 @@ $maxPriceRange = $priceRange['max_price'] ?? 1000;
                 <a href="<?php echo $baseUrl; ?>/" class="hover:text-primary">Home</a> > 
                 <span class="text-gray-900">Shop</span>
             </nav>
-            <h1 class="text-4xl md:text-6xl font-heading font-bold mb-4">Shop</h1>
-            <p class="text-lg text-gray-600 max-w-2xl mx-auto">Discover our curated collection of products</p>
+            <h1 class="text-2xl md:text-4xl font-heading font-bold mb-4">Shop</h1>
+            <p class="text-sm text-gray-600 max-w-2xl mx-auto">Discover our curated collection of products</p>
         </div>
     </div>
 </section>
@@ -131,9 +131,15 @@ $maxPriceRange = $priceRange['max_price'] ?? 1000;
 <!-- Main Content -->
 <section class="py-12 bg-white">
     <div class="container mx-auto px-4">
+        <!-- Mobile Filter Button -->
+        <button onclick="openFilterDrawer()" class="lg:hidden mb-4 flex items-center space-x-2 bg-primary text-white px-4 py-2 rounded hover:bg-primary-dark transition">
+            <i class="fas fa-filter"></i>
+            <span>Filters</span>
+        </button>
+        
         <div class="flex flex-col lg:flex-row gap-8">
-            <!-- Sidebar Filters -->
-            <aside class="lg:w-1/4">
+            <!-- Sidebar Filters (Desktop) -->
+            <aside class="hidden lg:block lg:w-1/4">
                 <div class="bg-white border border-gray-200 rounded-lg p-6 sticky top-24">
                     <!-- Products Category -->
                     <div class="mb-6">
@@ -161,13 +167,13 @@ $maxPriceRange = $priceRange['max_price'] ?? 1000;
                             <i class="fas fa-chevron-down text-sm" id="availability-arrow"></i>
                         </h3>
                         <div id="availability-filter" class="space-y-2">
-                            <label class="flex items-center">
+                            <label class="flex items-center text-md">
                                 <input type="checkbox" name="stock" value="in_stock" 
                                        <?php echo $stockStatus === 'in_stock' ? 'checked' : ''; ?>
                                        onchange="applyFilters()" class="mr-2">
                                 <span>In stock (<?php echo $inStockCount; ?>)</span>
                             </label>
-                            <label class="flex items-center">
+                            <label class="flex items-center text-md">
                                 <input type="checkbox" name="stock" value="out_of_stock" 
                                        <?php echo $stockStatus === 'out_of_stock' ? 'checked' : ''; ?>
                                        onchange="applyFilters()" class="mr-2">
@@ -203,8 +209,8 @@ $maxPriceRange = $priceRange['max_price'] ?? 1000;
             <!-- Products Grid -->
             <div class="lg:w-3/4">
                 <!-- Results and Sorting -->
-                <div class="flex flex-col md:flex-row justify-between items-start md:items-center mb-6">
-                    <p class="text-gray-600 mb-4 md:mb-0">
+                <div class="flex flex-col md:flex-row justify-between items-start md:items-center mb-6 gap-4">
+                    <p class="text-gray-600 text-sm mb-4 md:mb-0">
                         There are <?php echo $totalProducts; ?> results in total
                     </p>
                     <div class="flex items-center space-x-4">
@@ -216,7 +222,7 @@ $maxPriceRange = $priceRange['max_price'] ?? 1000;
                                 <i class="fas fa-list"></i>
                             </button>
                         </div>
-                        <select id="sortSelect" onchange="applyFilters()" class="border rounded px-4 py-2">
+                        <select id="sortSelect" onchange="applyFilters()" class="border rounded text-sm pl-2 py-2">
                             <option value="created_at DESC" <?php echo $sort === 'created_at DESC' ? 'selected' : ''; ?>>Sort by: Featured</option>
                             <option value="price ASC" <?php echo $sort === 'price ASC' ? 'selected' : ''; ?>>Price: Low to High</option>
                             <option value="price DESC" <?php echo $sort === 'price DESC' ? 'selected' : ''; ?>>Price: High to Low</option>
@@ -262,39 +268,39 @@ $maxPriceRange = $priceRange['max_price'] ?? 1000;
                             <?php endif; ?>
                             
                             <button onclick="toggleWishlist(<?php echo $itemId; ?>)" 
-                                    class="absolute top-3 right-3 bg-white rounded-full p-2 hover:bg-red-500 hover:text-white transition">
-                                <i class="fas fa-heart"></i>
+                                    class="absolute top-3 right-3 bg-white rounded-full w-9 h-9 hover:bg-black hover:text-white transition">
+                                <i class="far fa-heart"></i>
                             </button>
                         </div>
                         
                         <div class="p-4">
-                            <h3 class="font-semibold text-lg mb-2">
+                            <h3 class="font-semibold text-md mb-2">
                                 <a href="<?php echo $baseUrl; ?>/product.php?slug=<?php echo urlencode($itemSlug); ?>" class="hover:text-primary transition">
                                     <?php echo htmlspecialchars($itemName); ?>
                                 </a>
                             </h3>
                             
                             <!-- Star Rating -->
-                            <div class="flex items-center mb-2">
+                            <div class="flex items-center mb-3">
                                 <?php 
                                 $rating = floatval($item['rating'] ?? 0);
                                 $fullStars = floor($rating);
                                 $hasHalfStar = ($rating - $fullStars) >= 0.5;
                                 for ($i = 0; $i < 5; $i++): 
                                 ?>
-                                <i class="fas fa-star <?php echo $i < $fullStars ? 'text-yellow-400' : ($i === $fullStars && $hasHalfStar ? 'text-yellow-400' : 'text-gray-300'); ?>"></i>
+                                <i class="fas fa-star text-sm <?php echo $i < $fullStars ? 'text-yellow-400' : ($i === $fullStars && $hasHalfStar ? 'text-yellow-400' : 'text-gray-300'); ?>"></i>
                                 <?php endfor; ?>
                             </div>
                             
                             <div class="flex items-center justify-between">
                                 <div>
                                     <?php if ($originalPrice): ?>
-                                    <span class="text-gray-400 line-through mr-2"><?php echo format_currency($originalPrice); ?></span>
+                                    <span class="text-gray-400 text-sm line-through mr-2"><?php echo format_currency($originalPrice); ?></span>
                                     <?php endif; ?>
-                                    <span class="text-xl font-bold text-primary"><?php echo format_currency($price); ?></span>
+                                    <span class="text-md font-bold text-primary"><?php echo format_currency($price); ?></span>
                                 </div>
                                 <button onclick="addToCart(<?php echo $itemId; ?>)" 
-                                        class="bg-primary text-white px-4 py-2 rounded hover:bg-primary-dark transition">
+                                        class="bg-primary text-white px-4 py-2 rounded hover:bg-primary-dark transition text-sm">
                                     <i class="fas fa-shopping-cart mr-1"></i> Add
                                 </button>
                             </div>
@@ -338,14 +344,28 @@ $maxPriceRange = $priceRange['max_price'] ?? 1000;
 function toggleFilter(filterName) {
     const filter = document.getElementById(filterName + '-filter');
     const arrow = document.getElementById(filterName + '-arrow');
-    if (filter.classList.contains('hidden')) {
-        filter.classList.remove('hidden');
-        arrow.classList.remove('fa-chevron-up');
-        arrow.classList.add('fa-chevron-down');
-    } else {
-        filter.classList.add('hidden');
-        arrow.classList.remove('fa-chevron-down');
-        arrow.classList.add('fa-chevron-up');
+    if (filter && arrow) {
+        if (filter.classList.contains('hidden')) {
+            filter.classList.remove('hidden');
+            // Check if it's a drawer filter (chevron-right) or sidebar filter (chevron-up)
+            if (arrow.classList.contains('fa-chevron-right')) {
+                arrow.classList.remove('fa-chevron-right');
+                arrow.classList.add('fa-chevron-down');
+            } else {
+                arrow.classList.remove('fa-chevron-up');
+                arrow.classList.add('fa-chevron-down');
+            }
+        } else {
+            filter.classList.add('hidden');
+            // Check if it's a drawer filter (should go to chevron-right) or sidebar filter (should go to chevron-up)
+            if (filterName.includes('drawer')) {
+                arrow.classList.remove('fa-chevron-down');
+                arrow.classList.add('fa-chevron-right');
+            } else {
+                arrow.classList.remove('fa-chevron-down');
+                arrow.classList.add('fa-chevron-up');
+            }
+        }
     }
 }
 
@@ -430,7 +450,160 @@ function toggleWishlist(productId) {
     // Wishlist functionality can be implemented later
     console.log('Toggle wishlist for product:', productId);
 }
+
+// Filter Drawer Functions
+function openFilterDrawer() {
+    const drawer = document.getElementById('filterDrawer');
+    const overlay = document.getElementById('filterOverlay');
+    drawer.classList.remove('hidden');
+    drawer.classList.remove('-translate-x-full');
+    overlay.classList.remove('hidden');
+    document.body.style.overflow = 'hidden';
+}
+
+function closeFilterDrawer() {
+    const drawer = document.getElementById('filterDrawer');
+    const overlay = document.getElementById('filterOverlay');
+    drawer.classList.add('-translate-x-full');
+    // Add hidden class after transition completes
+    setTimeout(() => {
+        drawer.classList.add('hidden');
+    }, 300);
+    overlay.classList.add('hidden');
+    document.body.style.overflow = '';
+}
+
+// Close drawer when clicking overlay
+document.addEventListener('DOMContentLoaded', function() {
+    const overlay = document.getElementById('filterOverlay');
+    if (overlay) {
+        overlay.addEventListener('click', closeFilterDrawer);
+    }
+    
+    // Close drawer on Escape key
+    document.addEventListener('keydown', function(e) {
+        const drawer = document.getElementById('filterDrawer');
+        if (e.key === 'Escape' && drawer && !drawer.classList.contains('-translate-x-full')) {
+            closeFilterDrawer();
+        }
+    });
+});
+
+function applyFiltersFromDrawer() {
+    const params = new URLSearchParams(window.location.search);
+    
+    // Stock status
+    const stockCheckboxes = document.querySelectorAll('input[name="stock-drawer"]:checked');
+    if (stockCheckboxes.length > 0) {
+        params.set('stock', stockCheckboxes[0].value);
+    } else {
+        params.delete('stock');
+    }
+    
+    // Price
+    const minPrice = document.getElementById('minPriceDrawer')?.value;
+    const maxPrice = document.getElementById('maxPriceDrawer')?.value;
+    if (minPrice) {
+        params.set('min_price', minPrice);
+    } else {
+        params.delete('min_price');
+    }
+    if (maxPrice) {
+        params.set('max_price', maxPrice);
+    } else {
+        params.delete('max_price');
+    }
+    
+    // Sort (keep existing)
+    const sort = document.getElementById('sortSelect')?.value;
+    if (sort) {
+        params.set('sort', sort);
+    }
+    
+    // Reset to page 1
+    params.delete('page');
+    
+    window.location.href = '<?php echo $baseUrl; ?>/shop.php?' + params.toString();
+}
 </script>
+
+<!-- Mobile Filter Drawer -->
+<div id="filterOverlay" class="hidden fixed inset-0 bg-black bg-opacity-50 z-40 lg:hidden"></div>
+<div id="filterDrawer" class="hidden fixed top-0 left-0 h-full w-80 bg-white shadow-2xl z-50 transform -translate-x-full transition-transform duration-300 overflow-y-auto lg:hidden">
+    <div class="p-6">
+        <!-- Drawer Header -->
+        <div class="flex items-center justify-between mb-6 pb-4 border-b">
+            <h2 class="text-xl font-bold">Filters</h2>
+            <button onclick="closeFilterDrawer()" class="text-gray-500 hover:text-gray-800">
+                <i class="fas fa-times text-xl"></i>
+            </button>
+        </div>
+        
+        <!-- Products Category -->
+        <div class="mb-6">
+            <h3 class="font-bold text-lg mb-4 flex items-center justify-between cursor-pointer" onclick="toggleFilter('category-drawer')">
+                Products Category
+                <i class="fas fa-chevron-down text-sm" id="category-drawer-arrow"></i>
+            </h3>
+            <div id="category-drawer-filter" class="space-y-2">
+                <a href="<?php echo $baseUrl; ?>/shop.php" class="block text-gray-600 hover:text-primary transition <?php echo !$categorySlug ? 'font-semibold text-primary' : ''; ?>" onclick="closeFilterDrawer()">
+                    All Categories
+                </a>
+                <?php foreach ($categories as $cat): ?>
+                <a href="<?php echo $baseUrl; ?>/shop.php?category=<?php echo urlencode($cat['slug'] ?? ''); ?>" 
+                   class="block text-gray-600 hover:text-primary transition <?php echo $categorySlug === ($cat['slug'] ?? '') ? 'font-semibold text-primary' : ''; ?>"
+                   onclick="closeFilterDrawer()">
+                    <?php echo htmlspecialchars($cat['name'] ?? ''); ?> (<?php echo $cat['product_count'] ?? 0; ?>)
+                </a>
+                <?php endforeach; ?>
+            </div>
+        </div>
+        
+        <!-- Availability -->
+        <div class="mb-6 border-t pt-6">
+            <h3 class="font-bold text-lg mb-4 flex items-center justify-between cursor-pointer" onclick="toggleFilter('availability-drawer')">
+                Availability
+                <i class="fas fa-chevron-down text-sm" id="availability-drawer-arrow"></i>
+            </h3>
+            <div id="availability-drawer-filter" class="space-y-2">
+                <label class="flex items-center text-md">
+                    <input type="checkbox" name="stock-drawer" value="in_stock" 
+                           <?php echo $stockStatus === 'in_stock' ? 'checked' : ''; ?>
+                           onchange="applyFiltersFromDrawer()" class="mr-2">
+                    <span>In stock (<?php echo $inStockCount; ?>)</span>
+                </label>
+                <label class="flex items-center text-md">
+                    <input type="checkbox" name="stock-drawer" value="out_of_stock" 
+                           <?php echo $stockStatus === 'out_of_stock' ? 'checked' : ''; ?>
+                           onchange="applyFiltersFromDrawer()" class="mr-2">
+                    <span>Out of stock (<?php echo $outOfStockCount; ?>)</span>
+                </label>
+            </div>
+        </div>
+        
+        <!-- Price Range -->
+        <div class="mb-6 border-t pt-6">
+            <h3 class="font-bold text-lg mb-4 flex items-center justify-between cursor-pointer" onclick="toggleFilter('price-drawer')">
+                Price
+                <i class="fas fa-chevron-down text-sm" id="price-drawer-arrow"></i>
+            </h3>
+            <div id="price-drawer-filter" class="space-y-4">
+                <div class="flex items-center space-x-2">
+                    <input type="number" id="minPriceDrawer" placeholder="Min" 
+                           value="<?php echo htmlspecialchars($minPrice); ?>"
+                           min="0" step="0.01" class="w-full border rounded px-3 py-2">
+                    <span>-</span>
+                    <input type="number" id="maxPriceDrawer" placeholder="Max" 
+                           value="<?php echo htmlspecialchars($maxPrice); ?>"
+                           min="0" step="0.01" class="w-full border rounded px-3 py-2">
+                </div>
+                <button onclick="applyFiltersFromDrawer()" class="w-full bg-primary text-white py-2 rounded hover:bg-primary-dark transition">
+                    Apply Filters
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
 
 <?php require_once __DIR__ . '/includes/footer.php'; ?>
 

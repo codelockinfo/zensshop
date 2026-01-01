@@ -181,7 +181,7 @@ if (!function_exists('url')) {
                         </li>
                         <li class="border-t border-gray-200 mt-1 pt-1">
                             <a href="<?php echo url('admin/api/auth.php?action=logout'); ?>" class="user-dropdown-item text-red-600 hover:text-red-700">
-                                <i class="fas fa-sign-out-alt w-5"></i>
+                                <i class="fas fa-sign-out-alt w-5" style="color: #e24c4c;"></i>
                                 <span>Log out</span>
                             </a>
                         </li>
@@ -207,6 +207,7 @@ if (!function_exists('url')) {
                 <a href="<?php echo $baseUrl; ?>/admin/products/list.php" class="sidebar-menu-item flex items-center space-x-3 py-2 px-4 <?php echo strpos($_SERVER['PHP_SELF'], 'products') !== false ? 'bg-gray-700' : ''; ?>" title="Ecommerce">
                     <i class="fas fa-shopping-cart text-lg"></i>
                     <span class="sidebar-menu-text">Ecommerce</span>
+                    <i class="fas fa-chevron-down text-xs ml-auto"></i>
                 </a>
                 <div class="sidebar-submenu mt-2 space-y-1">
                     <a href="<?php echo $baseUrl; ?>/admin/products/add.php" class="flex items-center space-x-2 py-1 px-4 text-sm" title="Add Product">
@@ -239,6 +240,7 @@ if (!function_exists('url')) {
                 <a href="<?php echo $baseUrl; ?>/admin/orders/list.php" class="sidebar-menu-item flex items-center space-x-3 py-2 px-4 mt-2 <?php echo strpos($_SERVER['PHP_SELF'], 'orders') !== false ? 'bg-gray-700' : ''; ?>" title="Order">
                     <i class="fas fa-file-alt text-lg"></i>
                     <span class="sidebar-menu-text">Order</span>
+                    <i class="fas fa-chevron-down text-xs ml-auto"></i>
                 </a>
                 <div class="sidebar-submenu mt-2 space-y-1">
                     <a href="<?php echo $baseUrl; ?>/admin/orders/list.php" class="flex items-center space-x-2 py-1 px-4 text-sm" title="Order List">
@@ -253,6 +255,7 @@ if (!function_exists('url')) {
                 <a href="<?php echo $baseUrl; ?>/admin/customers/list.php" class="sidebar-menu-item flex items-center space-x-3 py-2 px-4 mt-2 <?php echo strpos($_SERVER['PHP_SELF'], 'customers') !== false ? 'bg-primary-light text-primary-dark' : ''; ?>" title="Customers">
                     <i class="fas fa-users text-lg"></i>
                     <span class="sidebar-menu-text">Customers</span>
+                    <i class="fas fa-chevron-down text-xs ml-auto"></i>
                 </a>
                 <div class="sidebar-submenu mt-2 space-y-1">
                     <a href="<?php echo $baseUrl; ?>/admin/customers/list.php" class="flex items-center space-x-2 py-1 px-4 text-sm" title="Customer List">

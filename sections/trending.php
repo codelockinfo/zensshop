@@ -10,14 +10,14 @@ $products = $product->getTrending(6); // Get more products for slider
 <section id="trending-section" class="py-16 md:py-24 bg-white">
     <div class="container mx-auto px-4">
         <div class="text-center mb-12">
-            <h2 class="text-4xl font-heading font-bold mb-4">Trending Jewelry</h2>
-            <p class="text-gray-600 text-lg max-w-2xl mx-auto">Unmatched design—superior performance and customer satisfaction in one.</p>
+            <h2 class="text-2xl md:text-3xl font-heading font-bold mb-4">Trending Jewelry</h2>
+            <p class="text-gray-600 text-sm md:text-md max-w-2xl mx-auto">Unmatched design—superior performance and customer satisfaction in one.</p>
         </div>
         
         <!-- Product Slider Container -->
         <div class="relative">
             <!-- Slider Wrapper -->
-            <div class="best-selling-slider overflow-hidden">
+            <div class="trending-slider overflow-hidden">
                 <div class="flex" id="trendingSlider" style="will-change: transform;">
                     <?php foreach ($products as $item): 
                 $mainImage = getProductImage($item);
@@ -95,10 +95,9 @@ $products = $product->getTrending(6); // Get more products for slider
                     </div>
                     <div class="flex items-center justify-between">
                         <div class="flex items-center gap-2">
-                        <p class="text-sm font-bold <?php echo $discount > 0 ? 'text-red-500' : 'text-[var(--color-primary)]'; ?>">$<?php echo number_format($price, 2); ?></p>
+                        <p class="text-md font-bold <?php echo $discount > 0 ? 'text-red-500' : 'text-[var(--color-primary)]'; ?>">$<?php echo number_format($price, 2); ?></p>
                             <?php if ($originalPrice): ?>
-                            <span class="text-gray-400 line-through text-sm block"><?php echo format_currency($originalPrice); ?></span>
-                            <span class="text-gray-400 line-through text-xs block">$<?php echo number_format($originalPrice, 2); ?></span>
+                            <span class="text-gray-400 line-through text-sm block">$<?php echo number_format($originalPrice, 2); ?></span>
                             <?php endif; ?>
                         </div>
                     </div>

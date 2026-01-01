@@ -21,7 +21,7 @@ function initializeWishlistButtons() {
                 if (icon) {
                     icon.classList.remove('far');
                     icon.classList.add('fas');
-                    btn.classList.add('bg-red-500', 'text-white');
+                    btn.classList.add('bg-black', 'text-white');
                     btn.classList.remove('bg-white');
                 }
             } else {
@@ -29,7 +29,7 @@ function initializeWishlistButtons() {
                 if (icon) {
                     icon.classList.remove('fas');
                     icon.classList.add('far');
-                    btn.classList.remove('bg-red-500', 'text-white');
+                    btn.classList.remove('bg-black', 'text-white');
                     btn.classList.add('bg-white');
                 }
             }
@@ -181,12 +181,12 @@ async function toggleWishlist(productId, button) {
                     if (isInWishlist) {
                         icon.classList.remove('fas');
                         icon.classList.add('far');
-                        button.classList.remove('bg-red-500', 'text-white');
+                        button.classList.remove('bg-black', 'text-white');
                         button.classList.add('bg-white');
                     } else {
                         icon.classList.remove('far');
                         icon.classList.add('fas');
-                        button.classList.add('bg-red-500', 'text-white');
+                        button.classList.add('bg-black', 'text-white');
                         button.classList.remove('bg-white');
                     }
                 }

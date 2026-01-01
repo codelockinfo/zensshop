@@ -59,7 +59,7 @@ require_once __DIR__ . '/includes/header.php';
 ?>
 
 <!-- Breadcrumb -->
-<div class="bg-gray-50 py-4">
+<div class="py-4">
     <div class="container mx-auto px-4">
         <nav class="text-sm text-gray-600">
             <a href="<?php echo $baseUrl; ?>/" class="hover:text-primary">Home</a>
@@ -70,8 +70,8 @@ require_once __DIR__ . '/includes/header.php';
 </div>
 
 <!-- Wishlist Section -->
-<div class="container mx-auto px-4 py-12">
-    <h1 class="text-4xl md:text-5xl font-heading font-bold text-center mb-12">Wishlist</h1>
+<div class="container mx-auto pt-2 px-4 py-12">
+    <h1 class="text-2xl md:text-4xl font-heading font-bold text-center mb-5 md:mb-12">Wishlist</h1>
     
     <?php if (empty($wishlistItems)): ?>
         <!-- Empty Wishlist -->
@@ -90,7 +90,7 @@ require_once __DIR__ . '/includes/header.php';
                 <div class="group relative bg-white border border-gray-200 rounded-lg overflow-hidden hover:shadow-lg transition-shadow">
                     <!-- Remove Button -->
                     <button onclick="removeFromWishlist(<?php echo $item['product_id']; ?>)" 
-                            class="absolute top-4 right-4 z-10 bg-white rounded-full p-2 shadow-md hover:bg-red-500 hover:text-white transition"
+                            class="absolute top-2 md:top-4 right-2 md:right-4 z-10 bg-white rounded-full h-9 w-9 shadow-md hover:bg-black hover:text-white transition"
                             title="Remove from wishlist">
                         <i class="fas fa-times"></i>
                     </button>
@@ -116,8 +116,8 @@ require_once __DIR__ . '/includes/header.php';
                     </a>
                     
                     <!-- Product Info -->
-                    <div class="p-6">
-                        <h3 class="text-lg font-heading font-semibold mb-2">
+                    <div class="py-6 px-4">
+                        <h3 class="text-md font-heading font-semibold mb-2">
                                 <a href="<?php echo $baseUrl; ?>/product.php?slug=<?php echo htmlspecialchars($item['slug'] ?? ''); ?>" 
                                class="hover:text-primary transition">
                                     <?php echo htmlspecialchars($item['name'] ?? 'Product'); ?>
@@ -125,7 +125,7 @@ require_once __DIR__ . '/includes/header.php';
                         </h3>
                         
                         <!-- Rating -->
-                        <div class="flex items-center mb-3">
+                        <div class="flex items-center mb-3 text-sm">
                             <?php 
                             $rating = floatval($item['rating'] ?? 0);
                             $fullStars = floor($rating);
@@ -143,13 +143,13 @@ require_once __DIR__ . '/includes/header.php';
                         
                         <!-- Price -->
                         <div class="flex items-center justify-between">
-                            <span class="text-xl font-bold text-primary">
+                            <span class="text-md font-bold text-primary">
                                 $<?php echo number_format(floatval($item['price'] ?? 0), 2); ?>
                             </span>
                             
                             <!-- Add to Cart Button -->
                             <button onclick="addToCart(<?php echo $item['product_id']; ?>, 1)" 
-                                    class="bg-primary text-white px-4 py-2 rounded-lg hover:bg-primary-dark transition">
+                                    class="bg-primary text-white px-4 py-2 rounded-lg hover:bg-primary-dark transition text-sm">
                                 <i class="fas fa-shopping-cart mr-2"></i>Add to Cart
                             </button>
                         </div>
@@ -185,7 +185,7 @@ require_once __DIR__ . '/includes/header.php';
                     <div class="group relative bg-white border border-gray-200 rounded-lg overflow-hidden hover:shadow-lg transition-shadow">
                         <!-- Wishlist Button -->
                         <button onclick="toggleWishlist(<?php echo $recentProduct['id']; ?>, this)" 
-                                class="absolute top-4 right-4 z-10 bg-white rounded-full p-2 shadow-md hover:bg-red-500 hover:text-white transition <?php echo $isInWishlist ? 'bg-red-500 text-white' : ''; ?>"
+                                class="absolute top-4 right-4 z-10 bg-white rounded-full w-9 h-9 shadow-md hover:bg-black hover:text-white transition <?php echo $isInWishlist ? 'bg-red-500 text-white' : ''; ?>"
                                 data-product-id="<?php echo $recentProduct['id']; ?>"
                                 title="<?php echo $isInWishlist ? 'Remove from wishlist' : 'Add to wishlist'; ?>">
                             <i class="<?php echo $isInWishlist ? 'fas' : 'far'; ?> fa-heart"></i>

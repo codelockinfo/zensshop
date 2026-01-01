@@ -195,7 +195,7 @@ if (!isset($baseUrl) && function_exists('getBaseUrl')) {
         <div class="flex flex-col h-full">
             <!-- Cart Header -->
             <div class="flex items-center justify-between p-6 border-b">
-                <h2 class="text-2xl font-heading font-bold">Shopping Cart</h2>
+                <h2 class="text-xl font-heading font-bold">Shopping Cart</h2>
                 <button class="text-gray-500 hover:text-gray-800" id="closeCart">
                     <i class="fas fa-times text-2xl"></i>
                 </button>
@@ -215,10 +215,10 @@ if (!isset($baseUrl) && function_exists('getBaseUrl')) {
                     <span class="text-lg font-semibold">Total:</span>
                     <span class="text-xl font-bold" id="cartTotal">$0.00</span>
                 </div>
-                <a href="<?php echo url('cart.php'); ?>" class="block w-full bg-primary text-white text-center py-3 rounded-lg hover:bg-primary-dark transition mb-2">
+                <a href="<?php echo url('cart.php'); ?>" class="block w-full bg-primary text-white text-center py-3 rounded-lg hover:bg-primary-dark hover:text-white transition mb-2">
                             View Cart
                         </a>
-                        <a href="<?php echo url('checkout'); ?>" class="block w-full bg-black text-white text-center py-3 rounded-lg hover:bg-gray-800 transition">
+                        <a href="<?php echo url('checkout'); ?>" class="block w-full bg-black text-white text-center py-3 rounded-lg hover:text-white hover:bg-gray-800 transition">
                             Checkout
                         </a>
             </div>

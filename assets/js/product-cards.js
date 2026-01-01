@@ -87,7 +87,7 @@ function toggleWishlist(productId, button) {
         if (icon.classList.contains('fas')) {
             icon.classList.remove('fas');
             icon.classList.add('far');
-            button.classList.remove('bg-red-500', 'text-white');
+            button.classList.remove('bg-black', 'text-white');
             button.classList.add('bg-white');
             if (typeof showNotification === 'function') {
                 showNotification('Removed from wishlist', 'info');
@@ -95,7 +95,7 @@ function toggleWishlist(productId, button) {
         } else {
             icon.classList.remove('far');
             icon.classList.add('fas');
-            button.classList.add('bg-red-500', 'text-white');
+            button.classList.add('bg-black', 'text-white');
             button.classList.remove('bg-white');
             if (typeof showNotification === 'function') {
                 showNotification('Added to wishlist', 'success');
