@@ -108,6 +108,9 @@ class Product {
     public function create($data) {
         return $this->retryHandler->executeWithRetry(
             function() use ($data) {
+                // Generate unique 10-digit product ID (e.g., 5654148741)
+                $customProductId = $this->generateUniqueProductId();
+                
                 // Generate slug from name
                 $slug = $this->generateSlug($data['name']);
                 
@@ -127,13 +130,14 @@ class Product {
                     $primaryCategoryId = $data['category_id'];
                 }
                 
-                // Insert product
+                // Insert product with custom 10-digit product_id
                 $productId = $this->db->insert(
                     "INSERT INTO products 
-                    (name, slug, sku, description, short_description, category_id, price, sale_price, 
+                    (product_id, name, slug, sku, description, short_description, category_id, price, sale_price, 
                      stock_quantity, stock_status, images, featured_image, gender, brand, status, featured) 
-                    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+                    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
                     [
+                        $customProductId,  // 10-digit random product ID (e.g., 5654148741)
                         $data['name'],
                         $slug,
                         $data['sku'] ?? null,
@@ -181,7 +185,11 @@ class Product {
                 
                 // Handle variants if provided
                 if (!empty($data['variants']) && is_array($data['variants'])) {
-                    $this->saveVariants($productId, $data['variants']);
+                    // Get the 10-digit product_id to use in variants table
+                    $productRecord = $this->db->fetchOne("SELECT product_id FROM products WHERE id = ?", [$productId]);
+                    if ($productRecord && !empty($productRecord['product_id'])) {
+                        $this->saveVariants($productRecord['product_id'], $data['variants']);
+                    }
                 }
                 
                 return $productId;
@@ -291,8 +299,38 @@ class Product {
     }
     
     /**
-     * Generate URL-friendly slug
+     * Generate unique 10-digit product ID
+     * Returns a random 10-digit number like: 5654148741
      */
+    private function generateUniqueProductId() {
+        $maxAttempts = 100; // Prevent infinite loop
+        $attempts = 0;
+        
+        do {
+            // Generate 10-digit random number (1000000000 to 9999999999)
+            // This ensures exactly 10 digits, like: 5654148741
+            $productId = mt_rand(1000000000, 9999999999);
+            
+            // Check if it already exists in database
+            $existing = $this->db->fetchOne(
+                "SELECT id FROM products WHERE product_id = ?",
+                [$productId]
+            );
+            
+            $attempts++;
+            
+            // If not found, return the unique ID
+            if (!$existing) {
+                return $productId;
+            }
+            
+            // If we've tried too many times, throw an error
+            if ($attempts >= $maxAttempts) {
+                throw new Exception('Unable to generate unique product ID after ' . $maxAttempts . ' attempts');
+            }
+        } while (true);
+    }
+    
     private function generateSlug($name) {
         $slug = strtolower(trim($name));
         $slug = preg_replace('/[^a-z0-9-]+/', '-', $slug);
@@ -362,40 +400,58 @@ class Product {
     
     /**
      * Save product variants
+     * @param int|string $productId - Can be auto-increment id or 10-digit product_id
      */
     public function saveVariants($productId, $variantsData) {
-        if (empty($variantsData['options']) || empty($variantsData['variants'])) {
+        // Check if variants data exists
+        if (empty($variantsData['variants']) || !is_array($variantsData['variants'])) {
             return;
         }
         
-        // Save variant options (e.g., Size, Color)
-        try {
-            foreach ($variantsData['options'] as $index => $option) {
-                if (empty($option['name']) || empty($option['values'])) {
-                    continue;
+        // Convert auto-increment id to 10-digit product_id if needed
+        $productIdValue = $this->getProductIdValue($productId);
+        
+        // Save variant options to product_variant_options table (if table exists)
+        if (!empty($variantsData['options']) && is_array($variantsData['options'])) {
+            try {
+                foreach ($variantsData['options'] as $index => $option) {
+                    if (empty($option['name']) || empty($option['values'])) {
+                        continue;
+                    }
+                    
+                    $this->db->insert(
+                        "INSERT INTO product_variant_options (product_id, option_name, option_values, display_order) 
+                         VALUES (?, ?, ?, ?)",
+                        [
+                            $productIdValue,
+                            $option['name'],
+                            json_encode($option['values']),
+                            $index
+                        ]
+                    );
                 }
-                
-                $this->db->insert(
-                    "INSERT INTO product_variant_options (product_id, option_name, option_values, display_order) 
-                     VALUES (?, ?, ?, ?)",
-                    [
-                        $productId,
-                        $option['name'],
-                        json_encode($option['values']),
-                        $index
-                    ]
-                );
+            } catch (Exception $e) {
+                // Table might not exist, log and continue (this is optional)
+                error_log("Could not save variant options (table may not exist): " . $e->getMessage());
             }
-        } catch (Exception $e) {
-            // Table might not exist, log and continue
-            error_log("Could not save variant options (table may not exist): " . $e->getMessage());
         }
         
-        // Save individual variants
+        // Save individual variants to product_variants table
         try {
             foreach ($variantsData['variants'] as $variant) {
                 if (empty($variant['attributes'])) {
                     continue;
+                }
+                
+                // Convert price and sale_price to proper format
+                $price = null;
+                if (!empty($variant['price']) && is_numeric($variant['price'])) {
+                    $price = floatval($variant['price']);
+                }
+                
+                $salePrice = null;
+                if (!empty($variant['sale_price']) && is_numeric($variant['sale_price'])) {
+                    $salePrice = floatval($variant['sale_price']);
                 }
                 
                 $this->db->insert(
@@ -403,33 +459,38 @@ class Product {
                     (product_id, sku, price, sale_price, stock_quantity, stock_status, image, variant_attributes, is_default) 
                     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)",
                     [
-                        $productId,
-                        $variant['sku'] ?? null,
-                        !empty($variant['price']) ? $variant['price'] : null,
-                        !empty($variant['sale_price']) ? $variant['sale_price'] : null,
-                        $variant['stock_quantity'] ?? 0,
-                        $variant['stock_status'] ?? 'in_stock',
-                        $variant['image'] ?? null,
+                        $productIdValue,  // Use 10-digit product_id
+                        !empty($variant['sku']) ? trim($variant['sku']) : null,
+                        $price,
+                        $salePrice,
+                        !empty($variant['stock_quantity']) ? intval($variant['stock_quantity']) : 0,
+                        !empty($variant['stock_status']) ? $variant['stock_status'] : 'in_stock',
+                        !empty($variant['image']) ? trim($variant['image']) : null,
                         json_encode($variant['attributes']),
-                        $variant['is_default'] ?? 0
+                        !empty($variant['is_default']) ? 1 : 0
                     ]
                 );
             }
         } catch (Exception $e) {
-            // Table might not exist, log and continue
-            error_log("Could not save variants (table may not exist): " . $e->getMessage());
+            // Log error but don't fail the product creation
+            error_log("Could not save variants: " . $e->getMessage());
+            // Don't throw - allow product to be created even if variants fail
         }
     }
     
     /**
      * Get product variants
+     * @param int|string $productId - Can be auto-increment id or 10-digit product_id
      */
     public function getVariants($productId) {
+        // Convert auto-increment id to 10-digit product_id if needed
+        $productIdValue = $this->getProductIdValue($productId);
+        
         try {
             // Get variant options
             $options = $this->db->fetchAll(
                 "SELECT * FROM product_variant_options WHERE product_id = ? ORDER BY display_order",
-                [$productId]
+                [$productIdValue]
             );
         } catch (Exception $e) {
             // Table might not exist or query failed
@@ -440,7 +501,7 @@ class Product {
             // Get variants
             $variants = $this->db->fetchAll(
                 "SELECT * FROM product_variants WHERE product_id = ? ORDER BY is_default DESC, id ASC",
-                [$productId]
+                [$productIdValue]
             );
         } catch (Exception $e) {
             // Table might not exist or query failed
@@ -482,12 +543,16 @@ class Product {
     
     /**
      * Delete product variants
+     * @param int|string $productId - Can be auto-increment id or 10-digit product_id
      */
     public function deleteVariants($productId) {
+        // Convert auto-increment id to 10-digit product_id if needed
+        $productIdValue = $this->getProductIdValue($productId);
+        
         try {
             $this->db->execute(
                 "DELETE FROM product_variant_options WHERE product_id = ?",
-                [$productId]
+                [$productIdValue]
             );
         } catch (Exception $e) {
             // Table might not exist, ignore the error
@@ -497,12 +562,33 @@ class Product {
         try {
             $this->db->execute(
                 "DELETE FROM product_variants WHERE product_id = ?",
-                [$productId]
+                [$productIdValue]
             );
         } catch (Exception $e) {
             // Table might not exist, ignore the error
             error_log("Could not delete variants (table may not exist): " . $e->getMessage());
         }
+    }
+    
+    /**
+     * Get 10-digit product_id value from either auto-increment id or product_id
+     * @param int|string $productId - Can be auto-increment id or 10-digit product_id
+     * @return string|int - Returns the 10-digit product_id
+     */
+    private function getProductIdValue($productId) {
+        // If it's already a 10-digit number (between 1000000000 and 9999999999), return as is
+        if (is_numeric($productId) && $productId >= 1000000000 && $productId <= 9999999999) {
+            return $productId;
+        }
+        
+        // Otherwise, assume it's an auto-increment id and get the product_id
+        $product = $this->db->fetchOne("SELECT product_id FROM products WHERE id = ?", [$productId]);
+        if ($product && !empty($product['product_id'])) {
+            return $product['product_id'];
+        }
+        
+        // Fallback: return as is (in case it's already the product_id)
+        return $productId;
     }
 }
 

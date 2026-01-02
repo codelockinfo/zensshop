@@ -3,18 +3,6 @@
 
 -- Product Variant Options Table (e.g., Size, Color, Material)
 -- This stores the variant option types and their values
-CREATE TABLE IF NOT EXISTS `product_variant_options` (
-  `id` int(11) NOT NULL AUTO_INCREMENT,
-  `product_id` int(11) NOT NULL,
-  `option_name` varchar(50) NOT NULL COMMENT 'e.g., Size, Color, Material',
-  `option_values` text NOT NULL COMMENT 'JSON array of option values, e.g., ["Small", "Medium", "Large"]',
-  `display_order` int(11) DEFAULT 0,
-  `created_at` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  `updated_at` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-  PRIMARY KEY (`id`),
-  KEY `product_id` (`product_id`),
-  FOREIGN KEY (`product_id`) REFERENCES `products` (`id`) ON DELETE CASCADE
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- Product Variants Table
 -- This stores individual variant combinations (e.g., Small-Red, Medium-Blue)
@@ -35,7 +23,6 @@ CREATE TABLE IF NOT EXISTS `product_variants` (
   `updated_at` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
   PRIMARY KEY (`id`),
   KEY `product_id` (`product_id`),
-  KEY `sku` (`sku`),
   KEY `is_default` (`is_default`),
   FOREIGN KEY (`product_id`) REFERENCES `products` (`id`) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
