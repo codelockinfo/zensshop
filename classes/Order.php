@@ -18,7 +18,12 @@ class Order {
     public function getAll($filters = []) {
         $sql = "SELECT o.*, 
                 COUNT(oi.id) as item_count,
-                SUM(oi.quantity) as total_quantity
+                SUM(oi.quantity) as total_quantity,
+                (SELECT p.featured_image 
+                 FROM order_items oi2 
+                 LEFT JOIN products p ON oi2.product_id = p.id 
+                 WHERE oi2.order_id = o.id 
+                 LIMIT 1) as product_image
                 FROM orders o
                 LEFT JOIN order_items oi ON o.id = oi.order_id
                 WHERE 1=1";
@@ -175,6 +180,140 @@ class Order {
         return $this->db->execute(
             "UPDATE orders SET tracking_number = ? WHERE id = ?",
             [$trackingNumber, $id]
+        );
+    }
+    
+    /**
+     * Update order (comprehensive update)
+     */
+    public function update($id, $data) {
+        // Build update query dynamically
+        $updates = [];
+        $params = [];
+        
+        $allowedFields = [
+            'order_status', 'payment_status', 'tracking_number', 'notes',
+            'customer_name', 'customer_email', 'customer_phone',
+            'billing_address', 'shipping_address',
+            'subtotal', 'discount_amount', 'shipping_amount', 'tax_amount', 'total_amount',
+            'payment_method'
+        ];
+        
+        foreach ($allowedFields as $field) {
+            // Include field if it's set in data (even if null or empty)
+            if (array_key_exists($field, $data)) {
+                if ($field === 'billing_address' || $field === 'shipping_address') {
+                    $updates[] = "{$field} = ?";
+                    $params[] = is_array($data[$field]) ? json_encode($data[$field]) : ($data[$field] ?? null);
+                } else {
+                    $updates[] = "{$field} = ?";
+                    $params[] = $data[$field] ?? null;
+                }
+            }
+        }
+        
+        if (empty($updates)) {
+            return false;
+        }
+        
+        $params[] = $id;
+        $sql = "UPDATE orders SET " . implode(', ', $updates) . " WHERE id = ?";
+        
+        return $this->db->execute($sql, $params);
+    }
+    
+    /**
+     * Add item to order
+     */
+    public function addOrderItem($orderId, $itemData) {
+        $itemId = $this->db->insert(
+            "INSERT INTO order_items 
+            (order_id, product_id, product_name, product_sku, quantity, price, subtotal) 
+            VALUES (?, ?, ?, ?, ?, ?, ?)",
+            [
+                $orderId,
+                $itemData['product_id'],
+                $itemData['product_name'],
+                $itemData['product_sku'] ?? null,
+                $itemData['quantity'],
+                $itemData['price'],
+                $itemData['price'] * $itemData['quantity']
+            ]
+        );
+        
+        // Recalculate totals
+        $this->recalculateTotals($orderId);
+        
+        return $itemId;
+    }
+    
+    /**
+     * Update order item
+     */
+    public function updateOrderItem($itemId, $itemData) {
+        $result = $this->db->execute(
+            "UPDATE order_items 
+            SET product_name = ?, quantity = ?, price = ?, subtotal = ? 
+            WHERE id = ?",
+            [
+                $itemData['product_name'],
+                $itemData['quantity'],
+                $itemData['price'],
+                $itemData['price'] * $itemData['quantity'],
+                $itemId
+            ]
+        );
+        
+        // Get order_id from item
+        $item = $this->db->fetchOne("SELECT order_id FROM order_items WHERE id = ?", [$itemId]);
+        if ($item) {
+            $this->recalculateTotals($item['order_id']);
+        }
+        
+        return $result;
+    }
+    
+    /**
+     * Delete order item
+     */
+    public function deleteOrderItem($itemId) {
+        // Get order_id before deleting
+        $item = $this->db->fetchOne("SELECT order_id FROM order_items WHERE id = ?", [$itemId]);
+        
+        $result = $this->db->execute("DELETE FROM order_items WHERE id = ?", [$itemId]);
+        
+        if ($item) {
+            $this->recalculateTotals($item['order_id']);
+        }
+        
+        return $result;
+    }
+    
+    /**
+     * Recalculate order totals based on items
+     */
+    public function recalculateTotals($orderId) {
+        $items = $this->getOrderItems($orderId);
+        
+        $subtotal = 0;
+        foreach ($items as $item) {
+            $subtotal += $item['subtotal'];
+        }
+        
+        // Get current order to preserve discount, shipping, tax
+        $order = $this->getById($orderId);
+        if (!$order) {
+            return false;
+        }
+        
+        $discountAmount = $order['discount_amount'] ?? 0;
+        $shippingAmount = $order['shipping_amount'] ?? 0;
+        $taxAmount = $order['tax_amount'] ?? 0;
+        $totalAmount = $subtotal - $discountAmount + $shippingAmount + $taxAmount;
+        
+        return $this->db->execute(
+            "UPDATE orders SET subtotal = ?, total_amount = ? WHERE id = ?",
+            [$subtotal, $totalAmount, $orderId]
         );
     }
 }

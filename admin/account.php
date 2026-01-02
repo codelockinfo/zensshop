@@ -170,20 +170,32 @@ require_once __DIR__ . '/../includes/admin-header.php';
                     // Normalize the URL (fix old /oecom/ paths)
                     $profileImage = normalizeImageUrl($profileImage);
                     
-                    // Remove base URL prefix and convert to file path
-                    $imagePath = str_replace($baseUrl . '/', '', $profileImage);
-                    $imagePath = preg_replace('#^[^/]+/#', '', $imagePath); // Remove any leading directory
-                    $fullPath = __DIR__ . '/../' . ltrim($imagePath, '/');
-                    
-                    if (file_exists($fullPath)) {
-                        $imageUrl = $baseUrl . '/' . ltrim($imagePath, '/');
+                    // Check if it's already a full URL
+                    if (strpos($profileImage, 'http://') === 0 || strpos($profileImage, 'https://') === 0) {
+                        $imageUrl = $profileImage;
+                    } elseif (strpos($profileImage, 'data:image') === 0) {
+                        // It's a base64 data URI, use it directly
+                        $imageUrl = $profileImage;
+                    } elseif (strpos($profileImage, '/') === 0) {
+                        // It's already a path from root
+                        $imageUrl = $profileImage;
+                    } else {
+                        // Remove any base URL prefix and convert to file path
+                        $imagePath = str_replace($baseUrl . '/', '', $profileImage);
+                        $imagePath = preg_replace('#^[^/]+/#', '', $imagePath); // Remove any leading directory
+                        $fullPath = __DIR__ . '/../' . ltrim($imagePath, '/');
+                        
+                        if (file_exists($fullPath)) {
+                            $imageUrl = $baseUrl . '/' . ltrim($imagePath, '/');
+                        }
                     }
                 }
                 ?>
                 <img src="<?php echo htmlspecialchars($imageUrl); ?>" 
                      alt="Profile" 
                      id="profilePreview"
-                     class="w-32 h-32 rounded-full object-cover border-4 border-gray-200">
+                     class="w-32 h-32 rounded-full object-cover border-4 border-gray-200"
+                     onerror="this.src='<?php echo $baseUrl; ?>/assets/images/default-avatar.svg'">
             </div>
             
             <form method="POST" action="" enctype="multipart/form-data" class="w-full">

@@ -16,7 +16,7 @@ $product = new Product();
 // Get product ID
 $productId = $_GET['id'] ?? null;
 if (!$productId) {
-    header('Location: ' . $baseUrl . '/admin/products/list.php');
+    header('Location: ' . url('admin/products/list'));
     exit;
 }
 
@@ -39,10 +39,10 @@ $mainImage = getProductImage($productData);
             <p class="text-gray-600">Dashboard > Ecommerce > View product</p>
         </div>
         <div class="flex items-center space-x-3">
-            <a href="<?php echo $baseUrl; ?>/admin/products/edit.php?id=<?php echo $productId; ?>" class="admin-btn admin-btn-primary">
+            <a href="<?php echo url('admin/products/edit?id=' . $productId); ?>" class="admin-btn admin-btn-primary">
                 <i class="fas fa-edit mr-2"></i> Edit Product
             </a>
-            <a href="<?php echo $baseUrl; ?>/admin/products/list.php" class="admin-btn border border-gray-300 text-gray-600">
+            <a href="<?php echo url('admin/products/list'); ?>" class="admin-btn border border-gray-300 text-gray-600">
                 <i class="fas fa-arrow-left mr-2"></i> Back to List
             </a>
         </div>
