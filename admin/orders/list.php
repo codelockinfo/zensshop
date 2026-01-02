@@ -29,7 +29,7 @@ $orders = $order->getAll($filters);
         <input type="text" 
                placeholder="Search here..." 
                value="<?php echo htmlspecialchars($filters['search']); ?>"
-               class="border rounded px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500">
+               class="border rounded px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 w-80">
         <button class="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600 transition">
             <i class="fas fa-file-export mr-2"></i>Export all order
         </button>

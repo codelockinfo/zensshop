@@ -4,32 +4,34 @@ if (!isset($baseUrl)) {
     $baseUrl = getBaseUrl();
 }
 ?>
-<section class="py-16 md:py-24 bg-gray-100 relative overflow-hidden">
-    <div class="absolute inset-0 bg-cover bg-center opacity-20" style="background-image: url('https://images.unsplash.com/photo-1611591437281-460bfbe1220a?w=1200');"></div>
+<section class="py-16 md:py-24 relative overflow-hidden" style="background: linear-gradient(to right, #8B7355 0%, #D4C5B9 100%);">
+    <div class="absolute inset-0 bg-cover bg-center" style="background-image: url('https://images.unsplash.com/photo-1611591437281-460bfbe1220a?w=1200'); filter: blur(8px); opacity: 0.6;"></div>
     
     <div class="container mx-auto px-4 relative z-10">
-        <div class="max-w-2xl mx-auto bg-white rounded-2xl shadow-xl p-8 md:p-12">
+        <div class="max-w-2xl mx-auto bg-white rounded-2xl shadow-2xl p-8 md:p-12">
             <div class="text-center mb-8">
-                <h2 class="text-3xl md:text-4xl font-heading font-bold mb-4">Join our family</h2>
-                <p class="text-gray-600 text-lg">Promotions, new products and sales. Directly to your inbox.</p>
+                <h2 class="text-2xl md:text-3xl font-heading font-bold mb-4 text-black">Join our family</h2>
+                <p class="text-gray-700 text-sm md:text-md">Promotions, new products and sales. Directly to your inbox.</p>
             </div>
             
             <form id="newsletterForm" class="space-y-4">
-                <div>
+                <div class="flex flex-col md:flex-row gap-3">
                     <input type="email" 
-                           name="email" 
-                           placeholder="Your email address" 
-                           required
-                           class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary">
+                        name="email" 
+                        placeholder="Your email address..." 
+                        required
+                        class="flex-1 px-4 py-3 border"
+                        style="border-radius: 50px;">
+                    
+                    <button type="submit" 
+                            class="bg-black text-white px-8 py-3 hover:bg-gray-800 transition font-medium whitespace-nowrap"
+                            style="border-radius: 50px;">
+                        Subscribe
+                    </button>
                 </div>
                 
-                <button type="submit" 
-                        class="w-full bg-black text-white py-3 rounded-lg hover:bg-gray-800 transition font-semibold">
-                    Subscribe
-                </button>
-                
-                <p class="text-xs text-gray-500 text-center">
-                    By subscribing, you agree to our <a href="<?php echo url('privacy.php'); ?>" class="underline">Privacy Policy</a> and consent to receive updates from our company.
+                <p class="text-xs md:text-sm text-gray-600 text-center mt-4">
+                    Your personal data will be used to support your experience throughout this website, and for other purposes described in our <a href="<?php echo url('privacy.php'); ?>" class="underline hover:text-gray-900">Privacy Policy</a>.
                 </p>
             </form>
         </div>

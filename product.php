@@ -1,4 +1,4 @@
-<?php
+    <?php
 // Start output buffering to prevent headers already sent errors
 ob_start();
 
@@ -168,10 +168,10 @@ $_COOKIE['recently_viewed'] = json_encode($recentIds);
             
             <!-- Product Information -->
             <div>
-                <h1 class="text-3xl md:text-4xl font-heading font-bold mb-4"><?php echo htmlspecialchars($productData['name'] ?? 'Product'); ?></h1>
+                <h1 class="text-3xl font-heading font-bold mb-4"><?php echo htmlspecialchars($productData['name'] ?? 'Product'); ?></h1>
                 
                 <!-- Rating and Reviews -->
-                <div class="flex items-center space-x-4 mb-4">
+                <div class="flex items-center space-x-4 mb-4 text-sm">
                     <div class="flex items-center">
                         <?php 
                         $rating = floatval($productData['rating'] ?? 5);
@@ -192,7 +192,7 @@ $_COOKIE['recently_viewed'] = json_encode($recentIds);
                     <?php if ($originalPrice): ?>
                     <span class="text-2xl text-gray-400 line-through mr-2"><?php echo format_currency($originalPrice); ?></span>
                     <?php endif; ?>
-                    <span class="text-4xl font-bold text-gray-900"><?php echo format_currency($price); ?></span>
+                    <span class="text-2xl font-bold text-gray-900"><?php echo format_currency($price); ?></span>
                 </div>
                 
                 <!-- Description -->
@@ -261,12 +261,12 @@ $_COOKIE['recently_viewed'] = json_encode($recentIds);
                 <!-- Action Buttons -->
                 <div class="flex flex-col sm:flex-row gap-4 mb-6">
                     <button onclick="addToCartFromDetail(<?php echo $productData['id']; ?>)" 
-                            class="flex-1 bg-black text-white py-4 px-6 rounded-lg hover:bg-gray-800 transition font-semibold flex items-center justify-center">
+                            class="flex-1 bg-black text-white py-4 px-6 hover:bg-gray-800 transition font-semibold flex items-center justify-center add-to-cart-btn">
                         <i class="fas fa-shopping-cart mr-2"></i>
                         Add To Cart
                     </button>
                     <button onclick="buyNow(<?php echo $productData['id']; ?>)" 
-                            class="flex-1 bg-pink-500 text-white py-4 px-6 rounded-lg hover:bg-pink-600 transition font-semibold">
+                            class="flex-1 bg-red-700 text-white py-4 px-6 hover:bg-red-600 transition font-semibold buy-now-btn">
                         Buy It Now
                     </button>
                 </div>
@@ -315,9 +315,9 @@ $_COOKIE['recently_viewed'] = json_encode($recentIds);
                 <div class="mt-6 pt-6 border-t">
                     <p class="text-sm text-gray-600 text-center">Guarantee Safe Checkout</p>
                     <div class="flex justify-center items-center space-x-4 mt-4">
-                        <img src="<?php echo $baseUrl; ?>/assets/images/checkout-image/Visa_Inc._logo.svg.png" alt="Visa" class="h-8 object-contain">
-                        <img src="<?php echo $baseUrl; ?>/assets/images/checkout-image/Mastercard-logo.svg.png" alt="Mastercard" class="h-8 object-contain">
-                        <img src="<?php echo $baseUrl; ?>/assets/images/checkout-image/American_Express_logo.svg.png" alt="American Express" class="h-8 object-contain">
+                        <img src="<?php echo $baseUrl; ?>/assets/images/checkout-image/Visa_Inc._logo.svg.png" alt="Visa" class="h-8 w-8 object-contain">
+                        <img src="<?php echo $baseUrl; ?>/assets/images/checkout-image/Mastercard-logo.svg.png" alt="Mastercard" class="h-8 w-8 object-contain">
+                        <img src="<?php echo $baseUrl; ?>/assets/images/checkout-image/American_Express_logo.svg.png" alt="American Express" class="h-8 w-8 object-contain">
                     </div>
                 </div>
             </div>
@@ -332,7 +332,7 @@ $_COOKIE['recently_viewed'] = json_encode($recentIds);
                         <span class="font-semibold text-lg">Description</span>
                         <i class="fas fa-plus text-gray-400" id="description-icon"></i>
                     </button>
-                    <div id="description-content" class="hidden pb-4 text-gray-700">
+                    <div id="description-content" class="hidden pb-4 text-gray-700 text-sm">
                         <?php echo nl2br(htmlspecialchars($productData['description'] ?? 'No description available.')); ?>
                     </div>
                 </div>
@@ -343,7 +343,7 @@ $_COOKIE['recently_viewed'] = json_encode($recentIds);
                         <span class="font-semibold text-lg">Shipping and Returns</span>
                         <i class="fas fa-plus text-gray-400" id="shipping-icon"></i>
                     </button>
-                    <div id="shipping-content" class="hidden pb-4 text-gray-700">
+                    <div id="shipping-content" class="hidden pb-4 text-gray-700 text-sm">
                         <p>We offer free shipping on all orders over <?php echo format_currency(150); ?>. Standard shipping takes 3-5 business days. International shipping may take 7-14 business days.</p>
                         <p class="mt-2">Returns are accepted within 30 days of purchase. Items must be unworn and in original packaging.</p>
                     </div>
@@ -355,7 +355,7 @@ $_COOKIE['recently_viewed'] = json_encode($recentIds);
                         <span class="font-semibold text-lg">Return Policies</span>
                         <i class="fas fa-plus text-gray-400" id="returns-icon"></i>
                     </button>
-                    <div id="returns-content" class="hidden pb-4 text-gray-700">
+                    <div id="returns-content" class="hidden pb-4 text-gray-700 text-sm">
                         <p>We accept returns within 30 days of purchase. Items must be in original condition with tags attached.</p>
                         <p class="mt-2">To initiate a return, please contact our customer service team or visit your account page.</p>
                     </div>
@@ -365,18 +365,18 @@ $_COOKIE['recently_viewed'] = json_encode($recentIds);
         
         <!-- Customer Reviews -->
         <div class="max-w-4xl mx-auto mb-16">
-            <h2 class="text-2xl font-heading font-bold mb-6">Customer Reviews</h2>
+            <h2 class="text-xl font-heading font-bold mb-6">Customer Reviews</h2>
             
             <div class="grid grid-cols-1 md:grid-cols-3 gap-8 mb-8">
                 <!-- Overall Rating -->
                 <div class="text-center">
-                    <div class="text-5xl font-bold mb-2"><?php echo number_format($rating, 2); ?></div>
-                    <div class="flex justify-center mb-2">
+                    <div class="text-4xl font-bold mb-2"><?php echo number_format($rating, 2); ?></div>
+                    <div class="flex justify-center mb-2 text-sm">
                         <?php for ($i = 0; $i < 5; $i++): ?>
                         <i class="fas fa-star text-yellow-400"></i>
                         <?php endfor; ?>
                     </div>
-                    <p class="text-gray-600">Based on <?php echo $reviewCount; ?> review<?php echo $reviewCount != 1 ? 's' : ''; ?></p>
+                    <p class="text-gray-600 text-sm">Based on <?php echo $reviewCount; ?> review<?php echo $reviewCount != 1 ? 's' : ''; ?></p>
                 </div>
                 
                 <!-- Rating Breakdown -->
@@ -393,7 +393,7 @@ $_COOKIE['recently_viewed'] = json_encode($recentIds);
                 </div>
             </div>
             
-            <button onclick="openReviewModal()" class="bg-white border-2 border-gray-300 px-6 py-2 rounded-lg hover:border-primary transition mb-6">
+            <button onclick="openReviewModal()" class="bg-white border-2 border-gray-300 px-6 py-2 rounded-lg hover:border-primary transition mb-6 text-sm">
                 Write A Review
             </button>
             
@@ -401,7 +401,7 @@ $_COOKIE['recently_viewed'] = json_encode($recentIds);
             <div class="space-y-6">
                 <div class="flex items-center justify-between mb-4">
                     <h3 class="font-semibold">Most Recent</h3>
-                    <select class="border rounded px-3 py-1" id="reviewSort" onchange="loadReviews()">
+                    <select class="border rounded px-3 py-2 text-sm" id="reviewSort" onchange="loadReviews()">
                         <option value="recent">Most Recent</option>
                         <option value="oldest">Oldest First</option>
                         <option value="highest">Highest Rating</option>
@@ -848,7 +848,7 @@ document.addEventListener('DOMContentLoaded', function() {
     <div class="bg-white rounded-lg max-w-2xl w-full max-h-[90vh] overflow-y-auto">
         <div class="p-6">
             <div class="flex items-center justify-between mb-6">
-                <h2 class="text-2xl font-heading font-bold">Write A Review</h2>
+                <h2 class="text-xl font-heading font-bold">Write A Review</h2>
                 <button onclick="closeReviewModal()" class="text-gray-500 hover:text-gray-800">
                     <i class="fas fa-times text-2xl"></i>
                 </button>
@@ -864,7 +864,7 @@ document.addEventListener('DOMContentLoaded', function() {
                         <?php for ($i = 1; $i <= 5; $i++): ?>
                         <button type="button" 
                                 onclick="setRating(<?php echo $i; ?>)" 
-                                class="star-rating-btn text-3xl text-gray-300 hover:text-yellow-400 transition"
+                                class="star-rating-btn text-2xl text-gray-300 hover:text-yellow-400 transition"
                                 data-rating="<?php echo $i; ?>">
                             <i class="far fa-star"></i>
                         </button>
@@ -881,7 +881,7 @@ document.addEventListener('DOMContentLoaded', function() {
                            id="reviewName" 
                            name="user_name" 
                            required
-                           class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary">
+                           class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary text-sm">
                 </div>
                 
                 <!-- Email -->
@@ -891,7 +891,7 @@ document.addEventListener('DOMContentLoaded', function() {
                            id="reviewEmail" 
                            name="user_email" 
                            required
-                           class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary">
+                           class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary text-sm">
                 </div>
                 
                 <!-- Review Title -->
@@ -901,7 +901,7 @@ document.addEventListener('DOMContentLoaded', function() {
                            id="reviewTitle" 
                            name="title" 
                            placeholder="Summarize your review"
-                           class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary">
+                           class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary text-sm">
                 </div>
                 
                 <!-- Review Comment -->
@@ -912,7 +912,7 @@ document.addEventListener('DOMContentLoaded', function() {
                               rows="5" 
                               required
                               placeholder="Share your experience with this product..."
-                              class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary"></textarea>
+                              class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary text-sm"></textarea>
                 </div>
                 
                 <!-- Submit Button -->

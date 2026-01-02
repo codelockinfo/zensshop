@@ -491,7 +491,7 @@ function updateCartUI() {
             <div class="flex items-center space-x-4 mb-4 pb-4 border-b" data-product-id="${item.product_id}">
                 <img src="${escapeHtml(imageUrl)}" alt="${escapeHtml(item.name)}" class="w-20 h-20 object-cover rounded" onerror="this.src='data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iODAiIGhlaWdodD0iODAiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+PHJlY3Qgd2lkdGg9IjgwIiBoZWlnaHQ9IjgwIiBmaWxsPSIjRjNGNEY2Ii8+PGNpcmNsZSBjeD0iNDAiIGN5PSI0MCIgcj0iMjAiIGZpbGw9IiM5QjdBOEEiLz48L3N2Zz4='">
                 <div class="flex-1">
-                    <h4 class="font-semibold text-sm">${escapeHtml(item.name)}</h4>
+                    <h4 class="font-semibold text-sm mb-2">${escapeHtml(item.name)}</h4>
                     <p class="text-gray-600 text-sm">${formatCurrency(itemPrice)}</p>
                     <div class="flex items-center space-x-2 mt-2">
                         <button onclick="updateCartItem(${item.product_id}, ${itemQuantity - 1})" class="w-8 h-8 border rounded flex items-center justify-center hover:bg-gray-100 text-sm">-</button>
