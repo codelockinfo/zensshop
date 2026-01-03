@@ -51,9 +51,9 @@ $pageTitle = 'Manage Category';
 require_once __DIR__ . '/../../includes/admin-header.php';
 ?>
 
-<div class="mb-6 flex items-center justify-between">
-    <h1 class="text-2xl font-bold text-gray-800">Category information</h1>
-    <p class="text-sm text-gray-500">Dashboard > Category > <?php echo $id ? 'Edit category' : 'New category'; ?></p>
+<div class="mb-6">
+    <h1 class="text-2xl md:text-3xl font-bold">Category information</h1>
+    <p class="text-sm md:text-base text-gray-600">Dashboard > Category > <?php echo $id ? 'Edit category' : 'New category'; ?></p>
 </div>
 
 <?php if ($error): ?>

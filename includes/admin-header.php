@@ -70,20 +70,25 @@ if (!function_exists('url')) {
         <div class="flex items-center space-x-4">
             <!-- Search Container -->
             <div class="relative admin-search-container">
-                <input type="text" 
-                       id="adminSearchInput"
-                       placeholder="Search here..." 
-                       class="px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm w-64"
-                       autocomplete="off">
-                <div id="adminSearchResults" class="admin-search-results hidden">
-                    <div class="admin-search-loading hidden">
-                        <div class="flex items-center justify-center p-4">
-                            <i class="fas fa-spinner fa-spin text-gray-400"></i>
-                            <span class="ml-2 text-sm text-gray-500">Searching...</span>
+                <button class="text-gray-600 hover:text-gray-800" id="adminSearchToggle">
+                    <i class="fas fa-search text-xl"></i>
+                </button>
+                <div id="adminSearchDropdown" class="admin-search-dropdown hidden">
+                    <input type="text" 
+                           id="adminSearchInput"
+                           placeholder="Search here..." 
+                           class="px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm w-64"
+                           autocomplete="off">
+                    <div id="adminSearchResults" class="admin-search-results hidden">
+                        <div class="admin-search-loading hidden">
+                            <div class="flex items-center justify-center p-4">
+                                <i class="fas fa-spinner fa-spin text-gray-400"></i>
+                                <span class="ml-2 text-sm text-gray-500">Searching...</span>
+                            </div>
                         </div>
-                    </div>
-                    <div id="adminSearchResultsContent" class="admin-search-results-content">
-                        <!-- Results will be populated here -->
+                        <div id="adminSearchResultsContent" class="admin-search-results-content">
+                            <!-- Results will be populated here -->
+                        </div>
                     </div>
                 </div>
             </div>
@@ -197,7 +202,7 @@ if (!function_exists('url')) {
             <div class="mb-8 sidebar-section">
                 <h3 class="sidebar-section-title mb-4">MAIN HOME</h3>
                 <a href="<?php echo $baseUrl; ?>/admin/dashboard.php" class="sidebar-menu-item flex items-center space-x-3 py-2 px-4 <?php echo basename($_SERVER['PHP_SELF']) === 'dashboard.php' ? 'bg-gray-700' : ''; ?>" title="Dashboard">
-                    <i class="fas fa-th-large text-lg"></i>
+                    <i class="fas fa-th-large text-md md:text-lg"></i>
                     <span class="sidebar-menu-text">Dashboard</span>
                 </a>
             </div>
@@ -205,16 +210,16 @@ if (!function_exists('url')) {
             <div class="mb-8 sidebar-section">
                 <h3 class="sidebar-section-title mb-4">ALL PAGE</h3>
                 <a href="<?php echo $baseUrl; ?>/admin/products/list.php" class="sidebar-menu-item flex items-center space-x-3 py-2 px-4 <?php echo strpos($_SERVER['PHP_SELF'], 'products') !== false ? 'bg-gray-700' : ''; ?>" title="Ecommerce">
-                    <i class="fas fa-shopping-cart text-lg"></i>
+                    <i class="fas fa-shopping-cart text-md md:text-lg"></i>
                     <span class="sidebar-menu-text">Ecommerce</span>
                     <i class="fas fa-chevron-down text-xs ml-auto"></i>
                 </a>
                 <div class="sidebar-submenu mt-2 space-y-1">
-                    <a href="<?php echo $baseUrl; ?>/admin/products/add.php" class="flex items-center space-x-2 py-1 px-4 text-sm" title="Add Product">
+                    <a href="<?php echo $baseUrl; ?>/admin/products/add.php" class="flex items-center space-x-2 py-1 px-4 text-sm <?php echo basename($_SERVER['PHP_SELF']) === 'add.php' ? 'bg-gray-700' : ''; ?>" title="Add Product">
                         <i class="fas fa-gem text-xs"></i>
                         <span>Add Product</span>
                     </a>
-                    <a href="<?php echo $baseUrl; ?>/admin/products/list.php" class="flex items-center space-x-2 py-1 px-4 text-sm" title="Product List">
+                    <a href="<?php echo $baseUrl; ?>/admin/products/list.php" class="flex items-center space-x-2 py-1 px-4 text-sm <?php echo basename($_SERVER['PHP_SELF']) === 'list.php' && strpos($_SERVER['PHP_SELF'], 'product') !== false ? 'bg-gray-700' : ''; ?>" title="Product List">
                         <i class="fas fa-gem text-xs"></i>
                         <span>Product List</span>
                     </a>
@@ -222,7 +227,7 @@ if (!function_exists('url')) {
                 <!-- Category with Submenu -->
                 <div class="category-menu-parent mt-2">
                     <a href="<?php echo $baseUrl; ?>/admin/categories/list.php" class="sidebar-menu-item flex items-center space-x-3 py-2 px-4 <?php echo strpos($_SERVER['PHP_SELF'], 'categories') !== false ? 'bg-gray-700' : ''; ?>" title="Category">
-                        <i class="fas fa-layer-group text-lg"></i>
+                        <i class="fas fa-layer-group text-md md:text-lg"></i>
                         <span class="sidebar-menu-text">Category</span>
                         <i class="fas fa-chevron-up text-xs ml-auto category-arrow"></i>
                     </a>
@@ -238,33 +243,33 @@ if (!function_exists('url')) {
                     </div>
                 </div>
                 <a href="<?php echo $baseUrl; ?>/admin/orders/list.php" class="sidebar-menu-item flex items-center space-x-3 py-2 px-4 mt-2 <?php echo strpos($_SERVER['PHP_SELF'], 'orders') !== false ? 'bg-gray-700' : ''; ?>" title="Order">
-                    <i class="fas fa-file-alt text-lg"></i>
+                    <i class="fas fa-file-alt text-md md:text-lg"></i>
                     <span class="sidebar-menu-text">Order</span>
                     <i class="fas fa-chevron-down text-xs ml-auto"></i>
                 </a>
                 <div class="sidebar-submenu mt-2 space-y-1">
-                    <a href="<?php echo $baseUrl; ?>/admin/orders/list.php" class="flex items-center space-x-2 py-1 px-4 text-sm" title="Order List">
+                    <a href="<?php echo $baseUrl; ?>/admin/orders/list.php" class="flex items-center space-x-2 py-1 px-4 text-sm  <?php echo basename($_SERVER['PHP_SELF']) === 'list.php' && strpos($_SERVER['PHP_SELF'], 'orders') !== false ? 'bg-gray-700' : ''; ?>" title="Order List">
                         <i class="fas fa-gem text-xs"></i>
                         <span>Order List</span>
                     </a>
                 </div>
-                <a href="<?php echo $baseUrl; ?>/admin/discounts/manage.php" class="sidebar-menu-item flex items-center space-x-3 py-2 px-4 mt-2" title="Discounts">
-                    <i class="fas fa-tag text-lg"></i>
+                <a href="<?php echo $baseUrl; ?>/admin/discounts/manage.php" class="sidebar-menu-item flex items-center space-x-3 py-2 px-4 mt-2  <?php echo basename($_SERVER['PHP_SELF']) === 'manage.php' && strpos($_SERVER['PHP_SELF'], 'discounts') !== false ? 'bg-gray-700' : ''; ?>" title="Discounts">
+                    <i class="fas fa-tag text-md md:text-lg"></i>
                     <span class="sidebar-menu-text">Discounts</span>
                 </a>
-                <a href="<?php echo $baseUrl; ?>/admin/customers/list.php" class="sidebar-menu-item flex items-center space-x-3 py-2 px-4 mt-2 <?php echo strpos($_SERVER['PHP_SELF'], 'customers') !== false ? 'bg-primary-light text-primary-dark' : ''; ?>" title="Customers">
-                    <i class="fas fa-users text-lg"></i>
+                <a href="<?php echo $baseUrl; ?>/admin/customers/list.php" class="sidebar-menu-item flex items-center space-x-3 py-2 px-4 mt-2  <?php echo basename($_SERVER['PHP_SELF']) === 'list.php' && strpos($_SERVER['PHP_SELF'], 'customers') !== false ? 'bg-gray-700' : ''; ?>" title="Customers">
+                    <i class="fas fa-users text-md md:text-lg"></i>
                     <span class="sidebar-menu-text">Customers</span>
                     <i class="fas fa-chevron-down text-xs ml-auto"></i>
                 </a>
                 <div class="sidebar-submenu mt-2 space-y-1">
-                    <a href="<?php echo $baseUrl; ?>/admin/customers/list.php" class="flex items-center space-x-2 py-1 px-4 text-sm" title="Customer List">
+                    <a href="<?php echo $baseUrl; ?>/admin/customers/list.php" class="flex items-center space-x-2 py-1 px-4 text-sm  <?php echo basename($_SERVER['PHP_SELF']) === 'list.php' && strpos($_SERVER['PHP_SELF'], 'customers') !== false ? 'bg-gray-700' : ''; ?>" title="Customer List">
                         <i class="fas fa-gem text-xs"></i>
                         <span>Customer List</span>
                     </a>
                 </div>
                 <a href="<?php echo $baseUrl; ?>/admin/report.php" class="sidebar-menu-item flex items-center space-x-3 py-2 px-4 mt-2 <?php echo basename($_SERVER['PHP_SELF']) === 'report.php' ? 'bg-gray-700' : ''; ?>" title="Report">
-                    <i class="fas fa-chart-bar text-lg"></i>
+                    <i class="fas fa-chart-bar text-md md:text-lg"></i>
                     <span class="sidebar-menu-text">Report</span>
                 </a>
             </div>

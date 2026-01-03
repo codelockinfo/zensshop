@@ -60,8 +60,8 @@ $discounts = $db->fetchAll("SELECT * FROM discounts ORDER BY created_at DESC");
 ?>
 
 <div class="mb-6">
-    <h1 class="text-3xl font-bold">Discount Management</h1>
-    <p class="text-gray-600">Dashboard > Discounts</p>
+    <h1 class="text-2xl md:text-3xl font-bold">Discount Management</h1>
+    <p class="text-gray-600 text-sm md:text-base">Dashboard > Discounts</p>
 </div>
 
 <?php if ($error): ?>
@@ -80,7 +80,7 @@ $discounts = $db->fetchAll("SELECT * FROM discounts ORDER BY created_at DESC");
     <!-- Form -->
     <div class="lg:col-span-2">
         <div class="admin-card">
-            <h2 class="text-xl font-bold mb-4"><?php echo $id ? 'Edit' : 'Add'; ?> Discount</h2>
+            <h2 class="text-lg md:text-xl font-bold mb-4"><?php echo $id ? 'Edit' : 'Add'; ?> Discount</h2>
             <form method="POST" action="">
                 <div class="admin-form-group">
                     <label class="admin-form-label">Discount Code *</label>
@@ -192,7 +192,7 @@ $discounts = $db->fetchAll("SELECT * FROM discounts ORDER BY created_at DESC");
     <!-- List -->
     <div>
         <div class="admin-card">
-            <h2 class="text-xl font-bold mb-4">All Discounts</h2>
+            <h2 class="text-lg md:text-xl font-bold mb-4">All Discounts</h2>
             <div class="space-y-2">
                 <?php foreach ($discounts as $disc): ?>
                 <div class="flex items-center justify-between p-3 border rounded hover:bg-gray-50">

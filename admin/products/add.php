@@ -113,8 +113,8 @@ $categories = $db->fetchAll("SELECT * FROM categories WHERE status = 'active' OR
 ?>
 
 <div class="mb-6">
-    <h1 class="text-3xl font-bold">Add Product</h1>
-    <p class="text-gray-600">Dashboard > Ecommerce > Add product</p>
+    <h1 class="text-2xl md:text-3xl font-bold">Add Product</h1>
+    <p class="text-gray-600 text-sm md:text-base">Dashboard > Ecommerce > Add product</p>
 </div>
 
 <?php if ($error): ?>
@@ -133,7 +133,7 @@ $categories = $db->fetchAll("SELECT * FROM categories WHERE status = 'active' OR
     <!-- Left Column -->
     <div class="space-y-6">
         <div class="admin-card">
-            <h2 class="text-xl font-bold mb-4">Product Information</h2>
+            <h2 class="text-lg md:text-xl font-bold mb-4">Product Information</h2>
             
             <form method="POST" action="" enctype="multipart/form-data">
                 <div class="admin-form-group">
@@ -191,7 +191,7 @@ $categories = $db->fetchAll("SELECT * FROM categories WHERE status = 'active' OR
     <!-- Right Column -->
     <div class="space-y-6">
         <div class="admin-card">
-            <h2 class="text-xl font-bold mb-4">Upload images</h2>
+            <h2 class="text-lg md:text-xl font-bold mb-4">Upload images</h2>
             <div class="grid grid-cols-2 gap-4 mb-4" id="imageUploadArea">
                 <div class="image-upload-box border-2 border-dashed border-gray-300 rounded-lg p-4 text-center cursor-pointer hover:border-blue-500 transition-colors relative" data-index="0">
                     <input type="file" accept="image/*" class="hidden image-file-input" data-index="0" multiple>
@@ -243,7 +243,7 @@ $categories = $db->fetchAll("SELECT * FROM categories WHERE status = 'active' OR
         </div>
         
         <div class="admin-card">
-            <h2 class="text-xl font-bold mb-4">Product Variants</h2>
+            <h2 class="text-lg md:text-xl font-bold mb-4">Product Variants</h2>
             <p class="text-sm text-gray-600 mb-4">Add variant options like Size, Color, Material, etc. (Maximum 2 options)</p>
             
             <!-- Variant Options Container -->
@@ -261,7 +261,7 @@ $categories = $db->fetchAll("SELECT * FROM categories WHERE status = 'active' OR
             
             <!-- Generated Variants Table -->
             <div id="variantsTableContainer" class="hidden">
-                <h3 class="text-lg font-semibold mb-3">Generated Variants</h3>
+                <h3 class="text-lg md:text-xl font-semibold mb-3">Generated Variants</h3>
                 <div class="overflow-x-auto">
                     <table class="w-full border-collapse border border-gray-300">
                         <thead>
@@ -286,7 +286,7 @@ $categories = $db->fetchAll("SELECT * FROM categories WHERE status = 'active' OR
         </div>
         
         <div class="admin-card">
-            <h2 class="text-xl font-bold mb-4">Product Details</h2>
+            <h2 class="text-lg md:text-xl font-bold mb-4">Product Details</h2>
             
             <div class="admin-form-group">
                 <label class="admin-form-label">Price *</label>
@@ -340,7 +340,7 @@ $categories = $db->fetchAll("SELECT * FROM categories WHERE status = 'active' OR
         </div>
         
         <div class="admin-card">
-            <h2 class="text-xl font-bold mb-4">Product date</h2>
+            <h2 class="text-lg md:text-xl font-bold mb-4">Product date</h2>
             <input type="date" 
                    value="<?php echo date('Y-m-d'); ?>"
                    class="admin-form-input">

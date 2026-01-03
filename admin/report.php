@@ -50,13 +50,13 @@ $salesByStatus = $db->fetchAll("
 ?>
 
 <div class="mb-6">
-    <h1 class="text-3xl font-bold">Report</h1>
-    <p class="text-gray-600">Dashboard > Ecommerce > Report</p>
+    <h1 class="text-2xl md:text-3xl font-bold">Report</h1>
+    <p class="text-gray-600 text-sm md:text-base">Dashboard > Ecommerce > Report</p>
 </div>
 
 <!-- Date Range Filter -->
 <div class="admin-card mb-6">
-    <div class="flex items-center space-x-4">
+    <div class="flex items-center flex-wrap gap-4">
         <label class="admin-form-label mb-0">Date Range:</label>
         <select id="dateRange" class="admin-form-select" style="width: auto; min-width: 250px;" onchange="window.location.href='?range=' + this.value">
             <option value="7" <?php echo $dateRange === '7' ? 'selected' : ''; ?>>Last 7 days</option>
@@ -67,15 +67,15 @@ $salesByStatus = $db->fetchAll("
 </div>
 
 <!-- Statistics Cards -->
-<div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
+<div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8 report-cards">
     <div class="admin-card">
         <div class="flex items-center justify-between">
             <div>
-                <p class="text-gray-600 mb-1">Total Orders</p>
-                <h2 class="text-3xl font-bold"><?php echo number_format($totalOrders); ?></h2>
+                <p class="text-gray-600 mb-1 text-sm md:text-base">Total Orders</p>
+                <h2 class="text-xl md:text-2xl font-bold"><?php echo number_format($totalOrders); ?></h2>
             </div>
-            <div class="w-16 h-16 bg-blue-100 rounded-lg flex items-center justify-center">
-                <i class="fas fa-file-alt text-blue-500 text-2xl"></i>
+            <div class="w-12 h-12 md:w-16 md:h-16 bg-blue-100 rounded-lg flex items-center justify-center">
+                <i class="fas fa-file-alt text-blue-500 text-lg md:text-2xl"></i>
             </div>
         </div>
     </div>
@@ -83,23 +83,11 @@ $salesByStatus = $db->fetchAll("
     <div class="admin-card">
         <div class="flex items-center justify-between">
             <div>
-                <p class="text-gray-600 mb-1">Total Revenue</p>
-                <h2 class="text-3xl font-bold">$<?php echo number_format($totalRevenue, 2); ?></h2>
+                <p class="text-gray-600 mb-1 text-sm md:text-base">Total Revenue</p>
+                <h2 class="text-xl md:text-2xl font-bold">$<?php echo number_format($totalRevenue, 2); ?></h2>
             </div>
-            <div class="w-16 h-16 bg-green-100 rounded-lg flex items-center justify-center">
-                <i class="fas fa-dollar-sign text-green-500 text-2xl"></i>
-            </div>
-        </div>
-    </div>
-    
-    <div class="admin-card">
-        <div class="flex items-center justify-between">
-            <div>
-                <p class="text-gray-600 mb-1">Total Customers</p>
-                <h2 class="text-3xl font-bold"><?php echo number_format($totalCustomers); ?></h2>
-            </div>
-            <div class="w-16 h-16 bg-purple-100 rounded-lg flex items-center justify-center">
-                <i class="fas fa-users text-purple-500 text-2xl"></i>
+            <div class="w-12 h-12 md:w-16 md:h-16 bg-green-100 rounded-lg flex items-center justify-center">
+                <i class="fas fa-dollar-sign text-green-500 text-lg md:text-2xl"></i>
             </div>
         </div>
     </div>
@@ -107,11 +95,23 @@ $salesByStatus = $db->fetchAll("
     <div class="admin-card">
         <div class="flex items-center justify-between">
             <div>
-                <p class="text-gray-600 mb-1">Total Products</p>
-                <h2 class="text-3xl font-bold"><?php echo number_format($totalProducts); ?></h2>
+                <p class="text-gray-600 mb-1 text-sm md:text-base">Total Customers</p>
+                <h2 class="text-xl md:text-2xl font-bold"><?php echo number_format($totalCustomers); ?></h2>
             </div>
-            <div class="w-16 h-16 bg-orange-100 rounded-lg flex items-center justify-center">
-                <i class="fas fa-box text-orange-500 text-2xl"></i>
+            <div class="w-12 h-12 md:w-16 md:h-16 bg-purple-100 rounded-lg flex items-center justify-center">
+                <i class="fas fa-users text-purple-500 text-lg md:text-2xl"></i>
+            </div>
+        </div>
+    </div>
+    
+    <div class="admin-card">
+        <div class="flex items-center justify-between">
+            <div>
+                <p class="text-gray-600 mb-1 text-sm md:text-base">Total Products</p>
+                <h2 class="text-xl md:text-2xl font-bold"><?php echo number_format($totalProducts); ?></h2>
+            </div>
+            <div class="w-12 h-12 md:w-16 md:h-16 bg-orange-100 rounded-lg flex items-center justify-center">
+                <i class="fas fa-box text-orange-500 text-lg md:text-2xl"></i>
             </div>
         </div>
     </div>
@@ -121,20 +121,20 @@ $salesByStatus = $db->fetchAll("
 <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
     <!-- Sales by Status -->
     <div class="admin-card">
-        <h3 class="text-xl font-bold mb-4">Sales by Status</h3>
+        <h3 class="text-lg md:text-xl font-bold mb-4">Sales by Status</h3>
         <div class="space-y-4">
             <?php foreach ($salesByStatus as $status): ?>
             <div class="flex items-center justify-between">
                 <div class="flex items-center space-x-3">
-                    <div class="w-4 h-4 rounded-full <?php 
+                    <div class="w-2 h-2 md:w-4 md:h-4 rounded-full <?php 
                         echo $status['payment_status'] === 'paid' ? 'bg-green-500' : 
                             ($status['payment_status'] === 'pending' ? 'bg-yellow-500' : 'bg-red-500'); 
                     ?>"></div>
-                    <span class="capitalize"><?php echo htmlspecialchars($status['payment_status']); ?></span>
+                    <span class="capitalize text-sm md:text-base"><?php echo htmlspecialchars($status['payment_status']); ?></span>
                 </div>
                 <div class="text-right">
-                    <p class="font-bold"><?php echo number_format($status['count']); ?> orders</p>
-                    <p class="text-gray-600 text-sm">$<?php echo number_format($status['total'] ?? 0, 2); ?></p>
+                    <p class="font-bold text-sm md:text-base"><?php echo number_format($status['count']); ?> orders</p>
+                    <p class="text-gray-600 text-xs md:text-md">$<?php echo number_format($status['total'] ?? 0, 2); ?></p>
                 </div>
             </div>
             <?php endforeach; ?>
@@ -143,23 +143,23 @@ $salesByStatus = $db->fetchAll("
     
     <!-- Top Products -->
     <div class="admin-card">
-        <h3 class="text-xl font-bold mb-4">Top Selling Products</h3>
+        <h3 class="text-lg md:text-xl font-bold mb-4">Top Selling Products</h3>
         <div class="space-y-3">
             <?php if (empty($topProducts)): ?>
-            <p class="text-gray-500 text-center py-4">No sales data available</p>
+            <p class="text-gray-500 text-center text-sm md:text-base py-4">No sales data available</p>
             <?php else: ?>
             <?php foreach ($topProducts as $index => $item): ?>
             <div class="flex items-center justify-between py-2 border-b border-gray-200 last:border-0">
                 <div class="flex items-center space-x-3">
-                    <span class="text-gray-400 font-bold">#<?php echo $index + 1; ?></span>
+                    <span class="text-gray-400 font-bold text-sm md:text-md">#<?php echo $index + 1; ?></span>
                     <div>
-                        <p class="font-semibold"><?php echo htmlspecialchars($item['name']); ?></p>
-                        <p class="text-sm text-gray-500">$<?php echo number_format($item['price'], 2); ?></p>
+                        <p class="font-semibold text-sm md:text-base"><?php echo htmlspecialchars($item['name']); ?></p>
+                        <p class="text-xs md:text-sm text-gray-500">$<?php echo number_format($item['price'], 2); ?></p>
                     </div>
                 </div>
                 <div class="text-right">
-                    <p class="font-bold"><?php echo number_format($item['total_sold'] ?? 0); ?> sold</p>
-                    <p class="text-sm text-gray-500"><?php echo number_format($item['order_count'] ?? 0); ?> orders</p>
+                    <p class="font-bold text-sm md:text-base"><?php echo number_format($item['total_sold'] ?? 0); ?> sold</p>
+                    <p class="text-xs md:text-sm text-gray-500"><?php echo number_format($item['order_count'] ?? 0); ?> orders</p>
                 </div>
             </div>
             <?php endforeach; ?>
@@ -170,7 +170,7 @@ $salesByStatus = $db->fetchAll("
 
 <!-- Recent Orders Table -->
 <div class="admin-card">
-    <h3 class="text-xl font-bold mb-4">Recent Orders</h3>
+    <h3 class="text-lg md:text-xl font-bold mb-4">Recent Orders</h3>
     <div class="overflow-x-auto">
         <table class="admin-table">
             <thead>

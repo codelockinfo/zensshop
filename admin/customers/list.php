@@ -27,27 +27,27 @@ $customers = $customer->getAllCustomers($filters);
 ?>
 
 <div class="mb-6">
-    <h1 class="text-3xl font-bold">Customer List</h1>
-    <p class="text-gray-600">Dashboard > Customers > Customer List</p>
+    <h1 class="text-2xl md:text-3xl font-bold">Customer List</h1>
+    <p class="text-gray-600 text-sm md:text-base">Dashboard > Customers > Customer List</p>
 </div>
 
 <div class="admin-card mb-6">
-    <div class="flex flex-col md:flex-row justify-between items-start md:items-center space-y-4 md:space-y-0">
+    <div class="flex flex-col justify-between items-start space-y-4">
         <div class="flex-1">
             <p class="text-sm text-gray-600">Tip search by Customer Email: Each customer is provided with a unique email, which you can rely on to find the exact customer you need.</p>
         </div>
-        <div class="flex items-center space-x-4">
-            <select class="border rounded px-3 py-2">
+        <div class="flex items-center flex-wrap w-full md:w-auto gap-4">
+            <select class="border rounded px-3 py-2 text-sm md:text-base w-full md:w-auto">
                 <option>Showing 10 entries</option>
                 <option>Showing 25 entries</option>
                 <option>Showing 50 entries</option>
             </select>
-            <form method="GET" action="" class="flex items-center space-x-2" id="searchForm">
+            <form method="GET" action="" class="flex items-center flex-wrap space-x-2 text-sm md:text-base w-full md:w-auto" id="searchForm">
                 <input type="text" 
                        name="search"
                        placeholder="Search here..." 
                        value="<?php echo htmlspecialchars($search); ?>"
-                       class="border rounded px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                       class="border rounded px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm md:text-base w-full md:w-auto"
                        onkeypress="if(event.key === 'Enter') { document.getElementById('searchForm').submit(); }">
                 <?php if ($status): ?>
                 <input type="hidden" name="status" value="<?php echo htmlspecialchars($status); ?>">
