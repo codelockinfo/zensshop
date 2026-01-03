@@ -29,6 +29,12 @@ if (!function_exists('url')) {
         return $baseUrl . '/' . $path . $queryString;
     }
 }
+
+$path = trim(parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH), '/');
+$segments = explode('/', $path);
+$module = $segments[count($segments) - 2] ?? '';  // products, orders
+$action = $segments[count($segments) - 1] ?? '';  // add, list
+
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -215,11 +221,11 @@ if (!function_exists('url')) {
                     <i class="fas fa-chevron-down text-xs ml-auto"></i>
                 </a>
                 <div class="sidebar-submenu mt-2 space-y-1">
-                    <a href="<?php echo $baseUrl; ?>/admin/products/add.php" class="flex items-center space-x-2 py-1 px-4 text-sm <?php echo basename($_SERVER['PHP_SELF']) === 'add.php' ? 'bg-gray-700' : ''; ?>" title="Add Product">
+                    <a href="<?php echo $baseUrl; ?>/admin/products/add.php" class=" <?php echo ($module === 'products' && in_array($action, ['add', 'add.php'])) ? 'bg-gray-700 text-white' : ''; ?> flex items-center space-x-2 py-1 px-4 text-sm" title="Add Product">
                         <i class="fas fa-gem text-xs"></i>
                         <span>Add Product</span>
                     </a>
-                    <a href="<?php echo $baseUrl; ?>/admin/products/list.php" class="flex items-center space-x-2 py-1 px-4 text-sm <?php echo basename($_SERVER['PHP_SELF']) === 'list.php' && strpos($_SERVER['PHP_SELF'], 'product') !== false ? 'bg-gray-700' : ''; ?>" title="Product List">
+                    <a href="<?php echo $baseUrl; ?>/admin/products/list.php" class=" <?php echo ($module === 'products' && $action === 'list') ? 'bg-gray-700' : ''; ?> flex items-center space-x-2 py-1 px-4 text-sm" title="Product List">
                         <i class="fas fa-gem text-xs"></i>
                         <span>Product List</span>
                     </a>
@@ -232,7 +238,7 @@ if (!function_exists('url')) {
                         <i class="fas fa-chevron-up text-xs ml-auto category-arrow"></i>
                     </a>
                     <div class="sidebar-submenu mt-2 space-y-1 <?php echo strpos($_SERVER['PHP_SELF'], 'categories') !== false ? '' : 'hidden'; ?>">
-                        <a href="<?php echo $baseUrl; ?>/admin/categories/list.php" class="flex items-center space-x-2 py-1 px-4 text-sm <?php echo basename($_SERVER['PHP_SELF']) === 'list.php' && strpos($_SERVER['PHP_SELF'], 'categories') !== false ? 'bg-gray-700' : ''; ?>" title="Category List">
+                        <a href="<?php echo $baseUrl; ?>/admin/categories/list.php" class=" flex items-center space-x-2 py-1 px-4 text-sm <?php echo basename($_SERVER['PHP_SELF']) === 'list.php' && strpos($_SERVER['PHP_SELF'], 'categories') !== false ? 'bg-gray-700' : ''; ?>" title="Category List">
                             <i class="fas fa-gem text-xs"></i>
                             <span>Category List</span>
                         </a>
@@ -248,22 +254,22 @@ if (!function_exists('url')) {
                     <i class="fas fa-chevron-down text-xs ml-auto"></i>
                 </a>
                 <div class="sidebar-submenu mt-2 space-y-1">
-                    <a href="<?php echo $baseUrl; ?>/admin/orders/list.php" class="flex items-center space-x-2 py-1 px-4 text-sm  <?php echo basename($_SERVER['PHP_SELF']) === 'list.php' && strpos($_SERVER['PHP_SELF'], 'orders') !== false ? 'bg-gray-700' : ''; ?>" title="Order List">
+                    <a href="<?php echo $baseUrl; ?>/admin/orders/list.php" class="<?php echo ($module === 'orders' && in_array($action, ['list'])) ? 'bg-gray-700 text-white' : ''; ?> flex items-center space-x-2 py-1 px-4 text-sm" title="Order List">
                         <i class="fas fa-gem text-xs"></i>
                         <span>Order List</span>
                     </a>
                 </div>
-                <a href="<?php echo $baseUrl; ?>/admin/discounts/manage.php" class="sidebar-menu-item flex items-center space-x-3 py-2 px-4 mt-2  <?php echo basename($_SERVER['PHP_SELF']) === 'manage.php' && strpos($_SERVER['PHP_SELF'], 'discounts') !== false ? 'bg-gray-700' : ''; ?>" title="Discounts">
-                    <i class="fas fa-tag text-md md:text-lg"></i>
+                <a href="<?php echo $baseUrl; ?>/admin/discounts/manage.php" class=" <?php echo strpos($_SERVER['PHP_SELF'], 'discounts') !== false ? 'bg-gray-700' : ''; ?> sidebar-menu-item flex items-center space-x-3 py-2 px-4 mt-2" title="Discounts">
+                    <i class="fas fa-tag text-lg"></i>
                     <span class="sidebar-menu-text">Discounts</span>
                 </a>
-                <a href="<?php echo $baseUrl; ?>/admin/customers/list.php" class="sidebar-menu-item flex items-center space-x-3 py-2 px-4 mt-2  <?php echo basename($_SERVER['PHP_SELF']) === 'list.php' && strpos($_SERVER['PHP_SELF'], 'customers') !== false ? 'bg-gray-700' : ''; ?>" title="Customers">
-                    <i class="fas fa-users text-md md:text-lg"></i>
+                <a href="<?php echo $baseUrl; ?>/admin/customers/list.php" class="sidebar-menu-item flex items-center space-x-3 py-2 px-4 mt-2 <?php echo strpos($_SERVER['PHP_SELF'], 'customers') !== false ? 'bg-gray-700' : ''; ?>" title="Customers">
+                    <i class="fas fa-users text-lg"></i>
                     <span class="sidebar-menu-text">Customers</span>
                     <i class="fas fa-chevron-down text-xs ml-auto"></i>
                 </a>
                 <div class="sidebar-submenu mt-2 space-y-1">
-                    <a href="<?php echo $baseUrl; ?>/admin/customers/list.php" class="flex items-center space-x-2 py-1 px-4 text-sm  <?php echo basename($_SERVER['PHP_SELF']) === 'list.php' && strpos($_SERVER['PHP_SELF'], 'customers') !== false ? 'bg-gray-700' : ''; ?>" title="Customer List">
+                    <a href="<?php echo $baseUrl; ?>/admin/customers/list.php" class="<?php echo ($module === 'customers' && in_array($action, ['list'])) ? 'bg-gray-700 text-white' : ''; ?> flex items-center space-x-2 py-1 px-4 text-sm" title="Customer List">
                         <i class="fas fa-gem text-xs"></i>
                         <span>Customer List</span>
                     </a>

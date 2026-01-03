@@ -228,8 +228,34 @@ if (!isset($baseUrl) && function_exists('getBaseUrl')) {
     <!-- Cart Overlay -->
     <div class="hidden fixed inset-0 bg-black bg-opacity-50 z-40" id="cartOverlay"></div>
     
+    <!-- Remove from Cart Confirmation Modal -->
+    <div id="removeConfirmModal" class="fixed inset-0 bg-black bg-opacity-50 z-50 hidden items-center justify-center" style="display: none;">
+        <div class="bg-white rounded-lg p-6 max-w-md w-full mx-4 relative shadow-xl">
+            <button onclick="closeRemoveConfirm()" class="absolute top-4 right-4 text-gray-400 hover:text-gray-600 transition">
+                <i class="fas fa-times text-xl"></i>
+            </button>
+            
+            <div class="flex flex-col items-center mb-6 pt-4">
+                <img id="removeConfirmImage" src="" alt="Product" class="w-20 h-20 object-cover rounded-lg mb-4 border border-gray-200">
+                <h3 id="removeConfirmName" class="text-base font-semibold text-center mb-4 text-gray-800"></h3>
+                <p class="text-gray-600 text-center text-sm mb-6">Would you like to add this product in wishlist?</p>
+            </div>
+            
+            <div class="flex space-x-3">
+                <button onclick="confirmRemoveWithWishlist()" 
+                        class="flex-1 bg-black text-white px-6 py-3 rounded-lg hover:bg-gray-800 transition font-medium text-sm">
+                    Yes
+                </button>
+                <button onclick="confirmRemoveWithoutWishlist()" 
+                        class="flex-1 bg-white text-black border-2 border-gray-300 px-6 py-3 rounded-lg hover:bg-gray-50 hover:border-gray-400 transition font-medium text-sm">
+                    No
+                </button>
+            </div>
+        </div>
+    </div>
+    
     <!-- Notification Modal -->
-    <div id="notificationModal" class="hidden notification-modal-overlay">
+    <!-- <div id="notificationModal" class="hidden notification-modal-overlay">
         <div class="notification-modal">
             <div class="notification-modal-header">
                 <div class="notification-modal-icon" id="notificationIcon">
@@ -244,7 +270,7 @@ if (!isset($baseUrl) && function_exists('getBaseUrl')) {
                 <button class="notification-modal-btn primary" id="notificationOkBtn" onclick="closeNotificationModal()">OK</button>
             </div>
         </div>
-    </div>
+    </div> -->
     
     <!-- Scripts -->
     <script src="<?php echo $baseUrl; ?>/assets/js/main.js"></script>
@@ -252,6 +278,104 @@ if (!isset($baseUrl) && function_exists('getBaseUrl')) {
     <script src="<?php echo $baseUrl; ?>/assets/js/product-cards.js"></script>
     <script src="<?php echo $baseUrl; ?>/assets/js/wishlist.js"></script>
     <script src="<?php echo $baseUrl; ?>/assets/js/notification.js"></script>
+    
+    <!-- Remove from Cart Confirmation Script -->
+    <script>
+    // Remove confirmation modal variables
+    let pendingRemoveProductId = null;
+    let pendingRemoveProductName = null;
+    let pendingRemoveProductImage = null;
+
+    // Show remove confirmation modal
+    function showRemoveConfirm(productId, productName, productImage) {
+        pendingRemoveProductId = productId;
+        pendingRemoveProductName = productName;
+        pendingRemoveProductImage = productImage;
+        
+        const modal = document.getElementById('removeConfirmModal');
+        const imageEl = document.getElementById('removeConfirmImage');
+        const nameEl = document.getElementById('removeConfirmName');
+        
+        if (modal && imageEl && nameEl) {
+            imageEl.src = productImage || '<?php echo $baseUrl; ?>/assets/images/default-avatar.svg';
+            nameEl.textContent = productName;
+            
+            modal.classList.remove('hidden');
+            modal.style.display = 'flex';
+        }
+    }
+
+    // Close remove confirmation modal
+    function closeRemoveConfirm() {
+        const modal = document.getElementById('removeConfirmModal');
+        if (modal) {
+            modal.classList.add('hidden');
+            modal.style.display = 'none';
+        }
+        pendingRemoveProductId = null;
+        pendingRemoveProductName = null;
+        pendingRemoveProductImage = null;
+    }
+
+    // Confirm remove with wishlist (Yes button)
+    async function confirmRemoveWithWishlist() {
+        if (!pendingRemoveProductId) return;
+        
+        const productId = pendingRemoveProductId;
+        closeRemoveConfirm();
+        
+        try {
+            // First, add to wishlist
+            const baseUrl = typeof BASE_URL !== 'undefined' ? BASE_URL : window.location.pathname.split('/').slice(0, -1).join('/') || '';
+            const wishlistResponse = await fetch(baseUrl + '/api/wishlist.php', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    product_id: productId
+                })
+            });
+            
+            const wishlistResult = await wishlistResponse.json();
+            
+            // Update wishlist count in header
+            if (wishlistResult.success && typeof refreshWishlist === 'function') {
+                await refreshWishlist();
+            }
+            
+            // Then remove from cart
+            if (typeof removeFromCart === 'function') {
+                await removeFromCart(productId);
+            }
+        } catch (error) {
+            console.error('Error adding to wishlist:', error);
+            // Still remove from cart even if wishlist add fails
+            if (typeof removeFromCart === 'function') {
+                await removeFromCart(productId);
+            }
+        }
+    }
+
+    // Confirm remove without wishlist (No button)
+    async function confirmRemoveWithoutWishlist() {
+        if (!pendingRemoveProductId) return;
+        
+        const productId = pendingRemoveProductId;
+        closeRemoveConfirm();
+        
+        // Just remove from cart
+        if (typeof removeFromCart === 'function') {
+            await removeFromCart(productId);
+        }
+    }
+
+    // Make functions globally available
+    window.showRemoveConfirm = showRemoveConfirm;
+    window.closeRemoveConfirm = closeRemoveConfirm;
+    window.confirmRemoveWithWishlist = confirmRemoveWithWishlist;
+    window.confirmRemoveWithoutWishlist = confirmRemoveWithoutWishlist;
+    </script>
 </body>
 </html>
 

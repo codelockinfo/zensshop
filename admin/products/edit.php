@@ -107,23 +107,29 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         }
         
         // Handle variants data
-        if (!empty($_POST['variants_data'])) {
+        if (isset($_POST['variants_data'])) {
             $variantsData = json_decode($_POST['variants_data'], true);
             if (is_array($variantsData)) {
                 $data['variants'] = $variantsData;
+            } else {
+                // If variants_data is empty or invalid, set empty array to clear variants
+                $data['variants'] = [];
             }
         }
         
         $retryHandler->executeWithRetry(
             function() use ($product, $productId, $data) {
-                // Delete existing variants first
-                $product->deleteVariants($productId);
-                // Update product
+                // Update product first
                 $product->update($productId, $data);
-                // Save new variants
-                if (!empty($data['variants'])) {
+                
+                // Handle variants: always delete existing and save new ones (even if empty)
+                $product->deleteVariants($productId);
+                
+                // Save new variants if provided
+                if (!empty($data['variants']) && is_array($data['variants'])) {
                     $product->saveVariants($productId, $data['variants']);
                 }
+                
                 return true;
             },
             'Update Product',

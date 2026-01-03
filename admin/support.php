@@ -104,8 +104,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 <div>
                     <h3 class="font-semibold mb-1">Need Immediate Help?</h3>
                     <p class="text-sm text-gray-600 mb-2">Our support team is available 24/7</p>
-                    <p class="text-sm font-semibold">support@milano.com</p>
-                    <p class="text-sm font-semibold">+1 (555) 123-4567</p>
+                    <p class="text-sm font-semibold">codelock2021@gmail.com</p>
+                    <p class="text-sm font-semibold">+91 9876543210</p>
                 </div>
             </div>
         </div>

@@ -488,21 +488,38 @@ function updateCartUI() {
         }
         
         html += `
-            <div class="flex items-center space-x-4 mb-4 pb-4 border-b" data-product-id="${item.product_id}">
-                <img src="${escapeHtml(imageUrl)}" alt="${escapeHtml(item.name)}" class="w-20 h-20 object-cover rounded" onerror="this.src='data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iODAiIGhlaWdodD0iODAiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+PHJlY3Qgd2lkdGg9IjgwIiBoZWlnaHQ9IjgwIiBmaWxsPSIjRjNGNEY2Ii8+PGNpcmNsZSBjeD0iNDAiIGN5PSI0MCIgcj0iMjAiIGZpbGw9IiM5QjdBOEEiLz48L3N2Zz4='">
-                <div class="flex-1">
-                    <h4 class="font-semibold text-sm mb-2">${escapeHtml(item.name)}</h4>
-                    <p class="text-gray-600 text-sm">${formatCurrency(itemPrice)}</p>
-                    <div class="flex items-center space-x-2 mt-2">
-                        <button onclick="updateCartItem(${item.product_id}, ${itemQuantity - 1})" class="w-8 h-8 border rounded flex items-center justify-center hover:bg-gray-100 text-sm">-</button>
-                        <span class="w-8 text-center text-sm">${itemQuantity}</span>
-                        <button onclick="updateCartItem(${item.product_id}, ${itemQuantity + 1})" class="w-8 h-8 border rounded flex items-center justify-center hover:bg-gray-100 text-sm">+</button>
+            <div class="side-cart-item-wrapper mb-4 pb-4 border-b" data-product-id="${item.product_id}">
+                <div class="flex items-center space-x-4 side-cart-item" data-product-id="${item.product_id}">
+                    <img src="${escapeHtml(imageUrl)}" alt="${escapeHtml(item.name)}" class="w-20 h-20 object-cover rounded" onerror="this.src='data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iODAiIGhlaWdodD0iODAiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+PHJlY3Qgd2lkdGg9IjgwIiBoZWlnaHQ9IjgwIiBmaWxsPSIjRjNGNEY2Ii8+PGNpcmNsZSBjeD0iNDAiIGN5PSI0MCIgcj0iMjAiIGZpbGw9IiM5QjdBOEEiLz48L3N2Zz4='">
+                    <div class="flex-1">
+                        <h4 class="font-semibold text-sm mb-2">${escapeHtml(item.name)}</h4>
+                        <p class="text-gray-600 text-sm">${formatCurrency(itemPrice)}</p>
+                        <div class="flex items-center space-x-2 mt-2">
+                            <button onclick="updateCartItem(${item.product_id}, ${itemQuantity - 1})" class="w-8 h-8 border rounded flex items-center justify-center hover:bg-gray-100 text-sm">-</button>
+                            <span class="w-8 text-center text-sm">${itemQuantity}</span>
+                            <button onclick="updateCartItem(${item.product_id}, ${itemQuantity + 1})" class="w-8 h-8 border rounded flex items-center justify-center hover:bg-gray-100 text-sm">+</button>
+                        </div>
+                    </div>
+                    <div class="text-right">
+                        <p class="font-semibold text-sm">${formatCurrency(itemTotal)}</p>
+                        <button onclick="showSideCartInlineRemoveConfirm(${item.product_id})" class="text-red-500 hover:text-red-700 mt-2 text-sm" title="Remove">
+                            <i class="fas fa-trash"></i>
+                        </button>
                     </div>
                 </div>
-                <div class="text-right">
-                    <p class="font-semibold text-sm">${formatCurrency(itemTotal)}</p>
-                    <button onclick="removeFromCart(${item.product_id})" class="text-red-500 hover:text-red-700 mt-2 text-sm" title="Remove">
-                        <i class="fas fa-trash"></i>
+                <!-- Side Cart Inline Remove Confirmation -->
+                <div class="side-cart-remove-confirm-inline flex items-center space-x-4 p-4 bg-gray-50 rounded border border-gray-300 hidden" data-product-id="${item.product_id}">
+                    <img src="${escapeHtml(imageUrl)}" alt="${escapeHtml(item.name)}" class="w-16 h-16 object-cover rounded border border-gray-200" onerror="this.src='data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iODAiIGhlaWdodD0iODAiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+PHJlY3Qgd2lkdGg9IjgwIiBoZWlnaHQ9IjgwIiBmaWxsPSIjRjNGNEY2Ii8+PGNpcmNsZSBjeD0iNDAiIGN5PSI0MCIgcj0iMjAiIGZpbGw9IiM5QjdBOEEiLz48L3N2Zz4='">
+                    <div class="flex-1">
+                        <h4 class="font-semibold text-sm mb-1 text-gray-800">${escapeHtml(item.name)}</h4>
+                        <p class="text-gray-600 text-xs mb-2">Add to wishlist before remove?</p>
+                        <div class="flex space-x-2">
+                            <button onclick="confirmSideCartInlineRemoveWithWishlist(${item.product_id})" class="px-4 py-1.5 bg-black text-white text-xs font-medium rounded hover:bg-gray-800 transition">Yes</button>
+                            <button onclick="confirmSideCartInlineRemoveWithoutWishlist(${item.product_id})" class="px-4 py-1.5 border border-gray-300 text-gray-700 text-xs font-medium rounded hover:bg-gray-50 transition">No</button>
+                        </div>
+                    </div>
+                    <button onclick="cancelSideCartInlineRemoveConfirm(${item.product_id})" class="text-gray-400 hover:text-gray-600">
+                        <i class="fas fa-times text-sm"></i>
                     </button>
                 </div>
             </div>
@@ -579,6 +596,59 @@ function formatCurrency(amount) {
     return symbol + parseFloat(amount).toFixed(2);
 }
 
+// Side Cart Inline Remove Confirm Functions
+function showSideCartInlineRemoveConfirm(productId) {
+    const wrapper = document.querySelector('.side-cart-item-wrapper[data-product-id="' + productId + '"]');
+    if (wrapper) {
+        const cartItem = wrapper.querySelector('.side-cart-item');
+        const confirmBox = wrapper.querySelector('.side-cart-remove-confirm-inline');
+        if (cartItem && confirmBox) {
+            cartItem.classList.add('hidden');
+            confirmBox.classList.remove('hidden');
+        }
+    }
+}
+
+function cancelSideCartInlineRemoveConfirm(productId) {
+    const wrapper = document.querySelector('.side-cart-item-wrapper[data-product-id="' + productId + '"]');
+    if (wrapper) {
+        const cartItem = wrapper.querySelector('.side-cart-item');
+        const confirmBox = wrapper.querySelector('.side-cart-remove-confirm-inline');
+        if (cartItem && confirmBox) {
+            cartItem.classList.remove('hidden');
+            confirmBox.classList.add('hidden');
+        }
+    }
+}
+
+async function confirmSideCartInlineRemoveWithWishlist(productId) {
+    const baseUrl = typeof BASE_URL !== 'undefined' ? BASE_URL : window.location.pathname.split('/').slice(0, -1).join('/') || '';
+    try {
+        // Add to wishlist
+        const wishlistResponse = await fetch(baseUrl + '/api/wishlist.php', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ product_id: productId })
+        });
+        const wishlistResult = await wishlistResponse.json();
+        
+        // Update wishlist count
+        if (wishlistResult.success && typeof refreshWishlist === 'function') {
+            await refreshWishlist();
+        }
+        
+        // Remove from cart
+        await removeFromCart(productId);
+    } catch (error) {
+        console.error('Error adding to wishlist:', error);
+        await removeFromCart(productId);
+    }
+}
+
+async function confirmSideCartInlineRemoveWithoutWishlist(productId) {
+    await removeFromCart(productId);
+}
+
 // Make functions globally available
 window.addToCart = addToCart;
 window.updateCartItem = updateCartItem;
@@ -586,4 +656,8 @@ window.removeFromCart = removeFromCart;
 window.refreshCart = refreshCart;
 window.updateCartUI = updateCartUI;
 window.updateCartCount = updateCartCount;
+window.showSideCartInlineRemoveConfirm = showSideCartInlineRemoveConfirm;
+window.cancelSideCartInlineRemoveConfirm = cancelSideCartInlineRemoveConfirm;
+window.confirmSideCartInlineRemoveWithWishlist = confirmSideCartInlineRemoveWithWishlist;
+window.confirmSideCartInlineRemoveWithoutWishlist = confirmSideCartInlineRemoveWithoutWishlist;
 

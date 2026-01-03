@@ -51,16 +51,22 @@ $orders = $order->getAll($filters);
             </tr>
         </thead>
         <tbody>
-            <?php foreach ($orders as $item): ?>
+            <?php foreach ($orders as $item): 
+                // Get product image with fallback using helper function
+                $productImage = !empty($item['product_image']) ? getImageUrl($item['product_image']) : 'https://via.placeholder.com/50';
+            ?>
             <tr>
                 <td>
                     <div class="flex items-center space-x-3">
-                        <img src="https://via.placeholder.com/50" alt="Product" class="w-12 h-12 object-cover rounded">
+                        <img src="<?php echo htmlspecialchars($productImage); ?>" 
+                             alt="Product" 
+                             class="w-12 h-12 object-cover rounded"
+                             onerror="this.src='https://via.placeholder.com/50'">
                         <span><?php echo htmlspecialchars($item['customer_name']); ?></span>
                     </div>
                 </td>
                 <td><?php echo htmlspecialchars($item['order_number']); ?></td>
-                <td>$<?php echo number_format($item['total_amount'], 2); ?></td>
+                <td><?php echo format_currency($item['total_amount']); ?></td>
                 <td><?php echo $item['total_quantity'] ?? 0; ?></td>
                 <td><?php echo $item['payment_status']; ?></td>
                 <td>
@@ -77,10 +83,10 @@ $orders = $order->getAll($filters);
                 </td>
                 <td>
                     <div class="flex items-center space-x-2">
-                        <a href="<?php echo $baseUrl; ?>/admin/orders/detail.php?id=<?php echo $item['id']; ?>" class="text-blue-500 hover:text-blue-700">
+                        <a href="<?php echo $baseUrl; ?>/admin/orders/detail?id=<?php echo $item['id']; ?>" class="text-blue-500 hover:text-blue-700">
                             <i class="fas fa-eye"></i>
                         </a>
-                        <a href="<?php echo $baseUrl; ?>/admin/orders/edit.php?id=<?php echo $item['id']; ?>" class="text-green-500 hover:text-green-700">
+                        <a href="<?php echo $baseUrl; ?>/admin/orders/edit?id=<?php echo $item['id']; ?>" class="text-green-500 hover:text-green-700">
                             <i class="fas fa-edit"></i>
                         </a>
                         <button onclick="deleteOrder(<?php echo $item['id']; ?>)" class="text-red-500 hover:text-red-700">
