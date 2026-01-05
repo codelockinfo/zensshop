@@ -15,8 +15,8 @@ $categories = $db->fetchAll("SELECT * FROM categories ORDER BY sort_order ASC");
 ?>
 
 <div class="mb-6">
-    <h1 class="text-3xl font-bold">Categories</h1>
-    <p class="text-gray-600">Dashboard > Category</p>
+    <h1 class="text-2xl md:text-3xl font-bold">Categories</h1>
+    <p class="text-gray-600 text-sm md:text-base">Dashboard > Category</p>
 </div>
 
 <div class="admin-card mb-6">

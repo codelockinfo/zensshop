@@ -5,12 +5,25 @@
 
 (function() {
     let searchTimeout;
+    const searchToggle = document.getElementById('adminSearchToggle');
+    const searchDropdown = document.getElementById('adminSearchDropdown');
     const searchInput = document.getElementById('adminSearchInput');
     const searchResults = document.getElementById('adminSearchResults');
     const searchResultsContent = document.getElementById('adminSearchResultsContent');
     const searchLoading = document.querySelector('.admin-search-loading');
     
-    if (!searchInput || !searchResults) return;
+    if (!searchToggle || !searchDropdown || !searchInput || !searchResults) return;
+    
+    // Toggle search dropdown
+    searchToggle.addEventListener('click', function(e) {
+        e.stopPropagation();
+        searchDropdown.classList.toggle('hidden');
+        if (!searchDropdown.classList.contains('hidden')) {
+            searchInput.focus();
+        } else {
+            searchResults.classList.add('hidden');
+        }
+    });
     
     // Debounce search function
     function performSearch(query) {
@@ -223,10 +236,11 @@
         }, 300); // 300ms debounce
     });
     
-    // Close search results when clicking outside
+    // Close search dropdown and results when clicking outside
     document.addEventListener('click', function(e) {
         const searchContainer = document.querySelector('.admin-search-container');
         if (searchContainer && !searchContainer.contains(e.target)) {
+            searchDropdown.classList.add('hidden');
             searchResults.classList.add('hidden');
         }
     });
@@ -239,6 +253,7 @@
     // Handle keyboard navigation
     searchInput.addEventListener('keydown', function(e) {
         if (e.key === 'Escape') {
+            searchDropdown.classList.add('hidden');
             searchResults.classList.add('hidden');
             searchInput.blur();
         }

@@ -345,25 +345,25 @@ function toggleFilter(filterName) {
     const filter = document.getElementById(filterName + '-filter');
     const arrow = document.getElementById(filterName + '-arrow');
     if (filter && arrow) {
-        if (filter.classList.contains('hidden')) {
-            filter.classList.remove('hidden');
+    if (filter.classList.contains('hidden')) {
+        filter.classList.remove('hidden');
             // Check if it's a drawer filter (chevron-right) or sidebar filter (chevron-up)
             if (arrow.classList.contains('fa-chevron-right')) {
                 arrow.classList.remove('fa-chevron-right');
                 arrow.classList.add('fa-chevron-down');
             } else {
-                arrow.classList.remove('fa-chevron-up');
-                arrow.classList.add('fa-chevron-down');
+        arrow.classList.remove('fa-chevron-up');
+        arrow.classList.add('fa-chevron-down');
             }
-        } else {
-            filter.classList.add('hidden');
+    } else {
+        filter.classList.add('hidden');
             // Check if it's a drawer filter (should go to chevron-right) or sidebar filter (should go to chevron-up)
             if (filterName.includes('drawer')) {
                 arrow.classList.remove('fa-chevron-down');
                 arrow.classList.add('fa-chevron-right');
             } else {
-                arrow.classList.remove('fa-chevron-down');
-                arrow.classList.add('fa-chevron-up');
+        arrow.classList.remove('fa-chevron-down');
+        arrow.classList.add('fa-chevron-up');
             }
         }
     }

@@ -8,14 +8,73 @@ document.addEventListener('DOMContentLoaded', function() {
     const sidebar = document.getElementById('sidebar');
     const contentWrapper = document.querySelector('.admin-content-wrapper');
     
+    // Function to check screen size and set sidebar state
+    function checkScreenSize() {
+        // On all screen sizes, start collapsed but allow toggle
+        if (!sidebar.classList.contains('expanded')) {
+            sidebar.classList.add('collapsed');
+            sidebar.classList.remove('expanded');
+            if (contentWrapper) {
+                contentWrapper.style.marginLeft = '80px';
+            }
+        }
+    }
+    
+    // Check on page load
+    checkScreenSize();
+    
+    // Check on window resize
+    window.addEventListener('resize', checkScreenSize);
+    
+    // Create overlay backdrop for sidebar (works on all screen sizes)
+    let sidebarOverlay = document.querySelector('.admin-sidebar-overlay');
+    if (!sidebarOverlay) {
+        sidebarOverlay = document.createElement('div');
+        sidebarOverlay.className = 'admin-sidebar-overlay';
+        document.body.appendChild(sidebarOverlay);
+        
+        // Close sidebar when clicking overlay
+        sidebarOverlay.addEventListener('click', function() {
+            sidebar.classList.add('collapsed');
+            sidebar.classList.remove('expanded');
+            sidebarOverlay.classList.remove('active');
+            if (contentWrapper) {
+                contentWrapper.style.marginLeft = '80px';
+            }
+        });
+    }
+    
     if (sidebarToggle && sidebar) {
         sidebarToggle.addEventListener('click', function() {
+            // On all screen sizes, toggle between collapsed and expanded
             sidebar.classList.toggle('collapsed');
-            if (contentWrapper) {
-                if (sidebar.classList.contains('collapsed')) {
+            sidebar.classList.toggle('expanded');
+            
+            // If collapsing, hide all submenus
+            if (sidebar.classList.contains('collapsed')) {
+                const submenus = document.querySelectorAll('.sidebar-submenu');
+                submenus.forEach(sub => {
+                    sub.classList.add('hidden');
+                    // Reset arrows if needed
+                    const parent = sub.closest('.sidebar-menu-item');
+                    if (parent) {
+                        const arrow = parent.querySelector('.fa-chevron-down, .fa-chevron-up');
+                        if (arrow) {
+                            arrow.classList.add('fa-chevron-up');
+                            arrow.classList.remove('fa-chevron-down');
+                        }
+                    }
+                });
+            }
+            
+            // Adjust content margin based on sidebar state
+            if (sidebar.classList.contains('expanded')) {
+                if (contentWrapper) {
+                    contentWrapper.style.marginLeft = '220px';
+                }
+            } else {
+                if (contentWrapper) {
                     contentWrapper.style.marginLeft = '80px';
-                } else {
-                    contentWrapper.style.marginLeft = '260px';
                 }
             }
         });
@@ -42,34 +101,73 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     }
     
-    // Category menu toggle
-    const categoryMenuParent = document.querySelector('.category-menu-parent');
-    if (categoryMenuParent) {
-        const categoryLink = categoryMenuParent.querySelector('a');
-        const submenu = categoryMenuParent.querySelector('.sidebar-submenu');
-        const arrow = categoryMenuParent.querySelector('.category-arrow');
-        
-        if (categoryLink && submenu) {
-            categoryLink.addEventListener('click', function(e) {
-                if (submenu.classList.contains('hidden')) {
-                    e.preventDefault();
-                    submenu.classList.remove('hidden');
-                    if (arrow) {
-                        arrow.classList.remove('fa-chevron-up');
-                        arrow.classList.add('fa-chevron-down');
-                    }
-                }
-            });
-            
-            // Keep submenu open if on category page
-            if (window.location.pathname.includes('categories')) {
-                submenu.classList.remove('hidden');
-                if (arrow) {
-                    arrow.classList.remove('fa-chevron-up');
-                    arrow.classList.add('fa-chevron-down');
-                }
+    // Expand sidebar when clicking menu items (if collapsed)
+    function expandSidebarIfCollapsed() {
+        if (sidebar.classList.contains('collapsed') && !sidebar.classList.contains('expanded')) {
+            sidebar.classList.remove('collapsed');
+            sidebar.classList.add('expanded');
+            if (contentWrapper) {
+                contentWrapper.style.marginLeft = '220px';
             }
         }
     }
+    
+    // Generalized menu toggle for all menus with submenus
+    const menuParents = document.querySelectorAll('.sidebar-menu-item');
+    menuParents.forEach(function(menuItem) {
+        const submenu = menuItem.nextElementSibling;
+        const link = menuItem.tagName === 'A' ? menuItem : menuItem.querySelector('a');
+        
+        if (link) {
+            if (submenu && submenu.classList.contains('sidebar-submenu')) {
+                // Menu with submenu - toggle behavior
+                const arrow = menuItem.querySelector('.fa-chevron-down, .fa-chevron-up');
+                
+                link.addEventListener('click', function(e) {
+                    e.preventDefault(); // Always prevent navigation
+                    
+                    // Toggle submenu
+                    if (submenu.classList.contains('hidden')) {
+                        submenu.classList.remove('hidden');
+                        if (arrow) {
+                            arrow.classList.remove('fa-chevron-up');
+                            arrow.classList.add('fa-chevron-down');
+                        }
+                    } else {
+                        submenu.classList.add('hidden');
+                        if (arrow) {
+                            arrow.classList.add('fa-chevron-up');
+                            arrow.classList.remove('fa-chevron-down');
+                        }
+                    }
+                });
+                
+                // Keep submenu open if on relevant page
+                const href = link.getAttribute('href');
+                if (href) {
+                    const pathParts = href.split('/');
+                    const menuName = pathParts[pathParts.length - 2]; // e.g., 'products' from /admin/products/list.php
+                    if (window.location.pathname.includes(menuName)) {
+                        submenu.classList.remove('hidden');
+                        if (arrow) {
+                            arrow.classList.remove('fa-chevron-up');
+                            arrow.classList.add('fa-chevron-down');
+                        }
+                    }
+                }
+            } else {
+                // Menu without submenu - navigate only when sidebar is expanded
+                link.addEventListener('click', function(e) {
+                    if (sidebar.classList.contains('collapsed')) {
+                        e.preventDefault();
+                    }
+                    // If expanded, allow navigation
+                });
+            }
+        }
+    });
+    
+    // Submenu items just navigate
+    // No need to expand sidebar
 });
 
