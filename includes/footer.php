@@ -278,6 +278,7 @@ if (!isset($baseUrl) && function_exists('getBaseUrl')) {
     <script src="<?php echo $baseUrl; ?>/assets/js/product-cards.js"></script>
     <script src="<?php echo $baseUrl; ?>/assets/js/wishlist.js"></script>
     <script src="<?php echo $baseUrl; ?>/assets/js/notification.js"></script>
+    <script src="<?php echo $baseUrl; ?>/assets/js/add-to-cart.js"></script>
     
     <!-- Remove from Cart Confirmation Script -->
     <script>

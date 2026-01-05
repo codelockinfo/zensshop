@@ -55,12 +55,12 @@ $products = $product->getBestSelling(12); // Get more products for slider
                                         <i class="fas fa-eye"></i>
                                         <span class="product-tooltip">Quick View</span>
                                     </a>
-                                    <button class="product-action-btn w-10 h-10 bg-white rounded-full flex items-center justify-center hover:bg-black hover:text-white transition shadow-lg compare-btn relative group" 
+                                    <!-- <button class="product-action-btn w-10 h-10 bg-white rounded-full flex items-center justify-center hover:bg-black hover:text-white transition shadow-lg compare-btn relative group" 
                                             data-product-id="<?php echo $item['id']; ?>">
                                         <i class="fas fa-layer-group"></i>
                                         <span class="product-tooltip">Compare</span>
-                                    </button>
-                                    <button class="product-action-btn w-10 h-10 bg-white rounded-full flex items-center justify-center hover:bg-black hover:text-white transition shadow-lg add-to-cart-hover-btn relative group" 
+                                    </button> -->
+                                    <button id="addToCartByProductIcon" class="product-action-btn w-10 h-10 bg-white rounded-full flex items-center justify-center hover:bg-black hover:text-white transition shadow-lg add-to-cart-hover-btn relative group" 
                                             data-product-id="<?php echo $item['id']; ?>">
                                         <i class="fas fa-shopping-cart"></i>
                                         <span class="product-tooltip">Add to Cart</span>
@@ -114,3 +114,12 @@ $products = $product->getBestSelling(12); // Get more products for slider
         </div>
     </div>
 </section>
+<!-- <script>
+    const bestSellerCartItem = document.getElementById('addToCartByProductIcon');
+    bestSellerCartItem.addEventListener('click', function(btn){
+        btn.preventDefault();
+        const productId = this.getAttribute('data-product-id');
+        addToCart(productId, 1);
+    })
+
+</script> -->

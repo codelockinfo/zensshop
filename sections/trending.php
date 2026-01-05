@@ -56,7 +56,7 @@ $products = $product->getTrending(6); // Get more products for slider
                     <?php endif; ?>
                     
                     <!-- Hover Action Buttons -->
-                    <div class="product-actions absolute right-2 top-12 flex flex-col mt-2 gap-2 opacity-0 group-hover:opacity-100 transition-opacity duration-300 z-30">
+                    <div id="addToCartByProductIcon" class="product-actions absolute right-2 top-12 flex flex-col mt-2 gap-2 opacity-0 group-hover:opacity-100 transition-opacity duration-300 z-30">
                         <a href="<?php echo $baseUrl; ?>/product.php?slug=<?php echo urlencode($item['slug'] ?? ''); ?>" 
                            class="product-action-btn w-10 h-10 bg-white rounded-full flex items-center justify-center hover:bg-black hover:text-white transition shadow-lg quick-view-btn relative group" 
                            data-product-id="<?php echo $item['id']; ?>"
@@ -64,11 +64,11 @@ $products = $product->getTrending(6); // Get more products for slider
                             <i class="fas fa-eye"></i>
                             <span class="product-tooltip">Quick View</span>
                         </a>
-                        <button class="product-action-btn w-10 h-10 bg-white rounded-full flex items-center justify-center hover:bg-black hover:text-white transition shadow-lg compare-btn relative group" 
+                        <!-- <button class="product-action-btn w-10 h-10 bg-white rounded-full flex items-center justify-center hover:bg-black hover:text-white transition shadow-lg compare-btn relative group" 
                                 data-product-id="<?php echo $item['id']; ?>">
                             <i class="fas fa-layer-group"></i>
                             <span class="product-tooltip">Compare</span>
-                        </button>
+                        </button> -->
                         <button class="product-action-btn w-10 h-10 bg-white rounded-full flex items-center justify-center hover:bg-black hover:text-white transition shadow-lg add-to-cart-hover-btn relative group" 
                                 data-product-id="<?php echo $item['id']; ?>">
                             <i class="fas fa-shopping-cart"></i>
