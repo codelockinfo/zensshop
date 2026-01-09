@@ -41,7 +41,7 @@ $products = $db->fetchAll($sql, $params);
     <p class="text-gray-600 text-sm md:text-base">Dashboard > Ecommerce > Product List</p>
 </div>
 
-<div class="admin-card mb-6">
+<!-- <div class="admin-card mb-6">
     <div class="flex flex-col justify-between items-start space-y-4">
         <div class="flex-1">
             <p class="text-xs md:text-sm text-gray-600">Tip search by Product ID: Each product is provided with a unique ID, which you can rely on to find the exact product you need.</p>
@@ -61,7 +61,7 @@ $products = $db->fetchAll($sql, $params);
                 </a>
         </div>
     </div>
-</div>
+</div> -->
 
 <div class="admin-card overflow-x-auto">
     <table class="admin-table">

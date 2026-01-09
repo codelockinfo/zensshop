@@ -8,20 +8,28 @@ document.addEventListener('DOMContentLoaded', function() {
     const sidebar = document.getElementById('sidebar');
     const contentWrapper = document.querySelector('.admin-content-wrapper');
     
-    // Function to check screen size and set sidebar state
-    function checkScreenSize() {
-        // On all screen sizes, start collapsed but allow toggle
-        if (!sidebar.classList.contains('expanded')) {
-            sidebar.classList.add('collapsed');
-            sidebar.classList.remove('expanded');
-            if (contentWrapper) {
-                contentWrapper.style.marginLeft = '80px';
-            }
-        }
-    }
+    // Function to check screen size and adjust sidebar
+    // function checkScreenSize(){
+    //     const isDesktop = window.innerWidth > 1024;
+
+    //     if (isDesktop){
+    //         sidebar.classList.add('expanded');
+    //         sidebar.classList.remove('collapsed');
+
+    //         if(contentWrapper){
+    //             contentWrapper.style.marginLeft = '250px';
+    //         }
+    //     }else{
+    //         sidebar.classLis.add('collapsed');
+    //         sidebar.classList.remove('expanded');
+    //         if(contentWrapper){
+    //             contentWrapper.style.marginLeft = '80px';
+    //         }
+    //     }
+    // }
     
-    // Check on page load
-    checkScreenSize();
+    // window.addEventListener('load', checkScreenSize);
+    // window.addEventListener('resize', checkScreenSize);
     
     // Check on window resize
     window.addEventListener('resize', checkScreenSize);

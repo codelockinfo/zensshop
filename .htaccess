@@ -1,37 +1,13 @@
-# Basic .htaccess for Milano E-commerce
-# Apache 2.4+ compatible
-
-# Prevent Directory Listing
-Options -Indexes
-
-# Protect Config Files (Apache 2.4 syntax)
-<FilesMatch "^(config|\.htaccess|\.env)">
-    Require all denied
-</FilesMatch>
-
-# Enable Rewrite Engine
 RewriteEngine On
+RewriteBase /zensshop/
 
-# Redirect /oecom/ to actual directory name (/zensshop/)
-# This handles cases where old URLs are accessed
-RewriteCond %{REQUEST_URI} ^/oecom/(.*)$
-RewriteRule ^oecom/(.*)$ /zensshop/$1 [R=301,L]
+# Allow access to existing files and directories
+RewriteCond %{REQUEST_FILENAME} -f [OR]
+RewriteCond %{REQUEST_FILENAME} -d
+RewriteRule ^ - [L]
 
-# Remove .php extension from URLs
-# If the request is for a .php file, redirect to URL without extension
-# EXCEPT for /api/ directory (API endpoints must keep .php extension)
-RewriteCond %{REQUEST_URI} !^/zensshop/api/
-RewriteCond %{THE_REQUEST} \s/+(.+?)\.php[\s?] [NC]
-RewriteRule ^ /%1? [R=301,L]
+# Redirect known admin/api paths if needed (optional safety, but -f/-d usually covers it)
 
-# If the requested file doesn't exist and doesn't have .php extension, try adding .php
-# EXCEPT for /api/ directory (API endpoints must keep .php extension)
-RewriteCond %{REQUEST_URI} !^/zensshop/api/
-RewriteCond %{REQUEST_FILENAME} !-f
-RewriteCond %{REQUEST_FILENAME} !-d
-RewriteCond %{REQUEST_FILENAME}.php -f
-RewriteRule ^(.*)$ $1.php [L]
-
-# Prevent direct access to .php files (optional - uncomment if you want to force clean URLs)
-# RewriteCond %{THE_REQUEST} \s/+(.+?)\.php[\s?] [NC]
-# RewriteRule ^ /%1 [R=301,L]
+# Route custom slugs to special-product.php
+# This captures alphanumeric path segments like /summer-sale
+RewriteRule ^([a-zA-Z0-9-_]+)/?$ special-product.php?page=$1 [QSA,L]

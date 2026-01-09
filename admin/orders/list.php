@@ -69,7 +69,7 @@ $orders = $order->getAll($filters);
                 <td><?php echo format_currency($item['total_amount']); ?></td>
                 <td><?php echo $item['total_quantity'] ?? 0; ?></td>
                 <td><?php echo $item['payment_status']; ?></td>
-                <td>
+                <!-- <td>
                     <span class="px-2 py-1 rounded <?php 
                         echo $item['order_status'] === 'Success' || $item['order_status'] === 'delivered' ? 'bg-green-100 text-green-800' : 
                             ($item['order_status'] === 'Cancel' || $item['order_status'] === 'cancelled' ? 'bg-orange-100 text-orange-800' : 
@@ -77,7 +77,29 @@ $orders = $order->getAll($filters);
                     ?>">
                         <?php echo ucfirst($item['order_status']); ?>
                     </span>
-                </td>
+                </td> -->
+              <td>
+    <select
+        class="order-status-select px-2 py-1 rounded border text-sm
+        <?php 
+            echo ($item['order_status'] === 'delivered' || $item['order_status'] === 'success')
+                ? 'bg-green-100 text-green-800'
+                : (($item['order_status'] === 'cancelled' || $item['order_status'] === 'cancel')
+                    ? 'bg-orange-100 text-orange-800'
+                    : 'bg-gray-100 text-gray-800');
+        ?>"
+        data-order-id="<?php echo $item['id']; ?>"
+    >
+        <?php
+        $statuses = ['pending', 'processing', 'shipped', 'delivered', 'cancelled'];
+        foreach ($statuses as $status) {
+            $selected = ($item['order_status'] === $status) ? 'selected' : '';
+            echo "<option value='{$status}' {$selected}>" . ucfirst($status) . "</option>";
+        }
+        ?>
+    </select>
+</td>
+
                 <td>
                     <button class="text-blue-500 hover:text-blue-700">Tracking</button>
                 </td>
@@ -130,6 +152,37 @@ function deleteOrder(id) {
     });
 }
 </script>
+
+<script>
+    document.addEventListener('change', function(e){
+        if(!e.target.classList.contains('order-status-select')) return;
+
+        const orderId = e.target.dataset.orderId;
+        const newStatus = e.target.value;
+
+        fetch(BASE_URL + '/admin/api/orders', {
+            method: 'POST',
+            headers:{
+                'Content-Type':'application/json'
+            },
+            body:JSON.stringify({
+                order_id:orderId,
+                order_status:newStatus
+                
+            })
+        })
+        .then(res => res.json())
+        .then(data => {
+            if(!data.success){
+                console.log('Failed to update order status');
+            }
+        })
+        .catch(err => {
+            console.log('Something went wrong:', err);
+        });
+    })
+</script>
+
 
 <?php require_once __DIR__ . '/../../includes/admin-footer.php'; ?>
 

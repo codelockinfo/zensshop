@@ -278,6 +278,16 @@ $action = $segments[count($segments) - 1] ?? '';  // add, list
                     <i class="fas fa-chart-bar text-md md:text-lg"></i>
                     <span class="sidebar-menu-text">Report</span>
                 </a>
+
+                <a href="<?php echo $baseUrl; ?>/admin/settings.php" class="sidebar-menu-item flex items-center space-x-3 py-2 px-4 mt-2 <?php echo basename($_SERVER['PHP_SELF']) === 'settings.php' ? 'bg-gray-700' : ''; ?>" title="Settings">
+                    <i class="fas fa-cog text-md md:text-lg"></i>
+                    <span class="sidebar-menu-text">Settings</span>
+                </a>
+
+                <a href="<?php echo $baseUrl; ?>/admin/logout.php" class="sidebar-menu-item flex items-center space-x-3 py-2 px-4 mt-2 <?php echo basename($_SERVER['PHP_SELF']) === 'logout.php' ? 'bg-gray-700' : ''; ?>" title="Logout">
+                    <i class="fas fa-sign-out-alt text-md md:text-lg"></i>
+                    <span class="sidebar-menu-text">Logout</span>
+                </a>
             </div>
         </div>
     </aside>
