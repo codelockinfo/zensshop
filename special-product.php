@@ -38,6 +38,45 @@ $mainImage = !empty($landingPage['hero_image']) ? $baseUrl . '/' . $landingPage[
 $images = json_decode($productData['images'] ?? '[]', true);
 $price = $productData['sale_price'] ?? $productData['price'] ?? 0;
 
+// Setup Gallery Pool for Rotation
+$galleryPool = [];
+if (!empty($mainImage)) $galleryPool[] = $mainImage;
+
+// Helper to normalized absolute URL
+$serverProtocol = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off' || $_SERVER['SERVER_PORT'] == 443) ? "https://" : "http://";
+$origin = $serverProtocol . $_SERVER['HTTP_HOST'];
+
+if (is_array($images)) {
+    foreach($images as $img) {
+        // Construct Full Path
+        if (strpos($img, 'http') === 0) {
+            $fullPath = $img;
+        } elseif (strpos($img, '/') === 0) {
+             // Root relative (e.g. /zensshop/assets...)
+             $fullPath = $origin . $img;
+        } else {
+             // Relative to Base URL
+             $fullPath = $baseUrl . '/' . $img;
+        }
+
+        // Deduplicate based on filename to avoid path mismatches (e.g. relative vs absolute)
+        $filename = basename($img);
+        $isDuplicate = false;
+        foreach ($galleryPool as $existing) {
+            if (strpos($existing, $filename) !== false) {
+                $isDuplicate = true;
+                break;
+            }
+        }
+        
+        if (!$isDuplicate) $galleryPool[] = $fullPath;
+    }
+}
+$galleryPool = array_values(array_unique($galleryPool));
+$galleryCount = count($galleryPool);
+$currentImgIdx = 1; // Start from 1 since 0 is used by Hero
+
+
 // Hero Section Content
 $heroTitle = $landingPage['hero_title'] ?: $productData['name'];
 $heroSubtitle = $landingPage['hero_subtitle'] ?: 'Natural Inner Beauty';
@@ -73,22 +112,28 @@ function getContrastColor($hexColor) {
 
 // Style Overrides (Auto-Contrast Text)
 $heroBg = $landingPage['hero_bg_color'] ?: '#E8F0E9';
-$heroText = getContrastColor($heroBg);
+$heroText = $landingPage['hero_text_color'] ?: getContrastColor($heroBg);
+
+$bodyBg = $landingPage['body_bg_color'] ?: '#FFFFFF';
+$bodyText = $landingPage['body_text_color'] ?: getContrastColor($bodyBg); 
+
+$bannerBg = $landingPage['banner_bg_color'] ?: '#FFFFFF';
+$bannerText = $landingPage['banner_text_color'] ?: getContrastColor($bannerBg);
 
 $statsBg = $landingPage['stats_bg_color'] ?: '#F3F6F4';
-$statsText = getContrastColor($statsBg);
+$statsText = $landingPage['stats_text_color'] ?: getContrastColor($statsBg);
 
 $whyBg = $landingPage['why_bg_color'] ?: '#FFFFFF';
-$whyText = getContrastColor($whyBg);
+$whyText = $landingPage['why_text_color'] ?: getContrastColor($whyBg);
 
 $aboutBg = $landingPage['about_bg_color'] ?: '#F9F9F9';
-$aboutText = getContrastColor($aboutBg);
+$aboutText = $landingPage['about_text_color'] ?: getContrastColor($aboutBg);
 
 $testiBg = $landingPage['testimonials_bg_color'] ?: '#FFFFFF';
-$testiText = getContrastColor($testiBg);
+$testiText = $landingPage['testimonials_text_color'] ?: getContrastColor($testiBg);
 
 $newsBg = $landingPage['newsletter_bg_color'] ?: '#E8F0E9';
-$newsText = getContrastColor($newsBg);
+$newsText = $landingPage['newsletter_text_color'] ?: getContrastColor($newsBg);
 
 
 // Decode JSON Configs
@@ -123,6 +168,87 @@ if (empty($statsData)) {
         ['value' => number_format($reviewCount), 'label' => 'Reviews'],
         ['value' => $satisfactionPercent . '%', 'label' => 'Satisfaction']
     ];
+}
+
+// SEO Meta Data Override
+if (!empty($landingPage['meta_title'])) {
+    $pageTitle = $landingPage['meta_title'];
+} else {
+    $pageTitle = $heroTitle; // Default fallback
+}
+
+$metaDescription = $landingPage['meta_description'] ?? '';
+$customSchema = $landingPage['custom_schema'] ?? '';
+
+if (!empty($customSchema)) {
+    // 1. Create Base Placeholders (Calculated values)
+    $replacements = [
+        '{{description}}' => preg_replace('/\s+/', ' ', strip_tags($heroDescription)),
+        '{{url}}' => $baseUrl . '/special-product.php?page=' . $pageSlug,
+        '{{image}}' => $mainImage,
+        '{{currency}}' => $productData['currency'] ?? 'USD',
+        '{{brand}}' => "ZensShop", // Default Brand
+        '{{availability}}' => (isset($productData['quantity']) && $productData['quantity'] <= 0) ? 'https://schema.org/OutOfStock' : 'https://schema.org/InStock',
+        '{{price_valid_until}}' => date('Y-m-d', strtotime('+1 year'))
+    ];
+
+    // 2. Auto-generate placeholders for ALL product fields
+    // This allows you to use {{weight}}, {{sku}}, {{material}}, etc. if they exist in DB
+    if (is_array($productData)) {
+        foreach ($productData as $key => $value) {
+            if (is_scalar($value)) { // Only string/int/float/bool
+                 $replacements['{{' . $key . '}}'] = $value;
+            }
+        }
+    }
+    
+    // 3. Perform Replacement
+    foreach ($replacements as $key => $val) {
+        $customSchema = str_replace($key, $val, $customSchema);
+    }
+} 
+elseif ($productData) {
+    // AUTO-GENERATE standard Product Schema if nothing provided
+    $schemaUrl = $baseUrl . '/special-product.php?page=' . $pageSlug; 
+    $schemaImg = $mainImage; 
+    
+    $availability = 'https://schema.org/InStock'; 
+    if (isset($productData['quantity']) && $productData['quantity'] <= 0) {
+        $availability = 'https://schema.org/OutOfStock';
+    }
+
+    $productSchema = [
+        "@context" => "https://schema.org",
+        "@type" => "Product",
+        "name" => $productData['name'],
+        "description" => strip_tags($heroDescription),
+        "url" => $schemaUrl,
+        "image" => [$schemaImg],
+        "brand" => [
+            "@type" => "Brand",
+            "name" => "ZensShop" 
+        ],
+        "offers" => [
+            "@type" => "Offer",
+            "price" => (float)$price,
+            "priceCurrency" => $productData['currency'] ?? 'USD',
+            "availability" => $availability,
+            "url" => $schemaUrl,
+            "priceValidUntil" => date('Y-m-d', strtotime('+1 year'))
+        ]
+    ];
+    
+    if (!empty($reviewCount) && $reviewCount > 0) {
+        $productSchema['aggregateRating'] = [
+            "@type" => "AggregateRating",
+            "ratingValue" => $avgRating,
+            "reviewCount" => $reviewCount,
+            "bestRating" => "5",
+            "worstRating" => "1"
+        ];
+    }
+    
+    $customSchema = json_encode($productSchema, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES);
 }
 
 // --- 4. HEADER INJECTION ---
@@ -162,15 +288,22 @@ require_once __DIR__ . '/includes/header.php';
 
 <style>
     /* Override font-family for this page if needed, or keep inherited */
-    body { font-family: 'Outfit', sans-serif; }
+    body { font-family: 'Outfit', sans-serif; background-color: var(--body-bg); color: var(--body-text); }
+    footer, footer.bg-white { background-color: var(--body-bg) !important; color: var(--body-text) !important; }
     h1, h2, h3, h4, h5, h6 { font-family: 'Playfair Display', serif; }
 
     /* Dynamic Theme Colors */
     :root {
         --theme-color: <?php echo htmlspecialchars($themeColor); ?>;
         
+        --body-bg: <?php echo htmlspecialchars($landingPage['body_bg_color'] ?? '#ffffff'); ?>;
+        --body-text: <?php echo htmlspecialchars($landingPage['body_text_color'] ?? '#000000'); ?>;
+
         --hero-bg: <?php echo htmlspecialchars($landingPage['hero_bg_color'] ?? '#f9fafb'); ?>;
         --hero-text: <?php echo htmlspecialchars($landingPage['hero_text_color'] ?? '#111827'); ?>;
+
+        --banner-bg: <?php echo htmlspecialchars($landingPage['banner_bg_color'] ?? '#ffffff'); ?>;
+        --banner-text: <?php echo htmlspecialchars($landingPage['banner_text_color'] ?? '#000000'); ?>;
         
         --stats-bg: <?php echo htmlspecialchars($landingPage['stats_bg_color'] ?? '#ffffff'); ?>;
         --stats-text: <?php echo htmlspecialchars($landingPage['stats_text_color'] ?? '#111827'); ?>;
@@ -187,6 +320,15 @@ require_once __DIR__ . '/includes/header.php';
         --news-bg: <?php echo htmlspecialchars($landingPage['newsletter_bg_color'] ?? '#ffffff'); ?>;
         --news-text: <?php echo htmlspecialchars($landingPage['newsletter_text_color'] ?? '#111827'); ?>;
     }
+
+    /* Section Colors */
+    .hero-section { background-color: var(--hero-bg); color: var(--hero-text); }
+    .banner-section { background-color: var(--banner-bg); color: var(--banner-text); }
+    .stats-section { background-color: var(--stats-bg); color: var(--stats-text); }
+    .why-section { background-color: var(--why-bg); color: var(--why-text); }
+    .about-section { background-color: var(--about-bg); color: var(--about-text); }
+    .testi-section { background-color: var(--testi-bg); color: var(--testi-text); }
+    .news-section { background-color: var(--news-bg); color: var(--news-text); }
 
     .text-theme { color: var(--theme-color); }
     .bg-theme { background-color: var(--theme-color); }
@@ -210,10 +352,10 @@ require_once __DIR__ . '/includes/header.php';
 </style>
 
 <!-- Main Wrapper -->
-<div class="landing-page-wrapper">
+<div class="landing-page-wrapper space-y-3 mb-3">
 
     <!-- Hero Section -->
-    <section class="hero-section min-h-screen relative flex items-center pt-25 pb-25">
+    <section class="hero-section min-h-screen relative flex items-center pt-10 pb-20 md:py-24">
         <div class="container mx-auto px-6 grid grid-cols-1 lg:grid-cols-2 gap-16 items-center">
             <div class="z-10 order-2 lg:order-1 text-center lg:text-left">
                 <h2 class="text-xl font-semibold tracking-widest uppercase mb-4 opacity-60"><?php echo htmlspecialchars($heroSubtitle); ?></h2>
@@ -226,7 +368,7 @@ require_once __DIR__ . '/includes/header.php';
                 </div>
                 
                 <button onclick="spAddToCart(<?php echo $productData['id']; ?>)" class="btn-accent px-10 py-4 rounded text-lg font-medium tracking-wide uppercase transition shadow-xl hover:shadow-2xl transform hover:-translate-y-0.5">
-                    Add to your cart — <?php echo format_currency($price); ?>
+                    Add to your cart — <?php echo format_price($price, $productData['currency'] ?? 'USD'); ?>
                 </button>
             </div>
             
@@ -244,7 +386,7 @@ require_once __DIR__ . '/includes/header.php';
     // 1. Stats Section
     if ($landingPage['show_stats']) {
         ob_start(); ?>
-        <section class="py-20 stats-section">
+        <section class="pt-10 pb-20 md:py-24 stats-section">
             <div class="container mx-auto px-6">
                 <div class="grid grid-cols-2 md:grid-cols-4 gap-12 text-center divide-x divide-gray-200">
                     <?php foreach($statsData as $stat): ?>
@@ -281,28 +423,46 @@ require_once __DIR__ . '/includes/header.php';
         foreach ($bannerSections as $banner): 
             $banImg = $banner['image'] ?? '';
             $banMobImg = $banner['mobile_image'] ?? '';
+            $banVideo = $banner['video_url'] ?? '';
+            $banMobVideo = $banner['mobile_video_url'] ?? '';
+            
             $banHead = $banner['heading'] ?? '';
             $banText = $banner['text'] ?? '';
             $banBtn = $banner['btn_text'] ?? '';
             $banLink = $banner['btn_link'] ?? '';
             
-            if($banImg && strpos($banImg, 'http') !== 0) $banImg = $baseUrl . '/' . $banImg;
-            if($banMobImg && strpos($banMobImg, 'http') !== 0) $banMobImg = $baseUrl . '/' . $banMobImg;
+            // 1. Resolve Desktop Media
+            $desktopAsset = $banVideo ?: $banImg;
+            $isDesktopVideo = !empty($banVideo) || preg_match('/\.(mp4|webm|ogg)$/i', $banImg);
+            if($desktopAsset && strpos($desktopAsset, 'http') !== 0) $desktopAsset = $baseUrl . '/' . $desktopAsset;
             
-            if (!$banImg) continue; 
+            // 2. Resolve Mobile Media
+            $mobileAsset = $banMobVideo ?: $banMobImg;
+            $isMobileVideo = !empty($banMobVideo) || ($mobileAsset && preg_match('/\.(mp4|webm|ogg)$/i', $mobileAsset));
+            if($mobileAsset && strpos($mobileAsset, 'http') !== 0) $mobileAsset = $baseUrl . '/' . $mobileAsset;
             
-            // Logic to wrap image in link if link exists but NO button
+            if (!$desktopAsset && !$mobileAsset) continue; 
+            
+            // Logic to wrap media in link if link exists but NO button
             $wrapLink = !empty($banLink) && empty($banBtn);
         ?>
-        <section class="w-full relative my-10 px-20 md:px-40">
+        <section class="banner-section w-full relative my-10 px-20 md:px-40 py-10">
             <?php if ($wrapLink): ?><a href="<?php echo htmlspecialchars($banLink); ?>" class="block"><?php endif; ?>
 
-            <?php if($banImg): ?>
-            <img src="<?php echo htmlspecialchars($banImg); ?>" class="block w-full h-auto <?php echo $banMobImg ? 'hidden md:block' : ''; ?>" alt="Banner">
+            <!-- Desktop Media -->
+            <?php if($isDesktopVideo): ?>
+                <video src="<?php echo htmlspecialchars($desktopAsset); ?>" autoplay muted loop playsinline class="block w-full h-auto object-cover <?php echo $mobileAsset ? 'hidden md:block' : ''; ?>"></video>
+            <?php else: ?>
+                <img src="<?php echo htmlspecialchars($desktopAsset); ?>" class="block w-full h-auto <?php echo $mobileAsset ? 'hidden md:block' : ''; ?>" alt="Banner">
             <?php endif; ?>
             
-            <?php if($banMobImg): ?>
-            <img src="<?php echo htmlspecialchars($banMobImg); ?>" class="block w-full h-auto md:hidden" alt="Banner Mobile">
+            <!-- Mobile Media -->
+            <?php if($mobileAsset): ?>
+                <?php if($isMobileVideo): ?>
+                    <video src="<?php echo htmlspecialchars($mobileAsset); ?>" autoplay muted loop playsinline class="block w-full h-auto object-cover md:hidden"></video>
+                <?php else: ?>
+                    <img src="<?php echo htmlspecialchars($mobileAsset); ?>" class="block w-full h-auto md:hidden" alt="Banner Mobile">
+                <?php endif; ?>
             <?php endif; ?>
 
             <?php if ($wrapLink): ?></a><?php endif; ?>
@@ -343,7 +503,7 @@ require_once __DIR__ . '/includes/header.php';
             ];
         }
         ob_start(); ?>
-        <section class="py-32 why-section">
+        <section class="pt-10 pb-20 md:py-24 why-section">
             <div class="container mx-auto px-6 text-center">
                 <h2 class="text-5xl font-heading uppercase tracking-widest mb-6"><?php echo htmlspecialchars($whyTitle); ?></h2>
                 <div class="grid grid-cols-1 md:grid-cols-3 gap-16 max-w-6xl mx-auto mt-20">
@@ -366,9 +526,17 @@ require_once __DIR__ . '/includes/header.php';
     if ($landingPage['show_about']) {
         $aboutTitle = $landingPage['about_title'] ?: 'About Us';
         $aboutText = $landingPage['about_text'] ?: ($landingPage['hero_description'] ?: $productData['description']);
-        $aboutImage = !empty($landingPage['about_image']) ? (strpos($landingPage['about_image'], 'http') === 0 ? $landingPage['about_image'] : $baseUrl . '/' . $landingPage['about_image']) : $mainImage;
+        
+        // Image Logic: Manual override OR next in gallery
+        if (!empty($landingPage['about_image'])) {
+            $aboutImage = (strpos($landingPage['about_image'], 'http') === 0 ? $landingPage['about_image'] : $baseUrl . '/' . $landingPage['about_image']);
+        } else {
+            $aboutImage = $galleryPool[$currentImgIdx % $galleryCount];
+            $currentImgIdx++;
+        }
+        
         ob_start(); ?>
-        <section class="py-32 about-section overflow-hidden">
+        <section class="pt-10 pb-20 md:py-24 about-section overflow-hidden">
             <div class="container mx-auto px-6">
                 <div class="flex flex-col lg:flex-row items-center gap-20">
                     <div class="lg:w-1/2">
@@ -395,7 +563,7 @@ require_once __DIR__ . '/includes/header.php';
     if ($landingPage['show_testimonials']) {
         $testimonialsTitle = $landingPage['testimonials_title'] ?: 'Testimonials';
         ob_start(); ?>
-        <section class="py-25 testi-section border-t border-gray-100">
+        <section class="pt-10 pb-20 md:py-24 testi-section border-t border-gray-100">
              <div class="container mx-auto px-6 text-center">
                 <h2 class="text-5xl font-heading font-thin mb-20 uppercase tracking-widest"><?php echo htmlspecialchars($testimonialsTitle); ?></h2>
                 <div id="testimonialsList" class="mx-auto">
@@ -410,20 +578,32 @@ require_once __DIR__ . '/includes/header.php';
     if ($landingPage['show_newsletter']) {
         $newsletterTitle = $landingPage['newsletter_title'] ?: 'Subscribe News';
         $newsletterText = $landingPage['newsletter_text'] ?: 'Enter your email below.';
+        
+        // Image Logic: Next in gallery
+        $newsImage = $galleryPool[$currentImgIdx % $galleryCount];
+        $currentImgIdx++;
+
         ob_start(); ?>
-        <section class="py-25 news-section">
-            <div class="container mx-auto px-6">
-                <div class="flex flex-col md:flex-row items-center justify-between max-w-6xl mx-auto bg-white p-16 rounded-2xl shadow-lg">
-                    <div class="md:w-1/2 mb-10 md:mb-0 pr-10 border-r border-gray-100 flex justify-center">
-                         <img src="<?php echo htmlspecialchars($mainImage); ?>" alt="Newsletter" class="w-48 h-auto object-contain">
+        <section class="pt-10 pb-20 md:py-24 news-section">
+            <div class="container mx-auto px-4 md:px-6">
+                <div class="flex flex-col md:flex-row items-center justify-between max-w-6xl mx-auto bg-white p-6 md:p-12 lg:p-16 rounded-2xl shadow-lg border border-gray-100/50">
+                    <!-- Image / Icon -->
+                    <div class="w-full md:w-5/12 mb-8 md:mb-0 md:pr-10 border-b md:border-b-0 md:border-r border-gray-100 flex justify-center pb-8 md:pb-0">
+                         <img src="<?php echo htmlspecialchars($newsImage); ?>" alt="Newsletter" class="w-100 md:w-100 h-auto object-contain drop-shadow-md hover:scale-105 transition duration-300">
                     </div>
-                    <div class="md:w-1/2 pl-0 md:pl-16 w-full">
-                         <h2 class="text-4xl font-heading mb-4 text-gray-800"><?php echo htmlspecialchars($newsletterTitle); ?></h2>
-                         <p class="text-gray-500 text-lg mb-8"><?php echo htmlspecialchars($newsletterText); ?></p>
-                         <div class="flex w-full">
-                             <input type="email" placeholder="Enter your email" class="flex-grow px-6 py-4 bg-gray-50 border border-gray-200 rounded-l focus:outline-none text-lg">
-                             <button class="btn-accent px-8 py-4 rounded-r text-base font-bold uppercase transition whitespace-nowrap">Get Started</button>
-                         </div>
+                    
+                    <!-- Content -->
+                    <div class="w-full md:w-7/12 md:pl-10 lg:pl-16 text-center md:text-left">
+                         <h2 class="text-2xl md:text-3xl lg:text-4xl font-heading mb-4 text-gray-800 font-bold tracking-tight"><?php echo htmlspecialchars($newsletterTitle); ?></h2>
+                         <p class="text-gray-500 text-base md:text-lg mb-8 leading-relaxed max-w-lg mx-auto md:mx-0"><?php echo htmlspecialchars($newsletterText); ?></p>
+                         
+                         <form onsubmit="event.preventDefault();" class="flex flex-col sm:flex-row w-full gap-3 sm:gap-0">
+                             <input type="email" placeholder="Enter your email" class="w-full flex-grow px-5 py-3 md:px-6 md:py-4 bg-gray-50 border border-gray-200 rounded-lg sm:rounded-r-none focus:outline-none text-base md:text-lg focus:ring-2 focus:ring-gray-200 transition">
+                             <button class="w-full sm:w-auto btn-accent px-8 py-3 md:py-4 rounded-lg sm:rounded-l-none text-sm md:text-base font-bold uppercase transition whitespace-nowrap shadow-md hover:shadow-lg transform active:scale-95">
+                                Get Started
+                             </button>
+                         </form>
+                         <p class="text-xs text-gray-400 mt-4"><i class="fas fa-lock mr-1"></i> Your privacy is our priority.</p>
                     </div>
                 </div>
             </div>
@@ -554,4 +734,19 @@ require_once __DIR__ . '/includes/header.php';
     });
     </script>
 </div>
+
 <?php require_once __DIR__ . '/includes/footer.php'; ?>
+
+<!-- SEO Content / Footer Extra -->
+<?php if (!empty($landingPage['show_footer_extra']) && !empty($landingPage['footer_extra_content'])): 
+    $footerBg = $landingPage['footer_extra_bg'] ?? '#f8f9fa';
+    $footerText = $landingPage['footer_extra_text'] ?? '#333333';
+?>
+<section class="pt-10 pb-20 md:py-24 border-t border-gray-100 relative z-10" style="background-color: <?php echo $footerBg; ?>; color: <?php echo $footerText; ?>;">
+    <div class="container mx-auto px-4">
+        <div class="prose max-w-none leading-relaxed" style="--tw-prose-body: <?php echo $footerText; ?>; --tw-prose-headings: <?php echo $footerText; ?>; --tw-prose-links: <?php echo $footerText; ?>; color: <?php echo $footerText; ?>;">
+            <?php echo $landingPage['footer_extra_content']; ?>
+        </div>
+    </div>
+</section>
+<?php endif; ?>

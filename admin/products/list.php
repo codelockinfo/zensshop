@@ -91,7 +91,7 @@ $products = $db->fetchAll($sql, $params);
                     </div>
                 </td>
                 <td>#<?php echo $item['id']; ?></td>
-                <td>$<?php echo number_format($item['price'], 2); ?></td>
+                <td><?php echo format_price($item['price'], $item['currency'] ?? 'USD'); ?></td>
                 <td><?php echo $item['stock_quantity']; ?></td>
                 <td><?php echo $item['sale_price'] ? round((($item['price'] - $item['sale_price']) / $item['price']) * 100) : 0; ?>%</td>
                 <td>

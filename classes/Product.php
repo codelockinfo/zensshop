@@ -133,9 +133,9 @@ class Product {
                 // Insert product with custom 10-digit product_id
                 $productId = $this->db->insert(
                     "INSERT INTO products 
-                    (product_id, name, slug, sku, description, short_description, category_id, price, sale_price, 
+                    (product_id, name, slug, sku, description, short_description, category_id, price, currency, sale_price, 
                      stock_quantity, stock_status, images, featured_image, gender, brand, status, featured) 
-                    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+                    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
                     [
                         $customProductId,  // 10-digit random product ID (e.g., 5654148741)
                         $data['name'],
@@ -145,6 +145,7 @@ class Product {
                         $data['short_description'] ?? null,
                         $primaryCategoryId,
                         $data['price'] ?? 0,
+                        $data['currency'] ?? 'INR',
                         $data['sale_price'] ?? null,
                         $data['stock_quantity'] ?? 0,
                         $data['stock_status'] ?? 'in_stock',
@@ -209,7 +210,7 @@ class Product {
                 $fields = [];
                 $params = [];
                 
-                $allowedFields = ['name', 'description', 'short_description', 'category_id', 'price', 
+                $allowedFields = ['name', 'description', 'short_description', 'category_id', 'price', 'currency', 
                                  'sale_price', 'stock_quantity', 'stock_status', 'images', 'featured_image',
                                  'gender', 'brand', 'status', 'featured'];
                 

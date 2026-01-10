@@ -8,6 +8,11 @@ require_once __DIR__ . '/../classes/Cart.php';
 $cart = new Cart();
 $cartCount = $cart->getCount();
 
+// Fetch Landing Pages for Menu
+require_once __DIR__ . '/../classes/Database.php';
+$db = Database::getInstance();
+$landingPagesList = $db->fetchAll("SELECT name, slug FROM landing_pages ORDER BY name ASC");
+
 // Get base URL using the centralized function
 $baseUrl = getBaseUrl();
 
@@ -35,7 +40,17 @@ if (!function_exists('url')) {
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title><?php echo isset($pageTitle) ? $pageTitle . ' - ' : ''; ?>Milano - Elegant Jewelry Store</title>
+    <title><?php echo isset($pageTitle) ? htmlspecialchars($pageTitle) . ' - ' : ''; ?>Milano - Elegant Jewelry Store</title>
+    
+    <?php if (!empty($metaDescription)): ?>
+    <meta name="description" content="<?php echo htmlspecialchars($metaDescription); ?>">
+    <?php endif; ?>
+
+    <?php if (!empty($customSchema)): ?>
+    <script type="application/ld+json">
+        <?php echo $customSchema; // Outputting raw JSON as requested ?>
+    </script>
+    <?php endif; ?>
     
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
@@ -54,7 +69,7 @@ if (!function_exists('url')) {
     // Make BASE_URL available globally for all frontend pages
     const BASE_URL = '<?php echo $baseUrl; ?>';
     // Make currency symbol available globally
-    const CURRENCY_SYMBOL = '<?php echo defined("CURRENCY_SYMBOL") ? CURRENCY_SYMBOL : "₹"; ?>';
+    const CURRENCY_SYMBOL = '<?php echo defined("CURRENCY_SYMBOL") ? CURRENCY_SYMBOL : "$"; ?>';
     </script>
 </head>
 <body class="font-body">
@@ -99,11 +114,11 @@ if (!function_exists('url')) {
                     <button class="flex items-center gap-2 hover:text-gray-300 transition cursor-pointer focus:outline-none whitespace-nowrap" id="currencySelector">
                         <span class="flex items-center gap-2">
                             <span class="rounded-full border border-gray-300 overflow-hidden" style="width: 20px; height: 20px; display: inline-flex; align-items: center; justify-content: center;">
-                                <img src="https://cdn.shopify.com/static/images/flags/us.svg" alt="United States" id="selectedFlagImg" class="w-full h-full object-cover" style="width: 20px; height: 20px;">
+                                <img src="https://cdn.shopify.com/static/images/flags/in.svg" alt="India" id="selectedFlagImg" class="w-full h-full object-cover" style="width: 20px; height: 20px;">
                             </span>
                             <span class="text-sm">
                                 <span class="text-gray-400" id="countryCode"></span>
-                                <span id="selectedCurrency" class="text-white">United States (USD $)</span>
+                                <span id="selectedCurrency" class="text-white">India (INR ₹)</span>
                             </span>
                         </span>
                         <svg class="icon-down flex-shrink-0" width="10" height="6" style="margin-left: 4px;">
@@ -112,6 +127,14 @@ if (!function_exists('url')) {
                     </button>
                     <!-- Currency Dropdown -->
                     <div class="absolute right-0 top-full mt-2 bg-white text-black shadow-lg rounded-lg py-1 min-w-[240px] hidden z-50 border border-gray-200" id="currencyDropdown">
+                        <a href="#" class="block px-4 py-2.5 hover:bg-gray-50 transition currency-option" data-flag="https://cdn.shopify.com/static/images/flags/in.svg" data-code="in" data-currency="India (INR ₹)">
+                            <span class="flex items-center gap-2">
+                                <span class="rounded-full border border-gray-300 overflow-hidden" style="width: 20px; height: 20px; display: inline-flex; align-items: center; justify-content: center;">
+                                    <img src="https://cdn.shopify.com/static/images/flags/in.svg" alt="India" class="w-full h-full object-cover" style="width: 20px; height: 20px;">
+                                </span>
+                                <span class="text-sm">India (INR ₹)</span>
+                            </span>
+                        </a>
                         <a href="#" class="block px-4 py-2.5 hover:bg-gray-50 transition currency-option" data-flag="https://cdn.shopify.com/static/images/flags/cn.svg" data-code="cn" data-currency="China (CNY ¥)">
                             <span class="flex items-center gap-2">
                                 <span class="rounded-full border border-gray-300 overflow-hidden" style="width: 20px; height: 20px; display: inline-flex; align-items: center; justify-content: center;">
@@ -319,7 +342,21 @@ if (!function_exists('url')) {
                         Blog
                         <i class="fas fa-chevron-down text-xs ml-1"></i>
                     </a>
-                        <a href="#" class="text-black hover:text-red-700 transition font-sans text-md nav-link">Buy Theme!</a>
+                    <div class="relative group">
+                        <a href="#" class="text-black hover:text-red-700 transition font-sans text-md nav-link flex items-center">
+                           Product pages! 
+                            <i class="fas fa-chevron-down text-xs ml-1"></i>
+                        </a>
+                        <div class="absolute top-full left-0 w-56 pt-2 hidden group-hover:block z-50">
+                            <div class="bg-white shadow-xl border border-gray-100 rounded-lg py-2 flex flex-col">
+                                <?php foreach($landingPagesList as $lpPage): ?>
+                                    <a href="<?php echo url('special-product.php?page='.$lpPage['slug']); ?>" class="px-4 py-2 hover:bg-gray-50 text-sm text-gray-700 hover:text-red-700 transition whitespace-nowrap overflow-hidden text-ellipsis">
+                                        <?php echo htmlspecialchars($lpPage['name']); ?>
+                                    </a>
+                                <?php endforeach; ?>
+                            </div>
+                        </div>
+                    </div>
                 </div>
                 
                 <!-- Right Icons -->

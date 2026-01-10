@@ -76,6 +76,9 @@ class Cart {
                     if (empty($item['slug'])) {
                         $item['slug'] = $product['slug'] ?? '';
                     }
+                    if (empty($item['currency'])) {
+                        $item['currency'] = $product['currency'] ?? 'USD';
+                    }
                 }
             }
             
@@ -106,7 +109,7 @@ class Cart {
      */
     private function getCartFromDB($userId) {
         $items = $this->db->fetchAll(
-            "SELECT c.*, p.name, p.price, p.sale_price, p.featured_image, p.stock_quantity, p.stock_status, p.slug
+            "SELECT c.*, p.name, p.price, p.currency, p.sale_price, p.featured_image, p.stock_quantity, p.stock_status, p.slug
              FROM cart c
              INNER JOIN products p ON c.product_id = p.id
              WHERE c.user_id = ?",
@@ -145,6 +148,7 @@ class Cart {
                 'quantity' => $item['quantity'],
                 'name' => $item['name'],
                 'price' => $item['sale_price'] ?? $item['price'],
+                'currency' => $item['currency'] ?? 'USD',
                 'image' => $productImage,
                 'slug' => $item['slug'] ?? ''
             ];
@@ -214,6 +218,7 @@ class Cart {
                 'quantity' => $quantity,
                 'name' => $product['name'],
                 'price' => $product['sale_price'] ?? $product['price'],
+                'currency' => $product['currency'] ?? 'USD',
                 'image' => $productImage,
                 'slug' => $product['slug'] ?? ''
             ];

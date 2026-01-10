@@ -11,6 +11,10 @@ $cartTotal = $cart->getTotal();
 <section class="py-16 md:py-24 bg-gray-50 min-h-screen">
     <div class="container mx-auto px-4">
         <h1 class="text-4xl font-heading font-bold mb-8">Shopping Cart</h1>
+        <?php 
+            // Determine currency for totals (use first item's currency or default)
+            $cartCurrency = !empty($cartItems) ? ($cartItems[0]['currency'] ?? 'USD') : 'USD';
+        ?>
         
         <?php if (empty($cartItems)): ?>
         <div class="bg-white rounded-lg p-12 text-center">
@@ -43,7 +47,7 @@ $cartTotal = $cart->getTotal();
                                     <?php echo htmlspecialchars($item['name']); ?>
                                 </a>
                             </h3>
-                            <p class="text-gray-600">Price: <span class="item-price"><?php echo format_currency($item['price']); ?></span></p>
+                            <p class="text-gray-600">Price: <span class="item-price"><?php echo format_price($item['price'], $item['currency'] ?? 'USD'); ?></span></p>
                         </div>
                         <div class="flex items-center space-x-4">
                             <div class="flex items-center border rounded">
@@ -54,7 +58,7 @@ $cartTotal = $cart->getTotal();
                                         class="px-4 py-2 hover:bg-gray-100">+</button>
                             </div>
                             <p class="text-xl font-bold w-24 text-right item-total">
-                                <span><?php echo format_currency($item['price'] * $item['quantity']); ?></span>
+                                <span><?php echo format_price($item['price'] * $item['quantity'], $item['currency'] ?? 'USD'); ?></span>
                             </p>
                             <button onclick="showInlineRemoveConfirm(<?php echo $item['product_id']; ?>)" 
                                     class="text-red-500 hover:text-red-700">
@@ -97,19 +101,19 @@ $cartTotal = $cart->getTotal();
                     <div class="space-y-4 mb-6">
                         <div class="flex justify-between">
                             <span>Subtotal</span>
-                            <span id="cartSubtotal"><?php echo format_currency($cartTotal); ?></span>
+                            <span id="cartSubtotal"><?php echo format_price($cartTotal, $cartCurrency); ?></span>
                         </div>
                         <div class="flex justify-between">
                             <span>Shipping</span>
-                            <span><?php echo format_currency(0); ?></span>
+                            <span><?php echo format_price(0, $cartCurrency); ?></span>
                         </div>
                         <div class="flex justify-between">
                             <span>Tax</span>
-                            <span><?php echo format_currency(0); ?></span>
+                            <span><?php echo format_price(0, $cartCurrency); ?></span>
                         </div>
                         <div class="border-t pt-4 flex justify-between text-xl font-bold">
                             <span>Total</span>
-                            <span id="cartTotal"><?php echo format_currency($cartTotal); ?></span>
+                            <span id="cartTotal"><?php echo format_price($cartTotal, $cartCurrency); ?></span>
                         </div>
                     </div>
                     <a href="<?php echo url('checkout'); ?>" 

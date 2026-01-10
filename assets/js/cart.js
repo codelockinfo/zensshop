@@ -294,8 +294,9 @@ async function updateCartItem(productId, quantity) {
                     if (data.total !== undefined) {
                         const cartSubtotal = document.getElementById('cartSubtotal');
                         const cartTotal = document.getElementById('cartTotal');
-                        if (cartSubtotal) cartSubtotal.textContent = formatCurrency(data.total);
-                        if (cartTotal) cartTotal.textContent = formatCurrency(data.total);
+                        const currency = cartData.length > 0 ? (cartData[0].currency || 'USD') : 'USD';
+                        if (cartSubtotal) cartSubtotal.textContent = formatCurrency(data.total, currency);
+                        if (cartTotal) cartTotal.textContent = formatCurrency(data.total, currency);
                     }
                 } else {
                     // Item not found, reload page
@@ -455,7 +456,7 @@ function updateCartUI() {
                 <p>Your cart is empty</p>
             </div>
         `;
-        if (cartTotal) cartTotal.textContent = formatCurrency(0);
+        if (cartTotal) cartTotal.textContent = formatCurrency(0, 'USD');
         return;
     }
     
@@ -493,7 +494,7 @@ function updateCartUI() {
                     <img src="${escapeHtml(imageUrl)}" alt="${escapeHtml(item.name)}" class="w-20 h-20 object-cover rounded" onerror="this.src='data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iODAiIGhlaWdodD0iODAiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+PHJlY3Qgd2lkdGg9IjgwIiBoZWlnaHQ9IjgwIiBmaWxsPSIjRjNGNEY2Ii8+PGNpcmNsZSBjeD0iNDAiIGN5PSI0MCIgcj0iMjAiIGZpbGw9IiM5QjdBOEEiLz48L3N2Zz4='">
                     <div class="flex-1">
                         <h4 class="font-semibold text-sm mb-2">${escapeHtml(item.name)}</h4>
-                        <p class="text-gray-600 text-sm">${formatCurrency(itemPrice)}</p>
+                        <p class="text-gray-600 text-sm">${formatCurrency(itemPrice, item.currency)}</p>
                         <div class="flex items-center space-x-2 mt-2">
                             <button onclick="updateCartItem(${item.product_id}, ${itemQuantity - 1})" class="w-8 h-8 border rounded flex items-center justify-center hover:bg-gray-100 text-sm">-</button>
                             <span class="w-8 text-center text-sm">${itemQuantity}</span>
@@ -501,7 +502,7 @@ function updateCartUI() {
                         </div>
                     </div>
                     <div class="text-right">
-                        <p class="font-semibold text-sm">${formatCurrency(itemTotal)}</p>
+                        <p class="font-semibold text-sm">${formatCurrency(itemTotal, item.currency)}</p>
                         <button onclick="showSideCartInlineRemoveConfirm(${item.product_id})" class="text-red-500 hover:text-red-700 mt-2 text-sm" title="Remove">
                             <i class="fas fa-trash"></i>
                         </button>
@@ -527,7 +528,8 @@ function updateCartUI() {
     });
     
     cartItemsContainer.innerHTML = html;
-    if (cartTotal) cartTotal.textContent = formatCurrency(total);
+    const cartCurrency = cartData.length > 0 ? (cartData[0].currency || 'USD') : 'USD';
+    if (cartTotal) cartTotal.textContent = formatCurrency(total, cartCurrency);
 }
 
 // Update cart count badge
@@ -591,8 +593,29 @@ function escapeHtml(text) {
 }
 
 // Format currency
-function formatCurrency(amount) {
-    const symbol = typeof CURRENCY_SYMBOL !== 'undefined' ? CURRENCY_SYMBOL : '₹';
+function formatCurrency(amount, currencyCode) {
+    const symbols = {
+        'USD': '$',
+        'EUR': '€',
+        'GBP': '£',
+        'INR': '₹',
+        'CAD': 'C$',
+        'AUD': 'A$',
+        'JPY': '¥',
+        'KRW': '₩',
+        'CNY': '¥',
+        'RUB': '₽'
+    };
+    
+    // If currencyCode provided, use it
+    if (currencyCode) {
+        const code = currencyCode.toUpperCase();
+        const symbol = symbols[code] || '$';
+        return symbol + parseFloat(amount).toFixed(2);
+    }
+
+    // Fallback to global symbol
+    const symbol = typeof CURRENCY_SYMBOL !== 'undefined' ? CURRENCY_SYMBOL : '$';
     return symbol + parseFloat(amount).toFixed(2);
 }
 

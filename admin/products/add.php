@@ -26,6 +26,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             'category_id' => !empty($_POST['category_ids'][0]) ? $_POST['category_ids'][0] : null,
             'category_ids' => $_POST['category_ids'] ?? [],
             'price' => $_POST['price'] ?? 0,
+            'currency' => $_POST['currency'] ?? 'USD',
             'sale_price' => $_POST['sale_price'] ?? null,
             'stock_quantity' => $_POST['stock_quantity'] ?? 0,
             'stock_status' => $_POST['stock_status'] ?? 'in_stock',
@@ -288,6 +289,18 @@ $categories = $db->fetchAll("SELECT * FROM categories WHERE status = 'active' OR
         <div class="admin-card">
             <h2 class="text-lg md:text-xl font-bold mb-4">Product Details</h2>
             
+            <div class="admin-form-group">
+                <label class="admin-form-label">Currency *</label>
+                <select name="currency" required class="admin-form-select">
+                    <option value="INR" selected>INR (₹)</option>
+                    <option value="USD">USD ($)</option>
+                    <option value="EUR">EUR (€)</option>
+                    <option value="GBP">GBP (£)</option>
+                    <option value="CAD">CAD ($)</option>
+                    <option value="AUD">AUD ($)</option>
+                </select>
+            </div>
+
             <div class="admin-form-group">
                 <label class="admin-form-label">Price *</label>
                 <input type="number" 

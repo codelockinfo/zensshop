@@ -136,13 +136,13 @@ $mainImage = getProductImage($productData);
             <div class="space-y-4">
                 <div>
                     <label class="admin-form-label">Price</label>
-                    <p class="text-2xl font-bold text-gray-900">$<?php echo number_format($productData['price'], 2); ?></p>
+                    <p class="text-2xl font-bold text-gray-900"><?php echo format_price($productData['price'], $productData['currency'] ?? 'USD'); ?></p>
                 </div>
                 
                 <?php if ($productData['sale_price']): ?>
                 <div>
                     <label class="admin-form-label">Sale Price</label>
-                    <p class="text-xl font-bold text-red-600">$<?php echo number_format($productData['sale_price'], 2); ?></p>
+                    <p class="text-xl font-bold text-red-600"><?php echo format_price($productData['sale_price'], $productData['currency'] ?? 'USD'); ?></p>
                     <p class="text-sm text-gray-500">
                         <?php 
                         $discount = round((($productData['price'] - $productData['sale_price']) / $productData['price']) * 100);

@@ -40,6 +40,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             'category_id' => !empty($_POST['category_ids'][0]) ? $_POST['category_ids'][0] : null,
             'category_ids' => $_POST['category_ids'] ?? [],
             'price' => $_POST['price'] ?? 0,
+            'currency' => $_POST['currency'] ?? 'USD',
             'sale_price' => $_POST['sale_price'] ?? null,
             'stock_quantity' => $_POST['stock_quantity'] ?? 0,
             'stock_status' => $_POST['stock_status'] ?? 'in_stock',
@@ -324,6 +325,18 @@ $existingVariants = $product->getVariants($productId);
         
         <div class="admin-card">
             <h2 class="text-xl font-bold mb-4">Product Details</h2>
+            
+            <div class="admin-form-group">
+                <label class="admin-form-label">Currency *</label>
+                <select name="currency" required class="admin-form-select">
+                    <option value="USD" <?php echo ($productData['currency'] ?? 'INR') === 'USD' ? 'selected' : ''; ?>>USD ($)</option>
+                    <option value="EUR" <?php echo ($productData['currency'] ?? '') === 'EUR' ? 'selected' : ''; ?>>EUR (€)</option>
+                    <option value="GBP" <?php echo ($productData['currency'] ?? '') === 'GBP' ? 'selected' : ''; ?>>GBP (£)</option>
+                    <option value="INR" <?php echo ($productData['currency'] ?? 'INR') === 'INR' ? 'selected' : ''; ?>>INR (₹)</option>
+                    <option value="CAD" <?php echo ($productData['currency'] ?? '') === 'CAD' ? 'selected' : ''; ?>>CAD ($)</option>
+                    <option value="AUD" <?php echo ($productData['currency'] ?? '') === 'AUD' ? 'selected' : ''; ?>>AUD ($)</option>
+                </select>
+            </div>
             
             <div class="admin-form-group">
                 <label class="admin-form-label">Price *</label>

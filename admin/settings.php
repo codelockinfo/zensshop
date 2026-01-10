@@ -63,10 +63,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $heroSubtitle = $_POST['hero_subtitle'];
         $heroDesc = $_POST['hero_description'];
         $themeColor = $_POST['theme_color'];
+        $bodyBg = $_POST['body_bg_color'] ?? '#ffffff';
+        $bodyText = $_POST['body_text_color'] ?? '#000000';
         
         // Colors
         $heroBg = $_POST['hero_bg_color'] ?? '#E8F0E9';
         $heroText = $_POST['hero_text_color'] ?? '#4A4A4A';
+        $bannerBg = $_POST['banner_bg_color'] ?? '#FFFFFF';
+        $bannerText = $_POST['banner_text_color'] ?? '#000000';
         $statsBg = $_POST['stats_bg_color'] ?? '';
         $statsText = $_POST['stats_text_color'] ?? '';
         $whyBg = $_POST['why_bg_color'];
@@ -119,26 +123,38 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $mobImgUrl = $item['mobile_image_url'] ?? '';
 
                 // Check for new upload: Desktop
-                if (isset($_FILES['banner_items']['name'][$index]['image_file']) && $_FILES['banner_items']['error'][$index]['image_file'] === UPLOAD_ERR_OK) {
-                     $fname = time() . '_' . $index . '_' . preg_replace('/[^a-zA-Z0-9._-]/', '', basename($_FILES['banner_items']['name'][$index]['image_file']));
-                     $target = $uploadDir . $fname;
-                     if (move_uploaded_file($_FILES['banner_items']['tmp_name'][$index]['image_file'], $target)) {
-                         $imgUrl = 'assets/images/banner/' . $fname;
+                if (isset($_FILES['banner_items']['name'][$index]['image_file'])) {
+                     $uErr = $_FILES['banner_items']['error'][$index]['image_file'];
+                     if ($uErr === UPLOAD_ERR_OK) {
+                         $fname = time() . '_' . $index . '_' . preg_replace('/[^a-zA-Z0-9._-]/', '', basename($_FILES['banner_items']['name'][$index]['image_file']));
+                         $target = $uploadDir . $fname;
+                         if (move_uploaded_file($_FILES['banner_items']['tmp_name'][$index]['image_file'], $target)) {
+                             $imgUrl = 'assets/images/banner/' . $fname;
+                         }
+                     } elseif ($uErr !== UPLOAD_ERR_NO_FILE) {
+                         $error .= "Banner ".($index+1)." Desktop Upload Failed (Code $uErr). Check upload_max_filesize. ";
                      }
                 }
                 
                 // Check for new upload: Mobile
-                if (isset($_FILES['banner_items']['name'][$index]['mobile_image_file']) && $_FILES['banner_items']['error'][$index]['mobile_image_file'] === UPLOAD_ERR_OK) {
-                     $fname = time() . '_mob_' . $index . '_' . preg_replace('/[^a-zA-Z0-9._-]/', '', basename($_FILES['banner_items']['name'][$index]['mobile_image_file']));
-                     $target = $uploadDir . $fname;
-                     if (move_uploaded_file($_FILES['banner_items']['tmp_name'][$index]['mobile_image_file'], $target)) {
-                         $mobImgUrl = 'assets/images/banner/' . $fname;
+                if (isset($_FILES['banner_items']['name'][$index]['mobile_image_file'])) {
+                     $uErr = $_FILES['banner_items']['error'][$index]['mobile_image_file'];
+                     if ($uErr === UPLOAD_ERR_OK) {
+                         $fname = time() . '_mob_' . $index . '_' . preg_replace('/[^a-zA-Z0-9._-]/', '', basename($_FILES['banner_items']['name'][$index]['mobile_image_file']));
+                         $target = $uploadDir . $fname;
+                         if (move_uploaded_file($_FILES['banner_items']['tmp_name'][$index]['mobile_image_file'], $target)) {
+                             $mobImgUrl = 'assets/images/banner/' . $fname;
+                         }
+                     } elseif ($uErr !== UPLOAD_ERR_NO_FILE) {
+                         $error .= "Banner ".($index+1)." Mobile Upload Failed (Code $uErr). Check upload_max_filesize. ";
                      }
                 }
 
                 $bannerItems[] = [
                     'image' => $imgUrl,
                     'mobile_image' => $mobImgUrl,
+                    'video_url' => $item['video_url'] ?? '',
+                    'mobile_video_url' => $item['mobile_video_url'] ?? '',
                     'heading' => $item['heading'] ?? '',
                     'text' => $item['text'] ?? '',
                     'btn_text' => $item['btn_text'] ?? '',
@@ -216,7 +232,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $db->execute(
                 "UPDATE landing_pages SET 
                     product_id=?, hero_title=?, hero_subtitle=?, hero_description=?, theme_color=?,
+                    body_bg_color=?, body_text_color=?,
                     hero_bg_color=?, hero_text_color=?,
+                    banner_bg_color=?, banner_text_color=?,
                     stats_bg_color=?, stats_text_color=?,
                     why_bg_color=?, why_text_color=?,
                     about_bg_color=?, about_text_color=?,
@@ -225,11 +243,17 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     show_stats=?, show_why=?, show_about=?, show_testimonials=?, show_newsletter=?, show_banner=?,
                     why_title=?, about_title=?, about_text=?, testimonials_title=?, newsletter_title=?, newsletter_text=?,
                     about_image=?,
-                    banner_image=?, banner_mobile_image=?, banner_heading=?, banner_text=?, banner_btn_text=?, banner_btn_link=?, banner_sections_json=?, section_order=?, stats_data=?, why_data=?, testimonials_data=?
+                    banner_image=?, banner_mobile_image=?, banner_heading=?, banner_text=?, banner_btn_text=?, banner_btn_link=?, banner_sections_json=?, section_order=?, stats_data=?, why_data=?, testimonials_data=?,
+                    meta_title=?, meta_description=?, custom_schema=?,
+                    footer_extra_content=?, show_footer_extra=?,
+                    footer_extra_bg=?, footer_extra_text=?
                 WHERE id=?",
                 [
                     $productId, $heroTitle, $heroSubtitle, $heroDesc, $themeColor,
-                    $heroBg, $heroText, $statsBg, $statsText, $whyBg, $whyText, $aboutBg, $aboutText,
+                    $bodyBg, $bodyText,
+                    $heroBg, $heroText, 
+                    $bannerBg, $bannerText,
+                    $statsBg, $statsText, $whyBg, $whyText, $aboutBg, $aboutText,
                     $testiBg, $testiText, $newsBg, $newsText,
                     $showStats, $showWhy, $showAbout, $showTestimonials, $showNewsletter, $showBanner,
                     $whyTitle, $aboutTitle, $aboutText, $testiTitle, $newsTitle, $newsText,
@@ -245,6 +269,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     $statsDataJson,
                     $whyDataJson,
                     $testimonialsDataJson,
+                    $_POST['meta_title'] ?? '',
+                    $_POST['meta_description'] ?? '',
+                    $_POST['custom_schema'] ?? '',
+                    $_POST['footer_extra_content'] ?? '',
+                    isset($_POST['show_footer_extra']) ? 1 : 0,
+                    $_POST['footer_extra_bg'] ?? '#f8f9fa',
+                    $_POST['footer_extra_text'] ?? '#333333',
                     $id
                 ]
             );
@@ -270,12 +301,45 @@ if (isset($_SESSION['flash_success'])) {
 
 $pageTitle = 'Landing Page Settings';
 require_once __DIR__ . '/../includes/admin-header.php';
+?>
+<!-- CKEditor 5 -->
+<script src="https://cdn.ckeditor.com/ckeditor5/41.1.0/classic/ckeditor.js"></script>
+<style>
+/* CKEditor content styling fix for Tailwind */
+.ck-editor__editable { min-height: 250px; }
+.ck-content h2 { font-size: 1.5em; font-weight: bold; margin-bottom: 0.5em; }
+.ck-content h3 { font-size: 1.25em; font-weight: bold; margin-bottom: 0.5em; }
+.ck-content p { margin-bottom: 1em; }
+.ck-content ul { list-style-type: disc !important; padding-left: 1.5em !important; margin-bottom: 1em; }
+.ck-content ol { list-style-type: decimal !important; padding-left: 1.5em !important; margin-bottom: 1em; }
+.ck-content a { color: blue; text-decoration: underline; }
+</style>
+<script>
+  document.addEventListener("DOMContentLoaded", function() {
+      const editors = document.querySelectorAll('.rich-text-editor');
+      editors.forEach(el => {
+          ClassicEditor
+              .create(el, {
+                  toolbar: ['heading', '|', 'bold', 'italic', 'link', 'bulletedList', 'numberedList', 'blockQuote', 'insertTable', '|', 'undo', 'redo'],
+                  heading: {
+                      options: [
+                          { model: 'paragraph', title: 'Paragraph', class: 'ck-heading_paragraph' },
+                          { model: 'heading2', view: 'h2', title: 'Heading 2', class: 'ck-heading_heading2' },
+                          { model: 'heading3', view: 'h3', title: 'Heading 3', class: 'ck-heading_heading3' }
+                      ]
+                  }
+              })
+              .catch(error => { console.error(error); });
+      });
+  });
+</script>
+<?php
 
 // Fetch all pages for selector
 $allPages = $db->fetchAll("SELECT id, name, slug FROM landing_pages ORDER BY name ASC");
 
 // Fetch active products for dropdown
-$products = $db->fetchAll("SELECT id, name, price FROM products WHERE status = 'active' ORDER BY name ASC");
+$products = $db->fetchAll("SELECT id, name, price, currency FROM products WHERE status = 'active' ORDER BY name ASC");
 
 // Fetch Current Page Data
 $lp = $db->fetchOne("SELECT * FROM landing_pages WHERE slug = ?", [$selectedSlug]);
@@ -325,6 +389,41 @@ if (!$lp && $selectedSlug !== 'default') {
             }
         });
     }, 3000); // 3 seconds
+
+    function copyLink(text) {
+        if (!navigator.clipboard) {
+            // Fallback for non-secure contexts or older browsers
+            var textArea = document.createElement("textarea");
+            textArea.value = text;
+            textArea.style.position = "fixed";  // Avoid scrolling to bottom
+            document.body.appendChild(textArea);
+            textArea.focus();
+            textArea.select();
+            try {
+                document.execCommand('copy');
+                showToast('Link copied!');
+            } catch (err) {
+                console.error('Fallback: Oops, unable to copy', err);
+            }
+            document.body.removeChild(textArea);
+            return;
+        }
+        navigator.clipboard.writeText(text).then(() => {
+            showToast('Link copied!');
+        });
+    }
+
+    function showToast(message) {
+        const el = document.createElement('div');
+        el.className = 'fixed bottom-4 right-4 bg-gray-800 text-white px-4 py-2 rounded shadow-lg text-sm z-50 animate-bounce';
+        el.innerText = message;
+        document.body.appendChild(el);
+        setTimeout(() => {
+            el.style.opacity = '0';
+            el.style.transition = 'opacity 0.5s';
+            setTimeout(() => el.remove(), 500);
+        }, 2000);
+    }
 </script>
 
 <div class="grid grid-cols-1 lg:grid-cols-4 gap-6">
@@ -338,11 +437,19 @@ if (!$lp && $selectedSlug !== 'default') {
                 <?php foreach ($allPages as $p): ?>
                 <li>
                     <div class="flex items-center group">
-                        <a href="?page=<?php echo $p['slug']; ?>" 
-                           class="flex-1 block px-3 py-2 rounded <?php echo $selectedSlug == $p['slug'] ? 'bg-blue-50 text-blue-600 font-bold border-l-4 border-blue-600' : 'hover:bg-gray-50'; ?>">
-                           <?php echo htmlspecialchars($p['name']); ?>
-                           <span class="text-xs text-gray-400 block font-normal">/<?php echo $p['slug']; ?></span>
-                        </a>
+                        <div class="flex-1 block px-3 py-2 rounded <?php echo $selectedSlug == $p['slug'] ? 'bg-blue-50 border-l-4 border-blue-600' : 'hover:bg-gray-50'; ?>">
+                           <a href="?page=<?php echo $p['slug']; ?>" class="block <?php echo $selectedSlug == $p['slug'] ? 'text-blue-600 font-bold' : 'text-gray-800 font-medium'; ?>">
+                               <?php echo htmlspecialchars($p['name']); ?>
+                           </a>
+                           <div class="flex items-center justify-between mt-1 group-hover/link">
+                               <a href="<?php echo $baseUrl; ?>/<?php echo $p['slug']; ?>" target="_blank" class="text-xs text-gray-400 font-normal hover:text-blue-600 hover:underline truncate mr-2" title="View Live Page">
+                                   <?php echo $baseUrl; ?>/<?php echo $p['slug']; ?> <i class="fas fa-external-link-alt text-[10px] ml-1"></i>
+                               </a>
+                               <button type="button" onclick="copyLink('<?php echo $baseUrl; ?>/<?php echo $p['slug']; ?>')" class="text-xs text-gray-400 hover:text-blue-600 p-1" title="Copy Link">
+                                   <i class="fas fa-copy"></i>
+                               </button>
+                           </div>
+                        </div>
                         <?php if($p['slug'] !== 'default'): ?>
                         <form method="POST" onsubmit="return confirm('Are you sure you want to delete this page?');" class="ml-2">
                             <input type="hidden" name="action" value="delete_page">
@@ -393,48 +500,66 @@ if (!$lp && $selectedSlug !== 'default') {
             
             <div class="flex justify-between items-center mb-6 border-b pb-4">
                 <h2 class="text-xl font-bold">Editing: <?php echo htmlspecialchars($lp['name']); ?></h2>
-                <div class="flex items-center gap-2">
-                     <label class="text-sm font-bold">Theme Color:</label>
-                     <input type="color" name="theme_color" value="<?php echo htmlspecialchars(($lp['theme_color'] ?? '') ?: '#5F8D76'); ?>" class="h-8 w-12 p-0 border-0">
+                <div class="flex items-center gap-6">
+                     <div class="flex items-center gap-2">
+                         <label class="text-sm font-bold">Theme Color:</label>
+                         <input type="color" name="theme_color" value="<?php echo htmlspecialchars(($lp['theme_color'] ?? '') ?: '#5F8D76'); ?>" class="h-8 w-12 p-0 border-0">
+                     </div>
+                     <div class="flex items-center gap-2">
+                         <label class="text-sm font-bold">Body Bg:</label>
+                         <input type="color" name="body_bg_color" value="<?php echo htmlspecialchars($lp['body_bg_color'] ?? '#ffffff'); ?>" class="h-8 w-12 p-0 border-0">
+                     </div>
+                     <div class="flex items-center gap-2">
+                         <label class="text-sm font-bold">Body Text:</label>
+                         <input type="color" name="body_text_color" value="<?php echo htmlspecialchars($lp['body_text_color'] ?? '#000000'); ?>" class="h-8 w-12 p-0 border-0">
+                     </div>
                 </div>
             </div>
 
+            <!-- SEO Settings -->
+            
+
             <!-- 1. Hero / Main -->
-            <div class="mb-8 border border-gray-200 rounded p-4">
-                <h3 class="font-bold text-lg mb-4 text-blue-600">Hero Section</h3>
-                <div class="grid grid-cols-2 gap-4">
-                    <div class="col-span-2">
-                        <label class="block text-sm font-bold mb-1">Linked Product</label>
-                        <select name="product_id" class="w-full border p-2 rounded">
-                             <?php foreach ($products as $pr): ?>
-                            <option value="<?php echo $pr['id']; ?>" <?php echo $pr['id'] == $lp['product_id'] ? 'selected' : ''; ?>>
-                                <?php echo htmlspecialchars($pr['name']); ?> - $<?php echo $pr['price']; ?>
-                            </option>
-                            <?php endforeach; ?>
-                        </select>
-                    </div>
-                    <div>
-                        <label class="block text-sm font-bold mb-1">Hero Title</label>
-                        <input type="text" name="hero_title" value="<?php echo htmlspecialchars($lp['hero_title'] ?? ''); ?>" class="w-full border p-2 rounded">
-                    </div>
-                    <div>
-                        <label class="block text-sm font-bold mb-1">Subtitle</label>
-                        <input type="text" name="hero_subtitle" value="<?php echo htmlspecialchars($lp['hero_subtitle'] ?? ''); ?>" class="w-full border p-2 rounded">
-                    </div>
-                     <div class="col-span-2">
-                        <label class="block text-sm font-bold mb-1">Description</label>
-                        <textarea name="hero_description" class="w-full border p-2 rounded" rows="3"><?php echo htmlspecialchars($lp['hero_description'] ?? ''); ?></textarea>
-                    </div>
-                 </div>
-                 <!-- Added Hero Colors -->
-                 <div class="grid grid-cols-2 gap-4 mt-4 border-t pt-4">
-                     <div>
-                        <label class="block text-xs font-bold mb-1">Hero Bg Color</label>
-                        <input type="color" name="hero_bg_color" value="<?php echo htmlspecialchars($lp['hero_bg_color'] ?? '#E8F0E9'); ?>" class="w-full h-8">
-                    </div>
-                    <div>
-                        <label class="block text-xs font-bold mb-1">Hero Text Color</label>
-                        <input type="color" name="hero_text_color" value="<?php echo htmlspecialchars($lp['hero_text_color'] ?? '#4A4A4A'); ?>" class="w-full h-8">
+            <div class="mb-8 border border-gray-200 rounded overflow-hidden">
+                <div class="bg-gray-50 p-3 flex justify-between items-center border-b">
+                     <h3 class="font-bold text-lg text-blue-600 m-0">Hero Section</h3>
+                     <button type="button" onclick="toggleSection('secHero', this)" class="p-2 hover:bg-gray-100 rounded transition"><i class="fas fa-chevron-up text-gray-500"></i></button>
+                </div>
+                <div id="secHero" class="p-4 bg-white">
+                    <div class="grid grid-cols-2 gap-4">
+                        <div class="col-span-2">
+                            <label class="block text-sm font-bold mb-1">Linked Product</label>
+                            <select name="product_id" class="w-full border p-2 rounded">
+                                 <?php foreach ($products as $pr): ?>
+                                <option value="<?php echo $pr['id']; ?>" <?php echo $pr['id'] == $lp['product_id'] ? 'selected' : ''; ?>>
+                                    <?php echo htmlspecialchars($pr['name']); ?> - <?php echo format_price($pr['price'], $pr['currency'] ?? 'INR'); ?>
+                                </option>
+                                <?php endforeach; ?>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-bold mb-1">Hero Title</label>
+                            <input type="text" name="hero_title" value="<?php echo htmlspecialchars($lp['hero_title'] ?? ''); ?>" class="w-full border p-2 rounded">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-bold mb-1">Subtitle</label>
+                            <input type="text" name="hero_subtitle" value="<?php echo htmlspecialchars($lp['hero_subtitle'] ?? ''); ?>" class="w-full border p-2 rounded">
+                        </div>
+                         <div class="col-span-2">
+                            <label class="block text-sm font-bold mb-1">Description</label>
+                            <textarea name="hero_description" class="w-full border p-2 rounded" rows="3"><?php echo htmlspecialchars($lp['hero_description'] ?? ''); ?></textarea>
+                        </div>
+                     </div>
+                     <!-- Added Hero Colors -->
+                     <div class="grid grid-cols-2 gap-4 mt-4 border-t pt-4">
+                         <div>
+                            <label class="block text-xs font-bold mb-1">Hero Bg Color</label>
+                            <input type="color" name="hero_bg_color" value="<?php echo htmlspecialchars($lp['hero_bg_color'] ?? '#E8F0E9'); ?>" class="w-full h-8">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-bold mb-1">Hero Text Color</label>
+                            <input type="color" name="hero_text_color" value="<?php echo htmlspecialchars($lp['hero_text_color'] ?? '#4A4A4A'); ?>" class="w-full h-8">
+                        </div>
                     </div>
                 </div>
             </div>
@@ -480,10 +605,14 @@ if (!$lp && $selectedSlug !== 'default') {
                              <label class="flex items-center cursor-pointer text-sm">
                                 <input type="checkbox" name="show_banner" class="mr-2" <?php echo ($lp['show_banner'] ?? 0) ? 'checked' : ''; ?>> Enable
                             </label>
-                            <button type="button" onclick="toggleSection('secBanner')" class="text-xs text-blue-600 font-bold uppercase">Edit Content</button>
+                            <button type="button" onclick="toggleSection('secBanner', this)" class="p-2 hover:bg-gray-100 rounded transition"><i class="fas fa-chevron-down text-gray-500"></i></button>
                         </div>
                     </div>
                     <div id="secBanner" class="p-4 hidden bg-white">
+                        <div class="grid grid-cols-2 gap-4 mb-4">
+                             <div><label class="block text-xs font-bold mb-1">Bg Color</label><input type="color" name="banner_bg_color" value="<?php echo htmlspecialchars($lp['banner_bg_color'] ?? '#ffffff'); ?>" class="w-full h-8"></div>
+                             <div><label class="block text-xs font-bold mb-1">Text Color</label><input type="color" name="banner_text_color" value="<?php echo htmlspecialchars($lp['banner_text_color'] ?? '#000000'); ?>" class="w-full h-8"></div>
+                        </div>
                         <div id="bannerSectionsContainer" class="space-y-6"></div>
                         <button type="button" onclick="addBannerSection()" class="mt-4 text-blue-600 font-bold hover:underline text-sm">+ Add Another Banner Section</button>
                         <input type="hidden" id="initialBannerData" value="<?php echo htmlspecialchars($lp['banner_sections_json'] ?? '[]'); ?>">
@@ -503,7 +632,7 @@ if (!$lp && $selectedSlug !== 'default') {
                              <label class="flex items-center cursor-pointer text-sm">
                                 <input type="checkbox" name="show_stats" class="mr-2" <?php echo $lp['show_stats'] ? 'checked' : ''; ?>> Enable
                             </label>
-                            <button type="button" onclick="document.getElementById('secStats').classList.toggle('hidden')" class="text-xs text-blue-600 font-bold uppercase">Edit Content</button>
+                            <button type="button" onclick="toggleSection('secStats', this)" class="p-2 hover:bg-gray-100 rounded transition"><i class="fas fa-chevron-down text-gray-500"></i></button>
                         </div>
                     </div>
                     <div id="secStats" class="p-4 hidden bg-white">
@@ -531,7 +660,7 @@ if (!$lp && $selectedSlug !== 'default') {
                              <label class="flex items-center cursor-pointer text-sm">
                                 <input type="checkbox" name="show_why" class="mr-2" <?php echo $lp['show_why'] ? 'checked' : ''; ?>> Enable
                             </label>
-                            <button type="button" onclick="document.getElementById('secWhy').classList.toggle('hidden')" class="text-xs text-blue-600 font-bold uppercase">Edit Content</button>
+                            <button type="button" onclick="toggleSection('secWhy', this)" class="p-2 hover:bg-gray-100 rounded transition"><i class="fas fa-chevron-down text-gray-500"></i></button>
                         </div>
                     </div>
                     <div id="secWhy" class="p-4 hidden bg-white">
@@ -560,7 +689,7 @@ if (!$lp && $selectedSlug !== 'default') {
                              <label class="flex items-center cursor-pointer text-sm">
                                 <input type="checkbox" name="show_about" class="mr-2" <?php echo $lp['show_about'] ? 'checked' : ''; ?>> Enable
                             </label>
-                            <button type="button" onclick="document.getElementById('secAbout').classList.toggle('hidden')" class="text-xs text-blue-600 font-bold uppercase">Edit Content</button>
+                            <button type="button" onclick="toggleSection('secAbout', this)" class="p-2 hover:bg-gray-100 rounded transition"><i class="fas fa-chevron-down text-gray-500"></i></button>
                         </div>
                     </div>
                     <div id="secAbout" class="p-4 hidden bg-white">
@@ -587,7 +716,7 @@ if (!$lp && $selectedSlug !== 'default') {
                              <label class="flex items-center cursor-pointer text-sm">
                                 <input type="checkbox" name="show_testimonials" class="mr-2" <?php echo $lp['show_testimonials'] ? 'checked' : ''; ?>> Enable
                             </label>
-                            <button type="button" onclick="document.getElementById('secTesti').classList.toggle('hidden')" class="text-xs text-blue-600 font-bold uppercase">Edit Content</button>
+                            <button type="button" onclick="toggleSection('secTesti', this)" class="p-2 hover:bg-gray-100 rounded transition"><i class="fas fa-chevron-down text-gray-500"></i></button>
                         </div>
                     </div>
                      <div id="secTesti" class="p-4 hidden bg-white">
@@ -616,7 +745,7 @@ if (!$lp && $selectedSlug !== 'default') {
                              <label class="flex items-center cursor-pointer text-sm">
                                 <input type="checkbox" name="show_newsletter" class="mr-2" <?php echo $lp['show_newsletter'] ? 'checked' : ''; ?>> Enable
                             </label>
-                            <button type="button" onclick="document.getElementById('secNews').classList.toggle('hidden')" class="text-xs text-blue-600 font-bold uppercase">Edit Content</button>
+                            <button type="button" onclick="toggleSection('secNews', this)" class="p-2 hover:bg-gray-100 rounded transition"><i class="fas fa-chevron-down text-gray-500"></i></button>
                         </div>
                     </div>
                     <div id="secNews" class="p-4 hidden bg-white">
@@ -670,7 +799,69 @@ if (!$lp && $selectedSlug !== 'default') {
                        </div>
                    </div>
             </div> -->
+            <div class="mb-6 mt-6 border border-gray-200 rounded p-4 bg-gray-50">
+                <div class="flex justify-between items-center cursor-pointer select-none" onclick="toggleSection('seoSettings', this)">
+                    <h3 class="font-bold text-lg text-gray-700">SEO & Metadata</h3>
+                    <i class="fas fa-chevron-down text-gray-500"></i>
+                </div>
+                <div id="seoSettings" class="hidden mt-4 pt-4 border-t border-gray-200">
+                    <div class="space-y-4">
+                        <div>
+                            <label class="block text-sm font-bold mb-1">Meta Title</label>
+                            <input type="text" name="meta_title" value="<?php echo htmlspecialchars($lp['meta_title'] ?? ''); ?>" placeholder="Page Title (overrides default)" class="w-full border p-2 rounded">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-bold mb-1">Meta Description</label>
+                            <textarea name="meta_description" class="w-full border p-2 rounded h-20" placeholder="Brief description for search engines..."><?php echo htmlspecialchars($lp['meta_description'] ?? ''); ?></textarea>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-bold mb-1">Custom JSON-LD Schema</label>
+                            <p class="text-xs text-gray-500 mb-2">Paste your custom schema script here. It will be injected as <code>&lt;script type="application/ld+json"&gt;...&lt;/script&gt;</code>.</p>
+                            <textarea name="custom_schema" class="w-full border p-2 rounded font-mono text-xs h-40 bg-gray-900 text-green-400" placeholder='{ "@context": "https://schema.org", ... }'><?php echo htmlspecialchars($lp['custom_schema'] ?? ''); ?></textarea>
+                        </div>
+                        <div class="pt-2 text-right">
+                             <button type="submit" class="bg-blue-600 text-white px-6 py-2 rounded shadow hover:bg-blue-700 transition font-bold text-sm">
+                                <i class="fas fa-save mr-2"></i>Save SEO Settings
+                             </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
 
+            
+            <!-- Footer Extra Content -->
+            <div class="mb-6 mt-6 border border-gray-200 rounded p-4 bg-white shadow-sm">
+                <div class="flex justify-between items-center mb-4 cursor-pointer" onclick="toggleSection('footerExtraSettings', this)">
+                     <h3 class="font-bold text-lg text-gray-800">Footer Extra Content (Rich Text)</h3>
+                     <i class="fas fa-chevron-down text-gray-500"></i>
+                </div>
+                
+                <div id="footerExtraSettings" class="hidden">
+                    <div class="mb-4">
+                        <label class="inline-flex items-center">
+                            <input type="checkbox" name="show_footer_extra" class="form-checkbox h-5 w-5 text-blue-600" <?php echo ($lp['show_footer_extra'] ?? 0) ? 'checked' : ''; ?>>
+                            <span class="ml-2 text-gray-700 font-bold">Show Extra Content Section</span>
+                        </label>
+                    </div>
+
+                    <div class="grid grid-cols-2 gap-4 mb-4">
+                         <div><label class="block text-xs font-bold mb-1">Bg Color</label><input type="color" name="footer_extra_bg" value="<?php echo htmlspecialchars($lp['footer_extra_bg'] ?? '#f8f9fa'); ?>" class="w-full h-8 cursor-pointer"></div>
+                        <div><label class="block text-xs font-bold mb-1">Text Color</label><input type="color" name="footer_extra_text" value="<?php echo htmlspecialchars($lp['footer_extra_text'] ?? '#333333'); ?>" class="w-full h-8 cursor-pointer"></div>
+                    </div>
+                    
+                    <div class="mb-4">
+                        <label class="block text-sm font-bold mb-2">Rich Text Content</label>
+                        <textarea name="footer_extra_content" class="rich-text-editor w-full border p-2 rounded h-64"><?php echo htmlspecialchars($lp['footer_extra_content'] ?? ''); ?></textarea>
+                        <p class="text-xs text-gray-500 mt-1">Use this editor to add text, links, images, tables, and style them as needed. This content appears after the footer.</p>
+                    </div>
+
+                    <div class="pt-2 text-right">
+                        <button type="submit" class="bg-blue-600 text-white px-6 py-2 rounded shadow hover:bg-blue-700 transition font-bold text-sm">
+                        <i class="fas fa-save mr-2"></i>Save Footer Content
+                        </button>
+                    </div>
+                </div>
+            </div>
             
         </form>
     </div>
@@ -960,9 +1151,27 @@ if (initialTestimonialsData) {
 }
 
 // Toggle Section Content Visibility
-window.toggleSection = function(id) {
+// Toggle Section Content Visibility
+window.toggleSection = function(id, btn) {
     const el = document.getElementById(id);
     if(el) el.classList.toggle('hidden');
+    
+    // Toggle Icon if button passed
+    if(btn) {
+        let icon = btn.querySelector('i');
+        // If btn itself is the icon element
+        if (!icon && (btn.classList.contains('fas') || btn.tagName === 'I')) icon = btn;
+        
+        if(icon) {
+            if(el.classList.contains('hidden')) {
+                icon.classList.remove('fa-chevron-up');
+                icon.classList.add('fa-chevron-down');
+            } else {
+                icon.classList.remove('fa-chevron-down');
+                icon.classList.add('fa-chevron-up');
+            }
+        }
+    }
 };
 
 function addBannerSection(data = {}) {
@@ -975,27 +1184,50 @@ function addBannerSection(data = {}) {
         
         <div class="grid grid-cols-2 gap-4 mb-4">
             <div>
-                <label class="block text-xs font-bold mb-1">Desktop Image</label>
-                ${data.image ? `<img src="${data.image.startsWith('http') ? data.image : '../'+data.image}" class="h-16 object-cover mb-2 border rounded w-auto">` : ''}
+                <label class="block text-xs font-bold mb-1">Desktop Media (Img/Video)</label>
+                ${data.image ? `<div class="mb-2">${
+                    data.image.match(/\.(mp4|webm)$/i) 
+                    ? `<video src="${data.image.startsWith('http') ? data.image : '../'+data.image}" class="h-20 w-auto object-cover border rounded" muted playsinline loop hover></video>`
+                    : `<img src="${data.image.startsWith('http') ? data.image : '../'+data.image}" class="h-16 object-cover border rounded w-auto">`
+                }</div>` : ''}
                 
                 <div class="flex flex-col">
-                    <input type="file" name="banner_items[${index}][image_file]" class="w-full border p-1 rounded mb-1 text-xs" onchange="previewImage(this)">
+                    <input type="file" class="w-full border p-1 rounded mb-1 text-xs" onchange="chunkUpload(this)">
                     <img class="preview-img hidden h-16 w-auto object-cover border rounded mt-1">
+                    <video class="preview-video hidden h-20 w-auto object-cover border rounded mt-1" controls muted></video>
                     <input type="hidden" name="banner_items[${index}][image_url]" value="${data.image || ''}">
                 </div>
             </div>
             <div>
-                <label class="block text-xs font-bold mb-1">Mobile Image (Opt)</label>
-                ${data.mobile_image ? `<img src="${data.mobile_image.startsWith('http') ? data.mobile_image : '../'+data.mobile_image}" class="h-16 object-cover mb-2 border rounded w-auto">` : ''}
+                <label class="block text-xs font-bold mb-1">Mobile Media (Img/Video)</label>
+                ${data.mobile_image ? `<div class="mb-2">${
+                    data.mobile_image.match(/\.(mp4|webm)$/i) 
+                    ? `<video src="${data.mobile_image.startsWith('http') ? data.mobile_image : '../'+data.mobile_image}" class="h-20 w-auto object-cover border rounded" muted playsinline loop></video>`
+                    : `<img src="${data.mobile_image.startsWith('http') ? data.mobile_image : '../'+data.mobile_image}" class="h-16 object-cover border rounded w-auto">`
+                }</div>` : ''}
                 
                 <div class="flex flex-col">
-                    <input type="file" name="banner_items[${index}][mobile_image_file]" class="w-full border p-1 rounded mb-1 text-xs" onchange="previewImage(this)">
+                    <input type="file" class="w-full border p-1 rounded mb-1 text-xs" onchange="chunkUpload(this)">
                     <img class="preview-img hidden h-16 w-auto object-cover border rounded mt-1">
                     <input type="hidden" name="banner_items[${index}][mobile_image_url]" value="${data.mobile_image || ''}">
                 </div>
             </div>
         </div>
         
+
+        
+        <div class="grid grid-cols-2 gap-4 mb-4">
+            <div>
+                 <label class="block text-xs font-bold mb-1">Video URL (Desktop)</label>
+                <input type="text" name="banner_items[${index}][video_url]" value="${data.video_url || ''}" placeholder="https://... or assets/video.mp4" class="w-full border p-2 rounded text-sm">
+                 <p class="text-[10px] text-gray-500">Use this if file upload fails due to size limit.</p>
+            </div>
+             <div>
+                 <label class="block text-xs font-bold mb-1">Video URL (Mobile)</label>
+                <input type="text" name="banner_items[${index}][mobile_video_url]" value="${data.mobile_video_url || ''}" placeholder="https://... or assets/mob_video.mp4" class="w-full border p-2 rounded text-sm">
+            </div>
+        </div>
+
          <div class="mb-2">
             <label class="block text-xs font-bold mb-1">Heading</label>
             <input type="text" name="banner_items[${index}][heading]" value="${data.heading || ''}" class="w-full border p-2 rounded text-sm">
@@ -1020,13 +1252,93 @@ function addBannerSection(data = {}) {
 
 function previewImage(input) {
     if (input.files && input.files[0]) {
+        const file = input.files[0];
         const reader = new FileReader();
         reader.onload = function(e) {
-            const img = input.parentElement.querySelector('.preview-img');
-            img.src = e.target.result;
-            img.classList.remove('hidden');
+            const container = input.parentElement;
+            const img = container.querySelector('.preview-img');
+            const video = container.querySelector('.preview-video');
+            
+            if (file.type.startsWith('video/') && video) {
+                video.src = e.target.result;
+                video.classList.remove('hidden');
+                if(img) img.classList.add('hidden');
+            } else if (img) {
+                img.src = e.target.result;
+                img.classList.remove('hidden');
+                if(video) video.classList.add('hidden');
+            }
         }
-        reader.readAsDataURL(input.files[0]);
+        reader.readAsDataURL(file);
+    }
+}
+
+async function chunkUpload(input) {
+    if (!input.files || !input.files[0]) return;
+    
+    // 1. Preview first (before we clear input)
+    previewImage(input); 
+    
+    const file = input.files[0];
+    const container = input.parentElement;
+    let progress = container.querySelector('.upload-progress');
+    if (!progress) {
+        progress = document.createElement('div');
+        progress.className = 'upload-progress text-xs text-blue-600 mt-1 font-bold';
+        container.appendChild(progress);
+    }
+    
+    const CHUNK_SIZE = 1024 * 1024; // 1MB
+    const totalChunks = Math.ceil(file.size / CHUNK_SIZE);
+    const uploadId = Date.now().toString(36) + Math.random().toString(36).substr(2);
+    
+    progress.innerText = 'Starting Upload...';
+    progress.className = 'upload-progress text-xs text-blue-600 mt-1 font-bold';
+    input.classList.add('opacity-50', 'cursor-not-allowed');
+    // input.disabled = true; // Don't disable completely or form might be weird
+    
+    try {
+        for (let i = 0; i < totalChunks; i++) {
+            const start = i * CHUNK_SIZE;
+            const end = Math.min(file.size, start + CHUNK_SIZE);
+            const chunk = file.slice(start, end);
+            
+            const formData = new FormData();
+            formData.append('chunk', chunk);
+            formData.append('file_name', file.name);
+            formData.append('chunk_index', i);
+            formData.append('total_chunks', totalChunks);
+            formData.append('upload_id', uploadId);
+            
+            const req = await fetch('upload_chunk.php', { method: 'POST', body: formData });
+            
+            if (!req.ok) throw new Error('Network error: ' + req.status);
+            
+            const res = await req.json();
+            if (res.error) throw new Error(res.error);
+            
+            if (res.status === 'done') {
+                progress.innerText = 'Upload Complete!';
+                progress.classList.replace('text-blue-600', 'text-green-600');
+                
+                // Update Hidden Input with Path
+                const hiddenUrl = container.querySelector('input[type="hidden"]');
+                if (hiddenUrl) hiddenUrl.value = res.path;
+                
+                // Clear File Input to Avoid Post Size Error
+                input.value = ''; 
+                input.classList.remove('opacity-50', 'cursor-not-allowed');
+                return;
+            }
+            
+            const percent = Math.round(((i + 1) / totalChunks) * 100);
+            progress.innerText = `Uploading ${percent}%...`;
+        }
+    } catch (e) {
+        console.error(e);
+        progress.innerText = 'Error: ' + e.message;
+        progress.classList.replace('text-blue-600', 'text-red-600');
+        input.classList.remove('opacity-50', 'cursor-not-allowed');
     }
 }
 

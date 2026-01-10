@@ -106,11 +106,11 @@ if (!isset($baseUrl) && function_exists('getBaseUrl')) {
                             <button class="flex items-center gap-2 text-black hover:text-gray-600 transition cursor-pointer focus:outline-none whitespace-nowrap" id="footerCurrencySelector">
                                 <span class="flex items-center gap-2">
                                     <span class="rounded-full border border-gray-300 overflow-hidden" style="width: 20px; height: 20px; display: inline-flex; align-items: center; justify-content: center;">
-                                        <img src="https://cdn.shopify.com/static/images/flags/us.svg" alt="United States" id="footerSelectedFlagImg" class="w-full h-full object-cover" style="width: 20px; height: 20px;">
+                                        <img src="https://cdn.shopify.com/static/images/flags/in.svg" alt="India" id="footerSelectedFlagImg" class="w-full h-full object-cover" style="width: 20px; height: 20px;">
                                     </span>
                                     <span class="text-sm">
                                         <span class="text-gray-500" id="footerCountryCode"></span>
-                                        <span id="footerSelectedCurrency" class="text-gray-700">United States (USD $)</span>
+                                        <span id="footerSelectedCurrency" class="text-gray-700">India (INR ₹)</span>
                                     </span>
                                 </span>
                                 <svg class="icon-down flex-shrink-0" width="10" height="6" style="margin-left: 4px;">
@@ -119,6 +119,14 @@ if (!isset($baseUrl) && function_exists('getBaseUrl')) {
                             </button>
                             <!-- Currency Dropdown -->
                             <div class="absolute left-0 bottom-full mb-3 bg-white text-black shadow-lg rounded-lg py-1 min-w-[240px] hidden z-50 border border-gray-200" id="footerCurrencyDropdown">
+                                <a href="#" class="block px-4 py-2.5 hover:bg-gray-50 transition footer-currency-option" data-flag="https://cdn.shopify.com/static/images/flags/in.svg" data-code="in" data-currency="India (INR ₹)">
+                                    <span class="flex items-center gap-2">
+                                        <span class="rounded-full border border-gray-300 overflow-hidden" style="width: 20px; height: 20px; display: inline-flex; align-items: center; justify-content: center;">
+                                            <img src="https://cdn.shopify.com/static/images/flags/in.svg" alt="India" class="w-full h-full object-cover" style="width: 20px; height: 20px;">
+                                        </span>
+                                        <span class="text-sm">India (INR ₹)</span>
+                                    </span>
+                                </a>
                                 <a href="#" class="block px-4 py-2.5 hover:bg-gray-50 transition footer-currency-option" data-flag="https://cdn.shopify.com/static/images/flags/cn.svg" data-code="cn" data-currency="China (CNY ¥)">
                                     <span class="flex items-center gap-2">
                                         <span class="rounded-full border border-gray-300 overflow-hidden" style="width: 20px; height: 20px; display: inline-flex; align-items: center; justify-content: center;">
@@ -189,7 +197,7 @@ if (!isset($baseUrl) && function_exists('getBaseUrl')) {
             <i class="fas fa-chevron-up text-xs"></i>
         </button>
     </footer>
-    
+
     <!-- Side Cart -->
     <div class="fixed right-0 top-0 h-full w-full md:w-96 bg-white shadow-2xl z-50 transform translate-x-full transition-transform duration-300" id="sideCart">
         <div class="flex flex-col h-full">

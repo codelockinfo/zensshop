@@ -131,13 +131,39 @@ function sanitize_input($data) {
 }
 
 /**
- * Format currency amount with symbol
+ * Format price with currency symbol
+ */
+function format_price($amount, $currency = 'USD') {
+    $symbols = [
+        'USD' => '$',
+        'EUR' => '€',
+        'GBP' => '£',
+        'INR' => '₹',
+        'CAD' => 'C$',
+        'AUD' => 'A$',
+        'JPY' => '¥',
+        'KRW' => '₩',
+        'CNY' => '¥',
+        'RUB' => '₽'
+    ];
+    
+    $code = strtoupper($currency);
+    $symbol = $symbols[$code] ?? '$';
+    
+    return $symbol . number_format((float)$amount, 2);
+}
+
+/**
+ * Format currency amount with symbol (Backward compatibility)
  */
 function format_currency($amount, $decimals = 2) {
     if (!defined('CURRENCY_SYMBOL')) {
-        require_once __DIR__ . '/../config/constants.php';
+        // defined check is good, but maybe we can just alias format_price?
+        // But formatting logic might differ (decimals).
+        // Let's keep using global symbol if defined, else '$'.
+        $globSymbol = defined('CURRENCY_SYMBOL') ? CURRENCY_SYMBOL : '$';
+        return $globSymbol . number_format((float)$amount, $decimals);
     }
-    $symbol = defined('CURRENCY_SYMBOL') ? CURRENCY_SYMBOL : '₹';
-    return $symbol . number_format((float)$amount, $decimals);
+    return CURRENCY_SYMBOL . number_format((float)$amount, $decimals);
 }
 

@@ -550,7 +550,7 @@ if (!defined('CURRENCY_SYMBOL')) {
     require_once __DIR__ . '/../../config/constants.php';
 }
 ?>
-const CURRENCY_SYMBOL = '<?php echo defined('CURRENCY_SYMBOL') ? CURRENCY_SYMBOL : '₹'; ?>';
+const CURRENCY_SYMBOL = '<?php echo defined('CURRENCY_SYMBOL') ? CURRENCY_SYMBOL : '$'; ?>';
 
 // Global functions - must be defined outside DOMContentLoaded
 function removeOrderItem(button) {
