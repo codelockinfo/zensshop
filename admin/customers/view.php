@@ -39,8 +39,7 @@ if ($customerId) {
 }
 ?>
 
-<div class="admin-content-wrapper">
-    <div class="admin-content">
+
         <!-- Breadcrumbs -->
         <div class="flex justify-between items-center mb-6">
             <div>
@@ -120,7 +119,7 @@ if ($customerId) {
                         </div>
                         <div class="flex justify-between items-center">
                             <span class="text-gray-600">Total Spent</span>
-                            <span class="font-bold text-lg text-primary">$<?php echo number_format($customerData['total_spent'], 2); ?></span>
+                            <span class="font-bold text-lg text-primary"><?php echo format_price($customerData['total_spent']); ?></span>
                         </div>
                         <?php if (!empty($customerData['last_order_date'])): ?>
                         <div class="flex justify-between items-center">
@@ -142,9 +141,25 @@ if ($customerId) {
                         <div>
                             <h3 class="font-semibold text-gray-700 mb-2">Billing Address</h3>
                             <div class="bg-gray-50 p-4 rounded-lg">
-                                <?php if (!empty($customerData['billing_address'])): ?>
-                                <p class="text-sm text-gray-800 whitespace-pre-line"><?php echo htmlspecialchars($customerData['billing_address']); ?></p>
-                                <?php else: ?>
+                                <?php if (!empty($customerData['billing_address'])): 
+                                    $billingAddr = $customerData['billing_address'];
+                                    $decodedBilling = json_decode($billingAddr, true);
+                                    if (json_last_error() === JSON_ERROR_NONE && is_array($decodedBilling)) {
+                                        $street = $decodedBilling['street'] ?? '';
+                                        $city = $decodedBilling['city'] ?? '';
+                                        $state = $decodedBilling['state'] ?? '';
+                                        $zip = $decodedBilling['zip'] ?? '';
+                                        $country = $decodedBilling['country'] ?? '';
+                                        
+                                        echo '<p class="text-sm text-gray-800">';
+                                        if ($street) echo htmlspecialchars($street) . '<br>';
+                                        echo htmlspecialchars(trim("$city, $state $zip", ", ")) . '<br>';
+                                        if ($country) echo htmlspecialchars($country);
+                                        echo '</p>';
+                                    } else {
+                                        echo '<p class="text-sm text-gray-800 whitespace-pre-line">' . htmlspecialchars($billingAddr) . '</p>';
+                                    }
+                                else: ?>
                                 <p class="text-sm text-gray-400">No billing address available</p>
                                 <?php endif; ?>
                             </div>
@@ -153,9 +168,25 @@ if ($customerId) {
                         <div>
                             <h3 class="font-semibold text-gray-700 mb-2">Shipping Address</h3>
                             <div class="bg-gray-50 p-4 rounded-lg">
-                                <?php if (!empty($customerData['shipping_address'])): ?>
-                                <p class="text-sm text-gray-800 whitespace-pre-line"><?php echo htmlspecialchars($customerData['shipping_address']); ?></p>
-                                <?php else: ?>
+                                <?php if (!empty($customerData['shipping_address'])): 
+                                    $shippingAddr = $customerData['shipping_address'];
+                                    $decodedShipping = json_decode($shippingAddr, true);
+                                    if (json_last_error() === JSON_ERROR_NONE && is_array($decodedShipping)) {
+                                        $street = $decodedShipping['street'] ?? '';
+                                        $city = $decodedShipping['city'] ?? '';
+                                        $state = $decodedShipping['state'] ?? '';
+                                        $zip = $decodedShipping['zip'] ?? '';
+                                        $country = $decodedShipping['country'] ?? '';
+                                        
+                                        echo '<p class="text-sm text-gray-800">';
+                                        if ($street) echo htmlspecialchars($street) . '<br>';
+                                        echo htmlspecialchars(trim("$city, $state $zip", ", ")) . '<br>';
+                                        if ($country) echo htmlspecialchars($country);
+                                        echo '</p>';
+                                    } else {
+                                        echo '<p class="text-sm text-gray-800 whitespace-pre-line">' . htmlspecialchars($shippingAddr) . '</p>';
+                                    }
+                                else: ?>
                                 <p class="text-sm text-gray-400">No shipping address available</p>
                                 <?php endif; ?>
                             </div>
@@ -217,7 +248,7 @@ if ($customerId) {
                                         </span>
                                     </td>
                                     <td class="py-4 px-4 text-right">
-                                        <span class="font-semibold text-gray-800">$<?php echo number_format($orderItem['total_amount'], 2); ?></span>
+                                        <span class="font-semibold text-gray-800"><?php echo format_price($orderItem['total_amount'], $orderItem['currency'] ?? 'INR'); ?></span>
                                     </td>
                                     <td class="py-4 px-4 text-center">
                                         <a href="<?php echo $baseUrl; ?>/admin/orders/list.php?search=<?php echo urlencode($orderItem['order_number']); ?>" 
@@ -234,8 +265,7 @@ if ($customerId) {
                 </div>
             </div>
         </div>
-    </div>
-</div>
+
 
 <?php require_once __DIR__ . '/../../includes/admin-footer.php'; ?>
 

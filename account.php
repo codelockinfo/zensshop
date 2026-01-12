@@ -33,6 +33,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
         $auth->updateProfile($updateData);
         header('Location: ?section=details&success=1');
         exit;
+    } elseif ($_POST['action'] === 'remove_wishlist') {
+        $productId = $_POST['product_id'] ?? null;
+        if ($productId) {
+            $wishlistModel->removeItem($productId);
+        }
+        header('Location: ?section=wishlist');
+        exit;
     }
     header('Location: ?section=addresses');
     exit;
@@ -562,7 +569,16 @@ require_once __DIR__ . '/includes/header.php';
                         <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                             <?php foreach ($wishlistItems as $product): ?>
                                 <!-- Product Card (simplified) -->
-                                <div class="bg-white rounded-2xl overflow-hidden border border-gray-100 shadow-sm transition hover:shadow-md">
+                                <div class="bg-white rounded-2xl overflow-hidden border border-gray-100 shadow-sm transition hover:shadow-md relative group">
+                                    <!-- Remove Button -->
+                                    <form method="POST" action="?section=wishlist" class="absolute top-2 right-2 z-10">
+                                        <input type="hidden" name="action" value="remove_wishlist">
+                                        <input type="hidden" name="product_id" value="<?php echo $product['product_id']; ?>">
+                                        <button type="submit" class="w-8 h-8 rounded-full bg-white/80 hover:bg-black hover:text-white flex items-center justify-center shadow-sm transition text-gray-500" title="Remove from wishlist">
+                                            <i class="fas fa-times"></i>
+                                        </button>
+                                    </form>
+
                                     <a href="<?php echo url('product.php?slug='.($product['slug'] ?? '')); ?>" class="h-48 bg-gray-100 overflow-hidden block">
                                         <img src="<?php echo getProductImage($product); ?>" alt="" class="w-full h-full object-cover">
                                     </a>

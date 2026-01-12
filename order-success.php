@@ -302,7 +302,7 @@ nav.bg-white.sticky.top-0 {
                             <?php if ($orderData['discount_amount'] > 0): ?>
                             <div class="flex justify-between text-sm">
                                 <span class="text-gray-600">Discount</span>
-                                <span class="text-green-600 font-medium">-<?php echo format_currency($orderData['discount_amount']); ?></span>
+                                <span class="text-gray-600 font-medium">-<?php echo format_currency($orderData['discount_amount']); ?></span>
                             </div>
                             <?php endif; ?>
                             

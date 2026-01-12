@@ -197,10 +197,18 @@ $discounts = $db->fetchAll("SELECT * FROM discounts ORDER BY created_at DESC");
                 <?php foreach ($discounts as $disc): ?>
                 <div class="flex items-center justify-between p-3 border rounded hover:bg-gray-50">
                     <div>
-                        <p class="font-semibold"><?php echo htmlspecialchars($disc['code']); ?></p>
+                        <div class="flex items-center gap-2">
+                            <p class="font-semibold text-blue-600"><?php echo htmlspecialchars($disc['code']); ?></p>
+                            <button type="button" 
+                                    class="text-gray-400 hover:text-blue-500 transition" 
+                                    onclick="copyToClipboard('<?php echo htmlspecialchars($disc['code']); ?>', this)" 
+                                    title="Copy Code">
+                                <i class="far fa-copy"></i>
+                            </button>
+                        </div>
                         <p class="text-sm text-gray-600"><?php echo htmlspecialchars($disc['name']); ?></p>
                     </div>
-                    <a href="?id=<?php echo $disc['id']; ?>" class="text-blue-500 hover:text-blue-700">
+                    <a href="?id=<?php echo $disc['id']; ?>" class="text-blue-500 hover:text-blue-700 p-2 rounded-full hover:bg-blue-50">
                         <i class="fas fa-edit"></i>
                     </a>
                 </div>
@@ -209,6 +217,61 @@ $discounts = $db->fetchAll("SELECT * FROM discounts ORDER BY created_at DESC");
         </div>
     </div>
 </div>
+
+
+<script>
+function copyToClipboard(text, button) {
+    // Navigator clipboard API
+    if (navigator.clipboard) {
+        navigator.clipboard.writeText(text).then(() => {
+            showCopiedFeedback(button);
+        }).catch(err => {
+            console.error('Failed to copy: ', err);
+            // Fallback for older browsers
+            fallbackCopyTextToClipboard(text, button);
+        });
+    } else {
+        fallbackCopyTextToClipboard(text, button);
+    }
+}
+
+function fallbackCopyTextToClipboard(text, button) {
+    var textArea = document.createElement("textarea");
+    textArea.value = text;
+    
+    // Avoid scrolling to bottom
+    textArea.style.top = "0";
+    textArea.style.left = "0";
+    textArea.style.position = "fixed";
+
+    document.body.appendChild(textArea);
+    textArea.focus();
+    textArea.select();
+
+    try {
+        var successful = document.execCommand('copy');
+        if (successful) {
+            showCopiedFeedback(button);
+        }
+    } catch (err) {
+        console.error('Fallback: Oops, unable to copy', err);
+    }
+
+    document.body.removeChild(textArea);
+}
+
+function showCopiedFeedback(button) {
+    const icon = button.querySelector('i');
+    
+    // Change icon to check
+    icon.className = 'fas fa-check text-green-500';
+    
+    // Revert back after 2 seconds
+    setTimeout(() => {
+        icon.className = 'far fa-copy';
+    }, 2000);
+}
+</script>
 
 <?php require_once __DIR__ . '/../../includes/admin-footer.php'; ?>
 

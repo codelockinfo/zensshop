@@ -155,6 +155,48 @@ class Order {
                 ]
             );
         }
+
+        // Auto-sync customer data (phone/address) if logged in
+        if (!empty($data['user_id'])) {
+            try {
+                $customerId = $data['user_id'];
+                $customerData = $this->db->fetchOne("SELECT * FROM customers WHERE id = ?", [$customerId]);
+                
+                if ($customerData) {
+                    $updates = [];
+                    $params = [];
+                    
+                    // Update Phone if missing
+                    if (empty($customerData['phone']) && !empty($data['customer_phone'])) {
+                        $updates[] = "phone = ?";
+                        $params[] = $data['customer_phone'];
+                    }
+                    
+                    // Update Billing Address if missing
+                    $newBilling = json_encode($data['billing_address']);
+                    if (empty($customerData['billing_address']) && !empty($data['billing_address'])) {
+                        $updates[] = "billing_address = ?";
+                        $params[] = $newBilling;
+                    }
+
+                    // Update Shipping Address if missing
+                    $newShipping = json_encode($data['shipping_address']);
+                    if (empty($customerData['shipping_address']) && !empty($data['shipping_address'])) {
+                        $updates[] = "shipping_address = ?";
+                        $params[] = $newShipping;
+                    }
+                    
+                    if (!empty($updates)) {
+                        $params[] = $customerId;
+                        $sql = "UPDATE customers SET " . implode(', ', $updates) . " WHERE id = ?";
+                        $this->db->execute($sql, $params);
+                    }
+                }
+            } catch (Exception $e) {
+                // Log error but don't fail order creation
+                error_log("Failed to auto-sync customer data for order #$orderNumber: " . $e->getMessage());
+            }
+        }
         
         return $orderId;
     }

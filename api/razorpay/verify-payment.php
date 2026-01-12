@@ -136,6 +136,11 @@ try {
     // Clear cart
     $cart->clear();
     
+    // Clear discount session
+    if (isset($_SESSION['checkout_discount_code'])) {
+        unset($_SESSION['checkout_discount_code']);
+    }
+    
     echo json_encode([
         'success' => true,
         'message' => 'Payment verified and order created successfully',

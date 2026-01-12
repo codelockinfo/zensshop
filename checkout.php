@@ -47,25 +47,101 @@ $discountAmount = 0;
 $discountCode = '';
 
 // Process discount code
-if (isset($_POST['apply_discount'])) {
-    $discountCode = trim($_POST['discount_code'] ?? '');
-    // Simple discount logic - you can enhance this
-    if (strtoupper($discountCode) === 'SAVE10') {
-        $discountAmount = 10.00;
+$discountError = ''; // Specific error for discount field
+if (isset($_POST['remove_discount'])) {
+    unset($_SESSION['checkout_discount_code']);
+    $discountCode = '';
+    $discountAmount = 0;
+} elseif (isset($_POST['apply_discount']) || isset($_POST['place_order']) || isset($_SESSION['checkout_discount_code'])) {
+    // Prefer POST, then Session
+    $codeToValidate = '';
+    if (isset($_POST['apply_discount']) || isset($_POST['place_order'])) {
+        $codeToValidate = trim($_POST['discount_code'] ?? '');
+    } elseif (isset($_SESSION['checkout_discount_code'])) {
+        $codeToValidate = $_SESSION['checkout_discount_code'];
+    }
+
+    if (!empty($codeToValidate)) {
+        require_once __DIR__ . '/classes/Discount.php';
+        $discountManager = new Discount();
+        try {
+            // Recalculate cart total to be safe
+            $currentTotal = $cart->getTotal();
+            $discountAmount = $discountManager->calculateAmount($codeToValidate, $currentTotal);
+            // If successful, save to session and variables
+            $_SESSION['checkout_discount_code'] = $codeToValidate;
+            $discountCode = $codeToValidate;
+        } catch (Exception $e) {
+            // If explicitly applying, show specific error
+            if (isset($_POST['apply_discount'])) {
+                $discountError = $e->getMessage();
+            }
+            // If just loading from session and it fails (e.g. cart invalid now), clear session
+            if (isset($_SESSION['checkout_discount_code']) && !isset($_POST['apply_discount'])) {
+                unset($_SESSION['checkout_discount_code']);
+            }
+            // Reset logic
+            $discountCode = ''; 
+            $discountAmount = 0;
+        }
     }
 }
 
+// Generate CSRF token if not exists
+if (empty($_SESSION['csrf_token'])) {
+    $_SESSION['csrf_token'] = bin2hex(random_bytes(32));
+}
+
+// Rate Limiting (Prevent spam submissions)
+if (isset($_SESSION['last_checkout_attempt']) && (time() - $_SESSION['last_checkout_attempt'] < 5)) {
+    // If request is within 5 seconds of previous one
+    $error = "Please wait a moment before trying again.";
+}
+$_SESSION['last_checkout_attempt'] = time();
+
 // Process order if form is submitted
-if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['place_order'])) {
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['place_order']) && empty($error)) {
     try {
-        // Validate required fields
+        // 1. Honeypot Check (Anti-Bot)
+        // If this hidden field is filled, it's a bot
+        if (!empty($_POST['hp_website_check'])) {
+            // Silently fail or throw error (Silent is better to confuse bots, but for UX we just stop)
+            throw new Exception("Security check failed.");
+        }
+
+        // 2. CSRF Check
+        if (!isset($_POST['csrf_token']) || $_POST['csrf_token'] !== $_SESSION['csrf_token']) {
+            throw new Exception("Security check failed. Please refresh the page.");
+        }
+
+        // 3. Validate required fields
         $required = ['customer_name', 'customer_email', 'phone', 'country'];
         foreach ($required as $field) {
             if (empty($_POST[$field])) {
                 throw new Exception("Please fill in all required fields");
             }
         }
+
+        // 4. Strict Server-Side Validation
+        if (!filter_var($_POST['customer_email'], FILTER_VALIDATE_EMAIL)) {
+             throw new Exception("Invalid email address format.");
+        }
         
+        // Basic phone validation (allow +, spaces, dashes, digits, min 7 chars)
+        if (!preg_match('/^[\+]?[(]?[0-9]{3}[)]?[-\s\.]?[0-9]{3}[-\s\.]?[0-9]{4,6}$/', trim($_POST['phone']))) {
+             // Relaxed check to avoid blocking valid international formats too aggressively
+             // Just checking if it has at least 7 digits
+             if (strlen(preg_replace('/[^0-9]/', '', $_POST['phone'])) < 7) {
+                 throw new Exception("Please enter a valid phone number.");
+             }
+        }
+        
+        // Block Direct POST for Online Payments (Must go through API/JS)
+        $paymentMethod = $_POST['payment_method'] ?? 'cash_on_delivery';
+        if ($paymentMethod === 'credit_card' || $paymentMethod === 'razorpay') {
+             throw new Exception("Online payments must be processed via the secure payment window. Please click 'Pay Now'.");
+        }
+
         // Get user ID if logged in
         $userId = null;
         if ($auth->isLoggedIn()) {
@@ -74,35 +150,35 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['place_order'])) {
         }
         
         // Combine phone code and phone number
-        $phoneCode = $_POST['phone_code'] ?? '+1';
-        $phoneNumber = trim($_POST['phone'] ?? '');
+        $phoneCode = sanitize_input($_POST['phone_code'] ?? '+1');
+        $phoneNumber = sanitize_input(trim($_POST['phone'] ?? ''));
         $fullPhone = $phoneCode . ' ' . $phoneNumber;
         
-        // Prepare order data
+        // Prepare order data with sanitization
         $orderData = [
             'user_id' => $userId,
-            'customer_name' => trim($_POST['customer_name']),
-            'customer_email' => trim($_POST['customer_email']),
+            'customer_name' => sanitize_input(trim($_POST['customer_name'])),
+            'customer_email' => sanitize_input(trim($_POST['customer_email'])),
             'customer_phone' => $fullPhone,
             'billing_address' => [
-                'street' => trim($_POST['address'] ?? ''),
-                'city' => trim($_POST['city'] ?? ''),
-                'state' => trim($_POST['state'] ?? ''),
-                'zip' => trim($_POST['zip'] ?? ''),
-                'country' => trim($_POST['country_name'] ?? $_POST['country'] ?? 'India')
+                'street' => sanitize_input(trim($_POST['address'] ?? '')),
+                'city' => sanitize_input(trim($_POST['city'] ?? '')),
+                'state' => sanitize_input(trim($_POST['state'] ?? '')),
+                'zip' => sanitize_input(trim($_POST['zip'] ?? '')),
+                'country' => sanitize_input(trim($_POST['country_name'] ?? $_POST['country'] ?? 'India'))
             ],
             'shipping_address' => [
-                'street' => trim($_POST['address'] ?? ''),
-                'city' => trim($_POST['city'] ?? ''),
-                'state' => trim($_POST['state'] ?? ''),
-                'zip' => trim($_POST['zip'] ?? ''),
-                'country' => trim($_POST['country_name'] ?? $_POST['country'] ?? 'India')
+                'street' => sanitize_input(trim($_POST['address'] ?? '')),
+                'city' => sanitize_input(trim($_POST['city'] ?? '')),
+                'state' => sanitize_input(trim($_POST['state'] ?? '')),
+                'zip' => sanitize_input(trim($_POST['zip'] ?? '')),
+                'country' => sanitize_input(trim($_POST['country_name'] ?? $_POST['country'] ?? 'India'))
             ],
             'items' => [],
             'discount_amount' => $discountAmount,
-            'shipping_amount' => $_POST['delivery_type'] === 'pickup' ? 0 : $shippingAmount,
+            'shipping_amount' => ($_POST['delivery_type'] ?? '') === 'pickup' ? 0 : $shippingAmount,
             'tax_amount' => 0,
-            'payment_method' => $_POST['payment_method'] ?? 'cash_on_delivery'
+            'payment_method' => $paymentMethod
         ];
         
         // Prepare order items from cart
@@ -213,9 +289,24 @@ nav.bg-white.sticky.top-0 {
         </div>
 
         <?php if ($error): ?>
-        <div class="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-6 max-w-6xl mx-auto">
+        <!-- <div id="php-error-msg" class="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-6 max-w-6xl mx-auto transition-opacity duration-500">
             <?php echo htmlspecialchars($error); ?>
-        </div>
+        </div> -->
+        <script>
+            // Auto-hide error after 5 seconds
+            setTimeout(function() {
+                const errorMsg = document.getElementById('php-error-msg');
+                if (errorMsg) {
+                    errorMsg.style.opacity = '0';
+                    setTimeout(() => errorMsg.style.display = 'none', 500); // Wait for fade out
+                }
+            }, 5000);
+
+            // Prevent resubmission prompt on reload (PRG pattern via JS history)
+            if (window.history.replaceState) {
+                window.history.replaceState(null, null, window.location.href);
+            }
+        </script>
         <?php endif; ?>
 
         <form method="POST" action="<?php echo url('checkout'); ?>" class="max-w-6xl mx-auto">
@@ -380,216 +471,12 @@ nav.bg-white.sticky.top-0 {
                                 </div>
                                 <div>
                                     <label class="block text-sm font-semibold mb-2 text-gray-700">Country</label>
-                                    <div class="relative country-dropdown-wrapper">
-                                        <!-- Hidden inputs for form submission -->
-                                        <input type="hidden" name="country" id="countryInput" value="<?php echo htmlspecialchars($_POST['country'] ?? ''); ?>" required>
-                                        <?php
-                                        // Get country name from POST or lookup from code
-                                        $selectedCountryCode = $_POST['country'] ?? '';
-                                        $selectedCountryName = $_POST['country_name'] ?? '';
-                                        if ($selectedCountryCode && !$selectedCountryName) {
-                                            $countryLookup = [
-                                                'US' => 'United States', 'GB' => 'United Kingdom', 'CA' => 'Canada', 'AU' => 'Australia',
-                                                'DE' => 'Germany', 'FR' => 'France', 'IT' => 'Italy', 'ES' => 'Spain',
-                                                'NL' => 'Netherlands', 'BE' => 'Belgium', 'CH' => 'Switzerland', 'AT' => 'Austria',
-                                                'SE' => 'Sweden', 'NO' => 'Norway', 'DK' => 'Denmark', 'FI' => 'Finland',
-                                                'PL' => 'Poland', 'CZ' => 'Czech Republic', 'IE' => 'Ireland', 'PT' => 'Portugal',
-                                                'GR' => 'Greece', 'RO' => 'Romania', 'HU' => 'Hungary', 'BG' => 'Bulgaria',
-                                                'HR' => 'Croatia', 'SK' => 'Slovakia', 'SI' => 'Slovenia', 'LT' => 'Lithuania',
-                                                'LV' => 'Latvia', 'EE' => 'Estonia', 'LU' => 'Luxembourg', 'MT' => 'Malta',
-                                                'CY' => 'Cyprus', 'IS' => 'Iceland', 'LI' => 'Liechtenstein', 'MC' => 'Monaco',
-                                                'AD' => 'Andorra', 'SM' => 'San Marino', 'VA' => 'Vatican City',
-                                                'JP' => 'Japan', 'CN' => 'China', 'KR' => 'South Korea', 'IN' => 'India',
-                                                'SG' => 'Singapore', 'MY' => 'Malaysia', 'TH' => 'Thailand', 'PH' => 'Philippines',
-                                                'ID' => 'Indonesia', 'VN' => 'Vietnam', 'HK' => 'Hong Kong', 'TW' => 'Taiwan',
-                                                'NZ' => 'New Zealand', 'ZA' => 'South Africa', 'EG' => 'Egypt', 'AE' => 'United Arab Emirates',
-                                                'SA' => 'Saudi Arabia', 'IL' => 'Israel', 'TR' => 'Turkey', 'RU' => 'Russia',
-                                                'BR' => 'Brazil', 'MX' => 'Mexico', 'AR' => 'Argentina', 'CL' => 'Chile',
-                                                'CO' => 'Colombia', 'PE' => 'Peru', 'VE' => 'Venezuela', 'EC' => 'Ecuador',
-                                                'UY' => 'Uruguay', 'PY' => 'Paraguay', 'BO' => 'Bolivia', 'CR' => 'Costa Rica',
-                                                'PA' => 'Panama', 'GT' => 'Guatemala', 'DO' => 'Dominican Republic', 'CU' => 'Cuba',
-                                                'JM' => 'Jamaica', 'TT' => 'Trinidad and Tobago', 'BB' => 'Barbados', 'BS' => 'Bahamas',
-                                                'NG' => 'Nigeria', 'KE' => 'Kenya', 'GH' => 'Ghana', 'TZ' => 'Tanzania',
-                                                'ET' => 'Ethiopia', 'UG' => 'Uganda', 'MA' => 'Morocco', 'TN' => 'Tunisia',
-                                                'DZ' => 'Algeria', 'LY' => 'Libya', 'SD' => 'Sudan', 'AO' => 'Angola',
-                                                'MZ' => 'Mozambique', 'ZM' => 'Zambia', 'ZW' => 'Zimbabwe', 'BW' => 'Botswana',
-                                                'NA' => 'Namibia', 'MU' => 'Mauritius', 'SC' => 'Seychelles', 'MV' => 'Maldives',
-                                                'BD' => 'Bangladesh', 'PK' => 'Pakistan', 'LK' => 'Sri Lanka', 'NP' => 'Nepal',
-                                                'BT' => 'Bhutan', 'MM' => 'Myanmar', 'KH' => 'Cambodia', 'LA' => 'Laos',
-                                                'BN' => 'Brunei', 'FJ' => 'Fiji', 'PG' => 'Papua New Guinea', 'NC' => 'New Caledonia',
-                                                'PF' => 'French Polynesia', 'GU' => 'Guam', 'AS' => 'American Samoa',
-                                            ];
-                                            $selectedCountryName = $countryLookup[$selectedCountryCode] ?? $selectedCountryCode;
-                                        }
-                                        ?>
-                                        <input type="hidden" name="country_name" id="countryNameInput" value="<?php echo htmlspecialchars($selectedCountryName); ?>">
-                                        
-                                        <!-- Custom dropdown button -->
-                                        <button type="button" id="countryDropdownBtn" 
-                                                class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent bg-white text-left flex items-center justify-between">
-                                            <span id="countryDisplayText" class="text-gray-700">
-                                                <?php
-                                                $selectedCountry = $_POST['country'] ?? '';
-                                                if ($selectedCountry) {
-                                                    $countries = [
-                                                        'US' => 'United States', 'GB' => 'United Kingdom', 'CA' => 'Canada', 'AU' => 'Australia',
-                                                        'DE' => 'Germany', 'FR' => 'France', 'IT' => 'Italy', 'ES' => 'Spain',
-                                                        'NL' => 'Netherlands', 'BE' => 'Belgium', 'CH' => 'Switzerland', 'AT' => 'Austria',
-                                                        'SE' => 'Sweden', 'NO' => 'Norway', 'DK' => 'Denmark', 'FI' => 'Finland',
-                                                        'PL' => 'Poland', 'CZ' => 'Czech Republic', 'IE' => 'Ireland', 'PT' => 'Portugal',
-                                                        'GR' => 'Greece', 'RO' => 'Romania', 'HU' => 'Hungary', 'BG' => 'Bulgaria',
-                                                        'HR' => 'Croatia', 'SK' => 'Slovakia', 'SI' => 'Slovenia', 'LT' => 'Lithuania',
-                                                        'LV' => 'Latvia', 'EE' => 'Estonia', 'LU' => 'Luxembourg', 'MT' => 'Malta',
-                                                        'CY' => 'Cyprus', 'IS' => 'Iceland', 'LI' => 'Liechtenstein', 'MC' => 'Monaco',
-                                                        'AD' => 'Andorra', 'SM' => 'San Marino', 'VA' => 'Vatican City',
-                                                        'JP' => 'Japan', 'CN' => 'China', 'KR' => 'South Korea', 'IN' => 'India',
-                                                        'SG' => 'Singapore', 'MY' => 'Malaysia', 'TH' => 'Thailand', 'PH' => 'Philippines',
-                                                        'ID' => 'Indonesia', 'VN' => 'Vietnam', 'HK' => 'Hong Kong', 'TW' => 'Taiwan',
-                                                        'NZ' => 'New Zealand', 'ZA' => 'South Africa', 'EG' => 'Egypt', 'AE' => 'United Arab Emirates',
-                                                        'SA' => 'Saudi Arabia', 'IL' => 'Israel', 'TR' => 'Turkey', 'RU' => 'Russia',
-                                                        'BR' => 'Brazil', 'MX' => 'Mexico', 'AR' => 'Argentina', 'CL' => 'Chile',
-                                                        'CO' => 'Colombia', 'PE' => 'Peru', 'VE' => 'Venezuela', 'EC' => 'Ecuador',
-                                                        'UY' => 'Uruguay', 'PY' => 'Paraguay', 'BO' => 'Bolivia', 'CR' => 'Costa Rica',
-                                                        'PA' => 'Panama', 'GT' => 'Guatemala', 'DO' => 'Dominican Republic', 'CU' => 'Cuba',
-                                                        'JM' => 'Jamaica', 'TT' => 'Trinidad and Tobago', 'BB' => 'Barbados', 'BS' => 'Bahamas',
-                                                        'NG' => 'Nigeria', 'KE' => 'Kenya', 'GH' => 'Ghana', 'TZ' => 'Tanzania',
-                                                        'ET' => 'Ethiopia', 'UG' => 'Uganda', 'MA' => 'Morocco', 'TN' => 'Tunisia',
-                                                        'DZ' => 'Algeria', 'LY' => 'Libya', 'SD' => 'Sudan', 'AO' => 'Angola',
-                                                        'MZ' => 'Mozambique', 'ZM' => 'Zambia', 'ZW' => 'Zimbabwe', 'BW' => 'Botswana',
-                                                        'NA' => 'Namibia', 'MU' => 'Mauritius', 'SC' => 'Seychelles', 'MV' => 'Maldives',
-                                                        'BD' => 'Bangladesh', 'PK' => 'Pakistan', 'LK' => 'Sri Lanka', 'NP' => 'Nepal',
-                                                        'BT' => 'Bhutan', 'MM' => 'Myanmar', 'KH' => 'Cambodia', 'LA' => 'Laos',
-                                                        'BN' => 'Brunei', 'FJ' => 'Fiji', 'PG' => 'Papua New Guinea', 'NC' => 'New Caledonia',
-                                                        'PF' => 'French Polynesia', 'GU' => 'Guam', 'AS' => 'American Samoa',
-                                                    ];
-                                                    $flags = [
-                                                        'US' => '🇺🇸', 'GB' => '🇬🇧', 'CA' => '🇨🇦', 'AU' => '🇦🇺',
-                                                        'DE' => '🇩🇪', 'FR' => '🇫🇷', 'IT' => '🇮🇹', 'ES' => '🇪🇸',
-                                                        'NL' => '🇳🇱', 'BE' => '🇧🇪', 'CH' => '🇨🇭', 'AT' => '🇦🇹',
-                                                        'SE' => '🇸🇪', 'NO' => '🇳🇴', 'DK' => '🇩🇰', 'FI' => '🇫🇮',
-                                                        'PL' => '🇵🇱', 'CZ' => '🇨🇿', 'IE' => '🇮🇪', 'PT' => '🇵🇹',
-                                                        'GR' => '🇬🇷', 'RO' => '🇷🇴', 'HU' => '🇭🇺', 'BG' => '🇧🇬',
-                                                        'HR' => '🇭🇷', 'SK' => '🇸🇰', 'SI' => '🇸🇮', 'LT' => '🇱🇹',
-                                                        'LV' => '🇱🇻', 'EE' => '🇪🇪', 'LU' => '🇱🇺', 'MT' => '🇲🇹',
-                                                        'CY' => '🇨🇾', 'IS' => '🇮🇸', 'LI' => '🇱🇮', 'MC' => '🇲🇨',
-                                                        'AD' => '🇦🇩', 'SM' => '🇸🇲', 'VA' => '🇻🇦',
-                                                        'JP' => '🇯🇵', 'CN' => '🇨🇳', 'KR' => '🇰🇷', 'IN' => '🇮🇳',
-                                                        'SG' => '🇸🇬', 'MY' => '🇲🇾', 'TH' => '🇹🇭', 'PH' => '🇵🇭',
-                                                        'ID' => '🇮🇩', 'VN' => '🇻🇳', 'HK' => '🇭🇰', 'TW' => '🇹🇼',
-                                                        'NZ' => '🇳🇿', 'ZA' => '🇿🇦', 'EG' => '🇪🇬', 'AE' => '🇦🇪',
-                                                        'SA' => '🇸🇦', 'IL' => '🇮🇱', 'TR' => '🇹🇷', 'RU' => '🇷🇺',
-                                                        'BR' => '🇧🇷', 'MX' => '🇲🇽', 'AR' => '🇦🇷', 'CL' => '🇨🇱',
-                                                        'CO' => '🇨🇴', 'PE' => '🇵🇪', 'VE' => '🇻🇪', 'EC' => '🇪🇨',
-                                                        'UY' => '🇺🇾', 'PY' => '🇵🇾', 'BO' => '🇧🇴', 'CR' => '🇨🇷',
-                                                        'PA' => '🇵🇦', 'GT' => '🇬🇹', 'DO' => '🇩🇴', 'CU' => '🇨🇺',
-                                                        'JM' => '🇯🇲', 'TT' => '🇹🇹', 'BB' => '🇧🇧', 'BS' => '🇧🇸',
-                                                        'NG' => '🇳🇬', 'KE' => '🇰🇪', 'GH' => '🇬🇭', 'TZ' => '🇹🇿',
-                                                        'ET' => '🇪🇹', 'UG' => '🇺🇬', 'MA' => '🇲🇦', 'TN' => '🇹🇳',
-                                                        'DZ' => '🇩🇿', 'LY' => '🇱🇾', 'SD' => '🇸🇩', 'AO' => '🇦🇴',
-                                                        'MZ' => '🇲🇿', 'ZM' => '🇿🇲', 'ZW' => '🇿🇼', 'BW' => '🇧🇼',
-                                                        'NA' => '🇳🇦', 'MU' => '🇲🇺', 'SC' => '🇸🇨', 'MV' => '🇲🇻',
-                                                        'BD' => '🇧🇩', 'PK' => '🇵🇰', 'LK' => '🇱🇰', 'NP' => '🇳🇵',
-                                                        'BT' => '🇧🇹', 'MM' => '🇲🇲', 'KH' => '🇰🇭', 'LA' => '🇱🇦',
-                                                        'BN' => '🇧🇳', 'FJ' => '🇫🇯', 'PG' => '🇵🇬', 'NC' => '🇳🇨',
-                                                        'PF' => '🇵🇫', 'GU' => '🇬🇺', 'AS' => '🇦🇸',
-                                                    ];
-                                                    $flag = $flags[$selectedCountry] ?? '🌍';
-                                                    $name = $countries[$selectedCountry] ?? '';
-                                                    echo $flag . ' ' . $name;
-                                                } else {
-                                                    echo 'Choose country';
-                                                }
-                                                ?>
-                                            </span>
-                                            <i class="fas fa-chevron-down text-gray-400"></i>
-                                        </button>
-                                        
-                                        <!-- Dropdown menu -->
-                                        <div id="countryDropdown" class="hidden absolute z-50 w-full mt-1 bg-white border border-gray-300 rounded-lg shadow-lg max-h-80 overflow-hidden">
-                                            <!-- Search input -->
-                                            <div class="p-3 border-b border-gray-200">
-                                                <input type="text" id="countrySearch" placeholder="Search country..." 
-                                                       class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary text-sm">
-                                            </div>
-                                            
-                                            <!-- Country list -->
-                                            <div id="countryList" class="overflow-y-auto max-h-64">
-                                                <?php
-                                                $countries = [
-                                                    'US' => 'United States', 'GB' => 'United Kingdom', 'CA' => 'Canada', 'AU' => 'Australia',
-                                                    'DE' => 'Germany', 'FR' => 'France', 'IT' => 'Italy', 'ES' => 'Spain',
-                                                    'NL' => 'Netherlands', 'BE' => 'Belgium', 'CH' => 'Switzerland', 'AT' => 'Austria',
-                                                    'SE' => 'Sweden', 'NO' => 'Norway', 'DK' => 'Denmark', 'FI' => 'Finland',
-                                                    'PL' => 'Poland', 'CZ' => 'Czech Republic', 'IE' => 'Ireland', 'PT' => 'Portugal',
-                                                    'GR' => 'Greece', 'RO' => 'Romania', 'HU' => 'Hungary', 'BG' => 'Bulgaria',
-                                                    'HR' => 'Croatia', 'SK' => 'Slovakia', 'SI' => 'Slovenia', 'LT' => 'Lithuania',
-                                                    'LV' => 'Latvia', 'EE' => 'Estonia', 'LU' => 'Luxembourg', 'MT' => 'Malta',
-                                                    'CY' => 'Cyprus', 'IS' => 'Iceland', 'LI' => 'Liechtenstein', 'MC' => 'Monaco',
-                                                    'AD' => 'Andorra', 'SM' => 'San Marino', 'VA' => 'Vatican City',
-                                                    'JP' => 'Japan', 'CN' => 'China', 'KR' => 'South Korea', 'IN' => 'India',
-                                                    'SG' => 'Singapore', 'MY' => 'Malaysia', 'TH' => 'Thailand', 'PH' => 'Philippines',
-                                                    'ID' => 'Indonesia', 'VN' => 'Vietnam', 'HK' => 'Hong Kong', 'TW' => 'Taiwan',
-                                                    'NZ' => 'New Zealand', 'ZA' => 'South Africa', 'EG' => 'Egypt', 'AE' => 'United Arab Emirates',
-                                                    'SA' => 'Saudi Arabia', 'IL' => 'Israel', 'TR' => 'Turkey', 'RU' => 'Russia',
-                                                    'BR' => 'Brazil', 'MX' => 'Mexico', 'AR' => 'Argentina', 'CL' => 'Chile',
-                                                    'CO' => 'Colombia', 'PE' => 'Peru', 'VE' => 'Venezuela', 'EC' => 'Ecuador',
-                                                    'UY' => 'Uruguay', 'PY' => 'Paraguay', 'BO' => 'Bolivia', 'CR' => 'Costa Rica',
-                                                    'PA' => 'Panama', 'GT' => 'Guatemala', 'DO' => 'Dominican Republic', 'CU' => 'Cuba',
-                                                    'JM' => 'Jamaica', 'TT' => 'Trinidad and Tobago', 'BB' => 'Barbados', 'BS' => 'Bahamas',
-                                                    'NG' => 'Nigeria', 'KE' => 'Kenya', 'GH' => 'Ghana', 'TZ' => 'Tanzania',
-                                                    'ET' => 'Ethiopia', 'UG' => 'Uganda', 'MA' => 'Morocco', 'TN' => 'Tunisia',
-                                                    'DZ' => 'Algeria', 'LY' => 'Libya', 'SD' => 'Sudan', 'AO' => 'Angola',
-                                                    'MZ' => 'Mozambique', 'ZM' => 'Zambia', 'ZW' => 'Zimbabwe', 'BW' => 'Botswana',
-                                                    'NA' => 'Namibia', 'MU' => 'Mauritius', 'SC' => 'Seychelles', 'MV' => 'Maldives',
-                                                    'BD' => 'Bangladesh', 'PK' => 'Pakistan', 'LK' => 'Sri Lanka', 'NP' => 'Nepal',
-                                                    'BT' => 'Bhutan', 'MM' => 'Myanmar', 'KH' => 'Cambodia', 'LA' => 'Laos',
-                                                    'BN' => 'Brunei', 'FJ' => 'Fiji', 'PG' => 'Papua New Guinea', 'NC' => 'New Caledonia',
-                                                    'PF' => 'French Polynesia', 'GU' => 'Guam', 'AS' => 'American Samoa',
-                                                ];
-                                                
-                                                $flags = [
-                                                    'US' => '🇺🇸', 'GB' => '🇬🇧', 'CA' => '🇨🇦', 'AU' => '🇦🇺',
-                                                    'DE' => '🇩🇪', 'FR' => '🇫🇷', 'IT' => '🇮🇹', 'ES' => '🇪🇸',
-                                                    'NL' => '🇳🇱', 'BE' => '🇧🇪', 'CH' => '🇨🇭', 'AT' => '🇦🇹',
-                                                    'SE' => '🇸🇪', 'NO' => '🇳🇴', 'DK' => '🇩🇰', 'FI' => '🇫🇮',
-                                                    'PL' => '🇵🇱', 'CZ' => '🇨🇿', 'IE' => '🇮🇪', 'PT' => '🇵🇹',
-                                                    'GR' => '🇬🇷', 'RO' => '🇷🇴', 'HU' => '🇭🇺', 'BG' => '🇧🇬',
-                                                    'HR' => '🇭🇷', 'SK' => '🇸🇰', 'SI' => '🇸🇮', 'LT' => '🇱🇹',
-                                                    'LV' => '🇱🇻', 'EE' => '🇪🇪', 'LU' => '🇱🇺', 'MT' => '🇲🇹',
-                                                    'CY' => '🇨🇾', 'IS' => '🇮🇸', 'LI' => '🇱🇮', 'MC' => '🇲🇨',
-                                                    'AD' => '🇦🇩', 'SM' => '🇸🇲', 'VA' => '🇻🇦',
-                                                    'JP' => '🇯🇵', 'CN' => '🇨🇳', 'KR' => '🇰🇷', 'IN' => '🇮🇳',
-                                                    'SG' => '🇸🇬', 'MY' => '🇲🇾', 'TH' => '🇹🇭', 'PH' => '🇵🇭',
-                                                    'ID' => '🇮🇩', 'VN' => '🇻🇳', 'HK' => '🇭🇰', 'TW' => '🇹🇼',
-                                                    'NZ' => '🇳🇿', 'ZA' => '🇿🇦', 'EG' => '🇪🇬', 'AE' => '🇦🇪',
-                                                    'SA' => '🇸🇦', 'IL' => '🇮🇱', 'TR' => '🇹🇷', 'RU' => '🇷🇺',
-                                                    'BR' => '🇧🇷', 'MX' => '🇲🇽', 'AR' => '🇦🇷', 'CL' => '🇨🇱',
-                                                    'CO' => '🇨🇴', 'PE' => '🇵🇪', 'VE' => '🇻🇪', 'EC' => '🇪🇨',
-                                                    'UY' => '🇺🇾', 'PY' => '🇵🇾', 'BO' => '🇧🇴', 'CR' => '🇨🇷',
-                                                    'PA' => '🇵🇦', 'GT' => '🇬🇹', 'DO' => '🇩🇴', 'CU' => '🇨🇺',
-                                                    'JM' => '🇯🇲', 'TT' => '🇹🇹', 'BB' => '🇧🇧', 'BS' => '🇧🇸',
-                                                    'NG' => '🇳🇬', 'KE' => '🇰🇪', 'GH' => '🇬🇭', 'TZ' => '🇹🇿',
-                                                    'ET' => '🇪🇹', 'UG' => '🇺🇬', 'MA' => '🇲🇦', 'TN' => '🇹🇳',
-                                                    'DZ' => '🇩🇿', 'LY' => '🇱🇾', 'SD' => '🇸🇩', 'AO' => '🇦🇴',
-                                                    'MZ' => '🇲🇿', 'ZM' => '🇿🇲', 'ZW' => '🇿🇼', 'BW' => '🇧🇼',
-                                                    'NA' => '🇳🇦', 'MU' => '🇲🇺', 'SC' => '🇸🇨', 'MV' => '🇲🇻',
-                                                    'BD' => '🇧🇩', 'PK' => '🇵🇰', 'LK' => '🇱🇰', 'NP' => '🇳🇵',
-                                                    'BT' => '🇧🇹', 'MM' => '🇲🇲', 'KH' => '🇰🇭', 'LA' => '🇱🇦',
-                                                    'BN' => '🇧🇳', 'FJ' => '🇫🇯', 'PG' => '🇵🇬', 'NC' => '🇳🇨',
-                                                    'PF' => '🇵🇫', 'GU' => '🇬🇺', 'AS' => '🇦🇸',
-                                                ];
-                                                
-                                                foreach ($countries as $code => $name) {
-                                                    $flag = $flags[$code] ?? '🌍';
-                                                    echo "<div class=\"country-option px-4 py-2 hover:bg-gray-100 cursor-pointer flex items-center space-x-2\" data-code=\"{$code}\" data-name=\"{$name}\" data-flag=\"{$flag}\">";
-                                                    echo "<span>{$flag}</span>";
-                                                    echo "<span>{$name}</span>";
-                                                    echo "</div>\n";
-                                                }
-                                                ?>
-                                            </div>
-                                        </div>
-                                    </div>
+                                    <input type="text" name="country" 
+                                           value="<?php echo htmlspecialchars($_POST['country'] ?? 'India'); ?>"
+                                           required
+                                           placeholder="Enter country name"
+                                           class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent">
+
                                 </div>
                             </div>
                         </div>
@@ -618,18 +505,35 @@ nav.bg-white.sticky.top-0 {
                         </div>
                         
                         <!-- Discount Code -->
+                        <!-- Discount Code -->
                         <div class="mb-6">
-                            <form method="POST" class="flex gap-2">
-                                <input type="text" name="discount_code" 
-                                       value="<?php echo htmlspecialchars($discountCode); ?>"
-                                       placeholder="Discount code" 
-                                       class="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary">
-                                <button type="submit" name="apply_discount" class="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition font-semibold">
-                                    Apply
-                                </button>
-                            </form>
                             <?php if ($discountAmount > 0): ?>
-                            <p class="text-sm text-green-600 mt-2">Discount applied!</p>
+                                <!-- Applied State -->
+                                <input type="hidden" name="discount_code" value="<?php echo htmlspecialchars($discountCode); ?>">
+                                <div class="flex items-center justify-between py-1 px-5 bg-[#e5e7eb] border border-gray-300 rounded-lg">
+                                    <div class="flex items-center gap-2">
+                                        <i class="fas fa-tag text-gray-600"></i>
+                                        <span class="font-medium text-gray-700"><?php echo htmlspecialchars($discountCode); ?></span>
+                                    </div>
+                                    <button type="submit" name="remove_discount" value="1" formnovalidate class="text-gray-500 hover:text-red-600 transition focus:outline-none p-1">
+                                        <i class="fas fa-times"></i>
+                                    </button>
+                                </div>
+                                <p class="text-xs text-gray-600 mt-2 ml-1">Discount applied successfully!</p>
+                            <?php else: ?>
+                                <!-- Input State -->
+                                <div class="flex gap-2">
+                                    <input type="text" name="discount_code" 
+                                           value="<?php echo htmlspecialchars($discountCode); ?>"
+                                           placeholder="Discount code" 
+                                           class="flex-1 px-4 py-2 border <?php echo !empty($discountError) ? 'border-red-300 ring-2 ring-red-100' : 'border-gray-300'; ?> rounded-lg focus:outline-none focus:ring-2 focus:ring-primary">
+                                    <button type="submit" name="apply_discount" value="1" formnovalidate class="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition font-semibold">
+                                        Apply
+                                    </button>
+                                </div>
+                                <?php if (!empty($discountError)): ?>
+                                    <p class="text-sm text-red-500 mt-2 ml-1"><?php echo htmlspecialchars($discountError); ?></p>
+                                <?php endif; ?>
                             <?php endif; ?>
                         </div>
                         
@@ -646,7 +550,7 @@ nav.bg-white.sticky.top-0 {
                             <?php if ($discountAmount > 0): ?>
                             <div class="flex justify-between text-sm">
                                 <span class="text-gray-600">Discount</span>
-                                <span class="font-semibold text-green-600">-<?php echo format_currency($discountAmount); ?></span>
+                                <span class="font-semibold text-gray-600">-<?php echo format_currency($discountAmount); ?></span>
                             </div>
                             <?php endif; ?>
                             <div class="flex justify-between text-lg font-bold pt-2 border-t">
@@ -669,6 +573,13 @@ nav.bg-white.sticky.top-0 {
                         <button type="button" id="razorpayPayButton" class="w-full bg-blue-600 text-white py-4 px-6 rounded-lg hover:bg-blue-700 transition font-semibold mb-4">
                             Pay Now
                         </button>
+                        <!-- Honeypot Field (Hidden from users, visible to bots) -->
+                        <div style="display:none; opacity:0; visibility:hidden; position:absolute; left:-9999px;">
+                            <input type="text" name="hp_website_check" tabindex="-1" autocomplete="off" value="">
+                        </div>
+
+                        <!-- CSRF Token -->
+                        <input type="hidden" name="csrf_token" value="<?php echo $_SESSION['csrf_token']; ?>">
                         <input type="hidden" name="place_order" value="1">
                         
                         <!-- Security Message -->
@@ -716,111 +627,11 @@ function updateShipping() {
     // For now, it's handled server-side
 }
 
-// Country dropdown functionality
-(function() {
-    const dropdownBtn = document.getElementById('countryDropdownBtn');
-    const dropdown = document.getElementById('countryDropdown');
-    const countryInput = document.getElementById('countryInput');
-    const countryDisplayText = document.getElementById('countryDisplayText');
-    const countrySearch = document.getElementById('countrySearch');
-    const countryList = document.getElementById('countryList');
-    const countryOptions = countryList.querySelectorAll('.country-option');
+
     
-    // Toggle dropdown
-    if (dropdownBtn && dropdown) {
-        dropdownBtn.addEventListener('click', function(e) {
-            e.stopPropagation();
-            dropdown.classList.toggle('hidden');
-            if (!dropdown.classList.contains('hidden')) {
-                countrySearch.focus();
-            }
-        });
-        
-        // Close dropdown when clicking outside
-        document.addEventListener('click', function(e) {
-            if (!dropdownBtn.contains(e.target) && !dropdown.contains(e.target)) {
-                dropdown.classList.add('hidden');
-            }
-        });
-    }
+
     
-    // Search functionality
-    if (countrySearch && countryOptions.length > 0) {
-        countrySearch.addEventListener('input', function(e) {
-            const searchTerm = e.target.value.toLowerCase().trim();
-            
-            countryOptions.forEach(option => {
-                const name = option.getAttribute('data-name').toLowerCase();
-                const code = option.getAttribute('data-code').toLowerCase();
-                
-                if (name.includes(searchTerm) || code.includes(searchTerm)) {
-                    option.style.display = 'flex';
-                } else {
-                    option.style.display = 'none';
-                }
-            });
-        });
-    }
-    
-    // Select country
-    const countryNameInput = document.getElementById('countryNameInput');
-    countryOptions.forEach(option => {
-        option.addEventListener('click', function() {
-            const code = this.getAttribute('data-code');
-            const name = this.getAttribute('data-name');
-            const flag = this.getAttribute('data-flag');
-            
-            // Update hidden inputs
-            countryInput.value = code;
-            if (countryNameInput) {
-                countryNameInput.value = name;
-            }
-            
-            // Update display text
-            countryDisplayText.textContent = flag + ' ' + name;
-            
-            // Close dropdown
-            dropdown.classList.add('hidden');
-            
-            // Clear search
-            if (countrySearch) {
-                countrySearch.value = '';
-                // Show all options again
-                countryOptions.forEach(opt => {
-                    opt.style.display = 'flex';
-                });
-            }
-        });
-    });
-    
-    // Keyboard navigation
-    if (countrySearch) {
-        let selectedIndex = -1;
-        
-        countrySearch.addEventListener('keydown', function(e) {
-            const visibleOptions = Array.from(countryOptions).filter(opt => 
-                opt.style.display !== 'none'
-            );
-            
-            if (e.key === 'ArrowDown') {
-                e.preventDefault();
-                selectedIndex = Math.min(selectedIndex + 1, visibleOptions.length - 1);
-                visibleOptions[selectedIndex]?.scrollIntoView({ block: 'nearest' });
-            } else if (e.key === 'ArrowUp') {
-                e.preventDefault();
-                selectedIndex = Math.max(selectedIndex - 1, -1);
-                if (selectedIndex >= 0) {
-                    visibleOptions[selectedIndex]?.scrollIntoView({ block: 'nearest' });
-                }
-            } else if (e.key === 'Enter' && selectedIndex >= 0) {
-                e.preventDefault();
-                visibleOptions[selectedIndex]?.click();
-            } else {
-                selectedIndex = -1;
-            }
-        });
-    }
-})();
+
 
 // Error/Success Message Functions
 let errorMessageTimeout = null;
@@ -913,15 +724,14 @@ document.getElementById('razorpayPayButton').addEventListener('click', async fun
     const city = document.querySelector('input[name="city"]').value.trim();
     const state = document.querySelector('input[name="state"]').value.trim();
     const zip = document.querySelector('input[name="zip"]').value.trim();
-    const countryCode = document.querySelector('input[name="country"]').value.trim();
-    const countryName = document.querySelector('input[name="country_name"]').value.trim();
-    const country = countryName || countryCode; // Use full name if available, otherwise use code
+    const country = document.querySelector('input[name="country"]').value.trim();
     const deliveryType = document.querySelector('input[name="delivery_type"]:checked').value;
     
     // Hide any previous error messages
     hideErrorMessage();
     
-    if (!customerName || !customerEmail || !customerPhone || !address || !city || !state || !zip || !countryCode) {
+    // Check validation - specifically checking 'country' now instead of countryCode
+    if (!customerName || !customerEmail || !customerPhone || !address || !city || !state || !zip || !country) {
         console.error('[RAZORPAY] Validation failed: Missing required fields');
         showErrorMessage('Please fill in all required fields');
         return;
@@ -936,15 +746,9 @@ document.getElementById('razorpayPayButton').addEventListener('click', async fun
     }
     
     // Calculate final shipping and total based on delivery type
+    // Calculate final shipping and total based on delivery type
     const finalShipping = deliveryType === 'pickup' ? 0 : razorpayShippingAmount;
     const finalTotal = razorpayCartTotal + finalShipping - razorpayDiscountAmount;
-    
-    console.log('[RAZORPAY] Starting payment process');
-    console.log('[RAZORPAY] Cart total:', razorpayCartTotal);
-    console.log('[RAZORPAY] Shipping:', finalShipping);
-    console.log('[RAZORPAY] Discount:', razorpayDiscountAmount);
-    console.log('[RAZORPAY] Final total:', finalTotal);
-    console.log('[RAZORPAY] Delivery type:', deliveryType);
     
     // Disable button to prevent double clicks
     const button = this;
@@ -962,8 +766,6 @@ document.getElementById('razorpayPayButton').addEventListener('click', async fun
             discount_amount: razorpayDiscountAmount
         };
         
-        console.log('[RAZORPAY] Sending order request:', requestData);
-        
         const orderResponse = await fetch(razorpayBaseUrl + '/api/razorpay/create-order.php', {
             method: 'POST',
             headers: {
@@ -975,19 +777,12 @@ document.getElementById('razorpayPayButton').addEventListener('click', async fun
         const orderData = await orderResponse.json();
         
         if (!orderData.success) {
-            console.error('[RAZORPAY] Failed to create order:', orderData);
-            console.error('[RAZORPAY] Error message:', orderData.message);
-            if (orderData.debug) {
-                console.error('[RAZORPAY] Debug info:', orderData.debug);
-            }
             const errorMsg = orderData.message || 'Failed to create payment order';
             showErrorMessage(errorMsg);
             button.disabled = false;
             button.textContent = 'Pay Now';
             return;
         }
-        
-        console.log('[RAZORPAY] Order created successfully:', orderData);
         
         // Prepare order data for verification
         const orderInfo = {
@@ -1040,32 +835,22 @@ document.getElementById('razorpayPayButton').addEventListener('click', async fun
                     const verifyData = await verifyResponse.json();
                     
                     if (verifyData.success) {
-                        console.log('[RAZORPAY] Payment verified successfully:', verifyData);
-                        console.log('[RAZORPAY] Order ID:', verifyData.order_id);
-                        
                         // Ensure order_id exists
                         if (!verifyData.order_id) {
-                            console.error('[RAZORPAY] No order_id in response:', verifyData);
                             throw new Error('Order ID not received from server');
                         }
                         
                         // Redirect to success page with order ID
                         // Use clean URL format (without .php) to avoid .htaccess redirect issues
                         const successUrl = razorpayBaseUrl + '/order-success?id=' + encodeURIComponent(verifyData.order_id);
-                        console.log('[RAZORPAY] Redirecting to:', successUrl);
-                        console.log('[RAZORPAY] Order ID being passed:', verifyData.order_id);
-                        console.log('[RAZORPAY] Full verify response:', verifyData);
                         // Use window.location.replace to prevent back button issues
                         window.location.replace(successUrl);
                     } else {
-                        console.error('[RAZORPAY] Payment verification failed:', verifyData);
-                        console.error('[RAZORPAY] Error message:', verifyData.message);
                         showErrorMessage('Payment verification failed: ' + (verifyData.message || 'Unknown error'));
                         button.disabled = false;
                         button.textContent = 'Pay Now';
                     }
                 } catch (error) {
-                    console.error('[RAZORPAY] Payment verification error:', error);
                     showErrorMessage('An error occurred while verifying payment. Please contact support.');
                     button.disabled = false;
                     button.textContent = 'Pay Now';
@@ -1091,9 +876,6 @@ document.getElementById('razorpayPayButton').addEventListener('click', async fun
         razorpay.open();
         
     } catch (error) {
-        console.error('[RAZORPAY] Payment error:', error);
-        console.error('[RAZORPAY] Error message:', error.message);
-        console.error('[RAZORPAY] Error stack:', error.stack);
         showErrorMessage('An error occurred: ' + (error.message || 'Unknown error. Please try again.'));
         button.disabled = false;
         button.textContent = 'Pay Now';

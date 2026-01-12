@@ -104,7 +104,7 @@ $customers = $customer->getAllCustomers($filters);
                 <td><?php echo htmlspecialchars($item['email']); ?></td>
                 <td><?php echo !empty($item['phone']) ? htmlspecialchars($item['phone']) : '-'; ?></td>
                 <td><?php echo $item['total_orders']; ?></td>
-                <td>$<?php echo number_format($item['total_spent'], 2); ?></td>
+                <td><?php echo format_price($item['total_spent']); ?></td>
                 <td>
                     <?php if ($item['is_registered']): ?>
                     <span class="px-2 py-1 rounded <?php echo $item['status'] === 'active' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'; ?>">

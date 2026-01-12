@@ -206,6 +206,7 @@ body {
   min-height: calc(100vh - 70px);
 }
 
+
 .admin-content {
   background-color: var(--admin-content-bg);
   padding-top: 0 !important;
