@@ -6,145 +6,145 @@
 function initTopBarSlider() {
     const slider = document.getElementById('topBarSlider');
     if (!slider) return;
-    
+
     const slides = slider.querySelectorAll('.top-bar-slide');
     if (slides.length === 0) return;
-    
+
     const prevBtn = document.getElementById('topBarPrev');
     const nextBtn = document.getElementById('topBarNext');
-    
+
     let currentSlide = 0;
     const totalSlides = slides.length;
     let autoSlideInterval;
-    
+
     function updateSlider() {
         const translateX = -currentSlide * 100;
         slider.style.transform = `translateX(${translateX}%)`;
     }
-    
+
     function nextSlide() {
         currentSlide = (currentSlide + 1) % totalSlides;
         updateSlider();
         resetAutoSlide();
     }
-    
+
     function prevSlide() {
         currentSlide = (currentSlide - 1 + totalSlides) % totalSlides;
         updateSlider();
         resetAutoSlide();
     }
-    
+
     function resetAutoSlide() {
         clearInterval(autoSlideInterval);
         autoSlideInterval = setInterval(nextSlide, 4000);
     }
-    
+
     // Arrow button event listeners
     if (nextBtn) {
         nextBtn.addEventListener('click', nextSlide);
     }
-    
+
     if (prevBtn) {
         prevBtn.addEventListener('click', prevSlide);
     }
-    
+
     // Auto-rotate every 4 seconds
     autoSlideInterval = setInterval(nextSlide, 4000);
-    
+
     // Initialize first slide
     updateSlider();
 }
 
 // Mobile Menu Toggle
-document.addEventListener('DOMContentLoaded', function() {
+document.addEventListener('DOMContentLoaded', function () {
     // Initialize top bar slider
     initTopBarSlider();
-    
+
     const mobileMenuBtn = document.getElementById('mobileMenuBtn');
     const mobileMenuDrawer = document.getElementById('mobileMenuDrawer');
     const mobileMenuOverlay = document.getElementById('mobileMenuOverlay');
-    
+
     if (mobileMenuBtn && mobileMenuDrawer) {
-        mobileMenuBtn.addEventListener('click', function() {
+        mobileMenuBtn.addEventListener('click', function () {
             openMobileMenu();
         });
     }
-    
+
     if (mobileMenuOverlay) {
-        mobileMenuOverlay.addEventListener('click', function() {
+        mobileMenuOverlay.addEventListener('click', function () {
             closeMobileMenu();
         });
     }
-    
+
     // Close mobile menu on Escape key
-    document.addEventListener('keydown', function(e) {
+    document.addEventListener('keydown', function (e) {
         if (e.key === 'Escape' && mobileMenuDrawer && !mobileMenuDrawer.classList.contains('-translate-x-full')) {
             closeMobileMenu();
         }
     });
-    
+
     // Search Overlay
     const searchBtn = document.getElementById('searchBtn');
     const searchOverlay = document.getElementById('searchOverlay');
     const closeSearch = document.getElementById('closeSearch');
-    
+
     if (searchBtn && searchOverlay) {
-        searchBtn.addEventListener('click', function() {
+        searchBtn.addEventListener('click', function () {
             searchOverlay.classList.remove('hidden');
         });
     }
-    
+
     if (closeSearch && searchOverlay) {
-        closeSearch.addEventListener('click', function() {
+        closeSearch.addEventListener('click', function () {
             searchOverlay.classList.add('hidden');
         });
     }
-    
+
     // Close search on overlay click
     if (searchOverlay) {
-        searchOverlay.addEventListener('click', function(e) {
+        searchOverlay.addEventListener('click', function (e) {
             if (e.target === searchOverlay) {
                 searchOverlay.classList.add('hidden');
             }
         });
     }
-    
+
     // Currency Selector Dropdown
     const currencySelector = document.getElementById('currencySelector');
     const currencyDropdown = document.getElementById('currencyDropdown');
-    
+
     if (currencySelector && currencyDropdown) {
         const selectedFlagImg = document.getElementById('selectedFlagImg');
         const countryCode = document.getElementById('countryCode');
         const selectedCurrency = document.getElementById('selectedCurrency');
-        
+
         // Toggle dropdown on button click
-        currencySelector.addEventListener('click', function(e) {
+        currencySelector.addEventListener('click', function (e) {
             e.stopPropagation();
             e.preventDefault();
             currencyDropdown.classList.toggle('hidden');
         });
-        
+
         // Close dropdown when clicking outside
-        document.addEventListener('click', function(e) {
+        document.addEventListener('click', function (e) {
             if (currencySelector && currencyDropdown) {
                 if (!currencySelector.contains(e.target) && !currencyDropdown.contains(e.target)) {
                     currencyDropdown.classList.add('hidden');
                 }
             }
         });
-        
+
         // Handle currency selection
         const currencyOptions = currencyDropdown.querySelectorAll('.currency-option');
         currencyOptions.forEach(option => {
-            option.addEventListener('click', function(e) {
+            option.addEventListener('click', function (e) {
                 e.preventDefault();
                 e.stopPropagation();
-                
+
                 const flag = this.getAttribute('data-flag');
                 const code = this.getAttribute('data-code');
                 const currency = this.getAttribute('data-currency');
-                
+
                 if (flag && code && currency) {
                     if (selectedFlagImg) {
                         selectedFlagImg.src = flag;
@@ -157,87 +157,87 @@ document.addEventListener('DOMContentLoaded', function() {
                         selectedCurrency.textContent = currency;
                     }
                 }
-                
+
                 currencyDropdown.classList.add('hidden');
             });
         });
-        
+
         // Close dropdown on Escape key
-        document.addEventListener('keydown', function(e) {
+        document.addEventListener('keydown', function (e) {
             if (e.key === 'Escape' && currencyDropdown && !currencyDropdown.classList.contains('hidden')) {
                 currencyDropdown.classList.add('hidden');
             }
         });
     }
-    
+
     // Footer Currency Selector Dropdown
     const footerCurrencySelector = document.getElementById('footerCurrencySelector');
     const footerCurrencyDropdown = document.getElementById('footerCurrencyDropdown');
     const footerSelectedFlagImg = document.getElementById('footerSelectedFlagImg');
     const footerCountryCode = document.getElementById('footerCountryCode');
     const footerSelectedCurrency = document.getElementById('footerSelectedCurrency');
-    
+
     if (footerCurrencySelector && footerCurrencyDropdown && footerSelectedFlagImg && footerCountryCode && footerSelectedCurrency) {
         // Toggle dropdown on button click
-        footerCurrencySelector.addEventListener('click', function(e) {
+        footerCurrencySelector.addEventListener('click', function (e) {
             e.stopPropagation();
             e.preventDefault();
             footerCurrencyDropdown.classList.toggle('hidden');
         });
-        
+
         // Close dropdown when clicking outside
-        document.addEventListener('click', function(e) {
+        document.addEventListener('click', function (e) {
             if (footerCurrencySelector && footerCurrencyDropdown) {
                 if (!footerCurrencySelector.contains(e.target) && !footerCurrencyDropdown.contains(e.target)) {
                     footerCurrencyDropdown.classList.add('hidden');
                 }
             }
         });
-        
+
         // Handle currency selection
         const footerCurrencyOptions = footerCurrencyDropdown.querySelectorAll('.footer-currency-option');
         footerCurrencyOptions.forEach(option => {
-            option.addEventListener('click', function(e) {
+            option.addEventListener('click', function (e) {
                 e.preventDefault();
                 e.stopPropagation();
-                
+
                 const flag = this.getAttribute('data-flag');
                 const code = this.getAttribute('data-code');
                 const currency = this.getAttribute('data-currency');
-                
+
                 if (flag && code && currency) {
                     footerSelectedFlagImg.src = flag;
                     footerSelectedFlagImg.alt = currency.split(' (')[0];
                     footerCountryCode.textContent = code;
                     footerSelectedCurrency.textContent = currency;
                 }
-                
+
                 footerCurrencyDropdown.classList.add('hidden');
             });
         });
-        
+
         // Close dropdown on Escape key
-        document.addEventListener('keydown', function(e) {
+        document.addEventListener('keydown', function (e) {
             if (e.key === 'Escape' && footerCurrencyDropdown && !footerCurrencyDropdown.classList.contains('hidden')) {
                 footerCurrencyDropdown.classList.add('hidden');
             }
         });
     }
-    
+
     // Back to Top Button
     const backToTopBtn = document.getElementById('backToTop');
     if (backToTopBtn) {
         // Show/hide button based on scroll position
-        window.addEventListener('scroll', function() {
+        window.addEventListener('scroll', function () {
             if (window.pageYOffset > 300) {
                 backToTopBtn.classList.remove('hidden');
             } else {
                 backToTopBtn.classList.add('hidden');
             }
         });
-        
+
         // Scroll to top when clicked
-        backToTopBtn.addEventListener('click', function() {
+        backToTopBtn.addEventListener('click', function () {
             window.scrollTo({
                 top: 0,
                 behavior: 'smooth'
@@ -255,11 +255,15 @@ function smoothScrollTo(element) {
 }
 
 // Format Currency
-function formatCurrency(amount) {
-    return new Intl.NumberFormat('en-US', {
-        style: 'currency',
-        currency: 'USD'
-    }).format(amount);
+function formatCurrency(amount, currencyCode) {
+    const symbol = typeof CURRENCY_SYMBOL !== 'undefined' ? CURRENCY_SYMBOL : '₹';
+    if (currencyCode === 'USD' && symbol === '$') {
+        return new Intl.NumberFormat('en-US', {
+            style: 'currency',
+            currency: 'USD'
+        }).format(amount);
+    }
+    return symbol + parseFloat(amount).toFixed(2);
 }
 
 // Debounce Function
@@ -292,7 +296,7 @@ const observerOptions = {
     rootMargin: '0px 0px -50px 0px'
 };
 
-const observer = new IntersectionObserver(function(entries) {
+const observer = new IntersectionObserver(function (entries) {
     entries.forEach(entry => {
         if (entry.isIntersecting) {
             entry.target.classList.add('fade-in');
@@ -302,26 +306,26 @@ const observer = new IntersectionObserver(function(entries) {
 }, observerOptions);
 
 // Observe all sections for fade-in animation
-document.addEventListener('DOMContentLoaded', function() {
+document.addEventListener('DOMContentLoaded', function () {
     const sections = document.querySelectorAll('section[id$="-section"]');
     sections.forEach(section => {
         observer.observe(section);
     });
-    
+
     // Mega menu hover handling for better mobile/tablet support
     const megaMenuParents = document.querySelectorAll('.mega-menu-parent');
     megaMenuParents.forEach(parent => {
         const megaMenu = parent.querySelector('.mega-menu');
         if (megaMenu) {
             // Keep menu open when hovering over it
-            parent.addEventListener('mouseenter', function() {
+            parent.addEventListener('mouseenter', function () {
                 megaMenu.style.opacity = '1';
                 megaMenu.style.visibility = 'visible';
                 megaMenu.style.transform = 'translateY(0)';
                 megaMenu.style.transform = 'translateX(-50%)';
             });
-            
-            parent.addEventListener('mouseleave', function() {
+
+            parent.addEventListener('mouseleave', function () {
                 megaMenu.style.opacity = '0';
                 megaMenu.style.visibility = 'hidden';
                 megaMenu.style.transform = 'translateY(-10px)';
@@ -329,19 +333,19 @@ document.addEventListener('DOMContentLoaded', function() {
             });
         }
     });
-    
+
     // Shop menu hover handling
     const shopMenuParents = document.querySelectorAll('.shop-menu-parent');
     shopMenuParents.forEach(parent => {
         const shopDropdown = parent.querySelector('.shop-dropdown');
         if (shopDropdown) {
-            parent.addEventListener('mouseenter', function() {
+            parent.addEventListener('mouseenter', function () {
                 shopDropdown.style.opacity = '1';
                 shopDropdown.style.visibility = 'visible';
                 shopDropdown.style.transform = 'translateY(0)';
                 shopDropdown.style.transform = 'translateX(-10%)';
             });
-            parent.addEventListener('mouseleave', function() {
+            parent.addEventListener('mouseleave', function () {
                 shopDropdown.style.opacity = '0';
                 shopDropdown.style.visibility = 'hidden';
                 shopDropdown.style.transform = 'translateY(-10px)';
@@ -349,21 +353,21 @@ document.addEventListener('DOMContentLoaded', function() {
             });
         }
     });
-    
+
     // Pages dropdown menu hover handling
     const pagesMenuParents = document.querySelectorAll('.pages-menu-parent');
     pagesMenuParents.forEach(parent => {
         const pagesDropdown = parent.querySelector('.pages-dropdown');
         if (pagesDropdown) {
             // Keep menu open when hovering over it
-            parent.addEventListener('mouseenter', function() {
+            parent.addEventListener('mouseenter', function () {
                 pagesDropdown.style.opacity = '1';
                 pagesDropdown.style.visibility = 'visible';
                 pagesDropdown.style.transform = 'translateY(0)';
                 pagesDropdown.style.transform = 'translateX(-10%)';
             });
-            
-            parent.addEventListener('mouseleave', function() {
+
+            parent.addEventListener('mouseleave', function () {
                 pagesDropdown.style.opacity = '0';
                 pagesDropdown.style.visibility = 'hidden';
                 pagesDropdown.style.transform = 'translateY(-10px)';
@@ -389,7 +393,7 @@ function openMobileMenu() {
 function closeMobileMenu() {
     const drawer = document.getElementById('mobileMenuDrawer');
     const overlay = document.getElementById('mobileMenuOverlay');
-    
+
     // Close all submenus
     const submenus = ['shop', 'products', 'pages', 'shop-layouts', 'shop-pages'];
     submenus.forEach(name => {
@@ -399,7 +403,7 @@ function closeMobileMenu() {
             submenu.classList.add('hidden');
         }
     });
-    
+
     if (drawer && overlay) {
         drawer.classList.add('-translate-x-full');
         setTimeout(() => {

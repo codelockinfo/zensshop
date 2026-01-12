@@ -36,14 +36,13 @@ class Cart {
             }
         }
         
-        // If user is logged in, sync with database
-        if (isset($_SESSION['user_id'])) {
-            $dbCart = $this->getCartFromDB($_SESSION['user_id']);
-            if (!empty($dbCart)) {
-                $cartItems = $dbCart;
-                // Update cookie
-                $this->saveCartToCookie($cartItems);
-            }
+        // If user is logged in, strictly use database
+        $loggedId = $_SESSION['customer_id'] ?? $_SESSION['user_id'] ?? null;
+        if ($loggedId) {
+            $dbCart = $this->getCartFromDB($loggedId);
+            $cartItems = $dbCart;
+            // Sync cookie with DB
+            $this->saveCartToCookie($cartItems);
         }
         
         // Ensure all items have required fields and proper image URLs
@@ -231,8 +230,9 @@ class Cart {
         error_log("Cart::addItem - Returning cart: " . json_encode($cartItems));
         
         // Save to database if user is logged in
-        if (isset($_SESSION['user_id'])) {
-            $this->saveCartToDB($_SESSION['user_id'], $cartItems);
+        $loggedId = $_SESSION['customer_id'] ?? $_SESSION['user_id'] ?? null;
+        if ($loggedId) {
+            $this->saveCartToDB($loggedId, $cartItems);
         }
         
         return $cartItems;
@@ -257,8 +257,9 @@ class Cart {
         
         $this->saveCartToCookie($cartItems);
         
-        if (isset($_SESSION['user_id'])) {
-            $this->saveCartToDB($_SESSION['user_id'], $cartItems);
+        $loggedId = $_SESSION['customer_id'] ?? $_SESSION['user_id'] ?? null;
+        if ($loggedId) {
+            $this->saveCartToDB($loggedId, $cartItems);
         }
         
         return $cartItems;
@@ -278,8 +279,9 @@ class Cart {
         
         $this->saveCartToCookie($cartItems);
         
-        if (isset($_SESSION['user_id'])) {
-            $this->saveCartToDB($_SESSION['user_id'], $cartItems);
+        $loggedId = $_SESSION['customer_id'] ?? $_SESSION['user_id'] ?? null;
+        if ($loggedId) {
+            $this->saveCartToDB($loggedId, $cartItems);
         }
         
         return $cartItems;
@@ -296,11 +298,12 @@ class Cart {
         unset($_COOKIE[CART_COOKIE_NAME]);
         
         // Clear from database if user is logged in
-        if (isset($_SESSION['user_id'])) {
+        $loggedId = $_SESSION['customer_id'] ?? $_SESSION['user_id'] ?? null;
+        if ($loggedId) {
             try {
                 $this->db->execute(
                     "DELETE FROM cart WHERE user_id = ?",
-                    [$_SESSION['user_id']]
+                    [$loggedId]
                 );
             } catch (Exception $e) {
                 // Table might not exist, ignore
@@ -344,10 +347,18 @@ class Cart {
         $cartJson = json_encode($cartItems);
         // Only set cookie if headers haven't been sent yet
         if (!headers_sent()) {
-            setcookie(CART_COOKIE_NAME, $cartJson, time() + CART_COOKIE_EXPIRY, '/');
+            if (empty($cartItems)) {
+                setcookie(CART_COOKIE_NAME, '', time() - 3600, '/');
+            } else {
+                setcookie(CART_COOKIE_NAME, $cartJson, time() + CART_COOKIE_EXPIRY, '/');
+            }
         }
-        // Always update $_COOKIE for current request
-        $_COOKIE[CART_COOKIE_NAME] = $cartJson;
+        // Update $_COOKIE for current request
+        if (empty($cartItems)) {
+            unset($_COOKIE[CART_COOKIE_NAME]);
+        } else {
+            $_COOKIE[CART_COOKIE_NAME] = $cartJson;
+        }
     }
     
     /**
@@ -363,11 +374,45 @@ class Cart {
         // Insert new items
         foreach ($cartItems as $item) {
             $this->db->insert(
-                "INSERT INTO cart (user_id, product_id, quantity) VALUES (?, ?, ?)
-                 ON DUPLICATE KEY UPDATE quantity = ?",
-                [$userId, $item['product_id'], $item['quantity'], $item['quantity']]
+                "INSERT INTO cart (user_id, product_id, quantity) VALUES (?, ?, ?)",
+                [$userId, $item['product_id'], $item['quantity']]
             );
         }
+    }
+
+    /**
+     * Sync guest cart with database after login
+     */
+    public function syncCartAfterLogin($userId) {
+        $guestCart = [];
+        if (isset($_COOKIE[CART_COOKIE_NAME])) {
+            $cartData = json_decode($_COOKIE[CART_COOKIE_NAME], true);
+            if (is_array($cartData)) {
+                $guestCart = $cartData;
+            }
+        }
+        
+        if (empty($guestCart)) return;
+        
+        $dbCart = $this->getCartFromDB($userId);
+        
+        // Merge guest cart into db cart
+        foreach ($guestCart as $guestItem) {
+            $found = false;
+            foreach ($dbCart as &$dbItem) {
+                if ($dbItem['product_id'] == $guestItem['product_id']) {
+                    $dbItem['quantity'] += $guestItem['quantity'];
+                    $found = true;
+                    break;
+                }
+            }
+            if (!$found) {
+                $dbCart[] = $guestItem;
+            }
+        }
+        
+        $this->saveCartToDB($userId, $dbCart);
+        $this->saveCartToCookie($dbCart);
     }
 }
 

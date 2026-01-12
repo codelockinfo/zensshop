@@ -126,7 +126,13 @@ nav.bg-white.sticky.top-0 {
                     
                     <!-- Logo -->
                     <div class="mb-8">
-                        <a href="<?php echo $baseUrl; ?>/" class="text-3xl font-heading font-bold text-black">milano</a>
+                        <a href="<?php echo $baseUrl; ?>/" class="flex items-center">
+                            <?php if ($siteLogoType == 'image'): ?>
+                                <img src="<?php echo getImageUrl($siteLogo); ?>" alt="<?php echo htmlspecialchars($siteLogoText); ?>" class="h-12 w-auto object-contain">
+                            <?php else: ?>
+                                <span class="text-3xl font-heading font-bold text-black"><?php echo htmlspecialchars($siteLogoText); ?></span>
+                            <?php endif; ?>
+                        </a>
                     </div>
                     
                     <!-- Order Confirmation Header -->
@@ -257,11 +263,7 @@ nav.bg-white.sticky.top-0 {
                             <?php foreach ($orderData['items'] as $item): ?>
                             <div class="flex items-start space-x-4">
                                 <?php 
-                                $imageUrl = !empty($item['featured_image']) 
-                                    ? (strpos($item['featured_image'], 'http') === 0 
-                                        ? $item['featured_image'] 
-                                        : $baseUrl . '/' . ltrim($item['featured_image'], '/'))
-                                    : $baseUrl . '/assets/images/placeholder.jpg';
+                                $imageUrl = getImageUrl($item['product_image'] ?? '');
                                 ?>
                                 <img src="<?php echo htmlspecialchars($imageUrl); ?>" 
                                      alt="<?php echo htmlspecialchars($item['product_name']); ?>"

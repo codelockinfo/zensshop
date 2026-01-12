@@ -5,7 +5,7 @@
 let cartData = [];
 
 // Initialize cart on page load
-document.addEventListener('DOMContentLoaded', function() {
+document.addEventListener('DOMContentLoaded', function () {
     loadCart();
     setupCartUI();
 });
@@ -16,10 +16,10 @@ function setupCartUI() {
     const closeCart = document.getElementById('closeCart');
     const sideCart = document.getElementById('sideCart');
     const cartOverlay = document.getElementById('cartOverlay');
-    
+
     // Open cart
     if (cartBtn) {
-        cartBtn.addEventListener('click', function() {
+        cartBtn.addEventListener('click', function () {
             // Refresh cart data when opening
             refreshCart();
             sideCart.classList.remove('translate-x-full');
@@ -27,18 +27,18 @@ function setupCartUI() {
             document.body.style.overflow = 'hidden';
         });
     }
-    
+
     // Close cart
     if (closeCart) {
         closeCart.addEventListener('click', closeCartPanel);
     }
-    
+
     if (cartOverlay) {
         cartOverlay.addEventListener('click', closeCartPanel);
     }
-    
+
     // Close on Escape key
-    document.addEventListener('keydown', function(e) {
+    document.addEventListener('keydown', function (e) {
         if (e.key === 'Escape' && !sideCart.classList.contains('translate-x-full')) {
             closeCartPanel();
         }
@@ -48,7 +48,7 @@ function setupCartUI() {
 function closeCartPanel() {
     const sideCart = document.getElementById('sideCart');
     const cartOverlay = document.getElementById('cartOverlay');
-    
+
     sideCart.classList.add('translate-x-full');
     cartOverlay.classList.add('hidden');
     document.body.style.overflow = '';
@@ -72,7 +72,7 @@ function loadCart() {
                     parsed = null;
                 }
             }
-            
+
             if (parsed && Array.isArray(parsed)) {
                 cartData = parsed;
             } else {
@@ -85,7 +85,7 @@ function loadCart() {
     } else {
         cartData = [];
     }
-    
+
     updateCartUI();
     updateCartCount();
 }
@@ -100,12 +100,12 @@ async function refreshCart() {
                 'Content-Type': 'application/json',
             }
         });
-        
+
         const data = await response.json();
-        
+
         if (data.success && Array.isArray(data.cart)) {
             cartData = data.cart;
-            
+
             // Update cookie from API response if cookie_data is provided
             if (data.cookie_data) {
                 try {
@@ -116,7 +116,7 @@ async function refreshCart() {
                     console.error('[CART] Error updating cookie from refresh:', e);
                 }
             }
-            
+
             updateCartUI();
             updateCartCount();
         } else {
@@ -138,7 +138,7 @@ async function addToCart(productId, quantity = 1) {
             product_id: productId,
             quantity: quantity
         };
-        
+
         const response = await fetch(baseUrl + '/api/cart.php', {
             method: 'POST',
             headers: {
@@ -146,12 +146,12 @@ async function addToCart(productId, quantity = 1) {
             },
             body: JSON.stringify(requestBody)
         });
-        
+
         const data = await response.json();
-        
+
         if (data.success && Array.isArray(data.cart)) {
             cartData = data.cart;
-            
+
             // ALWAYS set cookie via JavaScript from response data - MUST be before any return
             if (data.cookie_data) {
                 try {
@@ -175,30 +175,30 @@ async function addToCart(productId, quantity = 1) {
                     console.error('[CART] Error setting cookie (fallback):', e);
                 }
             }
-            
+
             // Reload cart from cookie to ensure UI is updated with latest data
             loadCart();
-            
+
             // Check if we're on the cart page
             const isCartPage = window.location.pathname.includes('/cart') || document.querySelector('.cart-item');
-            
+
             if (isCartPage) {
                 // Reload cart page to show new item
                 window.location.reload();
                 return;
             }
-            
+
             // Ensure UI is updated (loadCart already does this, but double-check)
             updateCartUI();
             updateCartCount();
-            
+
             // Show success message
             if (typeof showNotificationModal === 'function') {
                 showNotificationModal('Product added to cart!', 'success');
             } else if (typeof showNotification === 'function') {
                 showNotification('Product added to cart!', 'success');
             }
-            
+
             // Open cart panel (only if not on cart page)
             const sideCart = document.getElementById('sideCart');
             const cartOverlay = document.getElementById('cartOverlay');
@@ -225,7 +225,7 @@ async function updateCartItem(productId, quantity) {
     if (quantity < 1) {
         quantity = 1;
     }
-    
+
     try {
         const baseUrl = typeof BASE_URL !== 'undefined' ? BASE_URL : window.location.pathname.split('/').slice(0, -1).join('/') || '';
         const response = await fetch(baseUrl + '/api/cart.php', {
@@ -238,12 +238,12 @@ async function updateCartItem(productId, quantity) {
                 quantity: quantity
             })
         });
-        
+
         const data = await response.json();
-        
+
         if (data.success && Array.isArray(data.cart)) {
             cartData = data.cart;
-            
+
             // ALWAYS set cookie via JavaScript from response data
             if (data.cookie_data) {
                 try {
@@ -263,13 +263,13 @@ async function updateCartItem(productId, quantity) {
                     console.error('[CART] Error updating cookie (fallback):', e);
                 }
             }
-            
+
             // Reload cart from cookie to update UI
             loadCart();
-            
+
             // Check if we're on the cart page
             const isCartPage = window.location.pathname.includes('/cart') || document.querySelector('.cart-item');
-            
+
             if (isCartPage) {
                 // Update cart page DOM
                 const cartItem = document.querySelector(`.cart-item[data-product-id="${productId}"]`);
@@ -279,7 +279,7 @@ async function updateCartItem(productId, quantity) {
                     if (qtySpan) {
                         qtySpan.textContent = quantity;
                     }
-                    
+
                     // Update total for this item
                     const itemPriceEl = cartItem.querySelector('.item-price');
                     if (itemPriceEl) {
@@ -289,7 +289,7 @@ async function updateCartItem(productId, quantity) {
                             itemTotal.textContent = (itemPrice * quantity).toFixed(2);
                         }
                     }
-                    
+
                     // Update cart totals
                     if (data.total !== undefined) {
                         const cartSubtotal = document.getElementById('cartSubtotal');
@@ -307,7 +307,7 @@ async function updateCartItem(productId, quantity) {
                 // Update side cart UI
                 updateCartUI();
             }
-            
+
             // Update cart count in header
             if (data.count !== undefined) {
                 window.lastCartCount = data.count;
@@ -336,7 +336,7 @@ async function updateCartItem(productId, quantity) {
 async function removeFromCart(productId) {
     // Check if we're on the cart page
     const isCartPage = window.location.pathname.includes('/cart') || document.querySelector('.cart-item');
-    
+
     try {
         const baseUrl = typeof BASE_URL !== 'undefined' ? BASE_URL : window.location.pathname.split('/').slice(0, -1).join('/') || '';
         const response = await fetch(baseUrl + '/api/cart.php', {
@@ -348,12 +348,12 @@ async function removeFromCart(productId) {
                 product_id: productId
             })
         });
-        
+
         const data = await response.json();
-        
+
         if (data.success) {
             cartData = Array.isArray(data.cart) ? data.cart : [];
-            
+
             // ALWAYS set cookie via JavaScript from response data
             if (data.cookie_data) {
                 try {
@@ -373,10 +373,10 @@ async function removeFromCart(productId) {
                     console.error('[CART] Error updating cookie (remove fallback):', e);
                 }
             }
-            
+
             // Reload cart from cookie to update UI
             loadCart();
-            
+
             if (isCartPage) {
                 // Remove item from cart page DOM immediately
                 const cartItem = document.querySelector(`.cart-item[data-product-id="${productId}"]`);
@@ -384,10 +384,10 @@ async function removeFromCart(productId) {
                     cartItem.style.transition = 'opacity 0.3s ease, transform 0.3s ease';
                     cartItem.style.opacity = '0';
                     cartItem.style.transform = 'translateX(-20px)';
-                    
+
                     setTimeout(() => {
                         cartItem.remove();
-                        
+
                         // Update cart totals
                         if (data.total !== undefined) {
                             const cartSubtotal = document.getElementById('cartSubtotal');
@@ -395,7 +395,7 @@ async function removeFromCart(productId) {
                             if (cartSubtotal) cartSubtotal.textContent = formatCurrency(data.total);
                             if (cartTotal) cartTotal.textContent = formatCurrency(data.total);
                         }
-                        
+
                         // Check if cart is empty
                         const remainingItems = document.querySelectorAll('.cart-item');
                         if (remainingItems.length === 0) {
@@ -411,13 +411,13 @@ async function removeFromCart(productId) {
                 // Update side cart UI
                 updateCartUI();
             }
-            
+
             // Update cart count in header
             if (data.count !== undefined) {
                 window.lastCartCount = data.count;
             }
             updateCartCount();
-            
+
             if (typeof showNotificationModal === 'function') {
                 showNotificationModal('Product removed from cart', 'success');
             } else if (typeof showNotification === 'function') {
@@ -446,9 +446,9 @@ async function removeFromCart(productId) {
 function updateCartUI() {
     const cartItemsContainer = document.getElementById('cartItems');
     const cartTotal = document.getElementById('cartTotal');
-    
+
     if (!cartItemsContainer) return;
-    
+
     if (cartData.length === 0) {
         cartItemsContainer.innerHTML = `
             <div class="text-center text-gray-500 py-8">
@@ -459,22 +459,22 @@ function updateCartUI() {
         if (cartTotal) cartTotal.textContent = formatCurrency(0, 'USD');
         return;
     }
-    
+
     let html = '';
     let total = 0;
-    
+
     cartData.forEach(item => {
         // Ensure we have valid data
         if (!item || !item.product_id || !item.name) {
             console.warn('Invalid cart item:', item);
             return;
         }
-        
+
         const itemPrice = parseFloat(item.price) || 0;
         const itemQuantity = parseInt(item.quantity) || 1;
         const itemTotal = itemPrice * itemQuantity;
         total += itemTotal;
-        
+
         // Get image URL - handle both relative and absolute paths
         let imageUrl = item.image || '';
         if (!imageUrl || imageUrl === 'null' || imageUrl === 'undefined' || imageUrl === '') {
@@ -487,7 +487,7 @@ function updateCartUI() {
             const baseUrl = typeof BASE_URL !== 'undefined' ? BASE_URL : window.location.pathname.split('/').slice(0, -1).join('/') || '';
             imageUrl = baseUrl + imageUrl;
         }
-        
+
         html += `
             <div class="side-cart-item-wrapper mb-4 pb-4 border-b" data-product-id="${item.product_id}">
                 <div class="flex items-center space-x-4 side-cart-item" data-product-id="${item.product_id}">
@@ -526,7 +526,7 @@ function updateCartUI() {
             </div>
         `;
     });
-    
+
     cartItemsContainer.innerHTML = html;
     const cartCurrency = cartData.length > 0 ? (cartData[0].currency || 'USD') : 'USD';
     if (cartTotal) cartTotal.textContent = formatCurrency(total, cartCurrency);
@@ -541,7 +541,7 @@ function updateCartCount() {
     } else {
         count = cartData.reduce((sum, item) => sum + (item.quantity || 0), 0);
     }
-    
+
     const cartCountElements = document.querySelectorAll('.cart-count');
     cartCountElements.forEach(el => {
         el.textContent = count;
@@ -563,18 +563,17 @@ function showNotification(message, type = 'info') {
         showNotificationModal(message, type);
         return;
     }
-    
+
     // Fallback to simple notification
     const notification = document.createElement('div');
-    notification.className = `fixed top-4 right-4 z-50 px-6 py-4 rounded-lg shadow-lg ${
-        type === 'success' ? 'bg-green-500' : 
-        type === 'error' ? 'bg-red-500' : 
-        'bg-blue-500'
-    } text-white`;
+    notification.className = `fixed top-4 right-4 z-50 px-6 py-4 rounded-lg shadow-lg ${type === 'success' ? 'bg-green-500' :
+            type === 'error' ? 'bg-red-500' :
+                'bg-blue-500'
+        } text-white`;
     notification.textContent = message;
-    
+
     document.body.appendChild(notification);
-    
+
     // Remove after 3 seconds
     setTimeout(() => {
         notification.style.opacity = '0';
@@ -606,16 +605,16 @@ function formatCurrency(amount, currencyCode) {
         'CNY': '¥',
         'RUB': '₽'
     };
-    
+
     // If currencyCode provided, use it
     if (currencyCode) {
         const code = currencyCode.toUpperCase();
-        const symbol = symbols[code] || '$';
+        const symbol = symbols[code] || '₹';
         return symbol + parseFloat(amount).toFixed(2);
     }
 
     // Fallback to global symbol
-    const symbol = typeof CURRENCY_SYMBOL !== 'undefined' ? CURRENCY_SYMBOL : '$';
+    const symbol = typeof CURRENCY_SYMBOL !== 'undefined' ? CURRENCY_SYMBOL : '₹';
     return symbol + parseFloat(amount).toFixed(2);
 }
 
@@ -654,12 +653,12 @@ async function confirmSideCartInlineRemoveWithWishlist(productId) {
             body: JSON.stringify({ product_id: productId })
         });
         const wishlistResult = await wishlistResponse.json();
-        
+
         // Update wishlist count
         if (wishlistResult.success && typeof refreshWishlist === 'function') {
             await refreshWishlist();
         }
-        
+
         // Remove from cart
         await removeFromCart(productId);
     } catch (error) {

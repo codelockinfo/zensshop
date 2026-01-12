@@ -42,3 +42,6 @@ define('RAZORPAY_KEY_ID', getenv('RAZORPAY_KEY_ID') ?: 'rzp_test_RfbZw5apB4THcH'
 define('RAZORPAY_KEY_SECRET', getenv('RAZORPAY_KEY_SECRET') ?: 'CEpjpNKALClK7tuKFf20D9VM');
 define('RAZORPAY_MODE', getenv('RAZORPAY_MODE') ?: 'test'); // 'test' or 'live'
 
+// Google Auth Configuration
+define('GOOGLE_CLIENT_ID', 'YOUR_GOOGLE_CLIENT_ID.apps.googleusercontent.com');
+

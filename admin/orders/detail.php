@@ -113,8 +113,8 @@ require_once __DIR__ . '/../../includes/admin-header.php';
                 <?php foreach ($orderData['items'] as $item): ?>
                 <div class="flex items-start space-x-4 pb-4 border-b last:border-b-0">
                     <?php 
-                    $imageUrl = !empty($item['featured_image']) 
-                        ? getImageUrl($item['featured_image'])
+                    $imageUrl = !empty($item['product_image']) 
+                        ? getImageUrl($item['product_image'])
                         : 'https://via.placeholder.com/100';
                     ?>
                     <img src="<?php echo htmlspecialchars($imageUrl); ?>" 

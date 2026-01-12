@@ -218,9 +218,9 @@ $action = $segments[count($segments) - 1] ?? '';  // add, list
                 <a href="<?php echo $baseUrl; ?>/admin/products/list.php" class="sidebar-menu-item flex items-center space-x-3 py-2 px-4 <?php echo strpos($_SERVER['PHP_SELF'], 'products') !== false ? 'bg-gray-700' : ''; ?>" title="Ecommerce">
                     <i class="fas fa-shopping-cart text-md md:text-lg"></i>
                     <span class="sidebar-menu-text">Ecommerce</span>
-                    <i class="fas fa-chevron-down text-xs ml-auto"></i>
+                    <i class="fas <?php echo strpos($_SERVER['PHP_SELF'], 'products') !== false ? 'fa-chevron-down' : 'fa-chevron-up'; ?> text-xs ml-auto"></i>
                 </a>
-                <div class="sidebar-submenu mt-2 space-y-1">
+                <div class="sidebar-submenu mt-2 space-y-1 <?php echo strpos($_SERVER['PHP_SELF'], 'products') !== false ? '' : 'hidden'; ?>">
                     <a href="<?php echo $baseUrl; ?>/admin/products/add.php" class=" <?php echo ($module === 'products' && in_array($action, ['add', 'add.php'])) ? 'bg-gray-700 text-white' : ''; ?> flex items-center space-x-2 py-1 px-4 text-sm" title="Add Product">
                         <i class="fas fa-gem text-xs"></i>
                         <span>Add Product</span>
@@ -235,7 +235,7 @@ $action = $segments[count($segments) - 1] ?? '';  // add, list
                     <a href="<?php echo $baseUrl; ?>/admin/categories/list.php" class="sidebar-menu-item flex items-center space-x-3 py-2 px-4 <?php echo strpos($_SERVER['PHP_SELF'], 'categories') !== false ? 'bg-gray-700' : ''; ?>" title="Category">
                         <i class="fas fa-layer-group text-md md:text-lg"></i>
                         <span class="sidebar-menu-text">Category</span>
-                        <i class="fas fa-chevron-up text-xs ml-auto category-arrow"></i>
+                        <i class="fas <?php echo strpos($_SERVER['PHP_SELF'], 'categories') !== false ? 'fa-chevron-down' : 'fa-chevron-up'; ?> text-xs ml-auto category-arrow"></i>
                     </a>
                     <div class="sidebar-submenu mt-2 space-y-1 <?php echo strpos($_SERVER['PHP_SELF'], 'categories') !== false ? '' : 'hidden'; ?>">
                         <a href="<?php echo $baseUrl; ?>/admin/categories/list.php" class=" flex items-center space-x-2 py-1 px-4 text-sm <?php echo basename($_SERVER['PHP_SELF']) === 'list.php' && strpos($_SERVER['PHP_SELF'], 'categories') !== false ? 'bg-gray-700' : ''; ?>" title="Category List">
@@ -251,9 +251,9 @@ $action = $segments[count($segments) - 1] ?? '';  // add, list
                 <a href="<?php echo $baseUrl; ?>/admin/orders/list.php" class="sidebar-menu-item flex items-center space-x-3 py-2 px-4 mt-2 <?php echo strpos($_SERVER['PHP_SELF'], 'orders') !== false ? 'bg-gray-700' : ''; ?>" title="Order">
                     <i class="fas fa-file-alt text-md md:text-lg"></i>
                     <span class="sidebar-menu-text">Order</span>
-                    <i class="fas fa-chevron-down text-xs ml-auto"></i>
+                    <i class="fas <?php echo strpos($_SERVER['PHP_SELF'], 'orders') !== false ? 'fa-chevron-down' : 'fa-chevron-up'; ?> text-xs ml-auto"></i>
                 </a>
-                <div class="sidebar-submenu mt-2 space-y-1">
+                <div class="sidebar-submenu mt-2 space-y-1 <?php echo strpos($_SERVER['PHP_SELF'], 'orders') !== false ? '' : 'hidden'; ?>">
                     <a href="<?php echo $baseUrl; ?>/admin/orders/list.php" class="<?php echo ($module === 'orders' && in_array($action, ['list'])) ? 'bg-gray-700 text-white' : ''; ?> flex items-center space-x-2 py-1 px-4 text-sm" title="Order List">
                         <i class="fas fa-gem text-xs"></i>
                         <span>Order List</span>
@@ -266,9 +266,9 @@ $action = $segments[count($segments) - 1] ?? '';  // add, list
                 <a href="<?php echo $baseUrl; ?>/admin/customers/list.php" class="sidebar-menu-item flex items-center space-x-3 py-2 px-4 mt-2 <?php echo strpos($_SERVER['PHP_SELF'], 'customers') !== false ? 'bg-gray-700' : ''; ?>" title="Customers">
                     <i class="fas fa-users text-lg"></i>
                     <span class="sidebar-menu-text">Customers</span>
-                    <i class="fas fa-chevron-down text-xs ml-auto"></i>
+                    <i class="fas <?php echo strpos($_SERVER['PHP_SELF'], 'customers') !== false ? 'fa-chevron-down' : 'fa-chevron-up'; ?> text-xs ml-auto"></i>
                 </a>
-                <div class="sidebar-submenu mt-2 space-y-1">
+                <div class="sidebar-submenu mt-2 space-y-1 <?php echo strpos($_SERVER['PHP_SELF'], 'customers') !== false ? '' : 'hidden'; ?>">
                     <a href="<?php echo $baseUrl; ?>/admin/customers/list.php" class="<?php echo ($module === 'customers' && in_array($action, ['list'])) ? 'bg-gray-700 text-white' : ''; ?> flex items-center space-x-2 py-1 px-4 text-sm" title="Customer List">
                         <i class="fas fa-gem text-xs"></i>
                         <span>Customer List</span>
@@ -279,10 +279,64 @@ $action = $segments[count($segments) - 1] ?? '';  // add, list
                     <span class="sidebar-menu-text">Report</span>
                 </a>
 
-                <a href="<?php echo $baseUrl; ?>/admin/settings.php" class="sidebar-menu-item flex items-center space-x-3 py-2 px-4 mt-2 <?php echo basename($_SERVER['PHP_SELF']) === 'settings.php' ? 'bg-gray-700' : ''; ?>" title="Settings">
-                    <i class="fas fa-cog text-md md:text-lg"></i>
-                    <span class="sidebar-menu-text">Settings</span>
-                </a>
+
+                <!-- Settings Menu Parent -->
+<?php
+$isSettingsPage = strpos($_SERVER['PHP_SELF'], 'settings') !== false
+               || strpos($_SERVER['PHP_SELF'], 'header_info') !== false
+               || strpos($_SERVER['PHP_SELF'], 'footer_info') !== false
+               || strpos($_SERVER['PHP_SELF'], 'menu_settings') !== false;
+
+$currentPage = basename($_SERVER['PHP_SELF']);
+?>
+
+<div class="category-menu-parent mt-2">
+    <!-- Parent Menu -->
+    <a href="<?php echo $baseUrl; ?>/admin/settings.php"
+       class="sidebar-menu-item flex items-center space-x-3 py-2 px-4 <?php echo $isSettingsPage ? 'bg-gray-700' : ''; ?>"
+       title="Settings">
+
+        <i class="fas fa-layer-group text-md md:text-lg"></i>
+        <span class="sidebar-menu-text">Settings</span>
+
+        <i class="fas <?php echo $isSettingsPage ? 'fa-chevron-down' : 'fa-chevron-up'; ?> text-xs ml-auto category-arrow"></i>
+    </a>
+
+    <!-- Sub Menu -->
+    <div class="sidebar-submenu mt-2 space-y-1 <?php echo $isSettingsPage ? '' : 'hidden'; ?>">
+
+        <a href="<?php echo $baseUrl; ?>/admin/settings.php"
+           class="flex items-center space-x-2 py-1 px-4 text-sm <?php echo ($currentPage === 'settings.php') ? 'bg-gray-700' : ''; ?>"
+           title="Product Page">
+            <i class="fas fa-gem text-xs"></i>
+            <span>Product Page</span>
+        </a>
+
+        <a href="<?php echo $baseUrl; ?>/admin/header_info.php"
+           class="flex items-center space-x-2 py-1 px-4 text-sm <?php echo ($currentPage === 'header_info.php') ? 'bg-gray-700' : ''; ?>"
+           title="Header Info">
+            <i class="fas fa-gem text-xs"></i>
+            <span>Header Info</span>
+        </a>
+
+        <a href="<?php echo $baseUrl; ?>/admin/footer_info.php"
+           class="flex items-center space-x-2 py-1 px-4 text-sm <?php echo ($currentPage === 'footer_info.php') ? 'bg-gray-700' : ''; ?>"
+           title="Footer Info">
+            <i class="fas fa-gem text-xs"></i>
+            <span>Footer Info</span>
+        </a>
+
+        <a href="<?php echo $baseUrl; ?>/admin/menu_settings.php"
+           class="flex items-center space-x-2 py-1 px-4 text-sm <?php echo ($currentPage === 'menu_settings.php') ? 'bg-gray-700' : ''; ?>"
+           title="Menu Settings">
+            <i class="fas fa-gem text-xs"></i>
+            <span>Menu Settings</span>
+        </a>
+
+    </div>
+</div>
+
+                
 
                 <a href="<?php echo $baseUrl; ?>/admin/logout.php" class="sidebar-menu-item flex items-center space-x-3 py-2 px-4 mt-2 <?php echo basename($_SERVER['PHP_SELF']) === 'logout.php' ? 'bg-gray-700' : ''; ?>" title="Logout">
                     <i class="fas fa-sign-out-alt text-md md:text-lg"></i>

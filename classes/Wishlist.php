@@ -36,14 +36,12 @@ class Wishlist {
             }
         }
         
-        // If user is logged in, sync with database
-        if (isset($_SESSION['user_id'])) {
-            $dbWishlist = $this->getWishlistFromDB($_SESSION['user_id']);
-            if (!empty($dbWishlist)) {
-                $wishlistItems = $dbWishlist;
-                // Update cookie
-                $this->saveWishlistToCookie($wishlistItems);
-            }
+        // If user is logged in, strictly use database
+        $loggedId = $_SESSION['customer_id'] ?? $_SESSION['user_id'] ?? null;
+        if ($loggedId) {
+            $wishlistItems = $this->getWishlistFromDB($loggedId);
+            // Sync cookie with DB so that local count remains accurate
+            $this->saveWishlistToCookie($wishlistItems);
         }
         
         // Ensure all items have required fields and proper image URLs
@@ -106,7 +104,7 @@ class Wishlist {
      */
     private function getWishlistFromDB($userId) {
         $items = $this->db->fetchAll(
-            "SELECT w.*, p.name, p.price, p.sale_price, p.featured_image, p.slug, p.rating, p.review_count
+            "SELECT w.*, p.name, p.price, p.sale_price, p.featured_image, p.slug, p.rating, p.review_count, p.sku
              FROM wishlist w
              INNER JOIN products p ON w.product_id = p.id
              WHERE w.user_id = ?",
@@ -147,7 +145,9 @@ class Wishlist {
                 'image' => $productImage,
                 'slug' => $item['slug'],
                 'rating' => $item['rating'] ?? 0,
-                'review_count' => $item['review_count'] ?? 0
+                'review_count' => $item['review_count'] ?? 0,
+                'sku' => $item['sku'],
+                'featured_image' => $item['featured_image']
             ];
         }
         
@@ -212,11 +212,19 @@ class Wishlist {
         $this->saveWishlistToCookie($wishlistItems);
         
         // Save to database if user is logged in
-        if (isset($_SESSION['user_id'])) {
-            $this->saveWishlistToDB($_SESSION['user_id'], $wishlistItems);
+        $loggedId = $_SESSION['customer_id'] ?? $_SESSION['user_id'] ?? null;
+        if ($loggedId) {
+            $this->saveWishlistToDB($loggedId, $wishlistItems);
         }
         
         return $wishlistItems;
+    }
+
+    /**
+     * Get items for a specific user
+     */
+    public function getItems($userId) {
+        return $this->getWishlistFromDB($userId);
     }
     
     /**
@@ -233,8 +241,9 @@ class Wishlist {
         
         $this->saveWishlistToCookie($wishlistItems);
         
-        if (isset($_SESSION['user_id'])) {
-            $this->saveWishlistToDB($_SESSION['user_id'], $wishlistItems);
+        $loggedId = $_SESSION['customer_id'] ?? $_SESSION['user_id'] ?? null;
+        if ($loggedId) {
+            $this->saveWishlistToDB($loggedId, $wishlistItems);
         }
         
         return $wishlistItems;
@@ -268,10 +277,18 @@ class Wishlist {
         $wishlistJson = json_encode($wishlistItems);
         // Only set cookie if headers haven't been sent yet
         if (!headers_sent()) {
-            setcookie(WISHLIST_COOKIE_NAME, $wishlistJson, time() + WISHLIST_COOKIE_EXPIRY, '/');
+            if (empty($wishlistItems)) {
+                setcookie(WISHLIST_COOKIE_NAME, '', time() - 3600, '/');
+            } else {
+                setcookie(WISHLIST_COOKIE_NAME, $wishlistJson, time() + WISHLIST_COOKIE_EXPIRY, '/');
+            }
         }
-        // Always update $_COOKIE for current request
-        $_COOKIE[WISHLIST_COOKIE_NAME] = $wishlistJson;
+        // Update $_COOKIE for current request
+        if (empty($wishlistItems)) {
+            unset($_COOKIE[WISHLIST_COOKIE_NAME]);
+        } else {
+            $_COOKIE[WISHLIST_COOKIE_NAME] = $wishlistJson;
+        }
     }
     
     /**

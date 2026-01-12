@@ -9,16 +9,28 @@ ob_start();
 require_once __DIR__ . '/includes/functions.php';
 require_once __DIR__ . '/classes/Cart.php';
 require_once __DIR__ . '/classes/Order.php';
-require_once __DIR__ . '/classes/Auth.php';
+require_once __DIR__ . '/classes/CustomerAuth.php';
 
 $baseUrl = getBaseUrl();
 $cart = new Cart();
 $order = new Order();
-$auth = new Auth();
+$auth = new CustomerAuth();
+
+// Require login for checkout
+if (!$auth->isLoggedIn()) {
+    ob_end_clean();
+    header('Location: ' . url('login?redirect=checkout'));
+    exit;
+}
 
 // Get cart items
 $cartItems = $cart->getCart();
 $cartTotal = $cart->getTotal();
+
+$customer = null;
+if ($auth->isLoggedIn()) {
+    $customer = $auth->getCurrentCustomer();
+}
 
 // Redirect if cart is empty
 if (empty($cartItems)) {
@@ -57,7 +69,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['place_order'])) {
         // Get user ID if logged in
         $userId = null;
         if ($auth->isLoggedIn()) {
-            $currentUser = $auth->getCurrentUser();
+            $currentUser = $auth->getCurrentCustomer();
             $userId = $currentUser['id'] ?? null;
         }
         
@@ -211,8 +223,31 @@ nav.bg-white.sticky.top-0 {
                 <!-- Left Section: Shipping Information -->
                 <div class="lg:col-span-2">
                     <div class="bg-white rounded-lg p-6 md:p-8">
-                        <h1 class="text-3xl font-bold mb-2">Checkout</h1>
-                        <h2 class="text-xl font-semibold text-gray-700 mb-6">Shipping Information</h2>
+                        <div class="flex items-center justify-between mb-4">
+                            <div class="flex items-center space-x-4">
+                                <a href="<?php echo url('cart'); ?>" class="text-gray-400 hover:text-black transition-colors" title="Back to Cart">
+                                    <i class="fas fa-chevron-left text-xl"></i>
+                                </a>
+                                <h1 class="text-3xl font-bold text-gray-900">Checkout</h1>
+                            </div>
+                        </div>
+
+                        <?php if ($customer): ?>
+                            <div class="bg-blue-50 border border-blue-100 rounded-xl p-4 mb-8 flex items-center space-x-3">
+                                <div class="w-10 h-10 bg-blue-600 rounded-full flex items-center justify-center text-white">
+                                    <i class="fas fa-user"></i>
+                                </div>
+                                <div>
+                                    <p class="text-sm text-blue-800">Welcome back, <span class="font-bold"><?php echo htmlspecialchars($customer['name']); ?></span>! </p>
+                                    <p class="text-xs text-blue-600 font-medium italic">Happy ordering! ✨</p>
+                                </div>
+                            </div>
+                        <?php endif; ?>
+
+                        <h2 class="text-xl font-semibold text-gray-800 mb-6 flex items-center">
+                            <i class="fas fa-shipping-fast mr-3 text-gray-400"></i>
+                            Shipping Information
+                        </h2>
                         
                         <!-- Delivery Options -->
                         <div class="flex gap-4 mb-8">
@@ -237,14 +272,14 @@ nav.bg-white.sticky.top-0 {
                             <div>
                                 <label class="block text-sm font-semibold mb-2 text-gray-700">Full name</label>
                                 <input type="text" name="customer_name" required 
-                                       value="<?php echo htmlspecialchars($_POST['customer_name'] ?? ''); ?>"
+                                       value="<?php echo htmlspecialchars($_POST['customer_name'] ?? ($customer['name'] ?? '')); ?>"
                                        class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent">
                             </div>
                             
                             <div>
                                 <label class="block text-sm font-semibold mb-2 text-gray-700">Email address</label>
                                 <input type="email" name="customer_email" required 
-                                       value="<?php echo htmlspecialchars($_POST['customer_email'] ?? ''); ?>"
+                                       value="<?php echo htmlspecialchars($_POST['customer_email'] ?? ($customer['email'] ?? '')); ?>"
                                        class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent">
                             </div>
                             

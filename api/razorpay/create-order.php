@@ -15,7 +15,7 @@ header('Content-Type: application/json');
 
 require_once __DIR__ . '/../../config/constants.php';
 require_once __DIR__ . '/../../classes/Cart.php';
-require_once __DIR__ . '/../../classes/Auth.php';
+require_once __DIR__ . '/../../classes/CustomerAuth.php';
 require_once __DIR__ . '/../../includes/functions.php';
 
 // Clear any output that might have been generated
@@ -101,9 +101,9 @@ if ($difference > 0.01) {
 
 // Get user ID if logged in
 $userId = null;
-$auth = new Auth();
+$auth = new CustomerAuth();
 if ($auth->isLoggedIn()) {
-    $currentUser = $auth->getCurrentUser();
+    $currentUser = $auth->getCurrentCustomer();
     $userId = $currentUser['id'] ?? null;
 }
 

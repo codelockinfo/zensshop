@@ -4,14 +4,58 @@ if (!function_exists('getBaseUrl')) {
     require_once __DIR__ . '/functions.php';
 }
 
+require_once __DIR__ . '/../classes/Auth.php';
+require_once __DIR__ . '/../classes/CustomerAuth.php';
+
+$auth = new Auth();
+$customerAuth = new CustomerAuth();
+
+$currentUser = $auth->getCurrentUser();
+$currentCustomer = $customerAuth->getCurrentCustomer();
+
 require_once __DIR__ . '/../classes/Cart.php';
 $cart = new Cart();
 $cartCount = $cart->getCount();
 
-// Fetch Landing Pages for Menu
 require_once __DIR__ . '/../classes/Database.php';
 $db = Database::getInstance();
 $landingPagesList = $db->fetchAll("SELECT name, slug FROM landing_pages ORDER BY name ASC");
+
+// Fetch Header Menu
+$headerMenuIdVal = $db->fetchOne("SELECT id FROM menus WHERE location = 'header_main'");
+$headerMenuItems = [];
+if ($headerMenuIdVal) {
+    $allItems = $db->fetchAll("SELECT * FROM menu_items WHERE menu_id = ? ORDER BY sort_order ASC", [$headerMenuIdVal['id']]);
+    if (function_exists('buildMenuTree')) {
+        $headerMenuItems = buildMenuTree($allItems);
+    }
+}
+
+// Fetch Header Settings
+$siteLogoType = $db->fetchOne("SELECT setting_value FROM site_settings WHERE setting_key = 'site_logo_type'")['setting_value'] ?? 'image';
+$siteLogoText = $db->fetchOne("SELECT setting_value FROM site_settings WHERE setting_key = 'site_logo_text'")['setting_value'] ?? 'milano';
+$siteLogo = $db->fetchOne("SELECT setting_value FROM site_settings WHERE setting_key = 'site_logo'")['setting_value'] ?? 'logo.png';
+$showSearchIcon = ($db->fetchOne("SELECT setting_value FROM site_settings WHERE setting_key = 'header_icon_search'")['setting_value'] ?? '1') == '1';
+$showUserIcon = ($db->fetchOne("SELECT setting_value FROM site_settings WHERE setting_key = 'header_icon_user'")['setting_value'] ?? '1') == '1';
+$showWishlistIcon = ($db->fetchOne("SELECT setting_value FROM site_settings WHERE setting_key = 'header_icon_wishlist'")['setting_value'] ?? '1') == '1';
+$showCartIcon = ($db->fetchOne("SELECT setting_value FROM site_settings WHERE setting_key = 'header_icon_cart'")['setting_value'] ?? '1') == '1';
+
+// Fetch Top Bar Settings
+$topbarSlidesRow = $db->fetchOne("SELECT setting_value FROM site_settings WHERE setting_key = 'topbar_slides'");
+$topbarSlides = json_decode($topbarSlidesRow['setting_value'] ?? '[]', true) ?: [
+    ['text' => '100% secure online payment', 'link' => '', 'link_text' => ''],
+    ['text' => 'Free Shipping for all order over $99', 'link' => '', 'link_text' => ''],
+    ['text' => 'Sign up for 10% off your first order.', 'link' => '/zensshop/signup.php', 'link_text' => 'Sign up']
+];
+
+$topbarLinksRow = $db->fetchOne("SELECT setting_value FROM site_settings WHERE setting_key = 'topbar_links'");
+$topbarLinks = json_decode($topbarLinksRow['setting_value'] ?? '[]', true) ?: [
+    ['label' => 'Contact Us', 'url' => 'contact.php'],
+    ['label' => 'About Us', 'url' => 'about.php'],
+    ['label' => 'Help Center', 'url' => 'help.php'],
+    ['label' => 'Our Store', 'url' => 'store.php']
+];
+
 
 // Get base URL using the centralized function
 $baseUrl = getBaseUrl();
@@ -69,8 +113,71 @@ if (!function_exists('url')) {
     // Make BASE_URL available globally for all frontend pages
     const BASE_URL = '<?php echo $baseUrl; ?>';
     // Make currency symbol available globally
-    const CURRENCY_SYMBOL = '<?php echo defined("CURRENCY_SYMBOL") ? CURRENCY_SYMBOL : "$"; ?>';
+    const CURRENCY_SYMBOL = '<?php echo defined("CURRENCY_SYMBOL") ? CURRENCY_SYMBOL : "₹"; ?>';
+    
+    // Adjust mega menu position to prevent overflow
+    function adjustMegaMenuPosition(menuElement) {
+        // Use requestAnimationFrame for better timing
+        requestAnimationFrame(() => {
+            // Reset positioning
+            menuElement.style.left = '';
+            menuElement.style.right = '';
+            menuElement.style.transform = '';
+            
+            // Get measurements
+            const rect = menuElement.getBoundingClientRect();
+            const viewportWidth = window.innerWidth;
+            const containerPadding = 20; // Safety padding
+            
+            // Check if menu overflows on the right
+            if (rect.right > (viewportWidth - containerPadding)) {
+                const overflow = rect.right - viewportWidth + containerPadding;
+                // Shift left using transform for smoother rendering
+                menuElement.style.transform = `translateX(-${overflow}px)`;
+                
+                // Double-check if it now overflows on the left
+                const newRect = menuElement.getBoundingClientRect();
+                if (newRect.left < containerPadding) {
+                    // If too far left, just align to right edge of viewport
+                    menuElement.style.transform = '';
+                    menuElement.style.left = 'auto';
+                    menuElement.style.right = `${containerPadding}px`;
+                }
+            }
+        });
+    }
+    
+    // Auto-adjust all mega menus on window resize
+    window.addEventListener('resize', () => {
+        document.querySelectorAll('.mega-menu-dropdown').forEach(menu => {
+            if (menu.offsetParent !== null) { // Only if visible
+                adjustMegaMenuPosition(menu);
+            }
+        });
+    });
     </script>
+    <style>
+    /* Multi-level Dropdown Support */
+    .group:hover .group-hover\:block { display: block; }
+    .group\/sub:hover > .group-hover\/sub\:block { display: block; }
+    
+    /* Mega Menu Viewport Constraint - Always constrain width */
+    .mega-menu-dropdown {
+        max-width: calc(100vw - 40px) !important;
+        /* Use right positioning by default to prevent overflow */
+        left: auto !important;
+        right: 0 !important;
+    }
+    
+    /* For very wide screens, we can center or left-align */
+    @media (min-width: 1920px) {
+        .mega-menu-dropdown {
+            left: 50% !important;
+            right: auto !important;
+            transform: translateX(-50%) !important;
+        }
+    }
+    </style>
 </head>
 <body class="font-body">
     <!-- Top Bar -->
@@ -92,33 +199,48 @@ if (!function_exists('url')) {
                 <!-- Slider Container -->
                 <div class="relative flex-1 overflow-hidden">
                     <div class="top-bar-slider flex transition-transform duration-500 ease-in-out" id="topBarSlider">
+                        <?php foreach ($topbarSlides as $slide): ?>
                         <div class="top-bar-slide flex-shrink-0 w-full flex items-center">
-                            <span>100% secure online payment</span>
+                            <span>
+                                <?php echo htmlspecialchars($slide['text']); ?>
+                                <?php if (!empty($slide['link'])): ?>
+                                    <a href="<?php echo htmlspecialchars($slide['link']); ?>" class="hover:text-gray-300 transition ml-1 underline underline-offset-4">
+                                        <?php 
+                                            if (!empty($slide['link_text'])) {
+                                                echo htmlspecialchars($slide['link_text']);
+                                            } else {
+                                                // Automatic fallback
+                                                if (stripos($slide['text'], 'Sign up') !== false) echo 'Sign up';
+                                                elseif (stripos($slide['text'], 'Shop Now') !== false) echo 'Shop Now';
+                                                else echo 'Learn More';
+                                            }
+                                        ?>
+                                    </a>
+                                <?php endif; ?>
+                            </span>
                         </div>
-                        <div class="top-bar-slide flex-shrink-0 w-full flex items-center">
-                            <span>Free Shipping for all order over $99</span>
-                        </div>
-                        <div class="top-bar-slide flex-shrink-0 w-full flex items-center">
-                            <span>Sign up for 10% off your first order.<a href="/zensshop/signup.php" class="hover:text-gray-300 transition">Sign up</a></span>
-                        </div>
+                        <?php endforeach; ?>
                     </div>
                 </div>  
             </div>
             <div class="flex items-center space-x-4">
-                <a href="<?php echo url('contact.php'); ?>" class="hover:text-gray-300 transition">Contact Us</a>
-                <a href="<?php echo url('about.php'); ?>" class="hover:text-gray-300 transition">About Us</a>
-                <a href="<?php echo url('help.php'); ?>" class="hover:text-gray-300 transition">Help Center</a>
-                <a href="<?php echo url('store.php'); ?>" class="hover:text-gray-300 transition">Our Store</a>
+                <?php foreach ($topbarLinks as $link): ?>
+                <a href="<?php echo url($link['url']); ?>" class="hover:text-gray-300 transition"><?php echo htmlspecialchars($link['label']); ?></a>
+                <?php endforeach; ?>
                 <!-- Currency/Region Selector -->
                 <div class="relative ml-4 pl-4 border-l border-gray-700">
+                    <?php
+                    $currencies = getCurrencies();
+                    $selectedCurrency = $currencies[0] ?? ['code'=>'in','name'=>'India','currency_name'=>'INR','symbol'=>'₹','flag'=>'https://cdn.shopify.com/static/images/flags/in.svg'];
+                    ?>
                     <button class="flex items-center gap-2 hover:text-gray-300 transition cursor-pointer focus:outline-none whitespace-nowrap" id="currencySelector">
                         <span class="flex items-center gap-2">
                             <span class="rounded-full border border-gray-300 overflow-hidden" style="width: 20px; height: 20px; display: inline-flex; align-items: center; justify-content: center;">
-                                <img src="https://cdn.shopify.com/static/images/flags/in.svg" alt="India" id="selectedFlagImg" class="w-full h-full object-cover" style="width: 20px; height: 20px;">
+                                <img src="<?php echo $selectedCurrency['flag']; ?>" alt="<?php echo $selectedCurrency['name']; ?>" id="selectedFlagImg" class="w-full h-full object-cover" style="width: 20px; height: 20px;">
                             </span>
                             <span class="text-sm">
                                 <span class="text-gray-400" id="countryCode"></span>
-                                <span id="selectedCurrency" class="text-white">India (INR ₹)</span>
+                                <span id="selectedCurrency" class="text-white"><?php echo $selectedCurrency['name'] . ' (' . $selectedCurrency['currency_name'] . ' ' . $selectedCurrency['symbol'] . ')'; ?></span>
                             </span>
                         </span>
                         <svg class="icon-down flex-shrink-0" width="10" height="6" style="margin-left: 4px;">
@@ -127,46 +249,16 @@ if (!function_exists('url')) {
                     </button>
                     <!-- Currency Dropdown -->
                     <div class="absolute right-0 top-full mt-2 bg-white text-black shadow-lg rounded-lg py-1 min-w-[240px] hidden z-50 border border-gray-200" id="currencyDropdown">
-                        <a href="#" class="block px-4 py-2.5 hover:bg-gray-50 transition currency-option" data-flag="https://cdn.shopify.com/static/images/flags/in.svg" data-code="in" data-currency="India (INR ₹)">
+                        <?php foreach ($currencies as $curr): ?>
+                        <a href="#" class="block px-4 py-2.5 hover:bg-gray-50 transition currency-option" data-flag="<?php echo $curr['flag']; ?>" data-code="<?php echo $curr['code']; ?>" data-currency="<?php echo $curr['name'] . ' (' . $curr['currency_name'] . ' ' . $curr['symbol'] . ')'; ?>">
                             <span class="flex items-center gap-2">
                                 <span class="rounded-full border border-gray-300 overflow-hidden" style="width: 20px; height: 20px; display: inline-flex; align-items: center; justify-content: center;">
-                                    <img src="https://cdn.shopify.com/static/images/flags/in.svg" alt="India" class="w-full h-full object-cover" style="width: 20px; height: 20px;">
+                                    <img src="<?php echo $curr['flag']; ?>" alt="<?php echo $curr['name']; ?>" class="w-full h-full object-cover" style="width: 20px; height: 20px;">
                                 </span>
-                                <span class="text-sm">India (INR ₹)</span>
+                                <span class="text-sm"><?php echo $curr['name'] . ' (' . $curr['currency_name'] . ' ' . $curr['symbol'] . ')'; ?></span>
                             </span>
                         </a>
-                        <a href="#" class="block px-4 py-2.5 hover:bg-gray-50 transition currency-option" data-flag="https://cdn.shopify.com/static/images/flags/cn.svg" data-code="cn" data-currency="China (CNY ¥)">
-                            <span class="flex items-center gap-2">
-                                <span class="rounded-full border border-gray-300 overflow-hidden" style="width: 20px; height: 20px; display: inline-flex; align-items: center; justify-content: center;">
-                                    <img src="https://cdn.shopify.com/static/images/flags/cn.svg" alt="China" class="w-full h-full object-cover" style="width: 20px; height: 20px;">
-                                </span>
-                                <span class="text-sm">China (CNY ¥)</span>
-                            </span>
-                        </a>
-                        <a href="#" class="block px-4 py-2.5 hover:bg-gray-50 transition currency-option" data-flag="https://cdn.shopify.com/static/images/flags/fr.svg" data-code="fr" data-currency="France (EUR €)">
-                            <span class="flex items-center gap-2">
-                                <span class="rounded-full border border-gray-300 overflow-hidden" style="width: 20px; height: 20px; display: inline-flex; align-items: center; justify-content: center;">
-                                    <img src="https://cdn.shopify.com/static/images/flags/fr.svg" alt="France" class="w-full h-full object-cover" style="width: 20px; height: 20px;">
-                                </span>
-                                <span class="text-sm">France (EUR €)</span>
-                            </span>
-                        </a>
-                        <a href="#" class="block px-4 py-2.5 hover:bg-gray-50 transition currency-option" data-flag="https://cdn.shopify.com/static/images/flags/gb.svg" data-code="gb" data-currency="United Kingdom (GBP £)">
-                            <span class="flex items-center gap-2">
-                                <span class="rounded-full border border-gray-300 overflow-hidden" style="width: 20px; height: 20px; display: inline-flex; align-items: center; justify-content: center;">
-                                    <img src="https://cdn.shopify.com/static/images/flags/gb.svg" alt="United Kingdom" class="w-full h-full object-cover" style="width: 20px; height: 20px;">
-                                </span>
-                                <span class="text-sm">United Kingdom (GBP £)</span>
-                            </span>
-                        </a>
-                        <a href="#" class="block px-4 py-2.5 hover:bg-gray-50 transition currency-option" data-flag="https://cdn.shopify.com/static/images/flags/us.svg" data-code="us" data-currency="United States (USD $)">
-                            <span class="flex items-center gap-2">
-                                <span class="rounded-full border border-gray-300 overflow-hidden" style="width: 20px; height: 20px; display: inline-flex; align-items: center; justify-content: center;">
-                                    <img src="https://cdn.shopify.com/static/images/flags/us.svg" alt="United States" class="w-full h-full object-cover" style="width: 20px; height: 20px;">
-                                </span>
-                                <span class="text-sm">United States (USD $)</span>
-                            </span>
-                        </a>
+                        <?php endforeach; ?>
                     </div>
                 </div>
             </div>
@@ -184,199 +276,64 @@ if (!function_exists('url')) {
                 
                 <!-- Logo (Left on desktop, Centered on mobile/tablet) -->
                 <div class="flex-shrink-0 xl:flex-shrink-0 absolute xl:relative left-1/2 xl:left-auto transform xl:transform-none -translate-x-1/2 xl:translate-x-0">
-                    <a href="<?php echo $baseUrl; ?>/" class="text-3xl font-heading font-bold text-black xl:lowercase lowercase">milano</a>
+                    <a href="<?php echo $baseUrl; ?>/" class="flex items-center">
+                        <?php if ($siteLogoType === 'text'): ?>
+                            <span class="text-3xl font-heading font-bold text-black xl:lowercase lowercase"><?php echo htmlspecialchars($siteLogoText); ?></span>
+                        <?php else: ?>
+                            <img src="<?php echo $baseUrl; ?>/assets/images/<?php echo htmlspecialchars($siteLogo); ?>" 
+                                 alt="Site Logo" 
+                                 class="h-8 object-contain"
+                                 onerror="this.parentElement.innerHTML='<span class=\'text-3xl font-heading font-bold text-black xl:lowercase lowercase\'>milano</span>'">
+                        <?php endif; ?>
+                    </a>
                 </div>
                 
                 <!-- Desktop Navigation - Centered (Hidden on mobile/tablet, visible on xl+) -->
                 <div class="hidden xl:flex items-center space-x-8 absolute left-1/2 transform -translate-x-1/2 z-10">
-                    <a href="<?php echo $baseUrl; ?>/" class="text-black hover:text-red-700 transition relative group font-sans text-md nav-link">
-                        Home
-                        <i class="fas fa-chevron-down text-xs ml-1"></i>
-                    </a>
-                    <!-- Shop with Dropdown -->
-                    <div class="relative shop-menu-parent">
-                        <a href="<?php echo url('collections.php'); ?>" class="text-black hover:text-red-700 transition relative group flex items-center font-sans text-md nav-link">
-                            Shop
-                            <i class="fas fa-chevron-down text-xs ml-1"></i>
-                        </a>
-                        <!-- Shop Dropdown Menu -->
-                        <div class="shop-dropdown absolute top-full left-0 mt-2 bg-white rounded-lg py-2 min-w-[200px] z-50">
-                            <a href="<?php echo url('collections.php'); ?>" class="block px-4 py-2 text-gray-700 hover:text-red-700 transition">
-                                Collections
-                            </a>
-                            <a href="<?php echo url('shop.php'); ?>" class="block px-4 py-2 text-gray-700 hover:text-red-700 transition">
-                                All Products
-                            </a>
-                        </div>
-                    </div>
-                    <!-- Products with Mega Menu -->
-                    <div class="relative mega-menu-parent">
-                        <a href="<?php echo url('products.php'); ?>" class="text-black hover:text-red-700 transition flex items-center font-sans text-md nav-link">
-                            Products
-                            <i class="fas fa-chevron-down text-xs ml-1"></i>
-                        </a>
-                        <!-- Mega Menu Dropdown -->
-                        <div class="mega-menu mega-menu-products">
-                            <div class="grid grid-cols-3 gap-8">
-                                <!-- Column 1: Shop Layouts -->
-                                <div>
-                                    <h3 class="font-bold text-gray-900 hover:text-red-700 transition mb-4 text-lg">Shop Layouts</h3>
-                                    <ul class="space-y-3">
-                                        <li><a href="<?php echo url('shop.php?layout=filter-left'); ?>" class="text-gray-600 hover:text-red-700 transition">Filter left sidebar</a></li>
-                                        <li><a href="<?php echo url('shop.php?layout=filter-right'); ?>" class="text-gray-600 hover:text-red-700 transition">Filter right sidebar</a></li>
-                                        <li>
-                                            <a href="<?php echo url('shop.php?layout=horizontal'); ?>" class="text-gray-600 hover:text-red-700 transition flex items-center">
-                                                Horizontal filter
-                                                <span class="ml-2 bg-red-500 text-white text-xs px-2 py-0.5 rounded-full">HOT</span>
-                                            </a>
-                                        </li>
-                                        <li><a href="<?php echo url('shop.php?layout=drawer'); ?>" class="text-gray-600 hover:text-red-700 transition">Filter drawer</a></li>
-                                        <li><a href="<?php echo url('shop.php?layout=grid-3'); ?>" class="text-gray-600 hover:text-red-700 transition">Grid 3 columns</a></li>
-                                        <li><a href="<?php echo url('shop.php?layout=grid-4'); ?>" class="text-gray-600 hover:text-red-700 transition">Grid 4 columns</a></li>
-                                        <li><a href="<?php echo url('shop.php'); ?>" class="text-gray-600 hover:text-red-700 transition">All collections</a></li>
-                                    </ul>
-                                </div>
-                                
-                                <!-- Column 2: Shop Pages -->
-                                <div>
-                                    <h3 class="font-bold text-gray-900 hover:text-red-700 transition mb-4 text-lg">Shop Pages</h3>
-                                    <ul class="space-y-3">
-                                        <li><a href="<?php echo url('collection-v1.php'); ?>" class="text-gray-600 hover:text-red-700 transition">Collection list v1</a></li>
-                                        <li>
-                                            <a href="<?php echo url('collection-v2.php'); ?>" class="text-gray-600 hover:text-red-700 transition flex items-center">
-                                                Collection list v2
-                                                <span class="ml-2 bg-blue-500 text-white text-xs px-2 py-0.5 rounded-full">NEW</span>
-                                            </a>
-                                        </li>
-                                        <li><a href="<?php echo url('shop.php?scroll=infinity'); ?>" class="text-gray-600 hover:text-red-700 transition">Infinity scroll</a></li>
-                                        <li><a href="<?php echo url('shop.php?load=more'); ?>" class="text-gray-600 hover:text-red-700 transition">Load more button</a></li>
-                                        <li><a href="<?php echo url('shop.php?pagination=1'); ?>" class="text-gray-600 hover:text-red-700 transition">Pagination page</a></li>
-                                        <li><a href="<?php echo url('banner-collection.php'); ?>" class="text-gray-600 hover:text-red-700 transition">Banner collection</a></li>
-                                    </ul>
-                                </div>
-                                
-                                <!-- Column 3: Featured Categories -->
-                                <div class="space-y-4">
-                                    <!-- Bracelets Card -->
-                                    <a href="<?php echo url('category.php?slug=bracelets'); ?>" class="block category-card group">
-                                        <div class="relative overflow-hidden rounded-lg">
-                                            <img src="https://images.unsplash.com/photo-1611591437281-460bfbe1220a?w=300&h=400&fit=crop" 
-                                                 alt="Bracelets" 
-                                                 class="w-full h-64 object-cover group-hover:scale-110 transition-transform duration-500">
-                                            <div class="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-10 transition-all duration-300"></div>
-                                            <!-- Product Name Overlay Button -->
-                                            <div class="absolute bottom-0 left-0 right-0 p-4 flex items-center justify-center">
-                                                <div class="bg-white px-6 py-3 w-full max-w-[85%]" style="border-radius: 50px;">
-                                                    <h3 class="text-center text-md font-semibold text-gray-900">
-                                                        Bracelets
-                                                    </h3>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </a>
-                                    
-                                    <!-- Rings Card -->
-                                    <a href="<?php echo url('category.php?slug=rings'); ?>" class="block category-card group">
-                                        <div class="relative overflow-hidden rounded-lg">
-                                            <img src="https://images.unsplash.com/photo-1603561591411-07134e71a2a9?w=300&h=400&fit=crop" 
-                                                 alt="Rings" 
-                                                 class="w-full h-64 object-cover group-hover:scale-110 transition-transform duration-500">
-                                            <div class="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-10 transition-all duration-300"></div>
-                                            <!-- Product Name Overlay Button -->
-                                            <div class="absolute bottom-0 left-0 right-0 p-4 flex items-center justify-center">
-                                                <div class="bg-white px-6 py-3 w-full max-w-[85%]" style="border-radius: 50px;">
-                                                    <h3 class="text-center text-md font-semibold text-gray-900">
-                                                        Rings
-                                                    </h3>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </a>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                    <!-- Pages with Dropdown Menu -->
-                    <div class="relative pages-menu-parent">
-                        <a href="<?php echo url('pages.php'); ?>" class="text-black hover:text-red-700 transition flex items-center font-sans text-md nav-link">
-                            Pages
-                            <i class="fas fa-chevron-down text-xs ml-1"></i>
-                        </a>
-                        <!-- Pages Dropdown Menu -->
-                        <div class="pages-dropdown">
-                            <ul class="space-y-2">
-                                <li>
-                                    <a href="<?php echo url('about.php'); ?>" class="text-gray-600 hover:text-red-700 transition block py-1 px-4">About us</a>
-                                </li>
-                                <li>
-                                    <a href="<?php echo url('contact.php'); ?>" class="text-gray-600 hover:text-red-700 transition block py-1 px-4">Contact us</a>
-                                </li>
-                                <li>
-                                    <a href="<?php echo url('sale.php'); ?>" class="text-gray-600 hover:text-red-700 transition flex items-center py-1 px-4">
-                                        Sale
-                                        <span class="ml-2 bg-red-500 text-white text-xs px-2 py-0.5 rounded-full">HOT</span>
-                                    </a>
-                                </li>
-                                <li>
-                                    <a href="<?php echo url('store.php'); ?>" class="text-gray-600 hover:text-red-700 transition block py-1 px-4">Our store</a>
-                                </li>
-                                <li>
-                                    <a href="<?php echo url('faq.php'); ?>" class="text-gray-600 hover:text-red-700 transition block py-1 px-4">FAQ</a>
-                                </li>
-                                <li>
-                                    <a href="<?php echo url('wishlist.php'); ?>" class="text-gray-600 hover:text-red-700 transition block py-1 px-4">Wishlist</a>
-                                </li>
-                                <li>
-                                    <a href="<?php echo url('compare.php'); ?>" class="text-gray-600 hover:text-red-700 transition block py-1 px-4">Compare</a>
-                                </li>
-                                <li>
-                                    <a href="<?php echo url('location.php'); ?>" class="text-gray-600 hover:text-red-700 transition block py-1 px-4">Store location</a>
-                                </li>
-                                <li>
-                                    <a href="<?php echo url('recently-viewed.php'); ?>" class="text-gray-600 hover:text-red-700 transition block py-1 px-4">Recently viewed products</a>
-                                </li>
-                            </ul>
-                        </div>
-                    </div>
-                    <a href="<?php echo url('blog.php'); ?>" class="text-black hover:text-red-700 transition relative group font-sans text-md nav-link">
-                        Blog
-                        <i class="fas fa-chevron-down text-xs ml-1"></i>
-                    </a>
-                    <div class="relative group">
-                        <a href="#" class="text-black hover:text-red-700 transition font-sans text-md nav-link flex items-center">
-                           Product pages! 
-                            <i class="fas fa-chevron-down text-xs ml-1"></i>
-                        </a>
-                        <div class="absolute top-full left-0 w-56 pt-2 hidden group-hover:block z-50">
-                            <div class="bg-white shadow-xl border border-gray-100 rounded-lg py-2 flex flex-col">
-                                <?php foreach($landingPagesList as $lpPage): ?>
-                                    <a href="<?php echo url('special-product.php?page='.$lpPage['slug']); ?>" class="px-4 py-2 hover:bg-gray-50 text-sm text-gray-700 hover:text-red-700 transition whitespace-nowrap overflow-hidden text-ellipsis">
-                                        <?php echo htmlspecialchars($lpPage['name']); ?>
-                                    </a>
-                                <?php endforeach; ?>
-                            </div>
-                        </div>
-                    </div>
+<?php
+if (!empty($headerMenuItems)) {
+    foreach ($headerMenuItems as $item) {
+        renderFrontendMenuItem($item, $landingPagesList ?? []);
+    }
+}
+?>
                 </div>
                 
                 <!-- Right Icons -->
                 <div class="flex items-center space-x-5">
+                    <?php if ($showSearchIcon): ?>
                     <!-- Search -->
                     <button class="text-black hover:text-gray-600 transition focus:outline-none header-icon" id="searchBtn">
                         <i class="fas fa-search text-lg"></i>
                     </button>
+                    <?php endif; ?>
                     
+                    <?php if ($showUserIcon): ?>
                     <!-- User Account - Only visible on xl screens -->
                     <a href="<?php echo url('account.php'); ?>" class="hidden xl:block text-black hover:text-gray-600 transition header-icon">
                         <i class="fas fa-user text-lg"></i>
                     </a>
+                    <?php endif; ?>
                     
+                    <?php if ($showWishlistIcon): ?>
                     <!-- Wishlist - Only visible on xl screens -->
                     <a href="<?php echo url('wishlist.php'); ?>" class="hidden xl:block text-gray-800 hover:text-primary transition relative">
                         <i class="fas fa-heart text-xl"></i>
-                        <span class="wishlist-count absolute -top-1 -right-1.5 font-medium bg-red-500 text-white text-xs rounded-full w-4 h-4 flex items-center justify-center">0</span>
+                        <span class="wishlist-count absolute -top-1 -right-1.5 font-medium bg-red-500 text-white text-xs rounded-full w-4 h-4 flex items-center justify-center">
+                            <?php 
+                            if ($currentCustomer) {
+                                require_once __DIR__ . '/../classes/Wishlist.php';
+                                $wishlist = new Wishlist();
+                                echo count($wishlist->getItems($currentCustomer['id']));
+                            } else {
+                                echo '0';
+                            }
+                            ?>
+                        </span>
                     </a>
+                    <?php endif; ?>
                     
+                    <?php if ($showCartIcon): ?>
                     <!-- Cart -->
                     <?php
                     // Check if we're on checkout or cart page
@@ -395,6 +352,7 @@ if (!function_exists('url')) {
                             <i class="fas fa-shopping-cart text-lg"></i>
                             <span class="absolute -top-1.5 -right-1.5 bg-red-500 text-white text-xs rounded-full w-4 h-4 flex items-center justify-center cart-count font-medium" style="font-size: 10px;"><?php echo $cartCount; ?></span>
                         </button>
+                    <?php endif; ?>
                     <?php endif; ?>
                 </div>
             </div>
@@ -709,4 +667,3 @@ if (!function_exists('url')) {
             </div>
         </div>
     </div>
-

@@ -29,6 +29,11 @@ class Order {
                 WHERE 1=1";
         $params = [];
         
+        if (!empty($filters['user_id'])) {
+            $sql .= " AND o.user_id = ?";
+            $params[] = $filters['user_id'];
+        }
+
         if (!empty($filters['order_status'])) {
             $sql .= " AND o.order_status = ?";
             $params[] = $filters['order_status'];
@@ -77,7 +82,7 @@ class Order {
      */
     public function getOrderItems($orderId) {
         return $this->db->fetchAll(
-            "SELECT oi.*, p.name as product_name, p.featured_image 
+            "SELECT oi.*, p.name as product_name, p.featured_image as product_image, p.sku as product_sku, p.slug as product_slug
              FROM order_items oi 
              LEFT JOIN products p ON oi.product_id = p.id 
              WHERE oi.order_id = ?",

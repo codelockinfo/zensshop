@@ -366,30 +366,8 @@ if (!$lp && $selectedSlug !== 'default') {
     </div>
 </div>
 
-<?php if ($success): ?>
-<div id="successAlert" class="bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded relative mb-4 transition-opacity duration-500" role="alert">
-    <span class="block sm:inline"><?php echo htmlspecialchars($success); ?></span>
-</div>
-<?php endif; ?>
-
-<?php if ($error): ?>
-<div id="errorAlert" class="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative mb-4 transition-opacity duration-500" role="alert">
-    <span class="block sm:inline"><?php echo htmlspecialchars($error); ?></span>
-</div>
-<?php endif; ?>
 
 <script>
-    // Auto-dismiss alerts after 3 seconds
-    setTimeout(function() {
-        const alerts = document.querySelectorAll('#successAlert, #errorAlert');
-        alerts.forEach(function(alert) {
-            if (alert) {
-                alert.style.opacity = '0'; // Fade out
-                setTimeout(() => alert.remove(), 500); // Remove from DOM after transition
-            }
-        });
-    }, 3000); // 3 seconds
-
     function copyLink(text) {
         if (!navigator.clipboard) {
             // Fallback for non-secure contexts or older browsers
@@ -451,7 +429,7 @@ if (!$lp && $selectedSlug !== 'default') {
                            </div>
                         </div>
                         <?php if($p['slug'] !== 'default'): ?>
-                        <form method="POST" onsubmit="return confirm('Are you sure you want to delete this page?');" class="ml-2">
+                        <form method="POST" class="ml-2">
                             <input type="hidden" name="action" value="delete_page">
                             <input type="hidden" name="page_id" value="<?php echo $p['id']; ?>">
                             <button type="submit" class="text-gray-400 hover:text-red-600 p-2" title="Delete Page">

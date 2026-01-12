@@ -1,0 +1,326 @@
+<?php
+session_start();
+require_once __DIR__ . '/../classes/Database.php';
+require_once __DIR__ . '/../classes/Auth.php';
+
+$auth = new Auth();
+$auth->requireLogin();
+$currentUser = $auth->getCurrentUser();
+
+$db = Database::getInstance();
+$success = '';
+$error = '';
+
+// Handle Form Submission
+if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    try {
+        // 1. General Info
+        $settings = [
+            'footer_logo_type' => $_POST['footer_logo_type'] ?? 'text',
+            'footer_logo_text' => $_POST['footer_logo_text'] ?? '',
+            'footer_description' => $_POST['footer_description'] ?? '',
+            'footer_learn_more_url' => $_POST['footer_learn_more_url'] ?? '#',
+            'footer_address' => $_POST['footer_address'] ?? '',
+            'footer_phone' => $_POST['footer_phone'] ?? '',
+            'footer_email' => $_POST['footer_email'] ?? '',
+            'footer_facebook' => $_POST['footer_facebook'] ?? '',
+            'footer_instagram' => $_POST['footer_instagram'] ?? '',
+            'footer_tiktok' => $_POST['footer_tiktok'] ?? '',
+            'footer_youtube' => $_POST['footer_youtube'] ?? '',
+            'footer_pinterest' => $_POST['footer_pinterest'] ?? '',
+            'footer_twitter' => $_POST['footer_twitter'] ?? '',
+            'footer_copyright' => $_POST['footer_copyright'] ?? '',
+            'footer_show_visa' => isset($_POST['footer_show_visa']) ? '1' : '0',
+            'footer_show_mastercard' => isset($_POST['footer_show_mastercard']) ? '1' : '0',
+            'footer_show_amex' => isset($_POST['footer_show_amex']) ? '1' : '0',
+            'footer_show_paypal' => isset($_POST['footer_show_paypal']) ? '1' : '0',
+            'footer_show_discover' => isset($_POST['footer_show_discover']) ? '1' : '0',
+        ];
+
+        // 2. Handle Image Upload
+        if (!empty($_FILES['footer_logo_image']['name'])) {
+            $uploadDir = __DIR__ . '/../assets/uploads/';
+            if (!is_dir($uploadDir)) mkdir($uploadDir, 0777, true);
+            
+            $fileName = time() . '_' . basename($_FILES['footer_logo_image']['name']);
+            $targetPath = $uploadDir . $fileName;
+            
+            if (move_uploaded_file($_FILES['footer_logo_image']['tmp_name'], $targetPath)) {
+                $settings['footer_logo_image'] = 'assets/uploads/' . $fileName;
+            } else {
+                throw new Exception("Failed to upload image.");
+            }
+        }
+
+        // 3. Handle Social Links (JSON)
+        // If data comes as individual arrays from repeater
+        if (isset($_POST['social_icons'])) {
+            $icons = $_POST['social_icons'];
+            $urls = $_POST['social_urls'] ?? []; // Fallback if urls missing for some reason
+            $socialLinks = [];
+            
+            for ($i = 0; $i < count($icons); $i++) {
+                // Save if we at least have an icon. URL can be empty (user might fill later).
+                // We'll filter empty URLs on display if needed, or render as #.
+                if (!empty($icons[$i])) {
+                     $socialLinks[] = [
+                        'icon' => $icons[$i],
+                        'url' => $urls[$i] ?? '',
+                    ];
+                }
+            }
+            // Force array values to ensure JSON is an array, not an object (if indices gap for some reason)
+            $settings['footer_social_json'] = json_encode(array_values($socialLinks), JSON_UNESCAPED_SLASHES);
+        } else {
+            // If post request but no social_icons, it means user deleted all rows OR it's a fresh save with none.
+            // We only want to overwrite if we are sure it's a form submission of this section.
+            // Since this is a specialized form, yes, we interpret absence as "empty list".
+            $settings['footer_social_json'] = '[]';
+        }
+
+        // 4. Save to Database (Key-Value Store)
+        foreach ($settings as $key => $value) {
+            // Check if exists
+            $exists = $db->fetchOne("SELECT setting_key FROM site_settings WHERE setting_key = ?", [$key]);
+            if ($exists) {
+                $db->execute("UPDATE site_settings SET setting_value = ? WHERE setting_key = ?", [$value, $key]);
+            } else {
+                $db->insert("INSERT INTO site_settings (setting_key, setting_value) VALUES (?, ?)", [$key, $value]);
+            }
+        }
+        
+        $success = "Footer information updated successfully!";
+
+    } catch (Exception $e) {
+        $error = $e->getMessage();
+    }
+}
+
+// Fetch Current Settings
+$rawSettings = $db->fetchAll("SELECT * FROM site_settings");
+$currentSettings = [];
+foreach ($rawSettings as $s) {
+    $currentSettings[$s['setting_key']] = $s['setting_value'];
+}
+// Defaults
+$defaults = [
+    'footer_logo_type' => 'text',
+    'footer_logo_text' => 'ZENSSHOP',
+    'footer_logo_image' => '',
+    'footer_description' => '',
+    'footer_learn_more_url' => '',
+    'footer_address' => '',
+    'footer_phone' => '',
+    'footer_email' => '',
+    'footer_social_json' => '[]',
+    'footer_copyright' => '© ' . date('Y') . ' Milano store. All rights reserved.',
+    'footer_show_visa' => '1',
+    'footer_show_mastercard' => '1',
+    'footer_show_amex' => '1',
+    'footer_show_paypal' => '1',
+    'footer_show_discover' => '1',
+];
+$settings = array_merge($defaults, $currentSettings);
+$socialLinks = json_decode($settings['footer_social_json'], true) ?: [];
+
+$pageTitle = 'Footer Information';
+require_once __DIR__ . '/../includes/admin-header.php';
+?>
+
+<div class="p-6 bg-white rounded-lg shadow-md m-6">
+    <div class="flex justify-between items-center mb-6">
+        <h1 class="text-2xl font-bold text-gray-800">Footer Information</h1>
+    </div>
+
+
+    <form method="POST" enctype="multipart/form-data" class="space-y-6">
+        
+        <!-- Logo Section -->
+        <div class="bg-gray-50 p-4 rounded border border-gray-200">
+            <h3 class="font-bold text-lg mb-4 border-b pb-2">Footer Logo</h3>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div>
+                    <label class="block text-sm font-semibold mb-2">Logo Type</label>
+                    <select name="footer_logo_type" class="w-full border p-2 rounded" onchange="toggleLogoFields(this.value)">
+                        <option value="text" <?php echo $settings['footer_logo_type'] === 'text' ? 'selected' : ''; ?>>Text Logo</option>
+                        <option value="image" <?php echo $settings['footer_logo_type'] === 'image' ? 'selected' : ''; ?>>Image Logo</option>
+                    </select>
+                </div>
+                
+                <div id="textLogoField" class="<?php echo $settings['footer_logo_type'] === 'text' ? '' : 'hidden'; ?>">
+                    <label class="block text-sm font-semibold mb-2">Logo Text</label>
+                    <input type="text" name="footer_logo_text" value="<?php echo htmlspecialchars($settings['footer_logo_text']); ?>" class="w-full border p-2 rounded">
+                </div>
+                
+                <div id="imageLogoField" class="<?php echo $settings['footer_logo_type'] === 'image' ? '' : 'hidden'; ?>">
+                    <label class="block text-sm font-semibold mb-2">Logo Image</label>
+                    
+                    <?php if (!empty($settings['footer_logo_image'])): ?>
+                    <div class="mb-3">
+                        <p class="text-xs text-gray-600 mb-2">Current Logo Preview:</p>
+                        <div class="border-2 border-dashed border-gray-300 rounded-lg p-4 bg-gray-50 flex items-center justify-center" style="min-height: 120px;">
+                            <img src="<?php echo getImageUrl($settings['footer_logo_image']); ?>" 
+                                 alt="Current Logo" 
+                                 class="max-h-20 object-contain"
+                                 onerror="this.parentElement.innerHTML='<span class=\'text-gray-400 text-sm\'>Logo not found</span>'">
+                        </div>
+                    </div>
+                    <?php endif; ?>
+                    
+                    <input type="file" name="footer_logo_image" accept="image/*" class="w-full border p-2 rounded bg-white">
+                    <p class="text-xs text-gray-500 mt-1">Recommended: PNG or SVG format, transparent background</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Description Section -->
+        <div class="bg-gray-50 p-4 rounded border border-gray-200">
+            <h3 class="font-bold text-lg mb-4 border-b pb-2">About & Contact</h3>
+            
+            <div class="mb-4">
+                <label class="block text-sm font-semibold mb-2">Footer Description</label>
+                <textarea name="footer_description" rows="3" class="w-full border p-2 rounded"><?php echo htmlspecialchars($settings['footer_description']); ?></textarea>
+            </div>
+            
+            <div class="mb-4">
+                <label class="block text-sm font-semibold mb-2">"Learn More" Link URL</label>
+                <input type="text" name="footer_learn_more_url" value="<?php echo htmlspecialchars($settings['footer_learn_more_url']); ?>" class="w-full border p-2 rounded" placeholder="https://...">
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div>
+                    <label class="block text-sm font-semibold mb-2">Address</label>
+                    <input type="text" name="footer_address" value="<?php echo htmlspecialchars($settings['footer_address']); ?>" class="w-full border p-2 rounded">
+                </div>
+                <div>
+                    <label class="block text-sm font-semibold mb-2">Phone</label>
+                    <input type="text" name="footer_phone" value="<?php echo htmlspecialchars($settings['footer_phone']); ?>" class="w-full border p-2 rounded">
+                </div>
+                <div>
+                    <label class="block text-sm font-semibold mb-2">Email</label>
+                    <input type="text" name="footer_email" value="<?php echo htmlspecialchars($settings['footer_email']); ?>" class="w-full border p-2 rounded">
+                </div>
+            </div>
+        </div>
+
+        <!-- Social Media Section (Dynamic) -->
+        <div class="bg-gray-50 p-4 rounded border border-gray-200">
+            <div class="flex justify-between items-center border-b pb-2 mb-4">
+                <h3 class="font-bold text-lg">Social Media Links</h3>
+                <button type="button" onclick="addSocialRow()" class="text-white bg-green-600 hover:bg-green-700 text-sm px-3 py-1 rounded">
+                    <i class="fas fa-plus"></i> Add New
+                </button>
+            </div>
+            
+            <div id="socialLinksContainer" class="space-y-3">
+                <!-- Rows will be added here by JS -->
+            </div>
+            
+            <!-- Template for JS -->
+            <template id="socialRowTemplate">
+                <div class="flex items-center gap-3 social-row p-2 bg-white border border-gray-200 rounded">
+                    <div class="w-1/3">
+                        <select name="social_icons[]" class="w-full border p-2 rounded text-sm">
+                            <option value="fab fa-facebook-f">Facebook</option>
+                            <option value="fab fa-instagram">Instagram</option>
+                            <option value="fab fa-tiktok">TikTok</option>
+                            <option value="fab fa-youtube">YouTube</option>
+                            <option value="fab fa-pinterest-p">Pinterest</option>
+                            <option value="fab fa-twitter">Twitter/X</option>
+                            <option value="fab fa-linkedin-in">LinkedIn</option>
+                            <option value="fab fa-whatsapp">WhatsApp</option>
+                            <option value="fab fa-snapchat-ghost">Snapchat</option>
+                            <option value="fas fa-envelope">Email</option>
+                            <option value="fas fa-link">Website/Link</option>
+                        </select>
+                    </div>
+                    <div class="flex-1">
+                        <input type="text" name="social_urls[]" class="w-full border p-2 rounded text-sm" placeholder="URL (https://...)">
+                    </div>
+                    <button type="button" onclick="removeRow(this)" class="text-red-500 hover:text-red-700 p-2">
+                        <i class="fas fa-trash"></i>
+                    </button>
+                </div>
+            </template>
+        </div>
+
+        <!-- Bottom Footer Settings -->
+        <div class="bg-gray-50 p-4 rounded border border-gray-200">
+            <h3 class="font-bold text-lg mb-4 border-b pb-2">Bottom Footer (Copyright & Payments)</h3>
+            
+            <div class="mb-4">
+                <label class="block text-sm font-semibold mb-2">Copyright Text</label>
+                <input type="text" name="footer_copyright" value="<?php echo htmlspecialchars($settings['footer_copyright']); ?>" class="w-full border p-2 rounded">
+            </div>
+            
+            <label class="block text-sm font-semibold mb-2">Visible Payment Methods</label>
+            <div class="grid grid-cols-2 md:grid-cols-5 gap-4 bg-white p-4 rounded border border-gray-100">
+                <div class="flex items-center gap-2">
+                    <input type="checkbox" name="footer_show_visa" value="1" id="visa" <?php echo $settings['footer_show_visa'] == '1' ? 'checked' : ''; ?>>
+                    <label for="visa" class="text-sm">Visa</label>
+                </div>
+                <div class="flex items-center gap-2">
+                    <input type="checkbox" name="footer_show_mastercard" value="1" id="master" <?php echo $settings['footer_show_mastercard'] == '1' ? 'checked' : ''; ?>>
+                    <label for="master" class="text-sm">Mastercard</label>
+                </div>
+                <div class="flex items-center gap-2">
+                    <input type="checkbox" name="footer_show_amex" value="1" id="amex" <?php echo $settings['footer_show_amex'] == '1' ? 'checked' : ''; ?>>
+                    <label for="amex" class="text-sm">Amex</label>
+                </div>
+                <div class="flex items-center gap-2">
+                    <input type="checkbox" name="footer_show_paypal" value="1" id="paypal" <?php echo $settings['footer_show_paypal'] == '1' ? 'checked' : ''; ?>>
+                    <label for="paypal" class="text-sm">PayPal</label>
+                </div>
+                <div class="flex items-center gap-2">
+                    <input type="checkbox" name="footer_show_discover" value="1" id="discover" <?php echo $settings['footer_show_discover'] == '1' ? 'checked' : ''; ?>>
+                    <label for="discover" class="text-sm">Discover</label>
+                </div>
+            </div>
+        </div>
+
+        <button type="submit" class="bg-blue-600 text-white px-6 py-2 rounded font-bold hover:bg-blue-700 transition">Save Changes</button>
+    </form>
+</div>
+
+<script>
+function toggleLogoFields(type) {
+    if (type === 'text') {
+        document.getElementById('textLogoField').classList.remove('hidden');
+        document.getElementById('imageLogoField').classList.add('hidden');
+    } else {
+        document.getElementById('textLogoField').classList.add('hidden');
+        document.getElementById('imageLogoField').classList.remove('hidden');
+    }
+}
+
+// Social Media Dynamic Rows
+const socialData = <?php echo $settings['footer_social_json']; ?>;
+
+function addSocialRow(data = null) {
+    const container = document.getElementById('socialLinksContainer');
+    const template = document.getElementById('socialRowTemplate');
+    const clone = template.content.cloneNode(true);
+    
+    if (data) {
+        clone.querySelector('select').value = data.icon;
+        clone.querySelector('input').value = data.url;
+    }
+    
+    container.appendChild(clone);
+}
+
+function removeRow(btn) {
+    btn.closest('.social-row').remove();
+}
+
+// Init existing data
+if (socialData && socialData.length > 0) {
+    socialData.forEach(item => addSocialRow(item));
+} else {
+    addSocialRow(); // Add one empty row by default
+}
+</script>
+
+<?php require_once __DIR__ . '/../includes/footer.php'; // Admin footer usually? Or just end body. ?>
+</body>
+</html>
