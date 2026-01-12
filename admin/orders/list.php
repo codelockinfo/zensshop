@@ -157,28 +157,43 @@ function deleteOrder(id) {
     document.addEventListener('change', function(e){
         if(!e.target.classList.contains('order-status-select')) return;
 
-        const orderId = e.target.dataset.orderId;
-        const newStatus = e.target.value;
+        const select = e.target;
+        const orderId = select.dataset.orderId;
+        const newStatus = select.value;
 
-        fetch(BASE_URL + '/admin/api/orders', {
-            method: 'POST',
+        // Visual feedback: Update styling immediately
+        select.className = 'order-status-select px-2 py-1 rounded border text-sm'; // Reset
+        if (newStatus === 'delivered' || newStatus === 'success') {
+            select.classList.add('bg-green-100', 'text-green-800');
+        } else if (newStatus === 'cancelled' || newStatus === 'cancel') {
+            select.classList.add('bg-orange-100', 'text-orange-800');
+        } else {
+            select.classList.add('bg-gray-100', 'text-gray-800');
+        }
+
+        fetch(BASE_URL + '/admin/api/orders.php', {
+            method: 'PUT',
             headers:{
                 'Content-Type':'application/json'
             },
             body:JSON.stringify({
-                order_id:orderId,
-                order_status:newStatus
-                
+                id: orderId,
+                order_status: newStatus
             })
         })
         .then(res => res.json())
         .then(data => {
-            if(!data.success){
-                console.log('Failed to update order status');
+            if(data.success){
+                console.log('Order status updated successfully');
+                // Optional: Show a small toast notification
+            } else {
+                alert('Failed to update order status: ' + (data.message || 'Unknown error'));
+                // Revert selection if needed, but for now simple alert is enough
             }
         })
         .catch(err => {
-            console.log('Something went wrong:', err);
+            console.error('Something went wrong:', err);
+            alert('System error while updating status');
         });
     })
 </script>

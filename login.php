@@ -29,6 +29,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $cart = new Cart();
         $cart->syncCartAfterLogin($customer['id']);
         
+        // Sync wishlist after login
+        require_once __DIR__ . '/classes/Wishlist.php';
+        $wishlist = new Wishlist();
+        $wishlist->syncWishlistAfterLogin($customer['id']);
+        
         $target = ($redirect === 'checkout') ? url('checkout.php') : url('account.php');
         unset($_SESSION['login_redirect']);
         header('Location: ' . $target);

@@ -267,8 +267,8 @@ $maxPriceRange = $priceRange['max_price'] ?? 1000;
                             </span>
                             <?php endif; ?>
                             
-                            <button onclick="toggleWishlist(<?php echo $itemId; ?>)" 
-                                    class="absolute top-3 right-3 bg-white rounded-full w-9 h-9 hover:bg-black hover:text-white transition">
+                            <button class="wishlist-btn absolute top-3 right-3 bg-white rounded-full w-9 h-9 hover:bg-black hover:text-white transition"
+                                    data-product-id="<?php echo $itemId; ?>">
                                 <i class="far fa-heart"></i>
                             </button>
                         </div>
@@ -444,11 +444,6 @@ function addToCart(productId) {
             }
         });
     }
-}
-
-function toggleWishlist(productId) {
-    // Wishlist functionality can be implemented later
-    console.log('Toggle wishlist for product:', productId);
 }
 
 // Filter Drawer Functions

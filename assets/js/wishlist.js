@@ -5,9 +5,22 @@
 let wishlistData = [];
 
 // Initialize wishlist on page load
-document.addEventListener('DOMContentLoaded', function() {
+document.addEventListener('DOMContentLoaded', function () {
     loadWishlist();
     initializeWishlistButtons();
+
+    // Global event listener for wishlist buttons (handles lazy loaded items too)
+    document.addEventListener('click', function (e) {
+        const btn = e.target.closest('.wishlist-btn');
+        if (btn) {
+            e.preventDefault();
+            e.stopPropagation();
+            const productId = btn.getAttribute('data-product-id');
+            if (productId) {
+                toggleWishlist(productId, btn);
+            }
+        }
+    });
 });
 
 // Initialize wishlist button states
@@ -44,7 +57,7 @@ function loadWishlist() {
     oldPaths.forEach(path => {
         document.cookie = `wishlist_items=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=${path}; SameSite=Lax`;
     });
-    
+
     const wishlistCookie = getCookie('wishlist_items');
     if (wishlistCookie) {
         try {
@@ -61,7 +74,7 @@ function loadWishlist() {
                     parsed = null;
                 }
             }
-            
+
             if (parsed && Array.isArray(parsed) && parsed.length > 0) {
                 wishlistData = parsed;
             } else {
@@ -74,7 +87,7 @@ function loadWishlist() {
     } else {
         wishlistData = [];
     }
-    
+
     updateWishlistCount();
 }
 
@@ -86,19 +99,19 @@ async function refreshWishlist() {
         oldPaths.forEach(path => {
             document.cookie = `wishlist_items=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=${path}; SameSite=Lax`;
         });
-        
+
         const response = await fetch((typeof BASE_URL !== 'undefined' ? BASE_URL : '/zensshop') + '/api/wishlist.php', {
             method: 'GET',
             headers: {
                 'Content-Type': 'application/json',
             }
         });
-        
+
         const data = await response.json();
-        
+
         if (data.success && Array.isArray(data.wishlist)) {
             wishlistData = data.wishlist;
-            
+
             // Update cookie with correct path
             if (wishlistData.length > 0) {
                 const cookieData = JSON.stringify(wishlistData);
@@ -106,7 +119,7 @@ async function refreshWishlist() {
                 expiry.setTime(expiry.getTime() + (30 * 24 * 60 * 60 * 1000));
                 document.cookie = `wishlist_items=${encodeURIComponent(cookieData)}; expires=${expiry.toUTCString()}; path=/; SameSite=Lax`;
             }
-            
+
             updateWishlistCount();
         } else {
             // Fallback to cookie
@@ -124,7 +137,7 @@ async function toggleWishlist(productId, button) {
     try {
         // Check if already in wishlist
         const isInWishlist = wishlistData.some(item => item.product_id == productId);
-        
+
         const method = isInWishlist ? 'DELETE' : 'POST';
         const response = await fetch((typeof BASE_URL !== 'undefined' ? BASE_URL : '/zensshop') + '/api/wishlist.php', {
             method: method,
@@ -135,12 +148,12 @@ async function toggleWishlist(productId, button) {
                 product_id: productId
             })
         });
-        
+
         const data = await response.json();
-        
+
         if (data.success && Array.isArray(data.wishlist)) {
             wishlistData = data.wishlist;
-            
+
             // ALWAYS set cookie via JavaScript from response data - MUST be before any return
             if (data.cookie_data) {
                 try {
@@ -163,17 +176,17 @@ async function toggleWishlist(productId, button) {
                     console.error('[WISHLIST] Error setting cookie (fallback):', e);
                 }
             }
-            
+
             // Update wishlist data
             wishlistData = data.wishlist || [];
             updateWishlistCount();
-            
+
             // Reload page if on wishlist page to show updated items
             if (window.location.pathname.includes('wishlist') || window.location.pathname.includes('wishlist.php')) {
                 window.location.reload();
                 return;
             }
-            
+
             // Update button state (only if not on wishlist page)
             if (button) {
                 const icon = button.querySelector('i');
@@ -191,11 +204,11 @@ async function toggleWishlist(productId, button) {
                     }
                 }
             }
-            
+
             // Show notification
             const message = isInWishlist ? 'Removed from wishlist' : 'Added to wishlist';
             const type = isInWishlist ? 'info' : 'success';
-            
+
             if (typeof showNotificationModal === 'function') {
                 showNotificationModal(message, type);
             } else if (typeof showNotification === 'function') {
@@ -230,12 +243,12 @@ async function removeFromWishlist(productId) {
                 product_id: productId
             })
         });
-        
+
         const data = await response.json();
-        
+
         if (data.success && Array.isArray(data.wishlist)) {
             wishlistData = data.wishlist;
-            
+
             // ALWAYS set cookie via JavaScript from response data - MUST be before any return
             if (data.cookie_data) {
                 try {
@@ -258,17 +271,17 @@ async function removeFromWishlist(productId) {
                     console.error('[WISHLIST] Error setting cookie (fallback):', e);
                 }
             }
-            
+
             // Update wishlist data
             wishlistData = data.wishlist || [];
             updateWishlistCount();
-            
+
             // Reload page if on wishlist page to show updated items
             if (window.location.pathname.includes('wishlist') || window.location.pathname.includes('wishlist.php')) {
                 window.location.reload();
                 return;
             }
-            
+
             if (typeof showNotificationModal === 'function') {
                 showNotificationModal('Product removed from wishlist', 'success');
             } else if (typeof showNotification === 'function') {

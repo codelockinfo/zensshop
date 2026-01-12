@@ -214,7 +214,10 @@ class Wishlist {
         // Save to database if user is logged in
         $loggedId = $_SESSION['customer_id'] ?? $_SESSION['user_id'] ?? null;
         if ($loggedId) {
+            error_log("Saving wishlist to DB for user: " . $loggedId);
             $this->saveWishlistToDB($loggedId, $wishlistItems);
+        } else {
+            error_log("User not logged in, skipping DB save for wishlist");
         }
         
         return $wishlistItems;
@@ -303,11 +306,36 @@ class Wishlist {
         
         // Insert new items
         foreach ($wishlistItems as $item) {
-            $this->db->insert(
-                "INSERT INTO wishlist (user_id, product_id) VALUES (?, ?)
-                 ON DUPLICATE KEY UPDATE created_at = CURRENT_TIMESTAMP",
-                [$userId, $item['product_id']]
-            );
+            try {
+                $this->db->insert(
+                    "INSERT INTO wishlist (user_id, product_id) VALUES (?, ?)
+                     ON DUPLICATE KEY UPDATE created_at = CURRENT_TIMESTAMP",
+                    [$userId, $item['product_id']]
+                );
+            } catch (Exception $e) {
+                error_log("Error saving wishlist item to DB: " . $e->getMessage());
+            }
+        }
+    }
+    /**
+     * Sync guest wishlist (cookie) with user wishlist (database) after login
+     */
+    public function syncWishlistAfterLogin($userId) {
+        // Get guest items from cookie
+        if (isset($_COOKIE[WISHLIST_COOKIE_NAME])) {
+            $cookieItems = json_decode($_COOKIE[WISHLIST_COOKIE_NAME], true);
+            if (is_array($cookieItems) && !empty($cookieItems)) {
+                // Add each item to the database
+                foreach ($cookieItems as $item) {
+                    if (!empty($item['product_id'])) {
+                        $this->db->insert(
+                            "INSERT INTO wishlist (user_id, product_id) VALUES (?, ?)
+                             ON DUPLICATE KEY UPDATE created_at = CURRENT_TIMESTAMP",
+                            [$userId, $item['product_id']]
+                        );
+                    }
+                }
+            }
         }
     }
 }

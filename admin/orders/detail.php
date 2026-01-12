@@ -77,6 +77,11 @@ require_once __DIR__ . '/../../includes/admin-header.php';
                     <p class="text-sm text-gray-500 mt-1">
                         Placed on <?php echo date('F j, Y g:i A', strtotime($orderData['created_at'])); ?>
                     </p>
+                    <?php if (!empty($orderData['delivery_date'])): ?>
+                    <p class="text-sm text-gray-500 mt-1">
+                        Estimated Delivery: <span class="font-bold text-gray-800"><?php echo date('F j, Y', strtotime($orderData['delivery_date'])); ?></span>
+                    </p>
+                    <?php endif; ?>
                 </div>
                 <div class="text-right">
                     <span class="px-3 py-1 rounded text-sm font-medium <?php 

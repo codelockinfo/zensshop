@@ -27,6 +27,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['credential'])) {
                 $cart = new Cart();
                 $cart->syncCartAfterLogin($customer['id']);
                 
+                // Sync wishlist after login
+                require_once __DIR__ . '/classes/Wishlist.php';
+                $wishlist = new Wishlist();
+                $wishlist->syncWishlistAfterLogin($customer['id']);
+                
                 $redirect = $_SESSION['login_redirect'] ?? '';
                 $target = ($redirect === 'checkout') ? url('checkout.php') : url('account.php');
                 unset($_SESSION['login_redirect']);

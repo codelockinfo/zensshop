@@ -273,6 +273,9 @@ $_COOKIE['recently_viewed'] = json_encode($recentIds);
                 
                 <!-- Additional Links -->
                 <div class="flex flex-wrap gap-4 text-sm mb-6">
+                    <button class="text-gray-600 hover:text-primary transition flex items-center wishlist-btn" data-product-id="<?php echo $productData['id']; ?>">
+                        <i class="far fa-heart mr-1"></i> Add to Wishlist
+                    </button>
                     <a href="#" class="text-gray-600 hover:text-primary transition">Compare colors</a>
                     <a href="#" class="text-gray-600 hover:text-primary transition">Ask a question</a>
                     <a href="#" class="text-gray-600 hover:text-primary transition">Share</a>
@@ -444,8 +447,9 @@ $_COOKIE['recently_viewed'] = json_encode($recentIds);
                                 -<?php echo $itemDiscount; ?>%
                             </span>
                             <?php endif; ?>
-                            <button class="absolute top-3 left-3 bg-white rounded-full p-2 hover:bg-red-500 hover:text-white transition opacity-0 group-hover:opacity-100">
-                                <i class="fas fa-heart"></i>
+                            <button class="wishlist-btn absolute top-3 left-3 bg-white rounded-full w-9 h-9 hover:bg-black hover:text-white transition opacity-0 group-hover:opacity-100"
+                                    data-product-id="<?php echo $item['id']; ?>">
+                                <i class="far fa-heart"></i>
                             </button>
                         </div>
                         <div class="p-4">

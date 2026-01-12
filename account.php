@@ -321,9 +321,26 @@ require_once __DIR__ . '/includes/header.php';
                                         <?php 
                                             $addr = json_decode($savedAddress, true);
                                             if (is_array($addr)) {
-                                                echo htmlspecialchars(($addr['first_name']??'') . ' ' . ($addr['last_name']??'')) . '<br>';
-                                                echo htmlspecialchars($addr['address']??'') . '<br>';
-                                                echo htmlspecialchars(($addr['city']??'') . ', ' . ($addr['state']??'') . ' ' . ($addr['zip']??''));
+                                                // Name
+                                                $name = trim(($addr['first_name']??'') . ' ' . ($addr['last_name']??''));
+                                                if ($name) echo htmlspecialchars($name) . '<br>';
+                                                
+                                                // Street
+                                                $street = $addr['street'] ?? $addr['address'] ?? $addr['address_line1'] ?? '';
+                                                if (!empty($addr['address_line2'])) $street .= ', ' . $addr['address_line2'];
+                                                if ($street) echo htmlspecialchars($street) . '<br>';
+                                                
+                                                // City, State, Zip
+                                                $parts = [];
+                                                if (!empty($addr['city'])) $parts[] = $addr['city'];
+                                                if (!empty($addr['state'])) $parts[] = $addr['state'];
+                                                if (!empty($addr['zip'])) $parts[] = $addr['zip'];
+                                                elseif (!empty($addr['postal_code'])) $parts[] = $addr['postal_code'];
+                                                
+                                                if (!empty($parts)) echo htmlspecialchars(implode(', ', $parts));
+
+                                                // Country
+                                                if (!empty($addr['country'])) echo '<br>' . htmlspecialchars($addr['country']);
                                             } else {
                                                 echo nl2br(htmlspecialchars($savedAddress));
                                             }
@@ -371,9 +388,26 @@ require_once __DIR__ . '/includes/header.php';
                                         <?php 
                                             $addr = json_decode($addrStr, true);
                                             if (is_array($addr)) {
-                                                echo htmlspecialchars(($addr['first_name']??'') . ' ' . ($addr['last_name']??'')) . '<br>';
-                                                echo htmlspecialchars($addr['address']??'') . '<br>';
-                                                echo htmlspecialchars(($addr['city']??'') . ', ' . ($addr['state']??'') . ' ' . ($addr['zip']??''));
+                                                // Name
+                                                $name = trim(($addr['first_name']??'') . ' ' . ($addr['last_name']??''));
+                                                if ($name) echo htmlspecialchars($name) . '<br>';
+                                                
+                                                // Street
+                                                $street = $addr['street'] ?? $addr['address'] ?? $addr['address_line1'] ?? '';
+                                                if (!empty($addr['address_line2'])) $street .= ', ' . $addr['address_line2'];
+                                                if ($street) echo htmlspecialchars($street) . '<br>';
+                                                
+                                                // City, State, Zip
+                                                $parts = [];
+                                                if (!empty($addr['city'])) $parts[] = $addr['city'];
+                                                if (!empty($addr['state'])) $parts[] = $addr['state'];
+                                                if (!empty($addr['zip'])) $parts[] = $addr['zip'];
+                                                elseif (!empty($addr['postal_code'])) $parts[] = $addr['postal_code'];
+                                                
+                                                if (!empty($parts)) echo htmlspecialchars(implode(', ', $parts));
+
+                                                // Country
+                                                if (!empty($addr['country'])) echo '<br>' . htmlspecialchars($addr['country']);
                                             } else {
                                                 echo nl2br(htmlspecialchars($addrStr));
                                             }
