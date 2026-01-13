@@ -63,8 +63,8 @@ class Email {
             $mail->SMTPAuth = true;
             $mail->Username = SMTP_USERNAME;
             $mail->Password = SMTP_PASSWORD;
-            // Determine encryption
-            if (defined('SMTP_ENCRYPTION') && strtolower(SMTP_ENCRYPTION) === 'ssl') {
+            // Determine encryption: Force SSL for Port 465, otherwise respect setting or default to TLS
+            if (SMTP_PORT == 465 || (defined('SMTP_ENCRYPTION') && strtolower(SMTP_ENCRYPTION) === 'ssl')) {
                 $mail->SMTPSecure = PHPMailer\PHPMailer\PHPMailer::ENCRYPTION_SMTPS;
             } else {
                 $mail->SMTPSecure = PHPMailer\PHPMailer\PHPMailer::ENCRYPTION_STARTTLS;
