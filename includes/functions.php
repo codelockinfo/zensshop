@@ -44,8 +44,8 @@ function url($path = '') {
         $queryString = '?' . $parts[1];
     }
     
-    // Remove .php extension if present
-    $path = preg_replace('/\.php$/', '', $path);
+    // Remove .php extension if present - DISABLED: Server requires .php
+    // $path = preg_replace('/\.php$/', '', $path);
     
     // If path is empty, return base URL
     if (empty($path)) {

@@ -39,7 +39,7 @@
         
         // Fetch search results
         const baseUrl = typeof BASE_URL !== 'undefined' ? BASE_URL : window.location.pathname.split('/').slice(0, -1).join('/') || '';
-        const searchUrl = baseUrl + '/admin/api/search?q=' + encodeURIComponent(query);
+        const searchUrl = baseUrl + '/admin/api/search.php?q=' + encodeURIComponent(query);
         fetch(searchUrl)
             .then(response => response.json())
             .then(data => {

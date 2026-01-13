@@ -72,7 +72,7 @@ if (typeof BASE_URL === 'undefined') {
 }
 function deleteCategory(id) {
     showConfirmModal('Are you sure you want to delete this category? This action cannot be undone.', function() {
-        fetch(BASE_URL + '/admin/api/categories', {
+        fetch(BASE_URL + '/admin/api/categories.php', {
             method: 'DELETE',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ id: id })

@@ -19,7 +19,7 @@ $auth = new CustomerAuth();
 // Require login for checkout
 if (!$auth->isLoggedIn()) {
     ob_end_clean();
-    header('Location: ' . url('login?redirect=checkout'));
+    header('Location: ' . url('login.php?redirect=checkout'));
     exit;
 }
 
@@ -35,7 +35,7 @@ if ($auth->isLoggedIn()) {
 // Redirect if cart is empty
 if (empty($cartItems)) {
     ob_end_clean();
-    header('Location: ' . url('cart'));
+    header('Location: ' . url('cart.php'));
     exit;
 }
 
@@ -202,7 +202,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['place_order']) && emp
         ob_end_clean();
         
         // Redirect to thank you page
-        header('Location: ' . url("order-success?id={$orderId}"));
+        header('Location: ' . url("order-success.php?id={$orderId}"));
         exit;
         
     } catch (Exception $e) {
@@ -309,7 +309,7 @@ nav.bg-white.sticky.top-0 {
         </script>
         <?php endif; ?>
 
-        <form method="POST" action="<?php echo url('checkout'); ?>" class="max-w-6xl mx-auto">
+        <form method="POST" action="<?php echo url('checkout.php'); ?>" class="max-w-6xl mx-auto">
             <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
                 <!-- Left Section: Shipping Information -->
                 <div class="lg:col-span-2">

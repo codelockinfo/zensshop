@@ -32,7 +32,7 @@ if (!$orderId) {
     while (ob_get_level() > 0) {
         ob_end_clean();
     }
-    header('Location: ' . $baseUrl . '/admin/orders/list');
+    header('Location: ' . $baseUrl . '/admin/orders/list.php');
     exit;
 }
 
@@ -43,7 +43,7 @@ if (!$orderData) {
     while (ob_get_level() > 0) {
         ob_end_clean();
     }
-    header('Location: ' . $baseUrl . '/admin/orders/list');
+    header('Location: ' . $baseUrl . '/admin/orders/list.php');
     exit;
 }
 
@@ -216,7 +216,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         while (ob_get_level() > 0) {
             ob_end_clean();
         }
-        header('Location: ' . $baseUrl . '/admin/orders/detail?id=' . $orderId . '&success=updated');
+        header('Location: ' . $baseUrl . '/admin/orders/detail.php?id=' . $orderId . '&success=updated');
         exit;
     } catch (Exception $e) {
         $error = $e->getMessage();
@@ -242,10 +242,10 @@ require_once __DIR__ . '/../../includes/admin-header.php';
             <p class="text-gray-600">Dashboard > Order > Edit Order</p>
         </div>
         <div class="flex items-center space-x-3">
-            <a href="<?php echo $baseUrl; ?>/admin/orders/detail?id=<?php echo $orderId; ?>" class="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600 transition">
+            <a href="<?php echo $baseUrl; ?>/admin/orders/detail.php?id=<?php echo $orderId; ?>" class="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600 transition">
                 <i class="fas fa-eye mr-2"></i>View Order Details
             </a>
-            <a href="<?php echo $baseUrl; ?>/admin/orders/list" class="bg-gray-500 text-white px-4 py-2 rounded hover:bg-gray-600 transition">
+            <a href="<?php echo $baseUrl; ?>/admin/orders/list.php" class="bg-gray-500 text-white px-4 py-2 rounded hover:bg-gray-600 transition">
                 <i class="fas fa-arrow-left mr-2"></i>Back to Orders
             </a>
         </div>
@@ -532,7 +532,7 @@ require_once __DIR__ . '/../../includes/admin-header.php';
                 </div>
         </div>
     <div class="mt-6 flex justify-end space-x-3 sticky top-[83%]">
-        <a href="<?php echo $baseUrl; ?>/admin/orders/detail?id=<?php echo $orderId; ?>" class="bg-gray-500 text-white px-6 py-2 rounded hover:bg-gray-600 transition">
+        <a href="<?php echo $baseUrl; ?>/admin/orders/detail.php?id=<?php echo $orderId; ?>" class="bg-gray-500 text-white px-6 py-2 rounded hover:bg-gray-600 transition">
             Cancel
         </a>
         <button type="submit" class="bg-blue-500 text-white px-6 py-2 rounded hover:bg-blue-600 transition">

@@ -41,27 +41,28 @@ $products = $db->fetchAll($sql, $params);
     <p class="text-gray-600 text-sm md:text-base">Dashboard > Ecommerce > Product List</p>
 </div>
 
-<!-- <div class="admin-card mb-6">
+<div class="admin-card mb-6">
     <div class="flex flex-col justify-between items-start space-y-4">
         <div class="flex-1">
             <p class="text-xs md:text-sm text-gray-600">Tip search by Product ID: Each product is provided with a unique ID, which you can rely on to find the exact product you need.</p>
         </div>
         <div class="flex flex-col md:flex-row w-full md:w-auto items-center gap-4">
-            <select class="border rounded px-3 py-2 text-sm md:text-base w-full md:w-auto">
-                <option>Showing 10 entries</option>
-                <option>Showing 25 entries</option>
-                <option>Showing 50 entries</option>
-            </select>
-            <input type="text" 
-                   placeholder="Search here..." 
-                   value="<?php echo htmlspecialchars($search); ?>"
-                   class="border rounded px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm md:text-base w-full md:w-auto">
+            <!-- <select class="border rounded px-3 py-2 text-sm md:text-base w-full md:w-auto">
+                <option>Showing all entries</option>
+            </select> -->
+            <form method="GET" action="" class="w-full md:w-auto">
+                <input type="text" 
+                       name="search"
+                       placeholder="Search here..." 
+                       value="<?php echo htmlspecialchars($search); ?>"
+                       class="border rounded px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm md:text-base w-full md:w-80">
+            </form>
             <a href="<?php echo url('admin/products/add.php'); ?>" class="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600 transition text-sm md:text-base">
                     + Add new
-                </a>
+            </a>
         </div>
     </div>
-</div> -->
+</div>
 
 <div class="admin-card overflow-x-auto">
     <table class="admin-table">
@@ -126,7 +127,7 @@ if (typeof BASE_URL === 'undefined') {
 }
 function deleteProduct(id) {
     showConfirmModal('Are you sure you want to delete this product? This action cannot be undone.', function() {
-        fetch(BASE_URL + '/admin/api/products', {
+        fetch(BASE_URL + '/admin/api/products.php', {
             method: 'DELETE',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ id: id })

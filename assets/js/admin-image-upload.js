@@ -118,7 +118,7 @@ function initializeImageUpload() {
         formData.append('image', file);
         
         const baseUrl = typeof BASE_URL !== 'undefined' ? BASE_URL : window.location.pathname.split('/').slice(0, -1).join('/') || '';
-        const uploadUrl = baseUrl + '/admin/api/upload';
+        const uploadUrl = baseUrl + '/admin/api/upload.php';
         fetch(uploadUrl, {
             method: 'POST',
             body: formData

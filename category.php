@@ -20,7 +20,7 @@ $categorySlug = $_GET['slug'] ?? '';
 
 if (empty($categorySlug)) {
     ob_end_clean(); // Clear any buffered output
-    header('Location: ' . $baseUrl . '/collections');
+    header('Location: ' . $baseUrl . '/collections.php');
     exit;
 }
 
@@ -32,7 +32,7 @@ $category = $db->fetchOne(
 
 if (!$category) {
     ob_end_clean(); // Clear any buffered output
-    header('Location: ' . $baseUrl . '/collections');
+    header('Location: ' . $baseUrl . '/collections.php');
     exit;
 }
 

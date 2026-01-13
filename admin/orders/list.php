@@ -26,10 +26,17 @@ $orders = $order->getAll($filters);
 
 <div class="admin-card mb-6">
     <div class="flex flex-col md:flex-row justify-between items-start md:items-center space-y-4 md:space-y-0">
-        <input type="text" 
-               placeholder="Search here..." 
-               value="<?php echo htmlspecialchars($filters['search']); ?>"
-               class="border rounded px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 w-80">
+        <form method="GET" action="" class="w-full md:w-auto">
+            <!-- Preserve other filters if any -->
+            <?php if (!empty($filters['order_status'])): ?>
+            <input type="hidden" name="status" value="<?php echo htmlspecialchars($filters['order_status']); ?>">
+            <?php endif; ?>
+            <input type="text" 
+                   name="search"
+                   placeholder="Search here..." 
+                   value="<?php echo htmlspecialchars($filters['search']); ?>"
+                   class="border rounded px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 w-80">
+        </form>
         <button class="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600 transition">
             <i class="fas fa-file-export mr-2"></i>Export all order
         </button>
@@ -105,10 +112,10 @@ $orders = $order->getAll($filters);
                 </td>
                 <td>
                     <div class="flex items-center space-x-2">
-                        <a href="<?php echo $baseUrl; ?>/admin/orders/detail?id=<?php echo $item['id']; ?>" class="text-blue-500 hover:text-blue-700">
+                        <a href="<?php echo $baseUrl; ?>/admin/orders/detail.php?id=<?php echo $item['id']; ?>" class="text-blue-500 hover:text-blue-700">
                             <i class="fas fa-eye"></i>
                         </a>
-                        <a href="<?php echo $baseUrl; ?>/admin/orders/edit?id=<?php echo $item['id']; ?>" class="text-green-500 hover:text-green-700">
+                        <a href="<?php echo $baseUrl; ?>/admin/orders/edit.php?id=<?php echo $item['id']; ?>" class="text-green-500 hover:text-green-700">
                             <i class="fas fa-edit"></i>
                         </a>
                         <button onclick="deleteOrder(<?php echo $item['id']; ?>)" class="text-red-500 hover:text-red-700">
@@ -129,7 +136,7 @@ if (typeof BASE_URL === 'undefined') {
 }
 function deleteOrder(id) {
     showConfirmModal('Are you sure you want to delete this order? This action cannot be undone.', function() {
-        fetch(BASE_URL + '/admin/api/orders', {
+        fetch(BASE_URL + '/admin/api/orders.php', {
             method: 'DELETE',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ id: id })

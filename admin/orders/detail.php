@@ -25,7 +25,7 @@ if (!$orderId) {
     while (ob_get_level() > 0) {
         ob_end_clean();
     }
-    header('Location: ' . $baseUrl . '/admin/orders/list');
+    header('Location: ' . $baseUrl . '/admin/orders/list.php');
     exit;
 }
 
@@ -37,7 +37,7 @@ if (!$orderData) {
     while (ob_get_level() > 0) {
         ob_end_clean();
     }
-    header('Location: ' . $baseUrl . '/admin/orders/list');
+    header('Location: ' . $baseUrl . '/admin/orders/list.php');
     exit;
 }
 
@@ -56,10 +56,10 @@ require_once __DIR__ . '/../../includes/admin-header.php';
             <p class="text-gray-600">Dashboard > Order > Order Details</p>
         </div>
         <div class="flex items-center space-x-3">
-            <a href="<?php echo $baseUrl; ?>/admin/orders/edit?id=<?php echo $orderId; ?>" class="bg-green-500 text-white px-4 py-2 rounded hover:bg-green-600 transition">
+            <a href="<?php echo $baseUrl; ?>/admin/orders/edit.php?id=<?php echo $orderId; ?>" class="bg-green-500 text-white px-4 py-2 rounded hover:bg-green-600 transition">
                 <i class="fas fa-edit mr-2"></i>Edit Order
             </a>
-            <a href="<?php echo $baseUrl; ?>/admin/orders/list" class="bg-gray-500 text-white px-4 py-2 rounded hover:bg-gray-600 transition">
+            <a href="<?php echo $baseUrl; ?>/admin/orders/list.php" class="bg-gray-500 text-white px-4 py-2 rounded hover:bg-gray-600 transition">
                 <i class="fas fa-arrow-left mr-2"></i>Back to Orders
             </a>
         </div>
