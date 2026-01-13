@@ -104,14 +104,52 @@ $action = $segments[count($segments) - 1] ?? '';  // add, list
             <button class="text-gray-600 hover:text-gray-800">
                 <i class="fas fa-moon text-xl"></i>
             </button>
-            <button class="text-gray-600 hover:text-gray-800 relative">
-                <i class="fas fa-bell text-xl"></i>
-                <span class="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center">1</span>
-            </button>
-            <button class="text-gray-600 hover:text-gray-800 relative">
-                <i class="fas fa-comment text-xl"></i>
-                <span class="absolute -top-1 -right-1 bg-blue-500 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center">1</span>
-            </button>
+            <!-- Notifications Dropdown -->
+            <div class="relative notification-dropdown">
+                <button class="text-gray-600 hover:text-gray-800 relative notification-trigger" id="notificationBell">
+                    <i class="fas fa-bell text-xl"></i>
+                    <span id="notificationCount" class="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center hidden">0</span>
+                </button>
+                
+                <!-- Notification Dropdown Menu -->
+                <div class="notification-dropdown-menu hidden" id="notificationDropdown">
+                    <div class="flex items-center justify-between p-4 border-b">
+                        <h3 class="font-semibold text-gray-800">Notifications</h3>
+                        <button id="markAllRead" class="text-xs text-blue-600 hover:text-blue-800">Mark all as read</button>
+                    </div>
+                    <div id="notificationList" class="max-h-96 overflow-y-auto">
+                        <!-- Notifications will be loaded here -->
+                        <div class="p-4 text-center text-gray-500">
+                            <i class="fas fa-spinner fa-spin"></i> Loading...
+                        </div>
+                    </div>
+                    <div class="p-2 border-t text-center">
+                        <a href="<?php echo $baseUrl; ?>/admin/notifications.php" class="text-sm text-blue-600 hover:text-blue-800">View all notifications</a>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Support Messages Dropdown -->
+            <div class="relative support-dropdown">
+                <button class="text-gray-600 hover:text-gray-800 relative support-trigger" id="supportBell">
+                    <i class="fas fa-comment text-xl"></i>
+                    <span id="supportCount" class="absolute -top-1 -right-1 bg-blue-500 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center hidden">0</span>
+                </button>
+                
+                <!-- Support Dropdown Menu -->
+                <div class="notification-dropdown-menu hidden" id="supportDropdown">
+                    <div class="flex items-center justify-between p-4 border-b">
+                        <h3 class="font-semibold text-gray-800">Support Messages</h3>
+                        <a href="<?php echo $baseUrl; ?>/admin/support.php" class="text-xs text-blue-600 hover:text-blue-800">View all</a>
+                    </div>
+                    <div id="supportList" class="max-h-96 overflow-y-auto">
+                        <!-- Messages will be loaded here -->
+                        <div class="p-4 text-center text-gray-500">
+                            <i class="fas fa-spinner fa-spin"></i> Loading...
+                        </div>
+                    </div>
+                </div>
+            </div>
             
             <!-- User Profile Dropdown -->
             <div class="relative user-profile-dropdown">
@@ -335,6 +373,13 @@ $currentPage = basename($_SERVER['PHP_SELF']);
            title="Menu Settings">
             <i class="fas fa-gem text-xs"></i>
             <span>Menu Settings</span>
+        </a>
+
+        <a href="<?php echo $baseUrl; ?>/admin/system-settings.php"
+           class="flex items-center space-x-2 py-1 px-4 text-sm <?php echo ($currentPage === 'system-settings.php') ? 'bg-gray-700' : ''; ?>"
+           title="System Settings">
+            <i class="fas fa-cog text-xs"></i>
+            <span>System Settings</span>
         </a>
 
     </div>

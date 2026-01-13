@@ -14,10 +14,17 @@ class CustomerAuth {
     public function register($name, $email, $password) {
         $hashedPassword = password_hash($password, PASSWORD_DEFAULT);
         try {
-            return $this->db->insert(
+            $customerId = $this->db->insert(
                 "INSERT INTO customers (name, email, password) VALUES (?, ?, ?)",
                 [$name, $email, $hashedPassword]
             );
+            
+            // Create notification for admin
+            require_once __DIR__ . '/Notification.php';
+            $notification = new Notification();
+            $notification->notifyNewCustomer($name, $customerId);
+            
+            return $customerId;
         } catch (Exception $e) {
             if (strpos($e->getMessage(), 'Duplicate entry') !== false) {
                 throw new Exception("Email already exists");
@@ -49,6 +56,11 @@ class CustomerAuth {
                 [$name, $email, $googleId]
             );
             $customer = $this->db->fetchOne("SELECT * FROM customers WHERE id = ?", [$id]);
+            
+            // Create notification for admin (new Google customer)
+            require_once __DIR__ . '/Notification.php';
+            $notification = new Notification();
+            $notification->notifyNewCustomer($name, $id);
         }
         
         $this->setCustomerSession($customer);

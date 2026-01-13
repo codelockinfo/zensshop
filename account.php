@@ -598,6 +598,125 @@ require_once __DIR__ . '/includes/header.php';
                         </div>
                      <?php endif; ?>
 
+                <?php elseif ($section === 'support'): ?>
+                    <!-- Customer Support Section -->
+                    <h2 class="text-2xl font-bold mb-6">Customer Support</h2>
+                    
+                    <div class="bg-white rounded-2xl border border-gray-100 p-8 mb-6">
+                        <div class="flex items-center gap-4 mb-6">
+                            <div class="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center">
+                                <i class="fas fa-headset text-blue-600 text-2xl"></i>
+                            </div>
+                            <div>
+                                <h3 class="text-lg font-bold text-gray-900">Need Help?</h3>
+                                <p class="text-gray-600">Send us a message and we'll get back to you within 24 hours</p>
+                            </div>
+                        </div>
+
+                        <form id="accountSupportForm" class="space-y-6">
+                            <div>
+                                <label for="supportSubject" class="block text-sm font-semibold mb-2 text-gray-700">Subject *</label>
+                                <input type="text" 
+                                       id="supportSubject" 
+                                       name="subject" 
+                                       required 
+                                       class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                       placeholder="How can we help you?">
+                            </div>
+
+                            <div>
+                                <label for="supportMessage" class="block text-sm font-semibold mb-2 text-gray-700">Message *</label>
+                                <textarea id="supportMessage" 
+                                          name="message" 
+                                          rows="6" 
+                                          required 
+                                          class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                          placeholder="Please describe your issue or question in detail..."></textarea>
+                            </div>
+
+                            <div id="accountSupportMessage" class="hidden"></div>
+
+                            <button type="submit" 
+                                    class="bg-blue-600 text-white px-8 py-3 rounded-lg font-semibold hover:bg-blue-700 transition duration-200 shadow-lg">
+                                <i class="fas fa-paper-plane mr-2"></i>Send Message
+                            </button>
+                        </form>
+                    </div>
+
+                    <!-- Quick Help -->
+                    <div class="bg-gradient-to-r from-gray-50 to-blue-50 rounded-2xl p-6 border border-blue-100">
+                        <h3 class="font-bold text-gray-900 mb-4">Quick Help</h3>
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <a href="?section=orders" class="flex items-center gap-3 p-4 bg-white rounded-lg hover:shadow-md transition">
+                                <i class="fas fa-truck text-blue-600"></i>
+                                <div>
+                                    <h4 class="font-semibold text-sm">Track Order</h4>
+                                    <p class="text-xs text-gray-500">View your order status</p>
+                                </div>
+                            </a>
+                            <a href="<?php echo url('support.php'); ?>" class="flex items-center gap-3 p-4 bg-white rounded-lg hover:shadow-md transition">
+                                <i class="fas fa-question-circle text-blue-600"></i>
+                                <div>
+                                    <h4 class="font-semibold text-sm">FAQ</h4>
+                                    <p class="text-xs text-gray-500">Common questions</p>
+                                </div>
+                            </a>
+                        </div>
+                    </div>
+
+                    <script>
+                    document.getElementById('accountSupportForm').addEventListener('submit', async function(e) {
+                        e.preventDefault();
+                        
+                        const btn = this.querySelector('button[type="submit"]');
+                        const origText = btn.innerHTML;
+                        const messageDiv = document.getElementById('accountSupportMessage');
+                        
+                        btn.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>Sending...';
+                        btn.disabled = true;
+                        messageDiv.classList.add('hidden');
+                        
+                        const formData = {
+                            name: '<?php echo htmlspecialchars($customer['name']); ?>',
+                            email: '<?php echo htmlspecialchars($customer['email']); ?>',
+                            subject: document.getElementById('supportSubject').value,
+                            message: document.getElementById('supportMessage').value
+                        };
+                        
+                        try {
+                            const response = await fetch('<?php echo $baseUrl; ?>/api/support.php', {
+                                method: 'POST',
+                                headers: { 'Content-Type': 'application/json' },
+                                body: JSON.stringify(formData)
+                            });
+                            
+                            const data = await response.json();
+                            
+                            if (data.success) {
+                                this.reset();
+                                messageDiv.textContent = data.message;
+                                messageDiv.className = 'p-4 bg-green-50 text-green-700 rounded-lg border border-green-200';
+                                messageDiv.classList.remove('hidden');
+                                
+                                // Scroll to message
+                                messageDiv.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+                            } else {
+                                messageDiv.textContent = data.message || 'Something went wrong. Please try again.';
+                                messageDiv.className = 'p-4 bg-red-50 text-red-700 rounded-lg border border-red-200';
+                                messageDiv.classList.remove('hidden');
+                            }
+                        } catch (error) {
+                            console.error('Support form error:', error);
+                            messageDiv.textContent = 'An error occurred: ' + (error.message || 'Please try again.');
+                            messageDiv.className = 'p-4 bg-red-50 text-red-700 rounded-lg border border-red-200';
+                            messageDiv.classList.remove('hidden');
+                        } finally {
+                            btn.innerHTML = origText;
+                            btn.disabled = false;
+                        }
+                    });
+                    </script>
+
                 <?php endif; ?>
             </div>
         </div>

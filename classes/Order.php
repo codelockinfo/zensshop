@@ -198,6 +198,30 @@ class Order {
             }
         }
         
+        // Create notification for admin
+        require_once __DIR__ . '/Notification.php';
+        $notification = new Notification();
+        $notification->notifyNewOrder(
+            $orderNumber,
+            $data['customer_name'],
+            '₹' . number_format($totalAmount, 2)
+        );
+        
+        // Send order confirmation email to customer
+        try {
+            require_once __DIR__ . '/Email.php';
+            $email = new Email();
+            $email->sendOrderConfirmation(
+                $data['customer_email'],
+                $orderNumber,
+                $data['customer_name'],
+                $totalAmount,
+                $data['items']
+            );
+        } catch (Exception $e) {
+            error_log("Failed to send order confirmation email: " . $e->getMessage());
+        }
+        
         return $orderId;
     }
     

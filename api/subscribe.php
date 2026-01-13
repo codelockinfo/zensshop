@@ -54,6 +54,20 @@ try {
 
     $db->insert("INSERT INTO subscribers (email, user_id) VALUES (?, ?)", [$email, $userId]);
 
+    // Create notification for admin
+    require_once __DIR__ . '/../classes/Notification.php';
+    $notification = new Notification();
+    $notification->notifyNewSubscriber($email);
+    
+    // Send confirmation email to subscriber
+    try {
+        require_once __DIR__ . '/../classes/Email.php';
+        $emailService = new Email();
+        $emailService->sendSubscriptionConfirmation($email);
+    } catch (Exception $e) {
+        error_log("Failed to send subscription confirmation email: " . $e->getMessage());
+    }
+
     echo json_encode(['success' => true, 'message' => 'Successfully subscribed!']);
 
 } catch (Exception $e) {

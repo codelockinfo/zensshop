@@ -1205,3 +1205,26 @@ h6 {
     grid-template-columns: repeat(1, minmax(0, 1fr)) !important;
   }
 }
+/* Notification Dropdown */
+.notification-dropdown {
+  position: relative;
+}
+
+.notification-dropdown-menu {
+  position: absolute;
+  top: 100%;
+  right: 0;
+  margin-top: 0.5rem;
+  width: 380px;
+  max-width: 90vw;
+  background: white;
+  border-radius: 0.5rem;
+  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+  border: 1px solid #e5e7eb;
+  z-index: 100;
+}
+
+.notification-item.unread {
+  background-color: #eff6ff;
+}
+
