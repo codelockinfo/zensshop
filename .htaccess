@@ -1,5 +1,5 @@
 RewriteEngine On
-RewriteBase /zensshop/
+# RewriteBase /zensshop/ (Commented out to support both root and subdirectory deployment)
 
 # Allow access to existing files and directories
 RewriteCond %{REQUEST_FILENAME} -f [OR]
