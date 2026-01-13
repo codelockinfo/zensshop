@@ -171,7 +171,10 @@ function format_currency($amount, $decimals = 2) {
 function buildMenuTree(array $elements, $parentId = null) {
     $branch = array();
     foreach ($elements as $element) {
-        if ($element['parent_id'] == $parentId) {
+        // Check compatibility for root items (handle NULL and 0 as equivalent for root)
+        $isRootMatch = ($parentId === null && $element['parent_id'] == 0);
+        
+        if ($element['parent_id'] == $parentId || $isRootMatch) {
             $children = buildMenuTree($elements, $element['id']);
             if ($children) {
                 $element['children'] = $children;

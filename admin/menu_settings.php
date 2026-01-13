@@ -216,8 +216,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 foreach ($treeData as $id => $data) {
                     $order = intval($data['sort_order']);
                     $parentId = intval($data['parent_id']);
-                    // If parentId is 0, make it NULL or 0 depending on DB. Assuming 0 is root or NULL.
-                    // If DB uses NULL for root, check schema. Assuming 0 based on previous code.
+                    if ($parentId === 0) $parentId = null;
                     $db->execute("UPDATE menu_items SET sort_order = ?, parent_id = ? WHERE id = ?", [$order, $parentId, intval($id)]);
                 }
                 $db->commit();
