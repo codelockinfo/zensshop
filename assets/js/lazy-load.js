@@ -149,7 +149,7 @@ function initializeNewsletterForm(container) {
         const email = this.querySelector('input[name="email"]').value;
 
         try {
-            const baseUrl = typeof BASE_URL !== 'undefined' ? BASE_URL : window.location.pathname.substring(0, window.location.pathname.indexOf('/zensshop') + 9) || '/zensshop';
+            const baseUrl = typeof BASE_URL !== 'undefined' ? BASE_URL : window.location.pathname.split('/').slice(0, -1).join('/') || '';
 
             const response = await fetch(baseUrl + '/api/subscribe.php', {
                 method: 'POST',

@@ -60,8 +60,11 @@ document.addEventListener('DOMContentLoaded', function() {
                 // Determine base URL dynamically if PHP var is empty, usually passed from server
                 let baseUrl = '<?php echo isset($baseUrl) ? $baseUrl : ""; ?>';
                 if(!baseUrl) {
-                    baseUrl = window.location.pathname.substring(0, window.location.pathname.indexOf('/zensshop') + 9);
-                    if(baseUrl.indexOf('zensshop') === -1) baseUrl = '/zensshop'; 
+                    if (typeof BASE_URL !== 'undefined') {
+                        baseUrl = BASE_URL;
+                    } else if (!baseUrl) {
+                        baseUrl = ''; // If at root, empty string or / is fine for relative paths
+                    } 
                 }
 
                 const response = await fetch(baseUrl + '/api/subscribe.php', {

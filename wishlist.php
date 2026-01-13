@@ -15,8 +15,12 @@ $db = Database::getInstance();
 
 // Clear old cookies with wrong paths (if headers not sent)
 if (!headers_sent()) {
-    // Clear old wishlist cookies with wrong paths
-    setcookie('wishlist_items', '', time() - 3600, '/zensshop');
+    // Clear existing cookies if they exist to prevent conflicts
+if (isset($_COOKIE['wishlist_items'])) {
+    $cookiePath = function_exists('getBaseUrl') ? getBaseUrl() : '/';
+    if (empty($cookiePath)) $cookiePath = '/';
+    setcookie('wishlist_items', '', time() - 3600, $cookiePath);
+}
     setcookie('wishlist_items', '', time() - 3600, '/oecom');
 }
 

@@ -100,7 +100,7 @@ async function refreshWishlist() {
             document.cookie = `wishlist_items=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=${path}; SameSite=Lax`;
         });
 
-        const response = await fetch((typeof BASE_URL !== 'undefined' ? BASE_URL : '/zensshop') + '/api/wishlist.php', {
+        const response = await fetch((typeof BASE_URL !== 'undefined' ? BASE_URL : '') + '/api/wishlist.php', {
             method: 'GET',
             headers: {
                 'Content-Type': 'application/json',
@@ -139,7 +139,7 @@ async function toggleWishlist(productId, button) {
         const isInWishlist = wishlistData.some(item => item.product_id == productId);
 
         const method = isInWishlist ? 'DELETE' : 'POST';
-        const response = await fetch((typeof BASE_URL !== 'undefined' ? BASE_URL : '/zensshop') + '/api/wishlist.php', {
+        const response = await fetch((typeof BASE_URL !== 'undefined' ? BASE_URL : '') + '/api/wishlist.php', {
             method: method,
             headers: {
                 'Content-Type': 'application/json',
@@ -234,7 +234,7 @@ async function toggleWishlist(productId, button) {
 // Remove from wishlist
 async function removeFromWishlist(productId) {
     try {
-        const response = await fetch((typeof BASE_URL !== 'undefined' ? BASE_URL : '/zensshop') + '/api/wishlist.php', {
+        const response = await fetch((typeof BASE_URL !== 'undefined' ? BASE_URL : '') + '/api/wishlist.php', {
             method: 'DELETE',
             headers: {
                 'Content-Type': 'application/json',
