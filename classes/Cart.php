@@ -37,7 +37,7 @@ class Cart {
         }
         
         // If user is logged in, strictly use database
-        $loggedId = $_SESSION['customer_id'] ?? $_SESSION['user_id'] ?? null;
+        $loggedId = $_SESSION['customer_id'] ?? null;
         if ($loggedId) {
             $dbCart = $this->getCartFromDB($loggedId);
             $cartItems = $dbCart;
@@ -230,7 +230,7 @@ class Cart {
         error_log("Cart::addItem - Returning cart: " . json_encode($cartItems));
         
         // Save to database if user is logged in
-        $loggedId = $_SESSION['customer_id'] ?? $_SESSION['user_id'] ?? null;
+        $loggedId = $_SESSION['customer_id'] ?? null;
         if ($loggedId) {
             $this->saveCartToDB($loggedId, $cartItems);
         }
@@ -257,7 +257,7 @@ class Cart {
         
         $this->saveCartToCookie($cartItems);
         
-        $loggedId = $_SESSION['customer_id'] ?? $_SESSION['user_id'] ?? null;
+        $loggedId = $_SESSION['customer_id'] ?? null;
         if ($loggedId) {
             $this->saveCartToDB($loggedId, $cartItems);
         }
@@ -279,7 +279,7 @@ class Cart {
         
         $this->saveCartToCookie($cartItems);
         
-        $loggedId = $_SESSION['customer_id'] ?? $_SESSION['user_id'] ?? null;
+        $loggedId = $_SESSION['customer_id'] ?? null;
         if ($loggedId) {
             $this->saveCartToDB($loggedId, $cartItems);
         }
@@ -298,7 +298,7 @@ class Cart {
         unset($_COOKIE[CART_COOKIE_NAME]);
         
         // Clear from database if user is logged in
-        $loggedId = $_SESSION['customer_id'] ?? $_SESSION['user_id'] ?? null;
+        $loggedId = $_SESSION['customer_id'] ?? null;
         if ($loggedId) {
             try {
                 $this->db->execute(
