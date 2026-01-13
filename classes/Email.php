@@ -218,45 +218,23 @@ class Email {
      * Send newsletter subscription confirmation
      */
     public function sendSubscriptionConfirmation($to) {
-        $subject = "Welcome to Our Newsletter!";
-        $message = "
-            <html>
-            <head>
-                <style>
-                    body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; }
-                    .container { max-width: 600px; margin: 0 auto; padding: 20px; }
-                    .header { background: #10B981; color: white; padding: 30px; text-align: center; border-radius: 8px 8px 0 0; }
-                    .content { background: #fff; padding: 30px; border: 1px solid #e5e7eb; }
-                    .icon { font-size: 48px; margin-bottom: 10px; }
-                    .footer { text-align: center; padding: 20px; color: #6b7280; font-size: 14px; }
-                </style>
-            </head>
-            <body>
-                <div class='container'>
-                    <div class='header'>
-                        <div class='icon'>✉️</div>
-                        <h1 style='margin: 0;'>Thanks for subscribing to us!</h1>
-                    </div>
-                    <div class='content'>
-                        <p>Welcome to our newsletter community!</p>
-                        <p>You'll be the first to know about:</p>
-                        <ul>
-                            <li>New product launches</li>
-                            <li>Exclusive deals and promotions</li>
-                            <li>Special offers just for subscribers</li>
-                            <li>Industry news and updates</li>
-                        </ul>
-                        <p>We're excited to have you with us!</p>
-                        <p style='color: #6b7280; font-size: 14px; margin-top: 30px;'>If you didn't subscribe to this newsletter, you can safely ignore this email.</p>
-                    </div>
-                    <div class='footer'>
-                        <p>&copy; " . date('Y') . " " . SITE_NAME . ". All rights reserved.</p>
-                    </div>
-                </div>
-            </body>
-            </html>
+        $subject = "Welcome to " . SITE_NAME . "!";
+        
+        $content = "
+            <h1 style='text-align: center;'>Thanks for subscribing to us!</h1>
+            <p>Welcome to our newsletter community! You'll be the first to know about:</p>
+            <ul>
+                <li>New product launches</li>
+                <li>Exclusive deals and promotions</li>
+                <li>Special offers just for subscribers</li>
+                <li>Industry news and updates</li>
+            </ul>
+            <p>We're excited to have you with us!</p>
+            <hr style='border: 0; border-top: 1px solid #e5e7eb; margin: 30px 0;'>
+            <p style='color: #6b7280; font-size: 13px; text-align: center;'>If you didn't subscribe to " . SITE_NAME . ", you can safely ignore this email.</p>
         ";
         
+        $message = $this->getEmailTemplate($subject, $content);
         return $this->send($to, $subject, $message);
     }
     
@@ -346,45 +324,92 @@ class Email {
     public function sendWelcomeEmail($to, $name) {
         $subject = "Welcome to " . SITE_NAME . "!";
         $siteUrl = getBaseUrl();
-        $message = "
-            <html>
-            <head>
-                <style>
-                    body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; }
-                    .container { max-width: 600px; margin: 0 auto; padding: 20px; }
-                    .header { background: #4F46E5; color: white; padding: 30px; text-align: center; border-radius: 8px 8px 0 0; }
-                    .content { background: #fff; padding: 30px; border: 1px solid #e5e7eb; }
-                    .button { background: #4F46E5; color: white; padding: 12px 24px; text-decoration: none; border-radius: 5px; display: inline-block; margin-top: 20px; }
-                    .footer { text-align: center; padding: 20px; color: #6b7280; font-size: 14px; }
-                </style>
-            </head>
-            <body>
-                <div class='container'>
-                    <div class='header'>
-                        <h1 style='margin: 0;'>Welcome to " . SITE_NAME . "!</h1>
-                    </div>
-                    <div class='content'>
-                        <p>Dear $name,</p>
-                        <p>We're thrilled to have you on board! Thank you for creating an account with us.</p>
-                        <p>You can now:</p>
-                        <ul>
-                            <li>Track your orders</li>
-                            <li>Save your favorite items to wishlist</li>
-                            <li>Checkout faster</li>
-                        </ul>
-                        <div style='text-align: center;'>
-                            <a href='$siteUrl' class='button'>Start Shopping</a>
-                        </div>
-                    </div>
-                    <div class='footer'>
-                        <p>&copy; " . date('Y') . " " . SITE_NAME . ". All rights reserved.</p>
-                    </div>
-                </div>
-            </body>
-            </html>
+        
+        $content = "
+            <h1 style='text-align: center;'>Welcome to " . SITE_NAME . "!</h1>
+            <p>Dear $name,</p>
+            <p>We're thrilled to have you on board! Thank you for creating an account with us.</p>
+            <p>As a registered member, you can now:</p>
+            <ul>
+                <li>Track your orders easily</li>
+                <li>Save your favorite items to wishlist</li>
+                <li>Checkout faster</li>
+            </ul>
+            <div style='text-align: center; margin: 30px 0;'>
+                <a href='$siteUrl' class='button'>Start Shopping</a>
+            </div>
         ";
         
+        $message = $this->getEmailTemplate($subject, $content);
         return $this->send($to, $subject, $message);
+    }
+
+    /**
+     * Standard Email Template
+     */
+    private function getEmailTemplate($title, $content) {
+        $logoType = defined('SITE_LOGO_TYPE') ? SITE_LOGO_TYPE : 'image';
+        $logoText = defined('SITE_LOGO_TEXT') ? SITE_LOGO_TEXT : SITE_NAME;
+        $logoImage = defined('SITE_LOGO') ? SITE_LOGO : 'logo.png';
+        
+        // Determine Logo HTML
+        $logoHtml = '';
+        $imagePath = __DIR__ . '/../assets/images/' . $logoImage;
+        
+        // Use text if type is text OR image file doesn't exist
+        if ($logoType === 'text' || !file_exists($imagePath)) {
+            $logoHtml = "<span style='font-size: 24px; font-weight: bold; color: #111827; text-transform: uppercase; letter-spacing: 1px;'>$logoText</span>";
+        } else {
+            $logoUrl = getBaseUrl() . '/assets/images/' . $logoImage;
+            $logoHtml = "<img src='$logoUrl' alt='$logoText' class='logo'>";
+        }
+
+        $year = date('Y');
+        $siteName = SITE_NAME;
+        
+        return "
+<!DOCTYPE html>
+<html>
+<head>
+    <meta name='viewport' content='width=device-width, initial-scale=1.0'>
+    <style>
+        body { margin: 0; padding: 0; font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; background-color: #f3f4f6; color: #374151; }
+        .wrapper { width: 100%; table-layout: fixed; background-color: #f3f4f6; padding-bottom: 40px; }
+        .webkit { max-width: 600px; margin: 0 auto; background-color: #ffffff; border-radius: 12px; overflow: hidden; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06); }
+        .header { text-align: center; padding: 30px 20px; background-color: #ffffff; border-bottom: 1px solid #f3f4f6; }
+        .logo { height: 40px; width: auto; object-fit: contain; }
+        .content { padding: 40px 30px; }
+        .footer { text-align: center; padding: 20px; color: #9ca3af; font-size: 12px; }
+        .button { display: inline-block; padding: 14px 28px; background-color: #000000; color: #ffffff; text-decoration: none; border-radius: 6px; font-weight: bold; margin-top: 10px; transition: background 0.3s; }
+        h1 { color: #111827; margin-top: 0; font-size: 24px; font-weight: bold; }
+        p { margin-bottom: 16px; line-height: 1.6; font-size: 16px; }
+        ul { margin-bottom: 24px; padding-left: 20px; }
+        li { margin-bottom: 10px; }
+        @media screen and (max-width: 600px) {
+            .content { padding: 30px 20px; }
+            h1 { font-size: 20px; }
+            .logo { height: 32px; }
+        }
+    </style>
+</head>
+<body>
+    <div class='wrapper'>
+        <div style='height: 40px;'></div>
+        <div class='webkit'>
+            <div class='header'>
+                $logoHtml
+            </div>
+            <div class='content'>
+                $content
+            </div>
+        </div>
+        <div class='footer'>
+            <p>&copy; $year $siteName. All rights reserved.</p>
+        </div>
+    </div>
+</body>
+</html>
+        ";
     }
 }
 

@@ -234,32 +234,32 @@ nav.bg-white.sticky.top-0 {
 <section class="py-8 md:py-12 bg-gray-50 min-h-screen">
     <div class="container mx-auto px-4">
         <!-- Progress Indicator -->
-        <div class="flex justify-center items-center mb-8">
-            <div class="flex items-center space-x-4">
+        <div class="flex justify-center items-center mb-8 overflow-x-auto">
+            <div class="flex items-center space-x-2 md:space-x-4 min-w-max">
                 <!-- Cart Step -->
                 <div class="flex items-center">
-                    <div class="w-8 h-8 rounded-full bg-primary text-white flex items-center justify-center font-semibold">
-                        <i class="fas fa-check text-sm"></i>
+                    <div class="w-6 h-6 md:w-8 md:h-8 rounded-full bg-primary text-white flex items-center justify-center font-semibold text-xs md:text-sm">
+                        <i class="fas fa-check"></i>
                     </div>
-                    <span class="ml-2 font-semibold text-gray-700">Cart</span>
+                    <span class="ml-2 font-semibold text-gray-700 text-xs md:text-base">Cart</span>
                 </div>
-                <div class="w-12 h-0.5 bg-primary"></div>
+                <div class="w-6 md:w-12 h-0.5 bg-primary"></div>
                 
                 <!-- Review Step -->
                 <div class="flex items-center">
-                    <div class="w-8 h-8 rounded-full bg-primary text-white flex items-center justify-center font-semibold">
-                        <i class="fas fa-check text-sm"></i>
+                    <div class="w-6 h-6 md:w-8 md:h-8 rounded-full bg-primary text-white flex items-center justify-center font-semibold text-xs md:text-sm">
+                        <i class="fas fa-check"></i>
                     </div>
-                    <span class="ml-2 font-semibold text-gray-700">Review</span>
+                    <span class="ml-2 font-semibold text-gray-700 text-xs md:text-base">Review</span>
                 </div>
-                <div class="w-12 h-0.5 bg-primary"></div>
+                <div class="w-6 md:w-12 h-0.5 bg-primary"></div>
                 
                 <!-- Checkout Step -->
                 <div class="flex items-center">
-                    <div class="w-8 h-8 rounded-full bg-blue-600 text-white flex items-center justify-center font-semibold">
+                    <div class="w-6 h-6 md:w-8 md:h-8 rounded-full bg-blue-600 text-white flex items-center justify-center font-semibold text-xs md:text-sm">
                         3
                     </div>
-                    <span class="ml-2 font-semibold text-blue-600">Checkout</span>
+                    <span class="ml-2 font-semibold text-blue-600 text-xs md:text-base">Checkout</span>
                 </div>
             </div>
         </div>
@@ -313,7 +313,7 @@ nav.bg-white.sticky.top-0 {
             <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
                 <!-- Left Section: Shipping Information -->
                 <div class="lg:col-span-2">
-                    <div class="bg-white rounded-lg p-6 md:p-8">
+                    <div class="bg-white rounded-lg p-4 sm:p-6 md:p-8">
                         <div class="flex items-center justify-between mb-4">
                             <div class="flex items-center space-x-4">
                                 <a href="<?php echo url('cart'); ?>" class="text-gray-400 hover:text-black transition-colors" title="Back to Cart">
@@ -341,7 +341,7 @@ nav.bg-white.sticky.top-0 {
                         </h2>
                         
                         <!-- Delivery Options -->
-                        <div class="flex gap-4 mb-8">
+                        <div class="flex flex-col sm:flex-row gap-4 mb-8">
                             <label class="flex-1 cursor-pointer">
                                 <input type="radio" name="delivery_type" value="delivery" checked class="hidden delivery-option" onchange="updateShipping()">
                                 <div class="border-2 border-blue-600 rounded-lg p-4 flex items-center space-x-3 delivery-option-card">
@@ -376,8 +376,8 @@ nav.bg-white.sticky.top-0 {
                             
                             <div>
                                 <label class="block text-sm font-semibold mb-2 text-gray-700">Phone number</label>
-                                <div class="flex relative">
-                                    <select name="phone_code" id="phoneCodeSelect" class="px-3 py-3 border border-gray-300 rounded-l-lg focus:outline-none focus:ring-2 focus:ring-primary bg-gray-50 appearance-none cursor-pointer" style="min-width: 120px;">
+                                <div class="flex relative w-full">
+                                    <select name="phone_code" id="phoneCodeSelect" class="px-3 py-3 border border-gray-300 rounded-l-lg focus:outline-none focus:ring-2 focus:ring-primary bg-gray-50 appearance-none cursor-pointer" style="min-width: 90px;">
                                         <?php
                                         // Comprehensive phone country codes
                                         $phoneCodes = [
@@ -436,7 +436,7 @@ nav.bg-white.sticky.top-0 {
                                     <input type="tel" name="phone" required 
                                            value="<?php echo htmlspecialchars($_POST['phone'] ?? ''); ?>"
                                            placeholder="425 151 2318"
-                                           class="flex-1 px-4 py-3 border border-gray-300 border-l-0 rounded-r-lg focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent">
+                                           class="flex-1 min-w-0 px-4 py-3 border border-gray-300 border-l-0 rounded-r-lg focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent">
                                 </div>
                             </div>
                             

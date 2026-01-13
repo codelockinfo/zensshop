@@ -22,10 +22,23 @@ class Settings {
             return self::$cache[$key];
         }
         
+        // Try primary settings table
         $result = $this->db->fetchOne(
             "SELECT setting_value FROM settings WHERE setting_key = ?",
             [$key]
         );
+        
+        // Fallback to site_settings table (for logo, appearance, etc.)
+        if (!$result) {
+            try {
+                $result = $this->db->fetchOne(
+                    "SELECT setting_value FROM site_settings WHERE setting_key = ?",
+                    [$key]
+                );
+            } catch (Exception $e) {
+                // Ignore if table doesn't exist
+            }
+        }
         
         $value = $result ? $result['setting_value'] : $default;
         self::$cache[$key] = $value;
@@ -85,6 +98,11 @@ class Settings {
     public static function loadEmailConfig() {
         $settings = new self();
         
+        // Define SITE_NAME first so it can be used as default
+        if (!defined('SITE_NAME')) {
+            define('SITE_NAME', $settings->get('site_name', 'Zens Shop'));
+        }
+        
         // Only define if not already defined
         if (!defined('SMTP_HOST')) {
             define('SMTP_HOST', $settings->get('smtp_host', 'smtp.gmail.com'));
@@ -94,6 +112,17 @@ class Settings {
         }
         if (!defined('SMTP_ENCRYPTION')) {
             define('SMTP_ENCRYPTION', $settings->get('smtp_encryption', 'tls'));
+        }
+        
+        // Define Site Logo
+        if (!defined('SITE_LOGO')) {
+            define('SITE_LOGO', $settings->get('site_logo', 'logo.png'));
+        }
+        if (!defined('SITE_LOGO_TYPE')) {
+            define('SITE_LOGO_TYPE', $settings->get('site_logo_type', 'image'));
+        }
+        if (!defined('SITE_LOGO_TEXT')) {
+            define('SITE_LOGO_TEXT', $settings->get('site_logo_text', SITE_NAME));
         }
         if (!defined('SMTP_USERNAME')) {
             define('SMTP_USERNAME', $settings->get('smtp_username', ''));
@@ -107,10 +136,7 @@ class Settings {
         if (!defined('SMTP_FROM_NAME')) {
             define('SMTP_FROM_NAME', $settings->get('smtp_from_name', 'Zens Shop'));
         }
-        // Don't override SITE_NAME if already defined in constants.php
-        if (!defined('SITE_NAME')) {
-            define('SITE_NAME', $settings->get('site_name', 'Zens Shop'));
-        }
+        
         // Don't override OTP_EXPIRY_MINUTES if already defined in constants.php
         if (!defined('OTP_EXPIRY_MINUTES')) {
             define('OTP_EXPIRY_MINUTES', $settings->get('otp_expiry_minutes', 10));
