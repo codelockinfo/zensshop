@@ -10,17 +10,21 @@ if (!defined('SITE_URL')) {
 
 /**
  * Get base URL for the site
- * ALWAYS returns /zensshop/ based on actual file system directory
- * This ensures consistency regardless of access path (/oecom/ or /zensshop/)
+ * Uses SITE_URL constant which automatically detects environment (local vs production)
  */
 function getBaseUrl() {
-    // ALWAYS use the actual file system directory name (zensshop)
-    // This ensures all URLs point to /zensshop/ even when accessed via /oecom/
-    $projectRoot = dirname(__DIR__);
-    $projectDir = basename($projectRoot);
+    if (defined('SITE_URL')) {
+        // Use the configured SITE_URL (automatically handles local vs production)
+        // Remove trailing slash if present to avoid double slashes
+        return rtrim(SITE_URL, '/');
+    }
     
-    // Return the actual directory name (should be 'zensshop')
-    return '/' . $projectDir;
+    // Fallback detection (should not be reached if config is loaded)
+    $protocol = isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] === 'on' ? 'https://' : 'http://';
+    $host = $_SERVER['HTTP_HOST'];
+    $path = dirname($_SERVER['SCRIPT_NAME']);
+    
+    return rtrim($protocol . $host . $path, '/');
 }
 
 /**

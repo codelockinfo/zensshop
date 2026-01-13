@@ -45,7 +45,7 @@ $topbarSlidesRow = $db->fetchOne("SELECT setting_value FROM site_settings WHERE 
 $topbarSlides = json_decode($topbarSlidesRow['setting_value'] ?? '[]', true) ?: [
     ['text' => '100% secure online payment', 'link' => '', 'link_text' => ''],
     ['text' => 'Free Shipping for all order over $99', 'link' => '', 'link_text' => ''],
-    ['text' => 'Sign up for 10% off your first order.', 'link' => '/zensshop/signup.php', 'link_text' => 'Sign up']
+    ['text' => 'Sign up for 10% off your first order.', 'link' => 'signup.php', 'link_text' => 'Sign up']
 ];
 
 $topbarLinksRow = $db->fetchOne("SELECT setting_value FROM site_settings WHERE setting_key = 'topbar_links'");
