@@ -235,7 +235,7 @@ class Email {
                 <div class='container'>
                     <div class='header'>
                         <div class='icon'>✉️</div>
-                        <h1 style='margin: 0;'>Thank You for Subscribing!</h1>
+                        <h1 style='margin: 0;'>Thanks for subscribing to us!</h1>
                     </div>
                     <div class='content'>
                         <p>Welcome to our newsletter community!</p>
@@ -271,9 +271,9 @@ class Email {
                 <style>
                     body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; }
                     .container { max-width: 600px; margin: 0 auto; padding: 20px; }
-                    .header { background: #EF4444; color: white; padding: 20px; text-align: center; border-radius: 8px 8px 0 0; }
+                    .header { background: #4F46E5; color: white; padding: 20px; text-align: center; border-radius: 8px 8px 0 0; }
                     .content { background: #fff; padding: 30px; border: 1px solid #e5e7eb; }
-                    .message-box { background: #f9fafb; padding: 20px; border-left: 4px solid #EF4444; margin: 20px 0; }
+                    .message-box { background: #f9fafb; padding: 20px; border-left: 4px solid #4F46E5; margin: 20px 0; }
                 </style>
             </head>
             <body>
@@ -290,7 +290,7 @@ class Email {
                             <p>" . nl2br(htmlspecialchars($message)) . "</p>
                         </div>
                         
-                        <p><a href='" . getBaseUrl() . "/admin/support.php' style='background: #EF4444; color: white; padding: 10px 20px; text-decoration: none; border-radius: 5px; display: inline-block;'>View in Admin Panel</a></p>
+                        <p><a href='" . getBaseUrl() . "/admin/support.php' style='background: #4F46E5; color: white; padding: 10px 20px; text-decoration: none; border-radius: 5px; display: inline-block;'>View in Admin Panel</a></p>
                     </div>
                 </div>
             </body>
@@ -331,6 +331,53 @@ class Email {
                         
                         <p>If you have any further questions, please don't hesitate to reach out.</p>
                         <p>Best regards,<br>Support Team</p>
+                    </div>
+                </div>
+            </body>
+            </html>
+        ";
+        
+        return $this->send($to, $subject, $message);
+    }
+
+    /**
+     * Send welcome email to new customer
+     */
+    public function sendWelcomeEmail($to, $name) {
+        $subject = "Welcome to " . SITE_NAME . "!";
+        $siteUrl = getBaseUrl();
+        $message = "
+            <html>
+            <head>
+                <style>
+                    body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; }
+                    .container { max-width: 600px; margin: 0 auto; padding: 20px; }
+                    .header { background: #4F46E5; color: white; padding: 30px; text-align: center; border-radius: 8px 8px 0 0; }
+                    .content { background: #fff; padding: 30px; border: 1px solid #e5e7eb; }
+                    .button { background: #4F46E5; color: white; padding: 12px 24px; text-decoration: none; border-radius: 5px; display: inline-block; margin-top: 20px; }
+                    .footer { text-align: center; padding: 20px; color: #6b7280; font-size: 14px; }
+                </style>
+            </head>
+            <body>
+                <div class='container'>
+                    <div class='header'>
+                        <h1 style='margin: 0;'>Welcome to " . SITE_NAME . "!</h1>
+                    </div>
+                    <div class='content'>
+                        <p>Dear $name,</p>
+                        <p>We're thrilled to have you on board! Thank you for creating an account with us.</p>
+                        <p>You can now:</p>
+                        <ul>
+                            <li>Track your orders</li>
+                            <li>Save your favorite items to wishlist</li>
+                            <li>Checkout faster</li>
+                        </ul>
+                        <div style='text-align: center;'>
+                            <a href='$siteUrl' class='button'>Start Shopping</a>
+                        </div>
+                    </div>
+                    <div class='footer'>
+                        <p>&copy; " . date('Y') . " " . SITE_NAME . ". All rights reserved.</p>
                     </div>
                 </div>
             </body>

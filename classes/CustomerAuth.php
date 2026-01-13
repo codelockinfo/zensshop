@@ -24,6 +24,15 @@ class CustomerAuth {
             $notification = new Notification();
             $notification->notifyNewCustomer($name, $customerId);
             
+            // Send Welcome Email
+            try {
+                require_once __DIR__ . '/Email.php';
+                $emailService = new Email();
+                $emailService->sendWelcomeEmail($email, $name);
+            } catch (Exception $e) {
+                error_log("Failed to send welcome email: " . $e->getMessage());
+            }
+            
             return $customerId;
         } catch (Exception $e) {
             if (strpos($e->getMessage(), 'Duplicate entry') !== false) {
@@ -61,6 +70,15 @@ class CustomerAuth {
             require_once __DIR__ . '/Notification.php';
             $notification = new Notification();
             $notification->notifyNewCustomer($name, $id);
+            
+            // Send Welcome Email
+            try {
+                require_once __DIR__ . '/Email.php';
+                $emailService = new Email();
+                $emailService->sendWelcomeEmail($email, $name);
+            } catch (Exception $e) {
+                error_log("Failed to send welcome email: " . $e->getMessage());
+            }
         }
         
         $this->setCustomerSession($customer);
