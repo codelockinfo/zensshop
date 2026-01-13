@@ -30,14 +30,20 @@ class Wishlist {
         
         // Try to get from cookie first
         if (isset($_COOKIE[WISHLIST_COOKIE_NAME])) {
-            $wishlistData = json_decode($_COOKIE[WISHLIST_COOKIE_NAME], true);
+            $json = $_COOKIE[WISHLIST_COOKIE_NAME];
+            $wishlistData = json_decode($json, true);
+            
+            if (!is_array($wishlistData)) {
+                $wishlistData = json_decode(stripslashes($json), true);
+            }
+
             if (is_array($wishlistData) && !empty($wishlistData)) {
                 $wishlistItems = $wishlistData;
             }
         }
         
         // If user is logged in, strictly use database
-        $loggedId = $_SESSION['customer_id'] ?? $_SESSION['user_id'] ?? null;
+        $loggedId = $_SESSION['customer_id'] ?? null;
         if ($loggedId) {
             $wishlistItems = $this->getWishlistFromDB($loggedId);
             // Sync cookie with DB so that local count remains accurate
@@ -212,7 +218,7 @@ class Wishlist {
         $this->saveWishlistToCookie($wishlistItems);
         
         // Save to database if user is logged in
-        $loggedId = $_SESSION['customer_id'] ?? $_SESSION['user_id'] ?? null;
+        $loggedId = $_SESSION['customer_id'] ?? null;
         if ($loggedId) {
             error_log("Saving wishlist to DB for user: " . $loggedId);
             $this->saveWishlistToDB($loggedId, $wishlistItems);
@@ -244,7 +250,7 @@ class Wishlist {
         
         $this->saveWishlistToCookie($wishlistItems);
         
-        $loggedId = $_SESSION['customer_id'] ?? $_SESSION['user_id'] ?? null;
+        $loggedId = $_SESSION['customer_id'] ?? null;
         if ($loggedId) {
             $this->saveWishlistToDB($loggedId, $wishlistItems);
         }
@@ -280,10 +286,17 @@ class Wishlist {
         $wishlistJson = json_encode($wishlistItems);
         // Only set cookie if headers haven't been sent yet
         if (!headers_sent()) {
+            $secure = false;
+            if (isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] === 'on') {
+                $secure = true;
+            } elseif (!empty($_SERVER['HTTP_X_FORWARDED_PROTO']) && $_SERVER['HTTP_X_FORWARDED_PROTO'] === 'https') {
+                $secure = true;
+            }
+
             if (empty($wishlistItems)) {
-                setcookie(WISHLIST_COOKIE_NAME, '', time() - 3600, '/');
+                setcookie(WISHLIST_COOKIE_NAME, '', time() - 3600, '/', '', $secure, false);
             } else {
-                setcookie(WISHLIST_COOKIE_NAME, $wishlistJson, time() + WISHLIST_COOKIE_EXPIRY, '/');
+                setcookie(WISHLIST_COOKIE_NAME, $wishlistJson, time() + WISHLIST_COOKIE_EXPIRY, '/', '', $secure, false);
             }
         }
         // Update $_COOKIE for current request

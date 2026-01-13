@@ -293,12 +293,29 @@ class Product {
      * Delete product
      */
     public function delete($id) {
-        // Soft delete to prevent foreign key constraint violations with orders
-        // We also modify the slug to free it up for future use
-        return $this->db->execute(
-            "UPDATE products SET status = 'archived', slug = CONCAT(slug, '-deleted-', UNIX_TIMESTAMP()) WHERE id = ?",
-            [$id]
-        );
+        try {
+            // Attempt Hard Delete
+            
+            // 1. Delete Foreign Key Dependencies (that might not be ON DELETE CASCADE)
+            // Variants
+            $this->deleteVariants($id);
+            // Categories
+            $this->db->execute("DELETE FROM product_categories WHERE product_id = ?", [$id]);
+            
+            // 2. Delete Product
+            $this->db->execute("DELETE FROM products WHERE id = ?", [$id]);
+            
+            return true;
+        } catch (Exception $e) {
+            // Hard delete failed (likely due to Foreign Key constraint with orders)
+            // Fallback to Soft Delete (Archive)
+            error_log("Hard delete failed for product $id: " . $e->getMessage() . ". Falling back to soft delete.");
+            
+            return $this->db->execute(
+                "UPDATE products SET status = 'archived', slug = CONCAT(slug, '-deleted-', UNIX_TIMESTAMP()) WHERE id = ?",
+                [$id]
+            );
+        }
     }
     
     /**

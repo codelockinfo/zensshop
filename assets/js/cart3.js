@@ -111,7 +111,7 @@ async function refreshCart() {
                 try {
                     const expiry = new Date();
                     expiry.setTime(expiry.getTime() + (30 * 24 * 60 * 60 * 1000));
-                    document.cookie = `cart_items=${encodeURIComponent(data.cookie_data)}; expires=${expiry.toUTCString()}; path=/; SameSite=Lax`;
+                    document.cookie = `cart_items=${encodeURIComponent(data.cookie_data)}; expires=${expiry.toUTCString()}; path=/; SameSite=Lax${window.location.protocol === 'https:' ? '; Secure' : ''}`;
                 } catch (e) {
                     console.error('[CART] Error updating cookie from refresh:', e);
                 }
@@ -158,7 +158,7 @@ async function addToCart(productId, quantity = 1) {
                     const expiry = new Date();
                     expiry.setTime(expiry.getTime() + (30 * 24 * 60 * 60 * 1000)); // 30 days
                     // Always use path=/ for cookies - works for all subdirectories
-                    const cookieString = `cart_items=${encodeURIComponent(data.cookie_data)}; expires=${expiry.toUTCString()}; path=/; SameSite=Lax`;
+                    const cookieString = `cart_items=${encodeURIComponent(data.cookie_data)}; expires=${expiry.toUTCString()}; path=/; SameSite=Lax${window.location.protocol === 'https:' ? '; Secure' : ''}`;
                     document.cookie = cookieString;
                 } catch (e) {
                     console.error('[CART] Error setting cookie:', e);
@@ -169,7 +169,7 @@ async function addToCart(productId, quantity = 1) {
                     const cookieData = JSON.stringify(data.cart);
                     const expiry = new Date();
                     expiry.setTime(expiry.getTime() + (30 * 24 * 60 * 60 * 1000));
-                    const cookieString = `cart_items=${encodeURIComponent(cookieData)}; expires=${expiry.toUTCString()}; path=/; SameSite=Lax`;
+                    const cookieString = `cart_items=${encodeURIComponent(cookieData)}; expires=${expiry.toUTCString()}; path=/; SameSite=Lax${window.location.protocol === 'https:' ? '; Secure' : ''}`;
                     document.cookie = cookieString;
                 } catch (e) {
                     console.error('[CART] Error setting cookie (fallback):', e);
@@ -249,7 +249,7 @@ async function updateCartItem(productId, quantity) {
                 try {
                     const expiry = new Date();
                     expiry.setTime(expiry.getTime() + (30 * 24 * 60 * 60 * 1000));
-                    document.cookie = `cart_items=${encodeURIComponent(data.cookie_data)}; expires=${expiry.toUTCString()}; path=/; SameSite=Lax`;
+                    document.cookie = `cart_items=${encodeURIComponent(data.cookie_data)}; expires=${expiry.toUTCString()}; path=/; SameSite=Lax${window.location.protocol === 'https:' ? '; Secure' : ''}`;
                 } catch (e) {
                     console.error('[CART] Error updating cookie:', e);
                 }
@@ -258,7 +258,7 @@ async function updateCartItem(productId, quantity) {
                     const cookieData = JSON.stringify(data.cart);
                     const expiry = new Date();
                     expiry.setTime(expiry.getTime() + (30 * 24 * 60 * 60 * 1000));
-                    document.cookie = `cart_items=${encodeURIComponent(cookieData)}; expires=${expiry.toUTCString()}; path=/; SameSite=Lax`;
+                    document.cookie = `cart_items=${encodeURIComponent(cookieData)}; expires=${expiry.toUTCString()}; path=/; SameSite=Lax${window.location.protocol === 'https:' ? '; Secure' : ''}`;
                 } catch (e) {
                     console.error('[CART] Error updating cookie (fallback):', e);
                 }
@@ -359,7 +359,7 @@ async function removeFromCart(productId) {
                 try {
                     const expiry = new Date();
                     expiry.setTime(expiry.getTime() + (30 * 24 * 60 * 60 * 1000));
-                    document.cookie = `cart_items=${encodeURIComponent(data.cookie_data)}; expires=${expiry.toUTCString()}; path=/; SameSite=Lax`;
+                    document.cookie = `cart_items=${encodeURIComponent(data.cookie_data)}; expires=${expiry.toUTCString()}; path=/; SameSite=Lax${window.location.protocol === 'https:' ? '; Secure' : ''}`;
                 } catch (e) {
                     console.error('[CART] Error updating cookie (remove):', e);
                 }
@@ -368,7 +368,7 @@ async function removeFromCart(productId) {
                     const cookieData = JSON.stringify(data.cart);
                     const expiry = new Date();
                     expiry.setTime(expiry.getTime() + (30 * 24 * 60 * 60 * 1000));
-                    document.cookie = `cart_items=${encodeURIComponent(cookieData)}; expires=${expiry.toUTCString()}; path=/; SameSite=Lax`;
+                    document.cookie = `cart_items=${encodeURIComponent(cookieData)}; expires=${expiry.toUTCString()}; path=/; SameSite=Lax${window.location.protocol === 'https:' ? '; Secure' : ''}`;
                 } catch (e) {
                     console.error('[CART] Error updating cookie (remove fallback):', e);
                 }

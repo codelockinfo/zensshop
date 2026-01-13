@@ -29,8 +29,16 @@ class Cart {
         $cartItems = [];
         
         // Try to get from cookie first
+        // Try to get from cookie first
         if (isset($_COOKIE[CART_COOKIE_NAME])) {
-            $cartData = json_decode($_COOKIE[CART_COOKIE_NAME], true);
+            $json = $_COOKIE[CART_COOKIE_NAME];
+            $cartData = json_decode($json, true);
+            
+            // Fallback: Try stripping slashes if direct decode fails
+            if (!is_array($cartData)) {
+                $cartData = json_decode(stripslashes($json), true);
+            }
+            
             if (is_array($cartData)) {
                 $cartItems = $cartData;
             }
@@ -347,10 +355,17 @@ class Cart {
         $cartJson = json_encode($cartItems);
         // Only set cookie if headers haven't been sent yet
         if (!headers_sent()) {
+            $secure = false;
+            if (isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] === 'on') {
+                $secure = true;
+            } elseif (!empty($_SERVER['HTTP_X_FORWARDED_PROTO']) && $_SERVER['HTTP_X_FORWARDED_PROTO'] === 'https') {
+                $secure = true;
+            }
+
             if (empty($cartItems)) {
-                setcookie(CART_COOKIE_NAME, '', time() - 3600, '/');
+                setcookie(CART_COOKIE_NAME, '', time() - 3600, '/', '', $secure, false);
             } else {
-                setcookie(CART_COOKIE_NAME, $cartJson, time() + CART_COOKIE_EXPIRY, '/');
+                setcookie(CART_COOKIE_NAME, $cartJson, time() + CART_COOKIE_EXPIRY, '/', '', $secure, false);
             }
         }
         // Update $_COOKIE for current request

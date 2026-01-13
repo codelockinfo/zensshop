@@ -55,7 +55,7 @@ function loadWishlist() {
     // Clear any old cookies with wrong path first
     const oldPaths = ['/zensshop', '/oecom'];
     oldPaths.forEach(path => {
-        document.cookie = `wishlist_items=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=${path}; SameSite=Lax`;
+        document.cookie = `wishlist_items=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=${path}; SameSite=Lax${window.location.protocol === 'https:' ? '; Secure' : ''}`;
     });
 
     const wishlistCookie = getCookie('wishlist_items');
@@ -97,7 +97,7 @@ async function refreshWishlist() {
         // Clear old cookies with wrong paths first
         const oldPaths = ['/zensshop', '/oecom'];
         oldPaths.forEach(path => {
-            document.cookie = `wishlist_items=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=${path}; SameSite=Lax`;
+            document.cookie = `wishlist_items=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=${path}; SameSite=Lax${window.location.protocol === 'https:' ? '; Secure' : ''}`;
         });
 
         const response = await fetch((typeof BASE_URL !== 'undefined' ? BASE_URL : '') + '/api/wishlist.php', {
@@ -117,7 +117,7 @@ async function refreshWishlist() {
                 const cookieData = JSON.stringify(wishlistData);
                 const expiry = new Date();
                 expiry.setTime(expiry.getTime() + (30 * 24 * 60 * 60 * 1000));
-                document.cookie = `wishlist_items=${encodeURIComponent(cookieData)}; expires=${expiry.toUTCString()}; path=/; SameSite=Lax`;
+                document.cookie = `wishlist_items=${encodeURIComponent(cookieData)}; expires=${expiry.toUTCString()}; path=/; SameSite=Lax${window.location.protocol === 'https:' ? '; Secure' : ''}`;
             }
 
             updateWishlistCount();
@@ -160,7 +160,7 @@ async function toggleWishlist(productId, button) {
                     const expiry = new Date();
                     expiry.setTime(expiry.getTime() + (30 * 24 * 60 * 60 * 1000)); // 30 days
                     // Always use path=/ for cookies - works for all subdirectories
-                    const cookieString = `wishlist_items=${encodeURIComponent(data.cookie_data)}; expires=${expiry.toUTCString()}; path=/; SameSite=Lax`;
+                    const cookieString = `wishlist_items=${encodeURIComponent(data.cookie_data)}; expires=${expiry.toUTCString()}; path=/; SameSite=Lax${window.location.protocol === 'https:' ? '; Secure' : ''}`;
                     document.cookie = cookieString;
                 } catch (e) {
                     console.error('[WISHLIST] Error setting cookie:', e);
@@ -170,7 +170,7 @@ async function toggleWishlist(productId, button) {
                     const cookieData = JSON.stringify(data.wishlist);
                     const expiry = new Date();
                     expiry.setTime(expiry.getTime() + (30 * 24 * 60 * 60 * 1000));
-                    const cookieString = `wishlist_items=${encodeURIComponent(cookieData)}; expires=${expiry.toUTCString()}; path=/; SameSite=Lax`;
+                    const cookieString = `wishlist_items=${encodeURIComponent(cookieData)}; expires=${expiry.toUTCString()}; path=/; SameSite=Lax${window.location.protocol === 'https:' ? '; Secure' : ''}`;
                     document.cookie = cookieString;
                 } catch (e) {
                     console.error('[WISHLIST] Error setting cookie (fallback):', e);
@@ -255,7 +255,7 @@ async function removeFromWishlist(productId) {
                     const expiry = new Date();
                     expiry.setTime(expiry.getTime() + (30 * 24 * 60 * 60 * 1000)); // 30 days
                     // Always use path=/ for cookies - works for all subdirectories
-                    const cookieString = `wishlist_items=${encodeURIComponent(data.cookie_data)}; expires=${expiry.toUTCString()}; path=/; SameSite=Lax`;
+                    const cookieString = `wishlist_items=${encodeURIComponent(data.cookie_data)}; expires=${expiry.toUTCString()}; path=/; SameSite=Lax${window.location.protocol === 'https:' ? '; Secure' : ''}`;
                     document.cookie = cookieString;
                 } catch (e) {
                     console.error('[WISHLIST] Error setting cookie:', e);
@@ -265,7 +265,7 @@ async function removeFromWishlist(productId) {
                     const cookieData = JSON.stringify(data.wishlist);
                     const expiry = new Date();
                     expiry.setTime(expiry.getTime() + (30 * 24 * 60 * 60 * 1000));
-                    const cookieString = `wishlist_items=${encodeURIComponent(cookieData)}; expires=${expiry.toUTCString()}; path=/; SameSite=Lax`;
+                    const cookieString = `wishlist_items=${encodeURIComponent(cookieData)}; expires=${expiry.toUTCString()}; path=/; SameSite=Lax${window.location.protocol === 'https:' ? '; Secure' : ''}`;
                     document.cookie = cookieString;
                 } catch (e) {
                     console.error('[WISHLIST] Error setting cookie (fallback):', e);

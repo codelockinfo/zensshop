@@ -20,7 +20,7 @@ $sql = "SELECT DISTINCT p.*, GROUP_CONCAT(DISTINCT c.name SEPARATOR ', ') as cat
         FROM products p 
         LEFT JOIN product_categories pc ON p.id = pc.product_id
         LEFT JOIN categories c ON pc.category_id = c.id 
-        WHERE 1=1";
+        WHERE p.status != 'archived'";
 $params = [];
 
 if (!empty($search)) {
