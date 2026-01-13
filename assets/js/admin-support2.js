@@ -29,7 +29,7 @@
 
     // Close dropdown when clicking outside
     document.addEventListener('click', function(e) {
-        if (isOpen && !supportDropdown.contains(e.target) && e.target !== supportBell) {
+        if (isOpen && !supportDropdown.contains(e.target) && !supportBell.contains(e.target)) {
             isOpen = false;
             supportDropdown.classList.add('hidden');
         }
