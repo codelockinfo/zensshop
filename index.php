@@ -18,7 +18,7 @@ require_once __DIR__ . '/includes/header.php';
                 <div class="max-w-md text-white">
                     <p class="text-md md:text-lg uppercase tracking-wider mb-2">NEW ARRIVALS</p>
                     <h1 class="text-4xl md:text-5xl font-heading font-bold mb-6">Get Extra 15% Off</h1>
-                    <a href="<?php echo $baseUrl; ?>/shop.php" class="inline-block border border-white px-8 py-3 hover:bg-white hover:text-black transition banner-btn">
+                    <a href="<?php echo url('shop.php'); ?>" class="inline-block border border-white px-8 py-3 hover:bg-white hover:text-black transition banner-btn">
                         Shop Collection
                     </a>
                 </div>
@@ -32,7 +32,7 @@ require_once __DIR__ . '/includes/header.php';
                 <div class="max-w-md text-white">
                     <p class="text-md md:text-lg uppercase tracking-wider mb-2">TRENDING NOW</p>
                     <h1 class="text-4xl md:text-5xl font-heading font-bold mb-6">Elegant Jewelry Collection</h1>
-                    <a href="<?php echo $baseUrl; ?>/shop.php" class="inline-block border border-white px-8 py-3 hover:bg-white hover:text-black transition banner-btn">
+                    <a href="<?php echo url('shop.php'); ?>" class="inline-block border border-white px-8 py-3 hover:bg-white hover:text-black transition banner-btn">
                         Explore Now
                     </a>
                 </div>
@@ -46,7 +46,7 @@ require_once __DIR__ . '/includes/header.php';
                 <div class="max-w-md text-white">
                     <p class="text-md md:text-lg uppercase tracking-wider mb-2">LIMITED TIME</p>
                     <h1 class="text-4xl md:text-5xl font-heading font-bold mb-6">Premium Quality, Best Prices</h1>
-                    <a href="<?php echo $baseUrl; ?>/shop.php" class="inline-block border border-white px-8 py-3 hover:bg-white hover:text-black transition banner-btn">
+                    <a href="<?php echo url('shop.php'); ?>" class="inline-block border border-white px-8 py-3 hover:bg-white hover:text-black transition banner-btn">
                         Shop Now
                     </a>
                 </div>
