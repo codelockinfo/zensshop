@@ -3,6 +3,7 @@ header('Content-Type: application/json');
 
 require_once __DIR__ . '/../classes/Database.php';
 require_once __DIR__ . '/../classes/CustomerAuth.php';
+require_once __DIR__ . '/../includes/functions.php';
 
 try {
     if ($_SERVER['REQUEST_METHOD'] !== 'POST') {

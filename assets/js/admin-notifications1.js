@@ -17,7 +17,7 @@
 
     // Toggle dropdown
     notificationBell.addEventListener('click', function(e) {
-        e.stopPropagation();
+        // e.stopPropagation();
         isOpen = !isOpen;
         
         if (isOpen) {

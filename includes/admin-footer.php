@@ -28,8 +28,8 @@
     <script src="<?php echo isset($baseUrl) ? $baseUrl : getBaseUrl(); ?>/assets/js/admin.js"></script>
     <script src="<?php echo isset($baseUrl) ? $baseUrl : getBaseUrl(); ?>/assets/js/admin-confirm.js"></script>
     <script src="<?php echo isset($baseUrl) ? $baseUrl : getBaseUrl(); ?>/assets/js/admin-search1.js"></script>
-    <script src="<?php echo isset($baseUrl) ? $baseUrl : getBaseUrl(); ?>/assets/js/admin-notifications.js"></script>
-    <script src="<?php echo isset($baseUrl) ? $baseUrl : getBaseUrl(); ?>/assets/js/admin-support.js"></script>
+    <script src="<?php echo isset($baseUrl) ? $baseUrl : getBaseUrl(); ?>/assets/js/admin-notifications1.js"></script>
+    <script src="<?php echo isset($baseUrl) ? $baseUrl : getBaseUrl(); ?>/assets/js/admin-support1.js"></script>
     <?php endif; ?>
 </body>
 </html>
