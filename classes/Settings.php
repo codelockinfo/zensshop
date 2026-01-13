@@ -92,6 +92,9 @@ class Settings {
         if (!defined('SMTP_PORT')) {
             define('SMTP_PORT', $settings->get('smtp_port', 587));
         }
+        if (!defined('SMTP_ENCRYPTION')) {
+            define('SMTP_ENCRYPTION', $settings->get('smtp_encryption', 'tls'));
+        }
         if (!defined('SMTP_USERNAME')) {
             define('SMTP_USERNAME', $settings->get('smtp_username', ''));
         }

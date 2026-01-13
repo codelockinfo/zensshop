@@ -545,7 +545,7 @@ nav.bg-white.sticky.top-0 {
                             </div>
                             <div class="flex justify-between text-sm">
                                 <span class="text-gray-600">Shipping</span>
-                                <span class="font-semibold"><?php echo format_currency($finalShipping); ?></span>
+                                <span id="summaryShipping" class="font-semibold"><?php echo format_currency($finalShipping); ?></span>
                             </div>
                             <?php if ($discountAmount > 0): ?>
                             <div class="flex justify-between text-sm">
@@ -555,7 +555,7 @@ nav.bg-white.sticky.top-0 {
                             <?php endif; ?>
                             <div class="flex justify-between text-lg font-bold pt-2 border-t">
                                 <span>Total</span>
-                                <span><?php echo format_currency($total); ?></span>
+                                <span id="summaryTotal"><?php echo format_currency($total); ?></span>
                             </div>
                         </div>
                         
@@ -623,8 +623,22 @@ document.querySelectorAll('.delivery-option').forEach(radio => {
 });
 
 function updateShipping() {
-    // This function can be used to update shipping costs dynamically
-    // For now, it's handled server-side
+    const deliveryType = document.querySelector('input[name="delivery_type"]:checked').value;
+    
+    // Use PHP values directly to ensure availability
+    const cartTotal = <?php echo $cartTotal; ?>;
+    const discount = <?php echo $discountAmount; ?>;
+    const defaultShipping = <?php echo $shippingAmount; ?>;
+    
+    const shipping = deliveryType === 'pickup' ? 0 : defaultShipping;
+    const total = cartTotal + shipping - discount;
+    
+    // Update DOM
+    const shippingEl = document.getElementById('summaryShipping');
+    const totalEl = document.getElementById('summaryTotal');
+    
+    if (shippingEl) shippingEl.innerText = '₹' + shipping.toFixed(2);
+    if (totalEl) totalEl.innerText = '₹' + total.toFixed(2);
 }
 
 

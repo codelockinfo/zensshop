@@ -82,3 +82,4 @@ CREATE TABLE IF NOT EXISTS `admin_notifications` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
 COMMIT;
+  

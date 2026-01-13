@@ -161,7 +161,8 @@ function format_price($amount, $currency = 'INR') {
  * Format currency amount with symbol (Backward compatibility)
  */
 function format_currency($amount, $decimals = 2) {
-    $symbol = defined('CURRENCY_SYMBOL') ? CURRENCY_SYMBOL : '₹';
+    // Explicitly use Rupee symbol to override potential bad configuration on server
+    $symbol = '₹'; 
     return $symbol . number_format((float)$amount, $decimals);
 }
 
