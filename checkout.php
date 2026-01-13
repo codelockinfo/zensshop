@@ -522,12 +522,12 @@ nav.bg-white.sticky.top-0 {
                                 <p class="text-xs text-gray-600 mt-2 ml-1">Discount applied successfully!</p>
                             <?php else: ?>
                                 <!-- Input State -->
-                                <div class="flex gap-2">
+                                <div class="flex flex-col sm:flex-row gap-2">
                                     <input type="text" name="discount_code" 
                                            value="<?php echo htmlspecialchars($discountCode); ?>"
                                            placeholder="Discount code" 
-                                           class="flex-1 px-4 py-2 border <?php echo !empty($discountError) ? 'border-red-300 ring-2 ring-red-100' : 'border-gray-300'; ?> rounded-lg focus:outline-none focus:ring-2 focus:ring-primary">
-                                    <button type="submit" name="apply_discount" value="1" formnovalidate class="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition font-semibold">
+                                           class="w-full sm:flex-1 px-4 py-2 border <?php echo !empty($discountError) ? 'border-red-300 ring-2 ring-red-100' : 'border-gray-300'; ?> rounded-lg focus:outline-none focus:ring-2 focus:ring-primary">
+                                    <button type="submit" name="apply_discount" value="1" formnovalidate class="w-full sm:w-auto px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition font-semibold">
                                         Apply
                                     </button>
                                 </div>

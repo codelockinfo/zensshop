@@ -149,68 +149,49 @@ class Email {
         $itemsHtml = '';
         foreach ($items as $item) {
             $itemsHtml .= "<tr>
-                <td style='padding: 10px; border-bottom: 1px solid #e5e7eb;'>{$item['product_name']}</td>
-                <td style='padding: 10px; border-bottom: 1px solid #e5e7eb; text-align: center;'>{$item['quantity']}</td>
-                <td style='padding: 10px; border-bottom: 1px solid #e5e7eb; text-align: right;'>₹" . number_format($item['price'], 2) . "</td>
+                <td style='padding: 12px; border-bottom: 1px solid #e5e7eb;'>{$item['product_name']}</td>
+                <td style='padding: 12px; border-bottom: 1px solid #e5e7eb; text-align: center;'>{$item['quantity']}</td>
+                <td style='padding: 12px; border-bottom: 1px solid #e5e7eb; text-align: right;'>₹" . number_format($item['price'], 2) . "</td>
             </tr>";
         }
         
-        $message = "
-            <html>
-            <head>
-                <style>
-                    body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; }
-                    .container { max-width: 600px; margin: 0 auto; padding: 20px; }
-                    .header { background: #4F46E5; color: white; padding: 20px; text-align: center; border-radius: 8px 8px 0 0; }
-                    .content { background: #fff; padding: 30px; border: 1px solid #e5e7eb; }
-                    .order-box { background: #f9fafb; padding: 20px; border-radius: 8px; margin: 20px 0; }
-                    .footer { text-align: center; padding: 20px; color: #6b7280; font-size: 14px; }
-                    table { width: 100%; border-collapse: collapse; margin: 20px 0; }
-                    .total { font-size: 18px; font-weight: bold; color: #4F46E5; }
-                </style>
-            </head>
-            <body>
-                <div class='container'>
-                    <div class='header'>
-                        <h1 style='margin: 0;'>Thank You for Your Order!</h1>
-                    </div>
-                    <div class='content'>
-                        <p>Dear $customerName,</p>
-                        <p>Thank you for shopping with us! Your order has been successfully placed.</p>
-                        
-                        <div class='order-box'>
-                            <h3 style='margin-top: 0;'>Order Details</h3>
-                            <p><strong>Order Number:</strong> $orderNumber</p>
-                            <p><strong>Order Date:</strong> " . date('F d, Y') . "</p>
-                        </div>
-                        
-                        <h3>Order Items</h3>
-                        <table>
-                            <thead>
-                                <tr style='background: #f3f4f6;'>
-                                    <th style='padding: 10px; text-align: left;'>Product</th>
-                                    <th style='padding: 10px; text-align: center;'>Quantity</th>
-                                    <th style='padding: 10px; text-align: right;'>Price</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                $itemsHtml
-                            </tbody>
-                        </table>
-                        
-                        <p class='total' style='text-align: right; margin-top: 20px;'>Total: ₹" . number_format($totalAmount, 2) . "</p>
-                        
-                        <p>We'll send you another email when your order ships.</p>
-                        <p>If you have any questions, please don't hesitate to contact us.</p>
-                    </div>
-                    <div class='footer'>
-                        <p>&copy; " . date('Y') . " " . SITE_NAME . ". All rights reserved.</p>
-                    </div>
-                </div>
-            </body>
-            </html>
+        $content = "
+            <h1 style='text-align: center; margin-bottom: 24px;'>Thank You for Your Order!</h1>
+            <p>Dear $customerName,</p>
+            <p>Thank you for shopping with us! Your order has been successfully placed.</p>
+            
+            <div style='background: #f9fafb; padding: 24px; border-radius: 8px; margin: 25px 0;'>
+                <h3 style='margin-top: 0; border-bottom: 1px solid #e5e7eb; padding-bottom: 10px; margin-bottom: 15px; font-size: 16px; color: #4b5563;'>Order Details</h3>
+                <p style='margin: 5px 0;'><strong style='min-width: 120px; display: inline-block; color: #6b7280;'>Order Number:</strong> #$orderNumber</p>
+                <p style='margin: 5px 0;'><strong style='min-width: 120px; display: inline-block; color: #6b7280;'>Order Date:</strong> " . date('F d, Y') . "</p>
+            </div>
+            
+            <h3 style='margin-bottom: 15px;'>Order Items</h3>
+            <table style='width: 100%; border-collapse: collapse; margin-bottom: 25px;'>
+                <thead>
+                    <tr style='background: #f3f4f6; text-transform: uppercase; font-size: 12px; letter-spacing: 0.5px;'>
+                        <th style='padding: 12px; text-align: left; border-radius: 6px 0 0 6px;'>Product</th>
+                        <th style='padding: 12px; text-align: center;'>Quantity</th>
+                        <th style='padding: 12px; text-align: right; border-radius: 0 6px 6px 0;'>Price</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    $itemsHtml
+                </tbody>
+            </table>
+            
+            <div style='text-align: right; margin-top: 20px; border-top: 2px solid #e5e7eb; padding-top: 20px;'>
+                 <p style='font-size: 14px; margin: 0; color: #6b7280;'>Total Amount</p>
+                 <p style='font-size: 24px; font-weight: bold; color: #111827; margin: 5px 0;'>₹" . number_format($totalAmount, 2) . "</p>
+            </div>
+            
+            <div style='margin-top: 30px; border-top: 1px solid #e5e7eb; padding-top: 20px; text-align: center;'>
+                <p style='margin-bottom: 5px;'>We'll send you another email when your order ships.</p>
+                <p style='color: #6b7280; font-size: 14px;'>If you have any questions, simply reply to this email.</p>
+            </div>
         ";
         
+        $message = $this->getEmailTemplate("Order Confirmation #$orderNumber", $content);
         return $this->send($to, $subject, $message);
     }
     
@@ -222,7 +203,7 @@ class Email {
         
         $content = "
             <h1 style='text-align: center;'>Thanks for subscribing to us!</h1>
-            <p>Welcome to our newsletter community! You'll be the first to know about:</p>
+            <p>Welcome to our " . SITE_NAME . " You'll be the first to know about:</p>
             <ul>
                 <li>New product launches</li>
                 <li>Exclusive deals and promotions</li>
