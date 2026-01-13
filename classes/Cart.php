@@ -365,18 +365,29 @@ class Cart {
      * Save cart to database
      */
     private function saveCartToDB($userId, $cartItems) {
-        // Clear existing cart
-        $this->db->execute(
-            "DELETE FROM cart WHERE user_id = ?",
-            [$userId]
-        );
-        
-        // Insert new items
-        foreach ($cartItems as $item) {
-            $this->db->insert(
-                "INSERT INTO cart (user_id, product_id, quantity) VALUES (?, ?, ?)",
-                [$userId, $item['product_id'], $item['quantity']]
+        try {
+            // Clear existing cart
+            $this->db->execute(
+                "DELETE FROM cart WHERE user_id = ?",
+                [$userId]
             );
+            
+            // Insert new items
+            foreach ($cartItems as $item) {
+                try {
+                    $this->db->insert(
+                        "INSERT INTO cart (user_id, product_id, quantity) VALUES (?, ?, ?)",
+                        [$userId, $item['product_id'], $item['quantity']]
+                    );
+                } catch (Exception $e) {
+                    error_log("Cart::saveCartToDB - Error inserting item: " . $e->getMessage());
+                    // Continue with next item or stop? 
+                    // If user is invalid, all will fail.
+                    // Just log and continue/break.
+                }
+            }
+        } catch (Exception $e) {
+            error_log("Cart::saveCartToDB - Error: " . $e->getMessage());
         }
     }
 
