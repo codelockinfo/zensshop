@@ -218,13 +218,13 @@ function getCurrencies() {
  * Recursive Function to Render Frontend Menu
  * Now supports images and multi-column dropdowns.
  */
-function renderFrontendMenuItem($item, $landingPagesList = [], $level = 0) {
+function renderFrontendMenuItem($item, $landingPagesList = [], $level = 0, $showImages = true) {
     // Only fetch children if they exist in the item structure
     $children = $item['children'] ?? [];
     $hasChildren = !empty($children);
     $label = htmlspecialchars($item['label']);
     $itemUrl = url($item['url']);
-    $hasImage = !empty($item['image_path']);
+    $hasImage = $showImages && !empty($item['image_path']);
     $imageUrl = $hasImage ? getImageUrl($item['image_path']) : '';
     $badgeText = $item['badge_text'] ?? '';
 
@@ -354,18 +354,7 @@ function renderFrontendMenuItem($item, $landingPagesList = [], $level = 0) {
         // 2. (Any child has an IMAGE OR Explicit setting)
         // Note: We removed check for "has children" so simple text lists stay as standard dropdowns
         $isMega = false;
-        if ($level === 0) {
-            foreach ($children as $sub) {
-                if (!empty($sub['image_path'])) {
-                    $isMega = true;
-                    break;
-                }
-            }
-            // Allow override if label implies big menu
-            if (in_array(strtolower(trim($item['label'])), ['shop', 'products', 'catalog'])) {
-                $isMega = true;
-            }
-        }
+        $isMega = !empty($item['is_mega_menu']) && $item['is_mega_menu'] == 1;
 
         // Layout Render
         $parentClass = "relative group";
@@ -453,7 +442,7 @@ function renderFrontendMenuItem($item, $landingPagesList = [], $level = 0) {
                  <div class="absolute top-full left-0 pt-3 hidden group-hover:block z-50 min-w-[200px]">
                      <div class="bg-white rounded-lg shadow-lg border border-gray-100 py-2 flex flex-col">
                         <?php foreach ($children as $child): 
-                             renderFrontendMenuItem($child, [], $level + 1);
+                             renderFrontendMenuItem($child, [], $level + 1, false);
                         endforeach; ?>
                      </div>
                  </div>
@@ -473,7 +462,7 @@ function renderFrontendMenuItem($item, $landingPagesList = [], $level = 0) {
                  <div class="absolute top-0 left-full pl-1 hidden group-hover/sub:block z-50 min-w-[180px]">
                      <div class="bg-white rounded-lg py-1 shadow-lg border border-gray-100">
                          <?php foreach ($children as $child): 
-                              renderFrontendMenuItem($child, [], $level + 1);
+                              renderFrontendMenuItem($child, [], $level + 1, $showImages);
                          endforeach; ?>
                      </div>
                  </div>

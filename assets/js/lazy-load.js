@@ -16,7 +16,7 @@ const sections = [
 
 let currentSectionIndex = 0;
 
-document.addEventListener('DOMContentLoaded', function() {
+document.addEventListener('DOMContentLoaded', function () {
     // Start loading sections after a short delay
     setTimeout(() => {
         loadNextSection();
@@ -27,7 +27,7 @@ function loadNextSection() {
     if (currentSectionIndex >= sections.length) {
         return;
     }
-    
+
     const section = sections[currentSectionIndex];
     loadSection(section.id, section.endpoint);
     currentSectionIndex++;
@@ -36,20 +36,20 @@ function loadNextSection() {
 async function loadSection(sectionId, endpoint) {
     const sectionElement = document.getElementById(sectionId);
     if (!sectionElement) return;
-    
+
     try {
         const baseUrl = typeof BASE_URL !== 'undefined' ? BASE_URL : window.location.pathname.split('/').slice(0, -1).join('/') || '';
         const response = await fetch(`${baseUrl}/api/sections?section=${endpoint}`);
         const html = await response.text();
-        
+
         if (html) {
             sectionElement.innerHTML = html;
             sectionElement.classList.remove('section-loading');
             sectionElement.classList.add('fade-in');
-            
+
             // Initialize any interactive elements in the loaded section
             initializeSection(sectionElement);
-            
+
             // Load next section after a delay
             setTimeout(() => {
                 loadNextSection();
@@ -62,7 +62,7 @@ async function loadSection(sectionId, endpoint) {
         console.error(`Error loading section ${endpoint}:`, error);
         sectionElement.innerHTML = '<div class="text-center py-8 text-red-500">Error loading section</div>';
         sectionElement.classList.remove('section-loading');
-        
+
         // Continue loading next section even on error
         setTimeout(() => {
             loadNextSection();
@@ -76,45 +76,130 @@ function initializeSection(sectionElement) {
     addToCartButtons.forEach(button => {
         const productId = button.getAttribute('data-product-id');
         if (productId) {
-            button.addEventListener('click', function(e) {
+            button.addEventListener('click', function (e) {
                 e.preventDefault();
                 addToCart(parseInt(productId), 1);
             });
         }
     });
-    
+
     // Initialize Best Selling Slider if this is the best-selling section
     if (sectionElement.id === 'best-selling-section' || sectionElement.querySelector('#bestSellingSlider')) {
-        setTimeout(function() {
+        setTimeout(function () {
             initializeBestSellingSlider();
         }, 200);
     }
-    
+
     // Initialize Trending Slider if this is the trending section
     if (sectionElement.id === 'trending-section' || sectionElement.querySelector('#trendingSlider')) {
-        setTimeout(function() {
+        setTimeout(function () {
             initializeTrendingSlider();
         }, 200);
     }
-    
+
     // Initialize Videos if this is the videos section
     if (sectionElement.id === 'videos-section' || sectionElement.querySelector('.video-card')) {
-        setTimeout(function() {
+        setTimeout(function () {
             initializeVideos();
         }, 100);
     }
-    
+
     // Initialize Product Cards (for trending and best-selling sections)
     if (sectionElement.querySelector('.product-card')) {
-        setTimeout(function() {
+        setTimeout(function () {
             if (typeof initializeProductCards === 'function') {
                 initializeProductCards();
             }
         }, 200);
     }
-    
+
     // Initialize any other interactive elements
     // Add more initialization code as needed
+
+    // Initialize Newsletter Form
+    if (sectionElement.id === 'newsletter-section' || sectionElement.querySelector('#globalNewsletterForm')) {
+        initializeNewsletterForm(sectionElement);
+    }
+}
+
+function initializeNewsletterForm(container) {
+    const form = container.querySelector('#globalNewsletterForm');
+    if (!form) return;
+
+    // Remove any existing listeners by cloning
+    const newForm = form.cloneNode(true);
+    form.parentNode.replaceChild(newForm, form);
+
+    newForm.addEventListener('submit', async function (e) {
+        e.preventDefault();
+        console.log('Global Newsletter Form Submitted');
+
+        const btn = this.querySelector('button[type="submit"]');
+        const origText = btn.innerText;
+        const messageDiv = document.getElementById('globalNewsletterMessage');
+
+        btn.innerText = 'Subscribing...';
+        btn.disabled = true;
+
+        // Hide any previous message
+        if (messageDiv) {
+            messageDiv.classList.add('hidden');
+        }
+
+        const email = this.querySelector('input[name="email"]').value;
+
+        try {
+            const baseUrl = typeof BASE_URL !== 'undefined' ? BASE_URL : window.location.pathname.substring(0, window.location.pathname.indexOf('/zensshop') + 9) || '/zensshop';
+
+            const response = await fetch(baseUrl + '/api/subscribe.php', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ email: email })
+            });
+
+            const data = await response.json();
+
+            if (data.success) {
+                this.reset();
+                if (messageDiv) {
+                    messageDiv.textContent = data.message || 'Successfully subscribed!';
+                    messageDiv.className = 'text-center text-sm text-green-600 bg-green-50 py-2 px-4 rounded';
+                    messageDiv.classList.remove('hidden');
+
+                    // Auto-hide after 5 seconds
+                    setTimeout(() => {
+                        messageDiv.classList.add('hidden');
+                    }, 5000);
+                }
+            } else {
+                if (messageDiv) {
+                    messageDiv.textContent = data.message || 'Something went wrong. Please try again.';
+                    messageDiv.className = 'text-center text-sm text-red-600 bg-red-50 py-2 px-4 rounded';
+                    messageDiv.classList.remove('hidden');
+
+                    // Auto-hide after 5 seconds
+                    setTimeout(() => {
+                        messageDiv.classList.add('hidden');
+                    }, 5000);
+                }
+            }
+        } catch (error) {
+            console.error(error);
+            if (messageDiv) {
+                messageDiv.textContent = 'An error occurred. Please try again.';
+                messageDiv.className = 'text-center text-sm text-red-600 bg-red-50 py-2 px-4 rounded';
+                messageDiv.classList.remove('hidden');
+
+                // Auto-hide after 5 seconds
+                setTimeout(() => {
+                    messageDiv.classList.add('hidden');
+                }, 5000);
+            }
+        } finally {
+            btn.innerText = origText;
+            btn.disabled = false;
+        }
+    });
 }
 
 function initializeVideos() {
@@ -125,46 +210,46 @@ function initializeVideos() {
         video.setAttribute('loop', '');
         video.setAttribute('muted', '');
         video.setAttribute('playsinline', '');
-        
+
         // Play video
-        video.play().catch(function(error) {
+        video.play().catch(function (error) {
             console.log('Video autoplay prevented:', error);
             // If autoplay fails, video will show poster image
         });
-        
+
         // Ensure video keeps playing
-        video.addEventListener('loadeddata', function() {
-            video.play().catch(() => {});
+        video.addEventListener('loadeddata', function () {
+            video.play().catch(() => { });
         });
     });
 }
 
 function initializeBestSellingSlider() {
     // Wait a bit for DOM to be ready and images to load
-    setTimeout(function() {
+    setTimeout(function () {
         const slider = document.getElementById('bestSellingSlider');
         const sliderWrapper = slider ? slider.parentElement : null;
         const prevBtn = document.getElementById('bestSellingPrev');
         const nextBtn = document.getElementById('bestSellingNext');
-        
+
         if (!slider) {
             console.log('Best selling slider not found');
             return;
         }
-        
+
         if (!prevBtn || !nextBtn) {
             console.log('Best selling navigation buttons not found');
             return;
         }
-        
+
         // Check if slider already initialized
         if (slider.dataset.initialized === 'true') {
             return;
         }
         slider.dataset.initialized = 'true';
-        
+
         let currentIndex = 0;
-        
+
         // Drag/swipe variables
         let isDragging = false;
         let startX = 0;
@@ -173,43 +258,43 @@ function initializeBestSellingSlider() {
         let currentTranslate = 0;
         let prevBtnRef = null;
         let nextBtnRef = null;
-        
+
         function getItemsPerView() {
             if (window.innerWidth >= 1280) return 6;
             if (window.innerWidth >= 1024) return 4;
             if (window.innerWidth >= 640) return 2;
             return 1;
         }
-        
+
         function getMaxIndex() {
             if (!slider.children.length) return 0;
             const firstItem = slider.children[0];
             if (!firstItem) return 0;
-            
+
             const itemWidth = firstItem.offsetWidth || 300;
             const gap = 24;
             const itemWidthWithGap = itemWidth + gap;
-            
+
             const container = slider.parentElement;
             const containerWidth = container ? container.offsetWidth : window.innerWidth;
-            
+
             const totalItems = slider.children.length;
             const itemsPerView = Math.floor(containerWidth / itemWidthWithGap) || 1;
-            
+
             return totalItems > itemsPerView ? totalItems - itemsPerView : 0;
         }
-        
+
         function updateSlider(disableTransition = false) {
             if (!slider.children.length) return;
-            
+
             // Calculate scroll position based on actual dimensions
             const firstItem = slider.children[0];
             if (!firstItem) return;
-            
+
             const itemWidth = firstItem.offsetWidth || 300;
             const gap = 24;
             const maxIndex = getMaxIndex();
-            
+
             // Clamp currentIndex to valid range
             if (currentIndex > maxIndex) {
                 currentIndex = maxIndex;
@@ -217,7 +302,7 @@ function initializeBestSellingSlider() {
             if (currentIndex < 0) {
                 currentIndex = 0;
             }
-            
+
             // Calculate scroll position - account for CSS gap (1.5rem = 24px)
             // When at maxIndex, ensure last item aligns with container edge
             let translateX;
@@ -231,16 +316,16 @@ function initializeBestSellingSlider() {
             } else {
                 translateX = -currentIndex * (itemWidth + gap);
             }
-            
+
             translateX += (isDragging ? currentTranslate : 0);
-            
+
             slider.style.transform = `translateX(${translateX}px)`;
             if (!disableTransition) {
                 slider.style.transition = 'transform 0.5s ease-in-out';
             } else {
                 slider.style.transition = 'none';
             }
-            
+
             // Show/hide navigation buttons
             const btnPrev = prevBtnRef || document.getElementById('bestSellingPrev');
             const btnNext = nextBtnRef || document.getElementById('bestSellingNext');
@@ -251,17 +336,17 @@ function initializeBestSellingSlider() {
                 btnNext.style.display = currentIndex < maxIndex ? 'flex' : 'none';
             }
         }
-        
+
         // Drag/Swipe functions
         function getPositionX(e) {
             return e.type.includes('mouse') ? e.clientX : e.touches[0].clientX;
         }
-        
+
         function startDrag(e) {
             // Don't start drag if clicking on a link, button, or interactive element
             const target = e.target.closest('a, button, .wishlist-btn, .product-action-btn');
             if (target) return;
-            
+
             isDragging = true;
             startX = getPositionX(e);
             const firstItem = slider.children[0];
@@ -273,12 +358,12 @@ function initializeBestSellingSlider() {
             const gap = 24;
             initialTranslate = -currentIndex * (itemWidth + gap);
             currentTranslate = 0;
-            
+
             if (sliderWrapper) {
                 sliderWrapper.style.cursor = 'grabbing';
                 sliderWrapper.style.userSelect = 'none';
             }
-            
+
             // Add event listeners to document for better drag handling
             if (e.type === 'touchstart') {
                 document.addEventListener('touchmove', drag, { passive: false });
@@ -288,55 +373,55 @@ function initializeBestSellingSlider() {
                 document.addEventListener('mouseup', endDrag);
             }
         }
-        
+
         function drag(e) {
             if (!isDragging) return;
             e.preventDefault();
             e.stopPropagation();
-            
+
             currentX = getPositionX(e);
             const dragDistance = currentX - startX;
-            
+
             const firstItem = slider.children[0];
             if (!firstItem) return;
             const itemWidth = firstItem.offsetWidth || 300;
             const gap = 24;
             const maxIndex = getMaxIndex();
-            
+
             // Calculate constraints - account for CSS gap
             const maxTranslate = 0; // Can't drag past start
             const minTranslate = -maxIndex * (itemWidth + gap); // Can't drag past end
-            
+
             // Apply drag distance with constraints
             currentTranslate = dragDistance;
             const newTranslate = initialTranslate + currentTranslate;
-            
+
             if (newTranslate > maxTranslate) {
                 currentTranslate = maxTranslate - initialTranslate;
             } else if (newTranslate < minTranslate) {
                 currentTranslate = minTranslate - initialTranslate;
             }
-            
+
             slider.style.transition = 'none';
             updateSlider(true);
         }
-        
+
         function endDrag(e) {
             if (!isDragging) return;
-            
+
             // Remove event listeners
             document.removeEventListener('touchmove', drag);
             document.removeEventListener('touchend', endDrag);
             document.removeEventListener('mousemove', drag);
             document.removeEventListener('mouseup', endDrag);
-            
+
             isDragging = false;
-            
+
             if (sliderWrapper) {
                 sliderWrapper.style.cursor = 'grab';
                 sliderWrapper.style.userSelect = '';
             }
-            
+
             // Determine if we should snap to next/prev slide
             const firstItem = slider.children[0];
             if (!firstItem) {
@@ -344,10 +429,10 @@ function initializeBestSellingSlider() {
                 updateSlider();
                 return;
             }
-            
+
             const itemWidth = firstItem.offsetWidth || 300;
             const threshold = itemWidth * 0.25; // 25% of item width to trigger slide
-            
+
             if (Math.abs(currentTranslate) > threshold) {
                 if (currentTranslate < 0 && currentIndex < getMaxIndex()) {
                     // Swipe left - go to next
@@ -357,22 +442,22 @@ function initializeBestSellingSlider() {
                     currentIndex--;
                 }
             }
-            
+
             currentTranslate = 0;
             updateSlider();
         }
-        
+
         // Remove existing event listeners by cloning buttons and storing references
         if (prevBtn && nextBtn) {
             const newPrevBtn = prevBtn.cloneNode(true);
             const newNextBtn = nextBtn.cloneNode(true);
             prevBtn.parentNode.replaceChild(newPrevBtn, prevBtn);
             nextBtn.parentNode.replaceChild(newNextBtn, nextBtn);
-            
+
             prevBtnRef = newPrevBtn;
             nextBtnRef = newNextBtn;
-            
-            newPrevBtn.addEventListener('click', function(e) {
+
+            newPrevBtn.addEventListener('click', function (e) {
                 e.preventDefault();
                 e.stopPropagation();
                 if (currentIndex > 0) {
@@ -380,8 +465,8 @@ function initializeBestSellingSlider() {
                     updateSlider();
                 }
             });
-            
-            newNextBtn.addEventListener('click', function(e) {
+
+            newNextBtn.addEventListener('click', function (e) {
                 e.preventDefault();
                 e.stopPropagation();
                 if (currentIndex < getMaxIndex()) {
@@ -390,45 +475,45 @@ function initializeBestSellingSlider() {
                 }
             });
         }
-        
+
         // Add drag/swipe event listeners
         if (sliderWrapper) {
             sliderWrapper.style.cursor = 'grab';
             sliderWrapper.addEventListener('touchstart', startDrag, { passive: false });
             sliderWrapper.addEventListener('mousedown', startDrag);
         }
-        
+
         // Handle window resize
         let resizeTimer;
-        const resizeHandler = function() {
+        const resizeHandler = function () {
             clearTimeout(resizeTimer);
-            resizeTimer = setTimeout(function() {
+            resizeTimer = setTimeout(function () {
                 updateSlider();
             }, 250);
         };
         window.addEventListener('resize', resizeHandler);
-        
+
         // Initialize after images load
         const images = slider.querySelectorAll('img');
         let imagesLoaded = 0;
-        
+
         if (images.length === 0) {
             updateSlider();
         } else {
-            images.forEach(function(img) {
+            images.forEach(function (img) {
                 if (img.complete) {
                     imagesLoaded++;
                     if (imagesLoaded === images.length) {
                         updateSlider();
                     }
                 } else {
-                    img.addEventListener('load', function() {
+                    img.addEventListener('load', function () {
                         imagesLoaded++;
                         if (imagesLoaded === images.length) {
                             updateSlider();
                         }
                     });
-                    img.addEventListener('error', function() {
+                    img.addEventListener('error', function () {
                         imagesLoaded++;
                         if (imagesLoaded === images.length) {
                             updateSlider();
@@ -437,7 +522,7 @@ function initializeBestSellingSlider() {
                 }
             });
         }
-        
+
         // Fallback initialization
         setTimeout(updateSlider, 500);
     }, 300);
@@ -445,30 +530,30 @@ function initializeBestSellingSlider() {
 
 function initializeTrendingSlider() {
     // Wait a bit for DOM to be ready and images to load
-    setTimeout(function() {
+    setTimeout(function () {
         const slider = document.getElementById('trendingSlider');
         const sliderWrapper = slider ? slider.parentElement : null;
         const prevBtn = document.getElementById('trendingPrev');
         const nextBtn = document.getElementById('trendingNext');
-        
+
         if (!slider) {
             console.log('Trending slider not found');
             return;
         }
-        
+
         if (!prevBtn || !nextBtn) {
             console.log('Trending navigation buttons not found');
             return;
         }
-        
+
         // Check if slider already initialized
         if (slider.dataset.initialized === 'true') {
             return;
         }
         slider.dataset.initialized = 'true';
-        
+
         let currentIndex = 0;
-        
+
         // Drag/swipe variables
         let isDragging = false;
         let startX = 0;
@@ -477,43 +562,43 @@ function initializeTrendingSlider() {
         let currentTranslate = 0;
         let prevBtnRef = null;
         let nextBtnRef = null;
-        
+
         function getItemsPerView() {
             if (window.innerWidth >= 1280) return 6;
             if (window.innerWidth >= 1024) return 4;
             if (window.innerWidth >= 640) return 2;
             return 1;
         }
-        
+
         function getMaxIndex() {
             if (!slider.children.length) return 0;
             const firstItem = slider.children[0];
             if (!firstItem) return 0;
-            
+
             const itemWidth = firstItem.offsetWidth || 300;
             const gap = 24;
             const itemWidthWithGap = itemWidth + gap;
-            
+
             const container = slider.parentElement;
             const containerWidth = container ? container.offsetWidth : window.innerWidth;
-            
+
             const totalItems = slider.children.length;
             const itemsPerView = Math.floor(containerWidth / itemWidthWithGap) || 1;
-            
+
             return totalItems > itemsPerView ? totalItems - itemsPerView : 0;
         }
-        
+
         function updateSlider(disableTransition = false) {
             if (!slider.children.length) return;
-            
+
             // Calculate scroll position based on actual dimensions
             const firstItem = slider.children[0];
             if (!firstItem) return;
-            
+
             const itemWidth = firstItem.offsetWidth || 300;
             const gap = 24;
             const maxIndex = getMaxIndex();
-            
+
             // Clamp currentIndex to valid range
             if (currentIndex > maxIndex) {
                 currentIndex = maxIndex;
@@ -521,7 +606,7 @@ function initializeTrendingSlider() {
             if (currentIndex < 0) {
                 currentIndex = 0;
             }
-            
+
             // Calculate scroll position - account for CSS gap (1.5rem = 24px)
             // When at maxIndex, ensure last item aligns with container edge
             let translateX;
@@ -535,16 +620,16 @@ function initializeTrendingSlider() {
             } else {
                 translateX = -currentIndex * (itemWidth + gap);
             }
-            
+
             translateX += (isDragging ? currentTranslate : 0);
-            
+
             slider.style.transform = `translateX(${translateX}px)`;
             if (!disableTransition) {
                 slider.style.transition = 'transform 0.5s ease-in-out';
             } else {
                 slider.style.transition = 'none';
             }
-            
+
             // Show/hide navigation buttons
             const btnPrev = prevBtnRef || document.getElementById('trendingPrev');
             const btnNext = nextBtnRef || document.getElementById('trendingNext');
@@ -555,17 +640,17 @@ function initializeTrendingSlider() {
                 btnNext.style.display = currentIndex < maxIndex ? 'flex' : 'none';
             }
         }
-        
+
         // Drag/Swipe functions
         function getPositionX(e) {
             return e.type.includes('mouse') ? e.clientX : e.touches[0].clientX;
         }
-        
+
         function startDrag(e) {
             // Don't start drag if clicking on a link, button, or interactive element
             const target = e.target.closest('a, button, .wishlist-btn, .product-action-btn');
             if (target) return;
-            
+
             isDragging = true;
             startX = getPositionX(e);
             const firstItem = slider.children[0];
@@ -577,12 +662,12 @@ function initializeTrendingSlider() {
             const gap = 24;
             initialTranslate = -currentIndex * (itemWidth + gap);
             currentTranslate = 0;
-            
+
             if (sliderWrapper) {
                 sliderWrapper.style.cursor = 'grabbing';
                 sliderWrapper.style.userSelect = 'none';
             }
-            
+
             // Add event listeners to document for better drag handling
             if (e.type === 'touchstart') {
                 document.addEventListener('touchmove', drag, { passive: false });
@@ -592,55 +677,55 @@ function initializeTrendingSlider() {
                 document.addEventListener('mouseup', endDrag);
             }
         }
-        
+
         function drag(e) {
             if (!isDragging) return;
             e.preventDefault();
             e.stopPropagation();
-            
+
             currentX = getPositionX(e);
             const dragDistance = currentX - startX;
-            
+
             const firstItem = slider.children[0];
             if (!firstItem) return;
             const itemWidth = firstItem.offsetWidth || 300;
             const gap = 24;
             const maxIndex = getMaxIndex();
-            
+
             // Calculate constraints - account for CSS gap
             const maxTranslate = 0; // Can't drag past start
             const minTranslate = -maxIndex * (itemWidth + gap); // Can't drag past end
-            
+
             // Apply drag distance with constraints
             currentTranslate = dragDistance;
             const newTranslate = initialTranslate + currentTranslate;
-            
+
             if (newTranslate > maxTranslate) {
                 currentTranslate = maxTranslate - initialTranslate;
             } else if (newTranslate < minTranslate) {
                 currentTranslate = minTranslate - initialTranslate;
             }
-            
+
             slider.style.transition = 'none';
             updateSlider(true);
         }
-        
+
         function endDrag(e) {
             if (!isDragging) return;
-            
+
             // Remove event listeners
             document.removeEventListener('touchmove', drag);
             document.removeEventListener('touchend', endDrag);
             document.removeEventListener('mousemove', drag);
             document.removeEventListener('mouseup', endDrag);
-            
+
             isDragging = false;
-            
+
             if (sliderWrapper) {
                 sliderWrapper.style.cursor = 'grab';
                 sliderWrapper.style.userSelect = '';
             }
-            
+
             // Determine if we should snap to next/prev slide
             const firstItem = slider.children[0];
             if (!firstItem) {
@@ -648,10 +733,10 @@ function initializeTrendingSlider() {
                 updateSlider();
                 return;
             }
-            
+
             const itemWidth = firstItem.offsetWidth || 300;
             const threshold = itemWidth * 0.25; // 25% of item width to trigger slide
-            
+
             if (Math.abs(currentTranslate) > threshold) {
                 if (currentTranslate < 0 && currentIndex < getMaxIndex()) {
                     // Swipe left - go to next
@@ -661,22 +746,22 @@ function initializeTrendingSlider() {
                     currentIndex--;
                 }
             }
-            
+
             currentTranslate = 0;
             updateSlider();
         }
-        
+
         // Remove existing event listeners by cloning buttons and storing references
         if (prevBtn && nextBtn) {
             const newPrevBtn = prevBtn.cloneNode(true);
             const newNextBtn = nextBtn.cloneNode(true);
             prevBtn.parentNode.replaceChild(newPrevBtn, prevBtn);
             nextBtn.parentNode.replaceChild(newNextBtn, nextBtn);
-            
+
             prevBtnRef = newPrevBtn;
             nextBtnRef = newNextBtn;
-            
-            newPrevBtn.addEventListener('click', function(e) {
+
+            newPrevBtn.addEventListener('click', function (e) {
                 e.preventDefault();
                 e.stopPropagation();
                 if (currentIndex > 0) {
@@ -684,8 +769,8 @@ function initializeTrendingSlider() {
                     updateSlider();
                 }
             });
-            
-            newNextBtn.addEventListener('click', function(e) {
+
+            newNextBtn.addEventListener('click', function (e) {
                 e.preventDefault();
                 e.stopPropagation();
                 if (currentIndex < getMaxIndex()) {
@@ -694,45 +779,45 @@ function initializeTrendingSlider() {
                 }
             });
         }
-        
+
         // Add drag/swipe event listeners
         if (sliderWrapper) {
             sliderWrapper.style.cursor = 'grab';
             sliderWrapper.addEventListener('touchstart', startDrag, { passive: false });
             sliderWrapper.addEventListener('mousedown', startDrag);
         }
-        
+
         // Handle window resize
         let resizeTimer;
-        const resizeHandler = function() {
+        const resizeHandler = function () {
             clearTimeout(resizeTimer);
-            resizeTimer = setTimeout(function() {
+            resizeTimer = setTimeout(function () {
                 updateSlider();
             }, 250);
         };
         window.addEventListener('resize', resizeHandler);
-        
+
         // Initialize after images load
         const images = slider.querySelectorAll('img');
         let imagesLoaded = 0;
-        
+
         if (images.length === 0) {
             updateSlider();
         } else {
-            images.forEach(function(img) {
+            images.forEach(function (img) {
                 if (img.complete) {
                     imagesLoaded++;
                     if (imagesLoaded === images.length) {
                         updateSlider();
                     }
                 } else {
-                    img.addEventListener('load', function() {
+                    img.addEventListener('load', function () {
                         imagesLoaded++;
                         if (imagesLoaded === images.length) {
                             updateSlider();
                         }
                     });
-                    img.addEventListener('error', function() {
+                    img.addEventListener('error', function () {
                         imagesLoaded++;
                         if (imagesLoaded === images.length) {
                             updateSlider();
@@ -741,7 +826,7 @@ function initializeTrendingSlider() {
                 }
             });
         }
-        
+
         // Fallback initialization
         setTimeout(updateSlider, 500);
     }, 300);

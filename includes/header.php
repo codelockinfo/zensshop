@@ -536,7 +536,7 @@ if (!empty($headerMenuItems)) {
     
     <!-- Products Submenu -->
     <div id="productsSubmenu" class="hidden fixed top-0 left-0 h-full w-80 bg-white shadow-2xl z-50 transform translate-x-full transition-transform duration-300 overflow-y-auto xl:hidden">
-        <div class="bg-black text-white px-6 py-4 flex items-center justify-between">
+        <div class="bg-black text-white px-6 py-4 flex items-center justify-between sticky top-0 z-50">
             <div class="flex items-center space-x-4">
                 <button onclick="closeSubmenu('products')" class="text-white hover:text-gray-300">
                     <i class="fas fa-chevron-left"></i>

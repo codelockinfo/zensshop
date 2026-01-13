@@ -597,16 +597,88 @@ require_once __DIR__ . '/includes/header.php';
                          <h2 class="text-2xl md:text-3xl lg:text-4xl font-heading mb-4 text-gray-800 font-bold tracking-tight"><?php echo htmlspecialchars($newsletterTitle); ?></h2>
                          <p class="text-gray-500 text-base md:text-lg mb-8 leading-relaxed max-w-lg mx-auto md:mx-0"><?php echo htmlspecialchars($newsletterText); ?></p>
                          
-                         <form onsubmit="event.preventDefault();" class="flex flex-col sm:flex-row w-full gap-3 sm:gap-0">
-                             <input type="email" placeholder="Enter your email" class="w-full flex-grow px-5 py-3 md:px-6 md:py-4 bg-gray-50 border border-gray-200 rounded-lg sm:rounded-r-none focus:outline-none text-base md:text-lg focus:ring-2 focus:ring-gray-200 transition">
-                             <button class="w-full sm:w-auto btn-accent px-8 py-3 md:py-4 rounded-lg sm:rounded-l-none text-sm md:text-base font-bold uppercase transition whitespace-nowrap shadow-md hover:shadow-lg transform active:scale-95">
+                         <form id="landingNewsletterForm" class="flex flex-col sm:flex-row w-full gap-3 sm:gap-0">
+                             <input type="email" name="email" placeholder="Enter your email" required class="w-full flex-grow px-5 py-3 md:px-6 md:py-4 bg-gray-50 border border-gray-200 rounded-lg sm:rounded-r-none focus:outline-none text-base md:text-lg focus:ring-2 focus:ring-gray-200 transition">
+                             <button type="submit" class="w-full sm:w-auto btn-accent px-8 py-3 md:py-4 rounded-lg sm:rounded-l-none text-sm md:text-base font-bold uppercase transition whitespace-nowrap shadow-md hover:shadow-lg transform active:scale-95">
                                 Get Started
                              </button>
                          </form>
+                         
+                         <!-- Message Container -->
+                         <div id="landingNewsletterMessage" class="hidden text-center text-sm mt-3"></div>
+                         
                          <p class="text-xs text-gray-400 mt-4"><i class="fas fa-lock mr-1"></i> Your privacy is our priority.</p>
                     </div>
                 </div>
             </div>
+            <script>
+            document.getElementById('landingNewsletterForm').addEventListener('submit', async function(e) {
+                e.preventDefault();
+                const btn = this.querySelector('button');
+                const origText = btn.innerText;
+                const messageDiv = document.getElementById('landingNewsletterMessage');
+                
+                btn.innerText = 'Subscribing...';
+                btn.disabled = true;
+                
+                // Hide any previous message
+                if (messageDiv) {
+                    messageDiv.classList.add('hidden');
+                }
+                
+                const email = this.querySelector('input[name="email"]').value;
+                const baseUrl = '<?php echo $baseUrl; ?>';
+                
+                try {
+                    const response = await fetch(`${baseUrl}/api/subscribe.php`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ email: email })
+                    });
+                    const data = await response.json();
+                    
+                    if (data.success) {
+                        this.reset();
+                        if (messageDiv) {
+                            messageDiv.textContent = data.message || 'Successfully subscribed!';
+                            messageDiv.className = 'text-center text-sm mt-3 text-green-600 bg-green-50 py-2 px-4 rounded';
+                            messageDiv.classList.remove('hidden');
+                            
+                            // Auto-hide after 5 seconds
+                            setTimeout(() => {
+                                messageDiv.classList.add('hidden');
+                            }, 5000);
+                        }
+                    } else {
+                        if (messageDiv) {
+                            messageDiv.textContent = data.message || 'Error subscribing.';
+                            messageDiv.className = 'text-center text-sm mt-3 text-red-600 bg-red-50 py-2 px-4 rounded';
+                            messageDiv.classList.remove('hidden');
+                            
+                            // Auto-hide after 5 seconds
+                            setTimeout(() => {
+                                messageDiv.classList.add('hidden');
+                            }, 5000);
+                        }
+                    }
+                } catch (err) {
+                    console.error(err);
+                    if (messageDiv) {
+                        messageDiv.textContent = 'An error occurred.';
+                        messageDiv.className = 'text-center text-sm mt-3 text-red-600 bg-red-50 py-2 px-4 rounded';
+                        messageDiv.classList.remove('hidden');
+                        
+                        // Auto-hide after 5 seconds
+                        setTimeout(() => {
+                            messageDiv.classList.add('hidden');
+                        }, 5000);
+                    }
+                } finally {
+                    btn.innerText = origText;
+                    btn.disabled = false;
+                }
+            });
+            </script>
         </section>
         <?php $sections['secNews'] = ob_get_clean();
     }

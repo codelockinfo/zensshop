@@ -100,10 +100,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $parentId = !empty($_POST['parent_id']) ? intval($_POST['parent_id']) : null;
         $badgeText = trim($_POST['badge_text'] ?? '');
         $customClasses = trim($_POST['custom_classes'] ?? '');
+        $isMegaMenu = isset($_POST['is_mega_menu']) && $_POST['is_mega_menu'] == '1' ? 1 : 0;
         $removeImage = isset($_POST['remove_image']) && $_POST['remove_image'] == '1';
         
         $imageSql = "";
-        $params = [$label, $url, $sortOrder, $parentId, $badgeText, $customClasses];
+        $params = [$label, $url, $sortOrder, $parentId, $badgeText, $customClasses, $isMegaMenu];
         
         // Handle image removal
         if ($removeImage) {
@@ -121,7 +122,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         }
         $params[] = $itemId;
 
-        $db->execute("UPDATE menu_items SET label=?, url=?, sort_order=?, parent_id=?, badge_text=?, custom_classes=? $imageSql WHERE id=?", $params);
+        $db->execute("UPDATE menu_items SET label=?, url=?, sort_order=?, parent_id=?, badge_text=?, custom_classes=?, is_mega_menu=? $imageSql WHERE id=?", $params);
         
         // Store success message in session and redirect to prevent form resubmission
         $_SESSION['menu_success'] = "Item updated.";
@@ -369,6 +370,14 @@ require_once __DIR__ . '/../includes/admin-header.php';
                 <div><label class="block text-xs font-bold mb-1">Badge (Hot/New)</label><input type="text" name="badge_text" id="edit_badge_text" class="w-full border p-2 rounded" placeholder="HOT"></div>
                 <div><label class="block text-xs font-bold mb-1">Custom CSS Classes</label><textarea name="custom_classes" id="edit_custom_classes" class="w-full border p-2 rounded text-xs" rows="2" placeholder="text-black hover:text-red-700 transition font-sans"></textarea></div>
                 
+                <div class="col-span-2 pt-2">
+                     <label class="flex items-center gap-2 cursor-pointer">
+                         <input type="checkbox" name="is_mega_menu" id="edit_is_mega_menu" value="1" class="w-4 h-4 text-blue-600 rounded border-gray-300 focus:ring-blue-500">
+                         <span class="text-sm font-bold text-gray-700">Enable Mega Menu (Show Images in Submenu)</span>
+                     </label>
+                     <p class="text-xs text-gray-500 mt-1 ml-6">If enabled, this item's children will be displayed as a mega menu with images. Ensure children have images uploaded.</p>
+                </div>
+                
                 <!-- Current Image Display -->
                 <div class="col-span-2">
                     <label class="block text-xs font-bold mb-1">Image</label>
@@ -469,6 +478,7 @@ function editItem(item) {
     document.getElementById('edit_parent_id').value = item.parent_id || '';
     document.getElementById('edit_badge_text').value = item.badge_text || '';
     document.getElementById('edit_custom_classes').value = item.custom_classes || '';
+    document.getElementById('edit_is_mega_menu').checked = (item.is_mega_menu == 1);
     
     // Handle current image display
     const currentImageContainer = document.getElementById('current_image_container');

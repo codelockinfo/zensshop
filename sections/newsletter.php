@@ -14,7 +14,7 @@ if (!isset($baseUrl)) {
                 <p class="text-gray-700 text-sm md:text-md">Promotions, new products and sales. Directly to your inbox.</p>
             </div>
             
-            <form id="newsletterForm" class="space-y-4">
+            <form id="globalNewsletterForm" class="space-y-4">
                 <div class="flex flex-col md:flex-row gap-3">
                     <input type="email" 
                         name="email" 
@@ -30,6 +30,9 @@ if (!isset($baseUrl)) {
                     </button>
                 </div>
                 
+                <!-- Message Container -->
+                <div id="globalNewsletterMessage" class="hidden text-center text-sm"></div>
+                
                 <p class="text-xs md:text-sm text-gray-600 text-center mt-4">
                     Your personal data will be used to support your experience throughout this website, and for other purposes described in our <a href="<?php echo url('privacy.php'); ?>" class="underline hover:text-gray-900">Privacy Policy</a>.
                 </p>
@@ -39,30 +42,50 @@ if (!isset($baseUrl)) {
 </section>
 
 <script>
-document.getElementById('newsletterForm')?.addEventListener('submit', async function(e) {
-    e.preventDefault();
-    const email = this.querySelector('input[name="email"]').value;
-    
-    try {
-        const baseUrl = typeof BASE_URL !== 'undefined' ? BASE_URL : '<?php echo isset($baseUrl) ? $baseUrl : (function_exists("getBaseUrl") ? getBaseUrl() : "/zensshop"); ?>';
-        const response = await fetch(baseUrl + '/api/newsletter', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ email: email })
+document.addEventListener('DOMContentLoaded', function() {
+    const form = document.getElementById('globalNewsletterForm');
+    if(form) {
+        form.addEventListener('submit', async function(e) {
+            e.preventDefault();
+            console.log('Global Newsletter Form Submitted');
+            
+            const btn = this.querySelector('button[type="submit"]');
+            const origText = btn.innerText;
+            btn.innerText = 'Subscribing...';
+            btn.disabled = true;
+
+            const email = this.querySelector('input[name="email"]').value;
+            
+            try {
+                // Determine base URL dynamically if PHP var is empty, usually passed from server
+                let baseUrl = '<?php echo isset($baseUrl) ? $baseUrl : ""; ?>';
+                if(!baseUrl) {
+                    baseUrl = window.location.pathname.substring(0, window.location.pathname.indexOf('/zensshop') + 9);
+                    if(baseUrl.indexOf('zensshop') === -1) baseUrl = '/zensshop'; 
+                }
+
+                const response = await fetch(baseUrl + '/api/subscribe.php', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ email: email })
+                });
+                
+                const data = await response.json();
+                
+                if (data.success) {
+                    alert(data.message);
+                    this.reset();
+                } else {
+                    alert(data.message || 'Something went wrong. Please try again.');
+                }
+            } catch (error) {
+                console.error(error);
+                alert('An error occurred. Please try again.');
+            } finally {
+                btn.innerText = origText;
+                btn.disabled = false;
+            }
         });
-        
-        const data = await response.json();
-        
-        if (data.success) {
-            alert('Thank you for subscribing!');
-            this.reset();
-        } else {
-            alert(data.message || 'Something went wrong. Please try again.');
-        }
-    } catch (error) {
-        alert('An error occurred. Please try again.');
     }
 });
 </script>
-
-

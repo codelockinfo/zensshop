@@ -26,6 +26,12 @@ if ($customerId) {
     }
     $customerData['is_registered'] = true;
     $orders = $customer->getCustomerOrders($customerId);
+    
+    // Check if customer is a newsletter subscriber
+    require_once __DIR__ . '/../../classes/Database.php';
+    $db = Database::getInstance();
+    $isSubscriber = $db->fetchOne("SELECT id FROM subscribers WHERE user_id = ?", [$customerId]);
+    $customerData['is_subscriber'] = !empty($isSubscriber);
 } else if ($customerEmail) {
     $customerData = $customer->getCustomerByEmail($customerEmail);
     if (!$customerData) {
@@ -33,6 +39,7 @@ if ($customerId) {
         exit;
     }
     $orders = $customer->getCustomerOrders(null, $customerEmail);
+    $customerData['is_subscriber'] = false; // Guest customers don't have subscriber status linked
 } else {
     header('Location: ' . $baseUrl . '/admin/customers/list.php');
     exit;
@@ -74,6 +81,12 @@ if ($customerId) {
                                 <?php else: ?>
                                 <span class="inline-flex items-center px-2 py-0.5 rounded text-xs bg-gray-100 text-gray-800 mt-1">
                                     <i class="fas fa-shopping-cart mr-1"></i>Guest Customer
+                                </span>
+                                <?php endif; ?>
+                                
+                                <?php if (!empty($customerData['is_subscriber'])): ?>
+                                <span class="inline-flex items-center px-2 py-0.5 rounded text-xs bg-blue-100 text-blue-800 mt-1 ml-1">
+                                    <i class="fas fa-envelope mr-1"></i>Subscriber
                                 </span>
                                 <?php endif; ?>
                             </div>

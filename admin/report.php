@@ -84,10 +84,10 @@ $salesByStatus = $db->fetchAll("
         <div class="flex items-center justify-between">
             <div>
                 <p class="text-gray-600 mb-1 text-sm md:text-base">Total Revenue</p>
-                <h2 class="text-xl md:text-2xl font-bold">$<?php echo number_format($totalRevenue, 2); ?></h2>
+                <h2 class="text-xl md:text-2xl font-bold"><?php echo format_price($totalRevenue); ?></h2>
             </div>
             <div class="w-12 h-12 md:w-16 md:h-16 bg-green-100 rounded-lg flex items-center justify-center">
-                <i class="fas fa-dollar-sign text-green-500 text-lg md:text-2xl"></i>
+                <i class="fas fa-rupee-sign text-green-500 text-lg md:text-2xl"></i>
             </div>
         </div>
     </div>
@@ -117,11 +117,17 @@ $salesByStatus = $db->fetchAll("
     </div>
 </div>
 
+<!-- Chart.js -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
 <!-- Charts and Tables Section -->
 <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
     <!-- Sales by Status -->
     <div class="admin-card">
         <h3 class="text-lg md:text-xl font-bold mb-4">Sales by Status</h3>
+        <div class="h-64 mb-4">
+            <canvas id="salesStatusChart"></canvas>
+        </div>
         <div class="space-y-4">
             <?php foreach ($salesByStatus as $status): ?>
             <div class="flex items-center justify-between">
@@ -134,7 +140,7 @@ $salesByStatus = $db->fetchAll("
                 </div>
                 <div class="text-right">
                     <p class="font-bold text-sm md:text-base"><?php echo number_format($status['count']); ?> orders</p>
-                    <p class="text-gray-600 text-xs md:text-md">$<?php echo number_format($status['total'] ?? 0, 2); ?></p>
+                    <p class="text-gray-600 text-xs md:text-md"><?php echo format_price($status['total'] ?? 0); ?></p>
                 </div>
             </div>
             <?php endforeach; ?>
@@ -144,22 +150,22 @@ $salesByStatus = $db->fetchAll("
     <!-- Top Products -->
     <div class="admin-card">
         <h3 class="text-lg md:text-xl font-bold mb-4">Top Selling Products</h3>
-        <div class="space-y-3">
+        <div class="h-64 mb-4">
+            <canvas id="topProductsChart"></canvas>
+        </div>
+        <div class="space-y-4 overflow-y-auto max-h-60">
             <?php if (empty($topProducts)): ?>
             <p class="text-gray-500 text-center text-sm md:text-base py-4">No sales data available</p>
             <?php else: ?>
-            <?php foreach ($topProducts as $index => $item): ?>
-            <div class="flex items-center justify-between py-2 border-b border-gray-200 last:border-0">
+            <?php foreach ($topProducts as $item): ?>
+            <div class="flex items-center justify-between">
                 <div class="flex items-center space-x-3">
-                    <span class="text-gray-400 font-bold text-sm md:text-md">#<?php echo $index + 1; ?></span>
-                    <div>
-                        <p class="font-semibold text-sm md:text-base"><?php echo htmlspecialchars($item['name']); ?></p>
-                        <p class="text-xs md:text-sm text-gray-500">$<?php echo number_format($item['price'], 2); ?></p>
-                    </div>
+                    <div class="w-2 h-2 md:w-4 md:h-4 rounded-full bg-blue-500"></div>
+                    <span class="font-semibold text-sm md:text-base truncate max-w-[150px] md:max-w-xs" title="<?php echo htmlspecialchars($item['name']); ?>"><?php echo htmlspecialchars($item['name']); ?></span>
                 </div>
                 <div class="text-right">
                     <p class="font-bold text-sm md:text-base"><?php echo number_format($item['total_sold'] ?? 0); ?> sold</p>
-                    <p class="text-xs md:text-sm text-gray-500"><?php echo number_format($item['order_count'] ?? 0); ?> orders</p>
+                    <p class="text-gray-600 text-xs md:text-md"><?php echo format_price(($item['total_sold'] ?? 0) * $item['price']); ?></p>
                 </div>
             </div>
             <?php endforeach; ?>
@@ -167,6 +173,84 @@ $salesByStatus = $db->fetchAll("
         </div>
     </div>
 </div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Sales by Status Chart
+    const statusCtx = document.getElementById('salesStatusChart').getContext('2d');
+    const salesData = <?php echo json_encode($salesByStatus); ?>;
+    
+    const statusLabels = salesData.map(item => item.payment_status.charAt(0).toUpperCase() + item.payment_status.slice(1));
+    const statusCounts = salesData.map(item => item.count);
+    const statusColors = salesData.map(item => {
+        if (item.payment_status === 'paid') return '#10B981'; // green-500
+        if (item.payment_status === 'pending') return '#F59E0B'; // yellow-500
+        return '#EF4444'; // red-500
+    });
+
+    new Chart(statusCtx, {
+        type: 'doughnut',
+        data: {
+            labels: statusLabels,
+            datasets: [{
+                data: statusCounts,
+                backgroundColor: statusColors,
+                borderWidth: 0
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: {
+                    display: false // We have our own custom legend
+                }
+            }
+        }
+    });
+
+    // Top Products Chart
+    const productsCtx = document.getElementById('topProductsChart').getContext('2d');
+    const productsData = <?php echo json_encode($topProducts); ?>;
+    
+    if (productsData.length > 0) {
+        new Chart(productsCtx, {
+            type: 'bar',
+            data: {
+                labels: productsData.map(item => item.name.length > 15 ? item.name.substring(0, 15) + '...' : item.name),
+                datasets: [{
+                    label: 'Units Sold',
+                    data: productsData.map(item => item.total_sold),
+                    backgroundColor: '#3B82F6', // blue-500
+                    borderRadius: 4
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        display: false
+                    }
+                },
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        ticks: {
+                            precision: 0
+                        }
+                    },
+                    x: {
+                        grid: {
+                            display: false
+                        }
+                    }
+                }
+            }
+        });
+    }
+});
+</script>
 
 <!-- Recent Orders Table -->
 <div class="admin-card">
@@ -196,10 +280,11 @@ $salesByStatus = $db->fetchAll("
                     <td><?php echo date('M d, Y', strtotime($orderItem['created_at'])); ?></td>
                     <td>
                         <span class="px-2 py-1 rounded text-xs <?php 
-                            echo $orderItem['status'] === 'completed' ? 'bg-green-100 text-green-800' : 
-                                ($orderItem['status'] === 'pending' ? 'bg-yellow-100 text-yellow-800' : 'bg-gray-100 text-gray-800'); 
+                            $status = $orderItem['order_status'] ?? 'pending';
+                            echo $status === 'completed' || $status === 'delivered' ? 'bg-green-100 text-green-800' : 
+                                ($status === 'pending' ? 'bg-yellow-100 text-yellow-800' : 'bg-gray-100 text-gray-800'); 
                         ?>">
-                            <?php echo htmlspecialchars(ucfirst($orderItem['status'])); ?>
+                            <?php echo htmlspecialchars(ucfirst($status)); ?>
                         </span>
                     </td>
                     <td>
@@ -210,7 +295,7 @@ $salesByStatus = $db->fetchAll("
                             <?php echo htmlspecialchars(ucfirst($orderItem['payment_status'])); ?>
                         </span>
                     </td>
-                    <td class="font-bold">$<?php echo number_format($orderItem['total_amount'], 2); ?></td>
+                    <td class="font-bold"><?php echo format_price($orderItem['total_amount']); ?></td>
                 </tr>
                 <?php endforeach; ?>
                 <?php endif; ?>

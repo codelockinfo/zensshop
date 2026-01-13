@@ -269,9 +269,13 @@ $action = $segments[count($segments) - 1] ?? '';  // add, list
                     <i class="fas <?php echo strpos($_SERVER['PHP_SELF'], 'customers') !== false ? 'fa-chevron-down' : 'fa-chevron-up'; ?> text-xs ml-auto"></i>
                 </a>
                 <div class="sidebar-submenu mt-2 space-y-1 <?php echo strpos($_SERVER['PHP_SELF'], 'customers') !== false ? '' : 'hidden'; ?>">
-                    <a href="<?php echo $baseUrl; ?>/admin/customers/list.php" class="<?php echo ($module === 'customers' && in_array($action, ['list'])) ? 'bg-gray-700 text-white' : ''; ?> flex items-center space-x-2 py-1 px-4 text-sm" title="Customer List">
+                    <a href="<?php echo $baseUrl; ?>/admin/customers/list.php" class="<?php echo basename($_SERVER['PHP_SELF']) === 'list.php' ? 'bg-gray-700 text-white' : ''; ?> flex items-center space-x-2 py-1 px-4 text-sm" title="Customer List">
                         <i class="fas fa-gem text-xs"></i>
                         <span>Customer List</span>
+                    </a>
+                    <a href="<?php echo $baseUrl; ?>/admin/customers/subscribers.php" class="<?php echo basename($_SERVER['PHP_SELF']) === 'subscribers.php' ? 'bg-gray-700 text-white' : ''; ?> flex items-center space-x-2 py-1 px-4 text-sm" title="Subscriber List">
+                        <i class="fas fa-envelope text-xs"></i>
+                        <span>Subscriber List</span>
                     </a>
                 </div>
                 <a href="<?php echo $baseUrl; ?>/admin/report.php" class="sidebar-menu-item flex items-center space-x-3 py-2 px-4 mt-2 <?php echo basename($_SERVER['PHP_SELF']) === 'report.php' ? 'bg-gray-700' : ''; ?>" title="Report">
