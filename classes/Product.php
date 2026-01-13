@@ -293,8 +293,10 @@ class Product {
      * Delete product
      */
     public function delete($id) {
+        // Soft delete to prevent foreign key constraint violations with orders
+        // We also modify the slug to free it up for future use
         return $this->db->execute(
-            "DELETE FROM products WHERE id = ?",
+            "UPDATE products SET status = 'archived', slug = CONCAT(slug, '-deleted-', UNIX_TIMESTAMP()) WHERE id = ?",
             [$id]
         );
     }
