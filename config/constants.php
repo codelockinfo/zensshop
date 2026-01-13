@@ -4,10 +4,18 @@
  */
 
 // Site Configuration - SITE_NAME is now managed in database settings (see admin/system-settings.php)
-// Always use actual file system directory name (zensshop)
-// This ensures SITE_URL is always /zensshop/ regardless of access path
-$projectDir = basename(dirname(__DIR__));
-define('SITE_URL', 'http://localhost/' . $projectDir);
+// Detect environment and set SITE_URL accordingly
+$isProduction = (isset($_SERVER['HTTP_HOST']) && strpos($_SERVER['HTTP_HOST'], 'kartoai.com') !== false);
+
+if ($isProduction) {
+    // Production environment
+    define('SITE_URL', 'https://zensshop.kartoai.com');
+} else {
+    // Local development environment
+    $projectDir = basename(dirname(__DIR__));
+    define('SITE_URL', 'http://localhost/' . $projectDir);
+}
+
 define('BASE_PATH', dirname(__DIR__));
 
 // Paths
