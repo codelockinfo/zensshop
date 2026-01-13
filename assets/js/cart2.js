@@ -539,7 +539,7 @@ function updateCartCount() {
     if (typeof window.lastCartCount !== 'undefined') {
         count = window.lastCartCount;
     } else {
-        count = cartData.reduce((sum, item) => sum + (item.quantity || 0), 0);
+        count = cartData.reduce((sum, item) => sum + parseInt(item.quantity || 0), 0);
     }
 
     const cartCountElements = document.querySelectorAll('.cart-count');

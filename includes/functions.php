@@ -45,7 +45,7 @@ function url($path = '') {
     }
     
     // Remove .php extension if present - DISABLED: Server requires .php
-    // $path = preg_replace('/\.php$/', '', $path);
+    $path = preg_replace('/\.php$/', '', $path);
     
     // If path is empty, return base URL
     if (empty($path)) {

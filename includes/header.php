@@ -71,7 +71,7 @@ if (!function_exists('url')) {
             $path = $parts[0];
             $queryString = '?' . $parts[1];
         }
-        // $path = preg_replace('/\.php$/', '', $path);
+        $path = preg_replace('/\.php$/', '', $path);
         if (empty($path)) {
             return $baseUrl . '/' . $queryString;
         }

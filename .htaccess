@@ -8,6 +8,11 @@ RewriteRule ^ - [L]
 
 # Redirect known admin/api paths if needed (optional safety, but -f/-d usually covers it)
 
+# Handle .php extension hiding
+RewriteCond %{REQUEST_FILENAME} !-d
+RewriteCond %{REQUEST_FILENAME}.php -f
+RewriteRule ^(.*)$ $1.php [L,QSA]
+
 # Route custom slugs to special-product.php
 # This captures alphanumeric path segments like /summer-sale
 RewriteRule ^([a-zA-Z0-9-_]+)/?$ special-product.php?page=$1 [QSA,L]

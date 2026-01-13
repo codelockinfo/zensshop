@@ -330,7 +330,7 @@ function renderFooterLinkRecursive($item, $baseUrl) {
     
     <!-- Scripts -->
     <script src="<?php echo $baseUrl; ?>/assets/js/main.js"></script>
-    <script src="<?php echo $baseUrl; ?>/assets/js/cart1.js"></script>
+    <script src="<?php echo $baseUrl; ?>/assets/js/cart2.js"></script>
     <script src="<?php echo $baseUrl; ?>/assets/js/product-cards.js"></script>
     <script src="<?php echo $baseUrl; ?>/assets/js/wishlist.js"></script>
     <script src="<?php echo $baseUrl; ?>/assets/js/notification.js"></script>
