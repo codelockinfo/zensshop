@@ -6,6 +6,11 @@
 
 require_once __DIR__ . '/../config/email.php';
 
+// Load Composer Autoloader
+if (file_exists(__DIR__ . '/../vendor/autoload.php')) {
+    require_once __DIR__ . '/../vendor/autoload.php';
+}
+
 // Note: PHPMailer should be installed via Composer or manually included
 // For now, we'll use a simple mail() function wrapper
 // In production, install PHPMailer: composer require phpmailer/phpmailer
