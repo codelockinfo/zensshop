@@ -195,6 +195,6 @@ document.addEventListener('DOMContentLoaded', function() {
     <div class="loading-spinner"></div>
 </section>
 
-<script src="<?php echo $baseUrl; ?>/assets/js/lazy-load.js"></script>
+<script src="<?php echo $baseUrl; ?>/assets/js/lazy-load1.js"></script>
 
 <?php require_once __DIR__ . '/includes/footer.php'; ?>

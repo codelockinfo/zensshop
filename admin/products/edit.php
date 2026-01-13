@@ -418,7 +418,7 @@ if (typeof BASE_URL === 'undefined') {
     const BASE_URL = '<?php echo $baseUrl; ?>';
 }
 </script>
-<script src="<?php echo $baseUrl; ?>/assets/js/admin-image-upload.js"></script>
+<script src="<?php echo $baseUrl; ?>/assets/js/admin-image-upload1.js"></script>
 <script src="<?php echo $baseUrl; ?>/assets/js/product-variants.js"></script>
 <script>
 // Initialize with existing images
