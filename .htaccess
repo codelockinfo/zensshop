@@ -9,11 +9,17 @@ php_value max_input_time 300
 <IfModule mod_rewrite.c>
     Options -MultiViews
     RewriteEngine On
-    RewriteBase /zensshop/
+    # Adjust RewriteBase: Use / for live server (root domain). 
+    # If on localhost/zensshop, locally this might need to be /zensshop/
+    RewriteBase /
 
-    # 1. To externally redirect /file.php to /file (Optional, avoiding for now to prevent loops, just focusing on making /file work)
-    
-    # 2. Internally rewrite /file to /file.php if it exists
+    # 1. Externally redirect /file.php to /file (Client Request -> Browser URL change)
+    # This ensures that even if code links to 'contact.php', the user sees 'contact'
+    RewriteCond %{THE_REQUEST} \s/+(.+?)\.php[\s?] [NC]
+    RewriteRule ^ /%1 [R=301,L,NE]
+
+    # 2. Internally rewrite extensionless URLs to .php files (Server internal processing)
+    # This allows the server to find 'contact.php' when 'contact' is requested
     RewriteCond %{REQUEST_FILENAME} !-d
     RewriteCond %{REQUEST_FILENAME}.php -f
     RewriteRule ^([^\.]+)$ $1.php [NC,L]
@@ -22,6 +28,6 @@ php_value max_input_time 300
     RewriteCond %{REQUEST_FILENAME} !-f
     RewriteCond %{REQUEST_FILENAME} !-d
 
-    # 4. Landing Pages (Catch-all for slugs that are NOT real PHP files)
+    # 4. Landing Pages (Catch-all)
     RewriteRule ^([a-zA-Z0-9-_]+)$ special-product.php?page=$1 [QSA,L]
 </IfModule>
