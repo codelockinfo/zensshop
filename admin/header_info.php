@@ -160,6 +160,18 @@ require_once __DIR__ . '/../includes/admin-header.php';
         <h1 class="text-2xl font-bold text-gray-800">Header Information</h1>
     </div>
 
+    <!-- Messages -->
+    <?php if ($success): ?>
+        <div class="bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded relative mb-4">
+            <?php echo htmlspecialchars($success); ?>
+        </div>
+    <?php endif; ?>
+
+    <?php if ($error): ?>
+        <div class="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative mb-4">
+            <?php echo htmlspecialchars($error); ?>
+        </div>
+    <?php endif; ?>
 
     <!-- Main Form -->
     <form method="POST" enctype="multipart/form-data">
@@ -195,20 +207,22 @@ require_once __DIR__ . '/../includes/admin-header.php';
                 <div id="imageLogoField" class="<?php echo $logoType === 'image' ? '' : 'hidden'; ?>">
                     <label class="block text-sm font-semibold mb-2">Logo Image</label>
                     
-                    <?php if (!empty($siteLogo) && $logoType === 'image'): ?>
-                    <div class="mb-3">
-                        <p class="text-xs text-gray-600 mb-2">Current Logo Preview:</p>
-                        <div class="border-2 border-dashed border-gray-300 rounded-lg p-4 bg-gray-50 flex items-center justify-center" style="min-height: 120px;">
-                            <img src="<?php echo htmlspecialchars('../assets/images/' . $siteLogo); ?>" 
-                                 alt="Current Logo" 
-                                 class="max-h-20 object-contain"
-                                 onerror="this.parentElement.innerHTML='<span class=\'text-gray-400 text-sm\'>Logo not found</span>'">
+                    <div class="relative group cursor-pointer border-2 border-dashed border-gray-300 rounded-lg p-4 bg-gray-50 flex items-center justify-center min-h-[120px] hover:bg-gray-100 transition" onclick="document.getElementById('logoInput').click()">
+                        
+                        <img id="logoPreview" 
+                             src="<?php echo !empty($logoPath) ? '../assets/images/' . $logoPath : ''; ?>" 
+                             class="max-h-20 object-contain <?php echo !empty($logoPath) ? '' : 'hidden'; ?>">
+                             
+                        <div id="logoPlaceholder" class="<?php echo !empty($logoPath) ? 'hidden' : ''; ?> text-center">
+                             <i class="fas fa-cloud-upload-alt text-3xl text-gray-400 mb-2"></i>
+                             <p class="text-sm text-gray-500">Click to upload logo</p>
                         </div>
+                        
+                        <div class="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-5 flex items-center justify-center transition-all rounded-lg"></div>
                     </div>
-                    <?php endif; ?>
-                    
-                    <input type="file" name="logo" accept="image/*" class="w-full border p-2 rounded bg-white">
-                    <p class="text-xs text-gray-500 mt-1">Recommended: PNG or SVG format, transparent background</p>
+
+                    <input type="file" id="logoInput" name="logo" accept="image/*" class="hidden" onchange="previewLogo(this)">
+                    <p class="text-xs text-gray-500 mt-2">Recommended: PNG or SVG format, transparent background</p>
                 </div>
             </div>
             
@@ -375,6 +389,25 @@ function toggleLogoFields(type) {
     } else {
         textField.classList.add('hidden');
         imageField.classList.remove('hidden');
+    }
+}
+
+function previewLogo(input) {
+    if (input.files && input.files[0]) {
+        var reader = new FileReader();
+        reader.onload = function(e) {
+            const img = document.getElementById('logoPreview');
+            const placeholder = document.getElementById('logoPlaceholder');
+            
+            if (img) {
+                img.src = e.target.result;
+                img.classList.remove('hidden');
+            }
+            if (placeholder) {
+                placeholder.classList.add('hidden');
+            }
+        }
+        reader.readAsDataURL(input.files[0]);
     }
 }
 

@@ -9,6 +9,7 @@ class CustomerAuth {
         if (session_status() === PHP_SESSION_NONE) {
             session_start();
         }
+        $this->checkRememberMe();
     }
     
     public function register($name, $email, $password) {
@@ -49,6 +50,9 @@ class CustomerAuth {
         }
         
         $this->setCustomerSession($customer);
+        // Always enable persistent login (auto-login on return)
+        $this->setRememberMe($customer['id']);
+        
         return $customer;
     }
     
@@ -82,6 +86,7 @@ class CustomerAuth {
         }
         
         $this->setCustomerSession($customer);
+        $this->setRememberMe($customer['id']);
         return $customer;
     }
     
@@ -97,6 +102,7 @@ class CustomerAuth {
     }
     
     public function logout() {
+        $this->deleteRememberMe();
         unset($_SESSION['customer_id']);
         unset($_SESSION['customer_name']);
         unset($_SESSION['customer_email']);
@@ -118,6 +124,63 @@ class CustomerAuth {
         $params[] = $_SESSION['customer_id'];
         $sql = "UPDATE customers SET " . implode(', ', $fields) . " WHERE id = ?";
         return $this->db->execute($sql, $params);
+    }
+
+    private function setRememberMe($customerId) {
+        try {
+            $selector = bin2hex(random_bytes(16));
+            $validator = bin2hex(random_bytes(32));
+            $token = hash('sha256', $validator);
+            $expires = date('Y-m-d H:i:s', time() + 30 * 24 * 60 * 60); // 30 days
+            
+            $this->db->execute(
+                "INSERT INTO customer_sessions (customer_id, selector, token, expires_at) VALUES (?, ?, ?, ?)",
+                [$customerId, $selector, $token, $expires]
+            );
+            
+            setcookie('remember_me', $selector . ':' . $validator, time() + 30 * 24 * 60 * 60, '/', '', false, true);
+        } catch (Exception $e) {
+            // Ignore generic errors to prevent login block
+        }
+    }
+
+    private function checkRememberMe() {
+        if ($this->isLoggedIn()) return;
+        if (!isset($_COOKIE['remember_me'])) return;
+        
+        $parts = explode(':', $_COOKIE['remember_me']);
+        if (count($parts) !== 2) return;
+        
+        list($selector, $validator) = $parts;
+        
+        try {
+            $session = $this->db->fetchOne(
+                "SELECT * FROM customer_sessions WHERE selector = ? AND expires_at > NOW()", 
+                [$selector]
+            );
+            
+            if ($session && hash_equals($session['token'], hash('sha256', $validator))) {
+                $customer = $this->db->fetchOne("SELECT * FROM customers WHERE id = ?", [$session['customer_id']]);
+                if ($customer) {
+                    $this->setCustomerSession($customer);
+                }
+            }
+        } catch (Exception $e) {
+            // Silently fail auto-login
+        }
+    }
+
+    private function deleteRememberMe() {
+        if (isset($_COOKIE['remember_me'])) {
+            $parts = explode(':', $_COOKIE['remember_me']);
+            if (count($parts) === 2) {
+                try {
+                    $this->db->execute("DELETE FROM customer_sessions WHERE selector = ?", [$parts[0]]);
+                } catch (Exception $e) {}
+            }
+            setcookie('remember_me', '', time() - 3600, '/');
+            unset($_COOKIE['remember_me']);
+        }
     }
 
     public function getCurrentCustomer() {

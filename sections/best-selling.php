@@ -3,8 +3,22 @@ require_once __DIR__ . '/../classes/Product.php';
 require_once __DIR__ . '/../includes/functions.php';
 
 $baseUrl = getBaseUrl();
+$db = Database::getInstance();
 $product = new Product();
-$products = $product->getBestSelling(12); // Get more products for slider
+
+// Check for manual selection from dedicated table
+$products = $db->fetchAll(
+    "SELECT p.* 
+     FROM products p 
+     JOIN section_best_selling_products h ON p.product_id = h.product_id 
+     WHERE p.status = 'active' 
+     ORDER BY h.sort_order ASC"
+);
+
+// Fallback if no specific products selected
+if (empty($products)) {
+    $products = $product->getBestSelling(12);
+}
 ?>
 
 <section>

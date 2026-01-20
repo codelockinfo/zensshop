@@ -352,7 +352,7 @@ require_once __DIR__ . '/includes/header.php';
 </style>
 
 <!-- Main Wrapper -->
-<div class="landing-page-wrapper space-y-3 mb-3">
+<div class="landing-page-wrapper">
 
     <!-- Hero Section -->
     <section class="hero-section min-h-screen relative flex items-center pt-10 pb-20 md:py-24">

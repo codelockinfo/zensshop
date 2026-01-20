@@ -162,7 +162,7 @@ function renderFooterLinkRecursive($item, $baseUrl) {
                     <!-- Left Section: Currency & Copyright -->
                     <div class="flex flex-wrap gap-5 md:gap-8 justify-center md:justify-start items-center">
                         <!-- Currency Selector -->
-                        <div class="relative">
+                        <div class="relative hidden">
                             <?php
                             $currencies = getCurrencies();
                             $selectedCurrency = $currencies[0] ?? ['code'=>'in','name'=>'India','currency_name'=>'INR','symbol'=>'₹','flag'=>'https://cdn.shopify.com/static/images/flags/in.svg'];

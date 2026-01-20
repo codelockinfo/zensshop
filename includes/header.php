@@ -40,6 +40,15 @@ $showUserIcon = ($db->fetchOne("SELECT setting_value FROM site_settings WHERE se
 $showWishlistIcon = ($db->fetchOne("SELECT setting_value FROM site_settings WHERE setting_key = 'header_icon_wishlist'")['setting_value'] ?? '1') == '1';
 $showCartIcon = ($db->fetchOne("SELECT setting_value FROM site_settings WHERE setting_key = 'header_icon_cart'")['setting_value'] ?? '1') == '1';
 
+// Fetch SEO & Branding Settings
+$siteTitleSuffix = $db->fetchOne("SELECT setting_value FROM settings WHERE setting_key = 'site_title_suffix'")['setting_value'] ?? 'Milano - Elegant Jewelry Store';
+// Deprecated: $faviconIcon = $db->fetchOne("SELECT setting_value FROM settings WHERE setting_key = 'favicon_icon'")['setting_value'] ?? '';
+$faviconPng = $db->fetchOne("SELECT setting_value FROM settings WHERE setting_key = 'favicon_png'")['setting_value'] ?? '';
+$faviconIco = $db->fetchOne("SELECT setting_value FROM settings WHERE setting_key = 'favicon_ico'")['setting_value'] ?? ''; // Google preferred
+$globalMetaDesc = $db->fetchOne("SELECT setting_value FROM settings WHERE setting_key = 'global_meta_description'")['setting_value'] ?? '';
+$globalSchema = $db->fetchOne("SELECT setting_value FROM settings WHERE setting_key = 'global_schema_json'")['setting_value'] ?? '';
+$headerScripts = $db->fetchOne("SELECT setting_value FROM settings WHERE setting_key = 'header_scripts'")['setting_value'] ?? '';
+
 // Fetch Top Bar Settings
 $topbarSlidesRow = $db->fetchOne("SELECT setting_value FROM site_settings WHERE setting_key = 'topbar_slides'");
 $topbarSlides = json_decode($topbarSlidesRow['setting_value'] ?? '[]', true) ?: [
@@ -84,16 +93,36 @@ if (!function_exists('url')) {
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title><?php echo isset($pageTitle) ? htmlspecialchars($pageTitle) . ' - ' : ''; ?>Milano - Elegant Jewelry Store</title>
+    <title><?php echo isset($pageTitle) ? htmlspecialchars($pageTitle) . ' - ' : ''; ?><?php echo htmlspecialchars($siteTitleSuffix); ?></title>
     
-    <?php if (!empty($metaDescription)): ?>
-    <meta name="description" content="<?php echo htmlspecialchars($metaDescription); ?>">
+    <?php if ($faviconPng): ?>
+    <link rel="icon" type="image/png" href="<?php echo $baseUrl; ?>/assets/images/<?php echo htmlspecialchars($faviconPng); ?>">
+    <?php endif; ?>
+    <?php if ($faviconIco): ?>
+    <link rel="shortcut icon" href="<?php echo $baseUrl; ?>/assets/images/<?php echo htmlspecialchars($faviconIco); ?>">
+    <?php endif; ?>
+
+    <?php 
+    $finalMetaDesc = !empty($metaDescription) ? $metaDescription : $globalMetaDesc;
+    if (!empty($finalMetaDesc)): ?>
+    <meta name="description" content="<?php echo htmlspecialchars($finalMetaDesc); ?>">
+    <?php endif; ?>
+
+    <?php if (!empty($globalSchema)): ?>
+    <script type="application/ld+json">
+        <?php echo $globalSchema; ?>
+    </script>
     <?php endif; ?>
 
     <?php if (!empty($customSchema)): ?>
     <script type="application/ld+json">
         <?php echo $customSchema; // Outputting raw JSON as requested ?>
     </script>
+    <?php endif; ?>
+    
+    <?php if (!empty($headerScripts)): ?>
+    <!-- Global Header Scripts (Analytics, Pixels, etc.) -->
+    <?php echo $headerScripts; ?>
     <?php endif; ?>
     
     <!-- Tailwind CSS -->
@@ -228,7 +257,7 @@ if (!function_exists('url')) {
                 <a href="<?php echo url($link['url']); ?>" class="hover:text-gray-300 transition"><?php echo htmlspecialchars($link['label']); ?></a>
                 <?php endforeach; ?>
                 <!-- Currency/Region Selector -->
-                <div class="relative ml-4 pl-4 border-l border-gray-700">
+                <div class="relative ml-4 pl-4 border-l border-gray-700 hidden">
                     <?php
                     $currencies = getCurrencies();
                     $selectedCurrency = $currencies[0] ?? ['code'=>'in','name'=>'India','currency_name'=>'INR','symbol'=>'₹','flag'=>'https://cdn.shopify.com/static/images/flags/in.svg'];

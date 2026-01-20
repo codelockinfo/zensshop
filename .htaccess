@@ -1,18 +1,19 @@
-RewriteEngine On
-# RewriteBase /zensshop/ (Commented out to support both root and subdirectory deployment)
 
-# Allow access to existing files and directories
-RewriteCond %{REQUEST_FILENAME} -f [OR]
-RewriteCond %{REQUEST_FILENAME} -d
-RewriteRule ^ - [L]
+# Increase Upload Limits for Video
+php_value upload_max_filesize 128M
+php_value post_max_size 128M
+php_value memory_limit 256M
+php_value max_execution_time 300
+php_value max_input_time 300
 
-# Redirect known admin/api paths if needed (optional safety, but -f/-d usually covers it)
+<IfModule mod_rewrite.c>
+    RewriteEngine On
+    RewriteBase /zensshop/
 
-# Handle .php extension hiding
-RewriteCond %{REQUEST_FILENAME} !-d
-RewriteCond %{REQUEST_FILENAME}.php -f
-RewriteRule ^(.*)$ $1.php [L,QSA]
+    # Don't rewrite files or directories that exist
+    RewriteCond %{REQUEST_FILENAME} !-f
+    RewriteCond %{REQUEST_FILENAME} !-d
 
-# Route custom slugs to special-product.php
-# This captures alphanumeric path segments like /summer-sale
-RewriteRule ^([a-zA-Z0-9-_]+)/?$ special-product.php?page=$1 [QSA,L]
+    # Rewrite slug to special-product.php
+    RewriteRule ^([a-zA-Z0-9-_]+)$ special-product.php?page=$1 [QSA,L]
+</IfModule>

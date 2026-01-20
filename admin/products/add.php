@@ -142,10 +142,10 @@ $categories = $db->fetchAll("SELECT * FROM categories WHERE status = 'active' OR
                     <input type="text" 
                            name="name" 
                            required
-                           maxlength="20"
+                           
                            placeholder="Enter product name"
                            class="admin-form-input">
-                    <p class="text-sm text-gray-500 mt-1">Do not exceed 20 characters when entering the product name.</p>
+                    <p class="text-sm text-gray-500 mt-1"></p>
                 </div>
                 
                 <div class="admin-form-group">
@@ -181,10 +181,10 @@ $categories = $db->fetchAll("SELECT * FROM categories WHERE status = 'active' OR
                     <label class="admin-form-label">Description *</label>
                     <textarea name="description" 
                               required
-                              maxlength="100"
+                              
                               placeholder="Description"
                               class="admin-form-input admin-form-textarea"></textarea>
-                    <p class="text-sm text-gray-500 mt-1">Do not exceed 100 characters when entering the product name.</p>
+                    <p class="text-sm text-gray-500 mt-1"></p>
                 </div>
         </div>
     </div>

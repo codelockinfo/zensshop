@@ -89,11 +89,19 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             }
         }
         
-        $success = "Footer information updated successfully!";
+        $_SESSION['flash_success'] = "Footer information updated successfully!";
+        header("Location: " . $_SERVER['PHP_SELF']);
+        exit;
 
     } catch (Exception $e) {
         $error = $e->getMessage();
     }
+}
+
+// Check Flash
+if (isset($_SESSION['flash_success'])) {
+    $success = $_SESSION['flash_success'];
+    unset($_SESSION['flash_success']);
 }
 
 // Fetch Current Settings
@@ -161,19 +169,21 @@ require_once __DIR__ . '/../includes/admin-header.php';
                 <div id="imageLogoField" class="<?php echo $settings['footer_logo_type'] === 'image' ? '' : 'hidden'; ?>">
                     <label class="block text-sm font-semibold mb-2">Logo Image</label>
                     
-                    <?php if (!empty($settings['footer_logo_image'])): ?>
-                    <div class="mb-3">
-                        <p class="text-xs text-gray-600 mb-2">Current Logo Preview:</p>
-                        <div class="border-2 border-dashed border-gray-300 rounded-lg p-4 bg-gray-50 flex items-center justify-center" style="min-height: 120px;">
-                            <img src="<?php echo getImageUrl($settings['footer_logo_image']); ?>" 
-                                 alt="Current Logo" 
-                                 class="max-h-20 object-contain"
-                                 onerror="this.parentElement.innerHTML='<span class=\'text-gray-400 text-sm\'>Logo not found</span>'">
+                    <div class="relative group cursor-pointer border-2 border-dashed border-gray-300 rounded-lg p-4 bg-gray-50 flex items-center justify-center min-h-[120px] hover:bg-gray-100 transition" onclick="document.getElementById('footerLogoInput').click()">
+                        
+                        <img id="footerLogoPreview" 
+                             src="<?php echo !empty($settings['footer_logo_image']) ? getImageUrl($settings['footer_logo_image']) : ''; ?>" 
+                             class="max-h-20 object-contain <?php echo !empty($settings['footer_logo_image']) ? '' : 'hidden'; ?>">
+                             
+                        <div id="footerLogoPlaceholder" class="<?php echo !empty($settings['footer_logo_image']) ? 'hidden' : ''; ?> text-center">
+                             <i class="fas fa-cloud-upload-alt text-3xl text-gray-400 mb-2"></i>
+                             <p class="text-sm text-gray-500">Click to upload logo</p>
                         </div>
+                        
+                        <div class="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-5 flex items-center justify-center transition-all rounded-lg"></div>
                     </div>
-                    <?php endif; ?>
                     
-                    <input type="file" name="footer_logo_image" accept="image/*" class="w-full border p-2 rounded bg-white">
+                    <input type="file" id="footerLogoInput" name="footer_logo_image" accept="image/*" class="hidden" onchange="previewFooterLogo(this)">
                     <p class="text-xs text-gray-500 mt-1">Recommended: PNG or SVG format, transparent background</p>
                 </div>
             </div>
@@ -296,6 +306,25 @@ function toggleLogoFields(type) {
     } else {
         document.getElementById('textLogoField').classList.add('hidden');
         document.getElementById('imageLogoField').classList.remove('hidden');
+    }
+}
+
+function previewFooterLogo(input) {
+    if (input.files && input.files[0]) {
+        var reader = new FileReader();
+        reader.onload = function(e) {
+            const img = document.getElementById('footerLogoPreview');
+            const placeholder = document.getElementById('footerLogoPlaceholder');
+            
+            if (img) {
+                img.src = e.target.result;
+                img.classList.remove('hidden');
+            }
+            if (placeholder) {
+                placeholder.classList.add('hidden');
+            }
+        }
+        reader.readAsDataURL(input.files[0]);
     }
 }
 

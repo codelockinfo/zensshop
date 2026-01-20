@@ -610,5 +610,29 @@ class Product {
         // Fallback: return as is (in case it's already the product_id)
         return $productId;
     }
+
+    /**
+     * Get products by multiple IDs
+     */
+    public function getByIds($ids, $preserveOrder = true) {
+        if (empty($ids)) {
+            return [];
+        }
+        
+        // Ensure IDs are integers
+        $ids = array_map('intval', $ids);
+        $idsStr = implode(',', $ids);
+        
+        $sql = "SELECT p.*, c.name as category_name 
+                FROM products p 
+                LEFT JOIN categories c ON p.category_id = c.id 
+                WHERE p.id IN ($idsStr) AND p.status = 'active'";
+        
+        if ($preserveOrder) {
+            $sql .= " ORDER BY FIELD(p.id, $idsStr)";
+        }
+        
+        return $this->db->fetchAll($sql);
+    }
 }
 

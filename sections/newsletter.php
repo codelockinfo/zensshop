@@ -1,94 +1,52 @@
 <?php
-if (!isset($baseUrl)) {
-    require_once __DIR__ . '/../includes/functions.php';
-    $baseUrl = getBaseUrl();
-}
+require_once __DIR__ . '/../classes/Database.php';
+
+$db = Database::getInstance();
+
+// Fetch settings
+$data = $db->fetchOne("SELECT * FROM section_newsletter LIMIT 1");
+
+if (!$data) return;
+
+$bgImage = $data['background_image'] ? getBaseUrl() . '/' . $data['background_image'] : '';
+$heading = $data['heading'] ?? 'Join our family';
+$subheading = $data['subheading'] ?? 'Promotions, new products and sales. Directly to your inbox.';
+$btnText = $data['button_text'] ?? 'Subscribe';
+$footer = $data['footer_content'] ?? '';
+
+// Determine Background Style
+$bgStyle = $bgImage ? "background-image: url('{$bgImage}');" : "background-color: #f3f4f6;";
 ?>
-<section class="py-16 md:py-24 relative overflow-hidden" style="background: linear-gradient(to right, #8B7355 0%, #D4C5B9 100%);">
-    <div class="absolute inset-0 bg-cover bg-center" style="background-image: url('https://images.unsplash.com/photo-1611591437281-460bfbe1220a?w=1200'); filter: blur(8px); opacity: 0.6;"></div>
-    
-    <div class="container mx-auto px-4 relative z-10">
-        <div class="max-w-2xl mx-auto bg-white rounded-2xl shadow-2xl p-8 md:p-12">
-            <div class="text-center mb-8">
-                <h2 class="text-2xl md:text-3xl font-heading font-bold mb-4 text-black">Join our family</h2>
-                <p class="text-gray-700 text-sm md:text-md">Promotions, new products and sales. Directly to your inbox.</p>
-            </div>
-            
-            <form id="globalNewsletterForm" class="space-y-4">
-                <div class="flex flex-col md:flex-row gap-3">
-                    <input type="email" 
-                        name="email" 
-                        placeholder="Your email address..." 
-                        required
-                        class="flex-1 px-4 py-3 border"
-                        style="border-radius: 50px;">
-                    
-                    <button type="submit" 
-                            class="bg-black text-white px-8 py-3 hover:bg-gray-800 transition font-medium whitespace-nowrap"
-                            style="border-radius: 50px;">
-                        Subscribe
-                    </button>
-                </div>
-                
-                <!-- Message Container -->
-                <div id="globalNewsletterMessage" class="hidden text-center text-sm"></div>
-                
-                <p class="text-xs md:text-sm text-gray-600 text-center mt-4">
-                    Your personal data will be used to support your experience throughout this website, and for other purposes described in our <a href="<?php echo url('privacy.php'); ?>" class="underline hover:text-gray-900">Privacy Policy</a>.
-                </p>
-            </form>
+
+<section class="py-20 md:py-24 bg-cover bg-center bg-no-repeat relative flex items-center justify-center min-h-[400px]" style="<?php echo $bgStyle; ?>">
+    <!-- Overlay if image is used -->
+    <?php if($bgImage): ?>
+    <div class="absolute inset-0 bg-black bg-opacity-10 backdrop-blur-[2px]"></div>
+    <?php endif; ?>
+
+    <div class="bg-white rounded-xl shadow-2xl p-8 md:p-10 max-w-2xl w-full mx-4 relative z-10 text-center">
+        <h2 class="text-3xl font-bold mb-3 text-gray-900"><?php echo htmlspecialchars($heading); ?></h2>
+        
+        <?php if($subheading): ?>
+        <p class="text-gray-600 mb-8"><?php echo htmlspecialchars($subheading); ?></p>
+        <?php endif; ?>
+
+        <form id="globalNewsletterForm" class="flex flex-col md:flex-row gap-3 mb-6">
+            <input type="email" name="email" placeholder="Your email address..." 
+                class="flex-grow border border-gray-300 rounded px-4 py-3 focus:outline-none focus:ring-2 focus:ring-black focus:border-transparent" 
+                required>
+            <button type="submit" 
+                class="bg-black text-white font-bold px-8 py-3 rounded hover:bg-gray-800 transition transform hover:scale-105">
+                <?php echo htmlspecialchars($btnText); ?>
+            </button>
+        </form>
+
+        <div id="globalNewsletterMessage" class="hidden text-sm mb-4"></div>
+
+        <?php if($footer): ?>
+        <div class="text-xs text-gray-500 leading-relaxed max-w-lg mx-auto">
+            <?php echo $footer; // Allow HTML for links ?>
         </div>
+        <?php endif; ?>
     </div>
 </section>
-
-<script>
-document.addEventListener('DOMContentLoaded', function() {
-    const form = document.getElementById('globalNewsletterForm');
-    if(form) {
-        form.addEventListener('submit', async function(e) {
-            e.preventDefault();
-            console.log('Global Newsletter Form Submitted');
-            
-            const btn = this.querySelector('button[type="submit"]');
-            const origText = btn.innerText;
-            btn.innerText = 'Subscribing...';
-            btn.disabled = true;
-
-            const email = this.querySelector('input[name="email"]').value;
-            
-            try {
-                // Determine base URL dynamically if PHP var is empty, usually passed from server
-                let baseUrl = '<?php echo isset($baseUrl) ? $baseUrl : ""; ?>';
-                if(!baseUrl) {
-                    if (typeof BASE_URL !== 'undefined') {
-                        baseUrl = BASE_URL;
-                    } else if (!baseUrl) {
-                        baseUrl = ''; // If at root, empty string or / is fine for relative paths
-                    } 
-                }
-
-                const response = await fetch(baseUrl + '/api/subscribe.php', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ email: email })
-                });
-                
-                const data = await response.json();
-                
-                if (data.success) {
-                    alert(data.message);
-                    this.reset();
-                } else {
-                    alert(data.message || 'Something went wrong. Please try again.');
-                }
-            } catch (error) {
-                console.error(error);
-                alert('An error occurred. Please try again.');
-            } finally {
-                btn.innerText = origText;
-                btn.disabled = false;
-            }
-        });
-    }
-});
-</script>

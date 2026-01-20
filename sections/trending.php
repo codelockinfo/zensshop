@@ -2,9 +2,23 @@
 require_once __DIR__ . '/../classes/Product.php';
 require_once __DIR__ . '/../includes/functions.php';
 
-    $baseUrl = getBaseUrl();
+$baseUrl = getBaseUrl();
+$db = Database::getInstance();
 $product = new Product();
-$products = $product->getTrending(6); // Get more products for slider
+
+// Check for manual selection from dedicated table
+$products = $db->fetchAll(
+    "SELECT p.* 
+     FROM products p 
+     JOIN section_trending_products h ON p.product_id = h.product_id 
+     WHERE p.status = 'active' 
+     ORDER BY h.sort_order ASC"
+);
+
+// Fallback if no specific products selected
+if (empty($products)) {
+    $products = $product->getTrending(6);
+}
 ?>
 
 <section id="trending-section" class="py-16 md:py-24 bg-white">

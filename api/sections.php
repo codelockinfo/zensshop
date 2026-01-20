@@ -87,13 +87,8 @@ try {
     // Get the output
     $html = ob_get_clean();
     
-    if (empty(trim($html))) {
-        http_response_code(500);
-        echo '<div class="text-center py-8 text-gray-500">Section content is empty</div>';
-        error_log("Section returned empty content: " . $section);
-    } else {
-        echo $html;
-    }
+    // Output the content (even if empty)
+    echo $html;
 } catch (Throwable $e) {
     // Clean any output
     if (ob_get_level() > 0) {

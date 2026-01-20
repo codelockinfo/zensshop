@@ -10,48 +10,118 @@ require_once __DIR__ . '/includes/header.php';
 
 <!-- Hero Section (Loaded First) -->
 <section id="hero-section" class="relative overflow-hidden">
+<?php
+// Fetch banners from database
+$banners = $db->fetchAll("SELECT * FROM banners WHERE active = 1 ORDER BY display_order ASC");
+
+// Fallback to default banners if none exist
+if (empty($banners)) {
+    $banners = [
+        [
+            'image_desktop' => 'https://images.unsplash.com/photo-1515562141207-7a88fb7ce338?w=1200',
+            'image_mobile' => '',
+            'subheading' => 'NEW ARRIVALS',
+            'heading' => 'Get Extra 15% Off',
+            'button_text' => 'Shop Collection',
+            'link' => url('shop.php')
+        ],
+        [
+            'image_desktop' => 'https://images.unsplash.com/photo-1605100804763-247f67b3557e?w=1200',
+            'image_mobile' => '',
+            'subheading' => 'TRENDING NOW',
+            'heading' => 'Elegant Jewelry Collection',
+            'button_text' => 'Explore Now',
+            'link' => url('shop.php')
+        ],
+        [
+            'image_desktop' => 'https://images.unsplash.com/photo-1599643478518-a784e5dc4c8f?w=1200',
+            'image_mobile' => '',
+            'subheading' => 'LIMITED TIME',
+            'heading' => 'Premium Quality, Best Prices',
+            'button_text' => 'Shop Now',
+            'link' => url('shop.php')
+        ]
+    ];
+}
+?>
     <div class="hero-slider relative">
-        <!-- Slide 1 -->
-        <div class="hero-slide active relative h-[600px] md:h-[700px] bg-cover bg-center" style="background-image: url('https://images.unsplash.com/photo-1515562141207-7a88fb7ce338?w=1200');">
-            <div class="absolute inset-0 bg-black bg-opacity-30"></div>
-            <div class="container mx-auto px-4 h-full flex items-center relative z-10">
-                <div class="max-w-md text-white">
-                    <p class="text-md md:text-lg uppercase tracking-wider mb-2">NEW ARRIVALS</p>
-                    <h1 class="text-4xl md:text-5xl font-heading font-bold mb-6">Get Extra 15% Off</h1>
-                    <a href="<?php echo url('shop.php'); ?>" class="inline-block border border-white px-8 py-3 hover:bg-white hover:text-black transition banner-btn">
-                        Shop Collection
-                    </a>
+        <?php foreach ($banners as $index => $banner): ?>
+            <?php 
+            // Helper to resolve link
+            if (!function_exists('resolveBannerLink')) {
+                function resolveBannerLink($url, $base) {
+                    if (empty($url)) return '';
+                    if (preg_match('/^https?:\/\//', $url)) return $url;
+                    if (strpos($url, 'mailto:') === 0 || strpos($url, 'tel:') === 0) return $url;
+                    return $base . '/' . ltrim($url, '/');
+                }
+            }
+
+            // Handle image URL
+            $bgImage = $banner['image_desktop'];
+            if (!preg_match('/^https?:\/\//', $bgImage)) {
+                $bgImage = $baseUrl . '/' . ltrim($bgImage, '/');
+            }
+            
+            $bgImageMobile = $banner['image_mobile'] ?? '';
+            if ($bgImageMobile && !preg_match('/^https?:\/\//', $bgImageMobile)) {
+                $bgImageMobile = $baseUrl . '/' . ltrim($bgImageMobile, '/');
+            }
+            
+            // Handle Links
+            $desktopLink = resolveBannerLink($banner['link'] ?? '', $baseUrl);
+            $mobileLink = resolveBannerLink(($banner['link_mobile'] ?? '') ?: ($banner['link'] ?? ''), $baseUrl);
+            ?>
+            <!-- Slide <?php echo $index + 1; ?> -->
+            <div class="hero-slide <?php echo $index === 0 ? 'active' : ''; ?> relative h-[600px] md:h-[700px]">
+                <!-- Desktop Image -->
+                <?php if($desktopLink): ?>
+                <a href="<?php echo htmlspecialchars($desktopLink); ?>" class="hidden md:block absolute inset-0 z-0">
+                    <div class="w-full h-full bg-cover bg-center" style="background-image: url('<?php echo htmlspecialchars($bgImage); ?>');"></div>
+                </a>
+                <?php else: ?>
+                <div class="absolute inset-0 bg-cover bg-center hidden md:block" style="background-image: url('<?php echo htmlspecialchars($bgImage); ?>');"></div>
+                <?php endif; ?>
+                
+                <!-- Mobile Image (Fallback to desktop if empty) -->
+                <?php if($mobileLink): ?>
+                <a href="<?php echo htmlspecialchars($mobileLink); ?>" class="md:hidden absolute inset-0 z-0">
+                    <div class="w-full h-full bg-cover bg-center" style="background-image: url('<?php echo htmlspecialchars($bgImageMobile ?: $bgImage); ?>');"></div>
+                </a>
+                <?php else: ?>
+                <div class="absolute inset-0 bg-cover bg-center md:hidden" style="background-image: url('<?php echo htmlspecialchars($bgImageMobile ?: $bgImage); ?>');"></div>
+                <?php endif; ?>
+                
+                <div class="absolute inset-0 bg-black bg-opacity-30"></div>
+                <div class="container mx-auto px-4 h-full flex items-center relative z-10">
+                    <div class="max-w-md text-white">
+                        <?php if (!empty($banner['subheading'])): ?>
+                            <p class="text-md md:text-lg uppercase tracking-wider mb-2"><?php echo htmlspecialchars($banner['subheading']); ?></p>
+                        <?php endif; ?>
+                        
+                        <?php if (!empty($banner['heading'])): ?>
+                            <h1 class="text-4xl md:text-5xl font-heading font-bold mb-6"><?php echo htmlspecialchars($banner['heading']); ?></h1>
+                        <?php endif; ?>
+                        
+                        <?php if (!empty($banner['button_text'])): ?>
+                            <!-- Desktop Button -->
+                            <?php if($desktopLink): ?>
+                            <a href="<?php echo htmlspecialchars($desktopLink); ?>" class="hidden md:inline-block border border-white px-8 py-3 hover:bg-white hover:text-black transition banner-btn relative z-10">
+                                <?php echo htmlspecialchars($banner['button_text']); ?>
+                            </a>
+                            <?php endif; ?>
+
+                            <!-- Mobile Button -->
+                            <?php if($mobileLink): ?>
+                            <a href="<?php echo htmlspecialchars($mobileLink); ?>" class="md:hidden inline-block border border-white px-8 py-3 hover:bg-white hover:text-black transition banner-btn relative z-10">
+                                <?php echo htmlspecialchars($banner['button_text']); ?>
+                            </a>
+                            <?php endif; ?>
+                        <?php endif; ?>
+                    </div>
                 </div>
             </div>
-        </div>
-        
-        <!-- Slide 2 -->
-        <div class="hero-slide relative h-[600px] md:h-[700px] bg-cover bg-center" style="background-image: url('https://images.unsplash.com/photo-1605100804763-247f67b3557e?w=1200');">
-            <div class="absolute inset-0 bg-black bg-opacity-30"></div>
-            <div class="container mx-auto px-4 h-full flex items-center relative z-10">
-                <div class="max-w-md text-white">
-                    <p class="text-md md:text-lg uppercase tracking-wider mb-2">TRENDING NOW</p>
-                    <h1 class="text-4xl md:text-5xl font-heading font-bold mb-6">Elegant Jewelry Collection</h1>
-                    <a href="<?php echo url('shop.php'); ?>" class="inline-block border border-white px-8 py-3 hover:bg-white hover:text-black transition banner-btn">
-                        Explore Now
-                    </a>
-                </div>
-            </div>
-        </div>
-        
-        <!-- Slide 3 -->
-        <div class="hero-slide relative h-[600px] md:h-[700px] bg-cover bg-center" style="background-image: url('https://images.unsplash.com/photo-1599643478518-a784e5dc4c8f?w=1200');">
-            <div class="absolute inset-0 bg-black bg-opacity-30"></div>
-            <div class="container mx-auto px-4 h-full flex items-center relative z-10">
-                <div class="max-w-md text-white">
-                    <p class="text-md md:text-lg uppercase tracking-wider mb-2">LIMITED TIME</p>
-                    <h1 class="text-4xl md:text-5xl font-heading font-bold mb-6">Premium Quality, Best Prices</h1>
-                    <a href="<?php echo url('shop.php'); ?>" class="inline-block border border-white px-8 py-3 hover:bg-white hover:text-black transition banner-btn">
-                        Shop Now
-                    </a>
-                </div>
-            </div>
-        </div>
+        <?php endforeach; ?>
         
         <!-- Navigation Arrows -->
         <button class="hero-prev absolute left-4 top-1/2 transform -translate-y-1/2 bg-white bg-opacity-50 hover:bg-opacity-75 rounded-full w-12 h-12 flex items-center justify-center text-black z-20 transition">
@@ -63,9 +133,9 @@ require_once __DIR__ . '/includes/header.php';
         
         <!-- Slide Indicators -->
         <div class="absolute bottom-4 left-1/2 transform -translate-x-1/2 z-20 flex items-center space-x-2">
-            <button class="hero-indicator active" data-slide="0"></button>
-            <button class="hero-indicator" data-slide="1"></button>
-            <button class="hero-indicator" data-slide="2"></button>
+            <?php foreach ($banners as $index => $banner): ?>
+                <button class="hero-indicator <?php echo $index === 0 ? 'active' : ''; ?>" data-slide="<?php echo $index; ?>"></button>
+            <?php endforeach; ?>
         </div>
     </div>
 </section>
@@ -191,10 +261,9 @@ document.addEventListener('DOMContentLoaded', function() {
     <div class="loading-spinner"></div>
 </section>
 
-<section id="newsletter-section" class="section-loading">
-    <div class="loading-spinner"></div>
+<section id="newsletter-section">
 </section>
 
-<script src="<?php echo $baseUrl; ?>/assets/js/lazy-load1.js"></script>
+<script src="<?php echo $baseUrl; ?>/assets/js/lazy-load2.js"></script>
 
 <?php require_once __DIR__ . '/includes/footer.php'; ?>

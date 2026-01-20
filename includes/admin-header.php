@@ -42,6 +42,7 @@ $action = $segments[count($segments) - 1] ?? '';  // add, list
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title><?php echo isset($pageTitle) ? $pageTitle . ' - ' : ''; ?>Admin Dashboard - Milano</title>
+    <link rel="icon" type="image/png" href="<?php echo $baseUrl; ?>/admin/Images/admin-logo.png">
     
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
@@ -327,7 +328,11 @@ $action = $segments[count($segments) - 1] ?? '';  // add, list
 $isSettingsPage = strpos($_SERVER['PHP_SELF'], 'settings') !== false
                || strpos($_SERVER['PHP_SELF'], 'header_info') !== false
                || strpos($_SERVER['PHP_SELF'], 'footer_info') !== false
-               || strpos($_SERVER['PHP_SELF'], 'menu_settings') !== false;
+               || strpos($_SERVER['PHP_SELF'], 'menu_settings') !== false
+               || strpos($_SERVER['PHP_SELF'], 'banner_settings') !== false
+               || strpos($_SERVER['PHP_SELF'], 'homepage_categories_settings') !== false
+               || strpos($_SERVER['PHP_SELF'], 'homepage_products_settings') !== false
+               || strpos($_SERVER['PHP_SELF'], 'homepage_videos_settings') !== false;
 
 $currentPage = basename($_SERVER['PHP_SELF']);
 ?>
@@ -352,6 +357,62 @@ $currentPage = basename($_SERVER['PHP_SELF']);
            title="Product Page">
             <i class="fas fa-gem text-xs"></i>
             <span>Product Page</span>
+        </a>
+
+        <a href="<?php echo url('admin/banner_settings.php'); ?>"
+           class="flex items-center space-x-2 py-1 px-4 text-sm <?php echo ($currentPage === 'banner_settings.php') ? 'bg-gray-700' : ''; ?>"
+           title="Banner Settings">
+            <i class="fas fa-images text-xs"></i>
+            <span>Banner</span>
+        </a>
+
+        <a href="<?php echo url('admin/special_offers_settings.php'); ?>"
+           class="flex items-center space-x-2 py-1 px-4 text-sm <?php echo ($currentPage === 'special_offers_settings.php') ? 'bg-gray-700' : ''; ?>"
+           title="Special Offers">
+            <i class="fas fa-tags text-xs"></i>
+            <span>Special Offers</span>
+        </a>
+
+        <a href="<?php echo url('admin/homepage_categories_settings.php'); ?>"
+           class="flex items-center space-x-2 py-1 px-4 text-sm <?php echo ($currentPage === 'homepage_categories_settings.php') ? 'bg-gray-700' : ''; ?>"
+           title="Homepage categories">
+            <i class="fas fa-th-large text-xs"></i>
+            <span>Categories</span>
+        </a>
+
+        <a href="<?php echo url('admin/homepage_products_settings.php'); ?>"
+           class="flex items-center space-x-2 py-1 px-4 text-sm <?php echo ($currentPage === 'homepage_products_settings.php') ? 'bg-gray-700' : ''; ?>"
+           title="Homepage Products">
+            <i class="fas fa-box-open text-xs"></i>
+            <span>Products</span>
+        </a>
+
+        <a href="<?php echo url('admin/homepage_videos_settings.php'); ?>"
+           class="flex items-center space-x-2 py-1 px-4 text-sm <?php echo ($currentPage === 'homepage_videos_settings.php') ? 'bg-gray-700' : ''; ?>"
+           title="Homepage Videos">
+            <i class="fas fa-video text-xs"></i>
+            <span>Video Reels</span>
+        </a>
+
+        <a href="<?php echo url('admin/philosophy_settings.php'); ?>"
+           class="flex items-center space-x-2 py-1 px-4 text-sm <?php echo ($currentPage === 'philosophy_settings.php') ? 'bg-gray-700' : ''; ?>"
+           title="Philosophy Section">
+            <i class="fas fa-quote-left text-xs"></i>
+            <span>Philosophy</span>
+        </a>
+
+        <a href="<?php echo url('admin/features_settings.php'); ?>"
+           class="flex items-center space-x-2 py-1 px-4 text-sm <?php echo ($currentPage === 'features_settings.php') ? 'bg-gray-700' : ''; ?>"
+           title="Features Section">
+            <i class="fas fa-star text-xs"></i>
+            <span>Features</span>
+        </a>
+
+        <a href="<?php echo url('admin/newsletter_settings.php'); ?>"
+           class="flex items-center space-x-2 py-1 px-4 text-sm <?php echo ($currentPage === 'newsletter_settings.php') ? 'bg-gray-700' : ''; ?>"
+           title="Newsletter Section">
+            <i class="fas fa-envelope text-xs"></i>
+            <span>Newsletter</span>
         </a>
 
         <a href="<?php echo url('admin/header_info.php'); ?>"

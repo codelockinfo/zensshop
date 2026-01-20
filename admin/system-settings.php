@@ -11,6 +11,23 @@ $settings = new Settings();
 
 // Handle form submission
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['action'] === 'update_settings') {
+    
+    // Handle File Uploads
+    $uploadFiles = ['setting_favicon_png', 'setting_favicon_ico'];
+    foreach ($uploadFiles as $fileKey) {
+        if (!empty($_FILES[$fileKey]['name'])) {
+            $uploadDir = __DIR__ . '/../assets/images/';
+            $ext = pathinfo($_FILES[$fileKey]['name'], PATHINFO_EXTENSION);
+            $prefix = ($fileKey === 'setting_favicon_ico') ? 'favicon' : 'favicon_browser';
+            $fileName = $prefix . '_' . time() . '.' . $ext;
+            
+            if (move_uploaded_file($_FILES[$fileKey]['tmp_name'], $uploadDir . $fileName)) {
+                $_POST[$fileKey] = $fileName;
+                $_POST['group_' . str_replace('setting_', '', $fileKey)] = 'seo';
+            }
+        }
+    }
+
     foreach ($_POST as $key => $value) {
         if ($key !== 'action' && strpos($key, 'setting_') === 0) {
             $settingKey = str_replace('setting_', '', $key);
@@ -26,6 +43,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
 $emailSettings = $settings->getByGroup('email');
 $generalSettings = $settings->getByGroup('general');
 $apiSettings = $settings->getByGroup('api');
+$seoSettings = $settings->getByGroup('seo');
 
 $pageTitle = 'System Settings';
 require_once __DIR__ . '/../includes/admin-header.php';
@@ -46,8 +64,123 @@ unset($_SESSION['success']);
         </div>
     <?php endif; ?>
 
-    <form method="POST" class="space-y-6">
+    <form method="POST" enctype="multipart/form-data" class="space-y-6">
         <input type="hidden" name="action" value="update_settings">
+
+        <!-- SEO & Branding Settings -->
+        <div class="bg-white rounded shadow p-6">
+            <h2 class="text-xl font-bold mb-4 flex items-center">
+                <i class="fas fa-globe mr-2 text-green-600"></i>
+                SEO & Branding
+            </h2>
+            <p class="text-sm text-gray-600 mb-6">Configure global SEO settings, favicon, and site identity.</p>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <!-- Site Name / Title Suffix -->
+                <div class="md:col-span-2">
+                     <label class="block text-sm font-medium text-gray-700 mb-2">Site Title (Suffix)</label>
+                     <input type="text" name="setting_site_title_suffix" value="<?php echo htmlspecialchars($settings->get('site_title_suffix', 'Milano - Elegant Jewelry Store')); ?>" class="w-full px-4 py-2 border rounded focus:ring-2 focus:ring-green-500" placeholder="e.g. My Awesome Shop">
+                     <p class="text-xs text-gray-500 mt-1">Appended to page titles (e.g., "Home - My Awesome Shop")</p>
+                     <input type="hidden" name="group_site_title_suffix" value="seo">
+                </div>
+
+                <!-- Favicon PNG (Browser) -->
+                <div>
+                     <label class="block text-sm font-medium text-gray-700 mb-2">Favicon (Browser Tab - PNG/JPG)</label>
+                     <?php $favPng = $settings->get('favicon_png'); ?>
+                     <div class="relative group cursor-pointer w-24 h-24 border-2 <?php echo !empty($favPng) ? 'border-gray-200' : 'border-dashed border-gray-300'; ?> rounded-lg overflow-hidden flex items-center justify-center bg-gray-50 hover:bg-gray-100 transition" onclick="document.getElementById('favPngInput').click()">
+                         
+                         <input type="file" id="favPngInput" name="setting_favicon_png" class="hidden" onchange="previewFavicon(this, 'previewPng')">
+                         <input type="hidden" name="group_favicon_png" value="seo">
+                         
+                         <div id="previewPng" class="w-full h-full flex items-center justify-center">
+                             <?php if($favPng): ?>
+                                 <img src="<?php echo getBaseUrl() . '/assets/images/' . $favPng; ?>" class="w-16 h-16 object-contain">
+                                 <!-- Overlay -->
+                                 <div class="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-40 transition flex items-center justify-center">
+                                      <i class="fas fa-camera text-white opacity-0 group-hover:opacity-100 transition"></i>
+                                 </div>
+                             <?php else: ?>
+                                 <div class="text-center text-gray-400">
+                                     <i class="fas fa-cloud-upload-alt text-2xl"></i>
+                                     <p class="text-[10px] mt-1">PNG</p>
+                                 </div>
+                             <?php endif; ?>
+                         </div>
+                     </div>
+                </div>
+
+                <!-- Favicon ICO (Google) -->
+                <div>
+                     <label class="block text-sm font-medium text-gray-700 mb-2">Favicon (Google - .ico)</label>
+                     <?php $favIco = $settings->get('favicon_ico'); ?>
+                     <div class="relative group cursor-pointer w-24 h-24 border-2 <?php echo !empty($favIco) ? 'border-gray-200' : 'border-dashed border-gray-300'; ?> rounded-lg overflow-hidden flex items-center justify-center bg-gray-50 hover:bg-gray-100 transition" onclick="document.getElementById('favIcoInput').click()">
+                         
+                         <input type="file" id="favIcoInput" name="setting_favicon_ico" class="hidden" onchange="previewFavicon(this, 'previewIco')">
+                         <input type="hidden" name="group_favicon_ico" value="seo">
+
+                         <div id="previewIco" class="w-full h-full flex items-center justify-center">
+                             <?php if($favIco): ?>
+                                 <img src="<?php echo getBaseUrl() . '/assets/images/' . $favIco; ?>" class="w-16 h-16 object-contain">
+                                 <!-- Overlay -->
+                                 <div class="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-40 transition flex items-center justify-center">
+                                      <i class="fas fa-camera text-white opacity-0 group-hover:opacity-100 transition"></i>
+                                 </div>
+                             <?php else: ?>
+                                 <div class="text-center text-gray-400">
+                                     <i class="fas fa-cloud-upload-alt text-2xl"></i>
+                                     <p class="text-[10px] mt-1">.ICO</p>
+                                 </div>
+                             <?php endif; ?>
+                         </div>
+                     </div>
+                </div>
+
+                <script>
+                function previewFavicon(input, containerId) {
+                    if (input.files && input.files[0]) {
+                        var reader = new FileReader();
+                        reader.onload = function(e) {
+                            const container = document.getElementById(containerId);
+                            container.innerHTML = `
+                                <img src="${e.target.result}" class="w-16 h-16 object-contain">
+                                <div class="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-40 transition flex items-center justify-center">
+                                     <i class="fas fa-camera text-white opacity-0 group-hover:opacity-100 transition"></i>
+                                </div>
+                            `;
+                            container.parentElement.classList.remove('border-dashed', 'border-gray-300');
+                            container.parentElement.classList.add('border-gray-200');
+                        }
+                        reader.readAsDataURL(input.files[0]);
+                    }
+                }
+                </script>
+
+                <!-- Global Meta Description -->
+                <div class="md:col-span-2">
+                     <label class="block text-sm font-medium text-gray-700 mb-2">Global Meta Description</label>
+                     <textarea name="setting_global_meta_description" rows="2" class="w-full px-4 py-2 border rounded focus:ring-2 focus:ring-green-500"><?php echo htmlspecialchars($settings->get('global_meta_description', '')); ?></textarea>
+                     <p class="text-xs text-gray-500 mt-1">Default description for pages that don't have a specific one.</p>
+                     <input type="hidden" name="group_global_meta_description" value="seo">
+                </div>
+
+                <!-- Global Schema JSON -->
+                <div class="md:col-span-2">
+                     <label class="block text-sm font-medium text-gray-700 mb-2">Global Schema (JSON)</label>
+                     <textarea name="setting_global_schema_json" rows="4" class="font-mono text-sm w-full px-4 py-2 border rounded focus:ring-2 focus:ring-green-500 bg-gray-50"><?php echo htmlspecialchars($settings->get('global_schema_json', '')); ?></textarea>
+                     <p class="text-xs text-gray-500 mt-1">Valid JSON-LD to be included on every page (e.g., Organization schema).</p>
+                     <input type="hidden" name="group_global_schema_json" value="seo">
+                </div>
+                
+                <!-- Google Analytics / Header Scripts -->
+                <div class="md:col-span-2">
+                     <label class="block text-sm font-medium text-gray-700 mb-2">Google Analytics / Header Scripts</label>
+                     <textarea name="setting_header_scripts" rows="5" class="font-mono text-sm w-full px-4 py-2 border rounded focus:ring-2 focus:ring-green-500 bg-gray-50"><?php echo htmlspecialchars($settings->get('header_scripts', '')); ?></textarea>
+                     <p class="text-xs text-gray-500 mt-1">Paste your Google Analytics code (G-XXXX) or any other scripts to be inserted into the <code>&lt;head&gt;</code> tag.</p>
+                     <input type="hidden" name="group_header_scripts" value="seo">
+                </div>
+            </div>
+        </div>
 
         <!-- Email Settings -->
         <div class="bg-white rounded shadow p-6">
