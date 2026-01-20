@@ -7,13 +7,21 @@ php_value max_execution_time 300
 php_value max_input_time 300
 
 <IfModule mod_rewrite.c>
+    Options -MultiViews
     RewriteEngine On
     RewriteBase /zensshop/
 
-    # Don't rewrite files or directories that exist
+    # 1. To externally redirect /file.php to /file (Optional, avoiding for now to prevent loops, just focusing on making /file work)
+    
+    # 2. Internally rewrite /file to /file.php if it exists
+    RewriteCond %{REQUEST_FILENAME} !-d
+    RewriteCond %{REQUEST_FILENAME}.php -f
+    RewriteRule ^([^\.]+)$ $1.php [NC,L]
+
+    # 3. Don't rewrite actual files or directories
     RewriteCond %{REQUEST_FILENAME} !-f
     RewriteCond %{REQUEST_FILENAME} !-d
 
-    # Rewrite slug to special-product.php
+    # 4. Landing Pages (Catch-all for slugs that are NOT real PHP files)
     RewriteRule ^([a-zA-Z0-9-_]+)$ special-product.php?page=$1 [QSA,L]
 </IfModule>
