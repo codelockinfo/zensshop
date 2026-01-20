@@ -195,11 +195,10 @@ $existingVariants = $product->getVariants($productId);
                     <input type="text" 
                            name="name" 
                            required
-                           maxlength="20"
                            placeholder="Enter product name"
                            value="<?php echo htmlspecialchars($productData['name']); ?>"
                            class="admin-form-input">
-                    <p class="text-sm text-gray-500 mt-1">Do not exceed 20 characters when entering the product name.</p>
+                    <p class="text-sm text-gray-500 mt-1"></p>
                 </div>
                 
                 <div class="admin-form-group">
@@ -242,10 +241,10 @@ $existingVariants = $product->getVariants($productId);
                     <label class="admin-form-label">Description *</label>
                     <textarea name="description" 
                               required
-                              maxlength="100"
+                              
                               placeholder="Description"
                               class="admin-form-input admin-form-textarea"><?php echo htmlspecialchars($productData['description'] ?? ''); ?></textarea>
-                    <p class="text-sm text-gray-500 mt-1">Do not exceed 100 characters when entering the product name.</p>
+                    <p class="text-sm text-gray-500 mt-1"></p>
                 </div>
         </div>
     </div>

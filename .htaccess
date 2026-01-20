@@ -9,12 +9,14 @@ php_value max_input_time 300
 <IfModule mod_rewrite.c>
     Options -MultiViews
     RewriteEngine On
-    # Adjust RewriteBase: Use / for live server (root domain). 
-    # If on localhost/zensshop, locally this might need to be /zensshop/
-    RewriteBase /
+    # Adjust RewriteBase: Use /zensshop/ for local WAMP Www directory
+    # IMPORTANT: Change this to / if your live site is at the root domain (e.g. zensshop.com)
+    RewriteBase /zensshop/
 
     # 1. Externally redirect /file.php to /file (Client Request -> Browser URL change)
     # This ensures that even if code links to 'contact.php', the user sees 'contact'
+    # Exclude POST requests to prevent 405 errors on form submission (preserving POST data)
+    RewriteCond %{REQUEST_METHOD} !POST
     RewriteCond %{THE_REQUEST} \s/+(.+?)\.php[\s?] [NC]
     RewriteRule ^ /%1 [R=301,L,NE]
 
