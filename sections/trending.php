@@ -60,7 +60,7 @@ if (empty($products)) {
                 <div class="relative overflow-hidden">
                     <a href="<?php echo url('product.php?slug=' . urlencode($item['slug'] ?? '')); ?>">
                         <img src="<?php echo htmlspecialchars($mainImage); ?>" alt="<?php echo htmlspecialchars($item['name']); ?>" 
-                             class="w-full h-64 object-cover group-hover:scale-110 transition-transform duration-500">
+                             class="w-full h-64 object-contain group-hover:scale-110 transition-transform duration-500">
                     </a>
                     
                     <!-- Discount Badge -->
