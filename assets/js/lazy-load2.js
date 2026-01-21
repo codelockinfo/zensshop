@@ -252,39 +252,42 @@ function initializeVideos() {
 
         function getMaxIndex() {
             if (!slider.children.length) return 0;
+
             const firstItem = slider.children[0];
             if (!firstItem) return 0;
 
-            const itemWidth = firstItem.offsetWidth || 300;
-            const gap = 24;
-            const itemWidthWithGap = itemWidth + gap;
-            const container = slider.parentElement;
-            const containerWidth = container ? container.offsetWidth : window.innerWidth;
-            const totalItems = slider.children.length;
-            const itemsPerView = Math.floor(containerWidth / itemWidthWithGap) || 1;
-            return totalItems > itemsPerView ? totalItems - itemsPerView : 0;
+            const itemWidth = firstItem.offsetWidth;
+            const style = window.getComputedStyle(slider);
+            const gap = parseFloat(style.gap) || 24;
+
+            const containerWidth = slider.parentElement.offsetWidth;
+            const scrollWidth = slider.scrollWidth;
+
+            if (scrollWidth <= containerWidth + 5) return 0;
+
+            const itemsInView = Math.floor((containerWidth + gap) / (itemWidth + gap));
+            return Math.max(0, slider.children.length - itemsInView);
         }
 
         function updateSlider(disableTransition = false) {
             if (!slider.children.length) return;
+
             const firstItem = slider.children[0];
             if (!firstItem) return;
 
-            const itemWidth = firstItem.offsetWidth || 300;
-            const gap = 24;
+            const itemWidth = firstItem.offsetWidth;
+            const style = window.getComputedStyle(slider);
+            const gap = parseFloat(style.gap) || 24;
+            const containerWidth = slider.parentElement.offsetWidth;
+            const scrollWidth = slider.scrollWidth;
             const maxIndex = getMaxIndex();
 
             if (currentIndex > maxIndex) currentIndex = maxIndex;
             if (currentIndex < 0) currentIndex = 0;
 
             let translateX;
-            // Alignment logic matching Best Selling
             if (currentIndex === maxIndex && maxIndex > 0) {
-                const container = slider.parentElement;
-                const containerWidth = container ? container.offsetWidth : window.innerWidth;
-                const totalItems = slider.children.length;
-                const totalSliderWidth = totalItems * itemWidth + (totalItems - 1) * gap;
-                translateX = containerWidth - totalSliderWidth;
+                translateX = containerWidth - scrollWidth;
             } else {
                 translateX = -currentIndex * (itemWidth + gap);
             }
@@ -293,7 +296,7 @@ function initializeVideos() {
             slider.style.transform = `translateX(${translateX}px)`;
             
             if (!disableTransition) {
-                 slider.style.transition = 'transform 0.5s ease-in-out';
+                slider.style.transition = 'transform 0.5s cubic-bezier(0.25, 0.46, 0.45, 0.94)';
             } else {
                  slider.style.transition = 'none';
             }
@@ -301,7 +304,7 @@ function initializeVideos() {
             // Update Buttons
             const btnPrev = prevBtnRef || document.getElementById('videoSectionPrev');
             const btnNext = nextBtnRef || document.getElementById('videoSectionNext');
-            if (btnPrev) btnPrev.style.display = currentIndex === 0 ? 'none' : 'flex';
+            if (btnPrev) btnPrev.style.display = currentIndex > 0 ? 'flex' : 'none';
             if (btnNext) btnNext.style.display = currentIndex < maxIndex ? 'flex' : 'none';
         }
 
@@ -446,31 +449,37 @@ function initializeBestSellingSlider() {
 
         function getMaxIndex() {
             if (!slider.children.length) return 0;
+
             const firstItem = slider.children[0];
             if (!firstItem) return 0;
 
-            const itemWidth = firstItem.offsetWidth || 300;
-            const gap = 24;
-            const itemWidthWithGap = itemWidth + gap;
+            const itemWidth = firstItem.offsetWidth;
+            const style = window.getComputedStyle(slider);
+            const gap = parseFloat(style.gap) || 24;
 
-            const container = slider.parentElement;
-            const containerWidth = container ? container.offsetWidth : window.innerWidth;
+            const containerWidth = slider.parentElement.offsetWidth;
+            const scrollWidth = slider.scrollWidth;
 
-            const totalItems = slider.children.length;
-            const itemsPerView = Math.floor(containerWidth / itemWidthWithGap) || 1;
+            // If everything fits, no need to scroll
+            if (scrollWidth <= containerWidth + 5) return 0;
 
-            return totalItems > itemsPerView ? totalItems - itemsPerView : 0;
+            // Calculate how many items are fully or mostly visible
+            const itemsInView = Math.floor((containerWidth + gap) / (itemWidth + gap));
+
+            return Math.max(0, slider.children.length - itemsInView);
         }
 
         function updateSlider(disableTransition = false) {
             if (!slider.children.length) return;
 
-            // Calculate scroll position based on actual dimensions
             const firstItem = slider.children[0];
             if (!firstItem) return;
 
-            const itemWidth = firstItem.offsetWidth || 300;
-            const gap = 24;
+            const itemWidth = firstItem.offsetWidth;
+            const style = window.getComputedStyle(slider);
+            const gap = parseFloat(style.gap) || 24;
+            const containerWidth = slider.parentElement.offsetWidth;
+            const scrollWidth = slider.scrollWidth;
             const maxIndex = getMaxIndex();
 
             // Clamp currentIndex to valid range
@@ -481,25 +490,20 @@ function initializeBestSellingSlider() {
                 currentIndex = 0;
             }
 
-            // Calculate scroll position - account for CSS gap (1.5rem = 24px)
-            // When at maxIndex, ensure last item aligns with container edge
             let translateX;
             if (currentIndex === maxIndex && maxIndex > 0) {
-                // At max position, calculate to align last item with right edge
-                const container = slider.parentElement;
-                const containerWidth = container ? container.offsetWidth : window.innerWidth;
-                const totalItems = slider.children.length;
-                const totalSliderWidth = totalItems * itemWidth + (totalItems - 1) * gap;
-                translateX = containerWidth - totalSliderWidth;
+                // At max position, perfectly align last item with right edge
+                translateX = containerWidth - scrollWidth;
             } else {
                 translateX = -currentIndex * (itemWidth + gap);
             }
 
-            translateX += (isDragging ? currentTranslate : 0);
+            // Apply dragging offset
+            const finalTranslate = translateX + (isDragging ? currentTranslate : 0);
 
-            slider.style.transform = `translateX(${translateX}px)`;
+            slider.style.transform = `translateX(${finalTranslate}px)`;
             if (!disableTransition) {
-                slider.style.transition = 'transform 0.5s ease-in-out';
+                slider.style.transition = 'transform 0.5s cubic-bezier(0.25, 0.46, 0.45, 0.94)';
             } else {
                 slider.style.transition = 'none';
             }
@@ -507,8 +511,9 @@ function initializeBestSellingSlider() {
             // Show/hide navigation buttons
             const btnPrev = prevBtnRef || document.getElementById('bestSellingPrev');
             const btnNext = nextBtnRef || document.getElementById('bestSellingNext');
+
             if (btnPrev) {
-                btnPrev.style.display = currentIndex === 0 ? 'none' : 'flex';
+                btnPrev.style.display = currentIndex > 0 ? 'flex' : 'none';
             }
             if (btnNext) {
                 btnNext.style.display = currentIndex < maxIndex ? 'flex' : 'none';
@@ -750,34 +755,37 @@ function initializeTrendingSlider() {
 
         function getMaxIndex() {
             if (!slider.children.length) return 0;
+
             const firstItem = slider.children[0];
             if (!firstItem) return 0;
 
-            const itemWidth = firstItem.offsetWidth || 300;
-            const gap = 24;
-            const itemWidthWithGap = itemWidth + gap;
+            const itemWidth = firstItem.offsetWidth;
+            const style = window.getComputedStyle(slider);
+            const gap = parseFloat(style.gap) || 24;
 
-            const container = slider.parentElement;
-            const containerWidth = container ? container.offsetWidth : window.innerWidth;
+            const containerWidth = slider.parentElement.offsetWidth;
+            const scrollWidth = slider.scrollWidth;
 
-            const totalItems = slider.children.length;
-            const itemsPerView = Math.floor(containerWidth / itemWidthWithGap) || 1;
+            // If everything fits, no need to scroll
+            if (scrollWidth <= containerWidth + 5) return 0;
 
-            return totalItems > itemsPerView ? totalItems - itemsPerView : 0;
+            const itemsInView = Math.floor((containerWidth + gap) / (itemWidth + gap));
+            return Math.max(0, slider.children.length - itemsInView);
         }
 
         function updateSlider(disableTransition = false) {
             if (!slider.children.length) return;
 
-            // Calculate scroll position based on actual dimensions
             const firstItem = slider.children[0];
             if (!firstItem) return;
 
-            const itemWidth = firstItem.offsetWidth || 300;
-            const gap = 24;
+            const itemWidth = firstItem.offsetWidth;
+            const style = window.getComputedStyle(slider);
+            const gap = parseFloat(style.gap) || 24;
+            const containerWidth = slider.parentElement.offsetWidth;
+            const scrollWidth = slider.scrollWidth;
             const maxIndex = getMaxIndex();
 
-            // Clamp currentIndex to valid range
             if (currentIndex > maxIndex) {
                 currentIndex = maxIndex;
             }
@@ -785,34 +793,27 @@ function initializeTrendingSlider() {
                 currentIndex = 0;
             }
 
-            // Calculate scroll position - account for CSS gap (1.5rem = 24px)
-            // When at maxIndex, ensure last item aligns with container edge
             let translateX;
             if (currentIndex === maxIndex && maxIndex > 0) {
-                // At max position, calculate to align last item with right edge
-                const container = slider.parentElement;
-                const containerWidth = container ? container.offsetWidth : window.innerWidth;
-                const totalItems = slider.children.length;
-                const totalSliderWidth = totalItems * itemWidth + (totalItems - 1) * gap;
-                translateX = containerWidth - totalSliderWidth;
+                translateX = containerWidth - scrollWidth;
             } else {
                 translateX = -currentIndex * (itemWidth + gap);
             }
 
-            translateX += (isDragging ? currentTranslate : 0);
+            const finalTranslate = translateX + (isDragging ? currentTranslate : 0);
 
-            slider.style.transform = `translateX(${translateX}px)`;
+            slider.style.transform = `translateX(${finalTranslate}px)`;
             if (!disableTransition) {
-                slider.style.transition = 'transform 0.5s ease-in-out';
+                slider.style.transition = 'transform 0.5s cubic-bezier(0.25, 0.46, 0.45, 0.94)';
             } else {
                 slider.style.transition = 'none';
             }
 
-            // Show/hide navigation buttons
             const btnPrev = prevBtnRef || document.getElementById('trendingPrev');
             const btnNext = nextBtnRef || document.getElementById('trendingNext');
+
             if (btnPrev) {
-                btnPrev.style.display = currentIndex === 0 ? 'none' : 'flex';
+                btnPrev.style.display = currentIndex > 0 ? 'flex' : 'none';
             }
             if (btnNext) {
                 btnNext.style.display = currentIndex < maxIndex ? 'flex' : 'none';
