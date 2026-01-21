@@ -36,6 +36,30 @@ function addColumnIfNotExists($table, $column, $definition) {
     }
 }
 
+// Function to safely create a table if it doesn't exist
+function createTableIfNotExists($tableName, $schema) {
+    global $db;
+    try {
+        // Simple check: Try select 1 limit 0. If fails, table likely doesn't exist.
+        // Better: SHOW TABLES LIKE ...
+        $check = $db->fetchAll("SHOW TABLES LIKE ?", [$tableName]);
+        if (empty($check)) {
+            echo "Creating table '$tableName'...\n";
+            $db->execute("CREATE TABLE `$tableName` ($schema) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4");
+            echo "Table '$tableName' created successfully.\n";
+            
+            // customized initialization for settings tables
+            if (strpos($tableName, '_settings') !== false) {
+                 $db->execute("INSERT INTO `$tableName` (id, heading) VALUES (1, 'Default Heading')");
+            }
+        } else {
+             echo "Table '$tableName' already exists. skipping creation.\n";
+        }
+    } catch (Exception $e) {
+        echo "Error creating table '$tableName': " . $e->getMessage() . "\n";
+    }
+}
+
 // 1. Update section_categories table
 addColumnIfNotExists('section_categories', 'heading', "VARCHAR(255) DEFAULT NULL");
 addColumnIfNotExists('section_categories', 'subheading', "TEXT DEFAULT NULL");
@@ -49,7 +73,16 @@ addColumnIfNotExists('section_best_selling_products', 'subheading', "TEXT DEFAUL
 addColumnIfNotExists('section_trending_products', 'heading', "VARCHAR(255) DEFAULT NULL");
 addColumnIfNotExists('section_trending_products', 'subheading', "TEXT DEFAULT NULL");
 
-// Add more updates here as needed
-// addColumnIfNotExists('some_other_table', 'new_col', "VARCHAR(255)...");
+// 4. Update categories table
+addColumnIfNotExists('categories', 'banner', "VARCHAR(255) DEFAULT NULL AFTER image");
+addColumnIfNotExists('categories', 'sort_order', "INT DEFAULT 0 AFTER status");
+
+// 5. Update special_offers table (User requested ALTER instead of new table)
+addColumnIfNotExists('special_offers', 'heading', "VARCHAR(255) DEFAULT NULL");
+addColumnIfNotExists('special_offers', 'subheading', "TEXT DEFAULT NULL");
+
+// 6. Update section_videos table (User requested ALTER instead of new table)
+addColumnIfNotExists('section_videos', 'heading', "VARCHAR(255) DEFAULT NULL");
+addColumnIfNotExists('section_videos', 'subheading', "TEXT DEFAULT NULL");
 
 echo "Database updates completed.\n";

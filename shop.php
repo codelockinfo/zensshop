@@ -62,28 +62,30 @@ $filters['offset'] = ($page - 1) * $perPage;
 $products = $product->getAll($filters);
 
 // Get all categories for sidebar
-$categories = $db->fetchAll("SELECT c.*, COUNT(pc.product_id) as product_count 
-                              FROM categories c 
-                              LEFT JOIN product_categories pc ON c.id = pc.category_id
-                              LEFT JOIN products p ON pc.product_id = p.id AND p.status = 'active'
-                              WHERE c.status = 'active' 
-                              GROUP BY c.id 
-                              ORDER BY c.sort_order ASC, c.name ASC");
+$categories = $db->fetchAll("SELECT c.*, 
+                               (SELECT COUNT(DISTINCT p.id) 
+                                FROM products p 
+                                LEFT JOIN product_categories pc ON p.id = pc.product_id
+                                WHERE p.status = 'active' AND (p.category_id = c.id OR pc.category_id = c.id)
+                               ) as product_count 
+                               FROM categories c 
+                               WHERE c.status = 'active' 
+                               ORDER BY c.sort_order ASC, c.name ASC");
 
 // Get stock counts
 $inStockCount = $db->fetchOne("SELECT COUNT(DISTINCT p.id) as count 
                                 FROM products p 
                                 LEFT JOIN product_categories pc ON p.id = pc.product_id
                                 WHERE p.status = 'active' AND p.stock_status = 'in_stock'" . 
-                                ($categorySlug ? " AND EXISTS (SELECT 1 FROM product_categories pc2 INNER JOIN categories c2 ON pc2.category_id = c2.id WHERE pc2.product_id = p.id AND c2.slug = ?)" : ""),
-                                $categorySlug ? [$categorySlug] : [])['count'] ?? 0;
+                                ($categorySlug ? " AND (p.category_id = (SELECT id FROM categories WHERE slug = ?) OR EXISTS (SELECT 1 FROM product_categories pc2 INNER JOIN categories c2 ON pc2.category_id = c2.id WHERE pc2.product_id = p.id AND c2.slug = ?))" : ""),
+                                $categorySlug ? [$categorySlug, $categorySlug] : [])['count'] ?? 0;
 
 $outOfStockCount = $db->fetchOne("SELECT COUNT(DISTINCT p.id) as count 
                                    FROM products p 
                                    LEFT JOIN product_categories pc ON p.id = pc.product_id
                                    WHERE p.status = 'active' AND p.stock_status = 'out_of_stock'" . 
-                                   ($categorySlug ? " AND EXISTS (SELECT 1 FROM product_categories pc2 INNER JOIN categories c2 ON pc2.category_id = c2.id WHERE pc2.product_id = p.id AND c2.slug = ?)" : ""),
-                                   $categorySlug ? [$categorySlug] : [])['count'] ?? 0;
+                                   ($categorySlug ? " AND (p.category_id = (SELECT id FROM categories WHERE slug = ?) OR EXISTS (SELECT 1 FROM product_categories pc2 INNER JOIN categories c2 ON pc2.category_id = c2.id WHERE pc2.product_id = p.id AND c2.slug = ?))" : ""),
+                                   $categorySlug ? [$categorySlug, $categorySlug] : [])['count'] ?? 0;
 
 // Get price range
 $priceRange = $db->fetchOne("SELECT MIN(COALESCE(p.sale_price, p.price)) as min_price, 
@@ -91,24 +93,31 @@ $priceRange = $db->fetchOne("SELECT MIN(COALESCE(p.sale_price, p.price)) as min_
                               FROM products p 
                               LEFT JOIN product_categories pc ON p.id = pc.product_id
                               WHERE p.status = 'active'" . 
-                              ($categorySlug ? " AND EXISTS (SELECT 1 FROM product_categories pc2 INNER JOIN categories c2 ON pc2.category_id = c2.id WHERE pc2.product_id = p.id AND c2.slug = ?)" : ""),
-                              $categorySlug ? [$categorySlug] : []);
+                              ($categorySlug ? " AND (p.category_id = (SELECT id FROM categories WHERE slug = ?) OR EXISTS (SELECT 1 FROM product_categories pc2 INNER JOIN categories c2 ON pc2.category_id = c2.id WHERE pc2.product_id = p.id AND c2.slug = ?))" : ""),
+                              $categorySlug ? [$categorySlug, $categorySlug] : []);
 $minPriceRange = $priceRange['min_price'] ?? 0;
 $maxPriceRange = $priceRange['max_price'] ?? 1000;
 ?>
 
 <!-- Hero Section -->
-<?php if ($category): ?>
-<section class="relative bg-gray-200 py-20 md:py-32">
-    <div class="container mx-auto px-4">
+<?php if ($category && !empty($category['banner'])): ?>
+    <?php
+    $bannerUrl = $baseUrl . '/' . $category['banner'];
+    ?>
+<section class="relative bg-cover bg-center py-20 md:py-32" 
+         style="background-image: url('<?php echo htmlspecialchars($bannerUrl); ?>');">
+    
+    <div class="absolute inset-0 bg-black bg-opacity-40"></div>
+
+    <div class="container mx-auto px-4 relative z-10">
         <div class="text-center">
-            <nav class="text-sm text-gray-600 mb-4">
-                <a href="<?php echo $baseUrl; ?>/" class="hover:text-primary">Home</a> > 
-                <span class="text-gray-900"><?php echo htmlspecialchars($category['name'] ?? ''); ?></span>
+            <nav class="text-sm text-gray-200 mb-4">
+                <a href="<?php echo $baseUrl; ?>/" class="hover:text-white">Home</a> > 
+                <span class="text-white"><?php echo htmlspecialchars($category['name'] ?? ''); ?></span>
             </nav>
-            <h1 class="text-2xl md:text-4xl font-heading font-bold mb-4"><?php echo htmlspecialchars($category['name'] ?? ''); ?></h1>
+            <h1 class="text-2xl md:text-4xl font-heading font-bold mb-4 text-white"><?php echo htmlspecialchars($category['name'] ?? ''); ?></h1>
             <?php if (!empty($category['description'])): ?>
-            <p class="text-sm text-gray-600 max-w-2xl mx-auto"><?php echo htmlspecialchars($category['description'] ?? ''); ?></p>
+            <p class="text-sm text-gray-100 max-w-2xl mx-auto"><?php echo htmlspecialchars($category['description'] ?? ''); ?></p>
             <?php endif; ?>
         </div>
     </div>
@@ -119,10 +128,12 @@ $maxPriceRange = $priceRange['max_price'] ?? 1000;
         <div class="text-center">
             <nav class="text-sm text-gray-600 mb-4">
                 <a href="<?php echo $baseUrl; ?>/" class="hover:text-primary">Home</a> > 
-                <span class="text-gray-900">Shop</span>
+                <span class="text-gray-900"><?php echo htmlspecialchars($category['name'] ?? 'Shop'); ?></span>
             </nav>
-            <h1 class="text-2xl md:text-4xl font-heading font-bold mb-4">Shop</h1>
-            <p class="text-sm text-gray-600 max-w-2xl mx-auto">Discover our curated collection of products</p>
+            <h1 class="text-2xl md:text-4xl font-heading font-bold mb-4"><?php echo htmlspecialchars($category['name'] ?? 'Shop'); ?></h1>
+            <p class="text-sm text-gray-600 max-w-2xl mx-auto">
+                <?php echo htmlspecialchars($category['description'] ?? 'Discover our curated collection of products'); ?>
+            </p>
         </div>
     </div>
 </section>

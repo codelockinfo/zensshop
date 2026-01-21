@@ -30,7 +30,7 @@ $recentOrders = $db->fetchAll("SELECT * FROM orders ORDER BY created_at DESC LIM
 
 // Get top products
 $topProducts = $db->fetchAll("
-    SELECT p.id, p.name, p.price, COUNT(oi.id) as order_count, SUM(oi.quantity) as total_sold
+    SELECT p.id, p.name, COUNT(oi.id) as order_count, SUM(oi.quantity) as total_sold, SUM(oi.subtotal) as total_revenue
     FROM products p
     LEFT JOIN order_items oi ON p.id = oi.product_id
     LEFT JOIN orders o ON oi.order_id = o.id
@@ -165,7 +165,7 @@ $salesByStatus = $db->fetchAll("
                 </div>
                 <div class="text-right">
                     <p class="font-bold text-sm md:text-base"><?php echo number_format($item['total_sold'] ?? 0); ?> sold</p>
-                    <p class="text-gray-600 text-xs md:text-md"><?php echo format_price(($item['total_sold'] ?? 0) * $item['price']); ?></p>
+                    <p class="text-gray-600 text-xs md:text-md"><?php echo format_price($item['total_revenue'] ?? 0); ?></p>
                 </div>
             </div>
             <?php endforeach; ?>
@@ -279,20 +279,27 @@ document.addEventListener('DOMContentLoaded', function() {
                     <td><?php echo htmlspecialchars($orderItem['customer_name'] ?? 'N/A'); ?></td>
                     <td><?php echo date('M d, Y', strtotime($orderItem['created_at'])); ?></td>
                     <td>
-                        <span class="px-2 py-1 rounded text-xs <?php 
-                            $status = $orderItem['order_status'] ?? 'pending';
-                            echo $status === 'completed' || $status === 'delivered' ? 'bg-green-100 text-green-800' : 
-                                ($status === 'pending' ? 'bg-yellow-100 text-yellow-800' : 'bg-gray-100 text-gray-800'); 
-                        ?>">
-                            <?php echo htmlspecialchars(ucfirst($status)); ?>
+                        <?php 
+                        $orderStatus = $orderItem['order_status'] ?? 'pending';
+                        $isDelivered = ($orderStatus === 'delivered' || $orderStatus === 'completed');
+                        $isPending = ($orderStatus === 'pending');
+                        $statusBg = $isDelivered ? '#d1fae5' : ($isPending ? '#fef3c7' : '#f3f4f6');
+                        $statusText = $isDelivered ? '#065f46' : ($isPending ? '#92400e' : '#374151');
+                        ?>
+                        <span class="px-2 py-1 rounded shadow-sm" style="background-color: <?php echo $statusBg; ?>; color: <?php echo $statusText; ?>; font-size: 0.75rem; font-weight: 600; display: inline-block;">
+                            <?php echo ucfirst($orderStatus); ?>
                         </span>
                     </td>
                     <td>
-                        <span class="px-2 py-1 rounded text-xs <?php 
-                            echo $orderItem['payment_status'] === 'paid' ? 'bg-green-100 text-green-800' : 
-                                ($orderItem['payment_status'] === 'pending' ? 'bg-yellow-100 text-yellow-800' : 'bg-red-100 text-red-800'); 
-                        ?>">
-                            <?php echo htmlspecialchars(ucfirst($orderItem['payment_status'])); ?>
+                        <?php 
+                        $payStatus = $orderItem['payment_status'] ?? 'pending';
+                        $isPaid = ($payStatus === 'paid');
+                        $isPayPending = ($payStatus === 'pending');
+                        $payBg = $isPaid ? '#d1fae5' : ($isPayPending ? '#fef3c7' : '#fee2e2');
+                        $payText = $isPaid ? '#065f46' : ($isPayPending ? '#92400e' : '#991b1b');
+                        ?>
+                        <span class="px-2 py-1 rounded shadow-sm" style="background-color: <?php echo $payBg; ?>; color: <?php echo $payText; ?>; font-size: 0.75rem; font-weight: 600; display: inline-block;">
+                            <?php echo ucfirst($payStatus); ?>
                         </span>
                     </td>
                     <td class="font-bold"><?php echo format_price($orderItem['total_amount']); ?></td>

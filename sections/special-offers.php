@@ -16,10 +16,24 @@ try {
 if (empty($offers)) {
     // Optional: Keep hardcoded fallback or verify it's just empty
 }
+
+// Get Section Heading/Subheading from the first item (since it's denormalized)
+$sectionHeading = $offers[0]['heading'] ?? 'Special Offers';
+$sectionSubheading = $offers[0]['subheading'] ?? 'Grab limited-time deals on our best products.';
 ?>
 
 <section class="py-16 md:py-24 bg-white">
     <div class="container mx-auto px-4">
+        <!-- Section Header -->
+        <div class="text-center mb-12">
+            <?php if (!empty($sectionHeading)): ?>
+                <h2 class="text-3xl md:text-4xl font-bold font-heading text-gray-900 mb-3"><?php echo htmlspecialchars($sectionHeading); ?></h2>
+            <?php endif; ?>
+            <?php if (!empty($sectionSubheading)): ?>
+                <p class="text-gray-600 text-base md:text-lg"><?php echo htmlspecialchars($sectionSubheading); ?></p>
+            <?php endif; ?>
+        </div>
+
         <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
             <?php foreach ($offers as $offer): ?>
             <?php

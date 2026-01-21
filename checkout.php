@@ -438,6 +438,7 @@ nav.bg-white.sticky.top-0 {
                                     <input type="tel" name="phone" required 
                                            value="<?php echo htmlspecialchars($_POST['phone'] ?? ''); ?>"
                                            placeholder="425 151 2318"
+                                           maxlength="10"
                                            class="flex-1 min-w-0 px-4 py-3 border border-gray-300 border-l-0 rounded-r-lg focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent">
                                 </div>
                             </div>

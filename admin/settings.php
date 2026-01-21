@@ -338,16 +338,24 @@ require_once __DIR__ . '/../includes/admin-header.php';
 // Fetch all pages for selector
 $allPages = $db->fetchAll("SELECT id, name, slug FROM landing_pages ORDER BY name ASC");
 
-// Fetch active products for dropdown
+// Determine which page to edit
+$selectedSlug = $_GET['page'] ?? '';
+
+// If no slug provided, or if provided slug is invalid, fallback to the first available page
+if (empty($selectedSlug) && !empty($allPages)) {
+    $selectedSlug = $allPages[0]['slug'];
+}
+
+// Fetch active products for dropdown (Adding back)
 $products = $db->fetchAll("SELECT id, name, price, currency FROM products WHERE status = 'active' ORDER BY name ASC");
 
 // Fetch Current Page Data
 $lp = $db->fetchOne("SELECT * FROM landing_pages WHERE slug = ?", [$selectedSlug]);
 
-if (!$lp && $selectedSlug !== 'default') {
-    // Fallback if slug invalid
-    //$error = "Page not found, loading default.";
-    $lp = $db->fetchOne("SELECT * FROM landing_pages WHERE slug = 'default'");
+// If still no page found (e.g. invalid slug provided and not caught above), try first page again
+if (!$lp && !empty($allPages)) {
+    $selectedSlug = $allPages[0]['slug'];
+    $lp = $db->fetchOne("SELECT * FROM landing_pages WHERE slug = ?", [$selectedSlug]);
 }
 ?>
 
@@ -413,23 +421,23 @@ if (!$lp && $selectedSlug !== 'default') {
             <h3 class="font-bold text-lg mb-4 border-b pb-2">Select Page</h3>
             <ul class="space-y-2">
                 <?php foreach ($allPages as $p): ?>
-                <li>
-                    <div class="flex items-center group">
-                        <div class="flex-1 block px-3 py-2 rounded <?php echo $selectedSlug == $p['slug'] ? 'bg-blue-50 border-l-4 border-blue-600' : 'hover:bg-gray-50'; ?>">
-                           <a href="?page=<?php echo $p['slug']; ?>" class="block <?php echo $selectedSlug == $p['slug'] ? 'text-blue-600 font-bold' : 'text-gray-800 font-medium'; ?>">
+                <li class="min-w-0">
+                    <div class="flex items-center group w-full">
+                        <div class="flex-1 block px-3 py-2 rounded min-w-0 <?php echo $selectedSlug == $p['slug'] ? 'bg-blue-50 border-l-4 border-blue-600' : 'hover:bg-gray-50'; ?>">
+                           <a href="?page=<?php echo $p['slug']; ?>" class="block truncate <?php echo $selectedSlug == $p['slug'] ? 'text-blue-600 font-bold' : 'text-gray-800 font-medium'; ?>">
                                <?php echo htmlspecialchars($p['name']); ?>
                            </a>
-                           <div class="flex items-center justify-between mt-1 group-hover/link">
-                               <a href="<?php echo $baseUrl; ?>/<?php echo $p['slug']; ?>" target="_blank" class="text-xs text-gray-400 font-normal hover:text-blue-600 hover:underline truncate mr-2" title="View Live Page">
+                            <div class="flex items-center justify-between mt-1 group-hover/link min-w-0">
+                               <a href="<?php echo $baseUrl; ?>/<?php echo $p['slug']; ?>" target="_blank" class="text-xs text-gray-400 font-normal hover:text-blue-600 hover:underline truncate mr-2 block flex-1 min-w-0" title="<?php echo $baseUrl; ?>/<?php echo $p['slug']; ?>">
                                    <?php echo $baseUrl; ?>/<?php echo $p['slug']; ?> <i class="fas fa-external-link-alt text-[10px] ml-1"></i>
                                </a>
-                               <button type="button" onclick="copyLink('<?php echo $baseUrl; ?>/<?php echo $p['slug']; ?>')" class="text-xs text-gray-400 hover:text-blue-600 p-1" title="Copy Link">
+                               <button type="button" onclick="copyLink('<?php echo $baseUrl; ?>/<?php echo $p['slug']; ?>')" class="text-xs text-gray-400 hover:text-blue-600 p-1 flex-shrink-0" title="Copy Link">
                                    <i class="fas fa-copy"></i>
                                </button>
                            </div>
                         </div>
                         <?php if($p['slug'] !== 'default'): ?>
-                        <form method="POST" class="ml-2">
+                        <form method="POST" class="ml-2 flex-shrink-0">
                             <input type="hidden" name="action" value="delete_page">
                             <input type="hidden" name="page_id" value="<?php echo $p['id']; ?>">
                             <button type="submit" class="text-gray-400 hover:text-red-600 p-2" title="Delete Page">

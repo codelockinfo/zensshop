@@ -35,10 +35,10 @@ $categories = $db->fetchAll(
                     // Check if it's a full URL or relative path
                     if (strpos($category['image'], 'http://') === 0 || strpos($category['image'], 'https://') === 0) {
                         $categoryImage = $category['image'];
-                    } elseif (strpos($category['image'], '/') === 0) {
-                        $categoryImage = $category['image'];
                     } else {
-                        $categoryImage = $baseUrl . '/assets/images/uploads/' . $category['image'];
+                        // Database stores path like 'assets/images/categories/filename.jpg'
+                        // Just prepend base URL if it doesn't have a leading slash
+                        $categoryImage = $baseUrl . '/' . ltrim($category['image'], '/');
                     }
                 } else {
                     // Use inline SVG placeholder to prevent external requests and reload loops
@@ -50,7 +50,7 @@ $categories = $db->fetchAll(
                 <div class="relative overflow-hidden rounded-xl bg-gray-100 aspect-[3/4]">
                     <img src="<?php echo htmlspecialchars($categoryImage); ?>" 
                          alt="<?php echo htmlspecialchars($category['name']); ?>"
-                         class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
+                         class="w-full h-full object-contain group-hover:scale-110 transition-transform duration-500"
                          onerror="if(!this.dataset.fallback) { this.dataset.fallback='1'; this.onerror=null; this.src='data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNDAwIiBoZWlnaHQ9IjUwMCIgdmlld0JveD0iMCAwIDQwMCA1MDAiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+PHJlY3Qgd2lkdGg9IjQwMCIgaGVpZ2h0PSI1MDAiIGZpbGw9IiNGM0Y0RjYiLz48Y2lyY2xlIGN4PSIyMDAiIGN5PSIyMDAiIHI9IjUwIiBmaWxsPSIjOUI3QThBIi8+PHBhdGggZD0iTTEwMCAzNTBDMTAwIDMwMCAxNTAgMjUwIDIwMCAyNTBDMjUwIDI1MCAzMDAgMzAwIDMwMCAzNTAiIGZpbGw9IiM5QjdBOEEiLz48L3N2Zz4='; }">
                     <div class="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-10 transition-all duration-300"></div>
                     <!-- Collection Name Overlay Button -->

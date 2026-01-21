@@ -37,6 +37,9 @@ if (!$productData || $productData['status'] !== 'active') {
 $mainImage = !empty($landingPage['hero_image']) ? $baseUrl . '/' . $landingPage['hero_image'] : getProductImage($productData);
 $images = json_decode($productData['images'] ?? '[]', true);
 $price = $productData['sale_price'] ?? $productData['price'] ?? 0;
+$originalPrice = $productData['price'] ?? 0;
+$currentSalePrice = $productData['sale_price'] ?? 0;
+$hasSale = $currentSalePrice > 0 && $currentSalePrice < $originalPrice;
 
 // Setup Gallery Pool for Rotation
 $galleryPool = [];
@@ -371,12 +374,25 @@ require_once __DIR__ . '/includes/header.php';
                     <?php echo htmlspecialchars($heroTitle); ?>
                 </h1>
                 
+                <?php // Price variables already defined at top ?>
+
                 <div class="mb-10 max-w-xl mx-auto lg:mx-0 leading-relaxed text-lg opacity-80">
                     <?php echo nl2br(htmlspecialchars($heroDescription)); ?>
                 </div>
+
+                <div class="product-price-container mb-6 flex items-center gap-3 justify-center lg:justify-start">
+                    <span class="text-xl font-bold text-gray-500 uppercase">Price:</span>
+                    <?php if ($hasSale): ?>
+                        <span class="text-xl font-bold text-red-600 line-through opacity-70"><?php echo format_price($originalPrice, $productData['currency'] ?? 'INR'); ?></span>
+                        <span class="text-xl font-bold text-gray-900"><?php echo format_price($currentSalePrice, $productData['currency'] ?? 'INR'); ?></span>
+                        <span class="bg-red-500 text-white text-[10px] font-bold px-2 py-0.5 rounded ml-2">-<?php echo round((($originalPrice - $currentSalePrice) / $originalPrice) * 100); ?>% OFF</span>
+                    <?php else: ?>
+                        <span class="text-xl font-bold text-gray-900"><?php echo format_price($originalPrice, $productData['currency'] ?? 'INR'); ?></span>
+                    <?php endif; ?>
+                </div>
                 
                 <button onclick="spAddToCart(<?php echo $productData['id']; ?>, this)" class="btn-accent px-10 py-4 rounded text-lg font-medium tracking-wide uppercase transition shadow-xl hover:shadow-2xl transform hover:-translate-y-0.5" data-loading-text="Adding...">
-                    Add to your cart — <?php echo format_price($price, $productData['currency'] ?? 'USD'); ?>
+                    Add to your cart
                 </button>
             </div>
             
@@ -552,7 +568,18 @@ require_once __DIR__ . '/includes/header.php';
                         <div class="text-lg leading-8 space-y-6 opacity-80">
                             <p><?php echo nl2br(htmlspecialchars($aboutText)); ?></p>
                         </div>
-                        <div class="mt-12">
+
+                        <div class="product-price-container mb-6 flex items-center gap-3">
+                            <span class="text-xl font-bold text-gray-500 uppercase">Price:</span>
+                            <?php if ($hasSale): ?>
+                                <span class="text-xl font-bold text-red-600 line-through opacity-70"><?php echo format_price($originalPrice, $productData['currency'] ?? 'INR'); ?></span>
+                                <span class="text-xl font-bold text-gray-900"><?php echo format_price($currentSalePrice, $productData['currency'] ?? 'INR'); ?></span>
+                                <span class="bg-red-500 text-white text-[10px] font-bold px-2 py-0.5 rounded ml-2">-<?php echo round((($originalPrice - $currentSalePrice) / $originalPrice) * 100); ?>% OFF</span>
+                            <?php else: ?>
+                                <span class="text-xl font-bold text-gray-900"><?php echo format_price($originalPrice, $productData['currency'] ?? 'INR'); ?></span>
+                            <?php endif; ?>
+                        </div>
+                        <div class="mt-6">
                              <button onclick="spAddToCart(<?php echo $productData['id']; ?>, this)" class="btn-accent px-10 py-4 rounded text-lg font-medium tracking-wide uppercase transition shadow-lg hover:shadow-xl" data-loading-text="Adding...">
                                 Shop Now
                             </button>

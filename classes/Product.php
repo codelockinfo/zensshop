@@ -27,19 +27,23 @@ class Product {
         $params = [];
         
         if (!empty($filters['category_id'])) {
-            $sql .= " AND EXISTS (
+            $sql .= " AND (p.category_id = ? OR EXISTS (
                 SELECT 1 FROM product_categories pc2 
                 WHERE pc2.product_id = p.id AND pc2.category_id = ?
-            )";
+            ))";
+            $params[] = $filters['category_id'];
             $params[] = $filters['category_id'];
         }
         
         if (!empty($filters['category_slug'])) {
-            $sql .= " AND EXISTS (
-                SELECT 1 FROM product_categories pc2 
-                INNER JOIN categories c2 ON pc2.category_id = c2.id
-                WHERE pc2.product_id = p.id AND c2.slug = ?
-            )";
+            $sql .= " AND (EXISTS (
+                SELECT 1 FROM categories c3 WHERE c3.id = p.category_id AND c3.slug = ?
+            ) OR EXISTS (
+                SELECT 1 FROM product_categories pc3 
+                INNER JOIN categories c2 ON pc3.category_id = c2.id
+                WHERE pc3.product_id = p.id AND c2.slug = ?
+            ))";
+            $params[] = $filters['category_slug'];
             $params[] = $filters['category_slug'];
         }
         
@@ -59,6 +63,7 @@ class Product {
             $params[] = $searchTerm;
         }
         
+        $sql .= " GROUP BY p.product_id";
         $sql .= " ORDER BY p.created_at DESC";
         
         if (!empty($filters['limit'])) {
@@ -72,6 +77,13 @@ class Product {
         }
         
         return $this->db->fetchAll($sql, $params);
+    }
+    
+    /**
+     * Get products by category slug
+     */
+    public function getByCategory($categorySlug) {
+        return $this->getAll(['category_slug' => $categorySlug]);
     }
     
     /**

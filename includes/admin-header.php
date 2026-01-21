@@ -99,10 +99,10 @@ $action = $segments[count($segments) - 1] ?? '';  // add, list
                     </div>
                 </div>
             </div>
-            <button class="text-gray-600 hover:text-gray-800">
+            <button class="text-gray-600 hover:text-gray-800 hidden">
                 <i class="fas fa-globe text-xl"></i>
             </button>
-            <button class="text-gray-600 hover:text-gray-800">
+            <button class="text-gray-600 hover:text-gray-800 hidden">
                 <i class="fas fa-moon text-xl"></i>
             </button>
             <!-- Notifications Dropdown -->

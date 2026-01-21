@@ -87,14 +87,14 @@ $customers = $customer->getAllCustomers($filters);
                             <i class="fas fa-user text-primary-dark text-xl"></i>
                         </div>
                         <div>
-                            <p class="font-semibold"><?php echo htmlspecialchars($item['name']); ?></p>
+                            <p class="font-semibold" style="margin-bottom: 2px;"><?php echo htmlspecialchars($item['name']); ?></p>
                             <?php if ($item['is_registered']): ?>
-                            <span class="inline-flex items-center px-2 py-0.5 rounded text-xs bg-green-100 text-green-800 mt-1">
-                                <i class="fas fa-check-circle mr-1"></i>Registered
+                            <span class="inline-flex items-center px-2 py-0.5 rounded shadow-sm" style="background-color: #d1fae5; color: #065f46; font-size: 0.75rem; font-weight: 600; vertical-align: middle;">
+                                <i class="fas fa-check-circle mr-1" style="font-size: 0.8rem;"></i>Registered
                             </span>
                             <?php else: ?>
-                            <span class="inline-flex items-center px-2 py-0.5 rounded text-xs bg-gray-100 text-gray-800 mt-1">
-                                <i class="fas fa-shopping-cart mr-1"></i>Guest
+                            <span class="inline-flex items-center px-2 py-0.5 rounded shadow-sm" style="background-color: #f3f4f6; color: #374151; font-size: 0.75rem; font-weight: 600; vertical-align: middle;">
+                                <i class="fas fa-shopping-cart mr-1" style="font-size: 0.8rem;"></i>Guest
                             </span>
                             <?php endif; ?>
                         </div>
@@ -106,14 +106,20 @@ $customers = $customer->getAllCustomers($filters);
                 <td><?php echo $item['total_orders']; ?></td>
                 <td><?php echo format_price($item['total_spent']); ?></td>
                 <td>
-                    <?php if ($item['is_registered']): ?>
-                    <span class="px-2 py-1 rounded <?php echo $item['status'] === 'active' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'; ?>">
-                        <?php echo ucfirst($item['status']); ?>
-                    </span>
+                    <?php 
+                    if ($item['is_registered']): 
+                        $status = !empty($item['status']) ? $item['status'] : 'active';
+                        $isActive = ($status === 'active');
+                        $bgColor = $isActive ? '#d1fae5' : '#fee2e2';
+                        $textColor = $isActive ? '#065f46' : '#991b1b';
+                    ?>
+                        <span class="px-2 py-1 rounded shadow-sm" style="background-color: <?php echo $bgColor; ?>; color: <?php echo $textColor; ?>; font-size: 0.75rem; font-weight: 600; display: inline-block;">
+                            <?php echo ucfirst($status); ?>
+                        </span>
                     <?php else: ?>
-                    <span class="px-2 py-1 rounded bg-gray-100 text-gray-800">
-                        Guest
-                    </span>
+                        <span class="px-2 py-1 rounded shadow-sm" style="background-color: #f3f4f6; color: #374151; font-size: 0.75rem; font-weight: 600; display: inline-block;">
+                            Guest
+                        </span>
                     <?php endif; ?>
                 </td>
                 <td>

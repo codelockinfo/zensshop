@@ -22,10 +22,22 @@ if (empty($videos)) {
         // ...
     ];
 }
+// Get Section Heading/Subheading from the first item
+$sectionHeading = $videos[0]['heading'] ?? 'Video Reels';
+$sectionSubheading = $videos[0]['subheading'] ?? 'Watch our latest stories';
 ?>
 
 <section class="bg-white py-12 relative group/section" id="uniqueVideoSection">
     <div class="container mx-auto px-4">
+        <!-- Section Header -->
+        <div class="text-center mb-10">
+            <?php if (!empty($sectionHeading)): ?>
+                <h2 class="text-3xl md:text-4xl font-bold font-heading text-gray-900 mb-3"><?php echo htmlspecialchars($sectionHeading); ?></h2>
+            <?php endif; ?>
+            <?php if (!empty($sectionSubheading)): ?>
+                <p class="text-gray-600 text-base md:text-lg"><?php echo htmlspecialchars($sectionSubheading); ?></p>
+            <?php endif; ?>
+        </div>
         
         <div class="relative">
             <!-- Navigation Buttons -->

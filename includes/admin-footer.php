@@ -25,7 +25,7 @@
         </div>
     </div>
     
-    <script src="<?php echo isset($baseUrl) ? $baseUrl : getBaseUrl(); ?>/assets/js/admin1.js"></script>
+    <script src="<?php echo isset($baseUrl) ? $baseUrl : getBaseUrl(); ?>/assets/js/admin2.js"></script>
     <script src="<?php echo isset($baseUrl) ? $baseUrl : getBaseUrl(); ?>/assets/js/admin-confirm.js"></script>
     <script src="<?php echo isset($baseUrl) ? $baseUrl : getBaseUrl(); ?>/assets/js/admin-search1.js"></script>
     <script src="<?php echo isset($baseUrl) ? $baseUrl : getBaseUrl(); ?>/assets/js/admin-notifications2.js"></script>
@@ -34,7 +34,7 @@
     <script>
     // Auto-dismiss alerts
     document.addEventListener('DOMContentLoaded', function() {
-        const alerts = document.querySelectorAll('.bg-green-100, .bg-red-100');
+        const alerts = document.querySelectorAll('.admin-alert');
         alerts.forEach(function(alert) {
             setTimeout(function() {
                 alert.style.transition = 'opacity 0.5s ease';
@@ -42,7 +42,7 @@
                 setTimeout(function() {
                     alert.remove();
                 }, 500);
-            }, 3000); // 3 seconds
+            }, 5000); // 5 seconds
         });
     });
     </script>

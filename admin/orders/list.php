@@ -48,6 +48,7 @@ $orders = $order->getAll($filters);
         <thead>
             <tr>
                 <th>Product</th>
+                <th>Customer</th>
                 <th>Order ID</th>
                 <th>Price</th>
                 <th>Quantity</th>
@@ -64,48 +65,51 @@ $orders = $order->getAll($filters);
             ?>
             <tr>
                 <td>
-                    <div class="flex items-center space-x-3">
-                        <img src="<?php echo htmlspecialchars($productImage); ?>" 
-                             alt="Product" 
-                             class="w-12 h-12 object-cover rounded"
-                             onerror="this.src='https://via.placeholder.com/50'">
-                        <span><?php echo htmlspecialchars($item['customer_name']); ?></span>
-                    </div>
+                    <img src="<?php echo htmlspecialchars($productImage); ?>" 
+                         alt="Product" 
+                         class="w-12 h-12 object-cover rounded"
+                         onerror="this.src='https://via.placeholder.com/50'">
+                </td>
+                <td>
+                    <span class="font-medium"><?php echo htmlspecialchars($item['customer_name']); ?></span>
                 </td>
                 <td><?php echo htmlspecialchars($item['order_number']); ?></td>
                 <td><?php echo format_currency($item['total_amount']); ?></td>
                 <td><?php echo $item['total_quantity'] ?? 0; ?></td>
-                <td><?php echo $item['payment_status']; ?></td>
-                <!-- <td>
-                    <span class="px-2 py-1 rounded <?php 
-                        echo $item['order_status'] === 'Success' || $item['order_status'] === 'delivered' ? 'bg-green-100 text-green-800' : 
-                            ($item['order_status'] === 'Cancel' || $item['order_status'] === 'cancelled' ? 'bg-orange-100 text-orange-800' : 
-                            'bg-gray-100 text-gray-800'); 
-                    ?>">
-                        <?php echo ucfirst($item['order_status']); ?>
+                <td>
+                    <?php 
+                    $payStatus = $item['payment_status'] ?? 'pending';
+                    $isPaid = ($payStatus === 'paid');
+                    $isPayPending = ($payStatus === 'pending');
+                    $payBg = $isPaid ? '#d1fae5' : ($isPayPending ? '#fef3c7' : '#fee2e2');
+                    $payText = $isPaid ? '#065f46' : ($isPayPending ? '#92400e' : '#991b1b');
+                    ?>
+                    <span class="px-2 py-1 rounded shadow-sm" style="background-color: <?php echo $payBg; ?>; color: <?php echo $payText; ?>; font-size: 0.75rem; font-weight: 600; display: inline-block;">
+                        <?php echo ucfirst($payStatus); ?>
                     </span>
-                </td> -->
-              <td>
-    <select
-        class="order-status-select px-2 py-1 rounded border text-sm
-        <?php 
-            echo ($item['order_status'] === 'delivered' || $item['order_status'] === 'success')
-                ? 'bg-green-100 text-green-800'
-                : (($item['order_status'] === 'cancelled' || $item['order_status'] === 'cancel')
-                    ? 'bg-orange-100 text-orange-800'
-                    : 'bg-gray-100 text-gray-800');
-        ?>"
-        data-order-id="<?php echo $item['id']; ?>"
-    >
-        <?php
-        $statuses = ['pending', 'processing', 'shipped', 'delivered', 'cancelled'];
-        foreach ($statuses as $status) {
-            $selected = ($item['order_status'] === $status) ? 'selected' : '';
-            echo "<option value='{$status}' {$selected}>" . ucfirst($status) . "</option>";
-        }
-        ?>
-    </select>
-</td>
+                </td>
+                <td>
+                    <?php 
+                    $orderStatus = $item['order_status'] ?? 'pending';
+                    $isDelivered = ($orderStatus === 'delivered' || $orderStatus === 'success');
+                    $isCancelled = ($orderStatus === 'cancelled' || $orderStatus === 'cancel');
+                    $selectBg = $isDelivered ? '#d1fae5' : ($isCancelled ? '#fee2e2' : '#f3f4f6');
+                    $selectText = $isDelivered ? '#065f46' : ($isCancelled ? '#991b1b' : '#374151');
+                    ?>
+                    <select
+                        class="order-status-select px-2 py-1 rounded border shadow-sm"
+                        style="background-color: <?php echo $selectBg; ?>; color: <?php echo $selectText; ?>; font-size: 0.75rem; font-weight: 600;"
+                        data-order-id="<?php echo $item['id']; ?>"
+                    >
+                        <?php
+                        $statuses = ['pending', 'processing', 'shipped', 'delivered', 'cancelled'];
+                        foreach ($statuses as $status) {
+                            $selected = ($orderStatus === $status) ? 'selected' : '';
+                            echo "<option value='{$status}' {$selected}>" . ucfirst($status) . "</option>";
+                        }
+                        ?>
+                    </select>
+                </td>
 
                 <td>
                     <button class="text-blue-500 hover:text-blue-700">Tracking</button>

@@ -104,7 +104,7 @@ require_once __DIR__ . '/../includes/admin-header.php';
 $categories = $db->fetchAll("SELECT * FROM section_categories ORDER BY sort_order ASC");
 ?>
 
-<div class="container mx-auto p-6">
+<div class="p-6 pl-0">
     <form method="POST" enctype="multipart/form-data">
         <!-- Top Action Bar -->
         <div class="flex justify-between items-center mb-6 bg-white p-4 rounded-lg shadow-sm border border-gray-200 sticky top-0 z-10">
@@ -120,16 +120,23 @@ $categories = $db->fetchAll("SELECT * FROM section_categories ORDER BY sort_orde
         </div>
 
         <?php if ($success): ?>
-            <div class="bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded relative mb-4">
+            <div class="bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded relative mb-4 admin-alert">
                 <?php echo htmlspecialchars($success); ?>
             </div>
         <?php endif; ?>
 
         <?php if ($error): ?>
-            <div class="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative mb-4">
+            <div class="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative mb-4 admin-alert">
                 <?php echo htmlspecialchars($error); ?>
             </div>
         <?php endif; ?>
+
+        </div>
+
+        <?php 
+        // Fetch valid categories for the dropdown
+        $validCategories = $db->fetchAll("SELECT id, name, slug FROM categories WHERE status = 'active' ORDER BY name ASC");
+        ?>
 
         <!-- Section Headers -->
         <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-6 mb-8">
@@ -155,6 +162,7 @@ $categories = $db->fetchAll("SELECT * FROM section_categories ORDER BY sort_orde
                         <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-16">Sort</th>
                         <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-32">Image</th>
                         <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Title</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Select Category</th>
                         <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Link</th>
                         <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider w-24">Action</th>
                     </tr>
@@ -179,7 +187,24 @@ $categories = $db->fetchAll("SELECT * FROM section_categories ORDER BY sort_orde
                             <input type="text" name="title[]" value="<?php echo htmlspecialchars($cat['title']); ?>" class="w-full border rounded p-2" required>
                         </td>
                         <td class="px-6 py-4">
-                            <input type="text" name="link[]" value="<?php echo htmlspecialchars($cat['link']); ?>" class="w-full border rounded p-2" placeholder="e.g., category.php?slug=rings">
+                            <select onchange="updateLink(this)" class="w-full border rounded p-2 text-sm">
+                                <option value="">-- Select --</option>
+                                <?php foreach ($validCategories as $vCat): ?>
+                                    <?php 
+                                    $isSelected = false;
+                                    // Check if link matches shop.php?category=slug
+                                    if (strpos($cat['link'], 'category=' . $vCat['slug']) !== false) {
+                                        $isSelected = true;
+                                    }
+                                    ?>
+                                    <option value="<?php echo htmlspecialchars($vCat['slug']); ?>" <?php echo $isSelected ? 'selected' : ''; ?>>
+                                        <?php echo htmlspecialchars($vCat['name']); ?>
+                                    </option>
+                                <?php endforeach; ?>
+                            </select>
+                        </td>
+                        <td class="px-6 py-4">
+                            <input type="text" name="link[]" value="<?php echo htmlspecialchars($cat['link']); ?>" class="w-full border rounded p-2 bg-gray-50" placeholder="e.g., shop.php?category=rings">
                         </td>
                         <td class="px-6 py-4 text-right">
                             <button type="button" onclick="markForDeletion(this, <?php echo $cat['id']; ?>)" class="text-red-500 hover:text-red-700 transition">
@@ -219,7 +244,17 @@ $categories = $db->fetchAll("SELECT * FROM section_categories ORDER BY sort_orde
             <input type="text" name="title[]" value="" class="w-full border rounded p-2" placeholder="Category Name" required>
         </td>
         <td class="px-6 py-4">
-            <input type="text" name="link[]" value="" class="w-full border rounded p-2" placeholder="Link URL">
+            <select onchange="updateLink(this)" class="w-full border rounded p-2 text-sm">
+                <option value="">-- Select --</option>
+                <?php foreach ($validCategories as $vCat): ?>
+                    <option value="<?php echo htmlspecialchars($vCat['slug']); ?>">
+                        <?php echo htmlspecialchars($vCat['name']); ?>
+                    </option>
+                <?php endforeach; ?>
+            </select>
+        </td>
+        <td class="px-6 py-4">
+            <input type="text" name="link[]" value="" class="w-full border rounded p-2 bg-gray-50" placeholder="Link URL">
         </td>
         <td class="px-6 py-4 text-right">
             <button type="button" onclick="removeRow(this)" class="text-red-500 hover:text-red-700 transition">
@@ -262,6 +297,18 @@ function previewImage(input) {
             }
         }
         reader.readAsDataURL(input.files[0]);
+    }
+}
+
+function updateLink(select) {
+    const slug = select.value;
+    if (slug) {
+        // Find the link input in the same row
+        const row = select.closest('tr');
+        const linkInput = row.querySelector('input[name="link[]"]');
+        if (linkInput) {
+            linkInput.value = 'shop.php?category=' + slug;
+        }
     }
 }
 

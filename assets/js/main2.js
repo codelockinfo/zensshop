@@ -486,6 +486,14 @@ function setBtnLoading(btn, isLoading) {
     if (isLoading) {
         if (!btn.hasAttribute('data-original-html')) {
             btn.setAttribute('data-original-html', btn.innerHTML);
+            
+            // Lock dimensions
+            const rect = btn.getBoundingClientRect();
+            btn.style.width = rect.width + 'px';
+            btn.style.height = rect.height + 'px';
+            btn.style.display = 'inline-flex';
+            btn.style.alignItems = 'center';
+            btn.style.justifyContent = 'center';
         }
         btn.disabled = true;
         btn.innerHTML = `<i class="fas fa-spinner fa-spin"></i>`;
@@ -494,6 +502,12 @@ function setBtnLoading(btn, isLoading) {
         const originalHtml = btn.getAttribute('data-original-html');
         if (originalHtml !== null) {
             btn.innerHTML = originalHtml;
+            // Restore dimensions
+            btn.style.width = '';
+            btn.style.height = '';
+            btn.style.display = '';
+            btn.style.alignItems = '';
+            btn.style.justifyContent = '';
         }
         btn.disabled = false;
         btn.classList.remove('opacity-75', 'cursor-not-allowed');

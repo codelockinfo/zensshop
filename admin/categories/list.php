@@ -12,6 +12,8 @@ require_once __DIR__ . '/../../includes/admin-header.php';
 
 $db = Database::getInstance();
 $categories = $db->fetchAll("SELECT * FROM categories ORDER BY sort_order ASC");
+// Debug: uncomment if needed
+// print_r($categories);
 ?>
 
 <div class="mb-6">
@@ -30,6 +32,7 @@ $categories = $db->fetchAll("SELECT * FROM categories ORDER BY sort_order ASC");
         <thead>
             <tr>
                 <th>ID</th>
+                <th>Image</th>
                 <th>Name</th>
                 <th>Slug</th>
                 <th>Status</th>
@@ -41,11 +44,26 @@ $categories = $db->fetchAll("SELECT * FROM categories ORDER BY sort_order ASC");
             <?php foreach ($categories as $cat): ?>
             <tr>
                 <td><?php echo $cat['id']; ?></td>
+                <td>
+                    <?php if (!empty($cat['image'])): ?>
+                        <img src="<?php echo $baseUrl . '/' . $cat['image']; ?>" alt="<?php echo htmlspecialchars($cat['name']); ?>" class="w-10 h-10 object-cover rounded border">
+                    <?php else: ?>
+                        <div class="w-10 h-10 bg-gray-200 rounded flex items-center justify-center text-gray-500">
+                            <i class="fas fa-image"></i>
+                        </div>
+                    <?php endif; ?>
+                </td>
                 <td><?php echo htmlspecialchars($cat['name']); ?></td>
                 <td><?php echo htmlspecialchars($cat['slug']); ?></td>
                 <td>
-                    <span class="px-2 py-1 rounded <?php echo $cat['status'] === 'active' ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-800'; ?>">
-                        <?php echo ucfirst($cat['status']); ?>
+                    <?php 
+                    $status = !empty($cat['status']) ? $cat['status'] : 'active';
+                    $isActive = ($status === 'active');
+                    $bgColor = $isActive ? '#d1fae5' : '#f3f4f6';
+                    $textColor = $isActive ? '#065f46' : '#374151';
+                    ?>
+                    <span class="px-2 py-1 rounded shadow-sm" style="background-color: <?php echo $bgColor; ?>; color: <?php echo $textColor; ?>; font-size: 0.75rem; font-weight: 600; display: inline-block;">
+                        <?php echo ucfirst($status); ?>
                     </span>
                 </td>
                 <td><?php echo $cat['sort_order']; ?></td>

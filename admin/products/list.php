@@ -24,8 +24,9 @@ $sql = "SELECT DISTINCT p.*, GROUP_CONCAT(DISTINCT c.name SEPARATOR ', ') as cat
 $params = [];
 
 if (!empty($search)) {
-    $sql .= " AND (p.name LIKE ? OR p.description LIKE ? OR p.sku LIKE ?)";
+    $sql .= " AND (p.name LIKE ? OR p.description LIKE ? OR p.sku LIKE ? OR p.id LIKE ?)";
     $searchTerm = "%{$search}%";
+    $params[] = $searchTerm;
     $params[] = $searchTerm;
     $params[] = $searchTerm;
     $params[] = $searchTerm;
@@ -44,25 +45,57 @@ $products = $db->fetchAll($sql, $params);
 <div class="admin-card mb-6">
     <div class="flex flex-col justify-between items-start space-y-4">
         <div class="flex-1">
-            <p class="text-xs md:text-sm text-gray-600">Tip search by Product ID: Each product is provided with a unique ID, which you can rely on to find the exact product you need.</p>
+            <p class="text-xs md:text-sm text-gray-600">Tip: Search by Product Name, SKU, or ID to find the exact product you need.</p>
         </div>
-        <div class="flex flex-col md:flex-row w-full md:w-auto items-center gap-4">
-            <!-- <select class="border rounded px-3 py-2 text-sm md:text-base w-full md:w-auto">
-                <option>Showing all entries</option>
-            </select> -->
-            <form method="GET" action="" class="w-full md:w-auto">
+        <div class="flex flex-col md:flex-row w-full items-center justify-between gap-4">
+            <form method="GET" action="" class="w-full md:flex-1 md:max-w-xl">
                 <input type="text" 
+                       id="searchInput"
                        name="search"
-                       placeholder="Search here..." 
+                       placeholder="Search by title, ID, or Product ID..." 
                        value="<?php echo htmlspecialchars($search); ?>"
-                       class="border rounded px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm md:text-base w-full md:w-80">
+                       class="border rounded px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm md:text-base w-full">
             </form>
-            <a href="<?php echo url('admin/products/add.php'); ?>" class="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600 transition text-sm md:text-base">
+            <a href="<?php echo url('admin/products/add.php'); ?>" class="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600 transition text-sm md:text-base whitespace-nowrap">
                     + Add new
             </a>
         </div>
     </div>
 </div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const searchInput = document.getElementById('searchInput');
+    const tableBody = document.querySelector('tbody');
+    let debounceTimer;
+
+    searchInput.addEventListener('input', function(e) {
+        const query = e.target.value;
+        
+        clearTimeout(debounceTimer);
+        debounceTimer = setTimeout(() => {
+            const url = '<?php echo $baseUrl; ?>/admin/search_products_ajax.php?search=' + encodeURIComponent(query);
+            
+            fetch(url)
+                .then(response => response.text())
+                .then(html => {
+                    tableBody.innerHTML = html;
+                })
+                .catch(err => console.error('Search failed', err));
+            
+            // Also update URL without reload
+            const newUrl = new URL(window.location);
+            if (query) {
+                newUrl.searchParams.set('search', query);
+            } else {
+                newUrl.searchParams.delete('search');
+            }
+            window.history.pushState({}, '', newUrl);
+            
+        }, 300); // 300ms debounce
+    });
+});
+</script>
 
 <div class="admin-card overflow-x-auto">
     <table class="admin-table">
@@ -74,6 +107,7 @@ $products = $db->fetchAll($sql, $params);
                 <th>Quantity</th>
                 <th>Sale</th>
                 <th>Stock</th>
+                <th>Status</th>
                 <th>Start date</th>
                 <th>Action</th>
             </tr>
@@ -85,9 +119,11 @@ $products = $db->fetchAll($sql, $params);
             <tr>
                 <td>
                     <div class="flex items-center space-x-3">
-                        <img src="<?php echo htmlspecialchars($mainImage); ?>" alt="<?php echo htmlspecialchars($item['name']); ?>" class="w-16 h-16 object-cover rounded">
-                        <div>
-                            <p class="font-semibold"><?php echo htmlspecialchars($item['name']); ?></p>
+                        <img src="<?php echo htmlspecialchars($mainImage); ?>" alt="<?php echo htmlspecialchars($item['name']); ?>" class="w-16 h-16 object-cover rounded flex-shrink-0">
+                        <div class="min-w-0">
+                            <p class="font-semibold text-sm line-clamp-2 max-w-[200px]" title="<?php echo htmlspecialchars($item['name']); ?>">
+                                <?php echo htmlspecialchars($item['name']); ?>
+                            </p>
                         </div>
                     </div>
                 </td>
@@ -96,8 +132,26 @@ $products = $db->fetchAll($sql, $params);
                 <td><?php echo $item['stock_quantity']; ?></td>
                 <td><?php echo $item['sale_price'] ? round((($item['price'] - $item['sale_price']) / $item['price']) * 100) : 0; ?>%</td>
                 <td>
-                    <span class="px-2 py-1 rounded <?php echo $item['stock_status'] === 'in_stock' ? 'bg-green-100 text-green-800' : 'bg-orange-100 text-orange-800'; ?>">
-                        <?php echo ucfirst(str_replace('_', ' ', $item['stock_status'])); ?>
+                    <?php 
+                    $stockStatus = !empty($item['stock_status']) ? $item['stock_status'] : 'in_stock';
+                    $isInStock = ($stockStatus === 'in_stock');
+                    $stockBg = $isInStock ? '#d1fae5' : '#ffedd5';
+                    $stockText = $isInStock ? '#065f46' : '#9a3412';
+                    ?>
+                    <span class="px-2 py-1 rounded shadow-sm" style="background-color: <?php echo $stockBg; ?>; color: <?php echo $stockText; ?>; font-size: 0.75rem; font-weight: 600; display: inline-block;">
+                        <?php echo ucfirst(str_replace('_', ' ', $stockStatus)); ?>
+                    </span>
+                </td>
+                <td>
+                    <?php 
+                    $status = !empty($item['status']) ? $item['status'] : 'draft';
+                    $isActive = ($status === 'active');
+                    $isDraft = ($status === 'draft');
+                    $statusBg = $isActive ? '#d1fae5' : ($isDraft ? '#dbeafe' : '#fee2e2');
+                    $statusText = $isActive ? '#065f46' : ($isDraft ? '#1e40af' : '#991b1b');
+                    ?>
+                    <span class="px-2 py-1 rounded shadow-sm" style="background-color: <?php echo $statusBg; ?>; color: <?php echo $statusText; ?>; font-size: 0.75rem; font-weight: 600; display: inline-block;">
+                        <?php echo ucfirst($status); ?>
                     </span>
                 </td>
                 <td><?php echo date('m/d/Y', strtotime($item['created_at'])); ?></td>

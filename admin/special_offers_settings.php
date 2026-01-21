@@ -13,7 +13,33 @@ $error = '';
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $action = $_POST['action'] ?? '';
     
-    if ($action === 'delete') {
+    if ($action === 'save_settings') {
+        // Save Heading/Subheading
+        $heading = $_POST['heading'] ?? '';
+        $subheading = $_POST['subheading'] ?? '';
+        
+        // Update ALL rows with the new heading/subheading (Since it's a section property denormalized)
+        // Check if any rows exist
+        $exists = $db->fetchOne("SELECT id FROM special_offers LIMIT 1");
+        
+        if ($exists) {
+            $db->execute("UPDATE special_offers SET heading = ?, subheading = ?", [$heading, $subheading]);
+        } else {
+             // If no offers exist, we can't strictly save the settings unless we created a dummy row or had a separate table.
+             // BUT, user insisted on altering table.
+             // To ensure settings persist even with 0 offers, we might need to rely on the separate table, 
+             // but per instructions we must use this table.
+             // We'll attempt to Insert a dummy row IF empty, but that might clutter. 
+             // Let's just update if exists. If not, we might lose settings until an offer is added.
+             // EDIT: We will insert a placeholder if empty to save settings.
+             $db->execute("INSERT INTO special_offers (heading, subheading, title, active) VALUES (?, ?, 'Placeholder', 0)", [$heading, $subheading]);
+        }
+        
+        $_SESSION['flash_success'] = "Section settings updated!";
+        header("Location: " . $_SERVER['PHP_SELF']);
+        exit;
+    }
+    elseif ($action === 'delete') {
         $id = (int)$_POST['id'];
         $db->execute("DELETE FROM special_offers WHERE id = ?", [$id]);
         $_SESSION['flash_success'] = "Offer deleted successfully!";
@@ -44,6 +70,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         
         if (empty($error)) {
             if ($id) {
+                // Fetch current heading/subheading to preserve them
+                $current = $db->fetchOne("SELECT heading, subheading FROM special_offers LIMIT 1");
+                $h = $current['heading'] ?? null;
+                $s = $current['subheading'] ?? null;
+
                 // Update existing
                 $sql = "UPDATE special_offers SET title = ?, link = ?, button_text = ?, display_order = ?, active = ?";
                 $params = [$title, $link, $button_text, $display_order, $active];
@@ -53,6 +84,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     $params[] = $image;
                 }
                 
+                // Preserve heading
+                if ($h !== null) {
+                    $sql .= ", heading = ?, subheading = ?";
+                    $params[] = $h;
+                    $params[] = $s;
+                }
+
                 $sql .= " WHERE id = ?";
                 $params[] = $id;
                 
@@ -63,9 +101,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 if (empty($image) && empty($_FILES['image']['name'])) {
                     $error = "Image is required for new offers.";
                 } else {
+                    // Fetch existing settings to apply to new row
+                    $current = $db->fetchOne("SELECT heading, subheading FROM special_offers LIMIT 1");
+                    $h = $current['heading'] ?? 'Special Offers';
+                    $s = $current['subheading'] ?? 'Grab limited-time deals on our best products.';
+
                     $db->execute(
-                        "INSERT INTO special_offers (title, link, button_text, image, display_order, active) VALUES (?, ?, ?, ?, ?, ?)",
-                        [$title, $link, $button_text, $image, $display_order, $active]
+                        "INSERT INTO special_offers (title, link, button_text, image, display_order, active, heading, subheading) VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
+                        [$title, $link, $button_text, $image, $display_order, $active, $h, $s]
                     );
                     $_SESSION['flash_success'] = "Offer added successfully!";
                 }
@@ -87,6 +130,13 @@ if (isset($_SESSION['flash_success'])) {
 
 $pageTitle = 'Special Offers Settings';
 require_once __DIR__ . '/../includes/admin-header.php';
+
+// Fetch Section Settings
+$sectionSettings = $db->fetchOne("SELECT heading, subheading FROM special_offers LIMIT 1");
+if (!$sectionSettings) {
+    // Default values if no record exists
+    $sectionSettings = ['heading' => 'Special Offers', 'subheading' => 'Grab limited-time deals on our best products.'];
+}
 
 // Fetch Offers
 $offers = $db->fetchAll("SELECT * FROM special_offers ORDER BY display_order ASC, created_at DESC");
@@ -111,6 +161,44 @@ $offers = $db->fetchAll("SELECT * FROM special_offers ORDER BY display_order ASC
             <span class="block sm:inline"><?php echo htmlspecialchars($error); ?></span>
         </div>
     <?php endif; ?>
+
+    <!-- Section Settings Card -->
+    <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-6 mb-8 transform transition hover:shadow-md">
+        <h3 class="text-lg font-bold text-gray-700 mb-4 border-b pb-2">Section Configuration</h3>
+        <form method="POST" class="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <input type="hidden" name="action" value="save_settings">
+            
+            <div class="col-span-1">
+                <label class="block text-sm font-bold text-gray-700 mb-2">Section Heading</label>
+                <div class="relative">
+                    <span class="absolute inset-y-0 left-0 pl-3 flex items-center text-gray-400">
+                        <i class="fas fa-heading"></i>
+                    </span>
+                    <input type="text" name="heading" value="<?php echo htmlspecialchars($sectionSettings['heading'] ?? ''); ?>" 
+                           class="w-full pl-10 border border-gray-300 p-2.5 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition" 
+                           placeholder="e.g. Special Offers">
+                </div>
+            </div>
+            
+            <div class="col-span-1">
+                <label class="block text-sm font-bold text-gray-700 mb-2">Section Subheading</label>
+                 <div class="relative">
+                    <span class="absolute inset-y-0 left-0 pl-3 flex items-center text-gray-400">
+                        <i class="fas fa-align-left"></i>
+                    </span>
+                    <input type="text" name="subheading" value="<?php echo htmlspecialchars($sectionSettings['subheading'] ?? ''); ?>" 
+                           class="w-full pl-10 border border-gray-300 p-2.5 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition" 
+                           placeholder="e.g. Exclusive deals just for you">
+                </div>
+            </div>
+            
+            <div class="col-span-1 md:col-span-2 flex justify-end mt-2">
+                <button type="submit" class="bg-gray-800 text-white px-6 py-2.5 rounded-lg hover:bg-black transition flex items-center shadow-lg">
+                    <i class="fas fa-save mr-2"></i> Update Settings
+                </button>
+            </div>
+        </form>
+    </div>
 
     <!-- Offers List -->
     <div class="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden">
