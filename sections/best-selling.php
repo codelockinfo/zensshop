@@ -59,7 +59,7 @@ if (empty($products)) {
                             <div class="relative overflow-hidden">
                                 <a href="<?php echo url('product.php?slug=' . urlencode($item['slug'] ?? '')); ?>">
                                     <img src="<?php echo htmlspecialchars($mainImage); ?>" alt="<?php echo htmlspecialchars($item['name']); ?>" 
-                                         class="w-full h-64 object-cover group-hover:scale-110 transition-transform duration-500">
+                                         class="w-full h-64 object-contain group-hover:scale-110 transition-transform duration-500">
                                 </a>
                                 
                                 <!-- Discount Badge -->
@@ -132,7 +132,7 @@ if (empty($products)) {
             </div>
             
             <?php if (!empty($products)): ?>
-            <!-- Navigation Arrows 1111 -->
+            <!-- Navigation Arrows -->
             <button class="absolute left-3 top-1/2 -translate-y-1/2 bg-white shadow-lg rounded-full w-12 h-12 flex items-center justify-center text-gray-800 hover:text-primary hover:bg-gray-50 transition z-10 best-selling-prev" id="bestSellingPrev">
                 <i class="fas fa-chevron-left"></i>
             </button>
