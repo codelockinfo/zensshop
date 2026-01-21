@@ -13,8 +13,14 @@ $categories = $db->fetchAll(
 <section class="py-16 md:py-24 bg-white">
     <div class="container mx-auto px-4">
         <div class="text-center mb-12">
-            <h2 class="text-2xl md:text-3xl font-heading font-bold mb-4">Shop By Category</h2>
-            <p class="text-gray-600 text-sm md:text-md max-w-2xl mx-auto">Express your style with our standout collection—fashion meets sophistication.</p>
+            <?php 
+                // Fetch section headers from first row
+                $sectionData = $db->fetchOne("SELECT heading, subheading FROM section_categories LIMIT 1");
+                $heading = !empty($sectionData['heading']) ? $sectionData['heading'] : 'Shop By Category';
+                $subheading = !empty($sectionData['subheading']) ? $sectionData['subheading'] : 'Express your style with our standout collection—fashion meets sophistication.';
+            ?>
+            <h2 class="text-2xl md:text-3xl font-heading font-bold mb-4"><?php echo htmlspecialchars($heading); ?></h2>
+            <p class="text-gray-600 text-sm md:text-md max-w-2xl mx-auto"><?php echo htmlspecialchars($subheading); ?></p>
         </div>
         
         <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-6">

@@ -260,13 +260,15 @@ $_COOKIE['recently_viewed'] = json_encode($recentIds);
                 
                 <!-- Action Buttons -->
                 <div class="flex flex-col sm:flex-row gap-4 mb-6">
-                    <button onclick="addToCartFromDetail(<?php echo $productData['id']; ?>)" 
-                            class="flex-1 bg-black text-white py-4 px-6 hover:bg-gray-800 transition font-semibold flex items-center justify-center add-to-cart-btn">
+                    <button onclick="addToCartFromDetail(<?php echo $productData['id']; ?>, this)" 
+                            class="flex-1 bg-black text-white py-4 px-6 hover:bg-gray-800 transition font-semibold flex items-center justify-center add-to-cart-btn"
+                            data-loading-text="Adding...">
                         <i class="fas fa-shopping-cart mr-2"></i>
                         Add To Cart
                     </button>
-                    <button onclick="buyNow(<?php echo $productData['id']; ?>)" 
-                            class="flex-1 bg-red-700 text-white py-4 px-6 hover:bg-red-600 transition font-semibold buy-now-btn">
+                    <button onclick="buyNow(<?php echo $productData['id']; ?>, this)" 
+                            class="flex-1 bg-red-700 text-white py-4 px-6 hover:bg-red-600 transition font-semibold buy-now-btn"
+                            data-loading-text="Processing...">
                         Buy It Now
                     </button>
                 </div>
@@ -568,12 +570,14 @@ function toggleSection(sectionId) {
     }
 }
 
-function addToCartFromDetail(productId) {
+function addToCartFromDetail(productId, btn) {
     const quantity = 1;
+    
+    if (btn) setBtnLoading(btn, true);
     
     // Use global addToCart function if available
     if (typeof addToCart === 'function') {
-        addToCart(productId, quantity);
+        addToCart(productId, quantity, btn);
     } else {
         // Fallback to direct API call
         fetch('<?php echo $baseUrl; ?>/api/cart.php', {
@@ -628,11 +632,15 @@ function addToCartFromDetail(productId) {
             } else {
                 alert('An error occurred while adding the product to cart');
             }
+        })
+        .finally(() => {
+            if (btn) setBtnLoading(btn, false);
         });
     }
 }
 
-function buyNow(productId) {
+function buyNow(productId, btn) {
+    if (btn) setBtnLoading(btn, true);
     // Add to cart and redirect to checkout
     fetch('<?php echo $baseUrl; ?>/api/cart.php', {
         method: 'POST',
@@ -645,11 +653,13 @@ function buyNow(productId) {
             window.location.href = '<?php echo url('checkout'); ?>';
         } else {
             alert(data.message || 'Failed to add product to cart');
+            if (btn) setBtnLoading(btn, false);
         }
     })
     .catch(error => {
         console.error('Error:', error);
-        alert('An error occurred');
+        alert('An error occurred. Please try again.');
+        if (btn) setBtnLoading(btn, false);
     });
 }
 
@@ -927,7 +937,7 @@ document.addEventListener('DOMContentLoaded', function() {
                         Cancel
                     </button>
                     <button type="submit" 
-                            class="px-6 py-2 bg-primary text-white rounded-lg hover:bg-primary-dark transition">
+                            class="px-6 py-2 bg-primary text-white rounded-lg hover:bg-primary-light hover:text-white transition">
                         Submit Review
                     </button>
                 </div>

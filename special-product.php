@@ -263,7 +263,8 @@ require_once __DIR__ . '/includes/header.php';
     const LANDING_BASE_URL = '<?php echo $baseUrl; ?>';
     
     // Custom Add To Cart for Landing Page
-    function spAddToCart(productId) {
+    function spAddToCart(productId, btn) {
+        if (btn) setBtnLoading(btn, true);
         fetch(`${LANDING_BASE_URL}/api/cart.php`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
@@ -277,12 +278,19 @@ require_once __DIR__ . '/includes/header.php';
                 countEls.forEach(el => el.textContent = data.cartCount);
                 
                 // Show site's cart drawer if available
-                const cartBtn = document.getElementById('cartBtn');
-                if(cartBtn) cartBtn.click();
-                else alert('Product added to cart!');
+                if (typeof openSideCart === 'function') {
+                    openSideCart(data.cart);
+                } else {
+                    const cartBtn = document.getElementById('cartBtn');
+                    if(cartBtn) cartBtn.click();
+                    else alert('Product added to cart!');
+                }
             }
         })
-        .catch(err => console.error(err));
+        .catch(err => console.error(err))
+        .finally(() => {
+            if (btn) setBtnLoading(btn, false);
+        });
     }
 </script>
 
@@ -367,7 +375,7 @@ require_once __DIR__ . '/includes/header.php';
                     <?php echo nl2br(htmlspecialchars($heroDescription)); ?>
                 </div>
                 
-                <button onclick="spAddToCart(<?php echo $productData['id']; ?>)" class="btn-accent px-10 py-4 rounded text-lg font-medium tracking-wide uppercase transition shadow-xl hover:shadow-2xl transform hover:-translate-y-0.5">
+                <button onclick="spAddToCart(<?php echo $productData['id']; ?>, this)" class="btn-accent px-10 py-4 rounded text-lg font-medium tracking-wide uppercase transition shadow-xl hover:shadow-2xl transform hover:-translate-y-0.5" data-loading-text="Adding...">
                     Add to your cart — <?php echo format_price($price, $productData['currency'] ?? 'USD'); ?>
                 </button>
             </div>
@@ -545,7 +553,7 @@ require_once __DIR__ . '/includes/header.php';
                             <p><?php echo nl2br(htmlspecialchars($aboutText)); ?></p>
                         </div>
                         <div class="mt-12">
-                             <button onclick="spAddToCart(<?php echo $productData['id']; ?>)" class="btn-accent px-10 py-4 rounded text-lg font-medium tracking-wide uppercase transition shadow-lg hover:shadow-xl">
+                             <button onclick="spAddToCart(<?php echo $productData['id']; ?>, this)" class="btn-accent px-10 py-4 rounded text-lg font-medium tracking-wide uppercase transition shadow-lg hover:shadow-xl" data-loading-text="Adding...">
                                 Shop Now
                             </button>
                         </div>
@@ -599,9 +607,9 @@ require_once __DIR__ . '/includes/header.php';
                          
                          <form id="landingNewsletterForm" class="flex flex-col sm:flex-row w-full gap-3 sm:gap-0">
                              <input type="email" name="email" placeholder="Enter your email" required class="w-full flex-grow px-5 py-3 md:px-6 md:py-4 bg-gray-50 border border-gray-200 rounded-lg sm:rounded-r-none focus:outline-none text-base md:text-lg focus:ring-2 focus:ring-gray-200 transition">
-                             <button type="submit" class="w-full sm:w-auto btn-accent px-8 py-3 md:py-4 rounded-lg sm:rounded-l-none text-sm md:text-base font-bold uppercase transition whitespace-nowrap shadow-md hover:shadow-lg transform active:scale-95">
+                              <button type="submit" class="w-full sm:w-auto btn-accent px-8 py-3 md:py-4 rounded-lg sm:rounded-l-none text-sm md:text-base font-bold uppercase transition whitespace-nowrap shadow-md hover:shadow-lg transform active:scale-95" data-loading-text="Subscribing...">
                                 Get Started
-                             </button>
+                              </button>
                          </form>
                          
                          <!-- Message Container -->
@@ -615,11 +623,7 @@ require_once __DIR__ . '/includes/header.php';
             document.getElementById('landingNewsletterForm').addEventListener('submit', async function(e) {
                 e.preventDefault();
                 const btn = this.querySelector('button');
-                const origText = btn.innerText;
-                const messageDiv = document.getElementById('landingNewsletterMessage');
-                
-                btn.innerText = 'Subscribing...';
-                btn.disabled = true;
+                if (btn) setBtnLoading(btn, true);
                 
                 // Hide any previous message
                 if (messageDiv) {
@@ -674,8 +678,7 @@ require_once __DIR__ . '/includes/header.php';
                         }, 5000);
                     }
                 } finally {
-                    btn.innerText = origText;
-                    btn.disabled = false;
+                    if (btn) setBtnLoading(btn, false);
                 }
             });
             </script>

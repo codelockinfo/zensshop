@@ -12,25 +12,25 @@ $baseUrl = getBaseUrl();
 $auth = new Auth();
 $auth->requireLogin();
 
-// Get order ID from URL
+// Get order identifier from URL
 $orderId = $_GET['id'] ?? null;
-
-// Convert to integer if it's a string number
-if ($orderId && is_numeric($orderId)) {
-    $orderId = (int)$orderId;
-}
-
-if (!$orderId) {
-    // Clear any output
-    while (ob_get_level() > 0) {
-        ob_end_clean();
-    }
-    header('Location: ' . $baseUrl . '/admin/orders/list.php');
-    exit;
-}
+$orderNumber = $_GET['order_number'] ?? null;
 
 $order = new Order();
-$orderData = $order->getById($orderId);
+$orderData = null;
+
+if ($orderNumber) {
+    $orderData = $order->getByOrderNumber($orderNumber);
+    if ($orderData) {
+        $orderId = $orderData['id'];
+    }
+} elseif ($orderId) {
+    // Convert to integer if it's a numeric ID
+    if (is_numeric($orderId)) {
+        $orderId = (int)$orderId;
+        $orderData = $order->getById($orderId);
+    }
+}
 
 if (!$orderData) {
     // Clear any output
@@ -56,7 +56,7 @@ require_once __DIR__ . '/../../includes/admin-header.php';
             <p class="text-gray-600">Dashboard > Order > Order Details</p>
         </div>
         <div class="flex items-center space-x-3">
-            <a href="<?php echo $baseUrl; ?>/admin/orders/edit.php?id=<?php echo $orderId; ?>" class="bg-green-500 text-white px-4 py-2 rounded hover:bg-green-600 transition">
+            <a href="<?php echo $baseUrl; ?>/admin/orders/edit.php?order_number=<?php echo urlencode($orderData['order_number']); ?>" class="bg-green-500 text-white px-4 py-2 rounded hover:bg-green-600 transition">
                 <i class="fas fa-edit mr-2"></i>Edit Order
             </a>
             <a href="<?php echo $baseUrl; ?>/admin/orders/list.php" class="bg-gray-500 text-white px-4 py-2 rounded hover:bg-gray-600 transition">

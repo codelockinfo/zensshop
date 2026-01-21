@@ -112,10 +112,10 @@ $orders = $order->getAll($filters);
                 </td>
                 <td>
                     <div class="flex items-center space-x-2">
-                        <a href="<?php echo $baseUrl; ?>/admin/orders/detail.php?id=<?php echo $item['id']; ?>" class="text-blue-500 hover:text-blue-700">
+                        <a href="<?php echo $baseUrl; ?>/admin/orders/detail.php?order_number=<?php echo urlencode($item['order_number']); ?>" class="text-blue-500 hover:text-blue-700">
                             <i class="fas fa-eye"></i>
                         </a>
-                        <a href="<?php echo $baseUrl; ?>/admin/orders/edit.php?id=<?php echo $item['id']; ?>" class="text-green-500 hover:text-green-700">
+                        <a href="<?php echo $baseUrl; ?>/admin/orders/edit.php?order_number=<?php echo urlencode($item['order_number']); ?>" class="text-green-500 hover:text-green-700">
                             <i class="fas fa-edit"></i>
                         </a>
                         <button onclick="deleteOrder(<?php echo $item['id']; ?>)" class="text-red-500 hover:text-red-700">

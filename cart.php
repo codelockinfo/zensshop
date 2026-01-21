@@ -21,7 +21,7 @@ $cartTotal = $cart->getTotal();
             <i class="fas fa-shopping-cart text-6xl text-gray-300 mb-4"></i>
             <h2 class="text-2xl font-bold mb-2">Your cart is empty</h2>
             <p class="text-gray-600 mb-6">Start adding some products to your cart!</p>
-            <a href="<?php echo $baseUrl; ?>/" class="inline-block bg-primary text-white px-6 py-3 rounded-lg hover:bg-primary-dark transition">
+            <a href="<?php echo $baseUrl; ?>/" class="inline-block bg-primary text-white px-6 py-3 rounded-lg hover:bg-primary-light hover:text-white transition">
                 Continue Shopping
             </a>
         </div>
@@ -51,11 +51,11 @@ $cartTotal = $cart->getTotal();
                         </div>
                         <div class="flex items-center space-x-4">
                             <div class="flex items-center border rounded">
-                                <button onclick="decrementCartItem(<?php echo $item['product_id']; ?>)" 
-                                        class="px-4 py-2 hover:bg-gray-100">-</button>
+                                <button onclick="decrementCartItem(<?php echo $item['product_id']; ?>, this)" 
+                                        class="px-4 py-2 hover:bg-gray-100" data-loading-text="">-</button>
                                 <span class="px-4 py-2 item-quantity" data-product-id="<?php echo $item['product_id']; ?>"><?php echo $item['quantity']; ?></span>
-                                <button onclick="incrementCartItem(<?php echo $item['product_id']; ?>)" 
-                                        class="px-4 py-2 hover:bg-gray-100">+</button>
+                                <button onclick="incrementCartItem(<?php echo $item['product_id']; ?>, this)" 
+                                        class="px-4 py-2 hover:bg-gray-100" data-loading-text="">+</button>
                             </div>
                             <p class="text-xl font-bold w-24 text-right item-total">
                                 <span><?php echo format_price($item['price'] * $item['quantity'], $item['currency'] ?? 'USD'); ?></span>
@@ -75,12 +75,14 @@ $cartTotal = $cart->getTotal();
                             <h3 class="text-base font-semibold mb-1 text-gray-800"><?php echo htmlspecialchars($item['name']); ?></h3>
                             <p class="text-gray-600 text-sm mb-3">Add to wishlist before remove?</p>
                             <div class="flex space-x-3">
-                                <button onclick="confirmInlineRemoveWithWishlist(<?php echo $item['product_id']; ?>)" 
-                                        class="px-6 py-2 bg-black text-white text-sm font-medium rounded hover:bg-gray-800 transition">
+                                <button onclick="confirmInlineRemoveWithWishlist(<?php echo $item['product_id']; ?>, this)" 
+                                        class="px-6 py-2 bg-black text-white text-sm font-medium rounded hover:bg-gray-800 transition"
+                                        data-loading-text="Removing...">
                                     Yes
                                 </button>
-                                <button onclick="confirmInlineRemoveWithoutWishlist(<?php echo $item['product_id']; ?>)" 
-                                        class="px-6 py-2 border border-gray-300 text-gray-700 text-sm font-medium rounded hover:bg-gray-50 transition">
+                                <button onclick="confirmInlineRemoveWithoutWishlist(<?php echo $item['product_id']; ?>, this)" 
+                                        class="px-6 py-2 border border-gray-300 text-gray-700 text-sm font-medium rounded hover:bg-gray-50 transition"
+                                        data-loading-text="Removing...">
                                     No
                                 </button>
                             </div>
@@ -134,23 +136,23 @@ $cartTotal = $cart->getTotal();
 
 <script>
 // Helper functions to increment/decrement cart items
-function incrementCartItem(productId) {
+function incrementCartItem(productId, btn) {
     const quantitySpan = document.querySelector(`.item-quantity[data-product-id="${productId}"]`);
     if (quantitySpan) {
         const currentQuantity = parseInt(quantitySpan.textContent) || 1;
         if (typeof updateCartItem === 'function') {
-            updateCartItem(productId, currentQuantity + 1);
+            updateCartItem(productId, currentQuantity + 1, btn);
         }
     }
 }
 
-function decrementCartItem(productId) {
+function decrementCartItem(productId, btn) {
     const quantitySpan = document.querySelector(`.item-quantity[data-product-id="${productId}"]`);
     if (quantitySpan) {
         const currentQuantity = parseInt(quantitySpan.textContent) || 1;
         const newQuantity = Math.max(1, currentQuantity - 1);
         if (typeof updateCartItem === 'function') {
-            updateCartItem(productId, newQuantity);
+            updateCartItem(productId, newQuantity, btn);
         }
     }
 }
@@ -198,7 +200,7 @@ async function confirmInlineRemoveWithWishlist(productId) {
         
         // Remove from cart
         if (typeof removeFromCart === 'function') {
-            await removeFromCart(productId);
+            await removeFromCart(productId, btn);
         }
     } catch (error) {
         console.error('Error adding to wishlist:', error);
@@ -208,9 +210,9 @@ async function confirmInlineRemoveWithWishlist(productId) {
     }
 }
 
-async function confirmInlineRemoveWithoutWishlist(productId) {
+async function confirmInlineRemoveWithoutWishlist(productId, btn) {
     if (typeof removeFromCart === 'function') {
-        await removeFromCart(productId);
+        await removeFromCart(productId, btn);
     }
 }
 

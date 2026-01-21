@@ -68,7 +68,7 @@ function initializeProductCards() {
             e.stopPropagation();
             const productId = parseInt(this.getAttribute('data-product-id'));
             if (typeof addToCart === 'function') {
-                addToCart(productId, 1);
+                addToCart(productId, 1, this);
             }
         });
     });

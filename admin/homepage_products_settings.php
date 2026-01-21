@@ -24,18 +24,24 @@ try {
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $bestSellingIds = $_POST['best_selling_ids'] ?? '';
     $trendingIds = $_POST['trending_ids'] ?? '';
+    $bs_heading = $_POST['bs_heading'] ?? '';
+    $bs_subheading = $_POST['bs_subheading'] ?? '';
+    $tr_heading = $_POST['tr_heading'] ?? '';
+    $tr_subheading = $_POST['tr_subheading'] ?? '';
     
     // Process Best Selling
     $db->execute("DELETE FROM section_best_selling_products"); 
     if (!empty($bestSellingIds)) {
-        // Allow potentially non-numeric IDs if product_id is string? The screenshot showed numbers. 
-        // But to be safe, filter empty only.
         $ids = array_filter(explode(',', $bestSellingIds));
         $order = 1;
         foreach ($ids as $id) {
             $id = trim($id);
-            if($id) $db->execute("INSERT INTO section_best_selling_products (product_id, sort_order) VALUES (?, ?)", [$id, $order++]);
+            if($id) $db->execute("INSERT INTO section_best_selling_products (product_id, sort_order, heading, subheading) VALUES (?, ?, ?, ?)", [$id, $order++, $bs_heading, $bs_subheading]);
         }
+    } else {
+        // Even if no products, update headers if something exists or just update the table?
+        // Usually we need at least one row or a separate settings table. 
+        // For now, if empty IDs, we just delete. If user wants to change heading, they must have products.
     }
 
     // Process Trending
@@ -45,7 +51,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $order = 1;
         foreach ($ids as $id) {
             $id = trim($id);
-            if($id) $db->execute("INSERT INTO section_trending_products (product_id, sort_order) VALUES (?, ?)", [$id, $order++]);
+            if($id) $db->execute("INSERT INTO section_trending_products (product_id, sort_order, heading, subheading) VALUES (?, ?, ?, ?)", [$id, $order++, $tr_heading, $tr_subheading]);
         }
     }
     
@@ -72,35 +78,25 @@ if (isset($_SESSION['flash_success'])) {
 }
 
 // Fetch Selected Products JOINING on product_id
-$queryBS = "SELECT p.*, h.sort_order FROM products p 
+$queryBS = "SELECT p.*, h.sort_order, h.heading, h.subheading FROM products p 
             JOIN section_best_selling_products h ON p.product_id = h.product_id 
             ORDER BY h.sort_order ASC";
 $bestSellingProducts = $db->fetchAll($queryBS);
 
-$queryTR = "SELECT p.*, h.sort_order FROM products p 
+// Get headers for Best Selling
+$bsHeaders = $db->fetchOne("SELECT heading, subheading FROM section_best_selling_products LIMIT 1");
+
+$queryTR = "SELECT p.*, h.sort_order, h.heading, h.subheading FROM products p 
             JOIN section_trending_products h ON p.product_id = h.product_id 
             ORDER BY h.sort_order ASC";
 $trendingProducts = $db->fetchAll($queryTR);
 
+// Get headers for Trending
+$trHeaders = $db->fetchOne("SELECT heading, subheading FROM section_trending_products LIMIT 1");
+
 // Create ID strings for JS state - using product_id
 $bestSellingIdsStr = implode(',', array_column($bestSellingProducts, 'product_id'));
 $trendingIdsStr = implode(',', array_column($trendingProducts, 'product_id'));
-
-// Fetch ALL active products including product_id column
-$allProducts = $db->fetchAll("SELECT id, product_id, name, sku, featured_image FROM products WHERE status = 'active' ORDER BY name ASC");
-$jsProducts = [];
-foreach($allProducts as $p) {
-    $img = getImageUrl($p['featured_image']);
-    // Map 'id' in JS to the 'product_id' column value!
-    $jsProducts[] = [
-        'id' => $p['product_id'], 
-        'system_id' => $p['id'],
-        'name' => $p['name'],
-        'sku' => $p['sku'],
-        'image' => $img,
-        'search_text' => strtolower($p['name'] . ' ' . $p['sku'] . ' ' . $p['product_id'])
-    ];
-}
 
 // START HTML OUTPUT
 $pageTitle = 'Homepage Products';
@@ -135,9 +131,23 @@ require_once __DIR__ . '/../includes/admin-header.php';
         <div class="bg-white rounded-lg shadow-sm border border-gray-200 mb-8 overflow-hidden">
             <div class="bg-gray-50 px-6 py-4 border-b border-gray-200">
                 <h2 class="text-xl font-semibold text-gray-800">Best Selling Section</h2>
-                <p class="text-sm text-gray-500">Select specific products to display in the Best Selling slider.</p>
+                <p class="text-sm text-gray-500">Customize the appearance and product list for the Best Selling section.</p>
             </div>
             <div class="p-6">
+                <!-- Section Headers -->
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+                    <div>
+                        <label class="block text-sm font-semibold text-gray-700 mb-1">Section Heading</label>
+                        <input type="text" name="bs_heading" value="<?php echo htmlspecialchars($bsHeaders['heading'] ?? 'Best Selling Products'); ?>" 
+                               class="w-full border rounded-lg p-2 focus:ring-2 focus:ring-blue-500 outline-none text-sm">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-semibold text-gray-700 mb-1">Section Subheading</label>
+                        <input type="text" name="bs_subheading" value="<?php echo htmlspecialchars($bsHeaders['subheading'] ?? 'Discover our most loved items by customers.'); ?>" 
+                               class="w-full border rounded-lg p-2 focus:ring-2 focus:ring-blue-500 outline-none text-sm">
+                    </div>
+                </div>
+
                 <input type="hidden" name="best_selling_ids" id="best_selling_ids" value="<?php echo htmlspecialchars($bestSellingIdsStr); ?>">
                 
                 <div class="bg-gray-50 p-4 rounded-lg mb-4 border border-gray-200">
@@ -192,9 +202,23 @@ require_once __DIR__ . '/../includes/admin-header.php';
         <div class="bg-white rounded-lg shadow-sm border border-gray-200 mb-8 overflow-hidden">
             <div class="bg-gray-50 px-6 py-4 border-b border-gray-200">
                 <h2 class="text-xl font-semibold text-gray-800">Trending Section</h2>
-                <p class="text-sm text-gray-500">Select specific products to display in the Trending slider.</p>
+                <p class="text-sm text-gray-500">Customize the appearance and product list for the Trending section.</p>
             </div>
             <div class="p-6">
+                <!-- Section Headers -->
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+                    <div>
+                        <label class="block text-sm font-semibold text-gray-700 mb-1">Section Heading</label>
+                        <input type="text" name="tr_heading" value="<?php echo htmlspecialchars($trHeaders['heading'] ?? 'Trending Products'); ?>" 
+                               class="w-full border rounded-lg p-2 focus:ring-2 focus:ring-blue-500 outline-none text-sm">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-semibold text-gray-700 mb-1">Section Subheading</label>
+                        <input type="text" name="tr_subheading" value="<?php echo htmlspecialchars($trHeaders['subheading'] ?? 'Check out what is currently trending in our store.'); ?>" 
+                               class="w-full border rounded-lg p-2 focus:ring-2 focus:ring-blue-500 outline-none text-sm">
+                    </div>
+                </div>
+
                 <input type="hidden" name="trending_ids" id="trending_ids" value="<?php echo htmlspecialchars($trendingIdsStr); ?>">
                 
                 <div class="bg-gray-50 p-4 rounded-lg mb-4 border border-gray-200">
@@ -250,8 +274,6 @@ require_once __DIR__ . '/../includes/admin-header.php';
 </div>
 
 <script>
-// Available Products from PHP
-const availableProducts = <?php echo json_encode($jsProducts); ?>;
 
 const collections = {
     best_selling: new Set(<?php echo $bestSellingIdsStr ? '[' . $bestSellingIdsStr . ']' : '[]'; ?>),
@@ -266,28 +288,46 @@ function initComboBox(key) {
     const toggleIcon = container.querySelector('.toggle-icon');
     
     // Render list function
-    function renderList(filterText = '') {
-        const term = filterText.toLowerCase();
-        // Filter products
-        const filtered = availableProducts.filter(p => 
-            term === '' || p.search_text.includes(term)
-        );
+    async function renderList(filterText = '') {
+        const term = filterText.trim();
         
-        if (filtered.length === 0) {
-            dropdown.innerHTML = '<div class="p-3 text-gray-500 text-sm">No products found</div>';
-        } else {
-            dropdown.innerHTML = filtered.map(p => `
-                <div class="p-2 hover:bg-blue-50 cursor-pointer border-b flex items-center gap-3 transition" 
-                     onclick="selectItem('${key}', ${p.id})">
-                    <div class="w-8 h-8 flex-shrink-0 bg-gray-200 rounded overflow-hidden">
-                         ${p.image ? `<img src="${p.image}" class="w-full h-full object-cover">` : '<i class="fas fa-image text-gray-400 flex items-center justify-center h-full w-full"></i>'}
+        // Show loading state
+        dropdown.innerHTML = '<div class="p-3 text-gray-500 text-sm"><i class="fas fa-spinner fa-spin mr-2"></i>Loading products...</div>';
+        
+        try {
+            // We allow empty term to show the first 20 products by default
+            const response = await fetch(`search_products_ajax.php?term=${encodeURIComponent(term)}`);
+            const products = await response.json();
+            
+            if (!products || !Array.isArray(products) || products.length === 0) {
+                dropdown.innerHTML = '<div class="p-3 text-gray-500 text-sm">No products found</div>';
+            } else {
+                dropdown.innerHTML = products.map(p => `
+                    <div class="p-2 hover:bg-blue-50 cursor-pointer border-b flex items-center gap-3 transition item-selection" 
+                         data-p='${JSON.stringify(p).replace(/'/g, "&apos;")}'>
+                        <div class="w-8 h-8 flex-shrink-0 bg-gray-200 rounded overflow-hidden">
+                             ${p.image ? `<img src="${p.image}" class="w-full h-full object-cover">` : '<i class="fas fa-image text-gray-400 flex items-center justify-center h-full w-full"></i>'}
+                        </div>
+                        <div>
+                            <div class="font-medium text-sm text-gray-800">${p.name}</div>
+                            <div class="text-xs text-gray-500">${p.sku ? 'SKU: ' + p.sku : ''} (ID: ${p.id})</div>
+                        </div>
                     </div>
-                    <div>
-                        <div class="font-medium text-sm text-gray-800">${p.name}</div>
-                        <div class="text-xs text-gray-500">SKU: ${p.sku ? p.sku : 'N/A'} (Product ID: ${p.id})</div>
-                    </div>
-                </div>
-            `).join('');
+                `).join('');
+
+                // Add click events to items
+                dropdown.querySelectorAll('.item-selection').forEach(item => {
+                    item.addEventListener('click', function(e) {
+                        const p = JSON.parse(this.dataset.p);
+                        addItem(key, p.id, p.name, p.image);
+                        input.value = '';
+                        hideDropdown();
+                    });
+                });
+            }
+        } catch (error) {
+            console.error('Search error:', error);
+            dropdown.innerHTML = '<div class="p-3 text-red-500 text-sm">Error fetching products</div>';
         }
     }
     
@@ -305,27 +345,24 @@ function initComboBox(key) {
     // Events
     input.addEventListener('focus', showDropdown);
     input.addEventListener('input', (e) => renderList(e.target.value));
-    input.addEventListener('blur', hideDropdown);
-    toggleIcon.addEventListener('click', () => {
+    toggleIcon.addEventListener('click', (e) => {
+        e.stopPropagation();
         if (dropdown.classList.contains('hidden')) {
             input.focus();
         } else {
-            hideDropdown(); // Wait, this needs immediate hide if clicked icon? 
-            // Better to let focus handle it, but for icon click:
-            dropdown.classList.contains('hidden') ? input.focus() : dropdown.classList.add('hidden');
+            dropdown.classList.add('hidden');
+        }
+    });
+
+    // Handle clicks outside to close
+    document.addEventListener('click', (e) => {
+        if (!container.contains(e.target)) {
+            dropdown.classList.add('hidden');
         }
     });
 }
 
-// Global selection handler
-function selectItem(key, id) {
-    const p = availableProducts.find(prod => prod.id === id);
-    if (p) {
-        addItem(key, p.id, p.name, p.image);
-        // Clear input
-        document.querySelector(`#combo_${key} input`).value = '';
-    }
-}
+// selectItem function removed as logic moved into renderList event listeners
 
 function addItem(key, id, name, image) {
     id = parseInt(id);
@@ -418,12 +455,8 @@ document.getElementById('settingsForm').addEventListener('submit', function(e) {
     
     const formData = new FormData(this);
     const submitBtn = document.querySelector('button[form="settingsForm"]');
-    let originalHtml = '';
-    
     if (submitBtn) {
-        originalHtml = submitBtn.innerHTML;
-        submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Saving...';
-        submitBtn.disabled = true;
+        setBtnLoading(submitBtn, true);
     }
     
     fetch('<?php echo basename($_SERVER['PHP_SELF']); ?>', {
@@ -449,8 +482,7 @@ document.getElementById('settingsForm').addEventListener('submit', function(e) {
     })
     .finally(() => {
         if (submitBtn) {
-            submitBtn.innerHTML = originalHtml;
-            submitBtn.disabled = false;
+            setBtnLoading(submitBtn, false);
         }
     });
 });

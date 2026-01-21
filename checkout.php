@@ -193,7 +193,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['place_order']) && emp
         }
         
         // Create order
-        $orderId = $order->create($orderData);
+        $orderResponse = $order->create($orderData);
+        $orderId = $orderResponse['id'];
+        $orderNumber = $orderResponse['order_number'];
         
         // Clear cart
         $cart->clear();
@@ -202,7 +204,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['place_order']) && emp
         ob_end_clean();
         
         // Redirect to thank you page
-        header('Location: ' . url("order-success.php?id={$orderId}"));
+        header('Location: ' . url("order-success.php?order_number={$orderNumber}"));
         exit;
         
     } catch (Exception $e) {
@@ -766,8 +768,7 @@ document.getElementById('razorpayPayButton').addEventListener('click', async fun
     
     // Disable button to prevent double clicks
     const button = this;
-    button.disabled = true;
-    button.textContent = 'Processing...';
+    setBtnLoading(button, true);
     
     try {
         // Create Razorpay order
@@ -793,8 +794,7 @@ document.getElementById('razorpayPayButton').addEventListener('click', async fun
         if (!orderData.success) {
             const errorMsg = orderData.message || 'Failed to create payment order';
             showErrorMessage(errorMsg);
-            button.disabled = false;
-            button.textContent = 'Pay Now';
+            setBtnLoading(button, false);
             return;
         }
         
@@ -854,20 +854,17 @@ document.getElementById('razorpayPayButton').addEventListener('click', async fun
                             throw new Error('Order ID not received from server');
                         }
                         
-                        // Redirect to success page with order ID
-                        // Use clean URL format (without .php) to avoid .htaccess redirect issues
-                        const successUrl = razorpayBaseUrl + '/order-success?id=' + encodeURIComponent(verifyData.order_id);
+                        // Redirect to success page with order number
+                        const successUrl = razorpayBaseUrl + '/order-success?order_number=' + encodeURIComponent(verifyData.order_number);
                         // Use window.location.replace to prevent back button issues
                         window.location.replace(successUrl);
                     } else {
                         showErrorMessage('Payment verification failed: ' + (verifyData.message || 'Unknown error'));
-                        button.disabled = false;
-                        button.textContent = 'Pay Now';
+                        setBtnLoading(button, false);
                     }
                 } catch (error) {
                     showErrorMessage('An error occurred while verifying payment. Please contact support.');
-                    button.disabled = false;
-                    button.textContent = 'Pay Now';
+                    setBtnLoading(button, false);
                 }
             },
             prefill: {
@@ -880,8 +877,7 @@ document.getElementById('razorpayPayButton').addEventListener('click', async fun
             },
             modal: {
                 ondismiss: function() {
-                    button.disabled = false;
-                    button.textContent = 'Pay Now';
+                    setBtnLoading(button, false);
                 }
             }
         };
@@ -891,8 +887,7 @@ document.getElementById('razorpayPayButton').addEventListener('click', async fun
         
     } catch (error) {
         showErrorMessage('An error occurred: ' + (error.message || 'Unknown error. Please try again.'));
-        button.disabled = false;
-        button.textContent = 'Pay Now';
+        setBtnLoading(button, false);
     }
 });
 </script>

@@ -4,26 +4,6 @@ require_once __DIR__ . '/classes/Database.php';
 $db = Database::getInstance();
 
 try {
-    // 1. cleanup: Remove columns from landing_pages if they exist
-    $colsToRemove = [
-        'show_philosophy',
-        'philosophy_title',
-        'philosophy_data', // user previously created this, we should remove it
-        'philosophy_bg_color',
-        'philosophy_text_color'
-    ];
-
-    foreach ($colsToRemove as $col) {
-        $check = $db->fetchOne("SHOW COLUMNS FROM `landing_pages` LIKE '$col'");
-        if ($check) {
-            try {
-                $db->execute("ALTER TABLE `landing_pages` DROP COLUMN `$col`");
-                echo "Dropped column: $col from landing_pages<br>";
-            } catch (Exception $e) {
-                echo "Error dropping $col: " . $e->getMessage() . "<br>";
-            }
-        }
-    }
 
     // 2. Create new table for Philosophy Section
     $db->execute("CREATE TABLE IF NOT EXISTS `philosophy_section` (

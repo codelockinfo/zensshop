@@ -13,11 +13,18 @@ $error = '';
 
 // Handle Form Submission
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    $section_heading = $_POST['section_heading'] ?? '';
+    $section_subheading = $_POST['section_subheading'] ?? '';
     $titles = $_POST['title'] ?? [];
     $links = $_POST['link'] ?? [];
     $orders = $_POST['sort_order'] ?? [];
     $ids = $_POST['id'] ?? [];
     $delete_ids = $_POST['delete_id'] ?? [];
+    
+    // Update all existing rows with the global heading/subheading if titles are empty but heading changed
+    if (empty($titles) && (!empty($section_heading) || !empty($section_subheading))) {
+        $db->execute("UPDATE section_categories SET heading = ?, subheading = ?", [$section_heading, $section_subheading]);
+    }
     
     // Handle Deletions
     if (!empty($delete_ids)) {
@@ -56,8 +63,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         
         if ($id) {
             // Update
-            $sql = "UPDATE section_categories SET title = ?, link = ?, sort_order = ?";
-            $params = [$title, $link, $order];
+            $sql = "UPDATE section_categories SET title = ?, link = ?, sort_order = ?, heading = ?, subheading = ?";
+            $params = [$title, $link, $order, $section_heading, $section_subheading];
             
             if ($imagePath) {
                 $sql .= ", image = ?";
@@ -72,8 +79,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             // Insert (only if image is present or not required)
             if ($imagePath) {
                 $db->execute(
-                    "INSERT INTO section_categories (title, link, sort_order, image) VALUES (?, ?, ?, ?)",
-                    [$title, $link, $order, $imagePath]
+                    "INSERT INTO section_categories (title, link, sort_order, image, heading, subheading) VALUES (?, ?, ?, ?, ?, ?)",
+                    [$title, $link, $order, $imagePath, $section_heading, $section_subheading]
                 );
             }
         }
@@ -123,6 +130,23 @@ $categories = $db->fetchAll("SELECT * FROM section_categories ORDER BY sort_orde
                 <?php echo htmlspecialchars($error); ?>
             </div>
         <?php endif; ?>
+
+        <!-- Section Headers -->
+        <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-6 mb-8">
+            <h2 class="text-lg font-bold text-gray-800 mb-4 border-b pb-2">Section Header Settings</h2>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div>
+                    <label class="block text-sm font-semibold text-gray-700 mb-2">Section Heading</label>
+                    <input type="text" name="section_heading" value="<?php echo htmlspecialchars($categories[0]['heading'] ?? 'Shop By Category'); ?>" 
+                           class="w-full border rounded-lg p-2.5 focus:ring-2 focus:ring-blue-500 outline-none" placeholder="e.g. Shop By Category">
+                </div>
+                <div>
+                    <label class="block text-sm font-semibold text-gray-700 mb-2">Section Subheading</label>
+                    <textarea name="section_subheading" rows="1" 
+                              class="w-full border rounded-lg p-2.5 focus:ring-2 focus:ring-blue-500 outline-none" placeholder="Enter subheading text..."><?php echo htmlspecialchars($categories[0]['subheading'] ?? 'Express your style with our standout collection—fashion meets sophistication.'); ?></textarea>
+                </div>
+            </div>
+        </div>
 
         <div class="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden">
             <table class="min-w-full divide-y divide-gray-200" id="categoriesTable">

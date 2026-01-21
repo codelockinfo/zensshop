@@ -25,7 +25,7 @@
         </div>
     </div>
     
-    <script src="<?php echo isset($baseUrl) ? $baseUrl : getBaseUrl(); ?>/assets/js/admin.js"></script>
+    <script src="<?php echo isset($baseUrl) ? $baseUrl : getBaseUrl(); ?>/assets/js/admin1.js"></script>
     <script src="<?php echo isset($baseUrl) ? $baseUrl : getBaseUrl(); ?>/assets/js/admin-confirm.js"></script>
     <script src="<?php echo isset($baseUrl) ? $baseUrl : getBaseUrl(); ?>/assets/js/admin-search1.js"></script>
     <script src="<?php echo isset($baseUrl) ? $baseUrl : getBaseUrl(); ?>/assets/js/admin-notifications2.js"></script>

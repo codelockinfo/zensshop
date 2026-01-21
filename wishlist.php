@@ -83,7 +83,7 @@ require_once __DIR__ . '/includes/header.php';
             <i class="fas fa-heart text-6xl text-gray-300 mb-4"></i>
             <h2 class="text-2xl font-heading font-bold mb-2">Your wishlist is empty</h2>
             <p class="text-gray-600 mb-6">Start adding products you love to your wishlist!</p>
-            <a href="<?php echo $baseUrl; ?>/shop.php" class="inline-block bg-primary text-white px-8 py-3 rounded-lg hover:bg-primary-dark transition">
+            <a href="<?php echo $baseUrl; ?>/shop.php" class="inline-block bg-primary text-white px-8 py-3 rounded-lg hover:bg-primary-light hover:text-white transition">
                 Continue Shopping
             </a>
         </div>
@@ -153,7 +153,7 @@ require_once __DIR__ . '/includes/header.php';
                             
                             <!-- Add to Cart Button -->
                             <button onclick="addToCart(<?php echo $item['product_id']; ?>, 1)" 
-                                    class="bg-primary text-white px-4 py-2 rounded-lg hover:bg-primary-dark transition text-sm">
+                                    class="bg-primary text-white px-4 py-2 rounded-lg hover:bg-primary-light hover:text-white transition text-sm">
                                 <i class="fas fa-shopping-cart mr-2"></i>Add to Cart
                             </button>
                         </div>

@@ -144,7 +144,8 @@ try {
     echo json_encode([
         'success' => true,
         'message' => 'Payment verified and order created successfully',
-        'order_id' => $createdOrderId
+        'order_id' => $createdOrderId['id'],
+        'order_number' => $createdOrderId['order_number']
     ]);
     
 } catch (Exception $e) {

@@ -8,12 +8,27 @@ $product = new Product();
 
 // Check for manual selection from dedicated table
 $products = $db->fetchAll(
-    "SELECT p.* 
+    "SELECT p.*, h.heading, h.subheading
      FROM products p 
      JOIN section_best_selling_products h ON p.product_id = h.product_id 
      WHERE p.status = 'active' 
      ORDER BY h.sort_order ASC"
 );
+
+// Fetch dynamic headers if available from any row
+$sectionHeading = 'Best Selling';
+$sectionSubheading = 'Unmatched design—superior performance and customer satisfaction in one.';
+if (!empty($products)) {
+    $sectionHeading = !empty($products[0]['heading']) ? $products[0]['heading'] : $sectionHeading;
+    $sectionSubheading = !empty($products[0]['subheading']) ? $products[0]['subheading'] : $sectionSubheading;
+} else {
+    // Fallback headers if table is empty but we want to check if headers exist anyway
+    $headers = $db->fetchOne("SELECT heading, subheading FROM section_best_selling_products LIMIT 1");
+    if ($headers) {
+        $sectionHeading = !empty($headers['heading']) ? $headers['heading'] : $sectionHeading;
+        $sectionSubheading = !empty($headers['subheading']) ? $headers['subheading'] : $sectionSubheading;
+    }
+}
 
 // Fallback if no specific products selected
 if (empty($products)) {
@@ -24,8 +39,8 @@ if (empty($products)) {
 <section>
     <div class="container mx-auto px-4">
         <div class="text-center mb-12">
-            <h2 class="text-2xl md:text-3xl font-heading font-bold mb-4">Best Selling</h2>
-            <p class="text-gray-600 text-sm max-w-2xl mx-auto">Unmatched design—superior performance and customer satisfaction in one.</p>
+            <h2 class="text-2xl md:text-3xl font-heading font-bold mb-4"><?php echo htmlspecialchars($sectionHeading); ?></h2>
+            <p class="text-gray-600 text-sm max-w-2xl mx-auto"><?php echo htmlspecialchars($sectionSubheading); ?></p>
         </div>
         
         <!-- Product Slider Container -->

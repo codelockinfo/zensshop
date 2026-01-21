@@ -479,6 +479,27 @@ function closeSubSubmenu(subSubmenuName) {
     }
 }
 
+// Button Loading State Utility
+function setBtnLoading(btn, isLoading) {
+    if (!btn) return;
+    
+    if (isLoading) {
+        if (!btn.hasAttribute('data-original-html')) {
+            btn.setAttribute('data-original-html', btn.innerHTML);
+        }
+        btn.disabled = true;
+        btn.innerHTML = `<i class="fas fa-spinner fa-spin"></i>`;
+        btn.classList.add('opacity-75', 'cursor-not-allowed');
+    } else {
+        const originalHtml = btn.getAttribute('data-original-html');
+        if (originalHtml !== null) {
+            btn.innerHTML = originalHtml;
+        }
+        btn.disabled = false;
+        btn.classList.remove('opacity-75', 'cursor-not-allowed');
+    }
+}
+
 // Make functions globally available
 window.openMobileMenu = openMobileMenu;
 window.closeMobileMenu = closeMobileMenu;
@@ -486,4 +507,5 @@ window.openSubmenu = openSubmenu;
 window.closeSubmenu = closeSubmenu;
 window.openSubSubmenu = openSubSubmenu;
 window.closeSubSubmenu = closeSubSubmenu;
+window.setBtnLoading = setBtnLoading;
 

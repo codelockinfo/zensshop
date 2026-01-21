@@ -134,7 +134,7 @@ if (!function_exists('url')) {
     <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     
     <!-- Custom CSS -->
-    <link rel="stylesheet" href="<?php echo $baseUrl; ?>/assets/css/main.css">
+    <link rel="stylesheet" href="<?php echo $baseUrl; ?>/assets/css/main1.css">
     
     <!-- Font Awesome for Icons -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
@@ -212,24 +212,21 @@ if (!function_exists('url')) {
     <!-- Top Bar -->
     <div class="hidden xl:block bg-black text-white text-sm py-2" style="padding: 12px 0;">
         <div class="container mx-auto px-4 flex justify-between items-center">
-            <div class="relative flex-1 overflow-hidden flex items-center" style="min-height: 20px; gap: 20px;">
-                <div class="arrow">
+            <!-- Left side spacer (to balance the right links) -->
+            <div class="flex-1 hidden xl:block"></div>
+
+            <!-- Centered Slider Section -->
+            <div class="flex-1 flex items-center justify-center space-x-6">
                 <!-- Left Arrow -->
-                <button class="top-bar-arrow top-bar-arrow-left flex-shrink-0 mr-2 text-gray-500 hover:text-white transition" id="topBarPrev" aria-label="Previous">
+                <button class="top-bar-arrow top-bar-arrow-left flex-shrink-0 text-gray-500 hover:text-white transition" id="topBarPrev" aria-label="Previous">
                     <i class="fas fa-chevron-left text-xs"></i>
                 </button>
 
-                <!-- Right Arrow -->
-                <button class="top-bar-arrow top-bar-arrow-right flex-shrink-0 ml-2 text-gray-500 hover:text-white transition" id="topBarNext" aria-label="Next">
-                    <i class="fas fa-chevron-right text-xs"></i>
-                </button>
-                </div>
-                
-                <!-- Slider Container -->
-                <div class="relative flex-1 overflow-hidden">
+                <!-- Slider Window -->
+                <div class="relative overflow-hidden w-full max-w-[450px]">
                     <div class="top-bar-slider flex transition-transform duration-500 ease-in-out" id="topBarSlider">
                         <?php foreach ($topbarSlides as $slide): ?>
-                        <div class="top-bar-slide flex-shrink-0 w-full flex items-center">
+                        <div class="top-bar-slide flex-shrink-0 w-full flex items-center justify-center text-center">
                             <span>
                                 <?php echo htmlspecialchars($slide['text']); ?>
                                 <?php if (!empty($slide['link'])): ?>
@@ -250,11 +247,18 @@ if (!function_exists('url')) {
                         </div>
                         <?php endforeach; ?>
                     </div>
-                </div>  
+                </div>
+
+                <!-- Right Arrow -->
+                <button class="top-bar-arrow top-bar-arrow-right flex-shrink-0 text-gray-500 hover:text-white transition" id="topBarNext" aria-label="Next">
+                    <i class="fas fa-chevron-right text-xs"></i>
+                </button>
             </div>
-            <div class="flex items-center space-x-4">
+
+            <!-- Right side links -->
+            <div class="flex-1 flex items-center justify-end space-x-4">
                 <?php foreach ($topbarLinks as $link): ?>
-                <a href="<?php echo url($link['url']); ?>" class="hover:text-gray-300 transition"><?php echo htmlspecialchars($link['label']); ?></a>
+                <a href="<?php echo url($link['url']); ?>" class="hover:text-gray-300 transition whitespace-nowrap"><?php echo htmlspecialchars($link['label']); ?></a>
                 <?php endforeach; ?>
                 <!-- Currency/Region Selector -->
                 <div class="relative ml-4 pl-4 border-l border-gray-700 hidden">

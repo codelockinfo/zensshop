@@ -71,7 +71,23 @@ class Order {
         );
         
         if ($order) {
-            $order['items'] = $this->getOrderItems($id);
+            $order['items'] = $this->getOrderItems($order['id']);
+        }
+        
+        return $order;
+    }
+
+    /**
+     * Get order by Order Number
+     */
+    public function getByOrderNumber($orderNumber) {
+        $order = $this->db->fetchOne(
+            "SELECT * FROM orders WHERE order_number = ?",
+            [$orderNumber]
+        );
+        
+        if ($order) {
+            $order['items'] = $this->getOrderItems($order['id']);
         }
         
         return $order;
@@ -222,7 +238,10 @@ class Order {
             error_log("Failed to send order confirmation email: " . $e->getMessage());
         }
         
-        return $orderId;
+        return [
+            'id' => $orderId,
+            'order_number' => $orderNumber
+        ];
     }
     
     /**

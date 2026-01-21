@@ -132,7 +132,7 @@ $maxPriceRange = $priceRange['max_price'] ?? 1000;
 <section class="py-12 bg-white">
     <div class="container mx-auto px-4">
         <!-- Mobile Filter Button -->
-        <button onclick="openFilterDrawer()" class="lg:hidden mb-4 flex items-center space-x-2 bg-primary text-white px-4 py-2 rounded hover:bg-primary-dark transition">
+        <button onclick="openFilterDrawer()" class="lg:hidden mb-4 flex items-center space-x-2 bg-primary text-white px-4 py-2 rounded hover:bg-primary-light hover:text-white transition">
             <i class="fas fa-filter"></i>
             <span>Filters</span>
         </button>
@@ -198,7 +198,7 @@ $maxPriceRange = $priceRange['max_price'] ?? 1000;
                                        value="<?php echo htmlspecialchars($maxPrice); ?>"
                                        min="0" step="0.01" class="w-full border rounded px-3 py-2">
                             </div>
-                            <button onclick="applyFilters()" class="w-full bg-primary text-white py-2 rounded hover:bg-primary-dark transition">
+                            <button onclick="applyFilters()" class="w-full bg-primary text-white py-2 rounded hover:bg-primary-light hover:text-white transition">
                                 Apply
                             </button>
                         </div>
@@ -300,7 +300,7 @@ $maxPriceRange = $priceRange['max_price'] ?? 1000;
                                     <span class="text-md font-bold text-primary"><?php echo format_price($price, $item['currency'] ?? 'USD'); ?></span>
                                 </div>
                                 <button onclick="addToCart(<?php echo $itemId; ?>)" 
-                                        class="bg-primary text-white px-4 py-2 rounded hover:bg-primary-dark transition text-sm">
+                                        class="bg-primary text-white px-4 py-2 rounded hover:bg-primary-light hover:text-white transition text-sm">
                                     <i class="fas fa-shopping-cart mr-1"></i> Add
                                 </button>
                             </div>
@@ -592,7 +592,7 @@ function applyFiltersFromDrawer() {
                            value="<?php echo htmlspecialchars($maxPrice); ?>"
                            min="0" step="0.01" class="w-full border rounded px-3 py-2">
                 </div>
-                <button onclick="applyFiltersFromDrawer()" class="w-full bg-primary text-white py-2 rounded hover:bg-primary-dark transition">
+                <button onclick="applyFiltersFromDrawer()" class="w-full bg-primary text-white py-2 rounded hover:bg-primary-light hover:text-white transition">
                     Apply Filters
                 </button>
             </div>

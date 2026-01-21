@@ -5,6 +5,7 @@ A complete e-commerce solution built with PHP, AJAX, and Tailwind CSS, featuring
 ## Features
 
 ### Frontend
+
 - **Responsive Landing Page** - Modern, elegant design inspired by Milano jewelry store
 - **Progressive Section Loading** - Sections load one by one via AJAX for better performance
 - **Shopping Cart** - Side cart panel with AJAX functionality and cookie storage
@@ -13,6 +14,7 @@ A complete e-commerce solution built with PHP, AJAX, and Tailwind CSS, featuring
 - **Mobile Responsive** - Fully responsive design using Tailwind CSS
 
 ### Admin Dashboard
+
 - **Authentication** - Login, registration, and forgot password with OTP email verification
 - **Product Management** - Add, edit, delete products with image upload and retry logic
 - **Order Management** - View orders, update status, track shipments
@@ -21,6 +23,7 @@ A complete e-commerce solution built with PHP, AJAX, and Tailwind CSS, featuring
 - **Reports** - Dashboard with statistics and analytics
 
 ### Technical Features
+
 - **Error Handling** - Retry logic with exponential backoff (2 retries) and email notifications
 - **Cookie Management** - Cart persistence using cookies (30-day expiry)
 - **Session Management** - Secure session-based authentication
@@ -30,6 +33,7 @@ A complete e-commerce solution built with PHP, AJAX, and Tailwind CSS, featuring
 ## Installation
 
 ### Prerequisites
+
 - PHP 7.4 or higher
 - MySQL/MariaDB
 - Apache/Nginx web server
@@ -38,6 +42,7 @@ A complete e-commerce solution built with PHP, AJAX, and Tailwind CSS, featuring
 ### Setup Steps
 
 1. **Clone or extract the project** to your web server directory:
+
    ```
    C:\wamp64\www\oecom\
    ```
@@ -49,6 +54,7 @@ A complete e-commerce solution built with PHP, AJAX, and Tailwind CSS, featuring
 
 3. **Configure database connection**:
    Edit `config/database.php`:
+
    ```php
    define('DB_HOST', 'localhost');
    define('DB_NAME', 'oecom_db');
@@ -58,6 +64,7 @@ A complete e-commerce solution built with PHP, AJAX, and Tailwind CSS, featuring
 
 4. **Configure email settings** (for OTP and notifications):
    Edit `config/email.php`:
+
    ```php
    define('SMTP_HOST', 'smtp.gmail.com');
    define('SMTP_PORT', 587);
@@ -68,9 +75,11 @@ A complete e-commerce solution built with PHP, AJAX, and Tailwind CSS, featuring
    ```
 
 5. **Set up PHPMailer** (optional but recommended):
+
    ```bash
    composer require phpmailer/phpmailer
    ```
+
    Or download PHPMailer manually and include it in your project.
 
 6. **Set file permissions**:
@@ -107,6 +116,7 @@ oecom/
 ## Usage
 
 ### Adding Products
+
 1. Login to admin dashboard
 2. Navigate to Ecommerce > Add Product
 3. Fill in product details
@@ -114,18 +124,21 @@ oecom/
 5. Save the product
 
 ### Managing Orders
+
 1. Go to Order > Order List
 2. View order details
 3. Update order status
 4. Add tracking numbers
 
 ### Cart Functionality
+
 - Products are stored in cookies (30-day expiry)
 - Cart syncs with database if user is logged in
 - Side cart panel opens on "Add to Cart" click
 - Cart persists across page reloads
 
 ### Error Handling
+
 - Failed operations (e.g., add product) retry up to 2 times
 - After 2 failed retries, email notification sent to admin
 - All errors are logged for debugging
@@ -133,17 +146,21 @@ oecom/
 ## Customization
 
 ### Colors and Fonts
-Edit `assets/css/main.css` to modify CSS variables:
+
+Edit `assets/css/main1.css` to modify CSS variables:
+
 ```css
 :root {
   --color-primary: #1a5d3a;
-  --font-heading: 'Playfair Display', serif;
-  --font-body: 'Inter', sans-serif;
+  --font-heading: "Playfair Display", serif;
+  --font-body: "Inter", sans-serif;
 }
 ```
 
 ### Site Configuration
+
 Edit `config/constants.php`:
+
 ```php
 define('SITE_NAME', 'Milano');
 define('SITE_URL', 'http://localhost/oecom');
@@ -173,5 +190,3 @@ This project is open source and available for use.
 ## Support
 
 For issues or questions, please check the code comments or contact the development team.
-
-

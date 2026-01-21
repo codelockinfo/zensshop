@@ -271,7 +271,7 @@ function renderFooterLinkRecursive($item, $baseUrl) {
                     <span class="text-lg font-semibold">Total:</span>
                     <span class="text-xl font-bold" id="cartTotal">₹0.00</span>
                 </div>
-                <a href="<?php echo url('cart.php'); ?>" class="block w-full bg-primary text-white text-center py-3 rounded-lg hover:bg-primary-dark hover:text-white transition mb-2">
+                <a href="<?php echo url('cart.php'); ?>" class="block w-full bg-primary text-white text-center py-3 rounded-lg hover:bg-primary-light hover:text-white transition mb-2">
                             View Cart
                         </a>
                 <a href="<?php echo url('checkout'); ?>" class="block w-full bg-black text-white text-center py-3 rounded-lg hover:text-white hover:bg-gray-800 transition">
@@ -298,12 +298,14 @@ function renderFooterLinkRecursive($item, $baseUrl) {
             </div>
             
             <div class="flex space-x-3">
-                <button onclick="confirmRemoveWithWishlist()" 
-                        class="flex-1 bg-black text-white px-6 py-3 rounded-lg hover:bg-gray-800 transition font-medium text-sm">
+                <button onclick="confirmRemoveWithWishlist(this)" 
+                        class="flex-1 bg-black text-white px-6 py-3 rounded-lg hover:bg-gray-800 transition font-medium text-sm"
+                        data-loading-text="Processing...">
                     Yes
                 </button>
-                <button onclick="confirmRemoveWithoutWishlist()" 
-                        class="flex-1 bg-white text-black border-2 border-gray-300 px-6 py-3 rounded-lg hover:bg-gray-50 hover:border-gray-400 transition font-medium text-sm">
+                <button onclick="confirmRemoveWithoutWishlist(this)" 
+                        class="flex-1 bg-white text-black border-2 border-gray-300 px-6 py-3 rounded-lg hover:bg-gray-50 hover:border-gray-400 transition font-medium text-sm"
+                        data-loading-text="Removing...">
                     No
                 </button>
             </div>
@@ -329,9 +331,9 @@ function renderFooterLinkRecursive($item, $baseUrl) {
     </div> -->
     
     <!-- Scripts -->
-    <script src="<?php echo $baseUrl; ?>/assets/js/main.js"></script>
-    <script src="<?php echo $baseUrl; ?>/assets/js/cart3.js"></script>
-    <script src="<?php echo $baseUrl; ?>/assets/js/product-cards.js"></script>
+    <script src="<?php echo $baseUrl; ?>/assets/js/main1.js"></script>
+    <script src="<?php echo $baseUrl; ?>/assets/js/cart4.js"></script>
+    <script src="<?php echo $baseUrl; ?>/assets/js/product-cards1.js"></script>
     <script src="<?php echo $baseUrl; ?>/assets/js/wishlist1.js"></script>
     <script src="<?php echo $baseUrl; ?>/assets/js/notification.js"></script>
     <script src="<?php echo $baseUrl; ?>/assets/js/add-to-cart2.js"></script>
@@ -375,11 +377,12 @@ function renderFooterLinkRecursive($item, $baseUrl) {
     }
 
     // Confirm remove with wishlist (Yes button)
-    async function confirmRemoveWithWishlist() {
+    async function confirmRemoveWithWishlist(btn) {
         if (!pendingRemoveProductId) return;
         
         const productId = pendingRemoveProductId;
-        closeRemoveConfirm();
+        if (btn) setBtnLoading(btn, true);
+        // closeRemoveConfirm(); // Moved to after process completes
         
         try {
             // First, add to wishlist
@@ -403,27 +406,33 @@ function renderFooterLinkRecursive($item, $baseUrl) {
             
             // Then remove from cart
             if (typeof removeFromCart === 'function') {
-                await removeFromCart(productId);
+                await removeFromCart(productId, btn);
+                closeRemoveConfirm();
             }
         } catch (error) {
             console.error('Error adding to wishlist:', error);
             // Still remove from cart even if wishlist add fails
             if (typeof removeFromCart === 'function') {
-                await removeFromCart(productId);
+                await removeFromCart(productId, btn);
+                closeRemoveConfirm();
             }
+        } finally {
+            if (btn) setBtnLoading(btn, false);
         }
     }
 
     // Confirm remove without wishlist (No button)
-    async function confirmRemoveWithoutWishlist() {
+    async function confirmRemoveWithoutWishlist(btn) {
         if (!pendingRemoveProductId) return;
         
         const productId = pendingRemoveProductId;
-        closeRemoveConfirm();
+        if (btn) setBtnLoading(btn, true);
         
         // Just remove from cart
         if (typeof removeFromCart === 'function') {
-            await removeFromCart(productId);
+            await removeFromCart(productId, btn);
+            closeRemoveConfirm();
+            if (btn) setBtnLoading(btn, false);
         }
     }
 

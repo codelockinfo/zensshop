@@ -2,34 +2,33 @@
 require_once __DIR__ . '/../includes/functions.php';
 require_once __DIR__ . '/../classes/Database.php';
 
-header('Content-Type: application/json');
+require_once __DIR__ . '/../classes/Auth.php';
 
-// Check authentication (basic check)
-// In a real app, you would verify admin session here
-// session_start();
-// if (!isset($_SESSION['admin_logged_in'])) { die(json_encode([])); }
+$auth = new Auth();
+if (!$auth->isLoggedIn()) {
+    http_response_code(401);
+    die(json_encode(['error' => 'Unauthorized']));
+}
+
+header('Content-Type: application/json');
 
 $term = $_GET['term'] ?? '';
 
-if (strlen($term) < 2) {
-    echo json_encode([]);
-    exit;
-}
-
 $db = Database::getInstance();
-$products = $db->fetchAll(
-    "SELECT id, name,featured_image FROM products 
-     WHERE (name LIKE ? OR sku LIKE ?) AND status = 'active' 
-     LIMIT 10",
-    ["%$term%", "%$term%"]
-);
+$params = ["%$term%", "%$term%", "%$term%"];
+$query = "SELECT id, product_id, name, sku, featured_image FROM products 
+          WHERE (name LIKE ? OR sku LIKE ? OR product_id LIKE ?) AND status = 'active' 
+          LIMIT 20";
+
+$products = $db->fetchAll($query, $params);
 
 $results = [];
 foreach ($products as $p) {
     $results[] = [
-        'id' => $p['id'],
-        'label' => $p['name'],
-        'value' => $p['id'],
+        'id' => $p['product_id'], // We use product_id for the homepage settings
+        'system_id' => $p['id'],
+        'name' => $p['name'],
+        'sku' => $p['sku'],
         'image' => getImageUrl($p['featured_image'])
     ];
 }

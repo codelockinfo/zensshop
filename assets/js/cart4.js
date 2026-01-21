@@ -131,7 +131,8 @@ async function refreshCart() {
 }
 
 // Add to cart
-async function addToCart(productId, quantity = 1) {
+async function addToCart(productId, quantity = 1, btn = null) {
+    if (btn) setBtnLoading(btn, true);
     try {
         const baseUrl = typeof BASE_URL !== 'undefined' ? BASE_URL : window.location.pathname.split('/').slice(0, -1).join('/') || '';
         const requestBody = {
@@ -217,11 +218,14 @@ async function addToCart(productId, quantity = 1) {
     } catch (error) {
         console.error('Error adding to cart:', error);
         showNotification('An error occurred. Please try again.', 'error');
+    } finally {
+        if (btn) setBtnLoading(btn, false);
     }
 }
 
 // Update cart item quantity
-async function updateCartItem(productId, quantity) {
+async function updateCartItem(productId, quantity, btn = null) {
+    if (btn) setBtnLoading(btn, true);
     if (quantity < 1) {
         quantity = 1;
     }
@@ -329,11 +333,14 @@ async function updateCartItem(productId, quantity) {
         } else {
             alert('An error occurred. Please try again.');
         }
+    } finally {
+        if (btn) setBtnLoading(btn, false);
     }
 }
 
 // Remove from cart
-async function removeFromCart(productId) {
+async function removeFromCart(productId, btn = null) {
+    if (btn) setBtnLoading(btn, true);
     // Check if we're on the cart page
     const isCartPage = window.location.pathname.includes('/cart') || document.querySelector('.cart-item');
 
@@ -439,6 +446,8 @@ async function removeFromCart(productId) {
         } else {
             alert('An error occurred. Please try again.');
         }
+    } finally {
+        if (btn) setBtnLoading(btn, false);
     }
 }
 

@@ -177,3 +177,25 @@ document.addEventListener('DOMContentLoaded', function () {
     // No need to expand sidebar
 });
 
+// Button Loading State Utility
+function setBtnLoading(btn, isLoading) {
+    if (!btn) return;
+    
+    if (isLoading) {
+        if (!btn.hasAttribute('data-original-html')) {
+            btn.setAttribute('data-original-html', btn.innerHTML);
+        }
+        btn.disabled = true;
+        btn.innerHTML = `<i class="fas fa-spinner fa-spin"></i>`;
+        btn.classList.add('opacity-75', 'cursor-not-allowed');
+    } else {
+        const originalHtml = btn.getAttribute('data-original-html');
+        if (originalHtml !== null) {
+            btn.innerHTML = originalHtml;
+        }
+        btn.disabled = false;
+        btn.classList.remove('opacity-75', 'cursor-not-allowed');
+    }
+}
+window.setBtnLoading = setBtnLoading;
+

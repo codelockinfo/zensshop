@@ -9,34 +9,26 @@ require_once __DIR__ . '/classes/Order.php';
 $baseUrl = getBaseUrl();
 $order = new Order();
 
-// Get order ID from URL - try both 'id' and 'order_id' parameters
+// Get order identifier from URL
 $orderId = $_GET['id'] ?? $_GET['order_id'] ?? null;
+$orderNumber = $_GET['order_number'] ?? null;
 
-// Convert to integer if it's a string number
-if ($orderId && is_numeric($orderId)) {
-    $orderId = (int)$orderId;
+// Debug: Log identifiers for troubleshooting
+error_log("Order Success Page - Identification: Order ID: " . var_export($orderId, true) . ", Order Number: " . var_export($orderNumber, true));
+
+$orderData = null;
+if ($orderNumber) {
+    $orderData = $order->getByOrderNumber($orderNumber);
+} elseif ($orderId) {
+    // Convert to integer if it's a numeric ID
+    if (is_numeric($orderId)) {
+        $orderData = $order->getById((int)$orderId);
+    }
 }
-
-// Debug: Log order ID for troubleshooting
-error_log("Order Success Page - Order ID from URL: " . var_export($orderId, true));
-error_log("Order Success Page - GET params: " . var_export($_GET, true));
-error_log("Order Success Page - REQUEST_URI: " . ($_SERVER['REQUEST_URI'] ?? 'N/A'));
-
-if (!$orderId) {
-    error_log("Order Success Page - No order ID provided, redirecting to home");
-    // Don't redirect in production - show error instead
-    die("Error: Order ID is required. Please check your order confirmation email.");
-}
-
-// Get order details
-$orderData = $order->getById($orderId);
-
-error_log("Order Success Page - Order data: " . var_export($orderData ? 'Found' : 'Not Found', true));
 
 if (!$orderData) {
-    error_log("Order Success Page - Order not found for ID: " . $orderId . ", redirecting to home");
-    // Don't redirect - show error instead
-    die("Error: Order not found. Please contact support with your order number.");
+    error_log("Order Success Page - Order not found for Identifier. Redirecting to home or showing error.");
+    die("Error: Order not found. Please check your confirmation mail or contact support.");
 }
 
 // Format customer name (first name only for thank you message)
