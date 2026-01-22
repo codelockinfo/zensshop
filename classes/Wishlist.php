@@ -31,10 +31,16 @@ class Wishlist {
         // Try to get from cookie first
         if (isset($_COOKIE[WISHLIST_COOKIE_NAME])) {
             $json = $_COOKIE[WISHLIST_COOKIE_NAME];
+            
+            // Try explicit decoding if needed
             $wishlistData = json_decode($json, true);
             
             if (!is_array($wishlistData)) {
                 $wishlistData = json_decode(stripslashes($json), true);
+            }
+            
+            if (!is_array($wishlistData)) {
+                $wishlistData = json_decode(urldecode($json), true);
             }
 
             if (is_array($wishlistData) && !empty($wishlistData)) {
@@ -59,7 +65,17 @@ class Wishlist {
             
             // If image is missing or invalid, fetch from product
             if (empty($item['image']) || $item['image'] === 'null' || $item['image'] === 'undefined') {
-                $product = $this->product->getById($item['product_id']);
+                $productId = $item['product_id'];
+                $product = $this->product->getByProductId($productId);
+
+                // Fallback for old auto-increment IDs
+                if (!$product && is_numeric($productId) && $productId < 1000000000) {
+                    $product = $this->product->getById($productId);
+                    if ($product) {
+                        $item['product_id'] = $product['product_id'];
+                    }
+                }
+
                 if ($product) {
                     if (!empty($product['featured_image'])) {
                         $item['image'] = $product['featured_image'];
@@ -112,7 +128,7 @@ class Wishlist {
         $items = $this->db->fetchAll(
             "SELECT w.*, p.name, p.price, p.sale_price, p.featured_image, p.slug, p.rating, p.review_count, p.sku
              FROM wishlist w
-             INNER JOIN products p ON w.product_id = p.id
+             LEFT JOIN products p ON (w.product_id = p.product_id OR (w.product_id = p.id AND w.product_id < 1000000000))
              WHERE w.user_id = ?",
             [$userId]
         );
@@ -124,7 +140,7 @@ class Wishlist {
             if (!empty($item['featured_image'])) {
                 $productImage = $item['featured_image'];
             } else {
-                $product = $this->product->getById($item['product_id']);
+                $product = $this->product->getByProductId($item['product_id']);
                 if ($product) {
                     $images = json_decode($product['images'] ?? '[]', true);
                     if (!empty($images[0])) {
@@ -164,8 +180,8 @@ class Wishlist {
      * Add item to wishlist
      */
     public function addItem($productId) {
-        // Get product
-        $product = $this->product->getById($productId);
+        // Get product by 10-digit ID
+        $product = $this->product->getByProductId($productId);
         if (!$product) {
             throw new Exception("Product not found");
         }

@@ -100,6 +100,19 @@ class Product {
     }
     
     /**
+     * Get product by 10-digit product_id
+     */
+    public function getByProductId($productId) {
+        return $this->db->fetchOne(
+            "SELECT p.*, c.name as category_name 
+             FROM products p 
+             LEFT JOIN categories c ON p.category_id = c.id 
+             WHERE p.product_id = ?",
+            [$productId]
+        );
+    }
+    
+    /**
      * Get product by slug
      */
     public function getBySlug($slug) {
@@ -222,7 +235,7 @@ class Product {
                 $fields = [];
                 $params = [];
                 
-                $allowedFields = ['name', 'description', 'short_description', 'category_id', 'price', 'currency', 
+                $allowedFields = ['name', 'sku', 'description', 'short_description', 'category_id', 'price', 'currency', 
                                  'sale_price', 'stock_quantity', 'stock_status', 'images', 'featured_image',
                                  'gender', 'brand', 'status', 'featured'];
                 
@@ -443,31 +456,6 @@ class Product {
         // Convert auto-increment id to 10-digit product_id if needed
         $productIdValue = $this->getProductIdValue($productId);
         
-        // Save variant options to product_variant_options table (if table exists)
-        if (!empty($variantsData['options']) && is_array($variantsData['options'])) {
-            try {
-                foreach ($variantsData['options'] as $index => $option) {
-                    if (empty($option['name']) || empty($option['values'])) {
-                        continue;
-                    }
-                    
-                    $this->db->insert(
-                        "INSERT INTO product_variant_options (product_id, option_name, option_values, display_order) 
-                         VALUES (?, ?, ?, ?)",
-                        [
-                            $productIdValue,
-                            $option['name'],
-                            json_encode($option['values']),
-                            $index
-                        ]
-                    );
-                }
-            } catch (Exception $e) {
-                // Table might not exist, log and continue (this is optional)
-                error_log("Could not save variant options (table may not exist): " . $e->getMessage());
-            }
-        }
-        
         // Save individual variants to product_variants table
         try {
             foreach ($variantsData['variants'] as $variant) {
@@ -519,52 +507,48 @@ class Product {
         $productIdValue = $this->getProductIdValue($productId);
         
         try {
-            // Get variant options
-            $options = $this->db->fetchAll(
-                "SELECT * FROM product_variant_options WHERE product_id = ? ORDER BY display_order",
-                [$productIdValue]
-            );
-        } catch (Exception $e) {
-            // Table might not exist or query failed
-            $options = [];
-        }
-        
-        try {
-            // Get variants
+            // Get variants from product_variants table
             $variants = $this->db->fetchAll(
                 "SELECT * FROM product_variants WHERE product_id = ? ORDER BY is_default DESC, id ASC",
                 [$productIdValue]
             );
         } catch (Exception $e) {
-            // Table might not exist or query failed
             $variants = [];
         }
         
-        // Decode JSON fields
-        if (is_array($options)) {
-            foreach ($options as &$option) {
-                if (isset($option['option_values'])) {
-                    $decoded = json_decode($option['option_values'], true);
-                    $option['option_values'] = is_array($decoded) ? $decoded : [];
-                } else {
-                    $option['option_values'] = [];
-                }
-            }
-        } else {
-            $options = [];
-        }
+        // Reconstruct options from variant attributes
+        $optionsMap = [];
         
         if (is_array($variants)) {
             foreach ($variants as &$variant) {
                 if (isset($variant['variant_attributes'])) {
-                    $decoded = json_decode($variant['variant_attributes'], true);
-                    $variant['variant_attributes'] = is_array($decoded) ? $decoded : [];
+                    $attributes = json_decode($variant['variant_attributes'], true);
+                    $variant['variant_attributes'] = is_array($attributes) ? $attributes : [];
+                    
+                    // Collect unique option names and values
+                    foreach ($variant['variant_attributes'] as $name => $value) {
+                        if (!isset($optionsMap[$name])) {
+                            $optionsMap[$name] = [];
+                        }
+                        if (!in_array($value, $optionsMap[$name])) {
+                            $optionsMap[$name][] = $value;
+                        }
+                    }
                 } else {
                     $variant['variant_attributes'] = [];
                 }
             }
         } else {
             $variants = [];
+        }
+        
+        // Convert optionsMap to the expected options array format
+        $options = [];
+        foreach ($optionsMap as $name => $values) {
+            $options[] = [
+                'option_name' => $name,
+                'option_values' => $values
+            ];
         }
         
         return [
@@ -580,16 +564,6 @@ class Product {
     public function deleteVariants($productId) {
         // Convert auto-increment id to 10-digit product_id if needed
         $productIdValue = $this->getProductIdValue($productId);
-        
-        try {
-            $this->db->execute(
-                "DELETE FROM product_variant_options WHERE product_id = ?",
-                [$productIdValue]
-            );
-        } catch (Exception $e) {
-            // Table might not exist, ignore the error
-            error_log("Could not delete variant options (table may not exist): " . $e->getMessage());
-        }
         
         try {
             $this->db->execute(

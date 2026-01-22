@@ -34,7 +34,12 @@ $cartTotal = $cart->getTotal();
                     $productSlug = $item['slug'] ?? '';
                     $productUrl = !empty($productSlug) ? url('product?slug=' . urlencode($productSlug)) : '#';
                 ?>
-                <div class="cart-item-wrapper" data-product-id="<?php echo $item['product_id']; ?>">
+                <?php 
+                    $variantAttributes = $item['variant_attributes'] ?? [];
+                    $attributesJson = json_encode($variantAttributes);
+                    $attributesEscaped = htmlspecialchars($attributesJson, ENT_QUOTES, 'UTF-8');
+                ?>
+                <div class="cart-item-wrapper" data-product-id="<?php echo $item['product_id']; ?>" data-attributes='<?php echo $attributesEscaped; ?>'>
                     <div class="bg-white rounded-lg p-6 flex flex-col md:flex-row items-start md:items-center space-y-4 md:space-y-0 md:space-x-6 cart-item" data-product-id="<?php echo $item['product_id']; ?>">
                         <a href="<?php echo $productUrl; ?>">
                             <img src="<?php echo htmlspecialchars($item['image'] ?? 'https://via.placeholder.com/150'); ?>" 
@@ -42,32 +47,39 @@ $cartTotal = $cart->getTotal();
                                  class="w-32 h-32 object-cover rounded">
                         </a>
                         <div class="flex-1">
-                            <h3 class="text-xl font-semibold mb-2">
+                            <h3 class="text-xl font-semibold mb-1">
                                 <a href="<?php echo $productUrl; ?>" class="hover:text-primary transition">
                                     <?php echo htmlspecialchars($item['name']); ?>
                                 </a>
                             </h3>
+                            <?php if (!empty($variantAttributes)): ?>
+                                <div class="mb-2 space-y-0.5">
+                                    <?php foreach ($variantAttributes as $key => $v): ?>
+                                        <p class="text-sm text-gray-500"><?php echo htmlspecialchars($key); ?>: <span class="font-medium"><?php echo htmlspecialchars($v); ?></span></p>
+                                    <?php endforeach; ?>
+                                </div>
+                            <?php endif; ?>
                             <p class="text-gray-600">Price: <span class="item-price"><?php echo format_price($item['price'], $item['currency'] ?? 'USD'); ?></span></p>
                         </div>
                         <div class="flex items-center space-x-4">
                             <div class="flex items-center border rounded">
-                                <button onclick="decrementCartItem(<?php echo $item['product_id']; ?>, this)" 
+                                <button onclick='decrementCartItem(<?php echo $item['product_id']; ?>, this, <?php echo $attributesEscaped; ?>)' 
                                         class="px-4 py-2 hover:bg-gray-100" data-loading-text="">-</button>
-                                <span class="px-4 py-2 item-quantity" data-product-id="<?php echo $item['product_id']; ?>"><?php echo $item['quantity']; ?></span>
-                                <button onclick="incrementCartItem(<?php echo $item['product_id']; ?>, this)" 
+                                <span class="px-4 py-2 item-quantity" data-product-id="<?php echo $item['product_id']; ?>" data-attributes='<?php echo $attributesEscaped; ?>'><?php echo $item['quantity']; ?></span>
+                                <button onclick='incrementCartItem(<?php echo $item['product_id']; ?>, this, <?php echo $attributesEscaped; ?>)' 
                                         class="px-4 py-2 hover:bg-gray-100" data-loading-text="">+</button>
                             </div>
                             <p class="text-xl font-bold w-24 text-right item-total">
                                 <span><?php echo format_price($item['price'] * $item['quantity'], $item['currency'] ?? 'USD'); ?></span>
                             </p>
-                            <button onclick="showInlineRemoveConfirm(<?php echo $item['product_id']; ?>)" 
+                            <button onclick='showInlineRemoveConfirm(<?php echo $item['product_id']; ?>, <?php echo $attributesEscaped; ?>)' 
                                     class="text-red-500 hover:text-red-700">
                                 <i class="fas fa-trash text-xl"></i>
                             </button>
                         </div>
                     </div>
                     <!-- Inline Remove Confirmation -->
-                    <div class="remove-confirm-inline bg-white rounded-lg p-6 flex items-center space-x-4 shadow-md border border-gray-300 hidden" data-product-id="<?php echo $item['product_id']; ?>">
+                    <div class="remove-confirm-inline bg-white rounded-lg p-6 flex items-center space-x-4 shadow-md border border-gray-300 hidden" data-product-id="<?php echo $item['product_id']; ?>" data-attributes='<?php echo $attributesEscaped; ?>'>
                         <img src="<?php echo htmlspecialchars($item['image'] ?? 'https://via.placeholder.com/150'); ?>" 
                              alt="<?php echo htmlspecialchars($item['name']); ?>" 
                              class="w-20 h-20 object-cover rounded border border-gray-200">
@@ -75,19 +87,19 @@ $cartTotal = $cart->getTotal();
                             <h3 class="text-base font-semibold mb-1 text-gray-800"><?php echo htmlspecialchars($item['name']); ?></h3>
                             <p class="text-gray-600 text-sm mb-3">Add to wishlist before remove?</p>
                             <div class="flex space-x-3">
-                                <button onclick="confirmInlineRemoveWithWishlist(<?php echo $item['product_id']; ?>, this)" 
+                                <button onclick='confirmInlineRemoveWithWishlist(<?php echo $item['product_id']; ?>, this, <?php echo $attributesEscaped; ?>)' 
                                         class="px-6 py-2 bg-black text-white text-sm font-medium rounded hover:bg-gray-800 transition"
                                         data-loading-text="Removing...">
                                     Yes
                                 </button>
-                                <button onclick="confirmInlineRemoveWithoutWishlist(<?php echo $item['product_id']; ?>, this)" 
+                                <button onclick='confirmInlineRemoveWithoutWishlist(<?php echo $item['product_id']; ?>, this, <?php echo $attributesEscaped; ?>)' 
                                         class="px-6 py-2 border border-gray-300 text-gray-700 text-sm font-medium rounded hover:bg-gray-50 transition"
                                         data-loading-text="Removing...">
                                     No
                                 </button>
                             </div>
                         </div>
-                        <button onclick="cancelInlineRemoveConfirm(<?php echo $item['product_id']; ?>)" 
+                        <button onclick='cancelInlineRemoveConfirm(<?php echo $item['product_id']; ?>, <?php echo $attributesEscaped; ?>)' 
                                 class="text-gray-400 hover:text-gray-600">
                             <i class="fas fa-times text-xl"></i>
                         </button>
@@ -136,30 +148,33 @@ $cartTotal = $cart->getTotal();
 
 <script>
 // Helper functions to increment/decrement cart items
-function incrementCartItem(productId, btn) {
-    const quantitySpan = document.querySelector(`.item-quantity[data-product-id="${productId}"]`);
+function incrementCartItem(productId, btn, attributes = {}) {
+    const attributesJson = JSON.stringify(attributes);
+    const quantitySpan = document.querySelector(`.item-quantity[data-product-id="${productId}"][data-attributes='${attributesJson}']`);
     if (quantitySpan) {
         const currentQuantity = parseInt(quantitySpan.textContent) || 1;
         if (typeof updateCartItem === 'function') {
-            updateCartItem(productId, currentQuantity + 1, btn);
+            updateCartItem(productId, currentQuantity + 1, btn, attributes);
         }
     }
 }
 
-function decrementCartItem(productId, btn) {
-    const quantitySpan = document.querySelector(`.item-quantity[data-product-id="${productId}"]`);
+function decrementCartItem(productId, btn, attributes = {}) {
+    const attributesJson = JSON.stringify(attributes);
+    const quantitySpan = document.querySelector(`.item-quantity[data-product-id="${productId}"][data-attributes='${attributesJson}']`);
     if (quantitySpan) {
         const currentQuantity = parseInt(quantitySpan.textContent) || 1;
         const newQuantity = Math.max(1, currentQuantity - 1);
         if (typeof updateCartItem === 'function') {
-            updateCartItem(productId, newQuantity, btn);
+            updateCartItem(productId, newQuantity, btn, attributes);
         }
     }
 }
 
 // Inline Remove Confirm Functions
-function showInlineRemoveConfirm(productId) {
-    const wrapper = document.querySelector('.cart-item-wrapper[data-product-id="' + productId + '"]');
+function showInlineRemoveConfirm(productId, attributes = {}) {
+    const attributesJson = JSON.stringify(attributes);
+    const wrapper = document.querySelector(`.cart-item-wrapper[data-product-id="${productId}"][data-attributes='${attributesJson}']`);
     if (wrapper) {
         const cartItem = wrapper.querySelector('.cart-item');
         const confirmBox = wrapper.querySelector('.remove-confirm-inline');
@@ -170,8 +185,9 @@ function showInlineRemoveConfirm(productId) {
     }
 }
 
-function cancelInlineRemoveConfirm(productId) {
-    const wrapper = document.querySelector('.cart-item-wrapper[data-product-id="' + productId + '"]');
+function cancelInlineRemoveConfirm(productId, attributes = {}) {
+    const attributesJson = JSON.stringify(attributes);
+    const wrapper = document.querySelector(`.cart-item-wrapper[data-product-id="${productId}"][data-attributes='${attributesJson}']`);
     if (wrapper) {
         const cartItem = wrapper.querySelector('.cart-item');
         const confirmBox = wrapper.querySelector('.remove-confirm-inline');
@@ -182,7 +198,7 @@ function cancelInlineRemoveConfirm(productId) {
     }
 }
 
-async function confirmInlineRemoveWithWishlist(productId) {
+async function confirmInlineRemoveWithWishlist(productId, btn, attributes = {}) {
     const baseUrl = typeof BASE_URL !== 'undefined' ? BASE_URL : window.location.pathname.split('/').slice(0, -1).join('/') || '';
     try {
         // Add to wishlist
@@ -200,19 +216,19 @@ async function confirmInlineRemoveWithWishlist(productId) {
         
         // Remove from cart
         if (typeof removeFromCart === 'function') {
-            await removeFromCart(productId, btn);
+            await removeFromCart(productId, btn, attributes);
         }
     } catch (error) {
         console.error('Error adding to wishlist:', error);
         if (typeof removeFromCart === 'function') {
-            await removeFromCart(productId);
+            await removeFromCart(productId, btn, attributes);
         }
     }
 }
 
-async function confirmInlineRemoveWithoutWishlist(productId, btn) {
+async function confirmInlineRemoveWithoutWishlist(productId, btn, attributes = {}) {
     if (typeof removeFromCart === 'function') {
-        await removeFromCart(productId, btn);
+        await removeFromCart(productId, btn, attributes);
     }
 }
 

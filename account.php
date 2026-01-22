@@ -296,11 +296,23 @@ require_once __DIR__ . '/includes/header.php';
                                                     <div class="flex-1 min-w-0">
                                                         <h4 class="font-bold text-gray-900 truncate hover:text-blue-600 transition">
                                                             <a href="<?php echo url('product.php?slug=' . ($item['product_slug'] ?? '')); ?>">
-                                                                <?php echo htmlspecialchars($item['product_name']); ?>
+                                                                <?php echo htmlspecialchars($item['product_name'] ?? ''); ?>
                                                             </a>
                                                         </h4>
-                                                        <p class="text-sm text-gray-500 mt-1">Quantity: <?php echo $item['quantity']; ?>x = <?php echo format_price($item['price'] * $item['quantity'], $item['currency'] ?? 'INR'); ?></p>
-                                                        <p class="text-xs text-gray-400 mt-0.5">Color: Silver | Size: Large</p>
+                                                        <p class="text-sm text-gray-500 mt-1">Quantity: <?php echo $item['quantity']; ?>x</p>
+                                                        <p class="text-sm text-gray-500 mt-1">Price: <?php echo format_price($item['price'] * $item['quantity'], $item['currency'] ?? 'INR'); ?></p>
+                                                        <?php 
+                                                        $variantAttributes = !empty($item['variant_attributes']) ? (is_array($item['variant_attributes']) ? $item['variant_attributes'] : json_decode($item['variant_attributes'], true)) : [];
+                                                        if (!empty($variantAttributes) && is_array($variantAttributes)): 
+                                                        ?>
+                                                            <div class="mt-1 flex flex-wrap gap-2">
+                                                                <?php foreach ($variantAttributes as $key => $value): ?>
+                                                                    <span class="text-xs bg-gray-100 text-gray-600 px-2 py-0.5 rounded border border-gray-200">
+                                                                        <?php echo htmlspecialchars($key); ?>: <span class="font-medium text-gray-800"><?php echo htmlspecialchars($value); ?></span>
+                                                                    </span>
+                                                                <?php endforeach; ?>
+                                                            </div>
+                                                        <?php endif; ?>
                                                     </div>
                                                 </div>
                                             <?php endforeach; ?>

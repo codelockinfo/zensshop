@@ -66,9 +66,21 @@ function initializeProductCards() {
         newBtn.addEventListener('click', function(e) {
             e.preventDefault();
             e.stopPropagation();
-            const productId = parseInt(this.getAttribute('data-product-id'));
+            const productId = this.getAttribute('data-product-id');
+            
+            // Get attributes if present
+            let attributes = {};
+            try {
+                const attrData = this.getAttribute('data-attributes');
+                if (attrData) {
+                    attributes = JSON.parse(attrData);
+                }
+            } catch (err) {
+                console.error("Error parsing product attributes:", err);
+            }
+
             if (typeof addToCart === 'function') {
-                addToCart(productId, 1, this);
+                addToCart(productId, 1, this, attributes);
             }
         });
     });

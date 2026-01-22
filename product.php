@@ -125,6 +125,11 @@ if (!headers_sent()) {
     setcookie('recently_viewed', json_encode($recentIds), time() + (30 * 24 * 60 * 60), '/');
 }
 $_COOKIE['recently_viewed'] = json_encode($recentIds);
+
+// Get product variants
+$variantsData = $product->getVariants($productData['id']);
+$productOptions = $variantsData['options'] ?? [];
+$productVariants = $variantsData['variants'] ?? [];
 ?>
 
 <section class="py-8 md:py-12 bg-white">
@@ -190,9 +195,9 @@ $_COOKIE['recently_viewed'] = json_encode($recentIds);
                 <!-- Price -->
                 <div class="mb-6">
                     <?php if ($originalPrice): ?>
-                    <span class="text-2xl text-gray-400 line-through mr-2"><?php echo format_price($originalPrice, $productData['currency'] ?? 'USD'); ?></span>
+                    <span id="original-price" class="text-2xl text-gray-400 line-through mr-2"><?php echo format_price($originalPrice, $productData['currency'] ?? 'USD'); ?></span>
                     <?php endif; ?>
-                    <span class="text-2xl font-bold text-gray-900"><?php echo format_price($price, $productData['currency'] ?? 'USD'); ?></span>
+                    <span id="product-price" class="text-2xl font-bold text-gray-900"><?php echo format_price($price, $productData['currency'] ?? 'USD'); ?></span>
                 </div>
                 
                 <!-- Description -->
@@ -222,51 +227,75 @@ $_COOKIE['recently_viewed'] = json_encode($recentIds);
                     </div>
                 </div>
                 
-                <!-- Size Selector -->
-                <div class="mb-6">
-                    <div class="flex items-center justify-between mb-3">
-                        <label class="font-semibold text-gray-900">Size:</label>
-                        <a href="#" class="text-sm text-primary hover:underline">Size guide</a>
+                <!-- Dynamic Variant Selectors -->
+                <?php if (!empty($productOptions)): ?>
+                    <?php foreach ($productOptions as $option): 
+                        $optionName = $option['option_name'];
+                        $optionValues = $option['option_values'];
+                    ?>
+                    <div class="mb-6 variant-option-group" data-option-name="<?php echo htmlspecialchars($optionName); ?>">
+                        <div class="flex items-center justify-between mb-3">
+                            <label class="font-semibold text-gray-900"><?php echo htmlspecialchars($optionName); ?>: <span class="selected-value text-primary font-normal"></span></label>
+                            <?php if (strtolower($optionName) === 'size'): ?>
+                                <a href="#" class="text-sm text-primary hover:underline">Size guide</a>
+                            <?php endif; ?>
+                        </div>
+                        <div class="flex flex-wrap gap-2">
+                            <?php foreach ($optionValues as $value): ?>
+                                <button type="button" 
+                                        onclick="selectVariantOption('<?php echo htmlspecialchars($optionName); ?>', '<?php echo htmlspecialchars($value); ?>', this)"
+                                        class="variant-btn px-4 py-2 border-2 rounded transition border-gray-300 hover:border-primary">
+                                    <?php echo htmlspecialchars($value); ?>
+                                </button>
+                            <?php endforeach; ?>
+                        </div>
                     </div>
-                    <div class="flex flex-wrap gap-2">
-                        <?php 
-                        $sizes = ['S', 'M', 'L', 'XL'];
-                        $selectedSize = $_GET['size'] ?? 'M';
-                        foreach ($sizes as $size): 
-                        ?>
-                        <button type="button" 
-                                onclick="selectSize('<?php echo $size; ?>', this)"
-                                class="size-btn px-6 py-2 border-2 rounded transition <?php echo $selectedSize === $size ? 'border-primary bg-primary text-white' : 'border-gray-300 hover:border-primary'; ?>">
-                            <?php echo $size; ?>
-                        </button>
+                    <?php endforeach; ?>
+                <?php else: ?>
+                    <!-- Fallback or simple size selector if no variants in DB -->
+                    <div class="mb-6">
+                        <div class="flex items-center justify-between mb-3">
+                            <label class="font-semibold text-gray-900">Standard Size:</label>
+                        </div>
+                        <div class="flex flex-wrap gap-2">
+                            <?php foreach (['Standard'] as $size): ?>
+                            <button type="button" 
+                                    class="px-6 py-2 border-2 rounded border-primary bg-primary text-white">
+                                <?php echo $size; ?>
+                            </button>
+                            <?php endforeach; ?>
+                        </div>
+                    </div>
+                <?php endif; ?>
+
+                <!-- Variant Images Section (if any have images) -->
+                <?php 
+                $variantImages = array_filter($productVariants, function($v) { return !empty($v['image']); });
+                if (!empty($variantImages)): 
+                ?>
+                <!-- <div class="mb-6">
+                    <label class="font-semibold text-gray-900 mb-3 block">Available Styles:</label>
+                    <div class="flex flex-wrap gap-3">
+                        <?php foreach ($variantImages as $v): ?>
+                            <button type="button" 
+                                    onclick="selectVariantByImage(<?php echo htmlspecialchars(json_encode($v['variant_attributes'])); ?>, '<?php echo htmlspecialchars($v['image']); ?>')"
+                                    class="w-16 h-16 rounded border-2 border-transparent hover:border-primary overflow-hidden transition">
+                                <img src="<?php echo htmlspecialchars($v['image']); ?>" alt="Style" class="w-full h-full object-cover">
+                            </button>
                         <?php endforeach; ?>
                     </div>
-                </div>
-                
-                <!-- Color Selector -->
-                <div class="mb-6">
-                    <label class="font-semibold text-gray-900 mb-3 block">Color: <span id="selectedColor">Indigo</span></label>
-                    <div class="flex gap-3">
-                        <button type="button" 
-                                onclick="selectColor('Indigo', this, '#4F46E5')"
-                                class="color-btn w-12 h-12 rounded-full border-2 border-primary bg-blue-600 focus:outline-none focus:ring-2 focus:ring-primary">
-                        </button>
-                        <button type="button" 
-                                onclick="selectColor('Black', this, '#000000')"
-                                class="color-btn w-12 h-12 rounded-full border-2 border-gray-300 bg-black hover:border-primary focus:outline-none focus:ring-2 focus:ring-primary">
-                        </button>
-                    </div>
-                </div>
+                </div> -->
+                <?php endif; ?>
                 
                 <!-- Action Buttons -->
                 <div class="flex flex-col sm:flex-row gap-4 mb-6">
-                    <button onclick="addToCartFromDetail(<?php echo $productData['id']; ?>, this)" 
+                    <button onclick="addToCartFromDetail(<?php echo $productData['product_id']; ?>, this)" 
                             class="flex-1 bg-black text-white py-4 px-6 hover:bg-gray-800 transition font-semibold flex items-center justify-center add-to-cart-btn"
                             data-loading-text="Adding...">
                         <i class="fas fa-shopping-cart mr-2"></i>
                         Add To Cart
                     </button>
-                    <button onclick="buyNow(<?php echo $productData['id']; ?>, this)" 
+                    <button onclick="buyNow(<?php echo $productData['product_id']; ?>, this)" 
                             class="flex-1 bg-red-700 text-white py-4 px-6 hover:bg-red-600 transition font-semibold buy-now-btn"
                             data-loading-text="Processing...">
                         Buy It Now
@@ -296,11 +325,11 @@ $_COOKIE['recently_viewed'] = json_encode($recentIds);
                 <div class="border-t pt-6 space-y-2 text-sm">
                     <div class="flex">
                         <span class="font-semibold text-gray-700 w-24">Sku:</span>
-                        <span class="text-gray-600"><?php echo htmlspecialchars($productData['sku'] ?? 'N/A'); ?></span>
+                        <span id="variant-sku" class="text-gray-600"><?php echo htmlspecialchars($productData['sku'] ?? 'N/A'); ?></span>
                     </div>
                     <div class="flex">
                         <span class="font-semibold text-gray-700 w-24">Available:</span>
-                        <span class="text-gray-600 capitalize"><?php echo str_replace('_', ' ', $productData['stock_status'] ?? 'in_stock'); ?></span>
+                        <span id="variant-stock-status" class="text-gray-600 capitalize"><?php echo str_replace('_', ' ', $productData['stock_status'] ?? 'in_stock'); ?></span>
                     </div>
                     <div class="flex">
                         <span class="font-semibold text-gray-700 w-24">Collections:</span>
@@ -518,8 +547,117 @@ $_COOKIE['recently_viewed'] = json_encode($recentIds);
 </section>
 
 <script>
-let selectedSize = '<?php echo $selectedSize; ?>';
-let selectedColor = 'Indigo';
+const productVariants = <?php echo json_encode($productVariants); ?>;
+const productMainSku = "<?php echo htmlspecialchars($productData['sku'] ?? 'N/A'); ?>";
+const productMainPrice = <?php echo $price; ?>;
+const productCurrency = "<?php echo $productData['currency'] ?? 'USD'; ?>";
+const currencySymbols = <?php 
+    $symbols = ['USD' => '$', 'EUR' => '€', 'GBP' => '£', 'INR' => '₹']; 
+    echo json_encode($symbols); 
+?>;
+let selectedOptions = {};
+
+function formatPriceJS(amount, currency) {
+    const symbol = currencySymbols[currency] || currency;
+    return symbol + parseFloat(amount).toFixed(2);
+}
+
+function selectVariantOption(optionName, value, button) {
+    selectedOptions[optionName] = value;
+    
+    // Update button UI
+    const group = button.closest('.variant-option-group');
+    group.querySelectorAll('.variant-btn').forEach(btn => {
+        btn.classList.remove('border-primary', 'bg-primary', 'text-white');
+        btn.classList.add('border-gray-300');
+    });
+    button.classList.remove('border-gray-300');
+    button.classList.add('border-primary', 'bg-primary', 'text-white');
+    
+    // Update selected value text
+    group.querySelector('.selected-value').textContent = value;
+    
+    updateVariantDisplay();
+}
+
+function selectVariantByImage(attributes, imageUrl) {
+    selectedOptions = {...attributes};
+    
+    // Update buttons UI
+    Object.keys(attributes).forEach(name => {
+        const val = attributes[name];
+        const group = document.querySelector(`.variant-option-group[data-option-name="${name}"]`);
+        if (group) {
+            group.querySelectorAll('.variant-btn').forEach(btn => {
+                if (btn.textContent.trim() === val) {
+                    btn.classList.remove('border-gray-300');
+                    btn.classList.add('border-primary', 'bg-primary', 'text-white');
+                    group.querySelector('.selected-value').textContent = val;
+                } else {
+                    btn.classList.remove('border-primary', 'bg-primary', 'text-white');
+                    btn.classList.add('border-gray-300');
+                }
+            });
+        }
+    });
+    
+    if (imageUrl) {
+        document.getElementById('mainProductImage').src = imageUrl;
+    }
+    
+    updateVariantDisplay();
+}
+
+function updateVariantDisplay() {
+    // Find matching variant
+    const matchingVariant = productVariants.find(v => {
+        return Object.keys(selectedOptions).every(key => v.variant_attributes[key] === selectedOptions[key]);
+    });
+    
+    const skuElement = document.getElementById('variant-sku');
+    const priceElement = document.getElementById('product-price');
+    const stockElement = document.getElementById('variant-stock-status');
+    
+    if (matchingVariant) {
+        // Update SKU
+        if (skuElement) {
+            skuElement.textContent = matchingVariant.sku || productMainSku;
+        }
+
+        // Update Price
+        if (priceElement && (matchingVariant.price || matchingVariant.sale_price)) {
+            const displayPrice = matchingVariant.sale_price || matchingVariant.price;
+            priceElement.textContent = formatPriceJS(displayPrice, productCurrency);
+        } else if (priceElement) {
+            priceElement.textContent = formatPriceJS(productMainPrice, productCurrency);
+        }
+        
+        // Update Stock Status
+        if (stockElement) {
+            const stock = parseInt(matchingVariant.stock_quantity);
+            if (stock > 0) {
+                stockElement.textContent = 'In Stock';
+                stockElement.className = 'text-green-600 capitalize';
+            } else {
+                stockElement.textContent = 'Out of Stock';
+                stockElement.className = 'text-red-600 capitalize';
+            }
+        }
+        
+        // Update image if variant has one
+        if (matchingVariant.image) {
+            document.getElementById('mainProductImage').src = matchingVariant.image;
+        }
+    } else {
+        // Reset to default
+        if (skuElement) skuElement.textContent = productMainSku;
+        if (priceElement) priceElement.textContent = formatPriceJS(productMainPrice, productCurrency);
+        if (stockElement) {
+            stockElement.textContent = "<?php echo str_replace('_', ' ', $productData['stock_status'] ?? 'in_stock'); ?>";
+            stockElement.className = 'text-gray-600 capitalize';
+        }
+    }
+}
 
 function changeMainImage(imageUrl, thumbnail) {
     document.getElementById('mainProductImage').src = imageUrl;
@@ -532,27 +670,6 @@ function changeMainImage(imageUrl, thumbnail) {
     });
     thumbnail.classList.remove('border-transparent');
     thumbnail.classList.add('border-primary');
-}
-
-function selectSize(size, button) {
-    selectedSize = size;
-    document.querySelectorAll('.size-btn').forEach(btn => {
-        btn.classList.remove('border-primary', 'bg-primary', 'text-white');
-        btn.classList.add('border-gray-300');
-    });
-    button.classList.remove('border-gray-300');
-    button.classList.add('border-primary', 'bg-primary', 'text-white');
-}
-
-function selectColor(color, button, colorCode) {
-    selectedColor = color;
-    document.getElementById('selectedColor').textContent = color;
-    document.querySelectorAll('.color-btn').forEach(btn => {
-        btn.classList.remove('border-primary');
-        btn.classList.add('border-gray-300');
-    });
-    button.classList.remove('border-gray-300');
-    button.classList.add('border-primary');
 }
 
 function toggleSection(sectionId) {
@@ -577,7 +694,7 @@ function addToCartFromDetail(productId, btn) {
     
     // Use global addToCart function if available
     if (typeof addToCart === 'function') {
-        addToCart(productId, quantity, btn);
+        addToCart(productId, quantity, btn, selectedOptions);
     } else {
         // Fallback to direct API call
         fetch('<?php echo $baseUrl; ?>/api/cart.php', {
@@ -585,7 +702,8 @@ function addToCartFromDetail(productId, btn) {
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ 
                 product_id: productId, 
-                quantity: quantity
+                quantity: quantity,
+                variant_attributes: selectedOptions
             })
         })
         .then(response => response.json())
@@ -645,7 +763,11 @@ function buyNow(productId, btn) {
     fetch('<?php echo $baseUrl; ?>/api/cart.php', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ product_id: productId, quantity: 1 })
+        body: JSON.stringify({ 
+            product_id: productId, 
+            quantity: 1,
+            variant_attributes: selectedOptions
+        })
     })
     .then(response => response.json())
     .then(data => {
@@ -841,9 +963,17 @@ function escapeHtml(text) {
     return div.innerHTML;
 }
 
-// Load reviews on page load
+// Load reviews and initialize variants on page load
 document.addEventListener('DOMContentLoaded', function() {
     loadReviews();
+    
+    // Auto-select first variant if available
+    if (typeof productVariants !== 'undefined' && productVariants.length > 0) {
+        const firstVariant = productVariants[0];
+        if (firstVariant.variant_attributes) {
+            selectVariantByImage(firstVariant.variant_attributes, firstVariant.image);
+        }
+    }
     
     // Close modal on overlay click
     const reviewModal = document.getElementById('reviewModal');

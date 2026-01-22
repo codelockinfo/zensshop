@@ -188,7 +188,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['place_order']) && emp
                 'product_name' => $item['name'],
                 'product_sku' => $item['sku'] ?? null,
                 'quantity' => $item['quantity'],
-                'price' => $item['price']
+                'price' => $item['price'],
+                'variant_attributes' => $item['variant_attributes'] ?? []
             ];
         }
         
@@ -500,7 +501,16 @@ nav.bg-white.sticky.top-0 {
                                      class="w-16 h-16 object-cover rounded">
                                 <div class="flex-1">
                                     <h3 class="font-semibold text-sm text-gray-800"><?php echo htmlspecialchars($item['name']); ?></h3>
-                                    <p class="text-xs text-gray-500"><?php echo $item['quantity']; ?>x</p>
+                                    <p class="text-xs text-gray-500">Quantity: <?php echo $item['quantity']; ?>x</p>
+                                    <?php if (!empty($item['variant_attributes']) && is_array($item['variant_attributes'])): ?>
+                                        <div class="mt-1 flex flex-wrap gap-1">
+                                            <?php foreach ($item['variant_attributes'] as $key => $value): ?>
+                                                <span class="text-[10px] text-gray-500 bg-gray-100 px-1 rounded">
+                                                    <?php echo htmlspecialchars($key); ?>: <?php echo htmlspecialchars($value); ?>
+                                                </span>
+                                            <?php endforeach; ?>
+                                        </div>
+                                    <?php endif; ?>
                                 </div>
                                 <p class="font-bold text-gray-800"><?php echo format_currency($item['price'] * $item['quantity']); ?></p>
                             </div>
@@ -653,6 +663,25 @@ function updateShipping() {
 // Error/Success Message Functions
 let errorMessageTimeout = null;
 let successMessageTimeout = null;
+
+function setBtnLoading(btn, isLoading) {
+    if (isLoading) {
+        // Save original text if not already saved
+        if (!btn.dataset.originalText) {
+            btn.dataset.originalText = btn.innerHTML;
+        }
+        btn.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>Processing...';
+        btn.disabled = true;
+        btn.classList.add('opacity-75', 'cursor-not-allowed');
+    } else {
+        // Restore original text
+        if (btn.dataset.originalText) {
+            btn.innerHTML = btn.dataset.originalText;
+        }
+        btn.disabled = false;
+        btn.classList.remove('opacity-75', 'cursor-not-allowed');
+    }
+}
 
 function showErrorMessage(message) {
     const container = document.getElementById('errorMessageContainer');

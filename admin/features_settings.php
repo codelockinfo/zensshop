@@ -102,7 +102,7 @@ require_once __DIR__ . '/../includes/admin-header.php';
                     <button onclick="editFeature(<?php echo htmlspecialchars(json_encode($f)); ?>)" class="text-blue-600 hover:text-blue-800 mr-2" title="Edit">
                         <i class="fas fa-edit"></i>
                     </button>
-                    <form method="POST" onsubmit="return confirm('Delete this feature?');" class="inline">
+                    <form method="POST">
                         <input type="hidden" name="delete_id" value="<?php echo $f['id']; ?>">
                         <button type="submit" class="text-red-600 hover:text-red-800" title="Delete">
                             <i class="fas fa-trash"></i>

@@ -152,7 +152,23 @@ require_once __DIR__ . '/includes/header.php';
                             </span>
                             
                             <!-- Add to Cart Button -->
-                            <button onclick="addToCart(<?php echo $item['product_id']; ?>, 1)" 
+                            <?php
+                            // Get default variant attributes
+                            $variantsData = $product->getVariants($item['product_id']);
+                            $defaultAttributes = [];
+                            if (!empty($variantsData['variants'])) {
+                                $defaultVariant = $variantsData['variants'][0];
+                                foreach ($variantsData['variants'] as $v) {
+                                    if (!empty($v['is_default'])) {
+                                        $defaultVariant = $v;
+                                        break;
+                                    }
+                                }
+                                $defaultAttributes = $defaultVariant['variant_attributes'];
+                            }
+                            $attributesJson = json_encode($defaultAttributes);
+                            ?>
+                            <button onclick='addToCart(<?php echo $item['product_id']; ?>, 1, this, <?php echo htmlspecialchars($attributesJson, ENT_QUOTES, 'UTF-8'); ?>)' 
                                     class="bg-primary text-white px-4 py-2 rounded-lg hover:bg-primary-light hover:text-white transition text-sm">
                                 <i class="fas fa-shopping-cart mr-2"></i>Add to Cart
                             </button>

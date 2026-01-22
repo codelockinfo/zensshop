@@ -53,6 +53,14 @@ if (empty($products)) {
                         $price = $item['sale_price'] ?? $item['price'];
                         $originalPrice = $item['sale_price'] ? $item['price'] : null;
                         $discount = $originalPrice ? round((($originalPrice - $price) / $originalPrice) * 100) : 0;
+                        
+                        // Get first variant for default attributes
+                        $firstVariant = $db->fetchOne(
+                            "SELECT variant_attributes FROM product_variants WHERE product_id = ? ORDER BY is_default DESC, id ASC LIMIT 1",
+                            [$item['product_id']]
+                        );
+                        $defaultAttributes = $firstVariant ? json_decode($firstVariant['variant_attributes'], true) : [];
+                        $attributesJson = json_encode($defaultAttributes);
                     ?>
                     <div class="min-w-[280px] md:min-w-[300px] my-2">
                         <div class="product-card bg-white rounded-lg overflow-hidden shadow-md transition-all duration-300 group relative">
@@ -69,7 +77,7 @@ if (empty($products)) {
                                 
                                 <!-- Wishlist Icon (Always Visible) -->
                                 <button class="absolute top-2 right-2 w-10 h-10 bg-white rounded-full flex items-center justify-center hover:bg-black hover:text-white transition z-20 wishlist-btn" 
-                                        data-product-id="<?php echo $item['id']; ?>"
+                                        data-product-id="<?php echo $item['product_id']; ?>"
                                         title="Add to Wishlist">
                                     <i class="far fa-heart"></i>
                                     <span class="product-tooltip">Add to Wishlist</span>
@@ -79,7 +87,7 @@ if (empty($products)) {
                                 <div class="product-actions absolute right-2 top-12 flex flex-col gap-2 mt-2 opacity-0 group-hover:opacity-100 transition-opacity duration-300 z-30">
                                     <a href="<?php echo $baseUrl; ?>/product.php?slug=<?php echo urlencode($item['slug'] ?? ''); ?>" 
                                        class="product-action-btn w-10 h-10 bg-white rounded-full flex items-center justify-center hover:bg-black hover:text-white transition shadow-lg quick-view-btn relative group" 
-                                       data-product-id="<?php echo $item['id']; ?>"
+                                       data-product-id="<?php echo $item['product_id']; ?>"
                                        data-product-slug="<?php echo htmlspecialchars($item['slug'] ?? ''); ?>">
                                         <i class="fas fa-eye"></i>
                                         <span class="product-tooltip">Quick View</span>
@@ -89,8 +97,9 @@ if (empty($products)) {
                                         <i class="fas fa-layer-group"></i>
                                         <span class="product-tooltip">Compare</span>
                                     </button> -->
-                                    <button id="addToCartByProductIcon" class="product-action-btn w-10 h-10 bg-white rounded-full flex items-center justify-center hover:bg-black hover:text-white transition shadow-lg add-to-cart-hover-btn relative group" 
-                                            data-product-id="<?php echo $item['id']; ?>">
+                                    <button class="product-action-btn w-10 h-10 bg-white rounded-full flex items-center justify-center hover:bg-black hover:text-white transition shadow-lg add-to-cart-hover-btn relative group" 
+                                            data-product-id="<?php echo $item['product_id']; ?>"
+                                            data-attributes='<?php echo htmlspecialchars($attributesJson, ENT_QUOTES, 'UTF-8'); ?>'>
                                         <i class="fas fa-shopping-cart"></i>
                                         <span class="product-tooltip">Add to Cart</span>
                                     </button>

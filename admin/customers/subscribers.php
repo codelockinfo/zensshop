@@ -185,7 +185,7 @@ unset($_SESSION['success'], $_SESSION['error']);
                                 <?php echo date('M d, Y H:i', strtotime($sub['created_at'])); ?>
                             </td>
                             <td class="px-6 py-4 text-sm text-right">
-                                <form method="POST" class="inline" onsubmit="return confirm('Are you sure you want to delete this subscriber?');">
+                                <form method="POST" class="inline">
                                     <input type="hidden" name="action" value="delete">
                                     <input type="hidden" name="id" value="<?php echo $sub['id']; ?>">
                                     <button type="submit" class="text-red-600 hover:text-red-800">

@@ -45,12 +45,13 @@ try {
                 throw new Exception('Product ID is required');
             }
             
-            $productId = (int)$input['product_id'];
+            $productId = $input['product_id'];
             $quantity = isset($input['quantity']) ? (int)$input['quantity'] : 1;
+            $attributes = isset($input['variant_attributes']) ? $input['variant_attributes'] : (isset($input['attributes']) ? $input['attributes'] : []);
             
-            error_log("Cart API POST - Adding product ID: $productId, quantity: $quantity");
+            error_log("Cart API POST - Adding product ID: $productId, quantity: $quantity, attrs: " . json_encode($attributes));
             
-            $items = $cart->addItem($productId, $quantity);
+            $items = $cart->addItem($productId, $quantity, $attributes);
             
             error_log("Cart API POST - Items after add: " . json_encode($items));
             error_log("Cart API POST - Cart count: " . count($items));
@@ -89,10 +90,11 @@ try {
                 throw new Exception('Product ID is required');
             }
             
-            $productId = (int)$input['product_id'];
+            $productId = $input['product_id'];
             $quantity = isset($input['quantity']) ? (int)$input['quantity'] : 1;
+            $attributes = isset($input['variant_attributes']) ? $input['variant_attributes'] : (isset($input['attributes']) ? $input['attributes'] : []);
             
-            $items = $cart->updateItem($productId, $quantity);
+            $items = $cart->updateItem($productId, $quantity, $attributes);
             
             // Include cookie_data for JavaScript to set cookie
             $cookieValue = json_encode($items);
@@ -113,8 +115,9 @@ try {
                 throw new Exception('Product ID is required');
             }
             
-            $productId = (int)$input['product_id'];
-            $items = $cart->removeItem($productId);
+            $productId = $input['product_id'];
+            $attributes = isset($input['variant_attributes']) ? $input['variant_attributes'] : (isset($input['attributes']) ? $input['attributes'] : []);
+            $items = $cart->removeItem($productId, $attributes);
             
             // Include cookie_data for JavaScript to set cookie
             $cookieValue = json_encode($items);

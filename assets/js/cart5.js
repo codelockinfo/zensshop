@@ -131,13 +131,14 @@ async function refreshCart() {
 }
 
 // Add to cart
-async function addToCart(productId, quantity = 1, btn = null) {
+async function addToCart(productId, quantity = 1, btn = null, attributes = {}) {
     if (btn) setBtnLoading(btn, true);
     try {
         const baseUrl = typeof BASE_URL !== 'undefined' ? BASE_URL : window.location.pathname.split('/').slice(0, -1).join('/') || '';
         const requestBody = {
             product_id: productId,
-            quantity: quantity
+            quantity: quantity,
+            variant_attributes: attributes
         };
 
         const response = await fetch(baseUrl + '/api/cart.php', {
@@ -224,7 +225,7 @@ async function addToCart(productId, quantity = 1, btn = null) {
 }
 
 // Update cart item quantity
-async function updateCartItem(productId, quantity, btn = null) {
+async function updateCartItem(productId, quantity, btn = null, attributes = {}) {
     if (btn) setBtnLoading(btn, true);
     if (quantity < 1) {
         quantity = 1;
@@ -239,7 +240,8 @@ async function updateCartItem(productId, quantity, btn = null) {
             },
             body: JSON.stringify({
                 product_id: productId,
-                quantity: quantity
+                quantity: quantity,
+                variant_attributes: attributes
             })
         });
 
@@ -339,7 +341,7 @@ async function updateCartItem(productId, quantity, btn = null) {
 }
 
 // Remove from cart
-async function removeFromCart(productId, btn = null) {
+async function removeFromCart(productId, btn = null, attributes = {}) {
     if (btn) setBtnLoading(btn, true);
     // Check if we're on the cart page
     const isCartPage = window.location.pathname.includes('/cart') || document.querySelector('.cart-item');
@@ -352,7 +354,8 @@ async function removeFromCart(productId, btn = null) {
                 'Content-Type': 'application/json',
             },
             body: JSON.stringify({
-                product_id: productId
+                product_id: productId,
+                variant_attributes: attributes
             })
         });
 
@@ -497,22 +500,30 @@ function updateCartUI() {
             imageUrl = baseUrl + imageUrl;
         }
 
+        const variantAttributes = item.variant_attributes || {};
+        const variantLabel = Object.entries(variantAttributes)
+            .map(([key, val]) => `<span class="text-xs text-gray-500 block">${key}: ${val}</span>`)
+            .join('');
+        
+        const attributesJson = JSON.stringify(variantAttributes).replace(/"/g, '&quot;');
+
         html += `
-            <div class="side-cart-item-wrapper mb-4 pb-4 border-b" data-product-id="${item.product_id}">
+            <div class="side-cart-item-wrapper mb-4 pb-4 border-b" data-product-id="${item.product_id}" data-attributes='${attributesJson}'>
                 <div class="flex items-center space-x-4 side-cart-item" data-product-id="${item.product_id}">
                     <img src="${escapeHtml(imageUrl)}" alt="${escapeHtml(item.name)}" class="w-20 h-20 object-cover rounded" onerror="this.src='data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iODAiIGhlaWdodD0iODAiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+PHJlY3Qgd2lkdGg9IjgwIiBoZWlnaHQ9IjgwIiBmaWxsPSIjRjNGNEY2Ii8+PGNpcmNsZSBjeD0iNDAiIGN5PSI0MCIgcj0iMjAiIGZpbGw9IiM5QjdBOEEiLz48L3N2Zz4='">
                     <div class="flex-1">
-                        <h4 class="font-semibold text-sm mb-2">${escapeHtml(item.name)}</h4>
-                        <p class="text-gray-600 text-sm">${formatCurrency(itemPrice, item.currency)}</p>
+                        <h4 class="font-semibold text-sm mb-1">${escapeHtml(item.name)}</h4>
+                        ${variantLabel}
+                        <p class="text-gray-600 text-sm mt-1">${formatCurrency(itemPrice, item.currency)}</p>
                         <div class="flex items-center space-x-2 mt-2">
-                            <button onclick="updateCartItem(${item.product_id}, ${itemQuantity - 1})" class="w-8 h-8 border rounded flex items-center justify-center hover:bg-gray-100 text-sm">-</button>
+                            <button onclick="updateCartItem(${item.product_id}, ${itemQuantity - 1}, null, ${attributesJson})" class="w-8 h-8 border rounded flex items-center justify-center hover:bg-gray-100 text-sm">-</button>
                             <span class="w-8 text-center text-sm">${itemQuantity}</span>
-                            <button onclick="updateCartItem(${item.product_id}, ${itemQuantity + 1})" class="w-8 h-8 border rounded flex items-center justify-center hover:bg-gray-100 text-sm">+</button>
+                            <button onclick="updateCartItem(${item.product_id}, ${itemQuantity + 1}, null, ${attributesJson})" class="w-8 h-8 border rounded flex items-center justify-center hover:bg-gray-100 text-sm">+</button>
                         </div>
                     </div>
                     <div class="text-right">
                         <p class="font-semibold text-sm">${formatCurrency(itemTotal, item.currency)}</p>
-                        <button onclick="showSideCartInlineRemoveConfirm(${item.product_id})" class="text-red-500 hover:text-red-700 mt-2 text-sm" title="Remove">
+                        <button onclick="showSideCartInlineRemoveConfirm(this)" class="text-red-500 hover:text-red-700 mt-2 text-sm" title="Remove">
                             <i class="fas fa-trash"></i>
                         </button>
                     </div>
@@ -524,11 +535,11 @@ function updateCartUI() {
                         <h4 class="font-semibold text-sm mb-1 text-gray-800">${escapeHtml(item.name)}</h4>
                         <p class="text-gray-600 text-xs mb-2">Add to wishlist before remove?</p>
                         <div class="flex space-x-2">
-                            <button onclick="confirmSideCartInlineRemoveWithWishlist(${item.product_id})" class="px-4 py-1.5 bg-black text-white text-xs font-medium rounded hover:bg-gray-800 transition">Yes</button>
-                            <button onclick="confirmSideCartInlineRemoveWithoutWishlist(${item.product_id})" class="px-4 py-1.5 border border-gray-300 text-gray-700 text-xs font-medium rounded hover:bg-gray-50 transition">No</button>
+                            <button onclick="confirmSideCartInlineRemoveWithWishlist(${item.product_id}, ${attributesJson})" class="px-4 py-1.5 bg-black text-white text-xs font-medium rounded hover:bg-gray-800 transition">Yes</button>
+                            <button onclick="confirmSideCartInlineRemoveWithoutWishlist(${item.product_id}, ${attributesJson})" class="px-4 py-1.5 border border-gray-300 text-gray-700 text-xs font-medium rounded hover:bg-gray-50 transition">No</button>
                         </div>
                     </div>
-                    <button onclick="cancelSideCartInlineRemoveConfirm(${item.product_id})" class="text-gray-400 hover:text-gray-600">
+                    <button onclick="cancelSideCartInlineRemoveConfirm(this)" class="text-gray-400 hover:text-gray-600">
                         <i class="fas fa-times text-sm"></i>
                     </button>
                 </div>
@@ -628,8 +639,8 @@ function formatCurrency(amount, currencyCode) {
 }
 
 // Side Cart Inline Remove Confirm Functions
-function showSideCartInlineRemoveConfirm(productId) {
-    const wrapper = document.querySelector('.side-cart-item-wrapper[data-product-id="' + productId + '"]');
+function showSideCartInlineRemoveConfirm(btn) {
+    const wrapper = btn.closest('.side-cart-item-wrapper');
     if (wrapper) {
         const cartItem = wrapper.querySelector('.side-cart-item');
         const confirmBox = wrapper.querySelector('.side-cart-remove-confirm-inline');
@@ -640,8 +651,8 @@ function showSideCartInlineRemoveConfirm(productId) {
     }
 }
 
-function cancelSideCartInlineRemoveConfirm(productId) {
-    const wrapper = document.querySelector('.side-cart-item-wrapper[data-product-id="' + productId + '"]');
+function cancelSideCartInlineRemoveConfirm(btn) {
+    const wrapper = btn.closest('.side-cart-item-wrapper');
     if (wrapper) {
         const cartItem = wrapper.querySelector('.side-cart-item');
         const confirmBox = wrapper.querySelector('.side-cart-remove-confirm-inline');
@@ -652,7 +663,7 @@ function cancelSideCartInlineRemoveConfirm(productId) {
     }
 }
 
-async function confirmSideCartInlineRemoveWithWishlist(productId) {
+async function confirmSideCartInlineRemoveWithWishlist(productId, attributes = {}) {
     const baseUrl = typeof BASE_URL !== 'undefined' ? BASE_URL : window.location.pathname.split('/').slice(0, -1).join('/') || '';
     try {
         // Add to wishlist
@@ -669,15 +680,15 @@ async function confirmSideCartInlineRemoveWithWishlist(productId) {
         }
 
         // Remove from cart
-        await removeFromCart(productId);
+        await removeFromCart(productId, null, attributes);
     } catch (error) {
         console.error('Error adding to wishlist:', error);
-        await removeFromCart(productId);
+        await removeFromCart(productId, null, attributes);
     }
 }
 
-async function confirmSideCartInlineRemoveWithoutWishlist(productId) {
-    await removeFromCart(productId);
+async function confirmSideCartInlineRemoveWithoutWishlist(productId, attributes = {}) {
+    await removeFromCart(productId, null, attributes);
 }
 
 // Make functions globally available

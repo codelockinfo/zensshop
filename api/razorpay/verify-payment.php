@@ -125,7 +125,8 @@ try {
             'product_name' => $item['name'],
             'product_sku' => $item['sku'] ?? null,
             'quantity' => $item['quantity'],
-            'price' => $item['price']
+            'price' => $item['price'],
+            'variant_attributes' => $item['variant_attributes'] ?? []
         ];
     }
     

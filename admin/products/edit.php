@@ -14,15 +14,21 @@ $product = new Product();
 $error = '';
 $success = '';
 
-// Get product ID
-$productId = $_GET['id'] ?? null;
-if (!$productId) {
+// Get product ID or 10-digit product_id
+$id = $_GET['id'] ?? null;
+$productIdParam = $_GET['product_id'] ?? null;
+
+if ($productIdParam) {
+    $productData = $product->getByProductId($productIdParam);
+    $productId = $productData['id'] ?? null;
+} elseif ($id) {
+    $productData = $product->getById($id);
+    $productId = $id;
+} else {
     header('Location: ' . $baseUrl . '/admin/products/list.php');
     exit;
 }
 
-// Get product data
-$productData = $product->getById($productId);
 if (!$productData) {
     header('Location: ' . $baseUrl . '/admin/products/list.php');
     exit;
@@ -47,6 +53,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             'gender' => $_POST['gender'] ?? 'unisex',
             'brand' => $_POST['brand'] ?? null,
             'status' => $_POST['status'] ?? 'draft',
+            'sku' => $_POST['sku'] ?? '',
             'featured' => isset($_POST['featured']) ? 1 : 0,
             'images' => []
         ];
@@ -166,7 +173,7 @@ $existingImages = json_decode($productData['images'] ?? '[]', true);
 $existingVariants = $product->getVariants($productId);
 ?>
 
-<div class="mb-6 flex justify-between items-center">
+<div class="mb-6 flex justify-between items-center sticky top-0 bg-[#f7f8fc] pb-5 z-50">
     <div>
         <h1 class="text-3xl font-bold">Edit Product</h1>
         <p class="text-gray-600">Dashboard > Ecommerce > Edit product</p>
@@ -203,7 +210,15 @@ $existingVariants = $product->getVariants($productId);
                            placeholder="Enter product name"
                            value="<?php echo htmlspecialchars($productData['name']); ?>"
                            class="admin-form-input">
-                    <p class="text-sm text-gray-500 mt-1"></p>
+                </div>
+
+                <div class="admin-form-group">
+                    <label class="admin-form-label">SKU</label>
+                    <input type="text" 
+                           name="sku" 
+                           placeholder="Enter product SKU"
+                           value="<?php echo htmlspecialchars($productData['sku'] ?? ''); ?>"
+                           class="admin-form-input">
                 </div>
                 
                 <div class="admin-form-group">
@@ -311,7 +326,7 @@ $existingVariants = $product->getVariants($productId);
             <input type="hidden" name="images" id="imagesInput" value="<?php echo htmlspecialchars(json_encode($existingImages)); ?>">
         </div>
         
-        <div class="admin-card">
+        <div class="admin-card" id="variants_section">
             <h2 class="text-xl font-bold mb-4">Product Variants</h2>
             <p class="text-sm text-gray-600 mb-4">Add variant options like Size, Color, Material, etc. (Maximum 2 options)</p>
             
@@ -450,7 +465,7 @@ if (typeof BASE_URL === 'undefined') {
 }
 </script>
 <script src="<?php echo $baseUrl; ?>/assets/js/admin-image-upload2.js"></script>
-<script src="<?php echo $baseUrl; ?>/assets/js/product-variants.js"></script>
+<script src="<?php echo $baseUrl; ?>/assets/js/product-variants2.js"></script>
 <script>
 // Initialize with existing images
 document.addEventListener('DOMContentLoaded', function() {
@@ -507,12 +522,13 @@ function initializeVariantsFromData(variantsData) {
                 if (option.option_values && Array.isArray(option.option_values)) {
                     option.option_values.forEach(value => {
                         if (tagContainer && value) {
-                            // Use the same escapeHtml function from product-variants.js
+                            // Use the same escapeHtml function from product-variants2.js
                             const escapedValue = value.replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+                            const escapedValueForOnClick = value.replace(/'/g, "\\'");
                             const tagHtml = `
                                 <span class="tag-item" data-value="${escapedValue}">
                                     <span class="tag-text">${escapedValue}</span>
-                                    <button type="button" class="tag-remove" onclick="removeTag(${index}, '${escapedValue}')">
+                                    <button type="button" class="tag-remove" onclick="removeTag(${index}, '${escapedValueForOnClick}')">
                                         <i class="fas fa-times"></i>
                                     </button>
                                 </span>
