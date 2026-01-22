@@ -26,20 +26,35 @@ $orders = $order->getAll($filters);
 
 <div class="admin-card mb-6">
     <div class="flex flex-col md:flex-row justify-between items-start md:items-center space-y-4 md:space-y-0">
-        <form method="GET" action="" class="w-full md:w-auto">
-            <!-- Preserve other filters if any -->
-            <?php if (!empty($filters['order_status'])): ?>
-            <input type="hidden" name="status" value="<?php echo htmlspecialchars($filters['order_status']); ?>">
-            <?php endif; ?>
-            <input type="text" 
-                   name="search"
-                   placeholder="Search here..." 
-                   value="<?php echo htmlspecialchars($filters['search']); ?>"
-                   class="border rounded px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 w-80">
+        <form method="GET" action="" class="w-full md:w-auto flex flex-col md:flex-row gap-3 items-center">
+            
+            <!-- Status Filter -->
+            <div class="relative">
+                <select name="status" onchange="this.form.submit()" 
+                        class="border border-gray-300 rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white cursor-pointer h-10 min-w-[150px]">
+                    <option value="">All Status</option>
+                    <?php 
+                    $statuses = ['pending' => 'Pending', 'processing' => 'Processing', 'shipped' => 'Shipped', 'delivered' => 'Delivered', 'cancelled' => 'Cancelled'];
+                    foreach($statuses as $val => $label): 
+                        $selected = (isset($_GET['status']) && $_GET['status'] === $val) ? 'selected' : '';
+                    ?>
+                    <option value="<?php echo $val; ?>" <?php echo $selected; ?>><?php echo $label; ?></option>
+                    <?php endforeach; ?>
+                </select>
+            </div>
+
+            <!-- Search Input -->
+            <div class="relative">
+                <input type="text" 
+                       name="search"
+                       placeholder="Search order..." 
+                       value="<?php echo htmlspecialchars($filters['search']); ?>"
+                       class="border border-gray-300 rounded px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 w-64 h-10">
+            </div>
         </form>
-        <button class="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600 transition">
+        <a href="<?php echo $baseUrl; ?>/admin/orders/export_csv.php" class="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600 transition flex items-center">
             <i class="fas fa-file-export mr-2"></i>Export all order
-        </button>
+        </a>
     </div>
 </div>
 
