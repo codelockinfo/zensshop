@@ -42,7 +42,8 @@ function createTableIfNotExists($tableName, $schema) {
     try {
         // Simple check: Try select 1 limit 0. If fails, table likely doesn't exist.
         // Better: SHOW TABLES LIKE ...
-        $check = $db->fetchAll("SHOW TABLES LIKE ?", [$tableName]);
+        // Note: Using direct query because parameterized SHOW TABLES can be tricky in some PDO/MySQL versions
+        $check = $db->fetchAll("SHOW TABLES LIKE '$tableName'");
         if (empty($check)) {
             echo "Creating table '$tableName'...\n";
             $db->execute("CREATE TABLE `$tableName` ($schema) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4");
@@ -84,5 +85,29 @@ addColumnIfNotExists('special_offers', 'subheading', "TEXT DEFAULT NULL");
 // 6. Update section_videos table (User requested ALTER instead of new table)
 addColumnIfNotExists('section_videos', 'heading', "VARCHAR(255) DEFAULT NULL");
 addColumnIfNotExists('section_videos', 'subheading', "TEXT DEFAULT NULL");
+
+// 7. Create customer_reset_password table
+$customerResetPasswordSchema = "
+    `id` INT(11) NOT NULL AUTO_INCREMENT,
+    `email` VARCHAR(255) NOT NULL,
+    `otp` VARCHAR(10) NOT NULL,
+    `created_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    PRIMARY KEY (`id`)
+";
+
+createTableIfNotExists('customer_reset_password', $customerResetPasswordSchema);
+
+// 8. Create password_resets table (For Admin)
+$passwordResetsSchema = "
+    `id` INT(11) NOT NULL AUTO_INCREMENT,
+    `email` VARCHAR(255) NOT NULL,
+    `otp` VARCHAR(10) NOT NULL,
+    `expires_at` DATETIME NOT NULL,
+    `used` TINYINT(1) DEFAULT 0,
+    `created_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    PRIMARY KEY (`id`),
+    INDEX `email_idx` (`email`)
+";
+createTableIfNotExists('password_resets', $passwordResetsSchema);
 
 echo "Database updates completed.\n";

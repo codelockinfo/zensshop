@@ -79,6 +79,13 @@ require_once __DIR__ . '/includes/header.php';
                     <p class="text-gray-500 mt-2">Sign in to your account</p>
                 </div>
 
+                <?php if (!empty($_GET['message'])): ?>
+                    <div class="bg-green-50 text-green-600 p-4 rounded-xl mb-6 text-sm flex items-center">
+                        <i class="fas fa-check-circle mr-2"></i>
+                        <?php echo htmlspecialchars($_GET['message']); ?>
+                    </div>
+                <?php endif; ?>
+
                 <?php if ($error): ?>
                     <div class="bg-red-50 text-red-600 p-4 rounded-xl mb-6 text-sm flex items-center">
                         <i class="fas fa-exclamation-circle mr-2"></i>
@@ -130,13 +137,16 @@ require_once __DIR__ . '/includes/header.php';
                     <div>
                         <div class="flex justify-between mb-2">
                             <label class="block text-xs font-bold text-gray-400 uppercase tracking-widest">Password</label>
-                            <a href="#" class="text-xs font-bold text-blue-600 hover:underline">Forgot?</a>
+                            <a href="<?php echo url('forgot-password.php'); ?>" class="text-xs font-bold text-blue-600 hover:underline">Forgot?</a>
                         </div>
                         <div class="relative">
                             <i class="fas fa-lock absolute left-4 top-1/2 -translate-y-1/2 text-gray-400"></i>
-                            <input type="password" name="password" required 
-                                   class="w-full pl-12 pr-4 py-4 rounded-xl border border-gray-100 bg-gray-50 focus:bg-white focus:ring-2 focus:ring-black outline-none transition"
+                            <input type="password" name="password" id="password" required 
+                                   class="w-full pl-12 pr-12 py-4 rounded-xl border border-gray-100 bg-gray-50 focus:bg-white focus:ring-2 focus:ring-black outline-none transition"
                                    placeholder="••••••••">
+                            <button type="button" onclick="togglePassword('password', this)" class="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 focus:outline-none">
+                                <i class="far fa-eye"></i>
+                            </button>
                         </div>
                     </div>
 
@@ -156,5 +166,22 @@ require_once __DIR__ . '/includes/header.php';
         </div>
     </div>
 </div>
+
+<script>
+function togglePassword(inputId, btn) {
+    const input = document.getElementById(inputId);
+    const icon = btn.querySelector('i');
+    
+    if (input.type === 'password') {
+        input.type = 'text';
+        icon.classList.remove('fa-eye');
+        icon.classList.add('fa-eye-slash');
+    } else {
+        input.type = 'password';
+        icon.classList.remove('fa-eye-slash');
+        icon.classList.add('fa-eye');
+    }
+}
+</script>
 
 <?php require_once __DIR__ . '/includes/footer.php'; ?>

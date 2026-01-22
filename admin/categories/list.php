@@ -21,11 +21,36 @@ $categories = $db->fetchAll("SELECT * FROM categories ORDER BY sort_order ASC");
     <p class="text-gray-600 text-sm md:text-base">Dashboard > Category</p>
 </div>
 
-<div class="admin-card mb-6">
+<div class="admin-card mb-6 flex flex-col md:flex-row justify-between items-center gap-4">
     <a href="<?php echo $baseUrl; ?>/admin/categories/manage.php" class="admin-btn admin-btn-primary">
         + Add Category
     </a>
+    
+    <div class="relative w-full md:w-auto">
+        <input type="text" id="categorySearch" placeholder="Search categories..." class="w-full md:w-64 border border-gray-300 rounded-lg px-4 py-2 pl-10 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-shadow">
+        <i class="fas fa-search absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400"></i>
+    </div>
 </div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const searchInput = document.getElementById('categorySearch');
+    const tableRows = document.querySelectorAll('.admin-table tbody tr');
+
+    searchInput.addEventListener('input', function(e) {
+        const searchTerm = e.target.value.toLowerCase();
+
+        tableRows.forEach(row => {
+            const text = row.innerText.toLowerCase();
+            if (text.includes(searchTerm)) {
+                row.style.display = '';
+            } else {
+                row.style.display = 'none';
+            }
+        });
+    });
+});
+</script>
 
 <div class="admin-card overflow-x-auto">
     <table class="admin-table">

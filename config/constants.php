@@ -36,7 +36,12 @@ define('RETRY_DELAY_SECONDS', 2); // Base delay for exponential backoff
 
 // OTP Configuration - Now managed in database settings (see admin/system-settings.php)
 // OTP_EXPIRY_MINUTES and OTP_LENGTH are loaded from settings table
-define('OTP_LENGTH', 6);
+if (!defined('OTP_EXPIRY_MINUTES')) {
+    define('OTP_EXPIRY_MINUTES', 5);
+}
+if (!defined('OTP_LENGTH')) {
+    define('OTP_LENGTH', 6);
+}
 
 // Session Configuration
 define('SESSION_LIFETIME', 3600); // 1 hour

@@ -85,24 +85,34 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['new_password'])) {
                 <label class="block text-gray-700 text-sm font-bold mb-2" for="new_password">
                     New Password
                 </label>
-                <input type="password" 
-                       id="new_password" 
-                       name="new_password" 
-                       required
-                       minlength="6"
-                       class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
+                <div class="relative">
+                    <input type="password" 
+                           id="new_password" 
+                           name="new_password" 
+                           required
+                           minlength="6"
+                           class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 pr-10">
+                    <button type="button" onclick="togglePassword('new_password', this)" class="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 focus:outline-none">
+                        <i class="far fa-eye"></i>
+                    </button>
+                </div>
             </div>
             
             <div class="mb-6">
                 <label class="block text-gray-700 text-sm font-bold mb-2" for="confirm_password">
                     Confirm Password
                 </label>
-                <input type="password" 
-                       id="confirm_password" 
-                       name="confirm_password" 
-                       required
-                       minlength="6"
-                       class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
+                <div class="relative">
+                    <input type="password" 
+                           id="confirm_password" 
+                           name="confirm_password" 
+                           required
+                           minlength="6"
+                           class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 pr-10">
+                    <button type="button" onclick="togglePassword('confirm_password', this)" class="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 focus:outline-none">
+                        <i class="far fa-eye"></i>
+                    </button>
+                </div>
             </div>
             
             <button type="submit" 
@@ -112,17 +122,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['new_password'])) {
         </form>
         <?php else: ?>
         <form method="POST" action="">
-            <div class="mb-4">
-                <label class="block text-gray-700 text-sm font-bold mb-2" for="email">
-                    Email Address
-                </label>
-                <input type="email" 
-                       id="email" 
-                       name="email" 
-                       required
-                       value="<?php echo htmlspecialchars($_GET['email'] ?? ''); ?>"
-                       class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
-            </div>
+            <input type="hidden" name="email" value="<?php echo htmlspecialchars($_GET['email'] ?? $_POST['email'] ?? ''); ?>">
             
             <div class="mb-6">
                 <label class="block text-gray-700 text-sm font-bold mb-2" for="otp">
@@ -151,6 +151,21 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['new_password'])) {
         </div>
     </div>
     <script>
+    function togglePassword(inputId, btn) {
+        const input = document.getElementById(inputId);
+        const icon = btn.querySelector('i');
+        
+        if (input.type === 'password') {
+            input.type = 'text';
+            icon.classList.remove('fa-eye');
+            icon.classList.add('fa-eye-slash');
+        } else {
+            input.type = 'password';
+            icon.classList.remove('fa-eye-slash');
+            icon.classList.add('fa-eye');
+        }
+    }
+
     document.addEventListener('DOMContentLoaded', function() {
         const alerts = document.querySelectorAll('.bg-green-100, .bg-red-100');
         alerts.forEach(function(alert) {

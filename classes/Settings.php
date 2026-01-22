@@ -139,7 +139,7 @@ class Settings {
         
         // Don't override OTP_EXPIRY_MINUTES if already defined in constants.php
         if (!defined('OTP_EXPIRY_MINUTES')) {
-            define('OTP_EXPIRY_MINUTES', $settings->get('otp_expiry_minutes', 10));
+            define('OTP_EXPIRY_MINUTES', $settings->get('otp_expiry_minutes', 5));
         }
     }
     

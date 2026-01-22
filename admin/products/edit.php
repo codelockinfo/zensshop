@@ -166,9 +166,14 @@ $existingImages = json_decode($productData['images'] ?? '[]', true);
 $existingVariants = $product->getVariants($productId);
 ?>
 
-<div class="mb-6">
-    <h1 class="text-3xl font-bold">Edit Product</h1>
-    <p class="text-gray-600">Dashboard > Ecommerce > Edit product</p>
+<div class="mb-6 flex justify-between items-center">
+    <div>
+        <h1 class="text-3xl font-bold">Edit Product</h1>
+        <p class="text-gray-600">Dashboard > Ecommerce > Edit product</p>
+    </div>
+    <button type="button" onclick="document.querySelector('form').submit()" class="bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700 shadow-md transition-colors">
+        <i class="fas fa-save mr-2"></i> Save Changes
+    </button>
 </div>
 
 <?php if ($error): ?>
@@ -252,29 +257,56 @@ $existingVariants = $product->getVariants($productId);
     <!-- Right Column -->
     <div class="space-y-6">
         <div class="admin-card">
-            <h2 class="text-xl font-bold mb-4">Upload images</h2>
+            <div class="flex justify-between items-center mb-4">
+                <h2 class="text-xl font-bold">Upload images</h2>
+                <span class="text-xs text-blue-600 bg-blue-50 px-2 py-1 rounded border border-blue-200">
+                    <i class="fas fa-arrows-alt mr-1"></i> Drag to reorder
+                </span>
+            </div>
+            
             <div class="grid grid-cols-2 gap-4 mb-4" id="imageUploadArea">
-                <?php for ($i = 0; $i < 4; $i++): ?>
+                <?php 
+                // Determine how many boxes to show. 
+                // Show existing images + 1 empty, or at least 4 boxes total if there are few images.
+                // Actually, let's just show existing images. If none, show 4 empty ones. 
+                // Then provide a button to add more.
+                
+                $count = count($existingImages);
+                $initialBoxes = max($count, 4); // Start with at least 4
+                
+                for ($i = 0; $i < $initialBoxes; $i++): 
+                    $hasImage = isset($existingImages[$i]);
+                ?>
                 <div class="image-upload-box border-2 border-dashed border-gray-300 rounded-lg p-4 text-center cursor-pointer hover:border-blue-500 transition-colors relative" data-index="<?php echo $i; ?>">
                     <input type="file" accept="image/*" class="hidden image-file-input" data-index="<?php echo $i; ?>" multiple>
-                    <div class="upload-placeholder <?php echo isset($existingImages[$i]) ? 'hidden' : ''; ?>">
+                    
+                    <div class="upload-placeholder <?php echo $hasImage ? 'hidden' : ''; ?>">
                         <i class="fas fa-cloud-upload-alt text-4xl text-gray-400 mb-2"></i>
                         <p class="text-sm text-gray-600">Drop your images here or <span class="text-blue-500">click to browse</span>.</p>
                     </div>
-                    <div class="image-preview <?php echo isset($existingImages[$i]) ? '' : 'hidden'; ?>">
-                        <?php if (isset($existingImages[$i])): 
+                    
+                    <div class="image-preview <?php echo $hasImage ? '' : 'hidden'; ?>">
+                        <?php if ($hasImage): 
                             $existingImageUrl = getImageUrl($existingImages[$i]);
                         ?>
                         <img src="<?php echo htmlspecialchars($existingImageUrl); ?>" alt="Preview" class="w-full h-32 object-cover rounded">
                         <p class="text-xs text-gray-600 mt-2 truncate">Existing Image</p>
                         <?php endif; ?>
                     </div>
-                    <button type="button" class="remove-image-btn absolute top-2 right-2 bg-red-500 text-white rounded-full w-6 h-6 flex items-center justify-center hover:bg-red-600 <?php echo isset($existingImages[$i]) ? '' : 'hidden'; ?>">
+                    
+                    <button type="button" class="remove-image-btn absolute top-2 right-2 bg-red-500 text-white rounded-full w-6 h-6 flex items-center justify-center hover:bg-red-600 <?php echo $hasImage ? '' : 'hidden'; ?>">
                         <i class="fas fa-times text-xs"></i>
                     </button>
                 </div>
                 <?php endfor; ?>
             </div>
+            
+            <div class="mb-4">
+                <button type="button" onclick="addMoreImage()" class="admin-btn border border-dashed border-blue-500 text-blue-500 w-full hover:bg-blue-50">
+                    <i class="fas fa-plus mr-2"></i> Add more image
+                </button>
+            </div>
+            
             <p class="text-sm text-gray-600">You need to add at least 4 images. Pay attention to the quality of the pictures you add, comply with the background color standards. Pictures must be in certain dimensions. Notice that the product shows all the details.</p>
             <input type="hidden" name="images" id="imagesInput" value="<?php echo htmlspecialchars(json_encode($existingImages)); ?>">
         </div>
@@ -417,7 +449,7 @@ if (typeof BASE_URL === 'undefined') {
     const BASE_URL = '<?php echo $baseUrl; ?>';
 }
 </script>
-<script src="<?php echo $baseUrl; ?>/assets/js/admin-image-upload1.js"></script>
+<script src="<?php echo $baseUrl; ?>/assets/js/admin-image-upload2.js"></script>
 <script src="<?php echo $baseUrl; ?>/assets/js/product-variants.js"></script>
 <script>
 // Initialize with existing images

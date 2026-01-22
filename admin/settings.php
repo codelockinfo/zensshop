@@ -681,7 +681,33 @@ if (!$lp && !empty($allPages)) {
                     <div id="secAbout" class="p-4 hidden bg-white">
                          <div class="mb-4"><label class="block text-sm font-bold mb-1">Section Title</label><input type="text" name="about_title" value="<?php echo htmlspecialchars($lp['about_title'] ?? ''); ?>" class="w-full border p-2 rounded"></div>
                         <div class="mb-4"><label class="block text-sm font-bold mb-1">Text Content</label><textarea name="about_text" class="w-full border p-2 rounded" rows="3"><?php echo htmlspecialchars($lp['about_text'] ?? ''); ?></textarea></div>
-                        <div class="mb-4"><label class="block text-sm font-bold mb-1">About Image URL</label><input type="text" name="about_image" value="<?php echo htmlspecialchars($lp['about_image'] ?? ''); ?>" placeholder="assets/img/about.jpg" class="w-full border p-2 rounded"></div>
+                        <div class="mb-4">
+                            <label class="block text-sm font-bold mb-1">About Image</label>
+                            
+                            <div class="relative group cursor-pointer border-2 border-dashed border-gray-300 rounded-lg p-4 bg-white flex flex-col items-center justify-center min-h-[200px] hover:border-blue-500 hover:bg-blue-50 transition" onclick="this.querySelector('input[type=file]').click()">
+                                
+                                <?php 
+                                $aboutImageValue = $lp['about_image'] ?? '';
+                                $hasAboutImage = !empty($aboutImageValue);
+                                // Helper for display - adjust path logic as per other sections
+                                $displayUrl = $hasAboutImage ? (strpos($aboutImageValue, 'http') === 0 ? $aboutImageValue : '../' . $aboutImageValue) : '';
+                                ?>
+
+                                <img src="<?php echo htmlspecialchars($displayUrl); ?>" class="preview-img <?php echo $hasAboutImage ? '' : 'hidden'; ?> max-h-48 w-auto object-contain rounded mb-2 shadow-sm">
+
+                                <div class="text-center placeholder-box <?php echo $hasAboutImage ? 'hidden' : ''; ?>">
+                                    <i class="fas fa-image text-3xl text-gray-400 mb-2"></i>
+                                    <p class="text-sm text-gray-500 font-semibold">Click to upload image</p>
+                                    <p class="text-xs text-gray-400 mt-1">Recommended: 800x600px</p>
+                                </div>
+
+                                <input type="file" class="hidden" onchange="handleBannerUpload(this)">
+                                <input type="hidden" name="about_image" value="<?php echo htmlspecialchars($aboutImageValue); ?>">
+                                
+                                <!-- Progress Bar Area -->
+                                <div class="upload-progress-container w-full absolute bottom-2 left-0 px-4"></div>
+                            </div>
+                        </div>
                         <div class="grid grid-cols-2 gap-4">
                              <div><label class="block text-xs font-bold mb-1">Bg Color</label><input type="color" name="about_bg_color" value="<?php echo htmlspecialchars($lp['about_bg_color'] ?? ''); ?>" class="w-full h-8"></div>
                             <div><label class="block text-xs font-bold mb-1">Text Color</label><input type="color" name="about_text_color" value="<?php echo htmlspecialchars($lp['about_text_color'] ?? ''); ?>" class="w-full h-8"></div>
@@ -1095,18 +1121,33 @@ let reviewCount = 0;
 function addTestimonialsItem(data = {}) {
     const index = reviewCount++;
     const div = document.createElement('div');
-    div.className = 'border border-gray-200 p-4 rounded bg-gray-50 relative';
+    div.className = 'border border-gray-200 p-4 rounded bg-gray-50 relative animate-fade-in';
     div.innerHTML = `
-         <button type="button" onclick="this.parentElement.remove()" class="absolute top-2 right-2 text-red-500 hover:text-red-700 font-bold" title="Remove">X</button>
+         <button type="button" onclick="this.parentElement.remove()" class="absolute top-2 right-2 text-red-500 hover:text-red-700 font-bold bg-white rounded-full w-6 h-6 flex items-center justify-center shadow-sm" title="Remove">
+            <i class="fas fa-times text-xs"></i>
+         </button>
          <span class="text-xs font-bold text-gray-400 mb-2 block uppercase tracking-wider">Review ${index+1}</span>
          <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
             <div class="md:col-span-1">
                  <label class="block text-xs font-bold mb-1">User Photo</label>
-                 ${data.image ? `<img src="${data.image.startsWith('http') ? data.image : '../'+data.image}" class="h-16 w-16 object-cover mb-2 border rounded-full">` : ''}
-                <div class="flex flex-col">
-                    <input type="file" name="testimonials_items[${index}][image_file]" class="w-full border p-1 rounded mb-1 text-xs" onchange="previewImage(this)">
-                    <img class="preview-img hidden h-16 w-16 object-cover border rounded-full mt-1">
+                 
+                 <div class="relative group cursor-pointer border-2 border-dashed border-gray-300 rounded-lg p-2 bg-white flex flex-col items-center justify-center h-32 hover:border-blue-500 hover:bg-blue-50 transition" onclick="this.querySelector('input[type=file]').click()">
+                    
+                    ${data.image ? `
+                        <img src="${data.image.startsWith('http') ? data.image : '../'+data.image}" class="preview-img h-20 w-20 object-cover rounded-full mb-1 border border-gray-200 shadow-sm">
+                    ` : `
+                        <img class="preview-img hidden h-20 w-20 object-cover rounded-full mb-1 border border-gray-200 shadow-sm">
+                    `}
+                    
+                    <div class="text-center placeholder-box ${data.image ? 'hidden' : ''}">
+                        <i class="fas fa-camera text-xl text-gray-400 mb-1"></i>
+                        <p class="text-[10px] text-gray-500 font-semibold leading-tight">Click to<br>upload</p>
+                    </div>
+
+                    <input type="file" class="hidden" onchange="handleBannerUpload(this)">
                     <input type="hidden" name="testimonials_items[${index}][image]" value="${data.image || ''}">
+                    <!-- Progress Bar Area -->
+                    <div class="upload-progress-container w-full absolute bottom-1 left-0 px-2"></div>
                 </div>
             </div>
             <div class="md:col-span-3 space-y-3">
@@ -1116,7 +1157,7 @@ function addTestimonialsItem(data = {}) {
                 </div>
                 <div>
                      <label class="block text-xs font-bold mb-1">Review Comment</label>
-                    <textarea name="testimonials_items[${index}][comment]" class="w-full border p-2 rounded text-sm" rows="2" placeholder="Great product, highly recommended!">${data.comment || ''}</textarea>
+                    <textarea name="testimonials_items[${index}][comment]" class="w-full border p-2 rounded text-sm min-h-[80px]" rows="2" placeholder="Great product, highly recommended!">${data.comment || ''}</textarea>
                 </div>
             </div>
          </div>
@@ -1163,44 +1204,67 @@ window.toggleSection = function(id, btn) {
 function addBannerSection(data = {}) {
     const index = bannerCount++;
     const div = document.createElement('div');
-    div.className = 'border border-gray-200 p-4 rounded bg-gray-50 relative';
+    div.className = 'border border-gray-200 p-4 rounded bg-gray-50 relative animate-fade-in';
     div.innerHTML = `
-        <button type="button" onclick="this.parentElement.remove()" class="absolute top-2 right-2 text-red-500 hover:text-red-700 font-bold" title="Remove Section">X</button>
+        <button type="button" onclick="this.parentElement.remove()" class="absolute top-2 right-2 text-red-500 hover:text-red-700 font-bold bg-white rounded-full w-6 h-6 flex items-center justify-center shadow-sm" title="Remove Section">
+            <i class="fas fa-times text-xs"></i>
+        </button>
         <span class="text-xs font-bold text-gray-400 mb-2 block uppercase tracking-wider">Banner Set ${index+1}</span>
         
         <div class="grid grid-cols-2 gap-4 mb-4">
+            <!-- Desktop Media -->
             <div>
                 <label class="block text-xs font-bold mb-1">Desktop Media (Img/Video)</label>
-                ${data.image ? `<div class="mb-2">${
-                    data.image.match(/\.(mp4|webm)$/i) 
-                    ? `<video src="${data.image.startsWith('http') ? data.image : '../'+data.image}" class="h-20 w-auto object-cover border rounded" muted playsinline loop hover></video>`
-                    : `<img src="${data.image.startsWith('http') ? data.image : '../'+data.image}" class="h-16 object-cover border rounded w-auto">`
-                }</div>` : ''}
-                
-                <div class="flex flex-col">
-                    <input type="file" class="w-full border p-1 rounded mb-1 text-xs" onchange="chunkUpload(this)">
-                    <img class="preview-img hidden h-16 w-auto object-cover border rounded mt-1">
-                    <video class="preview-video hidden h-20 w-auto object-cover border rounded mt-1" controls muted></video>
+                <div class="relative group cursor-pointer border-2 border-dashed border-gray-300 rounded-lg p-4 bg-white flex flex-col items-center justify-center min-h-[120px] hover:border-blue-500 hover:bg-blue-50 transition" onclick="this.querySelector('input[type=file]').click()">
+                    
+                    ${data.image ? `
+                        ${data.image.match(/\.(mp4|webm)$/i) 
+                        ? `<video src="${data.image.startsWith('http') ? data.image : '../'+data.image}" class="preview-video max-h-32 w-full object-cover rounded mb-2" muted playsinline loop hover></video>`
+                        : `<img src="${data.image.startsWith('http') ? data.image : '../'+data.image}" class="preview-img max-h-32 w-auto object-contain rounded mb-2">`
+                        }
+                    ` : `
+                        <img class="preview-img hidden max-h-32 w-auto object-contain rounded mb-2">
+                        <video class="preview-video hidden max-h-32 w-full object-cover rounded mb-2" muted playsinline loop></video>
+                    `}
+                    
+                    <div class="text-center placeholder-box ${data.image ? 'hidden' : ''}">
+                        <i class="fas fa-cloud-upload-alt text-2xl text-gray-400 mb-1"></i>
+                        <p class="text-xs text-gray-500 font-semibold">Click to upload</p>
+                    </div>
+
+                    <input type="file" class="hidden" onchange="handleBannerUpload(this)">
                     <input type="hidden" name="banner_items[${index}][image_url]" value="${data.image || ''}">
+                     <!-- Progress Bar Area -->
+                    <div class="upload-progress-container w-full"></div>
                 </div>
             </div>
+
+            <!-- Mobile Media -->
             <div>
                 <label class="block text-xs font-bold mb-1">Mobile Media (Img/Video)</label>
-                ${data.mobile_image ? `<div class="mb-2">${
-                    data.mobile_image.match(/\.(mp4|webm)$/i) 
-                    ? `<video src="${data.mobile_image.startsWith('http') ? data.mobile_image : '../'+data.mobile_image}" class="h-20 w-auto object-cover border rounded" muted playsinline loop></video>`
-                    : `<img src="${data.mobile_image.startsWith('http') ? data.mobile_image : '../'+data.mobile_image}" class="h-16 object-cover border rounded w-auto">`
-                }</div>` : ''}
-                
-                <div class="flex flex-col">
-                    <input type="file" class="w-full border p-1 rounded mb-1 text-xs" onchange="chunkUpload(this)">
-                    <img class="preview-img hidden h-16 w-auto object-cover border rounded mt-1">
+                <div class="relative group cursor-pointer border-2 border-dashed border-gray-300 rounded-lg p-4 bg-white flex flex-col items-center justify-center min-h-[120px] hover:border-blue-500 hover:bg-blue-50 transition" onclick="this.querySelector('input[type=file]').click()">
+                    
+                     ${data.mobile_image ? `
+                        ${data.mobile_image.match(/\.(mp4|webm)$/i) 
+                        ? `<video src="${data.mobile_image.startsWith('http') ? data.mobile_image : '../'+data.mobile_image}" class="preview-video max-h-32 w-full object-cover rounded mb-2" muted playsinline loop hover></video>`
+                        : `<img src="${data.mobile_image.startsWith('http') ? data.mobile_image : '../'+data.mobile_image}" class="preview-img max-h-32 w-auto object-contain rounded mb-2">`
+                        }
+                    ` : `
+                        <img class="preview-img hidden max-h-32 w-auto object-contain rounded mb-2">
+                        <video class="preview-video hidden max-h-32 w-full object-cover rounded mb-2" muted playsinline loop></video>
+                    `}
+
+                     <div class="text-center placeholder-box ${data.mobile_image ? 'hidden' : ''}">
+                        <i class="fas fa-mobile-alt text-2xl text-gray-400 mb-1"></i>
+                        <p class="text-xs text-gray-500 font-semibold">Click to upload</p>
+                    </div>
+
+                    <input type="file" class="hidden" onchange="handleBannerUpload(this)">
                     <input type="hidden" name="banner_items[${index}][mobile_image_url]" value="${data.mobile_image || ''}">
+                    <div class="upload-progress-container w-full"></div>
                 </div>
             </div>
         </div>
-        
-
         
         <div class="grid grid-cols-2 gap-4 mb-4">
             <div>
@@ -1234,6 +1298,18 @@ function addBannerSection(data = {}) {
         </div>
     `;
     bannerContainer.appendChild(div);
+}
+
+// Wrapper to handle upload and UI toggling (placeholder vs preview)
+async function handleBannerUpload(input) {
+    const container = input.parentElement;
+    const placeholder = container.querySelector('.placeholder-box');
+    
+    // Hide placeholder immediately on select
+    if(placeholder) placeholder.classList.add('hidden');
+    
+    // Call existing chunkUpload logic
+    await chunkUpload(input);
 }
 
 function previewImage(input) {

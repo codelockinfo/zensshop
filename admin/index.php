@@ -72,11 +72,16 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 <label class="block text-gray-700 text-sm font-bold mb-2" for="password">
                     Password
                 </label>
-                <input type="password" 
-                       id="password" 
-                       name="password" 
-                       required
-                       class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
+                <div class="relative">
+                    <input type="password" 
+                           id="password" 
+                           name="password" 
+                           required
+                           class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 pr-10">
+                    <button type="button" onclick="togglePassword('password', this)" class="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 focus:outline-none">
+                        <i class="far fa-eye"></i>
+                    </button>
+                </div>
             </div>
             
             <div class="mb-6">
@@ -101,6 +106,21 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         </div>
     </div>
     <script>
+    function togglePassword(inputId, btn) {
+        const input = document.getElementById(inputId);
+        const icon = btn.querySelector('i');
+        
+        if (input.type === 'password') {
+            input.type = 'text';
+            icon.classList.remove('fa-eye');
+            icon.classList.add('fa-eye-slash');
+        } else {
+            input.type = 'password';
+            icon.classList.remove('fa-eye-slash');
+            icon.classList.add('fa-eye');
+        }
+    }
+
     document.addEventListener('DOMContentLoaded', function() {
         const alerts = document.querySelectorAll('.bg-green-100, .bg-red-100');
         alerts.forEach(function(alert) {

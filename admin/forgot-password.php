@@ -14,6 +14,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['email'])) {
     try {
         $auth->generateOTP($email);
         $success = 'OTP has been sent to your email address.';
+        header('Location: ' . $baseUrl . '/admin/verify-otp.php?email=' . urlencode($email));
+        exit;
     } catch (Exception $e) {
         $error = $e->getMessage();
     }
@@ -33,7 +35,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['email'])) {
         <div class="text-center mb-8">
             <div class="w-16 h-16 bg-blue-500 rounded-lg flex items-center justify-center text-white text-2xl font-bold mx-auto mb-4">R</div>
             <h1 class="text-2xl font-bold">Forgot Password</h1>
-            <p class="text-gray-600 mt-2">Enter your email to receive OTP</p>
         </div>
         
         <?php if ($error): ?>
@@ -81,7 +82,20 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['email'])) {
     </div>
     <script>
     document.addEventListener('DOMContentLoaded', function() {
+        const form = document.querySelector('form');
+        const submitBtn = form.querySelector('button[type="submit"]');
         const alerts = document.querySelectorAll('.bg-green-100, .bg-red-100');
+        
+        if (form) {
+            form.addEventListener('submit', function() {
+                if (form.checkValidity()) {
+                    submitBtn.disabled = true;
+                    submitBtn.classList.add('opacity-75', 'cursor-not-allowed');
+                    submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i> Sending OTP...';
+                }
+            });
+        }
+
         alerts.forEach(function(alert) {
             setTimeout(function() {
                 alert.style.transition = 'opacity 0.5s ease';

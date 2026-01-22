@@ -11,7 +11,7 @@ $products = $db->fetchAll(
     "SELECT p.*, h.heading, h.subheading
      FROM products p 
      JOIN section_best_selling_products h ON p.product_id = h.product_id 
-     WHERE p.status = 'active' 
+     WHERE p.status != 'archived' 
      ORDER BY h.sort_order ASC"
 );
 
@@ -97,8 +97,8 @@ if (empty($products)) {
                                 </div>
                             </div>
                             <div class="p-4">
-                                <h3 class="font-semibold text-gray-800 mb-2 line-clamp-2">
-                                    <a href="<?php echo $baseUrl; ?>/product.php?slug=<?php echo urlencode($item['slug'] ?? ''); ?>" class="hover:text-primary transition">
+                                <h3 class="font-semibold text-sm md:text-base text-gray-800 md:w-[250px] mb-2 overflow-hidden h-10 md:h-12 leading-tight" style="display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical;" title="<?php echo htmlspecialchars($item['name']); ?>">
+                                    <a href="<?php echo $baseUrl; ?>/product.php?slug=<?php echo urlencode($item['slug'] ?? ''); ?>" class="hover:text-primary transition block">
                                         <?php echo htmlspecialchars($item['name']); ?>
                                     </a>
                                 </h3>

@@ -65,12 +65,12 @@ $action = $segments[count($segments) - 1] ?? '';  // add, list
             <button class="text-gray-600 hover:text-gray-800" id="sidebarToggle">
                 <i class="fas fa-bars text-xl"></i>
             </button>
-            <a href="<?php echo $baseUrl; ?>/admin/dashboard.php" class="flex items-center space-x-2 text-gray-600 hover:text-gray-800">
+            <a href="javascript:history.back()" class="flex items-center space-x-2 text-gray-600 hover:text-gray-800">
                 <i class="fas fa-arrow-left text-sm"></i>
             </a>
             <div class="flex items-center space-x-2">
-                <div class="w-8 h-8 bg-blue-500 rounded flex items-center justify-center text-white font-bold">R</div>
-                <span class="text-xl font-bold text-gray-800">Remos</span>
+                <div class="w-8 h-8 bg-blue-500 rounded flex items-center justify-center text-white font-bold">Z</div>
+                <span class="text-xl font-bold text-gray-800">ZENSSHOP</span>
             </div>
         </div>
         

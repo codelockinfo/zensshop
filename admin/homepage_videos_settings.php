@@ -470,17 +470,98 @@ require_once __DIR__ . '/../includes/admin-header.php';
 </template>
 
 <script>
+    // --- Drag and Drop Logic ---
+    let draggedVideo = null;
+
+    document.addEventListener('DOMContentLoaded', function() {
+        const cards = document.querySelectorAll('.video-card');
+        cards.forEach(card => enableDragAndDrop(card));
+    });
+
+    function enableDragAndDrop(card) {
+        card.setAttribute('draggable', 'true');
+        const handle = card.querySelector('.drag-handle');
+        
+        // Only allow dragging from the handle
+        card.addEventListener('dragstart', function(e) {
+            // Check if we are clicking inside the handle
+            const rect = handle.getBoundingClientRect();
+            // Optional: stricter check if needed, but for now relies on user
+            
+            draggedVideo = card;
+            e.dataTransfer.effectAllowed = 'move';
+            e.dataTransfer.setData('text/plain', ''); // Firefox hack
+            setTimeout(() => card.classList.add('opacity-50'), 0);
+        });
+
+        card.addEventListener('dragend', function(e) {
+            card.classList.remove('opacity-50');
+            draggedVideo = null;
+            document.querySelectorAll('.video-card').forEach(c => c.classList.remove('border-t-4', 'border-blue-500'));
+        });
+
+        card.addEventListener('dragover', function(e) {
+            e.preventDefault(); // allow drop
+            if (draggedVideo === card) return; // ignore self
+            
+            // Visual cue (optional, simple border)
+            // We want to verify we are over another card
+            const target = e.target.closest('.video-card');
+            if(target && target !== draggedVideo) {
+                 // Clean up others
+                 // target.classList.add('border-blue-500'); 
+            }
+        });
+
+        card.addEventListener('drop', function(e) {
+            e.preventDefault();
+            if (!draggedVideo || draggedVideo === card) return;
+
+            const container = document.getElementById('videoContainer');
+            const allCards = Array.from(container.querySelectorAll('.video-card'));
+            const fromIndex = allCards.indexOf(draggedVideo);
+            const toIndex = allCards.indexOf(card);
+
+            if (fromIndex < toIndex) {
+                // Moving down: insert after target
+                container.insertBefore(draggedVideo, card.nextSibling);
+            } else {
+                // Moving up: insert before target
+                container.insertBefore(draggedVideo, card);
+            }
+            
+            // Renumber or re-label items if needed (optional)
+            updateItemLabels();
+        });
+    }
+
+    function updateItemLabels() {
+        const cards = document.querySelectorAll('.video-card');
+        cards.forEach((card, index) => {
+            const title = card.querySelector('.drag-handle');
+            if(title) {
+                // Keep the icon, update the text
+                title.innerHTML = `<i class="fas fa-grip-vertical mr-2 text-gray-400"></i> Item ${index + 1}`;
+            }
+        });
+    }
+
     function addVideoRow() {
         const container = document.getElementById('videoContainer');
         const template = document.getElementById('rowTemplate');
         const clone = template.content.cloneNode(true);
         container.appendChild(clone);
         
+        const newCard = container.lastElementChild;
+        enableDragAndDrop(newCard); // Bind events
+        
         const emptyMsg = document.getElementById('emptyMsg');
         if(emptyMsg) emptyMsg.style.display = 'none';
         
+        updateItemLabels(); // Correct the "Item X" label
+        
         // Scroll to new item
-        container.lastElementChild.scrollIntoView({ behavior: 'smooth' });
+        newCard.scrollIntoView({ behavior: 'smooth' });
     }
 
     function removeCard(btn) {
@@ -489,6 +570,8 @@ require_once __DIR__ . '/../includes/admin-header.php';
         const container = card.parentNode;
         card.remove();
         
+        updateItemLabels();
+
         const emptyMsg = document.getElementById('emptyMsg');
         if (container.querySelectorAll('.video-card').length === 0 && emptyMsg) {
             emptyMsg.style.display = 'block';

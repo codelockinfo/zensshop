@@ -81,13 +81,22 @@ function renderFooterLinkRecursive($item, $baseUrl) {
                     
                     <div class="space-y-2 text-black mt-4">
                         <?php if (!empty($footerSettings['footer_address'])): ?>
-                        <p class="flex items-center text-sm text-gray-900"><i class="fas fa-map-marker-alt w-5 text-sm"></i><?php echo htmlspecialchars($footerSettings['footer_address']); ?></p>
+                        <a href="https://maps.google.com/?q=<?php echo urlencode($footerSettings['footer_address']); ?>" target="_blank" class="flex items-center text-sm text-gray-900 hover:text-black transition group">
+                            <i class="fas fa-map-marker-alt w-5 text-sm group-hover:text-black"></i>
+                            <span class="group-hover:underline"><?php echo htmlspecialchars($footerSettings['footer_address']); ?></span>
+                        </a>
                         <?php endif; ?>
                         <?php if (!empty($footerSettings['footer_phone'])): ?>
-                        <p class="flex items-center text-sm text-gray-900"><i class="fas fa-phone w-5 text-sm"></i><?php echo htmlspecialchars($footerSettings['footer_phone']); ?></p>
+                        <a href="tel:<?php echo htmlspecialchars(preg_replace('/[^0-9+]/', '', $footerSettings['footer_phone'])); ?>" class="flex items-center text-sm text-gray-900 hover:text-black transition group">
+                            <i class="fas fa-phone w-5 text-sm group-hover:text-black"></i>
+                            <span class="group-hover:underline"><?php echo htmlspecialchars($footerSettings['footer_phone']); ?></span>
+                        </a>
                         <?php endif; ?>
                         <?php if (!empty($footerSettings['footer_email'])): ?>
-                        <p class="flex items-center text-sm text-gray-900"><i class="fas fa-envelope w-5 text-sm"></i><?php echo htmlspecialchars($footerSettings['footer_email']); ?></p>
+                        <a href="mailto:<?php echo htmlspecialchars($footerSettings['footer_email']); ?>" class="flex items-center text-sm text-gray-900 hover:text-black transition group">
+                            <i class="fas fa-envelope w-5 text-sm group-hover:text-black"></i>
+                            <span class="group-hover:underline"><?php echo htmlspecialchars($footerSettings['footer_email']); ?></span>
+                        </a>
                         <?php endif; ?>
                     </div>
                     

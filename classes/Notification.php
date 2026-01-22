@@ -93,4 +93,13 @@ class Notification {
             "/admin/customers/subscribers.php"
         );
     }
+
+    public function notifyPasswordChange($customerName, $customerId, $email) {
+        return $this->create(
+            'security',
+            'Password Changed',
+            "Password reset for customer $customerName ($email)",
+            "/admin/customers/view.php?id=$customerId"
+        );
+    }
 }

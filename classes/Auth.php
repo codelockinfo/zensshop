@@ -186,19 +186,10 @@ class Auth {
         // Generate 6-digit OTP
         $otp = str_pad(rand(0, 999999), OTP_LENGTH, '0', STR_PAD_LEFT);
         
-        // Calculate expiry time
-        $expiresAt = date('Y-m-d H:i:s', time() + (OTP_EXPIRY_MINUTES * 60));
-        
-        // Delete old OTPs for this email
-        $this->db->execute(
-            "DELETE FROM password_resets WHERE email = ? OR expires_at < NOW()",
-            [$email]
-        );
-        
-        // Insert new OTP
+        // Insert new OTP with DB-calculated expiry to fix timezone offset issues
         $this->db->insert(
-            "INSERT INTO password_resets (email, otp, expires_at) VALUES (?, ?, ?)",
-            [$email, $otp, $expiresAt]
+            "INSERT INTO password_resets (email, otp, expires_at) VALUES (?, ?, DATE_ADD(NOW(), INTERVAL ? MINUTE))",
+            [$email, $otp, OTP_EXPIRY_MINUTES]
         );
         
         // Send OTP email

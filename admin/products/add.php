@@ -113,9 +113,14 @@ require_once __DIR__ . '/../../includes/functions.php';
 $categories = $db->fetchAll("SELECT * FROM categories WHERE status = 'active' ORDER BY name");
 ?>
 
-<div class="mb-6">
-    <h1 class="text-2xl md:text-3xl font-bold">Add Product</h1>
-    <p class="text-gray-600 text-sm md:text-base">Dashboard > Ecommerce > Add product</p>
+<div class="mb-6 flex justify-between items-center">
+    <div>
+        <h1 class="text-2xl md:text-3xl font-bold">Add Product</h1>
+        <p class="text-gray-600 text-sm md:text-base">Dashboard > Ecommerce > Add product</p>
+    </div>
+    <button type="button" onclick="document.querySelector('form').submit()" class="bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700 shadow-md transition-colors">
+        <i class="fas fa-save mr-2"></i> Save Product
+    </button>
 </div>
 
 <?php if ($error): ?>
@@ -192,53 +197,35 @@ $categories = $db->fetchAll("SELECT * FROM categories WHERE status = 'active' OR
     <!-- Right Column -->
     <div class="space-y-6">
         <div class="admin-card">
-            <h2 class="text-lg md:text-xl font-bold mb-4">Upload images</h2>
-            <div class="grid grid-cols-2 gap-4 mb-4" id="imageUploadArea">
-                <div class="image-upload-box border-2 border-dashed border-gray-300 rounded-lg p-4 text-center cursor-pointer hover:border-blue-500 transition-colors relative" data-index="0">
-                    <input type="file" accept="image/*" class="hidden image-file-input" data-index="0" multiple>
-                    <div class="upload-placeholder">
-                        <i class="fas fa-cloud-upload-alt text-4xl text-gray-400 mb-2"></i>
-                        <p class="text-sm text-gray-600">Drop your images here or <span class="text-blue-500">click to browse</span>.</p>
-                    </div>
-                    <div class="image-preview hidden"></div>
-                    <button type="button" class="remove-image-btn absolute top-2 right-2 bg-red-500 text-white rounded-full w-6 h-6 flex items-center justify-center hover:bg-red-600 hidden">
-                        <i class="fas fa-times text-xs"></i>
-                    </button>
-                </div>
-                <div class="image-upload-box border-2 border-dashed border-gray-300 rounded-lg p-4 text-center cursor-pointer hover:border-blue-500 transition-colors relative" data-index="1">
-                    <input type="file" accept="image/*" class="hidden image-file-input" data-index="1" multiple>
-                    <div class="upload-placeholder">
-                        <i class="fas fa-cloud-upload-alt text-4xl text-gray-400 mb-2"></i>
-                        <p class="text-sm text-gray-600">Drop your images here or <span class="text-blue-500">click to browse</span>.</p>
-                    </div>
-                    <div class="image-preview hidden"></div>
-                    <button type="button" class="remove-image-btn absolute top-2 right-2 bg-red-500 text-white rounded-full w-6 h-6 flex items-center justify-center hover:bg-red-600 hidden">
-                        <i class="fas fa-times text-xs"></i>
-                    </button>
-                </div>
-                <div class="image-upload-box border-2 border-dashed border-gray-300 rounded-lg p-4 text-center cursor-pointer hover:border-blue-500 transition-colors relative" data-index="2">
-                    <input type="file" accept="image/*" class="hidden image-file-input" data-index="2" multiple>
-                    <div class="upload-placeholder">
-                        <i class="fas fa-cloud-upload-alt text-4xl text-gray-400 mb-2"></i>
-                        <p class="text-sm text-gray-600">Drop your images here or <span class="text-blue-500">click to browse</span>.</p>
-                    </div>
-                    <div class="image-preview hidden"></div>
-                    <button type="button" class="remove-image-btn absolute top-2 right-2 bg-red-500 text-white rounded-full w-6 h-6 flex items-center justify-center hover:bg-red-600 hidden">
-                        <i class="fas fa-times text-xs"></i>
-                    </button>
-                </div>
-                <div class="image-upload-box border-2 border-dashed border-gray-300 rounded-lg p-4 text-center cursor-pointer hover:border-blue-500 transition-colors relative" data-index="3">
-                    <input type="file" accept="image/*" class="hidden image-file-input" data-index="3" multiple>
-                    <div class="upload-placeholder">
-                        <i class="fas fa-cloud-upload-alt text-4xl text-gray-400 mb-2"></i>
-                        <p class="text-sm text-gray-600">Drop your images here or <span class="text-blue-500">click to browse</span>.</p>
-                    </div>
-                    <div class="image-preview hidden"></div>
-                    <button type="button" class="remove-image-btn absolute top-2 right-2 bg-red-500 text-white rounded-full w-6 h-6 flex items-center justify-center hover:bg-red-600 hidden">
-                        <i class="fas fa-times text-xs"></i>
-                    </button>
-                </div>
+            <div class="flex justify-between items-center mb-4">
+                <h2 class="text-lg md:text-xl font-bold">Upload images</h2>
+                <span class="text-xs text-blue-600 bg-blue-50 px-2 py-1 rounded border border-blue-200">
+                    <i class="fas fa-arrows-alt mr-1"></i> Drag to reorder
+                </span>
             </div>
+            
+            <div class="grid grid-cols-2 gap-4 mb-4" id="imageUploadArea">
+                <?php for ($i = 0; $i < 4; $i++): ?>
+                <div class="image-upload-box border-2 border-dashed border-gray-300 rounded-lg p-4 text-center cursor-pointer hover:border-blue-500 transition-colors relative" data-index="<?php echo $i; ?>">
+                    <input type="file" accept="image/*" class="hidden image-file-input" data-index="<?php echo $i; ?>" multiple>
+                    <div class="upload-placeholder">
+                        <i class="fas fa-cloud-upload-alt text-4xl text-gray-400 mb-2"></i>
+                        <p class="text-sm text-gray-600">Drop your images here or <span class="text-blue-500">click to browse</span>.</p>
+                    </div>
+                    <div class="image-preview hidden"></div>
+                    <button type="button" class="remove-image-btn absolute top-2 right-2 bg-red-500 text-white rounded-full w-6 h-6 flex items-center justify-center hover:bg-red-600 hidden">
+                        <i class="fas fa-times text-xs"></i>
+                    </button>
+                </div>
+                <?php endfor; ?>
+            </div>
+            
+            <div class="mb-4">
+                <button type="button" onclick="addMoreImage()" class="admin-btn border border-dashed border-blue-500 text-blue-500 w-full hover:bg-blue-50">
+                    <i class="fas fa-plus mr-2"></i> Add more image
+                </button>
+            </div>
+            
             <p class="text-sm text-gray-600">You need to add at least 4 images. Pay attention to the quality of the pictures you add, comply with the background color standards. Pictures must be in certain dimensions. Notice that the product shows all the details.</p>
             <input type="hidden" name="images" id="imagesInput" value="">
         </div>
@@ -380,7 +367,7 @@ if (typeof BASE_URL === 'undefined') {
     const BASE_URL = '<?php echo $baseUrl; ?>';
 }
 </script>
-<script src="<?php echo $baseUrl; ?>/assets/js/admin-image-upload1.js"></script>
+<script src="<?php echo $baseUrl; ?>/assets/js/admin-image-upload2.js"></script>
 <script src="<?php echo $baseUrl; ?>/assets/js/product-variants.js"></script>
 
 <?php require_once __DIR__ . '/../../includes/admin-footer.php'; ?>

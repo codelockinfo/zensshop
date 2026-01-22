@@ -296,8 +296,13 @@ function initComboBox(key) {
         
         try {
             // We allow empty term to show the first 20 products by default
-            const response = await fetch(`search_products_ajax.php?term=${encodeURIComponent(term)}`);
-            const products = await response.json();
+            const response = await fetch(`search_products_json.php?term=${encodeURIComponent(term)}`);
+            let products = await response.json();
+            
+            // Filter out already selected products
+            if (Array.isArray(products)) {
+                products = products.filter(p => !collections[key].has(parseInt(p.id)));
+            }
             
             if (!products || !Array.isArray(products) || products.length === 0) {
                 dropdown.innerHTML = '<div class="p-3 text-gray-500 text-sm">No products found</div>';
