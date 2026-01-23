@@ -164,7 +164,7 @@ $productVariants = $variantsData['variants'] ?? [];
                     ?>
                     <img src="<?php echo htmlspecialchars($imageUrl); ?>" 
                          alt="Thumbnail <?php echo $index + 1; ?>"
-                         class="w-full h-20 object-cover rounded cursor-pointer border-2 transition hover:border-primary <?php echo $index === 0 ? 'border-primary' : 'border-transparent'; ?>"
+                         class="w-full  object-contain rounded cursor-pointer border-2 transition hover:border-primary <?php echo $index === 0 ? 'border-primary' : 'border-transparent'; ?>"
                          onclick="changeMainImage('<?php echo htmlspecialchars($imageUrl); ?>', this)">
                     <?php endforeach; ?>
                 </div>
