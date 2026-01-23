@@ -533,11 +533,11 @@ $productVariants = $variantsData['variants'] ?? [];
                     $itemDiscount = $itemOriginalPrice && $itemOriginalPrice > 0 ? round((($itemOriginalPrice - $itemPrice) / $itemOriginalPrice) * 100) : 0;
                 ?>
                 <a href="<?php echo $baseUrl; ?>/product.php?slug=<?php echo urlencode($item['slug'] ?? ''); ?>" class="group">
-                    <div class="bg-white rounded-lg overflow-hidden shadow-md hover:shadow-xl transition-all duration-300 relative">
+                    <div class="bg-white rounded-lg overflow-hidden shadow-md hover:shadow-xl transition-all duration-300 relative 1">
                         <div class="relative overflow-hidden">
                             <img src="<?php echo htmlspecialchars($itemImage); ?>" 
                                  alt="<?php echo htmlspecialchars($item['name'] ?? 'Product'); ?>"
-                                 class="w-full h-64 object-cover group-hover:scale-110 transition-transform duration-500">
+                                 class="w-full h-64 object-contain group-hover:scale-110 transition-transform duration-500">
                             <?php if ($itemDiscount > 0): ?>
                             <span class="absolute top-3 right-3 bg-red-500 text-white px-2 py-1 rounded text-xs font-semibold">
                                 -<?php echo $itemDiscount; ?>%
