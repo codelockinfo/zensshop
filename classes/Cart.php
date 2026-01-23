@@ -29,16 +29,20 @@ class Cart {
         $cartItems = [];
         
         // Try to get from cookie first
-        // Try to get from cookie first
         if (isset($_COOKIE[CART_COOKIE_NAME])) {
             $json = $_COOKIE[CART_COOKIE_NAME];
+            
+            // Try explicit decoding if needed
             $cartData = json_decode($json, true);
             
-            // Fallback: Try stripping slashes if direct decode fails
             if (!is_array($cartData)) {
                 $cartData = json_decode(stripslashes($json), true);
             }
             
+            if (!is_array($cartData)) {
+                $cartData = json_decode(urldecode($json), true);
+            }
+
             if (is_array($cartData)) {
                 $cartItems = $cartData;
             }
@@ -60,9 +64,18 @@ class Cart {
                 continue;
             }
             
-            // If image is missing or invalid, fetch from product
             if (empty($item['image']) || $item['image'] === 'null' || $item['image'] === 'undefined' || empty($item['slug'])) {
-                $product = $this->product->getById($item['product_id']);
+                $productId = $item['product_id'];
+                $product = $this->product->getByProductId($productId);
+                
+                // Fallback for old auto-increment IDs
+                if (!$product && is_numeric($productId) && $productId < 1000000000) {
+                    $product = $this->product->getById($productId);
+                    if ($product) {
+                        $item['product_id'] = $product['product_id']; // Use 10-digit ID from now on
+                    }
+                }
+
                 if ($product) {
                     if (!empty($product['featured_image'])) {
                         $item['image'] = $product['featured_image'];
@@ -118,46 +131,62 @@ class Cart {
         $items = $this->db->fetchAll(
             "SELECT c.*, p.name, p.price, p.currency, p.sale_price, p.featured_image, p.stock_quantity, p.stock_status, p.slug
              FROM cart c
-             INNER JOIN products p ON c.product_id = p.id
+             LEFT JOIN products p ON (c.product_id = p.product_id OR (c.product_id = p.id AND c.product_id < 1000000000))
              WHERE c.user_id = ?",
             [$userId]
         );
         
         $cartItems = [];
         foreach ($items as $item) {
-            // Get product image
-            $productImage = '';
-            if (!empty($item['featured_image'])) {
-                $productImage = $item['featured_image'];
-            } else {
-                $product = $this->product->getById($item['product_id']);
-                if ($product) {
-                    $images = json_decode($product['images'] ?? '[]', true);
-                    if (!empty($images[0])) {
-                        $productImage = $images[0];
+            $variantAttributes = !empty($item['variant_attributes']) ? json_decode($item['variant_attributes'], true) : [];
+            
+            // Get base product data
+            $productImage = $item['featured_image'];
+            $price = $item['sale_price'] ?? $item['price'];
+            $sku = $item['sku'] ?? '';
+            
+            // If variant attributes exist, try to get specific variant data
+            if (!empty($variantAttributes)) {
+                $productId = $item['product_id'];
+                $variant = $this->db->fetchOne(
+                    "SELECT * FROM product_variants WHERE product_id = ? AND variant_attributes = ?",
+                    [$productId, json_encode($variantAttributes)]
+                );
+                
+                // Fallback for old auto-increment IDs in cart table
+                if (!$variant && is_numeric($productId) && $productId < 1000000000) {
+                    $innerProd = $this->product->getById($productId);
+                    if ($innerProd) {
+                        $variant = $this->db->fetchOne(
+                            "SELECT * FROM product_variants WHERE product_id = ? AND variant_attributes = ?",
+                            [$innerProd['product_id'], json_encode($variantAttributes)]
+                        );
                     }
+                }
+                
+                if ($variant) {
+                    if (!empty($variant['image'])) $productImage = $variant['image'];
+                    if (!empty($variant['price'])) $price = $variant['sale_price'] ?: $variant['price'];
+                    if (!empty($variant['sku'])) $sku = $variant['sku'];
                 }
             }
             
-            // Convert to full URL if needed (but not for base64 data URIs)
+            // Convert to full URL if needed
             if (!empty($productImage) && strpos($productImage, 'http') !== 0 && strpos($productImage, '/') !== 0 && strpos($productImage, 'data:') !== 0) {
-                if (defined('UPLOAD_URL')) {
-                    $productImage = UPLOAD_URL . '/' . $productImage;
-                } else {
-                    require_once __DIR__ . '/../includes/functions.php';
-                    $baseUrl = getBaseUrl();
-                    $productImage = $baseUrl . '/assets/images/uploads/' . $productImage;
-                }
+                require_once __DIR__ . '/../includes/functions.php';
+                $productImage = getBaseUrl() . '/assets/images/uploads/' . $productImage;
             }
             
             $cartItems[] = [
                 'product_id' => $item['product_id'],
                 'quantity' => $item['quantity'],
                 'name' => $item['name'],
-                'price' => $item['sale_price'] ?? $item['price'],
+                'price' => $price,
                 'currency' => $item['currency'] ?? 'USD',
                 'image' => $productImage,
-                'slug' => $item['slug'] ?? ''
+                'slug' => $item['slug'] ?? '',
+                'variant_attributes' => $variantAttributes,
+                'sku' => $sku
             ];
         }
         
@@ -167,29 +196,29 @@ class Cart {
     /**
      * Add item to cart
      */
-    public function addItem($productId, $quantity = 1) {
-        // Get product
-        $product = $this->product->getById($productId);
+    public function addItem($productId, $quantity = 1, $attributes = []) {
+        // Get product by 10-digit ID first
+        $product = $this->product->getByProductId($productId);
+        
+        // If not found, try getting by standard ID (legacy support or if passed ID is PK)
+        if (!$product && is_numeric($productId)) {
+            $product = $this->product->getById($productId);
+        }
+        
         if (!$product) {
-            error_log("Cart::addItem - Product ID $productId not found in database");
             throw new Exception("Product not found");
         }
         
-        error_log("Cart::addItem - Product found: " . ($product['name'] ?? 'N/A') . " (ID: $productId)");
-        error_log("Cart::addItem - Stock status: " . ($product['stock_status'] ?? 'N/A'));
-        
         if ($product['stock_status'] !== 'in_stock') {
-            error_log("Cart::addItem - Product ID $productId is out of stock");
             throw new Exception("Product is out of stock");
         }
-        
-        // Get current cart
         $cartItems = $this->getCart();
         
-        // Check if item already exists
+        // Check if item already exists with SAME attributes
         $found = false;
         foreach ($cartItems as &$item) {
-            if ($item['product_id'] == $productId) {
+            $itemAttrs = $item['variant_attributes'] ?? [];
+            if ($item['product_id'] == $productId && $itemAttrs == $attributes) {
                 $item['quantity'] += $quantity;
                 $found = true;
                 break;
@@ -198,44 +227,46 @@ class Cart {
         
         // Add new item if not found
         if (!$found) {
-            // Get product image
-            $productImage = '';
-            if (!empty($product['featured_image'])) {
-                $productImage = $product['featured_image'];
-            } else {
-                $images = json_decode($product['images'] ?? '[]', true);
-                if (!empty($images[0])) {
-                    $productImage = $images[0];
+            // Default product data
+            $productImage = $product['featured_image'];
+            $price = $product['sale_price'] ?? $product['price'];
+            $sku = $product['sku'] ?? '';
+            
+            // Try to find specific variant data
+            if (!empty($attributes)) {
+                $variant = $this->db->fetchOne(
+                    "SELECT * FROM product_variants WHERE product_id = ? AND variant_attributes = ?",
+                    [$product['product_id'], json_encode($attributes)]
+                );
+                
+                if ($variant) {
+                    if (!empty($variant['image'])) $productImage = $variant['image'];
+                    if (!empty($variant['price'])) $price = $variant['sale_price'] ?: $variant['price'];
+                    if (!empty($variant['sku'])) $sku = $variant['sku'];
                 }
             }
             
-            // Convert to full URL if needed (but not for base64 data URIs)
+            // Convert to full URL if needed
             if (!empty($productImage) && strpos($productImage, 'http') !== 0 && strpos($productImage, '/') !== 0 && strpos($productImage, 'data:') !== 0) {
-                if (defined('UPLOAD_URL')) {
-                    $productImage = UPLOAD_URL . '/' . $productImage;
-                } else {
-                    require_once __DIR__ . '/../includes/functions.php';
-                    $baseUrl = getBaseUrl();
-                    $productImage = $baseUrl . '/assets/images/uploads/' . $productImage;
-                }
+                require_once __DIR__ . '/../includes/functions.php';
+                $productImage = getBaseUrl() . '/assets/images/uploads/' . $productImage;
             }
             
             $cartItems[] = [
                 'product_id' => $productId,
                 'quantity' => $quantity,
                 'name' => $product['name'],
-                'price' => $product['sale_price'] ?? $product['price'],
+                'price' => $price,
                 'currency' => $product['currency'] ?? 'USD',
                 'image' => $productImage,
-                'slug' => $product['slug'] ?? ''
+                'slug' => $product['slug'] ?? '',
+                'variant_attributes' => $attributes,
+                'sku' => $sku
             ];
         }
         
         // Save to cookie
         $this->saveCartToCookie($cartItems);
-        
-        error_log("Cart::addItem - Cart items after save: " . count($cartItems) . " items");
-        error_log("Cart::addItem - Returning cart: " . json_encode($cartItems));
         
         // Save to database if user is logged in
         $loggedId = $_SESSION['customer_id'] ?? null;
@@ -249,15 +280,16 @@ class Cart {
     /**
      * Update item quantity
      */
-    public function updateItem($productId, $quantity) {
+    public function updateItem($productId, $quantity, $attributes = []) {
         if ($quantity <= 0) {
-            return $this->removeItem($productId);
+            return $this->removeItem($productId, $attributes);
         }
         
         $cartItems = $this->getCart();
         
         foreach ($cartItems as &$item) {
-            if ($item['product_id'] == $productId) {
+            $itemAttrs = $item['variant_attributes'] ?? [];
+            if ($item['product_id'] == $productId && $itemAttrs == $attributes) {
                 $item['quantity'] = $quantity;
                 break;
             }
@@ -276,11 +308,12 @@ class Cart {
     /**
      * Remove item from cart
      */
-    public function removeItem($productId) {
+    public function removeItem($productId, $attributes = []) {
         $cartItems = $this->getCart();
         
-        $cartItems = array_filter($cartItems, function($item) use ($productId) {
-            return $item['product_id'] != $productId;
+        $cartItems = array_filter($cartItems, function($item) use ($productId, $attributes) {
+            $itemAttrs = $item['variant_attributes'] ?? [];
+            return !($item['product_id'] == $productId && $itemAttrs == $attributes);
         });
         
         $cartItems = array_values($cartItems); // Re-index array
@@ -391,8 +424,8 @@ class Cart {
             foreach ($cartItems as $item) {
                 try {
                     $this->db->insert(
-                        "INSERT INTO cart (user_id, product_id, quantity) VALUES (?, ?, ?)",
-                        [$userId, $item['product_id'], $item['quantity']]
+                        "INSERT INTO cart (user_id, product_id, quantity, variant_attributes) VALUES (?, ?, ?, ?)",
+                        [$userId, $item['product_id'], $item['quantity'], json_encode($item['variant_attributes'] ?? [])]
                     );
                 } catch (Exception $e) {
                     error_log("Cart::saveCartToDB - Error inserting item: " . $e->getMessage());
@@ -424,9 +457,11 @@ class Cart {
         
         // Merge guest cart into db cart
         foreach ($guestCart as $guestItem) {
+            $guestAttrs = $guestItem['variant_attributes'] ?? [];
             $found = false;
             foreach ($dbCart as &$dbItem) {
-                if ($dbItem['product_id'] == $guestItem['product_id']) {
+                $dbAttrs = $dbItem['variant_attributes'] ?? [];
+                if ($dbItem['product_id'] == $guestItem['product_id'] && $dbAttrs == $guestAttrs) {
                     $dbItem['quantity'] += $guestItem['quantity'];
                     $found = true;
                     break;

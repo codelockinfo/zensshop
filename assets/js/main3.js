@@ -488,9 +488,17 @@ function setBtnLoading(btn, isLoading) {
             btn.setAttribute('data-original-html', btn.innerHTML);
             
             // Lock dimensions
-            const rect = btn.getBoundingClientRect();
-            btn.style.width = rect.width + 'px';
-            btn.style.height = rect.height + 'px';
+            const width = btn.offsetWidth;
+            const height = btn.offsetHeight;
+            
+            btn.style.width = width + 'px';
+            btn.style.height = height + 'px';
+            
+            // Maintain display type if possible, or force inline-flex for centering
+            // If it was block, inline-flex might break layout slightly (e.g. margins), 
+            // so let's try to keep it simple but ensure centering.
+            // Using grid/place-items-center is also an option, but inline-flex is standard.
+            // We'll set justify/align for centering.
             btn.style.display = 'inline-flex';
             btn.style.alignItems = 'center';
             btn.style.justifyContent = 'center';
@@ -502,12 +510,13 @@ function setBtnLoading(btn, isLoading) {
         const originalHtml = btn.getAttribute('data-original-html');
         if (originalHtml !== null) {
             btn.innerHTML = originalHtml;
-            // Restore dimensions
+            // Restore dimensions and styles
             btn.style.width = '';
             btn.style.height = '';
             btn.style.display = '';
             btn.style.alignItems = '';
             btn.style.justifyContent = '';
+            btn.removeAttribute('data-original-html');
         }
         btn.disabled = false;
         btn.classList.remove('opacity-75', 'cursor-not-allowed');

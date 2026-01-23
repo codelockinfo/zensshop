@@ -21,7 +21,7 @@ class Order {
                 SUM(oi.quantity) as total_quantity,
                 (SELECT p.featured_image 
                  FROM order_items oi2 
-                 LEFT JOIN products p ON oi2.product_id = p.id 
+                 LEFT JOIN products p ON (oi2.product_id = p.product_id OR (oi2.product_id < 1000000000 AND oi2.product_id = p.id))
                  WHERE oi2.order_id = o.id 
                  LIMIT 1) as product_image
                 FROM orders o
@@ -100,7 +100,7 @@ class Order {
         return $this->db->fetchAll(
             "SELECT oi.*, p.name as product_name, p.featured_image as product_image, p.sku as product_sku, p.slug as product_slug
              FROM order_items oi 
-             LEFT JOIN products p ON oi.product_id = p.id 
+             LEFT JOIN products p ON (oi.product_id = p.product_id OR (oi.product_id < 1000000000 AND oi.product_id = p.id))
              WHERE oi.order_id = ?",
             [$orderId]
         );
@@ -158,16 +158,17 @@ class Order {
         foreach ($data['items'] as $item) {
             $this->db->insert(
                 "INSERT INTO order_items 
-                (order_id, product_id, product_name, product_sku, quantity, price, subtotal) 
-                VALUES (?, ?, ?, ?, ?, ?, ?)",
+                (order_id, product_id, product_name, product_sku, quantity, price, subtotal, variant_attributes) 
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
                 [
                     $orderId,
                     $item['product_id'],
-                    $item['product_name'],
-                    $item['product_sku'] ?? null,
+                    $item['name'] ?? $item['product_name'],
+                    $item['sku'] ?? $item['product_sku'] ?? null,
                     $item['quantity'],
                     $item['price'],
-                    $item['price'] * $item['quantity']
+                    $item['price'] * $item['quantity'],
+                    isset($item['variant_attributes']) ? (is_array($item['variant_attributes']) ? json_encode($item['variant_attributes']) : $item['variant_attributes']) : null
                 ]
             );
         }
@@ -319,8 +320,8 @@ class Order {
     public function addOrderItem($orderId, $itemData) {
         $itemId = $this->db->insert(
             "INSERT INTO order_items 
-            (order_id, product_id, product_name, product_sku, quantity, price, subtotal) 
-            VALUES (?, ?, ?, ?, ?, ?, ?)",
+            (order_id, product_id, product_name, product_sku, quantity, price, subtotal, variant_attributes) 
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
             [
                 $orderId,
                 $itemData['product_id'],
@@ -328,7 +329,8 @@ class Order {
                 $itemData['product_sku'] ?? null,
                 $itemData['quantity'],
                 $itemData['price'],
-                $itemData['price'] * $itemData['quantity']
+                $itemData['price'] * $itemData['quantity'],
+                isset($itemData['variant_attributes']) ? (is_array($itemData['variant_attributes']) ? json_encode($itemData['variant_attributes']) : $itemData['variant_attributes']) : null
             ]
         );
         

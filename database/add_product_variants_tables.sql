@@ -1,15 +1,12 @@
--- Create product variants tables for Shopify-like variant system
+-- Create product variants table for Shopify-like variant system
 -- This allows products to have multiple variants with different attributes (Size, Color, Material, etc.)
-
--- Product Variant Options Table (e.g., Size, Color, Material)
--- This stores the variant option types and their values
 
 -- Product Variants Table
 -- This stores individual variant combinations (e.g., Small-Red, Medium-Blue)
 CREATE TABLE IF NOT EXISTS `product_variants` (
   `id` int(11) NOT NULL AUTO_INCREMENT,
-  `product_id` int(11) NOT NULL,
-  `sku` varchar(100) UNIQUE,
+  `product_id` bigint(20) NOT NULL COMMENT '10-digit unique product id',
+  `sku` varchar(100) DEFAULT NULL,
   `price` decimal(10,2) DEFAULT NULL COMMENT 'Override product price if set',
   `sale_price` decimal(10,2) DEFAULT NULL,
   `stock_quantity` int(11) DEFAULT 0,
@@ -22,8 +19,8 @@ CREATE TABLE IF NOT EXISTS `product_variants` (
   `created_at` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
   `updated_at` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
   PRIMARY KEY (`id`),
+  UNIQUE KEY `sku` (`sku`),
   KEY `product_id` (`product_id`),
   KEY `is_default` (`is_default`),
-  FOREIGN KEY (`product_id`) REFERENCES `products` (`id`) ON DELETE CASCADE
+  CONSTRAINT `fk_product_variants_product_id` FOREIGN KEY (`product_id`) REFERENCES `products` (`product_id`) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
-

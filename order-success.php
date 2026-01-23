@@ -272,6 +272,19 @@ nav.bg-white.sticky.top-0 {
                                         SKU: <?php echo htmlspecialchars($item['product_sku']); ?>
                                     </p>
                                     <?php endif; ?>
+                                    
+                                    <?php 
+                                    $variantAttributes = !empty($item['variant_attributes']) ? (is_array($item['variant_attributes']) ? $item['variant_attributes'] : json_decode($item['variant_attributes'], true)) : [];
+                                    if (!empty($variantAttributes) && is_array($variantAttributes)): 
+                                    ?>
+                                        <div class="mt-1 flex flex-wrap gap-1">
+                                            <?php foreach ($variantAttributes as $key => $value): ?>
+                                                <span class="text-[10px] bg-gray-100 text-gray-600 px-1.5 py-0.5 rounded border border-gray-200">
+                                                    <?php echo htmlspecialchars($key); ?>: <?php echo htmlspecialchars($value); ?>
+                                                </span>
+                                            <?php endforeach; ?>
+                                        </div>
+                                    <?php endif; ?>
                                 </div>
                                 <div class="text-right">
                                     <p class="text-sm font-semibold text-gray-900">
@@ -338,6 +351,7 @@ nav.bg-white.sticky.top-0 {
                         <!-- Action Buttons -->
                         <div class="mt-6 space-y-3">
                             <a href="<?php echo url('/'); ?>" 
+                               style="color: #ffffff !important;"
                                class="block w-full bg-black text-white text-center py-3 rounded-lg hover:bg-gray-800 transition font-medium">
                                 Continue Shopping
                             </a>

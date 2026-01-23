@@ -679,7 +679,7 @@ function renderMenuItems($items) {
                      <div class="flex justify-end gap-2 opacity-100 md:opacity-0 group-hover:opacity-100 transition-opacity">
                          <button onclick="editItem(<?php echo htmlspecialchars(json_encode($item)); ?>)" class="text-blue-600 hover:text-blue-800 text-xs font-semibold px-2 py-1 bg-blue-50 rounded">Edit</button>
                          <button onclick="openAddModal(<?php echo $item['id']; ?>, '<?php echo addslashes($item['label']); ?>')" class="text-green-600 hover:text-green-800 text-xs font-semibold px-2 py-1 bg-green-50 rounded whitespace-nowrap"><i class="fas fa-plus mr-1"></i> Add Sub</button>
-                         <form method="POST" class="inline-block" onsubmit="return confirm('Are you sure?');">
+                         <form method="POST" class="inline-block">
                             <input type="hidden" name="action" value="delete_menu_item">
                             <input type="hidden" name="item_id" value="<?php echo $item['id']; ?>">
                             <input type="hidden" name="menu_id" value="<?php echo $item['menu_id']; ?>"> 

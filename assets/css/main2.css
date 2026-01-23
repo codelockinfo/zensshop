@@ -153,6 +153,10 @@ a:hover {
   color: var(--color-primary);
 }
 
+.text-black {
+  color: var(--color-black) !important;
+}
+
 .bg-primary {
   background-color: var(--color-primary);
 }

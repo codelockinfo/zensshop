@@ -133,6 +133,17 @@ require_once __DIR__ . '/../../includes/admin-header.php';
                         <?php if (!empty($item['product_sku'])): ?>
                         <p class="text-sm text-gray-500 mt-1">SKU: <?php echo htmlspecialchars($item['product_sku']); ?></p>
                         <?php endif; ?>
+                        
+                        <?php 
+                        $variantAttributes = !empty($item['variant_attributes']) ? json_decode($item['variant_attributes'], true) : [];
+                        if (!empty($variantAttributes)): 
+                        ?>
+                        <div class="mt-1 space-y-0.5">
+                            <?php foreach ($variantAttributes as $key => $value): ?>
+                            <p class="text-xs text-gray-600 font-medium"><?php echo htmlspecialchars($key); ?>: <?php echo htmlspecialchars($value); ?></p>
+                            <?php endforeach; ?>
+                        </div>
+                        <?php endif; ?>
                         <p class="text-sm text-gray-600 mt-2">
                             Quantity: <span class="font-medium"><?php echo $item['quantity']; ?></span>
                         </p>

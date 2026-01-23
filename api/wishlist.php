@@ -38,7 +38,7 @@ try {
                 throw new Exception('Product ID is required');
             }
             
-            $productId = (int)$input['product_id'];
+            $productId = $input['product_id'];
             $items = $wishlist->addItem($productId);
             
             // Include cookie_data for JavaScript to set cookie
@@ -59,7 +59,7 @@ try {
                 throw new Exception('Product ID is required');
             }
             
-            $productId = (int)$input['product_id'];
+            $productId = $input['product_id'];
             $items = $wishlist->removeItem($productId);
             
             // Include cookie_data for JavaScript to set cookie

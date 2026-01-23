@@ -33,6 +33,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             'gender' => $_POST['gender'] ?? 'unisex',
             'brand' => $_POST['brand'] ?? null,
             'status' => $_POST['status'] ?? 'draft',
+            'sku' => $_POST['sku'] ?? '',
             'featured' => isset($_POST['featured']) ? 1 : 0,
             'images' => []
         ];
@@ -113,7 +114,7 @@ require_once __DIR__ . '/../../includes/functions.php';
 $categories = $db->fetchAll("SELECT * FROM categories WHERE status = 'active' ORDER BY name");
 ?>
 
-<div class="mb-6 flex justify-between items-center">
+<div class="mb-6 flex justify-between items-center sticky top-0 bg-[#f7f8fc] pb-5 z-50">
     <div>
         <h1 class="text-2xl md:text-3xl font-bold">Add Product</h1>
         <p class="text-gray-600 text-sm md:text-base">Dashboard > Ecommerce > Add product</p>
@@ -147,10 +148,16 @@ $categories = $db->fetchAll("SELECT * FROM categories WHERE status = 'active' OR
                     <input type="text" 
                            name="name" 
                            required
-                           
                            placeholder="Enter product name"
                            class="admin-form-input">
-                    <p class="text-sm text-gray-500 mt-1"></p>
+                </div>
+
+                <div class="admin-form-group">
+                    <label class="admin-form-label">SKU</label>
+                    <input type="text" 
+                           name="sku" 
+                           placeholder="Enter product SKU"
+                           class="admin-form-input">
                 </div>
                 
                 <div class="admin-form-group">
@@ -230,7 +237,7 @@ $categories = $db->fetchAll("SELECT * FROM categories WHERE status = 'active' OR
             <input type="hidden" name="images" id="imagesInput" value="">
         </div>
         
-        <div class="admin-card">
+        <div class="admin-card" id="variants_section">
             <h2 class="text-lg md:text-xl font-bold mb-4">Product Variants</h2>
             <p class="text-sm text-gray-600 mb-4">Add variant options like Size, Color, Material, etc. (Maximum 2 options)</p>
             
@@ -368,7 +375,7 @@ if (typeof BASE_URL === 'undefined') {
 }
 </script>
 <script src="<?php echo $baseUrl; ?>/assets/js/admin-image-upload2.js"></script>
-<script src="<?php echo $baseUrl; ?>/assets/js/product-variants.js"></script>
+<script src="<?php echo $baseUrl; ?>/assets/js/product-variants2.js"></script>
 
 <?php require_once __DIR__ . '/../../includes/admin-footer.php'; ?>
 

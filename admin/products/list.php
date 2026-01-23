@@ -127,7 +127,7 @@ document.addEventListener('DOMContentLoaded', function() {
                         </div>
                     </div>
                 </td>
-                <td>#<?php echo $item['id']; ?></td>
+                <td>#<?php echo $item['product_id']; ?></td>
                 <td><?php echo format_price($item['price'], $item['currency'] ?? 'USD'); ?></td>
                 <td><?php echo $item['stock_quantity']; ?></td>
                 <td><?php echo $item['sale_price'] ? round((($item['price'] - $item['sale_price']) / $item['price']) * 100) : 0; ?>%</td>
@@ -157,10 +157,10 @@ document.addEventListener('DOMContentLoaded', function() {
                 <td><?php echo date('m/d/Y', strtotime($item['created_at'])); ?></td>
                 <td>
                     <div class="flex items-center space-x-2">
-                        <a href="<?php echo url('admin/products/view.php?id=' . $item['id']); ?>" class="text-blue-500 hover:text-blue-700">
+                        <a href="<?php echo url('admin/products/view.php?product_id=' . $item['product_id']); ?>" class="text-blue-500 hover:text-blue-700">
                             <i class="fas fa-eye"></i>
                         </a>
-                        <a href="<?php echo url('admin/products/edit.php?id=' . $item['id']); ?>" class="text-green-500 hover:text-green-700">
+                        <a href="<?php echo url('admin/products/edit.php?product_id=' . $item['product_id']); ?>" class="text-green-500 hover:text-green-700">
                             <i class="fas fa-edit"></i>
                         </a>
                         <button onclick="deleteProduct(<?php echo $item['id']; ?>)" class="text-red-500 hover:text-red-700">

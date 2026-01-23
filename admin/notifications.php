@@ -193,7 +193,7 @@ unset($_SESSION['success']);
                                             </form>
                                         <?php endif; ?>
                                         
-                                        <form method="POST" class="inline" onsubmit="return confirm('Delete this notification?');">
+                                        <form method="POST" class="inline">
                                             <input type="hidden" name="action" value="delete">
                                             <input type="hidden" name="id" value="<?php echo $notif['id']; ?>">
                                             <button type="submit" class="text-red-600 hover:text-red-800" title="Delete">

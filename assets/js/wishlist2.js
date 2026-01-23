@@ -29,21 +29,16 @@ function initializeWishlistButtons() {
     setTimeout(() => {
         document.querySelectorAll('.wishlist-btn').forEach(btn => {
             const productId = parseInt(btn.getAttribute('data-product-id'));
+            const icon = btn.querySelector('i');
             if (productId && isInWishlist(productId)) {
-                const icon = btn.querySelector('i');
                 if (icon) {
                     icon.classList.remove('far');
-                    icon.classList.add('fas');
-                    btn.classList.add('bg-black', 'text-white');
-                    btn.classList.remove('bg-white');
+                    icon.classList.add('fas', 'text-black');
                 }
             } else {
-                const icon = btn.querySelector('i');
                 if (icon) {
-                    icon.classList.remove('fas');
+                    icon.classList.remove('fas', 'text-black');
                     icon.classList.add('far');
-                    btn.classList.remove('bg-black', 'text-white');
-                    btn.classList.add('bg-white');
                 }
             }
         });
@@ -192,15 +187,11 @@ async function toggleWishlist(productId, button) {
                 const icon = button.querySelector('i');
                 if (icon) {
                     if (isInWishlist) {
-                        icon.classList.remove('fas');
+                        icon.classList.remove('fas', 'text-black');
                         icon.classList.add('far');
-                        button.classList.remove('bg-black', 'text-white');
-                        button.classList.add('bg-white');
                     } else {
                         icon.classList.remove('far');
-                        icon.classList.add('fas');
-                        button.classList.add('bg-black', 'text-white');
-                        button.classList.remove('bg-white');
+                        icon.classList.add('fas', 'text-black');
                     }
                 }
             }

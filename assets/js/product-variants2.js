@@ -344,18 +344,48 @@ function generateVariants() {
         return;
     }
     
-    // Calculate all combinations
-    generatedVariants = generateCombinations(variantOptions);
+    // Store old variants to preserve their data (SKU, Price, etc.)
+    const oldVariants = [...generatedVariants];
     
-    // Initialize variant data if needed
-    generatedVariants = generatedVariants.map((variant, idx) => {
-        // Check if variant already exists in our data
-        const existing = generatedVariants.find(v => 
-            JSON.stringify(v.attributes) === JSON.stringify(variant.attributes)
+    // Calculate all combinations
+    const combinations = generateCombinations(variantOptions);
+    
+    // Initialize variant data while preserving existing entries
+    generatedVariants = combinations.map((variant, idx) => {
+        // Try to find a match from old data
+        // 1. Exact match
+        let existing = oldVariants.find(v => 
+            v.attributes && isEquivalent(v.attributes, variant.attributes)
         );
         
-        return existing || {
-            id: `variant_${idx}`,
+        // 2. Sub-match / Super-match (Structural changes)
+        // If we added or removed an option box, try to find a variant that shares the same common attributes
+        if (!existing) {
+            existing = oldVariants.find(v => {
+                const attrsA = v.attributes;
+                const attrsB = variant.attributes;
+                if (!attrsA || !attrsB) return false;
+                
+                const keysA = Object.keys(attrsA);
+                const keysB = Object.keys(attrsB);
+                if (keysA.length === 0 || keysB.length === 0) return false;
+
+                // Determine which set of attributes is smaller
+                const smaller = keysA.length <= keysB.length ? attrsA : attrsB;
+                const larger = keysA.length <= keysB.length ? attrsB : attrsA;
+                const smallerKeys = Object.keys(smaller);
+
+                // Check if all attributes in the smaller set match the values in the larger set
+                return smallerKeys.every(k => smaller[k] === larger[k]);
+            });
+        }
+        
+        return existing ? {
+            ...existing,
+            id: (existing.id && existing.id.toString().startsWith('variant_')) ? `variant_${idx}_${Date.now()}` : existing.id,
+            attributes: variant.attributes // Use the NEW attributes structure
+        } : {
+            id: `variant_${idx}_${Date.now()}`,
             attributes: variant.attributes,
             sku: '',
             price: '',
@@ -370,6 +400,23 @@ function generateVariants() {
     
     renderVariantsTable();
     updateVariantsDataInput();
+}
+
+/**
+ * Deep comparison of two objects (for variant attributes)
+ */
+function isEquivalent(a, b) {
+    if (!a || !b) return false;
+    var aProps = Object.getOwnPropertyNames(a);
+    var bProps = Object.getOwnPropertyNames(b);
+
+    if (aProps.length != bProps.length) return false;
+
+    for (var i = 0; i < aProps.length; i++) {
+        var propName = aProps[i];
+        if (a[propName] !== b[propName]) return false;
+    }
+    return true;
 }
 
 /**
@@ -464,15 +511,67 @@ function renderVariantsTable() {
                            onchange="updateVariantField(${index}, 'stock_quantity', this.value)">
                 </td>
                 <td class="border border-gray-300 px-3 py-2">
-                    <input type="text" 
-                           class="admin-form-input variant-image w-full" 
-                           value="${variant.image || ''}"
-                           placeholder="Image URL"
-                           onchange="updateVariantField(${index}, 'image', this.value)">
+                    <div class="flex items-center justify-center">
+                        <div class="variant-image-preview-container bg-gray-100 rounded border border-gray-200 w-12 h-12 flex-shrink-0 flex items-center justify-center overflow-hidden cursor-pointer hover:bg-gray-200 transition-colors" 
+                             onclick="document.getElementById('variant_file_input_${index}').click()" 
+                             title="Click to upload image">
+                            ${variant.image ? `<img src="${variant.image}" class="w-full h-full object-cover">` : '<i class="fas fa-image text-gray-400"></i>'}
+                        </div>
+                        <input type="file" 
+                               id="variant_file_input_${index}" 
+                               class="hidden" 
+                               accept="image/*"
+                               onchange="uploadVariantImage(${index}, this.files)">
+                    </div>
                 </td>
             </tr>
         `;
     }).join('');
+}
+
+/**
+ * Upload variant image
+ */
+function uploadVariantImage(index, files) {
+    if (files.length === 0) return;
+    const file = files[0];
+    
+    if (!file.type.startsWith('image/')) {
+        alert('Please select only image files.');
+        return;
+    }
+    
+    // Show loading state
+    const container = document.querySelector(`[data-variant-index="${index}"] .variant-image-preview-container`);
+    if (container) {
+        container.innerHTML = '<i class="fas fa-spinner fa-spin text-blue-500"></i>';
+    }
+    
+    const formData = new FormData();
+    formData.append('image', file);
+    
+    const baseUrl = typeof BASE_URL !== 'undefined' ? BASE_URL : '';
+    const uploadUrl = baseUrl + '/admin/api/upload.php';
+    
+    fetch(uploadUrl, {
+        method: 'POST', 
+        body: formData
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            updateVariantField(index, 'image', data.path);
+            renderVariantsTable(); // Re-render to show new image
+        } else {
+            alert(data.message || 'Failed to upload image');
+            renderVariantsTable(); // Re-render to restore state
+        }
+    })
+    .catch(error => {
+        console.error(error);
+        alert('An error occurred while uploading.');
+        renderVariantsTable();
+    });
 }
 
 /**
