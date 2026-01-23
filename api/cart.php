@@ -8,15 +8,15 @@ require_once __DIR__ . '/../classes/Cart.php';
 
 $cart = new Cart();
 header('Content-Type: application/json');
-$method = $_SERVER['REQUEST_METHOD'];
-$input = json_decode(file_get_contents('php://input'), true);
+$method = $_SERVER['REQUEST_METHOD'] ?? 'GET';
+$inputJSON = file_get_contents('php://input');
+$input = json_decode($inputJSON, true);
 
 // Debug logging
-$rawInput = file_get_contents('php://input');
 error_log("=== Cart API Request ===");
 error_log("Method: " . $method);
-error_log("REQUEST_METHOD: " . ($_SERVER['REQUEST_METHOD'] ?? 'NOT SET'));
-error_log("Raw php://input: " . $rawInput);
+error_log("Session User: " . ($_SESSION['customer_id'] ?? 'Guest'));
+error_log("Raw php://input: " . $inputJSON);
 error_log("Parsed input: " . json_encode($input));
 error_log("Request URI: " . ($_SERVER['REQUEST_URI'] ?? 'NOT SET'));
 
@@ -70,7 +70,9 @@ try {
                 'total' => $cartTotal,
                 'count' => $cartCount,
                 'message' => 'Product added to cart',
-                'cookie_data' => $cookieValue
+                'cookie_data' => $cookieValue,
+                'db_error' => $cart->dbError,
+                'user_id' => $_SESSION['customer_id'] ?? null
             ];
             
             // Terminal success message

@@ -34,7 +34,7 @@ if (!$productData || $productData['status'] !== 'active') {
 }
 
 // Prepare Data
-$mainImage = !empty($landingPage['hero_image']) ? $baseUrl . '/' . $landingPage['hero_image'] : getProductImage($productData);
+$mainImage = !empty($landingPage['hero_image']) ? getImageUrl($landingPage['hero_image']) : getProductImage($productData);
 $images = json_decode($productData['images'] ?? '[]', true);
 $price = $productData['sale_price'] ?? $productData['price'] ?? 0;
 $originalPrice = $productData['price'] ?? 0;
@@ -45,22 +45,10 @@ $hasSale = $currentSalePrice > 0 && $currentSalePrice < $originalPrice;
 $galleryPool = [];
 if (!empty($mainImage)) $galleryPool[] = $mainImage;
 
-// Helper to normalized absolute URL
-$serverProtocol = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off' || $_SERVER['SERVER_PORT'] == 443) ? "https://" : "http://";
-$origin = $serverProtocol . $_SERVER['HTTP_HOST'];
-
 if (is_array($images)) {
     foreach($images as $img) {
         // Construct Full Path
-        if (strpos($img, 'http') === 0) {
-            $fullPath = $img;
-        } elseif (strpos($img, '/') === 0) {
-             // Root relative (e.g. /zensshop/assets...)
-             $fullPath = $origin . $img;
-        } else {
-             // Relative to Base URL
-             $fullPath = $baseUrl . '/' . $img;
-        }
+        $fullPath = getImageUrl($img);
 
         // Deduplicate based on filename to avoid path mismatches (e.g. relative vs absolute)
         $filename = basename($img);
@@ -286,7 +274,7 @@ require_once __DIR__ . '/includes/header.php';
                 } else {
                     const cartBtn = document.getElementById('cartBtn');
                     if(cartBtn) cartBtn.click();
-                    else alert('Product added to cart!');
+                    else console.log('Product added to cart!');
                 }
             }
         })
@@ -836,6 +824,131 @@ require_once __DIR__ . '/includes/header.php';
     });
     </script>
 </div>
+
+<!-- Sticky Add To Cart Bar for Landing Page -->
+<div id="sticky-bar" class="fixed bottom-0 left-0 w-full bg-white border-t border-gray-200 shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.1)] transform translate-y-full transition-transform duration-300 z-40 px-3 py-3 md:px-4">
+    <div class="container mx-auto flex items-center justify-between gap-3">
+        <div class="flex items-center gap-3 overflow-hidden">
+            <img src="<?php echo htmlspecialchars($mainImage); ?>" 
+                 alt="Sticky Bar Product" 
+                 class="w-10 h-10 md:w-12 md:h-12 object-contain rounded border border-gray-100 flex-shrink-0"
+                 onerror="this.src='https://via.placeholder.com/100x100?text=Product'">
+            <div class="min-w-0">
+                <h3 class="font-bold text-gray-900 leading-tight text-sm md:text-base truncate"><?php echo htmlspecialchars($heroTitle); ?></h3>
+                <div class="hidden md:flex text-xs text-yellow-500 items-center mt-1">
+                    <?php 
+                    $rating = floatval($avgRating ?? 5);
+                    for ($i = 0; $i < 5; $i++) {
+                        echo '<i class="fas fa-star ' . ($i < $rating ? '' : 'text-gray-300') . '"></i>';
+                    }
+                    ?>
+                </div>
+            </div>
+        </div>
+        
+        <div class="flex items-center gap-3 flex-shrink-0">
+            <div class="text-right mr-2 hidden md:block">
+                 <div class="text-xs text-gray-500">Total Price:</div>
+                 <div class="font-bold text-lg text-gray-900">
+                     <?php if ($hasSale): ?>
+                        <span class="text-red-500 line-through text-xs mr-1"><?php echo format_price($originalPrice, $productData['currency'] ?? 'INR'); ?></span>
+                        <span><?php echo format_price($currentSalePrice, $productData['currency'] ?? 'INR'); ?></span>
+                     <?php else: ?>
+                        <span><?php echo format_price($originalPrice, $productData['currency'] ?? 'INR'); ?></span>
+                     <?php endif; ?>
+                 </div>
+            </div>
+            
+             <div class="hidden md:flex items-center border border-gray-300 rounded-md w-24 h-10 overflow-hidden bg-white">
+                <button onclick="updateStickyQty(-1)" class="w-8 h-full flex items-center justify-center text-gray-600 hover:bg-gray-100 transition">-</button>
+                <input type="number" id="sticky-qty" value="1" min="1" class="flex-1 w-full text-center border-none focus:ring-0 p-0 text-gray-900 font-semibold appearance-none bg-transparent h-full text-sm" readonly>
+                <button onclick="updateStickyQty(1)" class="w-8 h-full flex items-center justify-center text-gray-600 hover:bg-gray-100 transition">+</button>
+            </div>
+
+            <button onclick="stickyAddToCart()" class="bg-black text-white px-4 py-2.5 md:px-8 rounded-full font-bold hover:bg-gray-800 transition shadow-lg transform hover:-translate-y-0.5 text-sm md:text-base whitespace-nowrap" id="sticky-atc-btn">
+                Add To Cart
+            </button>
+            
+            <button onclick="window.scrollTo({top: 0, behavior: 'smooth'})" class="hidden md:flex w-10 h-10 rounded-full bg-gray-100 hover:bg-gray-200 items-center justify-center transition ml-2">
+                <i class="fas fa-arrow-up text-gray-600"></i>
+            </button>
+        </div>
+    </div>
+</div>
+
+<script>
+document.addEventListener('scroll', function() {
+    const stickyBar = document.getElementById('sticky-bar');
+    const heroSection = document.querySelector('.hero-section'); 
+    const footer = document.querySelector('footer');
+    
+    if (!stickyBar || !heroSection) return;
+    
+    const scrollY = window.scrollY;
+    // Calculate trigger point: roughly passed the hero section
+    const heroHeight = heroSection.offsetHeight;
+    const heroBottom = heroSection.offsetTop + heroHeight;
+    const triggerPoint = heroBottom - 200; 
+    
+    // Check if we hit footer
+    let footerTop = document.documentElement.scrollHeight; 
+    if(footer) footerTop = footer.offsetTop;
+    
+    // Show if passed hero AND not yet at footer (with buffer)
+    if (scrollY > (heroBottom - 100) && (scrollY + window.innerHeight) < (footerTop + 50)) {
+        stickyBar.classList.remove('translate-y-full');
+    } else {
+        stickyBar.classList.add('translate-y-full');
+    }
+});
+
+function updateStickyQty(change) {
+    const input = document.getElementById('sticky-qty');
+    let val = parseInt(input.value) + change;
+    if (val < 1) val = 1;
+    input.value = val;
+}
+
+function stickyAddToCart() {
+    const btn = document.getElementById('sticky-atc-btn');
+    const qty = parseInt(document.getElementById('sticky-qty').value) || 1;
+    const productId = <?php echo $productData['id']; ?>;
+    
+    if (btn) {
+        const originalText = btn.innerHTML;
+        btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Adding...';
+        btn.disabled = true;
+
+        if (typeof spAddToCart === 'function') {
+           // Direct fetch to support quantity not supported by default spAddToCart
+            fetch(`${LANDING_BASE_URL}/api/cart.php`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ action: 'add', product_id: productId, quantity: qty })
+            })
+            .then(res => res.json())
+            .then(data => {
+                if(data.success) {
+                    const countEls = document.querySelectorAll('.cart-count');
+                    countEls.forEach(el => el.textContent = data.cartCount);
+                    if (typeof openSideCart === 'function') {
+                        openSideCart(data.cart);
+                    } else {
+                        const cartBtn = document.getElementById('cartBtn');
+                        if(cartBtn) cartBtn.click();
+                        else console.log('Product added to cart!');
+                    }
+                }
+            })
+            .catch(err => console.error(err))
+            .finally(() => {
+                btn.innerHTML = originalText;
+                btn.disabled = false;
+            });
+        }
+    }
+}
+</script>
 
 <?php require_once __DIR__ . '/includes/footer.php'; ?>
 

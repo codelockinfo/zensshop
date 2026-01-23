@@ -12,6 +12,8 @@ class Cart {
     private $db;
     private $product;
     
+    public $dbError = '';
+
     public function __construct() {
         $this->db = Database::getInstance();
         $this->product = new Product();
@@ -218,7 +220,9 @@ class Cart {
         $found = false;
         foreach ($cartItems as &$item) {
             $itemAttrs = $item['variant_attributes'] ?? [];
-            if ($item['product_id'] == $productId && $itemAttrs == $attributes) {
+            // Compare against both arg and proper ID to be safe, or just proper ID if we are sure items are normalized
+            // Best to compare against the ID we intend to store
+            if ($item['product_id'] == $product['product_id'] && $itemAttrs == $attributes) {
                 $item['quantity'] += $quantity;
                 $found = true;
                 break;
@@ -253,7 +257,7 @@ class Cart {
             }
             
             $cartItems[] = [
-                'product_id' => $productId,
+                'product_id' => $product['product_id'],
                 'quantity' => $quantity,
                 'name' => $product['name'],
                 'price' => $price,
@@ -413,6 +417,7 @@ class Cart {
      * Save cart to database
      */
     private function saveCartToDB($userId, $cartItems) {
+        $this->dbError = '';
         try {
             // Clear existing cart
             $this->db->execute(
@@ -428,13 +433,12 @@ class Cart {
                         [$userId, $item['product_id'], $item['quantity'], json_encode($item['variant_attributes'] ?? [])]
                     );
                 } catch (Exception $e) {
+                    $this->dbError .= "Item " . $item['product_id'] . " Error: " . $e->getMessage() . "; ";
                     error_log("Cart::saveCartToDB - Error inserting item: " . $e->getMessage());
-                    // Continue with next item or stop? 
-                    // If user is invalid, all will fail.
-                    // Just log and continue/break.
                 }
             }
         } catch (Exception $e) {
+            $this->dbError .= "General Error: " . $e->getMessage();
             error_log("Cart::saveCartToDB - Error: " . $e->getMessage());
         }
     }

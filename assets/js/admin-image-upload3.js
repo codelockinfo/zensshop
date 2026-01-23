@@ -140,7 +140,7 @@ function handleFiles(files, box, placeholder, preview, removeBtn) {
     const file = files[0];
     
     if (!file.type.startsWith('image/')) {
-        alert('Please select only image files.');
+        console.log('Please select only image files.');
         return;
     }
     
@@ -170,14 +170,14 @@ function handleFiles(files, box, placeholder, preview, removeBtn) {
         } else {
             preview.classList.add('hidden');
             placeholder.classList.remove('hidden');
-            alert(data.message || 'Failed to upload image');
+            console.log(data.message || 'Failed to upload image');
         }
     })
     .catch(error => {
         console.error(error);
         preview.classList.add('hidden');
         placeholder.classList.remove('hidden');
-        alert('An error occurred while uploading.');
+        console.log('An error occurred while uploading.');
     });
 }
 

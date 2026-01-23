@@ -159,8 +159,8 @@ class Product {
                 $productId = $this->db->insert(
                     "INSERT INTO products 
                     (product_id, name, slug, sku, description, short_description, category_id, price, currency, sale_price, 
-                     stock_quantity, stock_status, images, featured_image, gender, brand, status, featured) 
-                    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+                     stock_quantity, stock_status, images, featured_image, gender, brand, status, featured, highlights, shipping_policy, return_policy) 
+                    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
                     [
                         $customProductId,  // 10-digit random product ID (e.g., 5654148741)
                         $data['name'],
@@ -179,7 +179,10 @@ class Product {
                         $data['gender'] ?? 'unisex',
                         $data['brand'] ?? null,
                         $data['status'] ?? 'draft',
-                        $data['featured'] ?? 0
+                        $data['featured'] ?? 0,
+                        $data['highlights'] ?? null,
+                        $data['shipping_policy'] ?? null,
+                        $data['return_policy'] ?? null
                     ]
                 );
                 
@@ -237,7 +240,7 @@ class Product {
                 
                 $allowedFields = ['name', 'sku', 'description', 'short_description', 'category_id', 'price', 'currency', 
                                  'sale_price', 'stock_quantity', 'stock_status', 'images', 'featured_image',
-                                 'gender', 'brand', 'status', 'featured'];
+                                 'gender', 'brand', 'status', 'featured', 'highlights', 'shipping_policy', 'return_policy'];
                 
                 // Handle category_id (use first category if multiple)
                 if (isset($data['category_ids']) && is_array($data['category_ids']) && !empty($data['category_ids'])) {

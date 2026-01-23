@@ -213,13 +213,13 @@ function deleteOrder(id) {
                 console.log('Order status updated successfully');
                 // Optional: Show a small toast notification
             } else {
-                alert('Failed to update order status: ' + (data.message || 'Unknown error'));
+                console.log('Failed to update order status: ' + (data.message || 'Unknown error'));
                 // Revert selection if needed, but for now simple alert is enough
             }
         })
         .catch(err => {
             console.error('Something went wrong:', err);
-            alert('System error while updating status');
+            console.log('System error while updating status');
         });
     })
 </script>

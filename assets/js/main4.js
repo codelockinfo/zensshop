@@ -532,3 +532,40 @@ window.openSubSubmenu = openSubSubmenu;
 window.closeSubSubmenu = closeSubSubmenu;
 window.setBtnLoading = setBtnLoading;
 
+/**
+ * Native Share Function
+ */
+async function sharePage(title, text, url) {
+    // Fallback URL to current if not provided
+    const shareUrl = url || window.location.href;
+    const shareTitle = title || document.title;
+    const shareText = text || 'Check this out!';
+
+    if (navigator.share) {
+        try {
+            await navigator.share({
+                title: shareTitle,
+                text: shareText,
+                url: shareUrl
+            });
+            console.log('Successfully shared');
+        } catch (error) {
+            if (error.name !== 'AbortError') {
+                console.error('Error sharing:', error);
+            }
+        }
+    } else {
+        // Fallback: Copy to clipboard
+        try {
+            await navigator.clipboard.writeText(shareUrl);
+            console.log('Link copied to clipboard!');
+        } catch (err) {
+            console.error('Could not copy text: ', err);
+            // Last resort: just a prompt
+            window.prompt('Copy and share this link:', shareUrl);
+        }
+    }
+}
+
+window.sharePage = sharePage;
+

@@ -131,6 +131,7 @@ async function refreshCart() {
 }
 
 // Add to cart
+// Add to cart
 async function addToCart(productId, quantity = 1, btn = null, attributes = {}) {
     if (btn) setBtnLoading(btn, true);
     try {
@@ -187,7 +188,7 @@ async function addToCart(productId, quantity = 1, btn = null, attributes = {}) {
             if (isCartPage) {
                 // Reload cart page to show new item
                 window.location.reload();
-                return;
+                return data;
             }
 
             // Ensure UI is updated (loadCart already does this, but double-check)
@@ -209,16 +210,20 @@ async function addToCart(productId, quantity = 1, btn = null, attributes = {}) {
                 cartOverlay.classList.remove('hidden');
                 document.body.style.overflow = 'hidden';
             }
+            
+            return data;
         } else {
             if (typeof showNotificationModal === 'function') {
                 showNotificationModal(data.message || 'Failed to add product to cart', 'error');
             } else if (typeof showNotification === 'function') {
                 showNotification(data.message || 'Failed to add product to cart', 'error');
             }
+            return { success: false, message: data.message };
         }
     } catch (error) {
         console.error('Error adding to cart:', error);
         showNotification('An error occurred. Please try again.', 'error');
+        return { success: false, message: error.message };
     } finally {
         if (btn) setBtnLoading(btn, false);
     }
@@ -287,12 +292,26 @@ async function updateCartItem(productId, quantity, btn = null, attributes = {}) 
                     }
 
                     // Update total for this item
-                    const itemPriceEl = cartItem.querySelector('.item-price');
-                    if (itemPriceEl) {
-                        const itemPrice = parseFloat(itemPriceEl.textContent.replace(/[$,]/g, ''));
-                        const itemTotal = cartItem.querySelector('.item-total span');
-                        if (itemTotal) {
-                            itemTotal.textContent = (itemPrice * quantity).toFixed(2);
+                    const updatedItem = cartData.find(i => i.product_id == productId);
+                    if (updatedItem) {
+                        const itemTotalEl = cartItem.querySelector('.item-total');
+                        if (itemTotalEl) {
+                             // Use helper to format calculate and format price correctly
+                             const price = parseFloat(updatedItem.price) * parseInt(updatedItem.quantity);
+                             // If itemTotalEl has a span for amount, use it, otherwise replace text
+                             const amountSpan = itemTotalEl.querySelector('span');
+                             if(amountSpan) {
+                                 // If the span is meant for just the number, we might have an issue with symbols.
+                                 // Safest is to just update the whole container text or rely on formatCurrency if we want symbol.
+                                 // Assuming the span might hold the number or the whole thing.
+                                 // Let's use formatCurrency which returns Symbol + Amount. 
+                                 // If the user's design has symbol outside span: <span>100.00</span>, then formatCurrency will break it (₹100.00).
+                                 // But looking at NaN error, it seems they are trying to do math.
+                                 // Let's use the server value.
+                                 amountSpan.textContent = formatCurrency(price, updatedItem.currency);
+                             } else {
+                                 itemTotalEl.textContent = formatCurrency(price, updatedItem.currency);
+                             }
                         }
                     }
 
@@ -325,7 +344,7 @@ async function updateCartItem(productId, quantity, btn = null, attributes = {}) 
             } else if (typeof showNotification === 'function') {
                 showNotification(data.message || 'Failed to update cart', 'error');
             } else {
-                alert(data.message || 'Failed to update cart');
+                console.log(data.message || 'Failed to update cart');
             }
         }
     } catch (error) {
@@ -333,7 +352,7 @@ async function updateCartItem(productId, quantity, btn = null, attributes = {}) 
         if (typeof showNotification === 'function') {
             showNotification('An error occurred. Please try again.', 'error');
         } else {
-            alert('An error occurred. Please try again.');
+            console.log('An error occurred. Please try again.');
         }
     } finally {
         if (btn) setBtnLoading(btn, false);
@@ -439,7 +458,7 @@ async function removeFromCart(productId, btn = null, attributes = {}) {
             } else if (typeof showNotification === 'function') {
                 showNotification(data.message || 'Failed to remove product', 'error');
             } else {
-                alert(data.message || 'Failed to remove product');
+                console.log(data.message || 'Failed to remove product');
             }
         }
     } catch (error) {
@@ -447,7 +466,7 @@ async function removeFromCart(productId, btn = null, attributes = {}) {
         if (typeof showNotification === 'function') {
             showNotification('An error occurred. Please try again.', 'error');
         } else {
-            alert('An error occurred. Please try again.');
+            console.log('An error occurred. Please try again.');
         }
     } finally {
         if (btn) setBtnLoading(btn, false);
@@ -535,8 +554,8 @@ function updateCartUI() {
                         <h4 class="font-semibold text-sm mb-1 text-gray-800">${escapeHtml(item.name)}</h4>
                         <p class="text-gray-600 text-xs mb-2">Add to wishlist before remove?</p>
                         <div class="flex space-x-2">
-                            <button onclick="confirmSideCartInlineRemoveWithWishlist(${item.product_id}, ${attributesJson})" class="px-4 py-1.5 bg-black text-white text-xs font-medium rounded hover:bg-gray-800 transition">Yes</button>
-                            <button onclick="confirmSideCartInlineRemoveWithoutWishlist(${item.product_id}, ${attributesJson})" class="px-4 py-1.5 border border-gray-300 text-gray-700 text-xs font-medium rounded hover:bg-gray-50 transition">No</button>
+                            <button onclick="confirmSideCartInlineRemoveWithWishlist(this, ${item.product_id}, ${attributesJson})" class="px-4 py-1.5 bg-black text-white text-xs font-medium rounded hover:bg-gray-800 transition">Yes</button>
+                            <button onclick="confirmSideCartInlineRemoveWithoutWishlist(this, ${item.product_id}, ${attributesJson})" class="px-4 py-1.5 border border-gray-300 text-gray-700 text-xs font-medium rounded hover:bg-gray-50 transition">No</button>
                         </div>
                     </div>
                     <button onclick="cancelSideCartInlineRemoveConfirm(this)" class="text-gray-400 hover:text-gray-600">
@@ -663,7 +682,8 @@ function cancelSideCartInlineRemoveConfirm(btn) {
     }
 }
 
-async function confirmSideCartInlineRemoveWithWishlist(productId, attributes = {}) {
+async function confirmSideCartInlineRemoveWithWishlist(btn, productId, attributes = {}) {
+    if (btn) setBtnLoading(btn, true);
     const baseUrl = typeof BASE_URL !== 'undefined' ? BASE_URL : window.location.pathname.split('/').slice(0, -1).join('/') || '';
     try {
         // Add to wishlist
@@ -679,16 +699,18 @@ async function confirmSideCartInlineRemoveWithWishlist(productId, attributes = {
             await refreshWishlist();
         }
 
-        // Remove from cart
+        // Remove from cart - pass null because we handle loading, and if removed button is gone
         await removeFromCart(productId, null, attributes);
     } catch (error) {
         console.error('Error adding to wishlist:', error);
         await removeFromCart(productId, null, attributes);
+    } finally {
+        if (btn && document.body.contains(btn)) setBtnLoading(btn, false);
     }
 }
 
-async function confirmSideCartInlineRemoveWithoutWishlist(productId, attributes = {}) {
-    await removeFromCart(productId, null, attributes);
+async function confirmSideCartInlineRemoveWithoutWishlist(btn, productId, attributes = {}) {
+    await removeFromCart(productId, btn, attributes);
 }
 
 // Make functions globally available

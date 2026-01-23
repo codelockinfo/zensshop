@@ -60,27 +60,31 @@ function url($path = '') {
  */
 function getImageUrl($path) {
     if (empty($path)) {
-        return 'https://via.placeholder.com/300';
+        return 'https://via.placeholder.com/300x300?text=No+Image';
     }
     
-    // If already a full URL, return as is
-    if (strpos($path, 'http://') === 0 || strpos($path, 'https://') === 0) {
+    // If it's a full URL or data URI, return as is
+    if (strpos($path, 'http://') === 0 || strpos($path, 'https://') === 0 || strpos($path, 'data:') === 0) {
         return $path;
     }
     
-    // If it's a base64 data URI, return as is
-    if (strpos($path, 'data:image') === 0 || strpos($path, 'data:') === 0) {
-        return $path;
-    }
-    
-    // If starts with /, it's already a relative path from root
-    if (strpos($path, '/') === 0) {
-        return $path;
-    }
-    
-    // Otherwise, prepend base path
     $baseUrl = getBaseUrl();
-    return $baseUrl . '/assets/images/uploads/' . $path;
+    $parsedBase = parse_url($baseUrl, PHP_URL_PATH); // e.g., /zensshop
+    
+    // Remove base path if it exists at the start of $path (de-duplicate)
+    $cleanPath = $path;
+    if ($parsedBase && $parsedBase !== '/' && strpos($cleanPath, $parsedBase) === 0) {
+        $cleanPath = substr($cleanPath, strlen($parsedBase));
+    }
+    $cleanPath = ltrim($cleanPath, '/');
+    
+    // If path doesn't contain 'assets/images/', it's just a filename or partial path
+    if (strpos($cleanPath, 'assets/images/') === false) {
+        // Assume it belongs in uploads
+        $cleanPath = 'assets/images/uploads/' . $cleanPath;
+    }
+    
+    return $baseUrl . '/' . $cleanPath;
 }
 
 /**
