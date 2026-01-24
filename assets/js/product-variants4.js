@@ -328,7 +328,7 @@ function generateVariants() {
         const nameInput = card.querySelector(`[id$="_name_custom"]`);
         const tagContainer = card.querySelector(`[id$="_tags"]`);
         
-        const name = (nameSelect?.value || nameInput?.value || '').trim();
+        const name = (nameSelect?.value || nameInput?.value || 'Option ' + (index + 1)).trim();
         const tags = tagContainer?.querySelectorAll('.tag-item') || [];
         const values = Array.from(tags).map(tag => tag.getAttribute('data-value'));
         

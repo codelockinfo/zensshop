@@ -216,11 +216,8 @@ class Product {
                 
                 // Handle variants if provided
                 if (!empty($data['variants']) && is_array($data['variants'])) {
-                    // Get the 10-digit product_id to use in variants table
-                    $productRecord = $this->db->fetchOne("SELECT product_id FROM products WHERE id = ?", [$productId]);
-                    if ($productRecord && !empty($productRecord['product_id'])) {
-                        $this->saveVariants($productRecord['product_id'], $data['variants']);
-                    }
+                    // Use the 10-digit product_id we just generated
+                    $this->saveVariants($customProductId, $data['variants']);
                 }
                 
                 return $productId;
@@ -456,13 +453,20 @@ class Product {
      * @param int|string $productId - Can be auto-increment id or 10-digit product_id
      */
     public function saveVariants($productId, $variantsData) {
+        $log = "Saving variants for PID $productId. ";
         // Check if variants data exists
         if (empty($variantsData['variants']) || !is_array($variantsData['variants'])) {
+            $log .= "No variants found or invalid format.\n";
+            file_put_contents(__DIR__ . '/../admin/debug_variants.log', $log, FILE_APPEND);
             return;
         }
         
+        $log .= "Count: " . count($variantsData['variants']) . ". ";
+        $log .= "Data: " . json_encode($variantsData['variants']) . ". ";
+        
         // Convert auto-increment id to 10-digit product_id if needed
         $productIdValue = $this->getProductIdValue($productId);
+        $log .= "PID Value: $productIdValue. ";
         
         // Save individual variants to product_variants table
         try {
@@ -499,11 +503,14 @@ class Product {
                     ]
                 );
             }
+            $log .= "Success.\n";
         } catch (Exception $e) {
+            $log .= "Error: " . $e->getMessage() . "\n";
             // Log error but don't fail the product creation
             error_log("Could not save variants: " . $e->getMessage());
             // Don't throw - allow product to be created even if variants fail
         }
+        file_put_contents(__DIR__ . '/../admin/debug_variants.log', $log, FILE_APPEND);
     }
     
     /**

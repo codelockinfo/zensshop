@@ -163,7 +163,8 @@ try {
     echo json_encode([
         'success' => false, 
         'message' => $errorMessage,
-        'error' => RAZORPAY_MODE === 'test' ? $e->getMessage() : null
+        'error' => $e->getMessage(), // Force show error for debugging
+        'trace' => $e->getTraceAsString() // Optional: Trace
     ]);
     exit;
 }

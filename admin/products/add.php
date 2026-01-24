@@ -164,6 +164,14 @@ $brands = $brandsResult ? json_decode($brandsResult['setting_value'], true) : []
                 </div>
 
                 <div class="admin-form-group">
+                    <label class="admin-form-label">Description *</label>
+                    <textarea name="description" 
+                              id="description_editor"
+                              placeholder="Description"
+                              class="admin-form-input admin-form-textarea"></textarea>
+                </div>
+
+                <div class="admin-form-group">
                     <label class="admin-form-label">SKU</label>
                     <input type="text" 
                            name="sku" 
@@ -205,13 +213,7 @@ $brands = $brandsResult ? json_decode($brandsResult['setting_value'], true) : []
                     </select>
                 </div>
                 
-                <div class="admin-form-group">
-                    <label class="admin-form-label">Description *</label>
-                    <textarea name="description" 
-                              required
-                              placeholder="Description"
-                              class="admin-form-input admin-form-textarea"></textarea>
-                </div>
+
 
                 <div class="admin-form-group">
                     <label class="admin-form-label flex justify-between items-center">
@@ -425,11 +427,11 @@ if (typeof BASE_URL === 'undefined') {
 <script src="https://cdnjs.cloudflare.com/ajax/libs/tinymce/6.8.2/tinymce.min.js" referrerpolicy="origin"></script>
 <script>
 tinymce.init({
-    selector: '#shipping_policy_editor, #return_policy_editor',
+    selector: '#shipping_policy_editor, #return_policy_editor, #description_editor',
     license_key: 'gpl',
     plugins: 'advlist autolink lists link image charmap preview anchor searchreplace visualblocks code fullscreen insertdatetime media table code help wordcount',
     toolbar: 'undo redo | blocks | bold italic backcolor | alignleft aligncenter alignright alignjustify | bullist numlist outdent indent | removeformat | help',
-    height: 300,
+    height: 200,
     menubar: false,
     promotion: false,
     branding: false
@@ -506,7 +508,7 @@ document.getElementById('productForm').addEventListener('submit', function(e) {
 });
 </script>
 <script src="<?php echo $baseUrl; ?>/assets/js/admin-image-upload3.js"></script>
-<script src="<?php echo $baseUrl; ?>/assets/js/product-variants3.js"></script>
+<script src="<?php echo $baseUrl; ?>/assets/js/product-variants4.js"></script>
 
 <!-- Brand Management Modal -->
 <div id="brandModal" class="hidden fixed inset-0 bg-black/50 z-[100] flex items-center justify-center p-4">

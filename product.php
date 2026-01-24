@@ -227,11 +227,50 @@ $productVariants = $variantsData['variants'] ?? [];
                     <span id="product-price" class="text-2xl font-bold text-gray-900"><?php echo format_price($price, $productData['currency'] ?? 'USD'); ?></span>
                 </div>
                 
-                <!-- Description -->
+                <!-- Description with Read More -->
                 <div class="mb-6">
-                    <p class="text-gray-700 leading-relaxed">
-                        <?php echo nl2br(htmlspecialchars($productData['description'] ?? $productData['short_description'] ?? 'No description available.')); ?>
-                    </p>
+                    <div id="product-description-text" class="text-gray-700 leading-relaxed relative overflow-hidden transition-all duration-300 prose prose-sm max-w-none" style="max-height: 200px;">
+                        <?php echo $productData['description'] ?? $productData['short_description'] ?? 'No description available.'; ?>
+                        <div id="description-fade" class="absolute bottom-0 left-0 w-full h-12 bg-gradient-to-t from-white to-transparent pointer-events-none"></div>
+                    </div>
+                    <button id="toggle-description-btn" 
+                            onclick="toggleProductDescription()" 
+                            class="text-green-600 hover:text-green-800 font-medium text-sm mt-2 hidden focus:outline-none">
+                        Read More
+                    </button>
+                    
+                    <script>
+                    function toggleProductDescription() {
+                        const container = document.getElementById('product-description-text');
+                        const btn = document.getElementById('toggle-description-btn');
+                        const fade = document.getElementById('description-fade');
+                        
+                        if (container.style.maxHeight && container.style.maxHeight !== 'none') {
+                            container.style.maxHeight = 'none';
+                            btn.textContent = 'Read Less';
+                            fade.classList.add('hidden');
+                        } else {
+                            container.style.maxHeight = '200px';
+                            btn.textContent = 'Read More';
+                            fade.classList.remove('hidden');
+                        }
+                    }
+
+                    // Check if content exceeds height to show/hide button
+                    document.addEventListener('DOMContentLoaded', function() {
+                        const container = document.getElementById('product-description-text');
+                        const btn = document.getElementById('toggle-description-btn');
+                        const fade = document.getElementById('description-fade');
+                        
+                        // Check if content is taler than max-height (200px)
+                        if (container.scrollHeight > 200) {
+                            btn.classList.remove('hidden');
+                        } else {
+                            fade.classList.add('hidden');
+                            container.style.maxHeight = 'none'; // Unset max-height for short content
+                        }
+                    });
+                    </script>
                 </div>
                 
                 <!-- Key Information (Highlights) -->
