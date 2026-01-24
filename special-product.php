@@ -283,6 +283,42 @@ require_once __DIR__ . '/includes/header.php';
             if (btn) setBtnLoading(btn, false);
         });
     }
+
+    // Read More Toggle for Hero Description
+    document.addEventListener('DOMContentLoaded', function() {
+        const container = document.getElementById('hero-description-container');
+        const btn = document.getElementById('hero-read-more-btn');
+        const fade = document.getElementById('hero-description-fade');
+        
+        if (container && btn) {
+            // Check if content is actually taller than max-height
+            const isTall = container.scrollHeight > 180;
+            
+            if (!isTall) {
+                btn.style.display = 'none';
+                fade.style.display = 'none';
+                container.style.maxHeight = 'none';
+            }
+            
+            btn.addEventListener('click', function() {
+                const isExpanded = container.style.maxHeight === 'none';
+                
+                if (isExpanded) {
+                    container.style.maxHeight = '180px';
+                    fade.style.opacity = '1';
+                    btn.querySelector('span').textContent = 'Read More';
+                    btn.querySelector('i').style.transform = 'rotate(0deg)';
+                    // Scroll back to top of container if it's out of view
+                    container.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                } else {
+                    container.style.maxHeight = 'none';
+                    fade.style.opacity = '0';
+                    btn.querySelector('span').textContent = 'Show Less';
+                    btn.querySelector('i').style.transform = 'rotate(180deg)';
+                }
+            });
+        }
+    });
 </script>
 
 <style>
@@ -364,8 +400,17 @@ require_once __DIR__ . '/includes/header.php';
                 
                 <?php // Price variables already defined at top ?>
 
-                <div class="mb-10 max-w-xl mx-auto lg:mx-0 leading-relaxed text-lg opacity-80">
-                    <?php echo nl2br(htmlspecialchars($heroDescription)); ?>
+                <div class="mb-6 max-w-xl mx-auto lg:mx-0">
+                    <div id="hero-description-container" class="relative overflow-hidden transition-all duration-500 prose prose-lg max-w-none" style="max-height: 180px; color: inherit;">
+                        <div class="opacity-80 leading-relaxed">
+                            <?php echo $heroDescription; ?>
+                        </div>
+                        <div id="hero-description-fade" class="absolute bottom-0 left-0 w-full h-16 pointer-events-none transition-opacity duration-300" style="background: linear-gradient(to top, var(--hero-bg), transparent);"></div>
+                    </div>
+                    <button id="hero-read-more-btn" class="mb-4 text-sm font-bold uppercase tracking-widest hover:opacity-70 transition-all flex items-center gap-2" style="color: var(--theme-color);">
+                        <span>Read More</span>
+                        <i class="fas fa-chevron-down text-xs transition-transform duration-300"></i>
+                    </button>
                 </div>
 
                 <div class="product-price-container mb-6 flex items-center gap-3 justify-center lg:justify-start">
@@ -553,8 +598,8 @@ require_once __DIR__ . '/includes/header.php';
                 <div class="flex flex-col lg:flex-row items-center gap-20">
                     <div class="lg:w-1/2">
                         <h2 class="text-5xl font-heading uppercase tracking-widest mb-10"><?php echo htmlspecialchars($aboutTitle); ?></h2>
-                        <div class="text-lg leading-8 space-y-6 opacity-80">
-                            <p><?php echo nl2br(htmlspecialchars($aboutText)); ?></p>
+                        <div class="text-lg leading-8 space-y-6 opacity-80 prose prose-lg max-w-none" style="color: inherit;">
+                            <?php echo $aboutText; ?>
                         </div>
 
                         <div class="product-price-container mb-6 flex items-center gap-3">
