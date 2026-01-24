@@ -7,6 +7,7 @@ $auth = new Auth();
 $auth->requireLogin();
 
 $db = Database::getInstance();
+$baseUrl = getBaseUrl();
 $success = '';
 $error = '';
 
@@ -30,7 +31,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             try {
                 $db->insert("INSERT INTO landing_pages (name, slug, product_id) VALUES (?, ?, ?)", [$newName, $newSlug, $productId]);
                 $_SESSION['flash_success'] = "New landing page created!";
-                header("Location: settings.php?page=" . urlencode($newSlug));
+                header("Location: " . $baseUrl . '/admin/special-page?page=' . urlencode($newSlug));
                 exit;
             } catch (Exception $e) {
                 $error = "Error creating page: " . $e->getMessage();
@@ -46,7 +47,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         if ($check && $check['slug'] !== 'default') {
             $db->execute("DELETE FROM landing_pages WHERE id = ?", [$delId]);
             $_SESSION['flash_success'] = "Page deleted successfully.";
-            header("Location: settings.php?page=default");
+            header("Location: " . $baseUrl . '/admin/special-page?page=default');
             exit;
         } else {
             $error = "Cannot delete the default page.";
@@ -281,7 +282,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             );
             $_SESSION['flash_success'] = "Page settings saved successfully!";
             session_write_close(); // Ensure session is saved before redirect
-            header("Location: settings.php?page=" . urlencode($selectedSlug));
+            header("Location: " . $baseUrl . '/admin/special-page?page=' . urlencode($selectedSlug));
             exit;
         } catch (Exception $e) {
             $error = "Error saving settings: " . $e->getMessage();

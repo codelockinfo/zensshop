@@ -38,7 +38,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         }
 
         $_SESSION['flash_success'] = "Philosophy section updated successfully!";
-        header("Location: " . $_SERVER['PHP_SELF']);
+        header("Location: " . $baseUrl . '/admin/philosophy');
         exit;
 
     } catch (Exception $e) {
@@ -102,15 +102,15 @@ require_once __DIR__ . '/../includes/admin-header.php';
                 <div>
                     <label class="block text-sm font-bold mb-2">Background Color</label>
                     <div class="flex items-center">
-                        <input type="color" name="background_color" value="<?php echo htmlspecialchars($data['background_color']); ?>" class="h-10 w-12 p-1 border rounded mr-2 cursor-pointer">
-                        <input type="text" value="<?php echo htmlspecialchars($data['background_color']); ?>" class="w-full border p-2 rounded text-sm uppercase" readonly>
+                        <input type="color" name="background_color" value="<?php echo htmlspecialchars($data['background_color'] ?? '#384135'); ?>" class="h-10 w-12 p-1 border rounded mr-2 cursor-pointer">
+                        <input type="text" value="<?php echo htmlspecialchars($data['background_color'] ?? '#384135'); ?>" class="w-full border p-2 rounded text-sm uppercase" readonly>
                     </div>
                 </div>
                 <div>
                      <label class="block text-sm font-bold mb-2">Text Color</label>
                     <div class="flex items-center">
-                        <input type="color" name="text_color" value="<?php echo htmlspecialchars($data['text_color']); ?>" class="h-10 w-12 p-1 border rounded mr-2 cursor-pointer">
-                        <input type="text" value="<?php echo htmlspecialchars($data['text_color']); ?>" class="w-full border p-2 rounded text-sm uppercase" readonly>
+                        <input type="color" name="text_color" value="<?php echo htmlspecialchars($data['text_color'] ?? '#eee4d3'); ?>" class="h-10 w-12 p-1 border rounded mr-2 cursor-pointer">
+                        <input type="text" value="<?php echo htmlspecialchars($data['text_color'] ?? '#eee4d3'); ?>" class="w-full border p-2 rounded text-sm uppercase" readonly>
                     </div>
                 </div>
             </div>
@@ -118,23 +118,23 @@ require_once __DIR__ . '/../includes/admin-header.php';
             <!-- Content -->
             <div>
                 <label class="block text-sm font-bold mb-2">Heading (Optional)</label>
-                <input type="text" name="heading" value="<?php echo htmlspecialchars($data['heading']); ?>" class="w-full border p-2 rounded" placeholder="E.g. Our Philosophy">
+                <input type="text" name="heading" value="<?php echo htmlspecialchars($data['heading'] ?? ''); ?>" class="w-full border p-2 rounded" placeholder="E.g. Our Philosophy">
                 <p class="text-xs text-gray-500 mt-1">Leave empty to hide heading.</p>
             </div>
 
             <div>
                 <label class="block text-sm font-bold mb-2">Main Content (Context)</label>
-                <textarea name="content" rows="4" class="w-full border p-2 rounded" required><?php echo htmlspecialchars($data['content']); ?></textarea>
+                <textarea name="content" rows="4" class="w-full border p-2 rounded" required><?php echo htmlspecialchars($data['content'] ?? ''); ?></textarea>
             </div>
 
             <div class="grid grid-cols-2 gap-6">
                 <div>
                     <label class="block text-sm font-bold mb-2">Link Label</label>
-                    <input type="text" name="link_text" value="<?php echo htmlspecialchars($data['link_text']); ?>" class="w-full border p-2 rounded" placeholder="READ MORE">
+                    <input type="text" name="link_text" value="<?php echo htmlspecialchars($data['link_text'] ?? ''); ?>" class="w-full border p-2 rounded" placeholder="READ MORE">
                 </div>
                 <div>
                     <label class="block text-sm font-bold mb-2">Link URL</label>
-                    <input type="text" name="link_url" value="<?php echo htmlspecialchars($data['link_url']); ?>" class="w-full border p-2 rounded" placeholder="page.php">
+                    <input type="text" name="link_url" value="<?php echo htmlspecialchars($data['link_url'] ?? ''); ?>" class="w-full border p-2 rounded" placeholder="page.php">
                 </div>
             </div>
 

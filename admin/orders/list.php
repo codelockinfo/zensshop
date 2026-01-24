@@ -21,7 +21,9 @@ $orders = $order->getAll($filters);
 
 <div class="mb-6">
     <h1 class="text-2xl md:text-3xl font-bold">Order List</h1>
-    <p class="text-gray-600 text-sm md:text-base">Dashboard > Order > Order List</p>
+    <p class="text-gray-600 text-sm md:text-base">
+        <a href="<?php echo url('admin/dashboard.php'); ?>" class="hover:text-blue-600">Dashboard</a> > Order List
+    </p>
 </div>
 
 <div class="admin-card mb-6">

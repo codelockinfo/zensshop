@@ -124,7 +124,11 @@ $brands = $brandsResult ? json_decode($brandsResult['setting_value'], true) : []
 <div class="mb-6 flex justify-between items-center sticky top-0 bg-[#f7f8fc] pb-5 z-50">
     <div>
         <h1 class="text-2xl md:text-3xl font-bold">Add Product</h1>
-        <p class="text-gray-600 text-sm md:text-base">Dashboard > Ecommerce > Add product</p>
+        <p class="text-gray-600 text-sm md:text-base">
+            <a href="<?php echo url('admin/dashboard.php'); ?>" class="hover:text-blue-600">Dashboard</a> > 
+            <a href="<?php echo url('admin/products/list.php'); ?>" class="hover:text-blue-600">Ecommerce</a> > 
+            Add Product
+        </p>
     </div>
     <button type="button" onclick="document.getElementById('productForm').requestSubmit()" class="bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700 shadow-md transition-colors">
         <i class="fas fa-save mr-2"></i> Save Product

@@ -868,10 +868,6 @@ require_once __DIR__ . '/includes/header.php';
             <button onclick="stickyAddToCart()" class="bg-black text-white px-4 py-2.5 md:px-8 rounded-full font-bold hover:bg-gray-800 transition shadow-lg transform hover:-translate-y-0.5 text-sm md:text-base whitespace-nowrap" id="sticky-atc-btn">
                 Add To Cart
             </button>
-            
-            <button onclick="window.scrollTo({top: 0, behavior: 'smooth'})" class="hidden md:flex w-10 h-10 rounded-full bg-gray-100 hover:bg-gray-200 items-center justify-center transition ml-2">
-                <i class="fas fa-arrow-up text-gray-600"></i>
-            </button>
         </div>
     </div>
 </div>

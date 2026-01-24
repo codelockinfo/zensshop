@@ -21,7 +21,7 @@ if (isset($_POST['delete_id'])) {
     try {
         $db->execute("DELETE FROM section_features WHERE id = ?", [$_POST['delete_id']]);
         $_SESSION['flash_success'] = "Feature removed successfully.";
-        header("Location: " . $_SERVER['PHP_SELF']);
+        header("Location: " . $baseUrl . '/admin/features');
         exit;
     } catch (Exception $e) {
         $error = "Error removing feature: " . $e->getMessage();
@@ -54,7 +54,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
             $_SESSION['flash_success'] = "Feature added successfully.";
         }
         
-        header("Location: " . $_SERVER['PHP_SELF']);
+        header("Location: " . $baseUrl . '/admin/features');
         exit;
 
     } catch (Exception $e) {
@@ -114,8 +114,8 @@ require_once __DIR__ . '/../includes/admin-header.php';
                     <!-- Echoing Raw SVG -->
                     <?php echo $f['icon']; ?>
                 </div>
-                <h3 class="font-bold text-lg text-center mb-2"><?php echo htmlspecialchars($f['heading']); ?></h3>
-                <p class="text-gray-600 text-center text-sm"><?php echo nl2br(htmlspecialchars($f['content'])); ?></p>
+                <h3 class="font-bold text-lg text-center mb-2"><?php echo htmlspecialchars($f['title'] ?? ''); ?></h3>
+                <p class="text-gray-600 text-center text-sm"><?php echo nl2br(htmlspecialchars($f['content'] ?? '')); ?></p>
             </div>
         <?php endforeach; ?>
 

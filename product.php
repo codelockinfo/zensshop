@@ -5,10 +5,14 @@ ob_start();
 // Process redirects BEFORE any output
 require_once __DIR__ . '/classes/Product.php';
 require_once __DIR__ . '/classes/Database.php';
+require_once __DIR__ . '/classes/Wishlist.php'; // Add Wishlist class
 require_once __DIR__ . '/includes/functions.php';
 
 $product = new Product();
 $db = Database::getInstance();
+$wishlistObj = new Wishlist(); // Instantiate Wishlist
+$wishlistItems = $wishlistObj->getWishlist(); // Get items
+$wishlistIds = array_column($wishlistItems, 'product_id'); // Extract IDs
 
 // Get base URL for redirects
 $baseUrl = getBaseUrl();
@@ -241,24 +245,7 @@ $productVariants = $variantsData['variants'] ?? [];
                         <span><?php echo $h['text']; ?></span>
                     </div>
                     <?php endforeach; 
-                    else: ?>
-                    <div class="flex items-center text-gray-700">
-                        <i class="fas fa-truck mr-2 text-primary"></i>
-                        <span>Estimate delivery times: 3-5 days International</span>
-                    </div>
-                    <div class="flex items-center text-gray-700">
-                        <i class="fas fa-tag mr-2 text-primary"></i>
-                        <span>Use code <strong>'WELCOMES'</strong> for discount 15% on your first order.</span>
-                    </div>
-                    <div class="flex items-center text-gray-700">
-                        <i class="fas fa-shipping-fast mr-2 text-primary"></i>
-                        <span>Free shipping & returns: On all orders over <?php echo format_price(150, $productData['currency'] ?? 'USD'); ?>.</span>
-                    </div>
-                    <div class="flex items-center text-gray-700">
-                        <i class="fas fa-eye mr-2 text-primary"></i>
-                        <span><?php echo rand(10, 20); ?> people are viewing this right now</span>
-                    </div>
-                    <?php endif; ?>
+                    endif; ?>
                 </div>
                 
                 <!-- Dynamic Variant Selectors -->
@@ -531,25 +518,31 @@ $productVariants = $variantsData['variants'] ?? [];
                     $itemPrice = $item['sale_price'] ?? $item['price'] ?? 0;
                     $itemOriginalPrice = !empty($item['sale_price']) ? $item['price'] : null;
                     $itemDiscount = $itemOriginalPrice && $itemOriginalPrice > 0 ? round((($itemOriginalPrice - $itemPrice) / $itemOriginalPrice) * 100) : 0;
+                    
+                    // Use product_id (10-digit) if available, matching best-selling logic
+                    $currentId = !empty($item['product_id']) ? $item['product_id'] : $item['id'];
+                    $inWishlist = in_array($currentId, $wishlistIds);
                 ?>
-                <a href="<?php echo $baseUrl; ?>/product.php?slug=<?php echo urlencode($item['slug'] ?? ''); ?>" class="group">
-                    <div class="bg-white rounded-lg overflow-hidden shadow-md hover:shadow-xl transition-all duration-300 relative 1">
-                        <div class="relative overflow-hidden">
+                <div class="group bg-white rounded-lg overflow-hidden shadow-md hover:shadow-xl transition-all duration-300 relative">
+                    <div class="relative overflow-hidden">
+                        <a href="<?php echo $baseUrl; ?>/product.php?slug=<?php echo urlencode($item['slug'] ?? ''); ?>" class="block">
                             <img src="<?php echo htmlspecialchars($itemImage); ?>" 
                                  alt="<?php echo htmlspecialchars($item['name'] ?? 'Product'); ?>"
                                  class="w-full h-64 object-contain group-hover:scale-110 transition-transform duration-500">
-                            <?php if ($itemDiscount > 0): ?>
-                            <span class="absolute top-3 right-3 bg-red-500 text-white px-2 py-1 rounded text-xs font-semibold">
-                                -<?php echo $itemDiscount; ?>%
-                            </span>
-                            <?php endif; ?>
-                            <button class="wishlist-btn absolute top-3 left-3 bg-white rounded-full w-9 h-9 hover:bg-black hover:text-white transition opacity-0 group-hover:opacity-100 z-10"
-                                    data-product-id="<?php echo $item['id']; ?>"
-                                    onclick="event.preventDefault(); event.stopPropagation(); toggleWishlist('<?php echo $item['id']; ?>', this)">
-                                <i class="far fa-heart"></i>
-                            </button>
-                        </div>
-                        <div class="p-4">
+                        </a>
+                        <?php if ($itemDiscount > 0): ?>
+                        <span class="absolute top-3 right-3 bg-red-500 text-white px-2 py-1 rounded text-xs font-semibold z-10">
+                            -<?php echo $itemDiscount; ?>%
+                        </span>
+                        <?php endif; ?>
+                        <button class="wishlist-btn absolute top-3 left-3 rounded-full w-9 h-9 hover:bg-black hover:text-white transition opacity-0 group-hover:opacity-100 z-20 flex items-center justify-center <?php echo $inWishlist ? 'bg-black text-white' : 'bg-white text-black'; ?>"
+                                data-product-id="<?php echo $currentId; ?>">
+                            <i class="<?php echo $inWishlist ? 'fas' : 'far'; ?> fa-heart"></i>
+                            <span class="product-tooltip" style="display:none;"><?php echo $inWishlist ? 'Remove from Wishlist' : 'Add to Wishlist'; ?></span>
+                        </button>
+                    </div>
+                    <div class="p-4">
+                        <a href="<?php echo $baseUrl; ?>/product.php?slug=<?php echo urlencode($item['slug'] ?? ''); ?>" class="block">
                             <h3 class="font-semibold mb-2"><?php echo htmlspecialchars($item['name'] ?? 'Product'); ?></h3>
                             <div class="flex items-center mb-2">
                                 <?php for ($i = 0; $i < 5; $i++): ?>
@@ -562,9 +555,9 @@ $productVariants = $variantsData['variants'] ?? [];
                                 <?php endif; ?>
                                 <span class="font-bold text-primary"><?php echo format_price($itemPrice, $item['currency'] ?? 'USD'); ?></span>
                             </div>
-                        </div>
+                        </a>
                     </div>
-                </a>
+                </div>
                 <?php endforeach; ?>
             </div>
         </div>
@@ -1350,10 +1343,6 @@ async function toggleProductWishlist(productId, btn) {
 
             <button onclick="stickyAddToCart()" class="bg-black text-white px-4 py-2.5 md:px-8 rounded-full font-bold hover:bg-gray-800 transition shadow-lg transform hover:-translate-y-0.5 text-sm md:text-base whitespace-nowrap" id="sticky-atc-btn">
                 Add To Cart
-            </button>
-            
-            <button onclick="window.scrollTo({top: 0, behavior: 'smooth'})" class="hidden md:flex w-10 h-10 rounded-full bg-gray-100 hover:bg-gray-200 items-center justify-center transition ml-2">
-                <i class="fas fa-arrow-up text-gray-600"></i>
             </button>
         </div>
     </div>

@@ -7,8 +7,15 @@
 function initializeProductCards() {
     // Wishlist buttons
     document.querySelectorAll('.wishlist-btn').forEach(btn => {
+        // If button has explicit inline onclick, assume it handles itself and skip auto-wiring
+        if (btn.hasAttribute('onclick')) {
+            return;
+        }
+
         // Remove existing listeners
         const newBtn = btn.cloneNode(true);
+        // Remove inline onclick to prevent double firing (safety check for cleaner DOM)
+        newBtn.removeAttribute('onclick');
         btn.parentNode.replaceChild(newBtn, btn);
         
         newBtn.addEventListener('click', function(e) {

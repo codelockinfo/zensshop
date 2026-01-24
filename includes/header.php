@@ -148,40 +148,62 @@ if (!function_exists('url')) {
     function adjustMegaMenuPosition(menuElement) {
         // Use requestAnimationFrame for better timing
         requestAnimationFrame(() => {
-            // Reset positioning
-            menuElement.style.left = '';
-            menuElement.style.right = '';
-            menuElement.style.transform = '';
+            // Reset positioning to default to calculate natural dimensions
+            menuElement.style.left = '0px';
+            menuElement.style.right = 'auto';
+            menuElement.style.transform = 'none';
             
             // Get measurements
             const rect = menuElement.getBoundingClientRect();
             const viewportWidth = window.innerWidth;
             const containerPadding = 20; // Safety padding
             
+            let shiftX = 0;
+            
             // Check if menu overflows on the right
             if (rect.right > (viewportWidth - containerPadding)) {
-                const overflow = rect.right - viewportWidth + containerPadding;
-                // Shift left using transform for smoother rendering
-                menuElement.style.transform = `translateX(-${overflow}px)`;
-                
-                // Double-check if it now overflows on the left
-                const newRect = menuElement.getBoundingClientRect();
-                if (newRect.left < containerPadding) {
-                    // If too far left, just align to right edge of viewport
-                    menuElement.style.transform = '';
-                    menuElement.style.left = 'auto';
-                    menuElement.style.right = `${containerPadding}px`;
+                shiftX = (viewportWidth - containerPadding) - rect.right;
+            }
+            
+            // Apply the right shift first to check if it causes left overflow
+            if (shiftX !== 0) {
+                 // Check if this shift pushes it off the left side
+                 if ((rect.left + shiftX) < containerPadding) {
+                     // If it does, we need to clamp it.
+                     // Calculate the shift needed to align with left edge
+                     shiftX = containerPadding - rect.left;
+                 }
+            } else {
+                // If no right overflow, check if it naturally overflows left (unlikely with left=0, but possible with transforms)
+                if (rect.left < containerPadding) {
+                     shiftX = containerPadding - rect.left;
                 }
+            }
+            
+            // Apply the final calculated shift
+            if (shiftX !== 0) {
+                menuElement.style.transform = `translateX(${shiftX}px)`;
             }
         });
     }
     
-    // Auto-adjust all mega menus on window resize
+    // Auto-adjust all mega menus on window resize and hover
     window.addEventListener('resize', () => {
         document.querySelectorAll('.mega-menu-dropdown').forEach(menu => {
-            if (menu.offsetParent !== null) { // Only if visible
-                adjustMegaMenuPosition(menu);
+            // Check visibility by offsetParent or display style
+            if (menu.offsetParent !== null || window.getComputedStyle(menu).display !== 'none') {
+                 adjustMegaMenuPosition(menu);
             }
+        });
+    });
+    
+    // Add hover listeners to trigger adjustment immediately when menu opens
+    document.addEventListener('DOMContentLoaded', () => {
+        document.querySelectorAll('.group, .group\\/sub').forEach(group => {
+            group.addEventListener('mouseenter', () => {
+                const menu = group.querySelector('.mega-menu-dropdown');
+                if (menu) adjustMegaMenuPosition(menu);
+            });
         });
     });
     </script>
@@ -190,20 +212,21 @@ if (!function_exists('url')) {
     .group:hover .group-hover\:block { display: block; }
     .group\/sub:hover > .group-hover\/sub\:block { display: block; }
     
-    /* Mega Menu Viewport Constraint - Always constrain width */
+    /* Mega Menu Viewport Constraint */
     .mega-menu-dropdown {
         max-width: calc(100vw - 40px) !important;
-        /* Use right positioning by default to prevent overflow */
-        left: auto !important;
-        right: 0 !important;
+        /* Default to left align, let JS handle the shift */
+        left: 0;
+        right: auto;
     }
     
-    /* For very wide screens, we can center or left-align */
-    @media (min-width: 1920px) {
+    /* For smaller screens, ensure it doesn't break layout */
+    @media (max-width: 1024px) {
         .mega-menu-dropdown {
-            left: 50% !important;
-            right: auto !important;
-            transform: translateX(-50%) !important;
+            max-width: 100% !important;
+            left: 0 !important;
+            right: 0 !important;
+            transform: none !important; /* Disable JS positioning on mobile if used */
         }
     }
     </style>
@@ -690,13 +713,183 @@ if (!empty($headerMenuItems)) {
     </div>
     
     <!-- Search Overlay -->
-    <div class="hidden fixed inset-0 bg-black bg-opacity-50 z-50" id="searchOverlay">
-        <div class="container mx-auto px-4 pt-20">
-            <div class="max-w-2xl mx-auto">
-                <input type="text" placeholder="Search products..." class="w-full px-6 py-4 text-lg rounded-lg focus:outline-none focus:ring-2 focus:ring-primary">
-                <button class="absolute right-8 top-24 text-gray-500 hover:text-white" id="closeSearch">
-                    <i class="fas fa-times text-2xl"></i>
-                </button>
+    <div class="hidden fixed inset-0 bg-black bg-opacity-50 z-[60]" id="searchOverlay">
+        <div class="container mx-auto px-4 pt-24 relative h-full">
+            <div class="max-w-2xl mx-auto relative click-stop-propagation">
+                <form action="<?php echo url('shop.php'); ?>" method="GET" class="relative group">
+                    <input type="text" name="search" id="headerSearchInput" placeholder="Search products..." 
+                           class="w-full px-6 py-4 text-lg rounded-lg bg-white text-black focus:outline-none focus:ring-2 focus:ring-gray-200"
+                           autocomplete="off" autofocus>
+                    <button type="submit" class="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 hover:text-black p-2 transition-colors">
+                        <i class="fas fa-search text-xl"></i>
+                    </button>
+                </form>
+                
+                <!-- Live Search Results -->
+                <div id="headerSearchResults" class="absolute left-0 right-0 mt-2 bg-white rounded-lg shadow-xl overflow-hidden hidden max-h-[60vh] overflow-y-auto z-50">
+                    <!-- Results injected via JS -->
+                </div>
             </div>
         </div>
     </div>
+
+    <script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const searchInput = document.getElementById('headerSearchInput');
+        const searchResults = document.getElementById('headerSearchResults');
+        const searchOverlay = document.getElementById('searchOverlay');
+        const searchBtn = document.getElementById('searchBtn'); // The trigger button
+        let searchTimeout;
+
+        // Focus input when overlay opens
+        if (searchBtn && searchInput) {
+            searchBtn.addEventListener('click', () => {
+                setTimeout(() => searchInput.focus(), 100);
+            });
+        }
+
+        if (searchInput && searchResults) {
+            searchInput.addEventListener('input', function() {
+                const query = this.value.trim();
+                clearTimeout(searchTimeout);
+
+                if (query.length < 2) {
+                    searchResults.classList.add('hidden');
+                    searchResults.innerHTML = '';
+                    return;
+                }
+
+                searchTimeout = setTimeout(() => {
+                    const baseUrl = typeof BASE_URL !== 'undefined' ? BASE_URL : '';
+                    fetch(`${baseUrl}/api/products.php?search=${encodeURIComponent(query)}&limit=5`)
+                        .then(res => res.json())
+                        .then(data => {
+                            if ((data.success && data.products && data.products.length > 0) || (data.categories && data.categories.length > 0)) {
+                                let html = '<div class="max-h-[50vh] overflow-y-auto custom-scrollbar">';
+                                
+                                // Collections (Categories) Section
+                                if (data.categories && data.categories.length > 0) {
+                                    html += '<div class="px-4 py-2 text-xs font-bold text-gray-500 uppercase tracking-wider bg-gray-50 sticky top-0 z-10">Collections</div>';
+                                    html += '<ul class="divide-y divide-gray-100">';
+                                    data.categories.forEach(c => {
+                                        let catImg = '';
+                                        if (c.image) {
+                                             if (c.image.startsWith('http')) catImg = c.image;
+                                             else catImg = baseUrl + '/' + c.image.replace(/^\//, '');
+                                        } else {
+                                            catImg = baseUrl + '/assets/images/placeholder.png';
+                                        }
+                                        
+                                        html += `
+                                            <li>
+                                                <a href="${baseUrl}/shop.php?category=${encodeURIComponent(c.slug)}" class="flex items-center px-4 py-3 hover:bg-gray-50 transition group">
+                                                    <img src="${catImg}" class="w-10 h-10 object-cover rounded-full mr-3 border border-gray-200" onerror="this.src='${baseUrl}/assets/images/placeholder.png'">
+                                                    <div class="flex-1 font-medium text-gray-900 group-hover:text-primary transition-colors">${c.name}</div>
+                                                    <i class="fas fa-chevron-right text-xs text-gray-300 group-hover:text-primary"></i>
+                                                </a>
+                                            </li>
+                                        `;
+                                    });
+                                    html += '</ul>';
+                                }
+                                
+                                // Products Section
+                                if (data.products && data.products.length > 0) {
+                                    if (data.categories && data.categories.length > 0) {
+                                         html += '<div class="px-4 py-2 text-xs font-bold text-gray-500 uppercase tracking-wider bg-gray-50 sticky top-0 z-10 border-t border-gray-100">Products</div>';
+                                    }
+                                    html += '<ul class="divide-y divide-gray-100">';
+                                data.products.forEach(p => {
+                                    const price = parseFloat(p.sale_price || p.price);
+                                    let imgSrc = '';
+                                    if (p.images) {
+                                        try {
+                                            const imgs = JSON.parse(p.images);
+                                            imgSrc = imgs[0] || '';
+                                        } catch(e) {}
+                                    }
+                                    if (!imgSrc && p.featured_image) imgSrc = p.featured_image;
+                                    
+                                    // Handle relative paths
+                                    if (imgSrc && !imgSrc.startsWith('http')) {
+                                        imgSrc = baseUrl + '/' + imgSrc.replace(/^\//, '');
+                                    }
+                                    if (!imgSrc) imgSrc = baseUrl + '/assets/images/placeholder.png'; // Fallback
+                                    
+                                    const currencySymbol = typeof CURRENCY_SYMBOL !== 'undefined' ? CURRENCY_SYMBOL : '₹';
+                                    let categoryName = p.category_names || p.category_name || '';
+                                    
+                                    // Highlighting Logic
+                                    let displayName = p.name;
+                                    let displayCategory = categoryName;
+                                    
+                                    try {
+                                        if (query) {
+                                            // Escape special chars
+                                            const safeQuery = query.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+                                            const regex = new RegExp(`(${safeQuery})`, 'gi');
+                                            
+                                            displayName = p.name.replace(regex, '<span class="font-bold text-black bg-yellow-100">$1</span>');
+                                            
+                                            if (categoryName) {
+                                                displayCategory = categoryName.replace(regex, '<span class="font-bold text-black bg-yellow-100">$1</span>');
+                                            }
+                                        }
+                                    } catch(e) { console.error(e); }
+                                    
+                                    html += `
+                                        <li>
+                                            <a href="${baseUrl}/product.php?slug=${p.slug}" class="flex items-center px-4 py-3 hover:bg-gray-50 transition group">
+                                                <img src="${imgSrc}" class="w-12 h-12 object-cover rounded mr-3 border border-gray-100" onerror="this.src='${baseUrl}/assets/images/placeholder.png'">
+                                                <div class="flex-1 min-w-0">
+                                                    <div class="font-medium text-gray-900 group-hover:text-primary transition-colors truncate">${displayName}</div>
+                                                    ${displayCategory ? `<div class="text-xs text-gray-500 mt-0.5 truncate">${displayCategory}</div>` : ''}
+                                                    <div class="text-sm font-semibold text-gray-900 mt-0.5">${currencySymbol}${price.toFixed(2)}</div>
+                                                </div>
+                                                <i class="fas fa-chevron-right text-gray-300 group-hover:text-primary ml-2"></i>
+                                            </a>
+                                        </li>
+                                    `;
+                                });
+                                html += '</ul>';
+                                }
+                                html += '</div>';
+                                html += `
+                                    <div class="border-t border-gray-100 bg-gray-50">
+                                        <a href="${baseUrl}/shop.php?search=${encodeURIComponent(query)}" class="block text-center py-3 text-primary font-semibold hover:bg-gray-100 transition text-sm">
+                                            View all results
+                                        </a>
+                                    </div>
+                                `;
+                                searchResults.innerHTML = html;
+                                searchResults.classList.remove('hidden');
+                            } else {
+                                searchResults.innerHTML = '<div class="px-4 py-6 text-gray-500 text-center">No products found</div>';
+                                searchResults.classList.remove('hidden');
+                            }
+                        })
+                        .catch(e => {
+                            console.error("Search Error:", e);
+                        });
+                }, 300);
+            });
+
+            // Close on click outside (explicitly on overlay background)
+            searchOverlay.addEventListener('click', function(e) {
+                // If user clicks the overlay darker background, close it
+                if (e.target === searchOverlay || e.target.closest('.container') === e.target) {
+                     searchOverlay.classList.add('hidden');
+                     searchResults.classList.add('hidden');
+                }
+            });
+            
+            // Prevent closing when clicking inside the search box area
+            const searchContainer = document.querySelector('.click-stop-propagation');
+            if(searchContainer) {
+                searchContainer.addEventListener('click', function(e) {
+                    e.stopPropagation();
+                });
+            }
+        }
+    });
+    </script>

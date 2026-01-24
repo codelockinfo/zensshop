@@ -13,6 +13,22 @@ php_value max_input_time 300
     # IMPORTANT: Change this to / if your live site is at the root domain (e.g. zensshop.com)
     RewriteBase /zensshop/
 
+    # Custom Clean URLs (Masking)
+    RewriteRule ^admin/category$ admin/homepage_categories_settings.php [L,QSA]
+    RewriteRule ^admin/banner$ admin/banner_settings.php [L,QSA]
+    RewriteRule ^admin/features$ admin/features_settings.php [L,QSA]
+    RewriteRule ^admin/footer$ admin/footer_info.php [L,QSA]
+    RewriteRule ^admin/reset$ admin/forgot-password.php [L,QSA]
+    RewriteRule ^admin/header$ admin/header_info.php [L,QSA]
+    RewriteRule ^admin/products/?$ admin/homepage_products_settings.php [L,QSA]
+    RewriteRule ^admin/shorts$ admin/homepage_videos_settings.php [L,QSA]
+    RewriteRule ^admin/menu$ admin/menu_settings.php [L,QSA]
+    RewriteRule ^admin/newsletter$ admin/newsletter_settings.php [L,QSA]
+    RewriteRule ^admin/philosophy$ admin/philosophy_settings.php [L,QSA]
+    RewriteRule ^admin/offers$ admin/special_offers_settings.php [L,QSA]
+    RewriteRule ^admin/special-page$ admin/settings.php [L,QSA]
+    RewriteRule ^admin/settings$ admin/system-settings.php [L,QSA]
+
     # 1. Externally redirect /file.php to /file (Client Request -> Browser URL change)
     # This ensures that even if code links to 'contact.php', the user sees 'contact'
     # Exclude POST requests to prevent 405 errors on form submission (preserving POST data)

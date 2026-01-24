@@ -32,63 +32,90 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $db->execute("DELETE FROM section_categories WHERE id IN ($placeholders)", $delete_ids);
     }
     
-    // Handle Updates and Inserts
-    for ($i = 0; $i < count($titles); $i++) {
-        $id = $ids[$i] ?? null;
-        $title = trim($titles[$i]);
-        $link = trim($links[$i]);
-        $order = (int)$orders[$i];
-        
-        // Skip empty rows
-        if (empty($title)) continue;
-        
-        $imagePath = '';
-        
-        // Check for file upload
-        if (isset($_FILES['image']['name'][$i]) && !empty($_FILES['image']['name'][$i])) {
-            $uploadDir = __DIR__ . '/../assets/images/categories/';
-            if (!is_dir($uploadDir)) mkdir($uploadDir, 0777, true);
-            
-            $filename = time() . '_' . $i . '_' . preg_replace('/[^a-zA-Z0-9.]/', '_', $_FILES['image']['name'][$i]);
-            if (move_uploaded_file($_FILES['image']['tmp_name'][$i], $uploadDir . $filename)) {
-                $imagePath = 'assets/images/categories/' . $filename;
-            }
-        } else {
-            // Keep existing image if not uploading new one
-            if ($id) {
-                $existing = $db->fetchOne("SELECT image FROM section_categories WHERE id = ?", [$id]);
-                $imagePath = $existing['image'];
-            }
-        }
-        
-        if ($id) {
-            // Update
-            $sql = "UPDATE section_categories SET title = ?, link = ?, sort_order = ?, heading = ?, subheading = ?";
-            $params = [$title, $link, $order, $section_heading, $section_subheading];
-            
-            if ($imagePath) {
-                $sql .= ", image = ?";
-                $params[] = $imagePath;
-            }
-            
-            $sql .= " WHERE id = ?";
-            $params[] = $id;
-            
-            $db->execute($sql, $params);
-        } else {
-            // Insert (only if image is present or not required)
-            if ($imagePath) {
-                $db->execute(
-                    "INSERT INTO section_categories (title, link, sort_order, image, heading, subheading) VALUES (?, ?, ?, ?, ?, ?)",
-                    [$title, $link, $order, $imagePath, $section_heading, $section_subheading]
-                );
-            }
-        }
+    // Check for POST size limit
+    if (empty($_POST) && $_SERVER['CONTENT_LENGTH'] > 0) {
+        $error = "Form submission failed. The data sent exceeds the server's maximum limit (" . ini_get('post_max_size') . ").";
     }
-    
-    $_SESSION['flash_success'] = "Categories updated successfully!";
-    header("Location: " . $_SERVER['PHP_SELF']);
-    exit;
+
+    $updatedCount = 0;
+    $insertedCount = 0;
+
+    // Debug
+    file_put_contents('debug_cat.txt', "POST: " . print_r($_POST, true) . "\n");
+
+    // Handle Updates and Inserts
+    try {
+        if (!$error) {
+            $log = "";
+            for ($i = 0; $i < count($titles); $i++) {
+                $id = $ids[$i] ?? null;
+                $title = trim($titles[$i]);
+                $link = trim($links[$i] ?? '');
+                $order = (int)($orders[$i] ?? 0);
+                
+                $log .= "Row $i: ID='$id', Title='$title'. ";
+                
+                // Skip empty rows
+                if (empty($title)) {
+                    $log .= "Skipped (empty title)\n";
+                    continue;
+                }
+                
+                // ... (Keep existing image logic)
+                $imagePath = '';
+                if (isset($_FILES['image']['name'][$i]) && !empty($_FILES['image']['name'][$i])) {
+                    $uploadDir = __DIR__ . '/../assets/images/categories/';
+                    if (!is_dir($uploadDir)) mkdir($uploadDir, 0777, true);
+                    $filename = time() . '_' . $i . '_' . preg_replace('/[^a-zA-Z0-9.]/', '_', $_FILES['image']['name'][$i]);
+                    if (move_uploaded_file($_FILES['image']['tmp_name'][$i], $uploadDir . $filename)) {
+                        $imagePath = 'assets/images/categories/' . $filename;
+                    }
+                } else {
+                    if ($id) {
+                        $existing = $db->fetchOne("SELECT image FROM section_categories WHERE id = ?", [$id]);
+                        $imagePath = $existing['image'];
+                    }
+                }
+
+                $exists = false;
+                if (!empty($id)) {
+                    $exists = $db->fetchOne("SELECT id FROM section_categories WHERE id = ?", [$id]);
+                }
+                
+                if ($exists) {
+                    // Update
+                    $log .= "Updating ID $id.\n";
+                    $sql = "UPDATE section_categories SET title = ?, link = ?, sort_order = ?, heading = ?, subheading = ?";
+                    $params = [$title, $link, $order, $section_heading, $section_subheading];
+                    if ($imagePath) {
+                        $sql .= ", image = ?";
+                        $params[] = $imagePath;
+                    }
+                    $sql .= " WHERE id = ?";
+                    $params[] = $id;
+                    $db->execute($sql, $params);
+                    $updatedCount++;
+                } else {
+                    // Insert
+                    $log .= "Inserting New.\n";
+                    $imgToSave = $imagePath ? $imagePath : ''; 
+                    $db->execute(
+                        "INSERT INTO section_categories (title, link, sort_order, image, heading, subheading) VALUES (?, ?, ?, ?, ?, ?)",
+                        [$title, $link, $order, $imgToSave, $section_heading, $section_subheading]
+                    );
+                    $insertedCount++;
+                }
+            }
+            file_put_contents('debug_cat.txt', $log, FILE_APPEND);
+            
+            $_SESSION['flash_success'] = "Categories updated successfully!";
+            header("Location: " . $baseUrl . '/admin/category');
+            exit;
+        }
+
+    } catch (Exception $e) {
+        $error = "Detailed Error: " . $e->getMessage();
+    }
 }
 
 // Check Flash
@@ -131,7 +158,7 @@ $categories = $db->fetchAll("SELECT * FROM section_categories ORDER BY sort_orde
             </div>
         <?php endif; ?>
 
-        </div>
+
 
         <?php 
         // Fetch valid categories for the dropdown

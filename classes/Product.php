@@ -57,8 +57,10 @@ class Product {
         }
         
         if (!empty($filters['search'])) {
-            $sql .= " AND (p.name LIKE ? OR p.description LIKE ?)";
+            $sql .= " AND (p.name LIKE ? OR p.description LIKE ? OR c.name LIKE ? OR p.brand LIKE ?)";
             $searchTerm = "%{$filters['search']}%";
+            $params[] = $searchTerm;
+            $params[] = $searchTerm;
             $params[] = $searchTerm;
             $params[] = $searchTerm;
         }
@@ -248,7 +250,7 @@ class Product {
                 }
                 
                 foreach ($allowedFields as $field) {
-                    if (isset($data[$field])) {
+                    if (array_key_exists($field, $data)) {
                         $fields[] = "{$field} = ?";
                         
                         if ($field === 'images' && is_array($data[$field])) {
@@ -256,6 +258,9 @@ class Product {
                         } elseif ($field === 'featured') {
                             // Ensure featured is an integer (0 or 1)
                             $params[] = (int)$data[$field];
+                        } elseif ($field === 'sku' && $data[$field] === '') {
+                             // Handle empty SKU -> NULL for unique constraint
+                             $params[] = null;
                         } elseif ($field === 'category_id' && ($data[$field] === null || $data[$field] === '')) {
                             // Handle NULL category_id properly
                             $params[] = null;

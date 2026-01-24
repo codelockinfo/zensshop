@@ -108,7 +108,11 @@ require_once __DIR__ . '/../../includes/admin-header.php';
 
 <div class="mb-6">
     <h1 class="text-2xl md:text-3xl font-bold">Category information</h1>
-    <p class="text-sm md:text-base text-gray-600">Dashboard > Category > <?php echo $id ? 'Edit category' : 'New category'; ?></p>
+    <p class="text-sm md:text-base text-gray-600">
+        <a href="<?php echo url('admin/dashboard.php'); ?>" class="hover:text-blue-600">Dashboard</a> > 
+        <a href="<?php echo url('admin/categories/list.php'); ?>" class="hover:text-blue-600">Category</a> > 
+        <?php echo $id ? 'Edit category' : 'New category'; ?>
+    </p>
 </div>
 
 <?php if ($error): ?>

@@ -25,8 +25,9 @@ $locations = [
 
 // Handle Actions
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    $baseUrl = getBaseUrl();
     $action = $_POST['action'] ?? '';
-    $redirectUrl = $_SERVER['PHP_SELF']; // Default redirect
+    $redirectUrl = $baseUrl . '/admin/menu'; // Use clean URL
 
     // 1. Create Menu
     if ($action === 'create_menu') {
