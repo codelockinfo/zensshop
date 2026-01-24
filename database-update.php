@@ -288,9 +288,25 @@ if (!columnExists($db, 'products', 'return_policy')) {
 }
 
 // ==========================================
-// STEP 7: Seed Brands into site_settings
+// STEP 7: Add Razorpay & Delivery Columns to Orders
 // ==========================================
-echo "STEP 7: Seeding Brands into site_settings\n";
+echo "STEP 7: Adding Razorpay & Delivery Columns\n";
+echo "------------------------------------------\n";
+
+if (!columnExists($db, 'orders', 'razorpay_payment_id')) {
+    executeSql($db, "ALTER TABLE orders ADD COLUMN razorpay_payment_id VARCHAR(255) DEFAULT NULL AFTER order_status", "Add razorpay_payment_id to orders", $errors, $success, $EXECUTE);
+}
+if (!columnExists($db, 'orders', 'razorpay_order_id')) {
+    executeSql($db, "ALTER TABLE orders ADD COLUMN razorpay_order_id VARCHAR(255) DEFAULT NULL AFTER razorpay_payment_id", "Add razorpay_order_id to orders", $errors, $success, $EXECUTE);
+}
+if (!columnExists($db, 'orders', 'delivery_date')) {
+    executeSql($db, "ALTER TABLE orders ADD COLUMN delivery_date DATE DEFAULT NULL AFTER razorpay_order_id", "Add delivery_date to orders", $errors, $success, $EXECUTE);
+}
+
+// ==========================================
+// STEP 8: Seed Brands into site_settings
+// ==========================================
+echo "STEP 8: Seeding Brands into site_settings\n";
 echo "----------------------------------------\n";
 
 if ($EXECUTE) {
