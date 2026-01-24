@@ -132,9 +132,9 @@ dropForeignKeyIfExists($db, 'wishlist', 'wishlist_ibfk_2', $errors, $success, $E
 dropForeignKeyIfExists($db, 'wishlist', 'wishlist_customer_fk', $errors, $success, $EXECUTE);
 
 // Order Items Table
-// We need to find the FK name dynamically if unknown, but usually order_items_ibfk_...
-// Let's try to drop common ones or specifically known incorrect ones if any.
-// The critical ones are cart and wishlist which blocked inserts.
+dropForeignKeyIfExists($db, 'order_items', 'order_items_ibfk_1', $errors, $success, $EXECUTE);
+dropForeignKeyIfExists($db, 'order_items', 'order_items_ibfk_2', $errors, $success, $EXECUTE);
+dropForeignKeyIfExists($db, 'order_items', 'fk_order_items_product_id', $errors, $success, $EXECUTE); // For idempotency
 
 // ==========================================
 // STEP 3: Update Column Types (BIGINT)
@@ -158,6 +158,9 @@ executeSql($db, "ALTER TABLE cart MODIFY COLUMN user_id BIGINT NOT NULL", "Modif
 executeSql($db, "ALTER TABLE wishlist MODIFY COLUMN product_id BIGINT NOT NULL", "Modify wishlist.product_id to BIGINT", $errors, $success, $EXECUTE);
 executeSql($db, "ALTER TABLE wishlist MODIFY COLUMN user_id BIGINT NOT NULL", "Modify wishlist.user_id to BIGINT", $errors, $success, $EXECUTE);
 executeSql($db, "ALTER TABLE order_items MODIFY COLUMN product_id BIGINT NOT NULL", "Modify order_items.product_id to BIGINT", $errors, $success, $EXECUTE);
+
+// Ensure products.product_id has a UNIQUE index (required for FK reference)
+executeSql($db, "ALTER TABLE products ADD UNIQUE INDEX IF NOT EXISTS idx_unique_product_id (product_id)", "Ensure UNIQUE index on products.product_id", $errors, $success, $EXECUTE);
 
 // ==========================================
 // STEP 4: Re-Add Correct Foreign Keys
@@ -205,14 +208,7 @@ executeSql(
     $EXECUTE
 );
 
-// Order Items (Optional but recommended)
-// If we dropped the old one, we need to add this. If we didn't drop it (because name unknown), this might fail or duplicate.
-// We'll skip forcing this one blindly unless we are sure we dropped the old one. 
-// Step 2 didn't drop order_items FK blindly.
-// Let's leave order_items FK alone for now unless specific instruction to fix it, as it might block orders if wrong.
-// Actually, earlier fixes might have updated it. Let's add it safely only if we are sure.
-// Recommendation: If you are having issues with Orders, uncomment below lines after verifying FK name.
-/* 
+// Order Items: Product FK -> products(product_id)
 executeSql(
     $db,
     "ALTER TABLE order_items ADD CONSTRAINT fk_order_items_product_id FOREIGN KEY (product_id) REFERENCES products(product_id) ON DELETE CASCADE",
@@ -221,7 +217,6 @@ executeSql(
     $success,
     $EXECUTE
 );
-*/
 
 // Re-enable foreign key checks
 executeSql($db, "SET FOREIGN_KEY_CHECKS = 1", "Re-enable foreign key checks", $errors, $success, $EXECUTE);
