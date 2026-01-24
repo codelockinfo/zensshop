@@ -275,7 +275,7 @@ $maxPriceRange = $priceRange['max_price'] ?? 1000;
                             <a href="<?php echo url('product.php?slug=' . urlencode($itemSlug)); ?>">
                                 <img src="<?php echo htmlspecialchars($mainImage); ?>" 
                                      alt="<?php echo htmlspecialchars($itemName); ?>" 
-                                     class="w-full h-64 object-cover group-hover:scale-110 transition-transform duration-500">
+                                     class="w-full h-64 object-contain  group-hover:scale-110 transition-transform duration-500">
                             </a>
                             
                             <?php if ($discount > 0): ?>
