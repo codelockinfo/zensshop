@@ -272,6 +272,63 @@ if ($EXECUTE) {
 }
 
 // ==========================================
+// STEP 6: Add Highlights and Policies
+// ==========================================
+echo "STEP 6: Adding Product Highlights and Policies\n";
+echo "----------------------------------------------\n";
+
+if (!columnExists($db, 'products', 'highlights')) {
+    executeSql($db, "ALTER TABLE products ADD COLUMN highlights TEXT AFTER featured_image", "Add highlights to products", $errors, $success, $EXECUTE);
+}
+if (!columnExists($db, 'products', 'shipping_policy')) {
+    executeSql($db, "ALTER TABLE products ADD COLUMN shipping_policy TEXT AFTER highlights", "Add shipping_policy to products", $errors, $success, $EXECUTE);
+}
+if (!columnExists($db, 'products', 'return_policy')) {
+    executeSql($db, "ALTER TABLE products ADD COLUMN return_policy TEXT AFTER shipping_policy", "Add return_policy to products", $errors, $success, $EXECUTE);
+}
+
+// ==========================================
+// STEP 7: Add Razorpay & Delivery Columns to Orders
+// ==========================================
+echo "STEP 7: Adding Razorpay & Delivery Columns\n";
+echo "------------------------------------------\n";
+
+if (!columnExists($db, 'orders', 'razorpay_payment_id')) {
+    executeSql($db, "ALTER TABLE orders ADD COLUMN razorpay_payment_id VARCHAR(255) DEFAULT NULL AFTER order_status", "Add razorpay_payment_id to orders", $errors, $success, $EXECUTE);
+}
+if (!columnExists($db, 'orders', 'razorpay_order_id')) {
+    executeSql($db, "ALTER TABLE orders ADD COLUMN razorpay_order_id VARCHAR(255) DEFAULT NULL AFTER razorpay_payment_id", "Add razorpay_order_id to orders", $errors, $success, $EXECUTE);
+}
+if (!columnExists($db, 'orders', 'delivery_date')) {
+    executeSql($db, "ALTER TABLE orders ADD COLUMN delivery_date DATE DEFAULT NULL AFTER razorpay_order_id", "Add delivery_date to orders", $errors, $success, $EXECUTE);
+}
+
+// ==========================================
+// STEP 8: Seed Brands into site_settings
+// ==========================================
+echo "STEP 8: Seeding Brands into site_settings\n";
+echo "----------------------------------------\n";
+
+if ($EXECUTE) {
+    try {
+        $brandsExist = $db->fetchOne("SELECT setting_key FROM site_settings WHERE setting_key = 'Brands'");
+        if (!$brandsExist) {
+            $initialBrands = json_encode(['Milano', 'Luxury', 'Premium']);
+            $db->execute("INSERT INTO site_settings (setting_key, setting_value) VALUES ('Brands', ?)", [$initialBrands]);
+            $success[] = "Seeded Brands into site_settings";
+            echo "Status: ✅ SEEDED\n\n";
+        } else {
+            echo "Status: ⚠️ EXISTS - Brands already seeded\n\n";
+        }
+    } catch (Exception $e) {
+        $errors[] = "Seed Brands error: " . $e->getMessage();
+        echo "Status: ❌ ERROR - " . $e->getMessage() . "\n\n";
+    }
+} else {
+    echo "Status: SKIPPED (dry-run)\n\n";
+}
+
+// ==========================================
 // SUMMARY
 // ==========================================
 echo "\n========================================\n";

@@ -1,11 +1,13 @@
 <?php
 require_once __DIR__ . '/../classes/Database.php';
 require_once __DIR__ . '/../classes/Auth.php';
+require_once __DIR__ . '/../includes/functions.php';
 
 $auth = new Auth();
 $auth->requireLogin();
 
 $db = Database::getInstance();
+$baseUrl = getBaseUrl();
 $success = '';
 $error = '';
 
@@ -36,14 +38,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         }
         
         $_SESSION['flash_success'] = "Section settings updated!";
-        header("Location: " . $_SERVER['PHP_SELF']);
+        header("Location: " . $baseUrl . '/admin/offers');
         exit;
     }
     elseif ($action === 'delete') {
         $id = (int)$_POST['id'];
         $db->execute("DELETE FROM special_offers WHERE id = ?", [$id]);
         $_SESSION['flash_success'] = "Offer deleted successfully!";
-        header("Location: " . $_SERVER['PHP_SELF']);
+        header("Location: " . $baseUrl . '/admin/offers');
         exit;
     }
     elseif ($action === 'save') {
@@ -115,7 +117,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             }
             
             if (empty($error)) {
-                header("Location: " . $_SERVER['PHP_SELF']);
+                header("Location: " . $baseUrl . '/admin/offers');
                 exit;
             }
         }

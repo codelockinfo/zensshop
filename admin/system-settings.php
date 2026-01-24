@@ -8,6 +8,7 @@ $auth = new Auth();
 $auth->requireLogin();
 
 $settings = new Settings();
+$baseUrl = getBaseUrl();
 
 // Handle form submission
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['action'] === 'update_settings') {
@@ -35,7 +36,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
         }
     }
     $_SESSION['success'] = "Settings updated successfully!";
-    header("Location: " . $_SERVER['PHP_SELF']);
+    header("Location: " . $baseUrl . '/admin/settings');
     exit;
 }
 

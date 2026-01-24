@@ -20,9 +20,21 @@ $filters = [
 try {
     $products = $product->getAll($filters);
     
+    // Search for matching categories (Collections)
+    $categories = [];
+    if (!empty($filters['search'])) {
+        $db = Database::getInstance();
+        $searchTerm = "%{$filters['search']}%";
+        $categories = $db->fetchAll(
+            "SELECT * FROM categories WHERE name LIKE ? AND status = 'active' LIMIT 3",
+            [$searchTerm]
+        );
+    }
+    
     echo json_encode([
         'success' => true,
         'products' => $products,
+        'categories' => $categories,
         'count' => count($products)
     ]);
 } catch (Exception $e) {

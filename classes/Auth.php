@@ -110,6 +110,13 @@ class Auth {
     }
     
     /**
+     * Check if user is an admin
+     */
+    public function isAdmin() {
+        return $this->isLoggedIn() && isset($_SESSION['user_role']) && $_SESSION['user_role'] === 'admin';
+    }
+    
+    /**
      * Get current user
      */
     public function getCurrentUser() {

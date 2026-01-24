@@ -51,7 +51,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             }
             
             $_SESSION['flash_success'] = "Section settings updated successfully!";
-            header("Location: " . $_SERVER['PHP_SELF']);
+            header("Location: " . $baseUrl . '/admin/shorts');
             exit;
             
         } catch (Exception $e) {
@@ -162,7 +162,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $db->commit();
             
             $_SESSION['flash_success'] = "Videos section updated successfully!";
-            header("Location: " . $_SERVER['PHP_SELF']);
+            header("Location: " . $baseUrl . '/admin/shorts');
             exit;
 
         } catch (Exception $e) {

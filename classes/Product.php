@@ -57,8 +57,10 @@ class Product {
         }
         
         if (!empty($filters['search'])) {
-            $sql .= " AND (p.name LIKE ? OR p.description LIKE ?)";
+            $sql .= " AND (p.name LIKE ? OR p.description LIKE ? OR c.name LIKE ? OR p.brand LIKE ?)";
             $searchTerm = "%{$filters['search']}%";
+            $params[] = $searchTerm;
+            $params[] = $searchTerm;
             $params[] = $searchTerm;
             $params[] = $searchTerm;
         }
@@ -159,8 +161,8 @@ class Product {
                 $productId = $this->db->insert(
                     "INSERT INTO products 
                     (product_id, name, slug, sku, description, short_description, category_id, price, currency, sale_price, 
-                     stock_quantity, stock_status, images, featured_image, gender, brand, status, featured) 
-                    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+                     stock_quantity, stock_status, images, featured_image, gender, brand, status, featured, highlights, shipping_policy, return_policy) 
+                    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
                     [
                         $customProductId,  // 10-digit random product ID (e.g., 5654148741)
                         $data['name'],
@@ -179,7 +181,10 @@ class Product {
                         $data['gender'] ?? 'unisex',
                         $data['brand'] ?? null,
                         $data['status'] ?? 'draft',
-                        $data['featured'] ?? 0
+                        $data['featured'] ?? 0,
+                        $data['highlights'] ?? null,
+                        $data['shipping_policy'] ?? null,
+                        $data['return_policy'] ?? null
                     ]
                 );
                 
@@ -211,11 +216,8 @@ class Product {
                 
                 // Handle variants if provided
                 if (!empty($data['variants']) && is_array($data['variants'])) {
-                    // Get the 10-digit product_id to use in variants table
-                    $productRecord = $this->db->fetchOne("SELECT product_id FROM products WHERE id = ?", [$productId]);
-                    if ($productRecord && !empty($productRecord['product_id'])) {
-                        $this->saveVariants($productRecord['product_id'], $data['variants']);
-                    }
+                    // Use the 10-digit product_id we just generated
+                    $this->saveVariants($customProductId, $data['variants']);
                 }
                 
                 return $productId;
@@ -237,7 +239,7 @@ class Product {
                 
                 $allowedFields = ['name', 'sku', 'description', 'short_description', 'category_id', 'price', 'currency', 
                                  'sale_price', 'stock_quantity', 'stock_status', 'images', 'featured_image',
-                                 'gender', 'brand', 'status', 'featured'];
+                                 'gender', 'brand', 'status', 'featured', 'highlights', 'shipping_policy', 'return_policy'];
                 
                 // Handle category_id (use first category if multiple)
                 if (isset($data['category_ids']) && is_array($data['category_ids']) && !empty($data['category_ids'])) {
@@ -245,7 +247,7 @@ class Product {
                 }
                 
                 foreach ($allowedFields as $field) {
-                    if (isset($data[$field])) {
+                    if (array_key_exists($field, $data)) {
                         $fields[] = "{$field} = ?";
                         
                         if ($field === 'images' && is_array($data[$field])) {
@@ -253,6 +255,9 @@ class Product {
                         } elseif ($field === 'featured') {
                             // Ensure featured is an integer (0 or 1)
                             $params[] = (int)$data[$field];
+                        } elseif ($field === 'sku' && $data[$field] === '') {
+                             // Handle empty SKU -> NULL for unique constraint
+                             $params[] = null;
                         } elseif ($field === 'category_id' && ($data[$field] === null || $data[$field] === '')) {
                             // Handle NULL category_id properly
                             $params[] = null;
@@ -448,13 +453,20 @@ class Product {
      * @param int|string $productId - Can be auto-increment id or 10-digit product_id
      */
     public function saveVariants($productId, $variantsData) {
+        $log = "Saving variants for PID $productId. ";
         // Check if variants data exists
         if (empty($variantsData['variants']) || !is_array($variantsData['variants'])) {
+            $log .= "No variants found or invalid format.\n";
+            file_put_contents(__DIR__ . '/../admin/debug_variants.log', $log, FILE_APPEND);
             return;
         }
         
+        $log .= "Count: " . count($variantsData['variants']) . ". ";
+        $log .= "Data: " . json_encode($variantsData['variants']) . ". ";
+        
         // Convert auto-increment id to 10-digit product_id if needed
         $productIdValue = $this->getProductIdValue($productId);
+        $log .= "PID Value: $productIdValue. ";
         
         // Save individual variants to product_variants table
         try {
@@ -491,11 +503,14 @@ class Product {
                     ]
                 );
             }
+            $log .= "Success.\n";
         } catch (Exception $e) {
+            $log .= "Error: " . $e->getMessage() . "\n";
             // Log error but don't fail the product creation
             error_log("Could not save variants: " . $e->getMessage());
             // Don't throw - allow product to be created even if variants fail
         }
+        file_put_contents(__DIR__ . '/../admin/debug_variants.log', $log, FILE_APPEND);
     }
     
     /**

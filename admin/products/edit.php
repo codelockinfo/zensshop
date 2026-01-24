@@ -14,6 +14,10 @@ $product = new Product();
 $error = '';
 $success = '';
 
+// Fetch brands from site_settings
+$brandsResult = $db->fetchOne("SELECT setting_value FROM site_settings WHERE setting_key = 'Brands'");
+$brands = $brandsResult ? json_decode($brandsResult['setting_value'], true) : [];
+
 // Get product ID or 10-digit product_id
 $id = $_GET['id'] ?? null;
 $productIdParam = $_GET['product_id'] ?? null;
@@ -55,6 +59,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             'status' => $_POST['status'] ?? 'draft',
             'sku' => $_POST['sku'] ?? '',
             'featured' => isset($_POST['featured']) ? 1 : 0,
+            'highlights' => $_POST['highlights'] ?? null,
+            'shipping_policy' => $_POST['shipping_policy'] ?? null,
+            'return_policy' => $_POST['return_policy'] ?? null,
             'images' => []
         ];
         
@@ -178,7 +185,7 @@ $existingVariants = $product->getVariants($productId);
         <h1 class="text-3xl font-bold">Edit Product</h1>
         <p class="text-gray-600">Dashboard > Ecommerce > Edit product</p>
     </div>
-    <button type="button" onclick="document.querySelector('form').submit()" class="bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700 shadow-md transition-colors">
+    <button type="button" onclick="document.getElementById('productForm').requestSubmit()" class="bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700 shadow-md transition-colors">
         <i class="fas fa-save mr-2"></i> Save Changes
     </button>
 </div>
@@ -201,7 +208,7 @@ $existingVariants = $product->getVariants($productId);
         <div class="admin-card">
             <h2 class="text-xl font-bold mb-4">Product Information</h2>
             
-            <form method="POST" action="" enctype="multipart/form-data">
+            <form id="productForm" method="POST" action="" enctype="multipart/form-data">
                 <div class="admin-form-group">
                     <label class="admin-form-label">Product name *</label>
                     <input type="text" 
@@ -210,6 +217,14 @@ $existingVariants = $product->getVariants($productId);
                            placeholder="Enter product name"
                            value="<?php echo htmlspecialchars($productData['name']); ?>"
                            class="admin-form-input">
+                </div>
+
+                <div class="admin-form-group">
+                    <label class="admin-form-label">Description *</label>
+                    <textarea name="description" 
+                              id="description_editor"
+                              placeholder="Description"
+                              class="admin-form-input admin-form-textarea"><?php echo htmlspecialchars($productData['description'] ?? ''); ?></textarea>
                 </div>
 
                 <div class="admin-form-group">
@@ -248,23 +263,65 @@ $existingVariants = $product->getVariants($productId);
                 </div>
                 
                 <div class="admin-form-group">
-                    <label class="admin-form-label">Brand *</label>
-                    <select name="brand" class="admin-form-select">
+                    <div class="flex items-center justify-between mb-2">
+                        <label class="admin-form-label mb-0">Brand *</label>
+                        <button type="button" onclick="openBrandModal()" class="text-blue-600 hover:text-blue-800 text-sm font-medium">
+                            <i class="fas fa-plus-circle"></i> Add/Manage
+                        </button>
+                    </div>
+                    <select name="brand" id="brandSelect" class="admin-form-select">
                         <option value="">Choose brand</option>
-                        <option value="Milano" <?php echo $productData['brand'] === 'Milano' ? 'selected' : ''; ?>>Milano</option>
-                        <option value="Luxury" <?php echo $productData['brand'] === 'Luxury' ? 'selected' : ''; ?>>Luxury</option>
-                        <option value="Premium" <?php echo $productData['brand'] === 'Premium' ? 'selected' : ''; ?>>Premium</option>
+                        <?php foreach ($brands as $brand): ?>
+                        <option value="<?php echo htmlspecialchars($brand); ?>" <?php echo $productData['brand'] === $brand ? 'selected' : ''; ?>>
+                            <?php echo htmlspecialchars($brand); ?>
+                        </option>
+                        <?php endforeach; ?>
                     </select>
                 </div>
                 
+
+
                 <div class="admin-form-group">
-                    <label class="admin-form-label">Description *</label>
-                    <textarea name="description" 
-                              required
-                              
-                              placeholder="Description"
-                              class="admin-form-input admin-form-textarea"><?php echo htmlspecialchars($productData['description'] ?? ''); ?></textarea>
-                    <p class="text-sm text-gray-500 mt-1"></p>
+                    <label class="admin-form-label flex justify-between items-center">
+                        Product Highlights
+                        <button type="button" onclick="addHighlightRow()" class="text-blue-500 text-xs hover:underline">
+                            <i class="fas fa-plus mr-1"></i> Add More
+                        </button>
+                    </label>
+                    <div id="highlights-container" class="space-y-3">
+                        <?php 
+                        $highlights = json_decode($productData['highlights'] ?? '[]', true);
+                        if(empty($highlights)) $highlights = [['icon' => '', 'text' => '']];
+                        $hCount = 0;
+                        foreach($highlights as $h): 
+                            $hCount++;
+                            $rowId = "highlight_text_init_" . $hCount;
+                        ?>
+                        <div class="flex gap-3 highlight-row">
+                            <div class="w-1/3">
+                                <input type="text" name="highlight_icons[]" value="<?php echo htmlspecialchars($h['icon']); ?>" placeholder="Icon (e.g. fas fa-truck)" class="admin-form-input text-sm">
+                            </div>
+                            <div class="flex-1">
+                                <div id="<?php echo $rowId; ?>" class="admin-form-input text-sm highlight-text-editor" contenteditable="true" style="min-height: 38px; cursor: text;"><?php echo $h['text']; ?></div>
+                            </div>
+                            <button type="button" onclick="removeHighlightRow(this, '<?php echo $rowId; ?>')" class="text-red-500 px-2 mt-2">
+                                <i class="fas fa-trash"></i>
+                            </button>
+                        </div>
+                        <?php endforeach; ?>
+                    </div>
+                    <input type="hidden" name="highlights" id="highlights_json">
+                    <p class="text-xs text-gray-500 mt-2">Use Font Awesome classes for icons (e.g., fas fa-truck, fas fa-tag).</p>
+                </div>
+
+                <div class="admin-form-group">
+                    <label class="admin-form-label">Shipping Policy</label>
+                    <textarea name="shipping_policy" id="shipping_policy_editor" class="admin-form-input admin-form-textarea"><?php echo htmlspecialchars($productData['shipping_policy'] ?? ''); ?></textarea>
+                </div>
+
+                <div class="admin-form-group">
+                    <label class="admin-form-label">Return Policy</label>
+                    <textarea name="return_policy" id="return_policy_editor" class="admin-form-input admin-form-textarea"><?php echo htmlspecialchars($productData['return_policy'] ?? ''); ?></textarea>
                 </div>
         </div>
     </div>
@@ -458,14 +515,90 @@ $existingVariants = $product->getVariants($productId);
     </div>
 </div>
 
-<script>
-// BASE_URL is already declared in admin-header.php, so check if it exists first
-if (typeof BASE_URL === 'undefined') {
-    const BASE_URL = '<?php echo $baseUrl; ?>';
-}
 </script>
-<script src="<?php echo $baseUrl; ?>/assets/js/admin-image-upload2.js"></script>
-<script src="<?php echo $baseUrl; ?>/assets/js/product-variants2.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/tinymce/6.8.2/tinymce.min.js" referrerpolicy="origin"></script>
+<script>
+tinymce.init({
+    selector: '#shipping_policy_editor, #return_policy_editor, #description_editor',
+    license_key: 'gpl',
+    plugins: 'advlist autolink lists link image charmap preview anchor searchreplace visualblocks code fullscreen insertdatetime media table code help wordcount',
+    toolbar: 'undo redo | blocks | bold italic backcolor | alignleft aligncenter alignright alignjustify | bullist numlist outdent indent | removeformat | help',
+    height: 200,
+    menubar: false,
+    promotion: false,
+    branding: false
+});
+
+// Inline mini editor for highlights (looks like a text field)
+function initHighlightEditor(selector) {
+    tinymce.init({
+        target: selector,
+        inline: true,
+        license_key: 'gpl',
+        plugins: 'link lists',
+        toolbar: 'bold italic link',
+        menubar: false,
+        promotion: false,
+        branding: false,
+        fixed_toolbar_container: false
+    });
+}
+
+// Initialize existing highlight editors
+document.querySelectorAll('.highlight-text-editor').forEach(el => {
+    initHighlightEditor(el);
+});
+
+function addHighlightRow() {
+    const container = document.getElementById('highlights-container');
+    const rowId = 'highlight_text_' + Date.now();
+    const row = document.createElement('div');
+    row.className = 'flex gap-3 highlight-row';
+    row.innerHTML = `
+        <div class="w-1/3">
+            <input type="text" name="highlight_icons[]" placeholder="Icon (e.g. fas fa-truck)" class="admin-form-input text-sm">
+        </div>
+        <div class="flex-1">
+            <div id="${rowId}" class="admin-form-input text-sm highlight-text-editor" contenteditable="true" style="min-height: 38px; cursor: text;"></div>
+        </div>
+        <button type="button" onclick="removeHighlightRow(this, '${rowId}')" class="text-red-500 px-2 mt-2">
+            <i class="fas fa-trash"></i>
+        </button>
+    `;
+    container.appendChild(row);
+    
+    // Init TinyMCE on the new textarea
+    initHighlightEditor(document.getElementById(rowId));
+}
+
+function removeHighlightRow(btn, editorId) {
+    if (tinymce.get(editorId)) {
+        tinymce.get(editorId).remove();
+    }
+    btn.parentElement.remove();
+}
+
+document.getElementById('productForm').addEventListener('submit', function(e) {
+    // Sync all TinyMCE instances
+    if (typeof tinymce !== 'undefined') {
+        tinymce.triggerSave();
+    }
+
+    const icons = Array.from(document.querySelectorAll('input[name="highlight_icons[]"]')).map(i => i.value);
+    const editors = Array.from(document.querySelectorAll('.highlight-text-editor'));
+    
+    const highlights = [];
+    for(let i=0; i<icons.length; i++) {
+        const content = tinymce.get(editors[i].id) ? tinymce.get(editors[i].id).getContent() : editors[i].innerHTML;
+        if(icons[i] || content) {
+            highlights.push({ icon: icons[i], text: content });
+        }
+    }
+    document.getElementById('highlights_json').value = JSON.stringify(highlights);
+});
+</script>
+<script src="<?php echo $baseUrl; ?>/assets/js/admin-image-upload3.js"></script>
+<script src="<?php echo $baseUrl; ?>/assets/js/product-variants4.js"></script>
 <script>
 // Initialize with existing images
 document.addEventListener('DOMContentLoaded', function() {
@@ -575,6 +708,160 @@ function initializeVariantsFromData(variantsData) {
             updateVariantsDataInput();
         }
     }, 500);
+}
+</script>
+
+<!-- Brand Management Modal -->
+<div id="brandModal" class="hidden fixed inset-0 bg-black/50 z-[100] flex items-center justify-center p-4">
+    <div class="bg-white rounded-xl shadow-2xl w-full max-w-md overflow-hidden transform transition-all duration-300 scale-95 opacity-0" id="brandModalContent">
+        <div class="px-6 py-4 bg-gray-50 border-b flex items-center justify-between">
+            <h3 class="text-lg font-bold text-gray-800">Manage Brands</h3>
+            <button type="button" onclick="closeBrandModal()" class="text-gray-400 hover:text-gray-600 transition-colors">
+                <i class="fas fa-times text-xl"></i>
+            </button>
+        </div>
+        
+        <div class="p-6">
+            <!-- Add Brand Form -->
+            <div class="mb-6">
+                <label class="block text-sm font-bold text-gray-700 mb-2">Add New Brand</label>
+                <div class="flex gap-2">
+                    <input type="text" id="newBrandName" class="admin-form-input py-2" placeholder="Brand name...">
+                    <button type="button" onclick="addNewBrand()" class="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors">
+                        Add
+                    </button>
+                </div>
+            </div>
+            
+            <!-- Brand List -->
+            <div>
+                <label class="block text-sm font-bold text-gray-700 mb-2">Existing Brands</label>
+                <div class="max-h-60 overflow-y-auto custom-scrollbar border rounded-lg bg-gray-50" id="brandListContainer">
+                    <div class="p-4 text-center text-gray-500">Loading brands...</div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="px-6 py-4 bg-gray-50 border-t text-right">
+            <button type="button" onclick="closeBrandModal()" class="px-5 py-2 text-gray-700 font-medium hover:text-gray-900 transition-colors">
+                Close
+            </button>
+        </div>
+    </div>
+</div>
+
+<script>
+function openBrandModal() {
+    const modal = document.getElementById('brandModal');
+    const content = document.getElementById('brandModalContent');
+    modal.classList.remove('hidden');
+    setTimeout(() => {
+        content.classList.remove('scale-95', 'opacity-0');
+        content.classList.add('scale-100', 'opacity-100');
+    }, 10);
+    loadBrands();
+}
+
+function closeBrandModal() {
+    const modal = document.getElementById('brandModal');
+    const content = document.getElementById('brandModalContent');
+    content.classList.remove('scale-100', 'opacity-100');
+    content.classList.add('scale-95', 'opacity-0');
+    setTimeout(() => {
+        modal.classList.add('hidden');
+    }, 300);
+}
+
+async function loadBrands() {
+    const container = document.getElementById('brandListContainer');
+    try {
+        const response = await fetch('<?php echo $baseUrl; ?>/admin/api/settings.php?action=get_brands');
+        const data = await response.json();
+        
+        if (data.success) {
+            renderBrandList(data.brands);
+            updateBrandSelect(data.brands);
+        } else {
+            container.innerHTML = '<div class="p-4 text-red-500">' + data.message + '</div>';
+        }
+    } catch (error) {
+        container.innerHTML = '<div class="p-4 text-red-500">Failed to load brands</div>';
+    }
+}
+
+function renderBrandList(brands) {
+    const container = document.getElementById('brandListContainer');
+    if (!brands || brands.length === 0) {
+        container.innerHTML = '<div class="p-4 text-center text-gray-500">No brands added yet.</div>';
+        return;
+    }
+    
+    let html = '';
+    brands.forEach(function(brand) {
+        html += '<div class="flex items-center justify-between px-4 py-3 border-b last:border-0 hover:bg-white transition-colors">';
+        html += '<span class="font-medium text-gray-700">' + brand + '</span>';
+        html += '<button type="button" onclick="removeBrand(\'' + brand.replace(/'/g, "\\'") + '\')" class="text-red-500 hover:text-red-700 transition-colors">';
+        html += '<i class="fas fa-trash-alt"></i>';
+        html += '</button>';
+        html += '</div>';
+    });
+    container.innerHTML = html;
+}
+
+function updateBrandSelect(brands) {
+    const select = document.getElementById('brandSelect');
+    const currentValue = select.value;
+    
+    let html = '<option value="">Choose brand</option>';
+    brands.forEach(function(brand) {
+        var selected = (brand === currentValue) ? 'selected' : '';
+        html += '<option value="' + brand + '" ' + selected + '>' + brand + '</option>';
+    });
+    select.innerHTML = html;
+}
+
+async function addNewBrand() {
+    const input = document.getElementById('newBrandName');
+    const brand = input.value.trim();
+    
+    if (!brand) return;
+    
+    try {
+        const response = await fetch('<?php echo $baseUrl; ?>/admin/api/settings.php?action=add_brand', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ brand })
+        });
+        const data = await response.json();
+        
+        if (data.success) {
+            input.value = '';
+            renderBrandList(data.brands);
+            updateBrandSelect(data.brands);
+        } else {
+            console.log(data.message);
+        }
+    } catch (error) {
+        console.log('Failed to add brand');
+    }
+}
+
+async function removeBrand(brand) {
+    try {
+        const response = await fetch('<?php echo $baseUrl; ?>/admin/api/settings.php?action=remove_brand', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ brand: brand })
+        });
+        const data = await response.json();
+        
+        if (data.success) {
+            renderBrandList(data.brands);
+            updateBrandSelect(data.brands);
+        }
+    } catch (error) {
+        console.log(error);
+    }
 }
 </script>
 

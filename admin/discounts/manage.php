@@ -61,7 +61,9 @@ $discounts = $db->fetchAll("SELECT * FROM discounts ORDER BY created_at DESC");
 
 <div class="mb-6">
     <h1 class="text-2xl md:text-3xl font-bold">Discount Management</h1>
-    <p class="text-gray-600 text-sm md:text-base">Dashboard > Discounts</p>
+    <p class="text-gray-600 text-sm md:text-base">
+        <a href="<?php echo url('admin/dashboard.php'); ?>" class="hover:text-blue-600">Dashboard</a> > Discounts
+    </p>
 </div>
 
 <?php if ($error): ?>

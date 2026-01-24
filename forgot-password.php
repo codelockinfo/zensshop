@@ -381,7 +381,7 @@ document.addEventListener('DOMContentLoaded', function() {
                         errorContainer.classList.remove('hidden');
                         errorContainer.style.display = 'flex';
                     } else {
-                        alert(data.message || 'An error occurred.');
+                        console.log(data.message || 'An error occurred.');
                     }
                 }
 
@@ -393,7 +393,7 @@ document.addEventListener('DOMContentLoaded', function() {
                     errorContainer.classList.remove('hidden');
                     errorContainer.style.display = 'flex';
                 } else {
-                    alert('Connection error. Please try again.');
+                    console.log('Connection error. Please try again.');
                 }
             }
         });

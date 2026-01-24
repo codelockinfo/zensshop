@@ -47,10 +47,11 @@ foreach ($required as $field) {
 }
 
 // Sanitize input
-$paymentId = sanitize_input($input['razorpay_payment_id']);
-$orderId = sanitize_input($input['razorpay_order_id']);
-$signature = sanitize_input($input['razorpay_signature']);
-$orderData = $input['order_data']; // Contains customer info, address, etc.
+// Use raw inputs for signature verification to be safe
+$paymentId = $input['razorpay_payment_id'];
+$orderId = $input['razorpay_order_id'];
+$signature = $input['razorpay_signature'];
+$orderData = $input['order_data'] ?? [];
 
 // Get user ID if logged in
 $userId = null;
@@ -61,7 +62,12 @@ if ($auth->isLoggedIn()) {
 }
 
 try {
-    $razorpayKeySecret = RAZORPAY_KEY_SECRET;
+    $razorpayKeyId = defined('RAZORPAY_KEY_ID') ? RAZORPAY_KEY_ID : '';
+    $razorpayKeySecret = defined('RAZORPAY_KEY_SECRET') ? RAZORPAY_KEY_SECRET : '';
+    
+    if (empty($razorpayKeyId) || empty($razorpayKeySecret)) {
+        throw new Exception("Razorpay API keys are not configured. Please check admin settings.");
+    }
     
     // Verify signature
     $generatedSignature = hash_hmac('sha256', $orderId . '|' . $paymentId, $razorpayKeySecret);
@@ -75,13 +81,13 @@ try {
     $ch = curl_init('https://api.razorpay.com/v1/payments/' . $paymentId);
     curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
     curl_setopt($ch, CURLOPT_HTTPHEADER, [
-        'Authorization: Basic ' . base64_encode(RAZORPAY_KEY_ID . ':' . $razorpayKeySecret)
+        'Authorization: Basic ' . base64_encode($razorpayKeyId . ':' . $razorpayKeySecret)
     ]);
     
     $isLocalhost = in_array($_SERVER['HTTP_HOST'] ?? '', ['localhost', '127.0.0.1', '::1']) || 
                    strpos($_SERVER['HTTP_HOST'] ?? '', 'localhost') !== false;
     
-    if ($isLocalhost && RAZORPAY_MODE === 'test') {
+    if ($isLocalhost && defined('RAZORPAY_MODE') && RAZORPAY_MODE === 'test') {
         curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
         curl_setopt($ch, CURLOPT_SSL_VERIFYHOST, false);
     } else {
@@ -91,24 +97,35 @@ try {
     
     $response = curl_exec($ch);
     $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+    $curlError = curl_error($ch);
     curl_close($ch);
     
     if ($httpCode !== 200) {
-        echo json_encode(['success' => false, 'message' => 'Failed to verify payment with Razorpay']);
+        $errorMsg = 'Failed to verify payment with Razorpay. HTTP Code: ' . $httpCode;
+        if ($curlError) $errorMsg .= ' - ' . $curlError;
+        echo json_encode(['success' => false, 'message' => $errorMsg]);
         exit;
     }
     
     $paymentData = json_decode($response, true);
+    if (!$paymentData) {
+        throw new Exception("Invalid response from Razorpay API");
+    }
     
     // Check if payment is successful
-    if ($paymentData['status'] !== 'captured' && $paymentData['status'] !== 'authorized') {
-        echo json_encode(['success' => false, 'message' => 'Payment not successful. Status: ' . $paymentData['status']]);
+    $paymentStatus = $paymentData['status'] ?? 'unknown';
+    if ($paymentStatus !== 'captured' && $paymentStatus !== 'authorized') {
+        echo json_encode(['success' => false, 'message' => 'Payment not successful. Status: ' . $paymentStatus]);
         exit;
     }
     
     // Get cart items
     $cart = new Cart();
     $cartItems = $cart->getCart();
+    
+    if (empty($cartItems)) {
+        throw new Exception("Your cart is empty. The order could not be processed.");
+    }
     
     // Prepare order data
     $orderData['user_id'] = $userId;
@@ -151,19 +168,20 @@ try {
     
 } catch (Exception $e) {
     error_log("Payment verification error: " . $e->getMessage());
-    error_log("Payment verification error trace: " . $e->getTraceAsString());
     ob_clean();
     
-    // Provide more detailed error message for debugging
-    $errorMessage = 'Payment verification failed. Please contact support.';
-    if (strpos($e->getMessage(), 'razorpay_payment_id') !== false || strpos($e->getMessage(), 'Column not found') !== false) {
-        $errorMessage = 'Database error: Razorpay columns missing. Please run database migration.';
+    $msg = $e->getMessage();
+    $errorMessage = 'Payment verification failed: ' . $msg;
+    
+    // Check for common DB errors
+    if (strpos($msg, 'Column not found') !== false || strpos($msg, 'Unknown column') !== false) {
+        $errorMessage = 'Database error: One or more required columns are missing in production. Please run the database update script.';
     }
     
     echo json_encode([
         'success' => false, 
         'message' => $errorMessage,
-        'error' => RAZORPAY_MODE === 'test' ? $e->getMessage() : null
+        'debug_error' => $msg
     ]);
     exit;
 }

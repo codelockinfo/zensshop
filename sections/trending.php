@@ -1,10 +1,16 @@
 <?php
 require_once __DIR__ . '/../classes/Product.php';
 require_once __DIR__ . '/../includes/functions.php';
+require_once __DIR__ . '/../classes/Wishlist.php';
 
 $baseUrl = getBaseUrl();
 $db = Database::getInstance();
 $product = new Product();
+$wishlistObj = new Wishlist();
+
+// Get Wishlist IDs for checking status
+$wishlistItems = $wishlistObj->getWishlist();
+$wishlistIds = array_column($wishlistItems, 'product_id');
 
 // Check for manual selection from dedicated table
 $products = $db->fetchAll(
@@ -77,11 +83,15 @@ if (empty($products)) {
                     <?php endif; ?>
                     
                     <!-- Wishlist Icon (Always Visible) -->
-                    <button class="absolute top-2 right-2 w-10 h-10 bg-white rounded-full flex items-center justify-center hover:bg-black hover:text-white transition z-20 wishlist-btn" 
-                            data-product-id="<?php echo $item['product_id']; ?>"
-                            title="Add to Wishlist">
-                        <i class="far fa-heart"></i>
-                        <span class="product-tooltip">Add to Wishlist</span>
+                    <?php 
+                    $currentId = !empty($item['product_id']) ? $item['product_id'] : $item['id'];
+                    $inWishlist = in_array($currentId, $wishlistIds);
+                    ?>
+                    <button class="absolute top-2 right-2 w-10 h-10 rounded-full flex items-center justify-center <?php echo $inWishlist ? 'bg-black text-white' : 'bg-white text-black'; ?> hover:bg-black hover:text-white transition z-20 wishlist-btn" 
+                            data-product-id="<?php echo $currentId; ?>"
+                            title="<?php echo $inWishlist ? 'Remove from Wishlist' : 'Add to Wishlist'; ?>">
+                        <i class="<?php echo $inWishlist ? 'fas' : 'far'; ?> fa-heart"></i>
+                        <span class="product-tooltip"><?php echo $inWishlist ? 'Remove from Wishlist' : 'Add to Wishlist'; ?></span>
                     </button>
                     
                     <!-- Timer (for some discounted items) -->

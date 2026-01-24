@@ -44,8 +44,8 @@ $action = $segments[count($segments) - 1] ?? '';  // add, list
     <title><?php echo isset($pageTitle) ? $pageTitle . ' - ' : ''; ?>Admin Dashboard - Milano</title>
     <link rel="icon" type="image/png" href="<?php echo $baseUrl; ?>/admin/Images/admin-logo.png">
     
-    <!-- Tailwind CSS -->
-    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Tailwind CSS with Typography Plugin -->
+    <script src="https://cdn.tailwindcss.com?plugins=typography"></script>
     
     <!-- Font Awesome -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
@@ -339,7 +339,7 @@ $currentPage = basename($_SERVER['PHP_SELF']);
 
 <div class="category-menu-parent mt-2">
     <!-- Parent Menu -->
-    <a href="<?php echo url('admin/settings.php'); ?>"
+    <a href="<?php echo url('admin/special-page'); ?>"
        class="sidebar-menu-item flex items-center space-x-3 py-2 px-4 <?php echo $isSettingsPage ? 'bg-gray-700' : ''; ?>"
        title="Settings">
 
@@ -352,92 +352,92 @@ $currentPage = basename($_SERVER['PHP_SELF']);
     <!-- Sub Menu -->
     <div class="sidebar-submenu mt-2 space-y-1 <?php echo $isSettingsPage ? '' : 'hidden'; ?>">
 
-        <a href="<?php echo url('admin/settings.php'); ?>"
-           class="flex items-center space-x-2 py-1 px-4 text-sm <?php echo ($currentPage === 'settings.php') ? 'bg-gray-700' : ''; ?>"
+        <a href="<?php echo url('admin/special-page'); ?>"
+           class="flex items-center space-x-2 py-1 px-4 text-sm <?php echo ($currentPage === 'settings.php' || strpos($_SERVER['REQUEST_URI'], 'special-page') !== false) ? 'bg-gray-700' : ''; ?>"
            title="Product Page">
             <i class="fas fa-gem text-xs"></i>
             <span>Product Page</span>
         </a>
 
-        <a href="<?php echo url('admin/banner_settings.php'); ?>"
-           class="flex items-center space-x-2 py-1 px-4 text-sm <?php echo ($currentPage === 'banner_settings.php') ? 'bg-gray-700' : ''; ?>"
+        <a href="<?php echo url('admin/banner'); ?>"
+           class="flex items-center space-x-2 py-1 px-4 text-sm <?php echo ($currentPage === 'banner_settings.php' || strpos($_SERVER['REQUEST_URI'], 'admin/banner') !== false) ? 'bg-gray-700' : ''; ?>"
            title="Banner Settings">
             <i class="fas fa-images text-xs"></i>
             <span>Banner</span>
         </a>
 
-        <a href="<?php echo url('admin/special_offers_settings.php'); ?>"
-           class="flex items-center space-x-2 py-1 px-4 text-sm <?php echo ($currentPage === 'special_offers_settings.php') ? 'bg-gray-700' : ''; ?>"
+        <a href="<?php echo url('admin/offers'); ?>"
+           class="flex items-center space-x-2 py-1 px-4 text-sm <?php echo ($currentPage === 'special_offers_settings.php' || strpos($_SERVER['REQUEST_URI'], 'admin/offers') !== false) ? 'bg-gray-700' : ''; ?>"
            title="Special Offers">
             <i class="fas fa-tags text-xs"></i>
             <span>Special Offers</span>
         </a>
 
-        <a href="<?php echo url('admin/homepage_categories_settings.php'); ?>"
-           class="flex items-center space-x-2 py-1 px-4 text-sm <?php echo ($currentPage === 'homepage_categories_settings.php') ? 'bg-gray-700' : ''; ?>"
+        <a href="<?php echo url('admin/category'); ?>"
+           class="flex items-center space-x-2 py-1 px-4 text-sm <?php echo ($currentPage === 'homepage_categories_settings.php' || strpos($_SERVER['REQUEST_URI'], 'admin/category') !== false) ? 'bg-gray-700' : ''; ?>"
            title="Homepage categories">
             <i class="fas fa-th-large text-xs"></i>
             <span>Categories</span>
         </a>
 
-        <a href="<?php echo url('admin/homepage_products_settings.php'); ?>"
-           class="flex items-center space-x-2 py-1 px-4 text-sm <?php echo ($currentPage === 'homepage_products_settings.php') ? 'bg-gray-700' : ''; ?>"
+        <a href="<?php echo url('admin/products'); ?>"
+           class="flex items-center space-x-2 py-1 px-4 text-sm <?php echo ($currentPage === 'homepage_products_settings.php' || preg_match('#/admin/products/?($|\?)#', $_SERVER['REQUEST_URI'])) ? 'bg-gray-700' : ''; ?>"
            title="Homepage Products">
             <i class="fas fa-box-open text-xs"></i>
             <span>Products</span>
         </a>
 
-        <a href="<?php echo url('admin/homepage_videos_settings.php'); ?>"
-           class="flex items-center space-x-2 py-1 px-4 text-sm <?php echo ($currentPage === 'homepage_videos_settings.php') ? 'bg-gray-700' : ''; ?>"
+        <a href="<?php echo url('admin/shorts'); ?>"
+           class="flex items-center space-x-2 py-1 px-4 text-sm <?php echo ($currentPage === 'homepage_videos_settings.php' || strpos($_SERVER['REQUEST_URI'], 'admin/shorts') !== false) ? 'bg-gray-700' : ''; ?>"
            title="Homepage Videos">
             <i class="fas fa-video text-xs"></i>
             <span>Video Reels</span>
         </a>
 
-        <a href="<?php echo url('admin/philosophy_settings.php'); ?>"
-           class="flex items-center space-x-2 py-1 px-4 text-sm <?php echo ($currentPage === 'philosophy_settings.php') ? 'bg-gray-700' : ''; ?>"
+        <a href="<?php echo url('admin/philosophy'); ?>"
+           class="flex items-center space-x-2 py-1 px-4 text-sm <?php echo ($currentPage === 'philosophy_settings.php' || strpos($_SERVER['REQUEST_URI'], 'admin/philosophy') !== false) ? 'bg-gray-700' : ''; ?>"
            title="Philosophy Section">
             <i class="fas fa-quote-left text-xs"></i>
             <span>Philosophy</span>
         </a>
 
-        <a href="<?php echo url('admin/features_settings.php'); ?>"
-           class="flex items-center space-x-2 py-1 px-4 text-sm <?php echo ($currentPage === 'features_settings.php') ? 'bg-gray-700' : ''; ?>"
+        <a href="<?php echo url('admin/features'); ?>"
+           class="flex items-center space-x-2 py-1 px-4 text-sm <?php echo ($currentPage === 'features_settings.php' || strpos($_SERVER['REQUEST_URI'], 'admin/features') !== false) ? 'bg-gray-700' : ''; ?>"
            title="Features Section">
             <i class="fas fa-star text-xs"></i>
             <span>Features</span>
         </a>
 
-        <a href="<?php echo url('admin/newsletter_settings.php'); ?>"
-           class="flex items-center space-x-2 py-1 px-4 text-sm <?php echo ($currentPage === 'newsletter_settings.php') ? 'bg-gray-700' : ''; ?>"
+        <a href="<?php echo url('admin/newsletter'); ?>"
+           class="flex items-center space-x-2 py-1 px-4 text-sm <?php echo ($currentPage === 'newsletter_settings.php' || strpos($_SERVER['REQUEST_URI'], 'admin/newsletter') !== false) ? 'bg-gray-700' : ''; ?>"
            title="Newsletter Section">
             <i class="fas fa-envelope text-xs"></i>
             <span>Newsletter</span>
         </a>
 
-        <a href="<?php echo url('admin/header_info.php'); ?>"
-           class="flex items-center space-x-2 py-1 px-4 text-sm <?php echo ($currentPage === 'header_info.php') ? 'bg-gray-700' : ''; ?>"
+        <a href="<?php echo url('admin/header'); ?>"
+           class="flex items-center space-x-2 py-1 px-4 text-sm <?php echo ($currentPage === 'header_info.php' || strpos($_SERVER['REQUEST_URI'], 'admin/header') !== false) ? 'bg-gray-700' : ''; ?>"
            title="Header Info">
             <i class="fas fa-gem text-xs"></i>
             <span>Header Info</span>
         </a>
 
-        <a href="<?php echo url('admin/footer_info.php'); ?>"
-           class="flex items-center space-x-2 py-1 px-4 text-sm <?php echo ($currentPage === 'footer_info.php') ? 'bg-gray-700' : ''; ?>"
+        <a href="<?php echo url('admin/footer'); ?>"
+           class="flex items-center space-x-2 py-1 px-4 text-sm <?php echo ($currentPage === 'footer_info.php' || strpos($_SERVER['REQUEST_URI'], 'admin/footer') !== false) ? 'bg-gray-700' : ''; ?>"
            title="Footer Info">
             <i class="fas fa-gem text-xs"></i>
             <span>Footer Info</span>
         </a>
 
-        <a href="<?php echo url('admin/menu_settings.php'); ?>"
-           class="flex items-center space-x-2 py-1 px-4 text-sm <?php echo ($currentPage === 'menu_settings.php') ? 'bg-gray-700' : ''; ?>"
+        <a href="<?php echo url('admin/menu'); ?>"
+           class="flex items-center space-x-2 py-1 px-4 text-sm <?php echo ($currentPage === 'menu_settings.php' || strpos($_SERVER['REQUEST_URI'], 'admin/menu') !== false) ? 'bg-gray-700' : ''; ?>"
            title="Menu Settings">
             <i class="fas fa-gem text-xs"></i>
             <span>Menu Settings</span>
         </a>
 
-        <a href="<?php echo url('admin/system-settings.php'); ?>"
-           class="flex items-center space-x-2 py-1 px-4 text-sm <?php echo ($currentPage === 'system-settings.php') ? 'bg-gray-700' : ''; ?>"
+        <a href="<?php echo url('admin/settings'); ?>"
+           class="flex items-center space-x-2 py-1 px-4 text-sm <?php echo ($currentPage === 'system-settings.php' || strpos($_SERVER['REQUEST_URI'], 'admin/settings') !== false) ? 'bg-gray-700' : ''; ?>"
            title="System Settings">
             <i class="fas fa-cog text-xs"></i>
             <span>System Settings</span>

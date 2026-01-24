@@ -39,7 +39,11 @@ $products = $db->fetchAll($sql, $params);
 
 <div class="mb-6">
     <h1 class="text-2xl md:text-3xl font-bold">Product List</h1>
-    <p class="text-gray-600 text-sm md:text-base">Dashboard > Ecommerce > Product List</p>
+    <p class="text-gray-600 text-sm md:text-base">
+        <a href="<?php echo url('admin/dashboard.php'); ?>" class="hover:text-blue-600">Dashboard</a> > 
+        <a href="<?php echo url('admin/products/list.php'); ?>" class="hover:text-blue-600">Ecommerce</a> > 
+        Product List
+    </p>
 </div>
 
 <div class="admin-card mb-6">

@@ -21,7 +21,9 @@ $orders = $order->getAll($filters);
 
 <div class="mb-6">
     <h1 class="text-2xl md:text-3xl font-bold">Order List</h1>
-    <p class="text-gray-600 text-sm md:text-base">Dashboard > Order > Order List</p>
+    <p class="text-gray-600 text-sm md:text-base">
+        <a href="<?php echo url('admin/dashboard.php'); ?>" class="hover:text-blue-600">Dashboard</a> > Order List
+    </p>
 </div>
 
 <div class="admin-card mb-6">
@@ -213,13 +215,13 @@ function deleteOrder(id) {
                 console.log('Order status updated successfully');
                 // Optional: Show a small toast notification
             } else {
-                alert('Failed to update order status: ' + (data.message || 'Unknown error'));
+                console.log('Failed to update order status: ' + (data.message || 'Unknown error'));
                 // Revert selection if needed, but for now simple alert is enough
             }
         })
         .catch(err => {
             console.error('Something went wrong:', err);
-            alert('System error while updating status');
+            console.log('System error while updating status');
         });
     })
 </script>

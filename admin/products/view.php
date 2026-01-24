@@ -123,7 +123,13 @@ $variants = $variantsData['variants'] ?? [];
                     <?php foreach ($variants as $variant): 
                         $variantImage = !empty($variant['image']) ? $variant['image'] : $mainImage;
                         $attributes = $variant['variant_attributes'];
-                        $attrString = is_array($attributes) ? implode(' / ', array_values($attributes)) : 'Variant';
+                        $attrParts = [];
+                        if (is_array($attributes)) {
+                            foreach ($attributes as $k => $v) {
+                                $attrParts[] = ucfirst($k) . ': ' . $v;
+                            }
+                        }
+                        $attrString = !empty($attrParts) ? implode(' / ', $attrParts) : 'Variant';
                     ?>
                     <tr class="hover:bg-gray-50 transition-colors">
                         <td class="px-4 py-3">
@@ -132,18 +138,20 @@ $variants = $variantsData['variants'] ?? [];
                                  class="w-12 h-12 object-cover rounded border border-gray-200">
                         </td>
                         <td class="px-4 py-3">
-                            <span class="font-semibold text-gray-900"><?php echo htmlspecialchars($attrString); ?></span>
+                            <div class="text-sm text-gray-900 max-w-xs leading-snug">
+                                <?php echo htmlspecialchars($attrString); ?>
+                            </div>
                         </td>
-                        <td class="px-4 py-3">
+                        <td class="px-4 py-3 whitespace-nowrap">
                             <span class="text-sm text-gray-600"><?php echo htmlspecialchars($variant['sku'] ?? 'N/A'); ?></span>
                         </td>
-                        <td class="px-4 py-3">
+                        <td class="px-4 py-3 whitespace-nowrap">
                             <span class="text-sm font-bold text-gray-900">
                                 <?php echo format_price($variant['price'] ?: $productData['price'], $productData['currency'] ?? 'USD'); ?>
                             </span>
                         </td>
-                        <td class="px-4 py-3">
-                            <span class="px-2 py-1 rounded-full text-[10px] font-bold <?php echo $variant['stock_quantity'] > 0 ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'; ?>">
+                        <td class="px-4 py-3 whitespace-nowrap">
+                            <span class="px-2 py-1 rounded-full text-xs font-bold whitespace-nowrap <?php echo $variant['stock_quantity'] > 0 ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'; ?>">
                                 <?php echo $variant['stock_quantity']; ?> in stock
                             </span>
                         </td>
@@ -204,7 +212,7 @@ $variants = $variantsData['variants'] ?? [];
                 
                 <div>
                     <label class="admin-form-label">Description</label>
-                    <p class="text-gray-700"><?php echo nl2br(htmlspecialchars($productData['description'] ?? 'No description available')); ?></p>
+                    <div class="text-gray-700 prose prose-sm max-w-none"><?php echo $productData['description'] ?? 'No description available'; ?></div>
                 </div>
             </div>
         </div>

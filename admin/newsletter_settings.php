@@ -50,7 +50,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         }
 
         $_SESSION['flash_success'] = "Newsletter section updated successfully!";
-        header("Location: " . $_SERVER['PHP_SELF']);
+        header("Location: " . $baseUrl . '/admin/newsletter');
         exit;
 
     } catch (Exception $e) {

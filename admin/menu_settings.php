@@ -25,8 +25,9 @@ $locations = [
 
 // Handle Actions
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    $baseUrl = getBaseUrl();
     $action = $_POST['action'] ?? '';
-    $redirectUrl = $_SERVER['PHP_SELF']; // Default redirect
+    $redirectUrl = $baseUrl . '/admin/menu'; // Use clean URL
 
     // 1. Create Menu
     if ($action === 'create_menu') {
@@ -302,10 +303,10 @@ require_once __DIR__ . '/../includes/admin-header.php';
             </h1>
             <div>
                  <?php if($selectedMenuId): ?>
-                 <form method="POST" class="inline-block">
+                 <form method="POST" class="inline-block" id="deleteMenuForm">
                      <input type="hidden" name="action" value="delete_menu">
                      <input type="hidden" name="menu_id_delete" value="<?php echo $selectedMenuId; ?>">
-                     <button type="submit" class="text-red-500 hover:text-red-700 text-sm font-medium" onclick="return confirm('Are you sure you want to delete this menu and all its items?');">Delete Menu</button>
+                     <button type="button" class="text-red-500 hover:text-red-700 text-sm font-medium" onclick="showConfirmModal('Are you sure you want to delete this menu and all its items?', function(){ document.getElementById('deleteMenuForm').submit(); })">Delete Menu</button>
                  </form>
                  <?php endif; ?>
             </div>

@@ -5,10 +5,14 @@ ob_start();
 // Process redirects BEFORE any output
 require_once __DIR__ . '/classes/Product.php';
 require_once __DIR__ . '/classes/Database.php';
+require_once __DIR__ . '/classes/Wishlist.php'; // Add Wishlist class
 require_once __DIR__ . '/includes/functions.php';
 
 $product = new Product();
 $db = Database::getInstance();
+$wishlistObj = new Wishlist(); // Instantiate Wishlist
+$wishlistItems = $wishlistObj->getWishlist(); // Get items
+$wishlistIds = array_column($wishlistItems, 'product_id'); // Extract IDs
 
 // Get base URL for redirects
 $baseUrl = getBaseUrl();
@@ -40,7 +44,7 @@ require_once __DIR__ . '/includes/header.php';
 
 // Parse images
 $images = json_decode($productData['images'] ?? '[]', true);
-$mainImage = getProductImage($productData);
+$mainImage = !empty($images[0]) ? getImageUrl($images[0]) : getProductImage($productData);
 if (empty($images)) {
     $images = [$mainImage];
 }
@@ -153,19 +157,44 @@ $productVariants = $variantsData['variants'] ?? [];
                     <img id="mainProductImage" 
                          src="<?php echo htmlspecialchars($mainImage); ?>" 
                          alt="<?php echo htmlspecialchars($productData['name'] ?? 'Product'); ?>" 
-                         class="w-full h-auto rounded-lg">
+                         class="w-full h-auto rounded-lg"
+                         onerror="this.src='https://via.placeholder.com/600x600?text=Product+Image'">
                 </div>
                 
-                <!-- Thumbnail Images -->
-                <?php if (count($images) > 1): ?>
+                <!-- Thumbnail Images (Extended with Variants) -->
+                <?php 
+                $galleryItems = [];
+                $seenUrls = [];
+                
+                // Add main images (the Ring first)
+                foreach ($images as $img) {
+                    $url = getImageUrl($img);
+                    if (!in_array($url, $seenUrls)) {
+                        $galleryItems[] = ['url' => $url, 'variant' => null];
+                        $seenUrls[] = $url;
+                    }
+                }
+                
+                // Add variant images
+                foreach ($productVariants as $v) {
+                    if (!empty($v['image'])) {
+                        $url = getImageUrl($v['image']);
+                        if (!in_array($url, $seenUrls)) {
+                            $galleryItems[] = ['url' => $url, 'variant' => $v['variant_attributes']];
+                            $seenUrls[] = $url;
+                        }
+                    }
+                }
+                ?>
+                
+                <?php if (count($galleryItems) > 1): ?>
                 <div class="grid grid-cols-5 gap-2">
-                    <?php foreach ($images as $index => $image): 
-                        $imageUrl = getImageUrl($image);
-                    ?>
-                    <img src="<?php echo htmlspecialchars($imageUrl); ?>" 
+                    <?php foreach ($galleryItems as $index => $item): ?>
+                    <img src="<?php echo htmlspecialchars($item['url']); ?>" 
                          alt="Thumbnail <?php echo $index + 1; ?>"
-                         class="w-full  object-contain rounded cursor-pointer border-2 transition hover:border-primary <?php echo $index === 0 ? 'border-primary' : 'border-transparent'; ?>"
-                         onclick="changeMainImage('<?php echo htmlspecialchars($imageUrl); ?>', this)">
+                         class="thumbnail-img w-full h-20 object-cover rounded cursor-pointer border-2 transition hover:border-primary <?php echo $index === 0 ? 'border-primary' : 'border-transparent'; ?>"
+                         onclick="changeMainImage('<?php echo htmlspecialchars($item['url']); ?>', this, <?php echo $item['variant'] ? htmlspecialchars(json_encode($item['variant'])) : 'null'; ?>)"
+                         onerror="this.src='https://via.placeholder.com/150x150?text=No+Image'">
                     <?php endforeach; ?>
                 </div>
                 <?php endif; ?>
@@ -194,37 +223,68 @@ $productVariants = $variantsData['variants'] ?? [];
                 
                 <!-- Price -->
                 <div class="mb-6">
-                    <?php if ($originalPrice): ?>
-                    <span id="original-price" class="text-2xl text-gray-400 line-through mr-2"><?php echo format_price($originalPrice, $productData['currency'] ?? 'USD'); ?></span>
-                    <?php endif; ?>
+                    <span id="original-price" class="text-2xl text-gray-400 line-through mr-2 <?php echo !$originalPrice ? 'hidden' : ''; ?>"><?php echo format_price($originalPrice ?: 0, $productData['currency'] ?? 'USD'); ?></span>
                     <span id="product-price" class="text-2xl font-bold text-gray-900"><?php echo format_price($price, $productData['currency'] ?? 'USD'); ?></span>
                 </div>
                 
-                <!-- Description -->
+                <!-- Description with Read More -->
                 <div class="mb-6">
-                    <p class="text-gray-700 leading-relaxed">
-                        <?php echo nl2br(htmlspecialchars($productData['description'] ?? $productData['short_description'] ?? 'No description available.')); ?>
-                    </p>
+                    <div id="product-description-text" class="text-gray-700 leading-relaxed relative overflow-hidden transition-all duration-300 prose prose-sm max-w-none" style="max-height: 200px;">
+                        <?php echo $productData['description'] ?? $productData['short_description'] ?? 'No description available.'; ?>
+                        <div id="description-fade" class="absolute bottom-0 left-0 w-full h-12 bg-gradient-to-t from-white to-transparent pointer-events-none"></div>
+                    </div>
+                    <button id="toggle-description-btn" 
+                            onclick="toggleProductDescription()" 
+                            class="text-green-600 hover:text-green-800 font-medium text-sm mt-2 hidden focus:outline-none">
+                        Read More
+                    </button>
+                    
+                    <script>
+                    function toggleProductDescription() {
+                        const container = document.getElementById('product-description-text');
+                        const btn = document.getElementById('toggle-description-btn');
+                        const fade = document.getElementById('description-fade');
+                        
+                        if (container.style.maxHeight && container.style.maxHeight !== 'none') {
+                            container.style.maxHeight = 'none';
+                            btn.textContent = 'Read Less';
+                            fade.classList.add('hidden');
+                        } else {
+                            container.style.maxHeight = '200px';
+                            btn.textContent = 'Read More';
+                            fade.classList.remove('hidden');
+                        }
+                    }
+
+                    // Check if content exceeds height to show/hide button
+                    document.addEventListener('DOMContentLoaded', function() {
+                        const container = document.getElementById('product-description-text');
+                        const btn = document.getElementById('toggle-description-btn');
+                        const fade = document.getElementById('description-fade');
+                        
+                        // Check if content is taler than max-height (200px)
+                        if (container.scrollHeight > 200) {
+                            btn.classList.remove('hidden');
+                        } else {
+                            fade.classList.add('hidden');
+                            container.style.maxHeight = 'none'; // Unset max-height for short content
+                        }
+                    });
+                    </script>
                 </div>
                 
-                <!-- Key Information -->
+                <!-- Key Information (Highlights) -->
                 <div class="space-y-3 mb-6 text-sm">
+                    <?php 
+                    $highlights = json_decode($productData['highlights'] ?? '[]', true);
+                    if (!empty($highlights)):
+                        foreach ($highlights as $h): ?>
                     <div class="flex items-center text-gray-700">
-                        <i class="fas fa-truck mr-2 text-primary"></i>
-                        <span>Estimate delivery times: 3-5 days International</span>
+                        <i class="<?php echo htmlspecialchars($h['icon'] ?: 'fas fa-check'); ?> mr-2 text-primary"></i>
+                        <span><?php echo $h['text']; ?></span>
                     </div>
-                    <div class="flex items-center text-gray-700">
-                        <i class="fas fa-tag mr-2 text-primary"></i>
-                        <span>Use code <strong>'WELCOMES'</strong> for discount 15% on your first order.</span>
-                    </div>
-                    <div class="flex items-center text-gray-700">
-                        <i class="fas fa-shipping-fast mr-2 text-primary"></i>
-                        <span>Free shipping & returns: On all orders over <?php echo format_price(150, $productData['currency'] ?? 'USD'); ?>.</span>
-                    </div>
-                    <div class="flex items-center text-gray-700">
-                        <i class="fas fa-eye mr-2 text-primary"></i>
-                        <span><?php echo rand(10, 20); ?> people are viewing this right now</span>
-                    </div>
+                    <?php endforeach; 
+                    endif; ?>
                 </div>
                 
                 <!-- Dynamic Variant Selectors -->
@@ -268,25 +328,38 @@ $productVariants = $variantsData['variants'] ?? [];
                     </div>
                 <?php endif; ?>
 
-                <!-- Variant Images Section (if any have images) -->
-                <?php 
-                $variantImages = array_filter($productVariants, function($v) { return !empty($v['image']); });
-                if (!empty($variantImages)): 
-                ?>
+                <!-- Variant Images Section -->
+                <?php if (!empty($productVariants)): ?>
                 <!-- <div class="mb-6">
                     <label class="font-semibold text-gray-900 mb-3 block">Available Styles:</label>
                     <div class="flex flex-wrap gap-3">
-                        <?php foreach ($variantImages as $v): ?>
+                        <?php 
+                        $seenImages = [];
+                        foreach ($productVariants as $v): 
+                            $vImg = !empty($v['image']) ? getImageUrl($v['image']) : $mainImage;
+                            if (in_array($vImg, $seenImages)) continue;
+                            $seenImages[] = $vImg;
+                        ?>
                             <button type="button" 
-                                    onclick="selectVariantByImage(<?php echo htmlspecialchars(json_encode($v['variant_attributes'])); ?>, '<?php echo htmlspecialchars($v['image']); ?>')"
-                                    class="w-16 h-16 rounded border-2 border-transparent hover:border-primary overflow-hidden transition">
-                                <img src="<?php echo htmlspecialchars($v['image']); ?>" alt="Style" class="w-full h-full object-cover">
+                                    onclick="selectVariantByImage(<?php echo htmlspecialchars(json_encode($v['variant_attributes'])); ?>, '<?php echo htmlspecialchars($vImg); ?>')"
+                                    class="v-style-btn w-16 h-16 rounded border-2 border-gray-200 hover:border-primary overflow-hidden transition">
+                                <img src="<?php echo htmlspecialchars($vImg); ?>" alt="Style" class="w-full h-full object-cover">
                             </button>
                         <?php endforeach; ?>
                     </div>
                 </div> -->
                 <?php endif; ?>
                 
+                <!-- Quantity Selector -->
+                <div class="flex items-center gap-4 mb-6">
+                    <label class="font-semibold text-gray-900">Quantity:</label>
+                    <div class="flex items-center border border-gray-300 rounded-md w-32 h-10 overflow-hidden">
+                        <button onclick="updateProductQuantity(-1)" class="w-10 h-full flex items-center justify-center text-gray-600 hover:text-black hover:bg-gray-100 transition leading-none">-</button>
+                        <input type="number" id="productQuantity" value="1" min="1" class="flex-1 pl-4 w-full text-center border-none focus:ring-0 p-0 text-gray-900 font-semibold appearance-none bg-transparent h-full" style="text-align: center; border: 0 !important; outline: none !important; box-shadow: none !important;" readonly>
+                        <button onclick="updateProductQuantity(1)" class="w-10 h-full flex items-center justify-center text-gray-600 hover:text-black hover:bg-gray-100 transition leading-none">+</button>
+                    </div>
+                </div>
+
                 <!-- Action Buttons -->
                 <div class="flex flex-col sm:flex-row gap-4 mb-6">
                     <button onclick="addToCartFromDetail(<?php echo $productData['product_id']; ?>, this)" 
@@ -304,12 +377,14 @@ $productVariants = $variantsData['variants'] ?? [];
                 
                 <!-- Additional Links -->
                 <div class="flex flex-wrap gap-4 text-sm mb-6">
-                    <button class="text-gray-600 hover:text-primary transition flex items-center wishlist-btn" data-product-id="<?php echo $productData['id']; ?>">
+                    <button onclick="toggleProductWishlist(<?php echo $productData['product_id'] ?? $productData['id']; ?>, this)" class="text-gray-600 hover:text-primary transition flex items-center wishlist-btn" data-product-id="<?php echo $productData['product_id'] ?? $productData['id']; ?>">
                         <i class="far fa-heart mr-1"></i> Add to Wishlist
                     </button>
-                    <a href="#" class="text-gray-600 hover:text-primary transition">Compare colors</a>
-                    <a href="#" class="text-gray-600 hover:text-primary transition">Ask a question</a>
-                    <a href="#" class="text-gray-600 hover:text-primary transition">Share</a>
+                    <!-- <a href="#" class="text-gray-600 hover:text-primary transition"><i class="fas fa-exchange-alt mr-1"></i>Compare colors</a> -->
+                    <a href="#" class="text-gray-600 hover:text-primary transition"><i class="fas fa-question-circle mr-1"></i>Ask a question</a>
+                    <button onclick="sharePage('<?php echo addslashes($productData['name']); ?>', 'Check out this product!', window.location.href)" class="text-gray-600 hover:text-primary transition flex items-center">
+                        <i class="fas fa-share-alt mr-1"></i>Share
+                    </button>
                 </div>
                 
                 <!-- Pickup Information -->
@@ -343,6 +418,10 @@ $productVariants = $variantsData['variants'] ?? [];
                             ?>
                         </span>
                     </div>
+                    <div class="flex">
+                        <span class="font-semibold text-gray-700 w-24">Brand:</span>
+                        <span class="text-gray-600"><?php echo htmlspecialchars($productData['brand'] ?? 'N/A'); ?></span>
+                    </div>
                 </div>
                 
                 <!-- Guarantee -->
@@ -371,15 +450,21 @@ $productVariants = $variantsData['variants'] ?? [];
                     </div>
                 </div>
                 
-                <!-- Shipping and Returns -->
+                <!-- Shipping Policy -->
                 <div class="border-b">
                     <button onclick="toggleSection('shipping')" class="w-full flex items-center justify-between py-4 text-left">
                         <span class="font-semibold text-lg">Shipping and Returns</span>
                         <i class="fas fa-plus text-gray-400" id="shipping-icon"></i>
                     </button>
                     <div id="shipping-content" class="hidden pb-4 text-gray-700 text-sm">
-                        <p>We offer free shipping on all orders over <?php echo format_price(150, $productData['currency'] ?? 'USD'); ?>. Standard shipping takes 3-5 business days. International shipping may take 7-14 business days.</p>
-                        <p class="mt-2">Returns are accepted within 30 days of purchase. Items must be unworn and in original packaging.</p>
+                        <?php if (!empty($productData['shipping_policy'])): ?>
+                            <div class="prose prose-sm max-w-none text-[15px]">
+                                <?php echo $productData['shipping_policy']; ?>
+                            </div>
+                        <?php else: ?>
+                            <p>We offer free shipping on all orders over <?php echo format_price(150, $productData['currency'] ?? 'USD'); ?>. Standard shipping takes 3-5 business days. International shipping may take 7-14 business days.</p>
+                            <p class="mt-2">Returns are accepted within 30 days of purchase. Items must be unworn and in original packaging.</p>
+                        <?php endif; ?>
                     </div>
                 </div>
                 
@@ -390,8 +475,14 @@ $productVariants = $variantsData['variants'] ?? [];
                         <i class="fas fa-plus text-gray-400" id="returns-icon"></i>
                     </button>
                     <div id="returns-content" class="hidden pb-4 text-gray-700 text-sm">
-                        <p>We accept returns within 30 days of purchase. Items must be in original condition with tags attached.</p>
-                        <p class="mt-2">To initiate a return, please contact our customer service team or visit your account page.</p>
+                        <?php if (!empty($productData['return_policy'])): ?>
+                            <div class="prose prose-sm max-w-none text-[15px]">
+                                <?php echo $productData['return_policy']; ?>
+                            </div>
+                        <?php else: ?>
+                            <p>We accept returns within 30 days of purchase. Items must be in original condition with tags attached.</p>
+                            <p class="mt-2">To initiate a return, please contact our customer service team or visit your account page.</p>
+                        <?php endif; ?>
                     </div>
                 </div>
             </div>
@@ -466,24 +557,31 @@ $productVariants = $variantsData['variants'] ?? [];
                     $itemPrice = $item['sale_price'] ?? $item['price'] ?? 0;
                     $itemOriginalPrice = !empty($item['sale_price']) ? $item['price'] : null;
                     $itemDiscount = $itemOriginalPrice && $itemOriginalPrice > 0 ? round((($itemOriginalPrice - $itemPrice) / $itemOriginalPrice) * 100) : 0;
+                    
+                    // Use product_id (10-digit) if available, matching best-selling logic
+                    $currentId = !empty($item['product_id']) ? $item['product_id'] : $item['id'];
+                    $inWishlist = in_array($currentId, $wishlistIds);
                 ?>
-                <a href="<?php echo $baseUrl; ?>/product.php?slug=<?php echo urlencode($item['slug'] ?? ''); ?>" class="group">
-                    <div class="bg-white rounded-lg overflow-hidden shadow-md hover:shadow-xl transition-all duration-300 relative 1">
-                        <div class="relative overflow-hidden">
+                <div class="group bg-white rounded-lg overflow-hidden shadow-md hover:shadow-xl transition-all duration-300 relative">
+                    <div class="relative overflow-hidden">
+                        <a href="<?php echo $baseUrl; ?>/product.php?slug=<?php echo urlencode($item['slug'] ?? ''); ?>" class="block">
                             <img src="<?php echo htmlspecialchars($itemImage); ?>" 
                                  alt="<?php echo htmlspecialchars($item['name'] ?? 'Product'); ?>"
                                  class="w-full h-64 object-contain group-hover:scale-110 transition-transform duration-500">
-                            <?php if ($itemDiscount > 0): ?>
-                            <span class="absolute top-3 right-3 bg-red-500 text-white px-2 py-1 rounded text-xs font-semibold">
-                                -<?php echo $itemDiscount; ?>%
-                            </span>
-                            <?php endif; ?>
-                            <button class="wishlist-btn absolute top-3 left-3 bg-white rounded-full w-9 h-9 hover:bg-black hover:text-white transition opacity-0 group-hover:opacity-100"
-                                    data-product-id="<?php echo $item['id']; ?>">
-                                <i class="far fa-heart"></i>
-                            </button>
-                        </div>
-                        <div class="p-4">
+                        </a>
+                        <?php if ($itemDiscount > 0): ?>
+                        <span class="absolute top-3 right-3 bg-red-500 text-white px-2 py-1 rounded text-xs font-semibold z-10">
+                            -<?php echo $itemDiscount; ?>%
+                        </span>
+                        <?php endif; ?>
+                        <button class="wishlist-btn absolute top-3 left-3 rounded-full w-9 h-9 hover:bg-black hover:text-white transition opacity-0 group-hover:opacity-100 z-20 flex items-center justify-center <?php echo $inWishlist ? 'bg-black text-white' : 'bg-white text-black'; ?>"
+                                data-product-id="<?php echo $currentId; ?>">
+                            <i class="<?php echo $inWishlist ? 'fas' : 'far'; ?> fa-heart"></i>
+                            <span class="product-tooltip" style="display:none;"><?php echo $inWishlist ? 'Remove from Wishlist' : 'Add to Wishlist'; ?></span>
+                        </button>
+                    </div>
+                    <div class="p-4">
+                        <a href="<?php echo $baseUrl; ?>/product.php?slug=<?php echo urlencode($item['slug'] ?? ''); ?>" class="block">
                             <h3 class="font-semibold mb-2"><?php echo htmlspecialchars($item['name'] ?? 'Product'); ?></h3>
                             <div class="flex items-center mb-2">
                                 <?php for ($i = 0; $i < 5; $i++): ?>
@@ -496,9 +594,9 @@ $productVariants = $variantsData['variants'] ?? [];
                                 <?php endif; ?>
                                 <span class="font-bold text-primary"><?php echo format_price($itemPrice, $item['currency'] ?? 'USD'); ?></span>
                             </div>
-                        </div>
+                        </a>
                     </div>
-                </a>
+                </div>
                 <?php endforeach; ?>
             </div>
         </div>
@@ -555,11 +653,44 @@ const currencySymbols = <?php
     $symbols = ['USD' => '$', 'EUR' => '€', 'GBP' => '£', 'INR' => '₹']; 
     echo json_encode($symbols); 
 ?>;
+const defaultMainImage = "<?php echo htmlspecialchars($mainImage); ?>";
 let selectedOptions = {};
+
+// Quantity Helper Functions
+function updateProductQuantity(change) {
+    const input = document.getElementById('productQuantity');
+    let val = parseInt(input.value) + change;
+    if (val < 1) val = 1;
+    input.value = val;
+}
 
 function formatPriceJS(amount, currency) {
     const symbol = currencySymbols[currency] || currency;
     return symbol + parseFloat(amount).toFixed(2);
+}
+
+function getImageUrlJS(path) {
+    if (!path || path === '' || path === 'null' || path === 'undefined') return defaultMainImage;
+    if (path.startsWith('http://') || path.startsWith('https://') || path.startsWith('data:')) return path;
+    
+    const baseUrl = '<?php echo $baseUrl; ?>';
+    const basePath = '<?php echo parse_url($baseUrl, PHP_URL_PATH); ?>';
+    
+    let cleanPath = path;
+    // Remove base path if it exists at the start (de-duplicate)
+    if (basePath !== '/' && cleanPath.startsWith(basePath)) {
+        cleanPath = cleanPath.substring(basePath.length);
+    }
+    
+    // Remove leading slash
+    cleanPath = cleanPath.replace(/^\/+/, '');
+    
+    // If path doesn't contain assets/images/, prepend the uploads path
+    if (!cleanPath.includes('assets/images/')) {
+        cleanPath = 'assets/images/uploads/' + cleanPath;
+    }
+    
+    return baseUrl + '/' + cleanPath;
 }
 
 function selectVariantOption(optionName, value, button) {
@@ -601,9 +732,13 @@ function selectVariantByImage(attributes, imageUrl) {
         }
     });
     
-    if (imageUrl) {
-        document.getElementById('mainProductImage').src = imageUrl;
-    }
+    const mainImg = document.getElementById('mainProductImage');
+    const stickyImg = document.querySelector('#sticky-bar img');
+    
+    const finalImageUrl = getImageUrlJS(imageUrl);
+    
+    if (mainImg) mainImg.src = finalImageUrl;
+    if (stickyImg) stickyImg.src = finalImageUrl;
     
     updateVariantDisplay();
 }
@@ -616,7 +751,12 @@ function updateVariantDisplay() {
     
     const skuElement = document.getElementById('variant-sku');
     const priceElement = document.getElementById('product-price');
+    const originalPriceElement = document.getElementById('original-price');
+    const stickyOriginalPriceElement = document.getElementById('sticky-original-price');
     const stockElement = document.getElementById('variant-stock-status');
+    const stickyPriceElement = document.getElementById('sticky-price');
+    const mainImg = document.getElementById('mainProductImage');
+    const stickyImg = document.querySelector('#sticky-bar img');
     
     if (matchingVariant) {
         // Update SKU
@@ -625,11 +765,32 @@ function updateVariantDisplay() {
         }
 
         // Update Price
-        if (priceElement && (matchingVariant.price || matchingVariant.sale_price)) {
-            const displayPrice = matchingVariant.sale_price || matchingVariant.price;
+        const displayPrice = matchingVariant.sale_price || matchingVariant.price || productMainPrice;
+        const orgPrice = matchingVariant.sale_price ? matchingVariant.price : null;
+
+        if (priceElement) {
             priceElement.textContent = formatPriceJS(displayPrice, productCurrency);
-        } else if (priceElement) {
-            priceElement.textContent = formatPriceJS(productMainPrice, productCurrency);
+        }
+        if (stickyPriceElement) {
+            stickyPriceElement.textContent = formatPriceJS(displayPrice, productCurrency);
+        }
+
+        if (originalPriceElement) {
+            if (orgPrice) {
+                originalPriceElement.textContent = formatPriceJS(orgPrice, productCurrency);
+                originalPriceElement.classList.remove('hidden');
+            } else {
+                originalPriceElement.classList.add('hidden');
+            }
+        }
+
+        if (stickyOriginalPriceElement) {
+            if (orgPrice) {
+                stickyOriginalPriceElement.textContent = formatPriceJS(orgPrice, productCurrency);
+                stickyOriginalPriceElement.classList.remove('hidden');
+            } else {
+                stickyOriginalPriceElement.classList.add('hidden');
+            }
         }
         
         // Update Stock Status
@@ -644,32 +805,75 @@ function updateVariantDisplay() {
             }
         }
         
-        // Update image if variant has one
-        if (matchingVariant.image) {
-            document.getElementById('mainProductImage').src = matchingVariant.image;
-        }
+        // Update image if variant has one, otherwise revert to default
+        const variantImg = getImageUrlJS(matchingVariant.image);
+        if (mainImg) mainImg.src = variantImg;
+        if (stickyImg) stickyImg.src = variantImg;
+        
     } else {
         // Reset to default
         if (skuElement) skuElement.textContent = productMainSku;
         if (priceElement) priceElement.textContent = formatPriceJS(productMainPrice, productCurrency);
+        if (stickyPriceElement) stickyPriceElement.textContent = formatPriceJS(productMainPrice, productCurrency);
+        if (originalPriceElement) originalPriceElement.classList.add('hidden'); // Or reset to initial if applicable
+        if (stickyOriginalPriceElement) stickyOriginalPriceElement.classList.add('hidden');
+        
         if (stockElement) {
             stockElement.textContent = "<?php echo str_replace('_', ' ', $productData['stock_status'] ?? 'in_stock'); ?>";
             stockElement.className = 'text-gray-600 capitalize';
         }
+        
+        if (mainImg) mainImg.src = defaultMainImage;
+        if (stickyImg) stickyImg.src = defaultMainImage;
+    }
+
+    // --- Sync Thumbnail Borders ---
+    const currentSrc = mainImg ? mainImg.src : null;
+    if (currentSrc) {
+        let matchedAny = false;
+        document.querySelectorAll('.thumbnail-img').forEach(el => {
+            // Compare normalized URLs
+            if (el.src === currentSrc) {
+                el.classList.remove('border-transparent');
+                el.classList.add('border-primary');
+                matchedAny = true;
+            } else {
+                el.classList.remove('border-primary');
+                el.classList.add('border-transparent');
+            }
+        });
+        
+        // If the variant image doesn't match any thumbnail (unlikely but possible), 
+        // fallback to highlighting the first one if we're on default settings
+        if (!matchedAny) {
+             const firstThumb = document.querySelector('.thumbnail-img');
+             if (firstThumb) {
+                 firstThumb.classList.remove('border-transparent');
+                 firstThumb.classList.add('border-primary');
+             }
+        }
     }
 }
 
-function changeMainImage(imageUrl, thumbnail) {
-    document.getElementById('mainProductImage').src = imageUrl;
+function changeMainImage(imageUrl, button, variantData = null) {
+    const mainImg = document.getElementById('mainProductImage');
+    const stickyImg = document.querySelector('#sticky-bar img');
+    
+    if (mainImg) mainImg.src = imageUrl;
+    if (stickyImg) stickyImg.src = imageUrl;
+    
     // Update thumbnail borders
-    document.querySelectorAll('.border-primary').forEach(el => {
-        if (el.classList.contains('border-primary') && el !== thumbnail) {
-            el.classList.remove('border-primary');
-            el.classList.add('border-transparent');
-        }
+    document.querySelectorAll('.thumbnail-img').forEach(el => {
+        el.classList.remove('border-primary');
+        el.classList.add('border-transparent');
     });
-    thumbnail.classList.remove('border-transparent');
-    thumbnail.classList.add('border-primary');
+    button.classList.remove('border-transparent');
+    button.classList.add('border-primary');
+
+    // If it comes with variant data (image belongs to a variant), select that variant
+    if (variantData && typeof selectVariantByImage === 'function') {
+        selectVariantByImage(variantData, imageUrl);
+    }
 }
 
 function toggleSection(sectionId) {
@@ -688,7 +892,7 @@ function toggleSection(sectionId) {
 }
 
 function addToCartFromDetail(productId, btn) {
-    const quantity = 1;
+    const quantity = parseInt(document.getElementById('productQuantity').value) || 1;
     
     if (btn) setBtnLoading(btn, true);
     
@@ -737,7 +941,7 @@ function addToCartFromDetail(productId, btn) {
                 } else if (typeof showNotification === 'function') {
                     showNotification(data.message || 'Failed to add product to cart', 'error');
                 } else {
-                    alert(data.message || 'Failed to add product to cart');
+                    console.log(data.message || 'Failed to add product to cart');
                 }
             }
         })
@@ -748,7 +952,7 @@ function addToCartFromDetail(productId, btn) {
             } else if (typeof showNotification === 'function') {
                 showNotification('An error occurred while adding the product to cart', 'error');
             } else {
-                alert('An error occurred while adding the product to cart');
+                console.log('An error occurred while adding the product to cart');
             }
         })
         .finally(() => {
@@ -758,6 +962,7 @@ function addToCartFromDetail(productId, btn) {
 }
 
 function buyNow(productId, btn) {
+    const quantity = parseInt(document.getElementById('productQuantity').value) || 1;
     if (btn) setBtnLoading(btn, true);
     // Add to cart and redirect to checkout
     fetch('<?php echo $baseUrl; ?>/api/cart.php', {
@@ -765,7 +970,7 @@ function buyNow(productId, btn) {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ 
             product_id: productId, 
-            quantity: 1,
+            quantity: quantity,
             variant_attributes: selectedOptions
         })
     })
@@ -774,13 +979,13 @@ function buyNow(productId, btn) {
         if (data.success) {
             window.location.href = '<?php echo url('checkout'); ?>';
         } else {
-            alert(data.message || 'Failed to add product to cart');
+            console.log(data.message || 'Failed to add product to cart');
             if (btn) setBtnLoading(btn, false);
         }
     })
     .catch(error => {
         console.error('Error:', error);
-        alert('An error occurred. Please try again.');
+        console.log('An error occurred. Please try again.');
         if (btn) setBtnLoading(btn, false);
     });
 }
@@ -837,7 +1042,7 @@ function submitReview(event) {
         if (typeof showNotificationModal === 'function') {
             showNotificationModal('Please select a rating before submitting your review.', 'info', 'Rating Required');
         } else {
-            alert('Please select a rating');
+            console.log('Please select a rating');
         }
         return;
     }
@@ -871,7 +1076,7 @@ function submitReview(event) {
             if (typeof showNotificationModal === 'function') {
                 showNotificationModal('Thank you for your review! It has been submitted successfully.', 'success', 'Review Submitted');
             } else {
-                alert('Thank you for your review! It has been submitted successfully.');
+                console.log('Thank you for your review! It has been submitted successfully.');
             }
             // Reload reviews
             loadReviews();
@@ -883,7 +1088,7 @@ function submitReview(event) {
             if (typeof showNotificationModal === 'function') {
                 showNotificationModal(data.message || 'Failed to submit review. Please try again.', 'error', 'Error');
             } else {
-                alert(data.message || 'Failed to submit review. Please try again.');
+                console.log(data.message || 'Failed to submit review. Please try again.');
             }
             submitBtn.disabled = false;
             submitBtn.textContent = 'Submit Review';
@@ -894,7 +1099,7 @@ function submitReview(event) {
         if (typeof showNotificationModal === 'function') {
             showNotificationModal('An error occurred while submitting your review. Please try again.', 'error', 'Error');
         } else {
-            alert('An error occurred while submitting your review. Please try again.');
+            console.log('An error occurred while submitting your review. Please try again.');
         }
         submitBtn.disabled = false;
         submitBtn.textContent = 'Submit Review';
@@ -1075,6 +1280,221 @@ document.addEventListener('DOMContentLoaded', function() {
         </div>
     </div>
 </div>
+
+<script>
+async function toggleProductWishlist(productId, btn) {
+    if (!btn) return;
+
+    // Determine action based on current state (text)
+    // If text contains "Add", we want to ADD.
+    // If text contains "Remove", we want to REMOVE.
+    const isAdding = btn.textContent.toLowerCase().includes('add');
+    const method = isAdding ? 'POST' : 'DELETE';
+    
+    // Save original content
+    const originalContent = btn.innerHTML;
+    
+    // Show Loading
+    btn.innerHTML = '<i class="fas fa-spinner fa-spin mr-1"></i> Processing...';
+    btn.style.opacity = '0.7';
+    btn.disabled = true;
+
+    try {
+        const response = await fetch('<?php echo $baseUrl; ?>/api/wishlist.php', {
+            method: method,
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                product_id: productId
+            })
+        });
+
+        const data = await response.json();
+
+        if (data.success) {
+            // Update UI based on the action we just performed
+            if (isAdding) {
+                // We added it
+                btn.innerHTML = '<i class="fas fa-heart mr-1 text-red-500"></i> Remove from Wishlist';
+                // btn.classList.add('text-red-500'); 
+            } else {
+                // We removed it
+                btn.innerHTML = '<i class="far fa-heart mr-1"></i> Add to Wishlist';
+                // btn.classList.remove('text-red-500');
+            }
+            
+            // Try to update global counts if the main script is loaded
+            if (typeof refreshWishlist === 'function') {
+                refreshWishlist();
+            }
+        } else {
+            console.error('Wishlist action failed:', data.message);
+            // Revert on error
+            btn.innerHTML = originalContent;
+        }
+    } catch (error) {
+        console.error('Error toggling wishlist:', error);
+        btn.innerHTML = originalContent;
+    } finally {
+        btn.style.opacity = '1';
+        btn.disabled = false;
+    }
+}
+</script>
+
+<!-- Sticky Add To Cart Bar -->
+<div id="sticky-bar" class="fixed bottom-0 left-0 w-full bg-white border-t border-gray-200 shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.1)] transform translate-y-full transition-transform duration-300 z-40 px-3 py-3 md:px-4">
+    <div class="container mx-auto flex items-center justify-between gap-3">
+        <div class="flex items-center gap-3 overflow-hidden">
+            <img src="<?php echo htmlspecialchars($mainImage); ?>" 
+                 alt="Sticky Bar Product" 
+                 class="w-10 h-10 md:w-12 md:h-12 object-contain rounded border border-gray-100 flex-shrink-0"
+                 onerror="this.src='https://via.placeholder.com/100x100?text=Product'">
+            <div class="min-w-0">
+                <h3 class="font-bold text-gray-900 leading-tight text-sm md:text-base truncate"><?php echo htmlspecialchars($productData['name']); ?></h3>
+                <div class="hidden md:flex text-xs text-yellow-500 items-center mt-1">
+                    <?php 
+                    $rating = floatval($productData['rating'] ?? 5);
+                    for ($i = 0; $i < 5; $i++) {
+                        echo '<i class="fas fa-star ' . ($i < $rating ? '' : 'text-gray-300') . '"></i>';
+                    }
+                    ?>
+                </div>
+            </div>
+        </div>
+        
+        <div class="flex items-center gap-3 flex-shrink-0">
+            <div class="text-right mr-2 hidden md:block">
+                 <div class="text-xs text-gray-500">Total Price:</div>
+                 <div class="flex items-center justify-end gap-2">
+                     <span id="sticky-original-price" class="text-sm text-gray-400 line-through <?php echo !$originalPrice ? 'hidden' : ''; ?>"><?php echo format_price($originalPrice ?: 0, $productData['currency'] ?? 'USD'); ?></span>
+                     <div class="font-bold text-lg text-gray-900" id="sticky-price"><?php echo format_price($price, $productData['currency'] ?? 'USD'); ?></div>
+                 </div>
+            </div>
+            
+            <!-- Quantity - simplified -->
+             <div class="hidden md:flex items-center border border-gray-300 rounded-md w-24 h-10 overflow-hidden bg-white">
+                <button onclick="updateStickyQty(-1)" class="w-8 h-full flex items-center justify-center text-gray-600 hover:bg-gray-100 transition">-</button>
+                <input type="number" id="sticky-qty" value="1" min="1" class="flex-1 w-full text-center border-none focus:ring-0 p-0 text-gray-900 pl-2 font-semibold appearance-none bg-transparent h-full text-sm" readonly>
+                <button onclick="updateStickyQty(1)" class="w-8 h-full flex items-center justify-center text-gray-600 hover:bg-gray-100 transition">+</button>
+            </div>
+
+            <button onclick="stickyAddToCart()" class="bg-black text-white px-4 py-2.5 md:px-8 rounded-full font-bold hover:bg-gray-800 transition shadow-lg transform hover:-translate-y-0.5 text-sm md:text-base whitespace-nowrap" id="sticky-atc-btn">
+                Add To Cart
+            </button>
+        </div>
+    </div>
+</div>
+
+<script>
+// Sticky Bar Logic
+document.addEventListener('scroll', function() {
+    const stickyBar = document.getElementById('sticky-bar');
+    const footer = document.querySelector('footer');
+    const mainAtcBtn = document.querySelector('.add-to-cart-btn');
+    
+    if (!stickyBar) return;
+    
+    const scrollY = window.scrollY;
+    
+    // Calculate trigger point based on Main Add To Cart Button
+    let triggerPoint = 600; // default fallback (approx height of mobile viewport/hero)
+    
+    if (mainAtcBtn) {
+        // Get absolute position of the button's bottom edge
+        const rect = mainAtcBtn.getBoundingClientRect();
+        const absoluteBottom = rect.bottom + window.scrollY;
+        
+        // Trigger just after button scrolls out of view
+        triggerPoint = absoluteBottom; 
+    } else {
+        // Fallback: try to find the first image or grid
+        const mainImage = document.getElementById('mainProductImage');
+        if (mainImage) {
+             const rect = mainImage.getBoundingClientRect();
+             triggerPoint = rect.bottom + window.scrollY;
+        }
+    }
+    
+    // Check if we hit footer
+    let footerTop = document.documentElement.scrollHeight; 
+    if(footer) footerTop = footer.offsetTop;
+    
+    // Show if passed the trigger point AND not yet at footer (with buffer)
+    if (scrollY > triggerPoint && (scrollY + window.innerHeight) < (footerTop + 50)) {
+        stickyBar.classList.remove('translate-y-full');
+    } else {
+        stickyBar.classList.add('translate-y-full');
+    }
+});
+
+function updateStickyQty(change) {
+    const input = document.getElementById('sticky-qty');
+    let val = parseInt(input.value) + change;
+    if (val < 1) val = 1;
+    input.value = val;
+    
+    // Sync with main quantity if exists
+    const mainQty = document.getElementById('productQuantity');
+    if(mainQty) mainQty.value = val;
+}
+
+function stickyAddToCart() {
+    const btn = document.getElementById('sticky-atc-btn');
+    const qty = parseInt(document.getElementById('sticky-qty').value) || 1;
+    const productId = <?php echo $productData['id']; ?>;
+    
+    if (btn) {
+        const originalText = btn.innerHTML;
+        btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Adding...';
+        btn.disabled = true;
+        
+        // Use main add to cart function if available (it handles variants)
+        if (typeof addToCartFromDetail === 'function') {
+            // We need to make sure main input is synced first
+            const mainQty = document.getElementById('productQuantity');
+            if(mainQty) mainQty.value = qty;
+            
+            // Call main function
+            addToCartFromDetail(productId, null); 
+            
+            // Reset sticky button after short delay
+            setTimeout(() => {
+                btn.innerHTML = originalText;
+                btn.disabled = false;
+            }, 1000);
+        } else {
+            // Fallback
+             fetch('<?php echo $baseUrl; ?>/api/cart.php', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ product_id: productId, quantity: qty })
+            })
+            .then(res => res.json())
+            .then(data => {
+                if(data.success) {
+                    if(typeof refreshCart === 'function') refreshCart();
+                    // trigger side cart
+                     const sideCart = document.getElementById('sideCart');
+                    const cartOverlay = document.getElementById('cartOverlay');
+                    if (sideCart && cartOverlay) {
+                        sideCart.classList.remove('translate-x-full');
+                        cartOverlay.classList.remove('hidden');
+                        document.body.style.overflow = 'hidden';
+                    }
+                } else {
+                    console.log('Error: ' + data.message);
+                }
+            })
+            .finally(() => {
+                btn.innerHTML = originalText;
+                btn.disabled = false;
+            });
+        }
+    }
+}
+</script>
 
 <?php require_once __DIR__ . '/includes/footer.php'; ?>
 

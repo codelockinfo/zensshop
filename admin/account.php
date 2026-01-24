@@ -315,7 +315,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 const fileInput = document.getElementById('profileImageInput');
                 if (!fileInput.files || !fileInput.files[0]) {
                     e.preventDefault();
-                    alert('Please select an image file first.');
+                    console.log('Please select an image file first.');
                     return false;
                 }
             }

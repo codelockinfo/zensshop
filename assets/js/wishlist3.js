@@ -28,17 +28,62 @@ function initializeWishlistButtons() {
     // Wait a bit for wishlist data to load
     setTimeout(() => {
         document.querySelectorAll('.wishlist-btn').forEach(btn => {
-            const productId = parseInt(btn.getAttribute('data-product-id'));
+            const productId = btn.getAttribute('data-product-id');
             const icon = btn.querySelector('i');
+            const tooltip = btn.querySelector('.product-tooltip');
+            
+            const isCardButton = btn.classList.contains('absolute');
+            
             if (productId && isInWishlist(productId)) {
-                if (icon) {
-                    icon.classList.remove('far');
-                    icon.classList.add('fas', 'text-black');
+                if (isCardButton) {
+                    // Card Button: White Heart on Black Bg
+                    btn.classList.remove('bg-white', 'text-black');
+                    btn.classList.add('bg-black', 'text-white');
+                    if (icon) {
+                        icon.classList.remove('far');
+                        icon.classList.add('fas');
+                    }
+                } else {
+                    // Text Button: Black Filled Heart, No Bg Change
+                    if (icon) {
+                        icon.classList.remove('far');
+                        icon.classList.add('fas', 'text-black');
+                    }
+                }
+
+                if (tooltip) {
+                    tooltip.textContent = 'Remove from Wishlist';
+                    btn.setAttribute('title', 'Remove from Wishlist');
+                } else if (btn.textContent.toLowerCase().includes('wishlist')) {
+                    if(icon) {
+                         btn.innerHTML = '';
+                         btn.appendChild(icon);
+                         btn.appendChild(document.createTextNode(' Remove from Wishlist'));
+                    } else {
+                         btn.textContent = 'Remove from Wishlist';
+                    }
                 }
             } else {
-                if (icon) {
-                    icon.classList.remove('fas', 'text-black');
-                    icon.classList.add('far');
+                if (isCardButton) {
+                    // Card Button: Black Outline Heart on White Bg
+                    btn.classList.remove('bg-black', 'text-white');
+                    btn.classList.add('bg-white', 'text-black');
+                     if (icon) {
+                        icon.classList.remove('fas');
+                        icon.classList.add('far');
+                    }
+                } else {
+                     // Text Button: Outline Heart
+                     if (icon) {
+                        icon.classList.remove('fas', 'text-black');
+                        icon.classList.add('far');
+                    }
+                }
+
+                // Only revert tooltip for generic cards
+                if (tooltip) {
+                    tooltip.textContent = 'Add to Wishlist';
+                    btn.setAttribute('title', 'Add to Wishlist');
                 }
             }
         });
@@ -116,6 +161,7 @@ async function refreshWishlist() {
             }
 
             updateWishlistCount();
+            initializeWishlistButtons();
         } else {
             // Fallback to cookie
             loadWishlist();
@@ -185,13 +231,67 @@ async function toggleWishlist(productId, button) {
             // Update button state (only if not on wishlist page)
             if (button) {
                 const icon = button.querySelector('i');
-                if (icon) {
-                    if (isInWishlist) {
-                        icon.classList.remove('fas', 'text-black');
-                        icon.classList.add('far');
+                const tooltip = button.querySelector('.product-tooltip');
+                
+                const isCardButton = button.classList.contains('absolute');
+
+                if (isInWishlist) {
+                    // It WAS in wishlist (so we are Removing) -> Show "Add" (Outline)
+                    if (isCardButton) {
+                        button.classList.remove('bg-black', 'text-white');
+                        button.classList.add('bg-white', 'text-black');
+                        if (icon) {
+                            icon.classList.remove('fas');
+                            icon.classList.add('far');
+                        }
                     } else {
-                        icon.classList.remove('far');
-                        icon.classList.add('fas', 'text-black');
+                        // Text Button
+                        if (icon) {
+                            icon.classList.remove('fas', 'text-black');
+                            icon.classList.add('far');
+                        }
+                    }
+
+                    if (tooltip) {
+                        tooltip.textContent = 'Add to Wishlist';
+                        button.setAttribute('title', 'Add to Wishlist');
+                    } else if (button.textContent.toLowerCase().includes('wishlist')) {
+                        if(icon) {
+                             button.innerHTML = '';
+                             button.appendChild(icon);
+                             button.appendChild(document.createTextNode(' Add to Wishlist'));
+                        } else {
+                             button.textContent = 'Add to Wishlist';
+                        }
+                    }
+                } else {
+                     // It WAS NOT in wishlist (so we are Adding) -> Show "Remove" (Filled)
+                    if (isCardButton) {
+                        button.classList.remove('bg-white', 'text-black');
+                        button.classList.add('bg-black', 'text-white');
+                        if (icon) {
+                            icon.classList.remove('far');
+                            icon.classList.add('fas');
+                        }
+                    } else {
+                        // Text Button
+                        if (icon) {
+                            icon.classList.remove('far');
+                            icon.classList.add('fas', 'text-black');
+                        }
+                    }
+
+                    if (tooltip) {
+                        tooltip.textContent = 'Remove from Wishlist';
+                        button.setAttribute('title', 'Remove from Wishlist');
+                    } else if (button.textContent.toLowerCase().includes('wishlist')) {
+                        if(icon) {
+                             button.innerHTML = '';
+                             button.appendChild(icon);
+                             button.appendChild(document.createTextNode(' Remove from Wishlist'));
+                        } else {
+                             button.textContent = 'Remove from Wishlist';
+                        }
                     }
                 }
             }
@@ -311,7 +411,13 @@ function updateWishlistCount() {
 
 // Check if product is in wishlist
 function isInWishlist(productId) {
-    return wishlistData.some(item => item.product_id == productId);
+    if (!productId) return false;
+    const strId = String(productId).trim();
+    return wishlistData.some(item => {
+        const pId = item.product_id ? String(item.product_id).trim() : null;
+        const iId = item.id ? String(item.id).trim() : null;
+        return pId === strId || iId === strId;
+    });
 }
 
 // Get cookie value

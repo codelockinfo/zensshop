@@ -555,7 +555,7 @@ const CURRENCY_SYMBOL = '<?php echo defined('CURRENCY_SYMBOL') ? CURRENCY_SYMBOL
 
 // Global functions - must be defined outside DOMContentLoaded
 function removeOrderItem(button) {
-    if (confirm('Are you sure you want to remove this item?')) {
+    showConfirmModal('Are you sure you want to remove this item?', function() {
         const itemRow = button.closest('.order-item');
         // Mark as removed by hiding and disabling inputs
         itemRow.style.display = 'none';
@@ -569,7 +569,7 @@ function removeOrderItem(button) {
         deleteInput.value = itemRow.getAttribute('data-item-id');
         itemRow.appendChild(deleteInput);
         recalculateTotal();
-    }
+    });
 }
 
 function addOrderItem() {
@@ -578,7 +578,7 @@ function addOrderItem() {
     const price = document.getElementById('new_price').value;
     
     if (!productId || !quantity || !price) {
-        alert('Please fill in all fields to add an item.');
+        console.log('Please fill in all fields to add an item.');
         return;
     }
     

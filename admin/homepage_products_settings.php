@@ -67,7 +67,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     
     // Standard POST - Redirect with Session Flash
     $_SESSION['flash_success'] = $successMsg;
-    header("Location: " . $_SERVER['PHP_SELF']);
+    header("Location: " . $baseUrl . '/admin/products');
     exit;
 }
 
@@ -296,7 +296,7 @@ function initComboBox(key) {
         
         try {
             // We allow empty term to show the first 20 products by default
-            const response = await fetch(`search_products_json.php?term=${encodeURIComponent(term)}`);
+            const response = await fetch(`${BASE_URL}/admin/search_products_json.php?term=${encodeURIComponent(term)}`);
             let products = await response.json();
             
             // Filter out already selected products
@@ -464,7 +464,7 @@ document.getElementById('settingsForm').addEventListener('submit', function(e) {
         setBtnLoading(submitBtn, true);
     }
     
-    fetch('<?php echo basename($_SERVER['PHP_SELF']); ?>', {
+    fetch(`${BASE_URL}/admin/homepage_products_settings.php`, {
         method: 'POST',
         body: formData,
         headers: { 'X-Requested-With': 'XMLHttpRequest' }

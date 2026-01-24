@@ -14,7 +14,7 @@ const commonOptionNames = ['Size', 'Color', 'Material', 'Style', 'Pattern'];
  */
 function addVariantOption() {
     if (variantOptions.length >= 2) {
-        alert('Maximum 2 variant options allowed');
+        console.log('Maximum 2 variant options allowed');
         return;
     }
     
@@ -328,7 +328,7 @@ function generateVariants() {
         const nameInput = card.querySelector(`[id$="_name_custom"]`);
         const tagContainer = card.querySelector(`[id$="_tags"]`);
         
-        const name = (nameSelect?.value || nameInput?.value || '').trim();
+        const name = (nameSelect?.value || nameInput?.value || 'Option ' + (index + 1)).trim();
         const tags = tagContainer?.querySelectorAll('.tag-item') || [];
         const values = Array.from(tags).map(tag => tag.getAttribute('data-value'));
         
@@ -537,7 +537,7 @@ function uploadVariantImage(index, files) {
     const file = files[0];
     
     if (!file.type.startsWith('image/')) {
-        alert('Please select only image files.');
+        console.log('Please select only image files.');
         return;
     }
     
@@ -563,13 +563,13 @@ function uploadVariantImage(index, files) {
             updateVariantField(index, 'image', data.path);
             renderVariantsTable(); // Re-render to show new image
         } else {
-            alert(data.message || 'Failed to upload image');
+            console.log(data.message || 'Failed to upload image');
             renderVariantsTable(); // Re-render to restore state
         }
     })
     .catch(error => {
         console.error(error);
-        alert('An error occurred while uploading.');
+        console.log('An error occurred while uploading.');
         renderVariantsTable();
     });
 }

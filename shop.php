@@ -4,9 +4,15 @@ require_once __DIR__ . '/includes/header.php';
 require_once __DIR__ . '/classes/Product.php';
 require_once __DIR__ . '/classes/Database.php';
 require_once __DIR__ . '/includes/functions.php';
+require_once __DIR__ . '/classes/Wishlist.php';
 
 $product = new Product();
 $db = Database::getInstance();
+$wishlistObj = new Wishlist();
+
+// Get Wishlist IDs for checking status
+$wishlistItems = $wishlistObj->getWishlist();
+$wishlistIds = array_column($wishlistItems, 'product_id');
 
 // Get filters from URL
 $categorySlug = $_GET['category'] ?? '';
@@ -278,9 +284,14 @@ $maxPriceRange = $priceRange['max_price'] ?? 1000;
                             </span>
                             <?php endif; ?>
                             
-                            <button class="wishlist-btn absolute top-3 right-3 bg-white rounded-full w-9 h-9 hover:bg-black hover:text-white transition"
-                                    data-product-id="<?php echo $itemId; ?>">
-                                <i class="far fa-heart"></i>
+                            <?php 
+                            $currentId = !empty($item['product_id']) ? $item['product_id'] : $itemId;
+                            $inWishlist = in_array($currentId, $wishlistIds);
+                            ?>
+                            <button class="wishlist-btn absolute top-3 right-3 rounded-full w-9 h-9 flex items-center justify-center transition <?php echo $inWishlist ? 'bg-black text-white' : 'bg-white text-black'; ?> hover:bg-black hover:text-white"
+                                    data-product-id="<?php echo $currentId; ?>"
+                                    title="<?php echo $inWishlist ? 'Remove from Wishlist' : 'Add to Wishlist'; ?>">
+                                <i class="<?php echo $inWishlist ? 'fas' : 'far'; ?> fa-heart"></i>
                             </button>
                         </div>
                         
@@ -310,7 +321,7 @@ $maxPriceRange = $priceRange['max_price'] ?? 1000;
                                     <?php endif; ?>
                                     <span class="text-md font-bold text-primary"><?php echo format_price($price, $item['currency'] ?? 'USD'); ?></span>
                                 </div>
-                                <button onclick="addToCart(<?php echo $itemId; ?>)" 
+                                <button onclick="window.addToCart(<?php echo $itemId; ?>, 1, this)" 
                                         class="bg-primary text-white px-4 py-2 rounded hover:bg-primary-light hover:text-white transition text-sm">
                                     <i class="fas fa-shopping-cart mr-1"></i> Add
                                 </button>
@@ -438,24 +449,6 @@ function setView(view) {
     }
 }
 
-function addToCart(productId) {
-    if (typeof addToCart === 'function') {
-        window.addToCart(productId, 1);
-    } else {
-        fetch('<?php echo $baseUrl; ?>/api/cart.php', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ product_id: productId, quantity: 1 })
-        })
-        .then(response => response.json())
-        .then(data => {
-            if (data.success) {
-                alert('Product added to cart!');
-                location.reload();
-            }
-        });
-    }
-}
 
 // Filter Drawer Functions
 function openFilterDrawer() {

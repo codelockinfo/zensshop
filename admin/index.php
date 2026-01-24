@@ -85,7 +85,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             </div>
             
             <div class="mb-6">
-                <a href="<?php echo url('admin/forgot-password.php'); ?>" class="text-blue-500 hover:text-blue-700 text-sm">
+                <a href="<?php echo url('admin/reset'); ?>" class="text-blue-500 hover:text-blue-700 text-sm">
                     Forgot password?
                 </a>
             </div>
