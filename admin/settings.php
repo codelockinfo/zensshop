@@ -250,7 +250,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     $platformItems[] = [
                         'name' => $pItem['name'] ?? '',
                         'link' => $pItem['link'] ?? '',
-                        'image' => $pImgUrl
+                        'image' => $pImgUrl,
+                        'bg' => $pItem['bg'] ?? '#ffffff',
+                        'text' => $pItem['text'] ?? '#111827'
                     ];
                 }
             }
@@ -1427,9 +1429,21 @@ function addPlatformItem(data = {}) {
                 </div>
             </div>
             <div class="md:col-span-3 space-y-3">
-                <div>
-                     <label class="block text-xs font-bold mb-1">Platform Name</label>
-                    <input type="text" name="platform_items[${index}][name]" value="${data.name || ''}" class="w-full border p-2 rounded text-sm" placeholder="Amazon, Flipkart, etc.">
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                         <label class="block text-xs font-bold mb-1">Title</label>
+                         <input type="text" name="platform_items[${index}][name]" value="${data.name || ''}" class="w-full border p-2 rounded text-sm" placeholder="Amazon, Flipkart, etc.">
+                    </div>
+                    <div class="grid grid-cols-2 gap-2">
+                        <div>
+                             <label class="block text-xs font-bold mb-1">Bg Color</label>
+                             <input type="color" name="platform_items[${index}][bg]" value="${data.bg || '#ffffff'}" class="w-full h-9 border border-gray-200 rounded cursor-pointer">
+                        </div>
+                        <div>
+                             <label class="block text-xs font-bold mb-1">Text Color</label>
+                             <input type="color" name="platform_items[${index}][text]" value="${data.text || '#111827'}" class="w-full h-9 border border-gray-200 rounded cursor-pointer">
+                        </div>
+                    </div>
                 </div>
                 <div>
                      <label class="block text-xs font-bold mb-1">Product Link (Full URL)</label>

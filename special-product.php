@@ -40,6 +40,10 @@ $seoGrp = json_decode($landingPage['seo_data'] ?? '{}', true) ?: [];
 $productData = $productObj->getByProductId($landingPage['product_id']);
 if (!$productData || $productData['status'] !== 'active') die("The featured product is currently unavailable.");
 
+// Fetch Platform Data early for Hero use
+$platformItems = $platformsGrp['items'] ?? [];
+$showPlat = $platformsGrp['show'] ?? 1;
+
 // Style Defaults
 $themeColor = $configGrp['theme_color'] ?? '#5F8D76';
 $bodyBg = $configGrp['body_bg_color'] ?? '#ffffff';
@@ -339,9 +343,26 @@ require_once __DIR__ . '/includes/header.php';
                     <?php endif; ?>
                 </div>
                 
-                <button onclick="spAddToCart(<?php echo $productData['product_id']; ?>, this)" class="btn-accent px-10 py-4 rounded text-lg font-medium tracking-wide uppercase transition shadow-xl hover:shadow-2xl transform hover:-translate-y-0.5" data-loading-text="Adding...">
-                    Add to your cart
-                </button>
+                <div class="flex items-center gap-4 justify-center lg:justify-start flex-wrap">
+                    <button onclick="spAddToCart(<?php echo $productData['product_id']; ?>, this)" class="btn-accent px-10 py-[17px] rounded text-lg font-medium tracking-wide uppercase transition shadow-xl hover:shadow-2xl transform hover:-translate-y-1" data-loading-text="Adding...">
+                        Add to your cart
+                    </button>
+
+                        <?php foreach ($platformItems as $plat): 
+                            $pLink = $plat['link'] ?? '#';
+                            $pImg = !empty($plat['image']) ? getImageUrl($plat['image']) : '';
+                            $pName = $plat['name'] ?? 'Buy Now';
+                            $pBg = $plat['bg'] ?? '#ffffff';
+                            $pText = $plat['text'] ?? '#111827';
+                        ?>
+                        <a href="<?php echo htmlspecialchars($pLink); ?>" target="_blank" class="h-[58px] px-6 rounded flex items-center gap-3 shadow-lg hover:shadow-xl transition-all transform hover:-translate-y-1 group border border-gray-100" style="background-color: <?php echo $pBg; ?>; color: <?php echo $pText; ?>;" title="Buy on <?php echo htmlspecialchars($pName); ?>">
+                            <?php if ($pImg): ?>
+                                <img src="<?php echo htmlspecialchars($pImg); ?>" alt="<?php echo htmlspecialchars($pName); ?>" class="h-7 md:h-8 w-auto object-contain">
+                            <?php endif; ?>
+                            <span class="font-bold uppercase text-[11px] tracking-widest" style="color: <?php echo $pText; ?>;"><?php echo htmlspecialchars($pName); ?></span>
+                        </a>
+                        <?php endforeach; ?>
+                </div>
             </div>
             
             <div class="z-10 order-1 lg:order-2 flex justify-center relative">
@@ -573,41 +594,9 @@ require_once __DIR__ . '/includes/header.php';
         <?php $sections['secNews'] = ob_get_clean();
     }
 
-    // 7. Other Platforms Section
-    $showPlat = $platformsGrp['show'] ?? 1;
-    if ($showPlat) {
-        $platformData = $platformsGrp['items'] ?? [];
-        ob_start(); ?>
-        <section class="pt-10 pb-20 md:py-24 other-platforms-section overflow-hidden">
-            <div class="container mx-auto px-6 text-center">
-                <h2 class="text-3xl font-heading uppercase tracking-widest mb-4 opacity-60">Also Available At</h2>
-                <p class="text-gray-500 mb-12 max-w-2xl mx-auto">If you prefer buying from your favorite marketplace, you can find us on these platforms as well.</p>
-                <div class="flex flex-wrap justify-center gap-8 md:gap-16 items-center">
-                    <?php foreach ($platformData as $platform): 
-                        $platLink = $platform['link'] ?? '#';
-                        $platImg = !empty($platform['image']) ? (strpos($platform['image'], 'http') === 0 ? $platform['image'] : $baseUrl . '/' . $platform['image']) : '';
-                        $platName = $platform['name'] ?? 'Platform';
-                    ?>
-                    <a href="<?php echo htmlspecialchars($platLink); ?>" target="_blank" class="group transition-all duration-300 transform hover:-translate-y-2">
-                        <div class="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 group-hover:shadow-xl group-hover:border-theme transition-all w-48 h-24 flex items-center justify-center overflow-hidden">
-                            <?php if ($platImg): ?>
-                                <img src="<?php echo htmlspecialchars($platImg); ?>" alt="<?php echo htmlspecialchars($platName); ?>" class="max-w-full max-h-full object-contain grayscale group-hover:grayscale-0 transition-all duration-300">
-                            <?php else: ?>
-                                <span class="font-bold text-gray-400 group-hover:text-theme transition-colors"><?php echo htmlspecialchars($platName); ?></span>
-                            <?php endif; ?>
-                        </div>
-                        <p class="mt-4 text-xs font-bold uppercase tracking-widest text-gray-400 group-hover:text-theme transition-colors"><?php echo htmlspecialchars($platName); ?></p>
-                    </a>
-                    <?php endforeach; ?>
-                </div>
-            </div>
-        </section>
-        <?php $sections['secOtherPlatforms'] = ob_get_clean();
-    }
-
     // --- RENDER IN ORDER ---
     $savedOrder = $configGrp['section_order'] ?? [];
-    $defaultOrder = ['secOtherPlatforms', 'secBanner', 'secStats', 'secWhy', 'secAbout', 'secTesti', 'secNews'];
+    $defaultOrder = ['secBanner', 'secStats', 'secWhy', 'secAbout', 'secTesti', 'secNews'];
     
     $finalOrder = is_array($savedOrder) && !empty($savedOrder) ? $savedOrder : $defaultOrder;
     foreach ($defaultOrder as $k) {
@@ -843,8 +832,7 @@ function stickyAddToCart() {
 </script>
 
 <?php require_once __DIR__ . '/includes/footer.php'; ?>
-
-<!-- SEO Content / Footer Extra (Consolidated) -->
+<!--  Footer Extra (Consolidated) -->
 <?php 
 if (!empty($footerGrp['show_extra']) && !empty($footerGrp['extra_content'])): ?>
 <section class="pt-10 pb-20 md:py-24 border-t border-gray-100 relative z-10" style="background-color: <?php echo $footerGrp['extra_bg'] ?? '#f8f9fa'; ?>; color: <?php echo $footerGrp['extra_text'] ?? '#333333'; ?>;">
