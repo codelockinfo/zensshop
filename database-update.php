@@ -45,7 +45,9 @@ function executeSql($db, $sql, $description, &$errors, &$success, $execute = fal
         return true;
     } catch (Exception $e) {
         // Warning if duplicate column/key, but continue
-        if (strpos($e->getMessage(), 'Duplicate column') !== false || strpos($e->getMessage(), 'already exists') !== false) {
+        if (strpos($e->getMessage(), 'Duplicate column') !== false || 
+            strpos($e->getMessage(), 'already exists') !== false ||
+            strpos($e->getMessage(), 'Duplicate foreign key') !== false) {
             echo "Status: ⚠️ EXISTS - " . $e->getMessage() . "\n\n";
             return true;
         }
@@ -130,6 +132,12 @@ dropForeignKeyIfExists($db, 'cart', 'fk_cart_customer', $errors, $success, $EXEC
 // Wishlist Table
 dropForeignKeyIfExists($db, 'wishlist', 'wishlist_ibfk_2', $errors, $success, $EXECUTE);
 dropForeignKeyIfExists($db, 'wishlist', 'wishlist_customer_fk', $errors, $success, $EXECUTE);
+dropForeignKeyIfExists($db, 'wishlist', 'fk_wishlist_product_id', $errors, $success, $EXECUTE);
+dropForeignKeyIfExists($db, 'wishlist', 'fk_wishlist_customer', $errors, $success, $EXECUTE);
+
+// Explicitly drop the new ones too for a clean retry if needed
+dropForeignKeyIfExists($db, 'cart', 'fk_cart_product_id', $errors, $success, $EXECUTE);
+dropForeignKeyIfExists($db, 'cart', 'fk_cart_customer', $errors, $success, $EXECUTE);
 
 // Order Items Table
 dropForeignKeyIfExists($db, 'order_items', 'order_items_ibfk_1', $errors, $success, $EXECUTE);
@@ -153,6 +161,7 @@ $tablesToUpdate = [
 
 executeSql($db, "ALTER TABLE products MODIFY COLUMN product_id BIGINT NOT NULL", "Modify products.product_id to BIGINT", $errors, $success, $EXECUTE);
 executeSql($db, "ALTER TABLE product_variants MODIFY COLUMN product_id BIGINT NOT NULL", "Modify product_variants.product_id to BIGINT", $errors, $success, $EXECUTE);
+executeSql($db, "ALTER TABLE customers MODIFY COLUMN id BIGINT NOT NULL AUTO_INCREMENT", "Modify customers.id to BIGINT", $errors, $success, $EXECUTE);
 executeSql($db, "ALTER TABLE cart MODIFY COLUMN product_id BIGINT NOT NULL", "Modify cart.product_id to BIGINT", $errors, $success, $EXECUTE);
 executeSql($db, "ALTER TABLE cart MODIFY COLUMN user_id BIGINT NOT NULL", "Modify cart.user_id to BIGINT", $errors, $success, $EXECUTE);
 executeSql($db, "ALTER TABLE wishlist MODIFY COLUMN product_id BIGINT NOT NULL", "Modify wishlist.product_id to BIGINT", $errors, $success, $EXECUTE);
@@ -330,10 +339,10 @@ echo "STEP 9: Adding Other_platform column to landing_pages\n";
 echo "--------------------------------------------------\n";
 
 if (!columnExists($db, 'landing_pages', 'Other_platform')) {
-    executeSql($db, "ALTER TABLE landing_pages ADD COLUMN Other_platform JSON DEFAULT NULL AFTER section_order", "Add Other_platform to landing_pages", $errors, $success, $EXECUTE);
+    executeSql($db, "ALTER TABLE landing_pages ADD COLUMN Other_platform JSON DEFAULT NULL", "Add Other_platform to landing_pages", $errors, $success, $EXECUTE);
 }
 if (!columnExists($db, 'landing_pages', 'show_other_platforms')) {
-    executeSql($db, "ALTER TABLE landing_pages ADD COLUMN show_other_platforms TINYINT(1) DEFAULT 1 AFTER Other_platform", "Add show_other_platforms toggle to landing_pages", $errors, $success, $EXECUTE);
+    executeSql($db, "ALTER TABLE landing_pages ADD COLUMN show_other_platforms TINYINT(1) DEFAULT 1", "Add show_other_platforms toggle to landing_pages", $errors, $success, $EXECUTE);
 }
 
 // ==========================================
