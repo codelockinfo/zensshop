@@ -22,10 +22,10 @@ class Order {
                 (SELECT p.featured_image 
                  FROM order_items oi2 
                  LEFT JOIN products p ON (oi2.product_id = p.product_id OR (oi2.product_id < 1000000000 AND oi2.product_id = p.id))
-                 WHERE oi2.order_id = o.id 
+                 WHERE oi2.order_num = o.order_number 
                  LIMIT 1) as product_image
                 FROM orders o
-                LEFT JOIN order_items oi ON o.id = oi.order_id
+                LEFT JOIN order_items oi ON o.order_number = oi.order_num
                 WHERE 1=1";
         $params = [];
         
@@ -71,7 +71,7 @@ class Order {
         );
         
         if ($order) {
-            $order['items'] = $this->getOrderItems($order['id']);
+            $order['items'] = $this->getOrderItems($order['order_number']);
         }
         
         return $order;
@@ -87,7 +87,7 @@ class Order {
         );
         
         if ($order) {
-            $order['items'] = $this->getOrderItems($order['id']);
+            $order['items'] = $this->getOrderItems($order['order_number']);
         }
         
         return $order;
@@ -95,14 +95,15 @@ class Order {
     
     /**
      * Get order items
+     * @param string $orderNumber The order number string
      */
-    public function getOrderItems($orderId) {
+    public function getOrderItems($orderNumber) {
         return $this->db->fetchAll(
             "SELECT oi.*, p.name as product_name, p.featured_image as product_image, p.sku as product_sku, p.slug as product_slug
              FROM order_items oi 
              LEFT JOIN products p ON (oi.product_id = p.product_id OR (oi.product_id < 1000000000 AND oi.product_id = p.id))
-             WHERE oi.order_id = ?",
-            [$orderId]
+             WHERE oi.order_num = ?",
+            [$orderNumber]
         );
     }
     
@@ -124,8 +125,7 @@ class Order {
         $taxAmount = $data['tax_amount'] ?? 0;
         $totalAmount = $subtotal - $discountAmount + $shippingAmount + $taxAmount;
         
-        // Automatic Customer Matching:
-        // If user_id is missing (guest checkout) OR is a legacy small ID, try to find an existing customer by email
+        // Automatic Customer Matching
         if ((empty($data['user_id']) || $data['user_id'] < 1000000000) && !empty($data['customer_email'])) {
             try {
                 $existingCustomer = $this->db->fetchOne(
@@ -135,9 +135,7 @@ class Order {
                 if ($existingCustomer) {
                     $data['user_id'] = $existingCustomer['customer_id'];
                 }
-            } catch (Exception $e) {
-                // Silently fail matching if DB error, proceed as guest
-            }
+            } catch (Exception $e) {}
         }
         
         // Insert order
@@ -170,14 +168,14 @@ class Order {
             ]
         );
         
-        // Insert order items
+        // Insert order items - USING ORDER NUMBER NOW
         foreach ($data['items'] as $item) {
             $this->db->insert(
                 "INSERT INTO order_items 
-                (order_id, product_id, product_name, product_sku, quantity, price, subtotal, variant_attributes) 
+                (order_num, product_id, product_name, product_sku, quantity, price, subtotal, variant_attributes) 
                 VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
                 [
-                    $orderId,
+                    $orderNumber, // Storing Order Number explicitly
                     $item['product_id'],
                     $item['name'] ?? $item['product_name'],
                     $item['sku'] ?? $item['product_sku'] ?? null,
@@ -189,7 +187,7 @@ class Order {
             );
         }
 
-        // Auto-sync customer data (phone/address) if logged in
+        // Auto-sync customer data
         if (!empty($data['user_id'])) {
             try {
                 $customerId = $data['user_id'];
@@ -198,21 +196,19 @@ class Order {
                 if ($customerData) {
                     $updates = [];
                     $params = [];
-                    
-                    // Update Phone if missing
+                    // ... (Address checks omitted for brevity, same as before) ...
+                    // Update Phone
                     if (empty($customerData['phone']) && !empty($data['customer_phone'])) {
                         $updates[] = "phone = ?";
                         $params[] = $data['customer_phone'];
                     }
-                    
-                    // Update Billing Address if missing
+                    // Update Billing
                     $newBilling = json_encode($data['billing_address']);
                     if (empty($customerData['billing_address']) && !empty($data['billing_address'])) {
                         $updates[] = "billing_address = ?";
                         $params[] = $newBilling;
                     }
-
-                    // Update Shipping Address if missing
+                    // Update Shipping
                     $newShipping = json_encode($data['shipping_address']);
                     if (empty($customerData['shipping_address']) && !empty($data['shipping_address'])) {
                         $updates[] = "shipping_address = ?";
@@ -226,34 +222,20 @@ class Order {
                     }
                 }
             } catch (Exception $e) {
-                // Log error but don't fail order creation
                 error_log("Failed to auto-sync customer data for order #$orderNumber: " . $e->getMessage());
             }
         }
         
-        // Create notification for admin
+        // Notifications
         require_once __DIR__ . '/Notification.php';
         $notification = new Notification();
-        $notification->notifyNewOrder(
-            $orderNumber,
-            $data['customer_name'],
-            '₹' . number_format($totalAmount, 2)
-        );
+        $notification->notifyNewOrder($orderNumber, $data['customer_name'], '₹' . number_format($totalAmount, 2));
         
-        // Send order confirmation email to customer
         try {
             require_once __DIR__ . '/Email.php';
             $email = new Email();
-            $email->sendOrderConfirmation(
-                $data['customer_email'],
-                $orderNumber,
-                $data['customer_name'],
-                $totalAmount,
-                $data['items']
-            );
-        } catch (Exception $e) {
-            error_log("Failed to send order confirmation email: " . $e->getMessage());
-        }
+            $email->sendOrderConfirmation($data['customer_email'], $orderNumber, $data['customer_name'], $totalAmount, $data['items']);
+        } catch (Exception $e) { error_log("Failed to send order confirmation email: " . $e->getMessage()); }
         
         return [
             'id' => $orderId,
@@ -261,54 +243,21 @@ class Order {
         ];
     }
     
-    /**
-     * Update order status
-     */
+    // ... [updateStatus, updatePaymentStatus, updateTracking, update methods unchanged] ...
     public function updateStatus($id, $status) {
-        return $this->db->execute(
-            "UPDATE orders SET order_status = ? WHERE id = ?",
-            [$status, $id]
-        );
+        return $this->db->execute("UPDATE orders SET order_status = ? WHERE id = ?", [$status, $id]);
     }
-    
-    /**
-     * Update payment status
-     */
     public function updatePaymentStatus($id, $status) {
-        return $this->db->execute(
-            "UPDATE orders SET payment_status = ? WHERE id = ?",
-            [$status, $id]
-        );
+        return $this->db->execute("UPDATE orders SET payment_status = ? WHERE id = ?", [$status, $id]);
     }
-    
-    /**
-     * Update tracking number
-     */
     public function updateTracking($id, $trackingNumber) {
-        return $this->db->execute(
-            "UPDATE orders SET tracking_number = ? WHERE id = ?",
-            [$trackingNumber, $id]
-        );
+        return $this->db->execute("UPDATE orders SET tracking_number = ? WHERE id = ?", [$trackingNumber, $id]);
     }
-    
-    /**
-     * Update order (comprehensive update)
-     */
     public function update($id, $data) {
-        // Build update query dynamically
         $updates = [];
         $params = [];
-        
-        $allowedFields = [
-            'order_status', 'payment_status', 'tracking_number', 'notes',
-            'customer_name', 'customer_email', 'customer_phone',
-            'billing_address', 'shipping_address',
-            'subtotal', 'discount_amount', 'shipping_amount', 'tax_amount', 'total_amount',
-            'payment_method'
-        ];
-        
+        $allowedFields = ['order_status', 'payment_status', 'tracking_number', 'notes', 'customer_name', 'customer_email', 'customer_phone', 'billing_address', 'shipping_address', 'subtotal', 'discount_amount', 'shipping_amount', 'tax_amount', 'total_amount', 'payment_method'];
         foreach ($allowedFields as $field) {
-            // Include field if it's set in data (even if null or empty)
             if (array_key_exists($field, $data)) {
                 if ($field === 'billing_address' || $field === 'shipping_address') {
                     $updates[] = "{$field} = ?";
@@ -319,27 +268,29 @@ class Order {
                 }
             }
         }
-        
-        if (empty($updates)) {
-            return false;
-        }
-        
+        if (empty($updates)) return false;
         $params[] = $id;
-        $sql = "UPDATE orders SET " . implode(', ', $updates) . " WHERE id = ?";
-        
-        return $this->db->execute($sql, $params);
+        return $this->db->execute("UPDATE orders SET " . implode(', ', $updates) . " WHERE id = ?", $params);
     }
-    
+
     /**
      * Add item to order
+     * @param int|string $orderId The int ID or string Order Number
      */
     public function addOrderItem($orderId, $itemData) {
+        // Resolve Order Number
+        $orderNumber = $orderId;
+        if (is_numeric($orderId)) {
+            $order = $this->getById($orderId);
+            $orderNumber = $order['order_number'];
+        }
+
         $itemId = $this->db->insert(
             "INSERT INTO order_items 
-            (order_id, product_id, product_name, product_sku, quantity, price, subtotal, variant_attributes) 
+            (order_num, product_id, product_name, product_sku, quantity, price, subtotal, variant_attributes) 
             VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
             [
-                $orderId,
+                $orderNumber, // Always use Order Number
                 $itemData['product_id'],
                 $itemData['product_name'],
                 $itemData['product_sku'] ?? null,
@@ -350,8 +301,7 @@ class Order {
             ]
         );
         
-        // Recalculate totals
-        $this->recalculateTotals($orderId);
+        $this->recalculateTotals($orderNumber);
         
         return $itemId;
     }
@@ -373,10 +323,10 @@ class Order {
             ]
         );
         
-        // Get order_id from item
-        $item = $this->db->fetchOne("SELECT order_id FROM order_items WHERE id = ?", [$itemId]);
+        // Get order_num from item
+        $item = $this->db->fetchOne("SELECT order_num FROM order_items WHERE id = ?", [$itemId]);
         if ($item) {
-            $this->recalculateTotals($item['order_id']);
+            $this->recalculateTotals($item['order_num']);
         }
         
         return $result;
@@ -386,13 +336,12 @@ class Order {
      * Delete order item
      */
     public function deleteOrderItem($itemId) {
-        // Get order_id before deleting
-        $item = $this->db->fetchOne("SELECT order_id FROM order_items WHERE id = ?", [$itemId]);
+        $item = $this->db->fetchOne("SELECT order_num FROM order_items WHERE id = ?", [$itemId]);
         
         $result = $this->db->execute("DELETE FROM order_items WHERE id = ?", [$itemId]);
         
         if ($item) {
-            $this->recalculateTotals($item['order_id']);
+            $this->recalculateTotals($item['order_num']);
         }
         
         return $result;
@@ -400,19 +349,28 @@ class Order {
     
     /**
      * Recalculate order totals based on items
+     * @param int|string $identifier Order ID or Order Number
      */
-    public function recalculateTotals($orderId) {
-        $items = $this->getOrderItems($orderId);
+    public function recalculateTotals($identifier) {
+        // Handle Identifier (ID or Number)
+        $order = null;
+        if (is_numeric($identifier) && strpos((string)$identifier, 'ORD-') === false) {
+             $order = $this->getById($identifier);
+        } else {
+             $order = $this->getByOrderNumber($identifier);
+        }
+
+        if (!$order) return false;
+
+        $orderId = $order['id'];
+        $orderNumber = $order['order_number'];
+
+        // Get items using order_number
+        $items = $this->getOrderItems($orderNumber);
         
         $subtotal = 0;
         foreach ($items as $item) {
             $subtotal += $item['subtotal'];
-        }
-        
-        // Get current order to preserve discount, shipping, tax
-        $order = $this->getById($orderId);
-        if (!$order) {
-            return false;
         }
         
         $discountAmount = $order['discount_amount'] ?? 0;

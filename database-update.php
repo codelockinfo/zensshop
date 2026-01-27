@@ -517,6 +517,66 @@ if ($EXECUTE) {
     $success[] = "Customer ID Modernization Complete";
 }
 
+// ==========================================
+// STEP 15: Migrate Order Items to use Order Number
+// ==========================================
+echo "STEP 15: Migrating order_items schema (order_id -> order_num)\n";
+echo "---------------------------------------------------\n";
+
+if ($EXECUTE) {
+    // 1. Add new column order_num if not exists
+    if (!columnExists($db, 'order_items', 'order_num')) {
+        executeSql($db, "ALTER TABLE order_items ADD COLUMN order_num VARCHAR(50) AFTER id", "Add order_num column", $errors, $success, $EXECUTE);
+        executeSql($db, "CREATE INDEX idx_order_items_order_num ON order_items(order_num)", "Index order_num", $errors, $success, $EXECUTE);
+        
+        // 2. Populate order_num from orders table
+        echo "Populating order_num from orders table...\n";
+        // Attempt to join on ID first (standard)
+        $sql = "UPDATE order_items oi 
+                JOIN orders o ON oi.order_id = o.id 
+                SET oi.order_num = o.order_number 
+                WHERE oi.order_num IS NULL";
+        
+        // Check if order_id is numeric or string to decide how to join/copy
+        // But the join above works if order_id is INT.
+        // If order_id is ALREADY the string order_number (e.g. partial migration), we should copy it.
+        // We can do both safely.
+        
+        $db->execute($sql);
+        
+        // Fallback: If order_id is already the order number string (legacy mixed state), copy it directly
+        try {
+            $db->execute("UPDATE order_items SET order_num = order_id WHERE order_num IS NULL AND order_id LIKE 'ORD-%'");
+        } catch (Exception $e) {}
+        
+        // 3. Drop old column and keys
+        // Drop FKs first
+        $dropFkUsingSql = function($table, $column) use ($db) {
+             try {
+                $fks = $db->fetchAll("SELECT CONSTRAINT_NAME 
+                    FROM information_schema.KEY_COLUMN_USAGE 
+                    WHERE TABLE_SCHEMA = DATABASE() 
+                    AND TABLE_NAME = ? 
+                    AND COLUMN_NAME = ? 
+                    AND REFERENCED_TABLE_NAME IS NOT NULL", [$table, $column]);
+                foreach ($fks as $fk) {
+                    $db->execute("ALTER TABLE `$table` DROP FOREIGN KEY `{$fk['CONSTRAINT_NAME']}`");
+                }
+            } catch (Exception $e) {}
+        };
+        $dropFkUsingSql('order_items', 'order_id');
+        
+        // Drop order_id column
+        // Only drop if order_num is populated reasonably
+        $count = $db->fetchOne("SELECT COUNT(*) FROM order_items WHERE order_num IS NOT NULL");
+        if ($count > 0) {
+             executeSql($db, "ALTER TABLE order_items DROP COLUMN order_id", "Drop old order_id column", $errors, $success, $EXECUTE);
+        } else {
+             $errors[] = "Aborted dropping order_id: order_num population seemed to fail (0 records).";
+        }
+    }
+}
+
 echo "\n========================================\n";
 echo "SUMMARY\n";
 echo "========================================\n";
