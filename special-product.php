@@ -846,12 +846,11 @@ function stickyAddToCart() {
 
 <!-- SEO Content / Footer Extra (Consolidated) -->
 <?php 
-$footerData = $configGrp['footer_extra'] ?? [];
-if (!empty($footerData['show']) && !empty($footerData['content'])): ?>
-<section class="pt-10 pb-20 md:py-24 border-t border-gray-100 relative z-10" style="background-color: <?php echo $footerData['bg']; ?>; color: <?php echo $footerData['text']; ?>;">
+if (!empty($footerGrp['show_extra']) && !empty($footerGrp['extra_content'])): ?>
+<section class="pt-10 pb-20 md:py-24 border-t border-gray-100 relative z-10" style="background-color: <?php echo $footerGrp['extra_bg'] ?? '#f8f9fa'; ?>; color: <?php echo $footerGrp['extra_text'] ?? '#333333'; ?>;">
     <div class="container mx-auto px-4">
-        <div class="prose max-w-none leading-relaxed" style="color: <?php echo $footerData['text']; ?>;">
-            <?php echo $footerData['content']; ?>
+        <div class="prose max-w-none leading-relaxed" style="color: <?php echo $footerGrp['extra_text'] ?? '#333333'; ?>;">
+            <?php echo $footerGrp['extra_content']; ?>
         </div>
     </div>
 </section>

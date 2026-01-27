@@ -533,6 +533,13 @@ if ($lp) {
     $lp['nav_links'] = json_encode($headerGrp['nav_links'] ?? []);
     $lp['section_order'] = json_encode($configGrp['section_order'] ?? []);
 
+    // Map Footer Extra (aligned with grouped save logic)
+    $lp['show_footer_extra'] = $footerGrp['show_extra'] ?? 0;
+    $lp['footer_extra_content'] = $footerGrp['extra_content'] ?? '';
+    $lp['footer_extra_bg'] = $footerGrp['extra_bg'] ?? '#f8f9fa';
+    $lp['footer_extra_text'] = $footerGrp['extra_text'] ?? '#333333';
+    $lp['copyright_text'] = $footerGrp['copyright'] ?? '';
+
     // Map SEO
     $lp['meta_title'] = $seoGrp['meta_title'] ?? '';
     $lp['meta_description'] = $seoGrp['meta_description'] ?? '';
