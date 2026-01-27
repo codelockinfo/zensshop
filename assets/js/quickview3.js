@@ -134,6 +134,17 @@ function closeQuickView() {
 let qvSelectedOptions = {};
 let currentQVProduct = null;
 
+
+// Helper to fix corrupted CURRENCY_SYMBOL on server
+function formatQVPrice(amount) {
+    let symbol = typeof CURRENCY_SYMBOL !== 'undefined' ? CURRENCY_SYMBOL : '₹';
+    // If symbol is large integer (corrupted), fallback to ₹
+    if (!isNaN(parseInt(symbol)) && String(symbol).length > 2) {
+        symbol = '₹'; 
+    }
+    return symbol + parseFloat(amount).toFixed(2);
+}
+
 // Quick View Render Logic
 function renderQuickView(product) {
     const content = document.getElementById('quickViewContent');
@@ -263,9 +274,9 @@ function renderQuickView(product) {
                 </div>
                 
                 <div class="mb-4 flex items-center gap-3">
-                    <span class="text-2xl font-bold text-black" id="qvPrice">${formatCurrency(priceValue)}</span>
+                    <span class="text-2xl font-bold text-black" id="qvPrice">${formatQVPrice(priceValue)}</span>
                     <span id="qvOriginalPriceContainer" class="${originalPriceValue ? '' : 'hidden'}">
-                        <span class="text-gray-400 line-through text-lg" id="qvOriginalPrice">${originalPriceValue ? formatCurrency(originalPriceValue) : ''}</span>
+                        <span class="text-gray-400 line-through text-lg" id="qvOriginalPrice">${originalPriceValue ? formatQVPrice(originalPriceValue) : ''}</span>
                     </span>
                 </div>
 
@@ -300,7 +311,7 @@ function renderQuickView(product) {
                     <div class="flex gap-3 h-12">
                         <div class="flex items-center border border-black rounded-full w-28 h-full shrink-0 overflow-hidden">
                             <button onclick="updateQVQuantity(-1)" class="w-8 h-full flex items-center justify-center hover:bg-gray-100 text-black transition text-lg font-medium focus:outline-none">-</button>
-                            <input type="number" id="qvQuantity" value="1" min="1" class="w-full flex-1 text-center border-none focus:ring-0 p-0 h-full text-black font-bold text-lg bg-transparent" readonly>
+                            <input type="number" id="qvQuantity" value="1" min="1" class="w-full flex-1 text-center pl-4 border-none focus:ring-0 outline-none focus:outline-none p-0 h-full text-black font-bold text-lg bg-transparent shadow-none" readonly>
                             <button onclick="updateQVQuantity(1)" class="w-8 h-full flex items-center justify-center hover:bg-gray-100 text-black transition text-lg font-medium focus:outline-none">+</button>
                         </div>
                         <button onclick="addToCartFromQV(${product.product_id || product.id})" class="flex-1 bg-black text-white h-full rounded-full hover:bg-gray-800 transition-all font-bold uppercase flex items-center justify-center gap-2 shadow-lg text-sm">
@@ -389,9 +400,9 @@ window.selectQVVariant = function(btn, option, value) {
             const originalPriceContainer = document.getElementById('qvOriginalPriceContainer');
             const badgeContainer = document.getElementById('qvDiscountBadge');
 
-            if (priceEl) priceEl.innerHTML = formatCurrency(price);
+            if (priceEl) priceEl.innerHTML = formatQVPrice(price);
             if (originalPriceEl && originalPrice) {
-                originalPriceEl.innerHTML = formatCurrency(originalPrice);
+                originalPriceEl.innerHTML = formatQVPrice(originalPrice);
                 originalPriceContainer.classList.remove('hidden');
                 
                 if (badgeContainer) {
