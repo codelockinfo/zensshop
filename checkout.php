@@ -524,35 +524,35 @@ nav.bg-white.sticky.top-0 {
                         
                         <!-- Discount Code -->
                         <!-- Discount Code -->
-                        <div class="mb-6">
-                            <?php if ($discountAmount > 0): ?>
-                                <!-- Applied State -->
-                                <input type="hidden" name="discount_code" value="<?php echo htmlspecialchars($discountCode); ?>">
+                        <!-- Discount Code -->
+                        <div class="mb-6" id="discountSection">
+                            <!-- Applied State -->
+                            <div id="appliedState" class="<?php echo $discountAmount > 0 ? '' : 'hidden'; ?>">
+                                <input type="hidden" name="discount_code" id="hiddenDiscountCode" value="<?php echo htmlspecialchars($discountCode); ?>">
                                 <div class="flex items-center justify-between py-1 px-5 bg-[#e5e7eb] border border-gray-300 rounded-lg">
                                     <div class="flex items-center gap-2">
                                         <i class="fas fa-tag text-gray-600"></i>
-                                        <span class="font-medium text-gray-700"><?php echo htmlspecialchars($discountCode); ?></span>
+                                        <span class="font-medium text-gray-700" id="appliedCodeText"><?php echo htmlspecialchars($discountCode); ?></span>
                                     </div>
-                                    <button type="submit" name="remove_discount" value="1" formnovalidate class="text-gray-500 hover:text-red-600 transition focus:outline-none p-1">
+                                    <button type="button" id="btnRemoveDiscount" class="text-gray-500 hover:text-red-600 transition focus:outline-none p-1">
                                         <i class="fas fa-times"></i>
                                     </button>
                                 </div>
                                 <p class="text-xs text-gray-600 mt-2 ml-1">Discount applied successfully!</p>
-                            <?php else: ?>
-                                <!-- Input State -->
+                            </div>
+
+                            <!-- Input State -->
+                            <div id="inputState" class="<?php echo $discountAmount > 0 ? 'hidden' : ''; ?>">
                                 <div class="flex flex-col sm:flex-row gap-2">
-                                    <input type="text" name="discount_code" 
-                                           value="<?php echo htmlspecialchars($discountCode); ?>"
+                                    <input type="text" id="discountInput" 
                                            placeholder="Discount code" 
-                                           class="w-full sm:flex-1 px-4 py-2 border <?php echo !empty($discountError) ? 'border-red-300 ring-2 ring-red-100' : 'border-gray-300'; ?> rounded-lg focus:outline-none focus:ring-2 focus:ring-primary">
-                                    <button type="submit" name="apply_discount" value="1" formnovalidate class="w-full sm:w-auto px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition font-semibold">
+                                           class="w-full sm:flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary">
+                                    <button type="button" id="btnApplyDiscount" class="w-full sm:w-auto px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition font-semibold">
                                         Apply
                                     </button>
                                 </div>
-                                <?php if (!empty($discountError)): ?>
-                                    <p class="text-sm text-red-500 mt-2 ml-1"><?php echo htmlspecialchars($discountError); ?></p>
-                                <?php endif; ?>
-                            <?php endif; ?>
+                                <p id="discountErrorMsg" class="text-sm text-red-500 mt-2 ml-1 hidden"></p>
+                            </div>
                         </div>
                         
                         <!-- Order Summary -->
@@ -565,12 +565,10 @@ nav.bg-white.sticky.top-0 {
                                 <span class="text-gray-600">Shipping</span>
                                 <span id="summaryShipping" class="font-semibold"><?php echo format_currency($finalShipping); ?></span>
                             </div>
-                            <?php if ($discountAmount > 0): ?>
-                            <div class="flex justify-between text-sm">
+                            <div class="flex justify-between text-sm <?php echo $discountAmount > 0 ? '' : 'hidden'; ?>" id="summaryDiscountRow">
                                 <span class="text-gray-600">Discount</span>
-                                <span class="font-semibold text-gray-600">-<?php echo format_currency($discountAmount); ?></span>
+                                <span class="font-semibold text-gray-600" id="summaryDiscountAmount">-<?php echo format_currency($discountAmount); ?></span>
                             </div>
-                            <?php endif; ?>
                             <div class="flex justify-between text-lg font-bold pt-2 border-t">
                                 <span>Total</span>
                                 <span id="summaryTotal"><?php echo format_currency($total); ?></span>
@@ -640,16 +638,18 @@ document.querySelectorAll('.delivery-option').forEach(radio => {
     });
 });
 
+// Global state for calculations
+window.cartTotal = <?php echo $cartTotal; ?>;
+window.currentDiscountAmount = <?php echo $discountAmount; ?>;
+window.defaultShipping = <?php echo $shippingAmount; ?>;
+
 function updateShipping() {
-    const deliveryType = document.querySelector('input[name="delivery_type"]:checked').value;
+    const deliveryTypeInput = document.querySelector('input[name="delivery_type"]:checked');
+    const deliveryType = deliveryTypeInput ? deliveryTypeInput.value : 'delivery';
     
-    // Use PHP values directly to ensure availability
-    const cartTotal = <?php echo $cartTotal; ?>;
-    const discount = <?php echo $discountAmount; ?>;
-    const defaultShipping = <?php echo $shippingAmount; ?>;
-    
-    const shipping = deliveryType === 'pickup' ? 0 : defaultShipping;
-    const total = cartTotal + shipping - discount;
+    const shipping = deliveryType === 'pickup' ? 0 : window.defaultShipping;
+    // Ensure total doesn't go negative
+    const total = Math.max(0, window.cartTotal + shipping - window.currentDiscountAmount);
     
     // Update DOM
     const shippingEl = document.getElementById('summaryShipping');
@@ -758,10 +758,8 @@ function hideSuccessMessage() {
 
 // Razorpay Integration
 const razorpayBaseUrl = '<?php echo $baseUrl; ?>';
-const razorpayCartTotal = <?php echo $cartTotal; ?>;
-const razorpayShippingAmount = <?php echo $shippingAmount; ?>;
-const razorpayDiscountAmount = <?php echo $discountAmount; ?>;
-const razorpayTotal = razorpayCartTotal + razorpayShippingAmount - razorpayDiscountAmount;
+
+// NOTE: We do not define const for amounts here as they are dynamic (window.cartTotal etc)
 
 document.getElementById('razorpayPayButton').addEventListener('click', async function(e) {
     e.preventDefault();
@@ -776,7 +774,8 @@ document.getElementById('razorpayPayButton').addEventListener('click', async fun
     const state = document.querySelector('input[name="state"]').value.trim();
     const zip = document.querySelector('input[name="zip"]').value.trim();
     const country = document.querySelector('input[name="country"]').value.trim();
-    const deliveryType = document.querySelector('input[name="delivery_type"]:checked').value;
+    const deliveryTypeInput = document.querySelector('input[name="delivery_type"]:checked');
+    const deliveryType = deliveryTypeInput ? deliveryTypeInput.value : 'delivery';
     
     // Hide any previous error messages
     hideErrorMessage();
@@ -796,10 +795,9 @@ document.getElementById('razorpayPayButton').addEventListener('click', async fun
         return;
     }
     
-    // Calculate final shipping and total based on delivery type
-    // Calculate final shipping and total based on delivery type
-    const finalShipping = deliveryType === 'pickup' ? 0 : razorpayShippingAmount;
-    const finalTotal = razorpayCartTotal + finalShipping - razorpayDiscountAmount;
+    // Calculate final shipping and total based on delivery type USING GLOBAL VARIABLES
+    const finalShipping = deliveryType === 'pickup' ? 0 : window.defaultShipping;
+    const finalTotal = Math.max(0, window.cartTotal + finalShipping - window.currentDiscountAmount);
     
     // Disable button to prevent double clicks
     const button = this;
@@ -813,7 +811,7 @@ document.getElementById('razorpayPayButton').addEventListener('click', async fun
             customer_phone: phoneCode + ' ' + customerPhone,
             amount: finalTotal,
             shipping_amount: finalShipping,
-            discount_amount: razorpayDiscountAmount
+            discount_amount: window.currentDiscountAmount
         };
         
         const orderResponse = await fetch(razorpayBaseUrl + '/api/razorpay/create-order.php', {
@@ -851,8 +849,8 @@ document.getElementById('razorpayPayButton').addEventListener('click', async fun
                 zip: zip,
                 country: country
             },
-            discount_amount: razorpayDiscountAmount,
-            shipping_amount: deliveryType === 'pickup' ? 0 : razorpayShippingAmount,
+            discount_amount: window.currentDiscountAmount,
+            shipping_amount: finalShipping,
             tax_amount: 0
         };
         
@@ -893,11 +891,12 @@ document.getElementById('razorpayPayButton').addEventListener('click', async fun
                         // Use window.location.replace to prevent back button issues
                         window.location.replace(successUrl);
                     } else {
-                        showErrorMessage('Something went wrong');
+                        showErrorMessage(verifyData.message || 'Payment verification failed');
                         setBtnLoading(button, false);
                     }
                 } catch (error) {
-                    showErrorMessage('Something went wrong');
+                    console.error(error);
+                    showErrorMessage('Something went wrong processing payment');
                     setBtnLoading(button, false);
                 }
             },
@@ -920,10 +919,110 @@ document.getElementById('razorpayPayButton').addEventListener('click', async fun
         razorpay.open();
         
     } catch (error) {
-        showErrorMessage('Something went wrong');
+        console.error(error);
+        showErrorMessage('Something went wrong initiating payment');
         setBtnLoading(button, false);
     }
 });
+
+/* Discount Code Handler */
+document.getElementById('btnApplyDiscount').addEventListener('click', function() {
+    handleDiscount('apply');
+});
+
+document.getElementById('btnRemoveDiscount').addEventListener('click', function() {
+    handleDiscount('remove');
+});
+
+function handleDiscount(action) {
+    const btn = action === 'apply' ? document.getElementById('btnApplyDiscount') : document.getElementById('btnRemoveDiscount');
+    const input = document.getElementById('discountInput');
+    const errorMsg = document.getElementById('discountErrorMsg');
+    
+    // Validate apply
+    if (action === 'apply' && !input.value.trim()) {
+        if(errorMsg) {
+            errorMsg.textContent = 'Please enter a discount code';
+            errorMsg.classList.remove('hidden');
+        } else {
+            showErrorMessage('Please enter a discount code');
+        }
+        return;
+    }
+    
+    // Clear errors
+    if (errorMsg) errorMsg.classList.add('hidden');
+    
+    setBtnLoading(btn, true);
+    
+    // Prepare Data
+    const data = {
+        action: action,
+        code: action === 'apply' ? input.value.trim() : ''
+    };
+    
+    fetch('<?php echo $baseUrl; ?>/api/cart-discount.php', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(data)
+    })
+    .then(res => res.json())
+    .then(res => {
+        setBtnLoading(btn, false);
+        
+        if (res.success) {
+            // Update UI State
+            if (action === 'apply') {
+                document.getElementById('appliedState').classList.remove('hidden');
+                document.getElementById('inputState').classList.add('hidden');
+                document.getElementById('appliedCodeText').textContent = res.code;
+                document.getElementById('hiddenDiscountCode').value = res.code;
+                showSuccessMessage(res.message);
+            } else {
+                document.getElementById('appliedState').classList.add('hidden');
+                document.getElementById('inputState').classList.remove('hidden');
+                input.value = ''; // Clear input
+                document.getElementById('hiddenDiscountCode').value = '';
+                showSuccessMessage('Discount removed');
+            }
+            
+            // Update Discount Row DOM
+            const discountRow = document.getElementById('summaryDiscountRow');
+            const discountAmountEl = document.getElementById('summaryDiscountAmount');
+            
+            if (res.discount_amount > 0) {
+                if (discountRow) discountRow.classList.remove('hidden');
+                if (discountAmountEl) discountAmountEl.textContent = '-₹' + parseFloat(res.discount_amount).toFixed(2);
+            } else {
+                if (discountRow) discountRow.classList.add('hidden');
+            }
+            
+            // Update Global discount variable for `updateShipping` and Razorpay
+            window.currentDiscountAmount = parseFloat(res.discount_amount);
+             
+            // Trigger recalculation (which handles shipping + new discount)
+            updateShipping();
+            
+        } else {
+            // Error handling
+            if (action === 'apply') {
+                 if (errorMsg) {
+                     errorMsg.textContent = res.message;
+                     errorMsg.classList.remove('hidden');
+                 } else {
+                     showErrorMessage(res.message);
+                 }
+            } else {
+                showErrorMessage(res.message);
+            }
+        }
+    })
+    .catch(err => {
+        console.error(err);
+        setBtnLoading(btn, false);
+        showErrorMessage('An error occurred. Please try again.');
+    });
+}
 </script>
 
 <!-- Razorpay Checkout Script -->

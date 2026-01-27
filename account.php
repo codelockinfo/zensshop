@@ -55,7 +55,7 @@ $tab = $_GET['tab'] ?? 'all'; // For orders: current, unpaid, all
 // Fetch data based on section
 $orders = [];
 if ($section === 'orders') {
-    $filters = ['user_id' => $customer['id']];
+    $filters = ['user_id' => $customer['customer_id']];
     if ($tab === 'unpaid') {
         $filters['payment_status'] = 'pending';
     } elseif ($tab === 'current') {
@@ -66,14 +66,14 @@ if ($section === 'orders') {
     
     // Get full items for each order
     foreach ($orders as &$o) {
-        $o['items'] = $orderModel->getOrderItems($o['id']);
+        $o['items'] = $orderModel->getOrderItems($o['order_number']);
     }
 }
 
 $addresses = [];
 if ($section === 'addresses') {
     // 1. Get unique shipping addresses from past orders
-    $pastOrders = $orderModel->getAll(['user_id' => $customer['id']]);
+    $pastOrders = $orderModel->getAll(['user_id' => $customer['customer_id']]);
     $uniqueAddresses = [];
     foreach ($pastOrders as $po) {
         $addr = $po['shipping_address'];
@@ -92,18 +92,18 @@ if ($section === 'addresses') {
 
 $wishlistItems = [];
 if ($section === 'wishlist') {
-    $wishlistItems = $wishlistModel->getItems($customer['id']);
+    $wishlistItems = $wishlistModel->getItems($customer['customer_id']);
 }
 
 $paymentOrders = [];
 if ($section === 'payments') {
-    $paymentOrders = $orderModel->getAll(['user_id' => $customer['id']]);
+    $paymentOrders = $orderModel->getAll(['user_id' => $customer['customer_id']]);
 }
 
 $totalSpend = 0;
 if ($section === 'details') {
     // Calculate total spend
-    $allOrders = $orderModel->getAll(['user_id' => $customer['id']]);
+    $allOrders = $orderModel->getAll(['user_id' => $customer['customer_id']]);
     foreach ($allOrders as $ord) {
         if ($ord['payment_status'] === 'paid' && $ord['order_status'] !== 'cancelled') {
             $totalSpend += $ord['total_amount'];
@@ -112,7 +112,7 @@ if ($section === 'details') {
     
     // If phone is missing, try to get from last order to pre-fill
     if (empty($customer['phone'])) {
-        $lastOrder = $orderModel->getAll(['user_id' => $customer['id'], 'limit' => 1]);
+        $lastOrder = $orderModel->getAll(['user_id' => $customer['customer_id'], 'limit' => 1]);
         if (!empty($lastOrder[0]['customer_phone'])) {
             $customer['phone'] = $lastOrder[0]['customer_phone'];
         }
