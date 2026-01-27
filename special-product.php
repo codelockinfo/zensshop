@@ -18,6 +18,17 @@ $pageSlug = $_GET['page'] ?? 'default';
 $landingPage = $db->fetchOne("SELECT * FROM landing_pages WHERE slug = ?", [$pageSlug]);
 
 if (!$landingPage) {
+    // If a specific slug was requested but not found -> 404
+    if ($pageSlug !== 'default' && !empty($pageSlug)) {
+        header("HTTP/1.0 404 Not Found");
+        // Use Javascript redirect or meta refresh if headers already sent (unlikely here but safe), 
+        // or just Location header. Since this is early in the file, Location is fine.
+        // However, we want to show the not-found page content usually, or redirect.
+        // The user asked to "navigate to that not found page".
+        header("Location: " . $baseUrl . "/not-found");
+        exit;
+    }
+
     $landingPage = $db->fetchOne("SELECT * FROM landing_pages ORDER BY id ASC LIMIT 1");
     if (!$landingPage) die("Landing page not found.");
 }

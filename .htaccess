@@ -12,6 +12,7 @@ php_value max_input_time 300
     # Adjust RewriteBase: Use /zensshop/ for local WAMP Www directory
     # IMPORTANT: Change this to / if your live site is at the root domain (e.g. zensshop.com)
     RewriteBase /zensshop/
+    ErrorDocument 404 /zensshop/not-found
 
     # Custom Clean URLs (Masking)
     RewriteRule ^admin/category$ admin/homepage_categories_settings.php [L,QSA]
