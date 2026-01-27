@@ -47,7 +47,8 @@ function executeSql($db, $sql, $description, &$errors, &$success, $execute = fal
         // Warning if duplicate column/key, but continue
         if (strpos($e->getMessage(), 'Duplicate column') !== false || 
             strpos($e->getMessage(), 'already exists') !== false ||
-            strpos($e->getMessage(), 'Duplicate foreign key') !== false) {
+            strpos($e->getMessage(), 'Duplicate foreign key') !== false ||
+            strpos($e->getMessage(), '1826') !== false) {
             echo "Status: ⚠️ EXISTS - " . $e->getMessage() . "\n\n";
             return true;
         }
@@ -83,7 +84,13 @@ function dropForeignKeyIfExists($db, $table, $constraintName, &$errors, &$succes
             $success[] = "Dropped FK $constraintName from $table";
             echo "Status: ✅ DROPPED\n\n";
         } else {
-            echo "Status: NOT FOUND (Skipped)\n\n";
+            // Aggressive fallback: try to drop by name directly in case the schema check missed it (common with shared DB prefixes)
+            try {
+                $db->execute("ALTER TABLE `$table` DROP FOREIGN KEY `$constraintName`");
+                echo "Status: ✅ DROPPED (via direct command)\n\n";
+            } catch (Exception $e2) {
+                echo "Status: NOT FOUND (Skipped)\n\n";
+            }
         }
     } catch (Exception $e) {
         $errors[] = "Drop FK $constraintName: " . $e->getMessage();
@@ -170,6 +177,10 @@ executeSql($db, "ALTER TABLE order_items MODIFY COLUMN product_id BIGINT NOT NUL
 
 // Ensure products.product_id has a UNIQUE index (required for FK reference)
 executeSql($db, "ALTER TABLE products ADD UNIQUE INDEX IF NOT EXISTS idx_unique_product_id (product_id)", "Ensure UNIQUE index on products.product_id", $errors, $success, $EXECUTE);
+
+// Ensure child columns have indexes (prevents 1822 errors)
+executeSql($db, "ALTER TABLE cart ADD INDEX IF NOT EXISTS idx_cart_user (user_id)", "Add index to cart.user_id", $errors, $success, $EXECUTE);
+executeSql($db, "ALTER TABLE wishlist ADD INDEX IF NOT EXISTS idx_wishlist_user (user_id)", "Add index to wishlist.user_id", $errors, $success, $EXECUTE);
 
 // ==========================================
 // STEP 4: Re-Add Correct Foreign Keys
