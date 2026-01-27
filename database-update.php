@@ -45,11 +45,13 @@ function executeSql($db, $sql, $description, &$errors, &$success, $execute = fal
         return true;
     } catch (Exception $e) {
         // Warning if duplicate column/key, but continue
-        if (strpos($e->getMessage(), 'Duplicate column') !== false || 
-            strpos($e->getMessage(), 'already exists') !== false ||
-            strpos($e->getMessage(), 'Duplicate foreign key') !== false ||
-            strpos($e->getMessage(), '1826') !== false) {
-            echo "Status: ⚠️ EXISTS - " . $e->getMessage() . "\n\n";
+        $msg = $e->getMessage();
+        if (stripos($msg, 'Duplicate column') !== false || 
+            stripos($msg, 'already exists') !== false ||
+            stripos($msg, 'Duplicate foreign key') !== false ||
+            stripos($msg, '1826') !== false ||
+            stripos($msg, 'Duplicate entry') !== false) {
+            echo "Status: ⚠️ EXISTS - " . $msg . "\n\n";
             return true;
         }
         $errors[] = "$description: " . $e->getMessage();
@@ -168,7 +170,9 @@ $tablesToUpdate = [
 
 executeSql($db, "ALTER TABLE products MODIFY COLUMN product_id BIGINT NOT NULL", "Modify products.product_id to BIGINT", $errors, $success, $EXECUTE);
 executeSql($db, "ALTER TABLE product_variants MODIFY COLUMN product_id BIGINT NOT NULL", "Modify product_variants.product_id to BIGINT", $errors, $success, $EXECUTE);
-executeSql($db, "ALTER TABLE customers MODIFY COLUMN id BIGINT NOT NULL AUTO_INCREMENT", "Modify customers.id to BIGINT", $errors, $success, $EXECUTE);
+
+// Ensure customers has PRIMARY KEY on ID (required for FK reference)
+executeSql($db, "ALTER TABLE customers MODIFY COLUMN id BIGINT NOT NULL AUTO_INCREMENT, ADD PRIMARY KEY IF NOT EXISTS (id)", "Modify customers.id to BIGINT and ensure PRIMARY KEY", $errors, $success, $EXECUTE);
 executeSql($db, "ALTER TABLE cart MODIFY COLUMN product_id BIGINT NOT NULL", "Modify cart.product_id to BIGINT", $errors, $success, $EXECUTE);
 executeSql($db, "ALTER TABLE cart MODIFY COLUMN user_id BIGINT NOT NULL", "Modify cart.user_id to BIGINT", $errors, $success, $EXECUTE);
 executeSql($db, "ALTER TABLE wishlist MODIFY COLUMN product_id BIGINT NOT NULL", "Modify wishlist.product_id to BIGINT", $errors, $success, $EXECUTE);
