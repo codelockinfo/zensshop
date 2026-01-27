@@ -265,7 +265,7 @@ require_once __DIR__ . '/../../includes/admin-header.php';
                                         <span class="font-semibold text-gray-800"><?php echo format_price($orderItem['total_amount'], $orderItem['currency'] ?? 'INR'); ?></span>
                                     </td>
                                     <td class="py-4 px-4 text-center">
-                                        <a href="<?php echo $baseUrl; ?>/admin/orders/list.php?search=<?php echo urlencode($orderItem['order_number']); ?>" 
+                                        <a href="<?php echo $baseUrl; ?>/admin/orders/detail.php?order_number=<?php echo urlencode($orderItem['order_number']); ?>" 
                                            class="admin-btn bg-blue-500 text-white text-sm px-3 py-1">
                                             <i class="fas fa-eye mr-1"></i>View
                                         </a>

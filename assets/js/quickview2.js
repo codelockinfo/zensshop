@@ -404,9 +404,10 @@ window.selectQVVariant = function(btn, option, value) {
             }
 
             // Update Image and matching thumbnail border
-            if (variant.image) {
-                const thumb = document.querySelector(`.qv-thumb[data-img-url="${variant.image}"]`);
-                switchQVImage(variant.image, thumb);
+            const newImage = variant.image || currentQVProduct.image;
+            if (newImage) {
+                const thumb = document.querySelector(`.qv-thumb[data-img-url="${newImage}"]`);
+                switchQVImage(newImage, thumb);
             }
 
             // Update SKU
