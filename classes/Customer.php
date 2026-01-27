@@ -199,7 +199,7 @@ class Customer {
                 "SELECT o.*, 
                 COUNT(oi.id) as item_count
                 FROM orders o
-                LEFT JOIN order_items oi ON o.id = oi.order_id
+                LEFT JOIN order_items oi ON o.order_number = oi.order_num
                 WHERE o.user_id = ?
                 GROUP BY o.id
                 ORDER BY o.created_at DESC",
@@ -210,7 +210,7 @@ class Customer {
                 "SELECT o.*, 
                 COUNT(oi.id) as item_count
                 FROM orders o
-                LEFT JOIN order_items oi ON o.id = oi.order_id
+                LEFT JOIN order_items oi ON o.order_number = oi.order_num
                 WHERE o.customer_email = ?
                 GROUP BY o.id
                 ORDER BY o.created_at DESC",

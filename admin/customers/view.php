@@ -9,7 +9,7 @@ $auth = new Auth();
 $auth->requireLogin();
 
 $pageTitle = 'Customer Details';
-require_once __DIR__ . '/../../includes/admin-header.php';
+// Moved header inclusion to after logic processing to prevent headers already sent error
 
 $customer = new Customer();
 $order = new Order();
@@ -44,6 +44,7 @@ if ($customerId) {
     header('Location: ' . $baseUrl . '/admin/customers/list.php');
     exit;
 }
+require_once __DIR__ . '/../../includes/admin-header.php';
 ?>
 
 

@@ -108,10 +108,21 @@ $orders = $order->getAll($filters);
                 <td>
                     <?php 
                     $orderStatus = $item['order_status'] ?? 'pending';
-                    $isDelivered = ($orderStatus === 'delivered' || $orderStatus === 'success');
-                    $isCancelled = ($orderStatus === 'cancelled' || $orderStatus === 'cancel');
-                    $selectBg = $isDelivered ? '#d1fae5' : ($isCancelled ? '#fee2e2' : '#f3f4f6');
-                    $selectText = $isDelivered ? '#065f46' : ($isCancelled ? '#991b1b' : '#374151');
+                    
+                    // define colors for each status
+                    $statusColors = [
+                        'pending'    => ['bg' => '#fef3c7', 'text' => '#92400e'], // Yellow
+                        'processing' => ['bg' => '#dbeafe', 'text' => '#1e40af'], // Blue
+                        'shipped'    => ['bg' => '#f3e8ff', 'text' => '#6b21a8'], // Purple
+                        'delivered'  => ['bg' => '#d1fae5', 'text' => '#065f46'], // Green
+                        'success'    => ['bg' => '#d1fae5', 'text' => '#065f46'], // Green (alias)
+                        'cancelled'  => ['bg' => '#fee2e2', 'text' => '#991b1b'], // Red
+                        'cancel'     => ['bg' => '#fee2e2', 'text' => '#991b1b'], // Red (alias)
+                    ];
+                    
+                    $colors = $statusColors[$orderStatus] ?? ['bg' => '#f3f4f6', 'text' => '#374151']; // Default Gray
+                    $selectBg = $colors['bg'];
+                    $selectText = $colors['text'];
                     ?>
                     <select
                         class="order-status-select px-2 py-1 rounded border shadow-sm"
@@ -139,9 +150,7 @@ $orders = $order->getAll($filters);
                         <a href="<?php echo $baseUrl; ?>/admin/orders/edit.php?order_number=<?php echo urlencode($item['order_number']); ?>" class="text-green-500 hover:text-green-700">
                             <i class="fas fa-edit"></i>
                         </a>
-                        <button onclick="deleteOrder(<?php echo $item['id']; ?>)" class="text-red-500 hover:text-red-700">
-                            <i class="fas fa-trash"></i>
-                        </button>
+
                     </div>
                 </td>
             </tr>
@@ -190,14 +199,24 @@ function deleteOrder(id) {
         const newStatus = select.value;
 
         // Visual feedback: Update styling immediately
-        select.className = 'order-status-select px-2 py-1 rounded border text-sm'; // Reset
-        if (newStatus === 'delivered' || newStatus === 'success') {
-            select.classList.add('bg-green-100', 'text-green-800');
-        } else if (newStatus === 'cancelled' || newStatus === 'cancel') {
-            select.classList.add('bg-orange-100', 'text-orange-800');
-        } else {
-            select.classList.add('bg-gray-100', 'text-gray-800');
-        }
+        const statusColors = {
+            'pending':    { bg: '#fef3c7', text: '#92400e' },
+            'processing': { bg: '#dbeafe', text: '#1e40af' },
+            'shipped':    { bg: '#f3e8ff', text: '#6b21a8' },
+            'delivered':  { bg: '#d1fae5', text: '#065f46' },
+            'success':    { bg: '#d1fae5', text: '#065f46' },
+            'cancelled':  { bg: '#fee2e2', text: '#991b1b' },
+            'cancel':     { bg: '#fee2e2', text: '#991b1b' }
+        };
+
+        const color = statusColors[newStatus] || { bg: '#f3f4f6', text: '#374151' };
+        
+        // Remove old classes that might conflict
+        select.classList.remove('bg-green-100', 'text-green-800', 'bg-orange-100', 'text-orange-800', 'bg-gray-100', 'text-gray-800');
+        
+        // Apply new styles
+        select.style.backgroundColor = color.bg;
+        select.style.color = color.text;
 
         fetch(BASE_URL + '/admin/api/orders.php', {
             method: 'PUT',

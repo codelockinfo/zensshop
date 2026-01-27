@@ -61,7 +61,7 @@ $totalPages = ceil($totalCount / $perPage);
 
 // Get subscribers with customer information
 $subscribers = $db->fetchAll(
-    "SELECT s.*, c.name as customer_name 
+    "SELECT s.*, c.name as customer_name, c.customer_id as real_customer_id 
      FROM subscribers s 
      LEFT JOIN customers c ON s.user_id = c.id 
      $whereClause 
@@ -166,19 +166,16 @@ unset($_SESSION['success'], $_SESSION['error']);
                             <td class="px-6 py-4 text-sm"><?php echo $sub['id']; ?></td>
                             <td class="px-6 py-4 text-sm font-medium"><?php echo htmlspecialchars($sub['email']); ?></td>
                             <td class="px-6 py-4 text-sm">
-                                <?php if ($sub['user_id'] && $sub['customer_name']): ?>
-                                    <a href="<?php echo $baseUrl; ?>/admin/customers/view.php?id=<?php echo $sub['user_id']; ?>" 
+                                <?php if ($sub['user_id']): ?>
+                                    <a href="<?php echo $baseUrl; ?>/admin/customers/view.php?id=<?php echo $sub['real_customer_id'] ?? $sub['user_id']; ?>" 
                                        class="text-blue-600 hover:text-blue-800 hover:underline font-medium">
-                                        <i class="fas fa-user"></i> <?php echo htmlspecialchars($sub['customer_name']); ?>
+                                        <i class="fas fa-user"></i> <?php echo !empty($sub['customer_name']) ? htmlspecialchars($sub['customer_name']) : 'Customer #' . ($sub['real_customer_id'] ?? $sub['user_id']); ?>
                                     </a>
-                                <?php elseif ($sub['user_id']): ?>
-                                    <span class="bg-blue-100 text-blue-800 px-2 py-1 rounded text-xs">
-                                        <i class="fas fa-user"></i> Customer #<?php echo $sub['user_id']; ?>
-                                    </span>
                                 <?php else: ?>
-                                    <span class="bg-gray-100 text-gray-800 px-2 py-1 rounded text-xs">
-                                        <i class="fas fa-user-slash"></i> Guest
-                                    </span>
+                                    <a href="<?php echo $baseUrl; ?>/admin/customers/view.php?email=<?php echo urlencode($sub['email']); ?>" 
+                                       class="text-gray-600 hover:text-blue-800 hover:underline font-medium">
+                                        <i class="fas fa-user-clock"></i> Guest
+                                    </a>
                                 <?php endif; ?>
                             </td>
                             <td class="px-6 py-4 text-sm text-gray-500">
