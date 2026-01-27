@@ -14,11 +14,16 @@ class CustomerAuth {
     
     public function register($name, $email, $password) {
         $hashedPassword = password_hash($password, PASSWORD_DEFAULT);
+        // Generate unique 10-digit customer ID
+        $customCustomerId = mt_rand(1000000000, 9999999999);
+        
         try {
-            $customerId = $this->db->insert(
-                "INSERT INTO customers (name, email, password) VALUES (?, ?, ?)",
-                [$name, $email, $hashedPassword]
+            $insertedId = $this->db->insert(
+                "INSERT INTO customers (customer_id, name, email, password) VALUES (?, ?, ?, ?)",
+                [$customCustomerId, $name, $email, $hashedPassword]
             );
+            
+            $customerId = $customCustomerId; // Use the 10-digit ID as the reference
             
             // Create notification for admin
             require_once __DIR__ . '/Notification.php';
@@ -51,7 +56,7 @@ class CustomerAuth {
         
         $this->setCustomerSession($customer);
         // Always enable persistent login (auto-login on return)
-        $this->setRememberMe($customer['id']);
+        $this->setRememberMe($customer['customer_id']);
         
         return $customer;
     }
@@ -64,11 +69,14 @@ class CustomerAuth {
                 $this->db->execute("UPDATE customers SET google_id = ? WHERE id = ?", [$googleId, $customer['id']]);
             }
         } else {
+            // Generate unique 10-digit customer ID
+            $customCustomerId = mt_rand(1000000000, 9999999999);
+            
             $id = $this->db->insert(
-                "INSERT INTO customers (name, email, google_id) VALUES (?, ?, ?)",
-                [$name, $email, $googleId]
+                "INSERT INTO customers (customer_id, name, email, google_id) VALUES (?, ?, ?, ?)",
+                [$customCustomerId, $name, $email, $googleId]
             );
-            $customer = $this->db->fetchOne("SELECT * FROM customers WHERE id = ?", [$id]);
+            $customer = $this->db->fetchOne("SELECT * FROM customers WHERE customer_id = ?", [$customCustomerId]);
             
             // Create notification for admin (new Google customer)
             require_once __DIR__ . '/Notification.php';
@@ -86,12 +94,12 @@ class CustomerAuth {
         }
         
         $this->setCustomerSession($customer);
-        $this->setRememberMe($customer['id']);
+        $this->setRememberMe($customer['customer_id']);
         return $customer;
     }
     
     private function setCustomerSession($customer) {
-        $_SESSION['customer_id'] = $customer['id'];
+        $_SESSION['customer_id'] = $customer['customer_id'];
         $_SESSION['customer_name'] = $customer['name'];
         $_SESSION['customer_email'] = $customer['email'];
         $_SESSION['customer_logged_in'] = true;
@@ -122,7 +130,7 @@ class CustomerAuth {
         if (empty($fields)) return false;
         
         $params[] = $_SESSION['customer_id'];
-        $sql = "UPDATE customers SET " . implode(', ', $fields) . " WHERE id = ?";
+        $sql = "UPDATE customers SET " . implode(', ', $fields) . " WHERE customer_id = ?";
         return $this->db->execute($sql, $params);
     }
 
@@ -160,7 +168,7 @@ class CustomerAuth {
             );
             
             if ($session && hash_equals($session['token'], hash('sha256', $validator))) {
-                $customer = $this->db->fetchOne("SELECT * FROM customers WHERE id = ?", [$session['customer_id']]);
+                $customer = $this->db->fetchOne("SELECT * FROM customers WHERE customer_id = ?", [$session['customer_id']]);
                 if ($customer) {
                     $this->setCustomerSession($customer);
                 }
@@ -185,6 +193,6 @@ class CustomerAuth {
 
     public function getCurrentCustomer() {
         if (!$this->isLoggedIn()) return null;
-        return $this->db->fetchOne("SELECT * FROM customers WHERE id = ?", [$_SESSION['customer_id']]);
+        return $this->db->fetchOne("SELECT * FROM customers WHERE customer_id = ?", [$_SESSION['customer_id']]);
     }
 }

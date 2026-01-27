@@ -177,7 +177,7 @@ class Order {
         if (!empty($data['user_id'])) {
             try {
                 $customerId = $data['user_id'];
-                $customerData = $this->db->fetchOne("SELECT * FROM customers WHERE id = ?", [$customerId]);
+                $customerData = $this->db->fetchOne("SELECT * FROM customers WHERE customer_id = ?", [$customerId]);
                 
                 if ($customerData) {
                     $updates = [];
@@ -205,7 +205,7 @@ class Order {
                     
                     if (!empty($updates)) {
                         $params[] = $customerId;
-                        $sql = "UPDATE customers SET " . implode(', ', $updates) . " WHERE id = ?";
+                        $sql = "UPDATE customers SET " . implode(', ', $updates) . " WHERE customer_id = ?";
                         $this->db->execute($sql, $params);
                     }
                 }

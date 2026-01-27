@@ -146,7 +146,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['place_order']) && emp
         $userId = null;
         if ($auth->isLoggedIn()) {
             $currentUser = $auth->getCurrentCustomer();
-            $userId = $currentUser['id'] ?? null;
+            $userId = $currentUser['customer_id'] ?? null;
         }
         
         // Combine phone code and phone number

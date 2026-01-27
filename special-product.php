@@ -44,6 +44,10 @@ if (!$productData || $productData['status'] !== 'active') die("The featured prod
 $platformItems = $platformsGrp['items'] ?? [];
 $showPlat = $platformsGrp['show'] ?? 1;
 
+// 3.1 Fetch Variants & Pick First if available
+$variantsData = $productObj->getVariants($landingPage['product_id']);
+$firstVariant = !empty($variantsData['variants']) ? $variantsData['variants'][0] : null;
+
 // Style Defaults
 $themeColor = $configGrp['theme_color'] ?? '#5F8D76';
 $bodyBg = $configGrp['body_bg_color'] ?? '#ffffff';
@@ -57,9 +61,29 @@ $mainImage = !empty($heroGrp['image']) ? getImageUrl($heroGrp['image']) : getPro
 
 // Prepare Gallery
 $images = json_decode($productData['images'] ?? '[]', true);
+
+// Use Variant Price if available, otherwise Product Price
 $price = $productData['sale_price'] ?? $productData['price'] ?? 0;
 $originalPrice = $productData['price'] ?? 0;
 $currentSalePrice = $productData['sale_price'] ?? 0;
+
+if ($firstVariant) {
+    if ($firstVariant['price'] > 0) {
+        $originalPrice = $firstVariant['price'];
+    }
+    if ($firstVariant['sale_price'] > 0) {
+        $currentSalePrice = $firstVariant['sale_price'];
+    } else {
+        $currentSalePrice = 0; // No sale on variant
+    }
+    $price = $currentSalePrice > 0 ? $currentSalePrice : $originalPrice;
+    
+    // Override main image if variant has one
+    if (!empty($firstVariant['image'])) {
+        $mainImage = getImageUrl($firstVariant['image']);
+    }
+}
+
 $hasSale = $currentSalePrice > 0 && $currentSalePrice < $originalPrice;
 
 $galleryPool = [];
@@ -172,12 +196,12 @@ require_once __DIR__ . '/includes/header.php';
     const LANDING_BASE_URL = '<?php echo $baseUrl; ?>';
     
     // Custom Add To Cart for Landing Page
-    function spAddToCart(productId, btn) {
+    function spAddToCart(productId, btn, attributes = {}) {
         if (btn) setBtnLoading(btn, true);
         fetch(`${LANDING_BASE_URL}/api/cart.php`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ action: 'add', product_id: productId, quantity: 1 })
+            body: JSON.stringify({ action: 'add', product_id: productId, quantity: 1, variant_attributes: attributes })
         })
         .then(res => res.json())
         .then(data => {
@@ -291,7 +315,7 @@ require_once __DIR__ . '/includes/header.php';
         color: white;
     }
     .btn-accent:hover {
-        opacity: 0.9;
+        transform: translateY(-2px);
     }
 
     /* Hero Animations */
@@ -344,22 +368,25 @@ require_once __DIR__ . '/includes/header.php';
                 </div>
                 
                 <div class="flex items-center gap-4 justify-center lg:justify-start flex-wrap">
-                    <button onclick="spAddToCart(<?php echo $productData['product_id']; ?>, this)" class="btn-accent px-10 py-[17px] rounded text-lg font-medium tracking-wide uppercase transition shadow-xl hover:shadow-2xl transform hover:-translate-y-1" data-loading-text="Adding...">
-                        Add to your cart
+                    <button onclick="spAddToCart(<?php echo $productData['product_id']; ?>, this, <?php echo htmlspecialchars(json_encode($firstVariant['variant_attributes'] ?? (object)[])); ?>)" class="btn-accent px-6 h-[58px] py-[17px] rounded text-[11px] font-bold tracking-widest uppercase transition transform flex items-center justify-center gap-3" data-loading-text="Adding...">
+                        <i class="fas fa-shopping-cart text-[13px]"></i>
+                        <span>Add to cart</span>
                     </button>
 
                         <?php foreach ($platformItems as $plat): 
                             $pLink = $plat['link'] ?? '#';
                             $pImg = !empty($plat['image']) ? getImageUrl($plat['image']) : '';
-                            $pName = $plat['name'] ?? 'Buy Now';
+                            $pName = $plat['name'] ?? '';
                             $pBg = $plat['bg'] ?? '#ffffff';
                             $pText = $plat['text'] ?? '#111827';
                         ?>
                         <a href="<?php echo htmlspecialchars($pLink); ?>" target="_blank" class="h-[58px] px-6 rounded flex items-center gap-3 shadow-lg hover:shadow-xl transition-all transform hover:-translate-y-1 group border border-gray-100" style="background-color: <?php echo $pBg; ?>; color: <?php echo $pText; ?>;" title="Buy on <?php echo htmlspecialchars($pName); ?>">
                             <?php if ($pImg): ?>
-                                <img src="<?php echo htmlspecialchars($pImg); ?>" alt="<?php echo htmlspecialchars($pName); ?>" class="h-7 md:h-8 w-auto object-contain">
+                                <img src="<?php echo htmlspecialchars($pImg); ?>" alt="" class="h-7 md:h-8 w-auto object-contain">
                             <?php endif; ?>
-                            <span class="font-bold uppercase text-[11px] tracking-widest" style="color: <?php echo $pText; ?>;"><?php echo htmlspecialchars($pName); ?></span>
+                            <?php if (!empty($pName)): ?>
+                                <span class="font-bold uppercase text-[11px] tracking-widest" style="color: <?php echo $pText; ?>;"><?php echo htmlspecialchars($pName); ?></span>
+                            <?php endif; ?>
                         </a>
                         <?php endforeach; ?>
                 </div>
@@ -750,8 +777,9 @@ require_once __DIR__ . '/includes/header.php';
                 <button onclick="updateStickyQty(1)" class="w-8 h-full flex items-center justify-center text-gray-600 hover:bg-gray-100 transition">+</button>
             </div>
 
-            <button onclick="stickyAddToCart()" class="bg-black text-white px-4 py-2.5 md:px-8 rounded-full font-bold hover:bg-gray-800 transition shadow-lg transform hover:-translate-y-0.5 text-sm md:text-base whitespace-nowrap" id="sticky-atc-btn">
-                Add To Cart
+            <button onclick="stickyAddToCart()" class="bg-black text-white px-4 py-2.5 md:px-8 rounded-full font-bold hover:bg-gray-800 transition flex items-center justify-center gap-2 text-sm md:text-base whitespace-nowrap" id="sticky-atc-btn">
+                <i class="fas fa-shopping-cart text-xs md:text-sm"></i>
+                <span>Add To Cart</span>
             </button>
         </div>
     </div>
@@ -802,10 +830,11 @@ function stickyAddToCart() {
 
         if (typeof spAddToCart === 'function') {
            // Direct fetch to support quantity not supported by default spAddToCart
+            const attributes = <?php echo json_encode($firstVariant['variant_attributes'] ?? (object)[]); ?>;
             fetch(`${LANDING_BASE_URL}/api/cart.php`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ action: 'add', product_id: productId, quantity: qty })
+                body: JSON.stringify({ action: 'add', product_id: productId, quantity: qty, variant_attributes: attributes })
             })
             .then(res => res.json())
             .then(data => {

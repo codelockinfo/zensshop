@@ -135,6 +135,10 @@ class Product {
     public function create($data) {
         return $this->retryHandler->executeWithRetry(
             function() use ($data) {
+                // Use transaction to ensure consistency
+                $this->db->beginTransaction();
+                
+                try {
                 // Generate unique 10-digit product ID (e.g., 5654148741)
                 $customProductId = $this->generateUniqueProductId();
                 
@@ -220,7 +224,17 @@ class Product {
                     $this->saveVariants($customProductId, $data['variants']);
                 }
                 
+                $this->db->commit();
                 return $productId;
+                
+                } catch (Exception $e) {
+                    $this->db->rollback();
+                    // Detect duplicate SKU early
+                    if (strpos($e->getMessage(), 'Duplicate entry') !== false && strpos($e->getMessage(), '.sku') !== false) {
+                        throw new Exception("A product with SKU '" . ($data['sku'] ?? '') . "' already exists.");
+                    }
+                    throw $e;
+                }
             },
             'Create Product',
             ['data' => $data]

@@ -27,13 +27,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         // Sync cart after login
         require_once __DIR__ . '/classes/Cart.php';
         $cart = new Cart();
-        $cart->syncCartAfterLogin($customer['id']);
+        // Use the 10-digit customer_id for syncing
+        $cart->syncCartAfterLogin($customer['customer_id']);
         
         // Sync wishlist after login
         require_once __DIR__ . '/classes/Wishlist.php';
         $wishlist = new Wishlist();
-        $wishlist->syncWishlistAfterLogin($customer['id']);
+        $wishlist->syncWishlistAfterLogin($customer['customer_id']);
         
+        // Better redirect: if redirect is checkout, go to checkout.php, else check if it's a valid relative path
         $target = ($redirect === 'checkout') ? url('checkout.php') : url('account.php');
         unset($_SESSION['login_redirect']);
         header('Location: ' . $target);

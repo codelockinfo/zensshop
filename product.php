@@ -78,6 +78,32 @@ $primaryCategory = !empty($productCategories) ? $productCategories[0] : null;
 // Calculate price and discount
 $price = $productData['sale_price'] ?? $productData['price'] ?? 0;
 $originalPrice = !empty($productData['sale_price']) ? $productData['price'] : null;
+
+// Get product variants
+$variantsData = $product->getVariants($productData['id']);
+$productOptions = $variantsData['options'] ?? [];
+$productVariants = $variantsData['variants'] ?? [];
+
+// Auto-select first variant if available
+$firstVariant = !empty($productVariants) ? $productVariants[0] : null;
+
+if ($firstVariant) {
+    if ($firstVariant['price'] > 0) {
+        $originalPrice = $firstVariant['price'];
+    }
+    if ($firstVariant['sale_price'] > 0) {
+        $price = $firstVariant['sale_price'];
+    } else {
+        $price = $firstVariant['price'] ?: $price;
+        $originalPrice = null; // No sale on variant
+    }
+    
+    // Override main image if variant has one
+    if (!empty($firstVariant['image'])) {
+        $mainImage = getImageUrl($firstVariant['image']);
+    }
+}
+
 $discount = $originalPrice && $originalPrice > 0 ? round((($originalPrice - $price) / $originalPrice) * 100) : 0;
 
 // Get related products (same category)
@@ -130,10 +156,7 @@ if (!headers_sent()) {
 }
 $_COOKIE['recently_viewed'] = json_encode($recentIds);
 
-// Get product variants
-$variantsData = $product->getVariants($productData['id']);
-$productOptions = $variantsData['options'] ?? [];
-$productVariants = $variantsData['variants'] ?? [];
+// Product Options and Variants (already fetched above)
 ?>
 
 <section class="py-8 md:py-12 bg-white">
@@ -1380,8 +1403,9 @@ async function toggleProductWishlist(productId, btn) {
                 <button onclick="updateStickyQty(1)" class="w-8 h-full flex items-center justify-center text-gray-600 hover:bg-gray-100 transition">+</button>
             </div>
 
-            <button onclick="stickyAddToCart()" class="bg-black text-white px-4 py-2.5 md:px-8 rounded-full font-bold hover:bg-gray-800 transition shadow-lg transform hover:-translate-y-0.5 text-sm md:text-base whitespace-nowrap" id="sticky-atc-btn">
-                Add To Cart
+            <button onclick="stickyAddToCart()" class="bg-black text-white px-4 py-2.5 md:px-8 rounded-full font-bold hover:bg-gray-800 transition flex items-center justify-center gap-2 text-sm md:text-base whitespace-nowrap" id="sticky-atc-btn">
+                <i class="fas fa-shopping-cart text-xs md:text-sm"></i>
+                <span>Add To Cart</span>
             </button>
         </div>
     </div>

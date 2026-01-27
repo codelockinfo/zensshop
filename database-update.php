@@ -429,6 +429,94 @@ if (columnExists($db, 'landing_pages', 'product_id')) {
     executeSql($db, $query, "Migrate relative PK IDs to custom product_id values", $errors, $success, $EXECUTE);
 }
 
+// ==========================================
+// STEP 13: Increase Column Sizes for Large Payloads
+// ==========================================
+echo "STEP 13: Increasing Column Sizes for Large Payloads\n";
+echo "--------------------------------------------------\n";
+
+executeSql($db, "ALTER TABLE products MODIFY COLUMN images MEDIUMTEXT", "Upgrade products.images to MEDIUMTEXT", $errors, $success, $EXECUTE);
+executeSql($db, "ALTER TABLE product_variants MODIFY COLUMN variant_attributes MEDIUMTEXT", "Upgrade product_variants.variant_attributes to MEDIUMTEXT", $errors, $success, $EXECUTE);
+
+
+// ==========================================
+// STEP 14: Customer ID Modernization (10-digit)
+// ==========================================
+echo "STEP 14: Modernizing Customer IDs to 10-digit format\n";
+echo "---------------------------------------------------\n";
+
+if (!columnExists($db, 'customers', 'customer_id')) {
+    executeSql($db, "ALTER TABLE customers ADD COLUMN customer_id BIGINT AFTER id", "Add customer_id to customers", $errors, $success, $EXECUTE);
+    executeSql($db, "ALTER TABLE customers ADD UNIQUE INDEX IF NOT EXISTS idx_unique_customer_id (customer_id)", "Add UNIQUE index to customers.customer_id", $errors, $success, $EXECUTE);
+}
+
+if ($EXECUTE) {
+    // Populate existing customers with random 10-digit IDs if they don't have one
+    $customers = $db->fetchAll("SELECT id FROM customers WHERE customer_id IS NULL");
+    if (!empty($customers)) {
+        echo "Generating IDs for " . count($customers) . " existing customers...\n";
+        foreach ($customers as $c) {
+            $randomId = mt_rand(1000000000, 9999999999);
+            $db->execute("UPDATE customers SET customer_id = ? WHERE id = ?", [$randomId, $c['id']]);
+        }
+    }
+    
+    // Helper to dynamically drop FK on a column
+    $dropFkDynamic = function($table, $column) use ($db) {
+        try {
+            $fks = $db->fetchAll("SELECT CONSTRAINT_NAME 
+                FROM information_schema.KEY_COLUMN_USAGE 
+                WHERE TABLE_SCHEMA = DATABASE() 
+                AND TABLE_NAME = ? 
+                AND COLUMN_NAME = ? 
+                AND REFERENCED_TABLE_NAME IS NOT NULL", [$table, $column]);
+                
+            foreach ($fks as $fk) {
+                $name = $fk['CONSTRAINT_NAME'];
+                $db->execute("ALTER TABLE `$table` DROP FOREIGN KEY `$name`");
+                echo "Dropped dynamic FK: $name on $table.$column\n";
+            }
+        } catch (Exception $e) {
+             // Ignore errors if FK doesn't exist or table doesn't exist
+        }
+    };
+    
+    // Migrate dependent tables
+    
+    // 1. orders (user_id -> customer_id)
+    $dropFkDynamic('orders', 'user_id');
+    executeSql($db, "ALTER TABLE orders MODIFY COLUMN user_id BIGINT", "Ensure orders.user_id is BIGINT", $errors, $success, $EXECUTE);
+    // Standard update: match old ID to new customer_id
+    $db->execute("UPDATE orders o INNER JOIN customers c ON o.user_id = c.id SET o.user_id = c.customer_id WHERE o.user_id < 1000000000");
+    // Recovery update: match via email (fixes mismatches for orders placed during transition)
+    try {
+        $db->execute("UPDATE orders o INNER JOIN customers c ON o.customer_email = c.email SET o.user_id = c.customer_id WHERE c.customer_id IS NOT NULL");
+    } catch (Exception $e) { /* Ignore if columns missing */ }
+    
+    // 2. cart (user_id -> customer_id)
+    $dropFkDynamic('cart', 'user_id');
+    executeSql($db, "ALTER TABLE cart MODIFY COLUMN user_id BIGINT NOT NULL", "Ensure cart.user_id is BIGINT", $errors, $success, $EXECUTE);
+    $db->execute("UPDATE cart cr INNER JOIN customers c ON cr.user_id = c.id SET cr.user_id = c.customer_id WHERE cr.user_id < 1000000000");
+
+    // 3. wishlist (user_id -> customer_id)
+    $dropFkDynamic('wishlist', 'user_id');
+    executeSql($db, "ALTER TABLE wishlist MODIFY COLUMN user_id BIGINT NOT NULL", "Ensure wishlist.user_id is BIGINT", $errors, $success, $EXECUTE);
+    $db->execute("UPDATE wishlist w INNER JOIN customers c ON w.user_id = c.id SET w.user_id = c.customer_id WHERE w.user_id < 1000000000");
+
+    // 4. customer_sessions (customer_id -> customer_id)
+    // First drop the old FK if it exists
+    dropForeignKeyIfExists($db, 'customer_sessions', 'customer_sessions_ibfk_1', $errors, $success, $EXECUTE);
+    $dropFkDynamic('customer_sessions', 'customer_id'); // Double check
+    
+    executeSql($db, "ALTER TABLE customer_sessions MODIFY COLUMN customer_id BIGINT NOT NULL", "Ensure customer_sessions.customer_id is BIGINT", $errors, $success, $EXECUTE);
+    $db->execute("UPDATE customer_sessions cs INNER JOIN customers c ON cs.customer_id = c.id SET cs.customer_id = c.customer_id WHERE cs.customer_id < 1000000000");
+    
+    // Re-add FK pointing to new customer_id column
+    executeSql($db, "ALTER TABLE customer_sessions ADD CONSTRAINT fk_sessions_customer_id FOREIGN KEY (customer_id) REFERENCES customers(customer_id) ON DELETE CASCADE", "Re-add FK sessions -> customers.customer_id", $errors, $success, $EXECUTE);
+
+    $success[] = "Customer ID Modernization Complete";
+}
+
 echo "\n========================================\n";
 echo "SUMMARY\n";
 echo "========================================\n";

@@ -18,94 +18,101 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $product = new Product();
     $retryHandler = new RetryHandler();
     
-    try {
-        $data = [
-            'name' => $_POST['name'] ?? '',
-            'description' => $_POST['description'] ?? '',
-            'short_description' => $_POST['short_description'] ?? '',
-            'category_id' => !empty($_POST['category_ids'][0]) ? $_POST['category_ids'][0] : null,
-            'category_ids' => $_POST['category_ids'] ?? [],
-            'price' => $_POST['price'] ?? 0,
-            'currency' => $_POST['currency'] ?? 'USD',
-            'sale_price' => $_POST['sale_price'] ?? null,
-            'stock_quantity' => $_POST['stock_quantity'] ?? 0,
-            'stock_status' => $_POST['stock_status'] ?? 'in_stock',
-            'gender' => $_POST['gender'] ?? 'unisex',
-            'brand' => $_POST['brand'] ?? null,
-            'status' => $_POST['status'] ?? 'draft',
-            'sku' => $_POST['sku'] ?? '',
-            'featured' => isset($_POST['featured']) ? 1 : 0,
-            'highlights' => $_POST['highlights'] ?? null,
-            'shipping_policy' => $_POST['shipping_policy'] ?? null,
-            'return_policy' => $_POST['return_policy'] ?? null,
-            'images' => []
-        ];
-        
-        // Handle image uploads
-        if (!empty($_POST['images'])) {
-            $imagesJson = $_POST['images'];
-            $imagePaths = json_decode($imagesJson, true);
-            if (is_array($imagePaths) && !empty($imagePaths)) {
-                // Filter out empty values
-                $imagePaths = array_filter($imagePaths);
-                $data['images'] = array_values($imagePaths);
-                // Set first image as featured
-                if (!empty($imagePaths[0])) {
-                    $data['featured_image'] = $imagePaths[0];
-                }
-            }
-        }
-        
-        // Handle direct file uploads (fallback)
-        if (!empty($_FILES['product_images']['name'][0])) {
-            $uploadDir = __DIR__ . '/../../assets/images/uploads/';
-            if (!is_dir($uploadDir)) {
-                mkdir($uploadDir, 0755, true);
-            }
+    // Check if POST data is empty but method is POST and content-length > 0 (post_max_size exceeded)
+    if (empty($_POST) && isset($_SERVER['CONTENT_LENGTH']) && $_SERVER['CONTENT_LENGTH'] > 0) {
+        $error = "The total size of your images and data exceeds the server limit (" . ini_get('post_max_size') . "). Please upload fewer or smaller images.";
+    } else {
+        try {
+            $data = [
+                'name' => $_POST['name'] ?? '',
+                'description' => $_POST['description'] ?? '',
+                'short_description' => $_POST['short_description'] ?? '',
+                // Fix category mapping: check both singular and array versions
+                'category_id' => !empty($_POST['category_id']) ? $_POST['category_id'] : (!empty($_POST['category_ids'][0]) ? $_POST['category_ids'][0] : null),
+                'category_ids' => !empty($_POST['category_ids']) ? $_POST['category_ids'] : (!empty($_POST['category_id']) ? [$_POST['category_id']] : []),
+                'price' => $_POST['price'] ?? 0,
+                'currency' => $_POST['currency'] ?? 'INR',
+                'sale_price' => !empty($_POST['sale_price']) ? $_POST['sale_price'] : null,
+                'stock_quantity' => $_POST['stock_quantity'] ?? 0,
+                'stock_status' => $_POST['stock_status'] ?? 'in_stock',
+                'gender' => $_POST['gender'] ?? 'unisex',
+                'brand' => $_POST['brand'] ?? null,
+                'status' => $_POST['status'] ?? 'draft',
+                // Fix SKU: If empty, use NULL to avoid duplicate key error ('')
+                'sku' => !empty($_POST['sku']) ? trim($_POST['sku']) : null,
+                'featured' => isset($_POST['featured']) ? 1 : 0,
+                'highlights' => $_POST['highlights'] ?? null,
+                'shipping_policy' => $_POST['shipping_policy'] ?? null,
+                'return_policy' => $_POST['return_policy'] ?? null,
+                'images' => []
+            ];
             
-            $uploadedImages = [];
-            foreach ($_FILES['product_images']['name'] as $key => $name) {
-                if ($_FILES['product_images']['error'][$key] === UPLOAD_ERR_OK) {
-                    $tmpName = $_FILES['product_images']['tmp_name'][$key];
-                    $extension = pathinfo($name, PATHINFO_EXTENSION);
-                    $newName = 'product_' . uniqid() . '_' . time() . '.' . $extension;
-                    $destination = $uploadDir . $newName;
-                    
-                    if (move_uploaded_file($tmpName, $destination)) {
-                        $uploadedImages[] = $baseUrl . '/assets/images/uploads/' . $newName;
+            // Handle image uploads
+            if (!empty($_POST['images'])) {
+                $imagesJson = $_POST['images'];
+                $imagePaths = json_decode($imagesJson, true);
+                if (is_array($imagePaths) && !empty($imagePaths)) {
+                    // Filter out empty values
+                    $imagePaths = array_filter($imagePaths);
+                    $data['images'] = array_values($imagePaths);
+                    // Set first image as featured
+                    if (!empty($imagePaths[0])) {
+                        $data['featured_image'] = $imagePaths[0];
                     }
                 }
             }
             
-            if (!empty($uploadedImages)) {
-                $data['images'] = $uploadedImages;
-                if (!empty($uploadedImages[0])) {
-                    $data['featured_image'] = $uploadedImages[0];
+            // Handle direct file uploads (fallback)
+            if (!empty($_FILES['product_images']['name'][0])) {
+                $uploadDir = __DIR__ . '/../../assets/images/uploads/';
+                if (!is_dir($uploadDir)) {
+                    mkdir($uploadDir, 0755, true);
+                }
+                
+                $uploadedImages = [];
+                foreach ($_FILES['product_images']['name'] as $key => $name) {
+                    if ($_FILES['product_images']['error'][$key] === UPLOAD_ERR_OK) {
+                        $tmpName = $_FILES['product_images']['tmp_name'][$key];
+                        $extension = pathinfo($name, PATHINFO_EXTENSION);
+                        $newName = 'product_' . uniqid() . '_' . time() . '.' . $extension;
+                        $destination = $uploadDir . $newName;
+                        
+                        if (move_uploaded_file($tmpName, $destination)) {
+                            $uploadedImages[] = $baseUrl . '/assets/images/uploads/' . $newName;
+                        }
+                    }
+                }
+                
+                if (!empty($uploadedImages)) {
+                    $data['images'] = array_merge($data['images'] ?? [], $uploadedImages);
+                    if (empty($data['featured_image']) && !empty($uploadedImages[0])) {
+                        $data['featured_image'] = $uploadedImages[0];
+                    }
                 }
             }
-        }
-        
-        // Handle variants data
-        if (!empty($_POST['variants_data'])) {
-            $variantsData = json_decode($_POST['variants_data'], true);
-            if (is_array($variantsData)) {
-                $data['variants'] = $variantsData;
+            
+            // Handle variants data
+            if (!empty($_POST['variants_data'])) {
+                $variantsData = json_decode($_POST['variants_data'], true);
+                if (is_array($variantsData)) {
+                    $data['variants'] = $variantsData;
+                }
             }
+            
+            $productId = $retryHandler->executeWithRetry(
+                function() use ($product, $data) {
+                    return $product->create($data);
+                },
+                'Add Product',
+                ['data' => $data]
+            );
+            
+            // Redirect before any output
+            header('Location: ' . $baseUrl . '/admin/products/list.php');
+            exit;
+        } catch (Exception $e) {
+            $error = $e->getMessage();
         }
-        
-        $productId = $retryHandler->executeWithRetry(
-            function() use ($product, $data) {
-                return $product->create($data);
-            },
-            'Add Product',
-            ['data' => $data]
-        );
-        
-        // Redirect before any output
-        header('Location: ' . $baseUrl . '/admin/products/list.php');
-        exit;
-    } catch (Exception $e) {
-        $error = $e->getMessage();
     }
 }
 
@@ -130,8 +137,8 @@ $brands = $brandsResult ? json_decode($brandsResult['setting_value'], true) : []
             Add Product
         </p>
     </div>
-    <button type="button" onclick="document.getElementById('productForm').requestSubmit()" class="bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700 shadow-md transition-colors">
-        <i class="fas fa-save mr-2"></i> Save Product
+    <button type="submit" form="productForm" id="topSubmitBtn" class="bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700 shadow-md transition-all flex items-center">
+        <i class="fas fa-save mr-2"></i> <span>Save Product</span>
     </button>
 </div>
 
@@ -404,14 +411,11 @@ $brands = $brandsResult ? json_decode($brandsResult['setting_value'], true) : []
         </div>
         
         <div class="flex space-x-4">
-            <button type="submit" class="admin-btn admin-btn-primary flex-1">
-                Add product
+            <button type="submit" id="bottomSubmitBtn" class="admin-btn admin-btn-primary flex-1 flex items-center justify-center">
+                <span>Add product</span>
             </button>
-            <button type="button" class="admin-btn border border-blue-500 text-blue-500 flex-1">
-                Save product
-            </button>
-            <button type="button" class="admin-btn border border-gray-300 text-gray-600 flex-1">
-                Schedule
+            <button type="reset" class="admin-btn border border-gray-300 text-gray-600 flex-1">
+                Reset
             </button>
         </div>
             </form>
@@ -488,6 +492,18 @@ function removeHighlightRow(btn, editorId) {
 }
 
 document.getElementById('productForm').addEventListener('submit', function(e) {
+    // Prevent double-submission
+    const submitBtns = [document.getElementById('topSubmitBtn'), document.getElementById('bottomSubmitBtn')];
+    submitBtns.forEach(btn => {
+        if (btn) {
+            btn.disabled = true;
+            const span = btn.querySelector('span');
+            if (span) span.textContent = 'Processing...';
+            const icon = btn.querySelector('i');
+            if (icon) icon.className = 'fas fa-spinner fa-spin mr-2';
+        }
+    });
+
     // Sync all TinyMCE instances
     if (typeof tinymce !== 'undefined') {
         tinymce.triggerSave();
@@ -499,7 +515,8 @@ document.getElementById('productForm').addEventListener('submit', function(e) {
     const highlights = [];
     for(let i=0; i<icons.length; i++) {
         // For inline editors, we must use tinymce.get().getContent() 
-        const content = tinymce.get(editors[i].id) ? tinymce.get(editors[i].id).getContent() : editors[i].innerHTML;
+        const editorId = editors[i].id;
+        const content = (editorId && tinymce.get(editorId)) ? tinymce.get(editorId).getContent() : editors[i].innerHTML;
         if(icons[i] || content) {
             highlights.push({ icon: icons[i], text: content });
         }

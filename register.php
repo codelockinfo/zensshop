@@ -3,7 +3,11 @@ require_once __DIR__ . '/includes/functions.php';
 require_once __DIR__ . '/classes/CustomerAuth.php';
 
 $auth = new CustomerAuth();
-$redirect = $_SESSION['login_redirect'] ?? '';
+$redirect = $_GET['redirect'] ?? $_SESSION['login_redirect'] ?? '';
+
+if ($redirect) {
+    $_SESSION['login_redirect'] = $redirect;
+}
 
 if ($auth->isLoggedIn()) {
     $target = ($redirect === 'checkout') ? url('checkout.php') : url('account.php');

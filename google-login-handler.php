@@ -25,12 +25,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['credential'])) {
                 // Sync cart after login
                 require_once __DIR__ . '/classes/Cart.php';
                 $cart = new Cart();
-                $cart->syncCartAfterLogin($customer['id']);
+                $cart->syncCartAfterLogin($customer['customer_id']);
                 
                 // Sync wishlist after login
                 require_once __DIR__ . '/classes/Wishlist.php';
                 $wishlist = new Wishlist();
-                $wishlist->syncWishlistAfterLogin($customer['id']);
+                $wishlist->syncWishlistAfterLogin($customer['customer_id']);
                 
                 $redirect = $_SESSION['login_redirect'] ?? '';
                 $target = ($redirect === 'checkout') ? url('checkout.php') : url('account.php');

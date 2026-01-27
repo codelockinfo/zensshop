@@ -39,31 +39,38 @@ if (!$productData) {
 }
 
 // Handle form submission BEFORE including header (to allow redirects)
+// Handle form submission BEFORE including header (to allow redirects)
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $retryHandler = new RetryHandler();
     
-    try {
-        $data = [
-            'name' => $_POST['name'] ?? '',
-            'description' => $_POST['description'] ?? '',
-            'short_description' => $_POST['short_description'] ?? '',
-            'category_id' => !empty($_POST['category_ids'][0]) ? $_POST['category_ids'][0] : null,
-            'category_ids' => $_POST['category_ids'] ?? [],
-            'price' => $_POST['price'] ?? 0,
-            'currency' => $_POST['currency'] ?? 'USD',
-            'sale_price' => $_POST['sale_price'] ?? null,
-            'stock_quantity' => $_POST['stock_quantity'] ?? 0,
-            'stock_status' => $_POST['stock_status'] ?? 'in_stock',
-            'gender' => $_POST['gender'] ?? 'unisex',
-            'brand' => $_POST['brand'] ?? null,
-            'status' => $_POST['status'] ?? 'draft',
-            'sku' => $_POST['sku'] ?? '',
-            'featured' => isset($_POST['featured']) ? 1 : 0,
-            'highlights' => $_POST['highlights'] ?? null,
-            'shipping_policy' => $_POST['shipping_policy'] ?? null,
-            'return_policy' => $_POST['return_policy'] ?? null,
-            'images' => []
-        ];
+    // Check if POST data is empty but method is POST/length > 0 (exceeds post_max_size)
+    if (empty($_POST) && isset($_SERVER['CONTENT_LENGTH']) && $_SERVER['CONTENT_LENGTH'] > 0) {
+        $error = "The total size of your images and data exceeds the server limit (" . ini_get('post_max_size') . "). Please upload fewer or smaller images.";
+    } else {
+        try {
+            $data = [
+                'name' => $_POST['name'] ?? '',
+                'description' => $_POST['description'] ?? '',
+                'short_description' => $_POST['short_description'] ?? '',
+                // Fix category mapping
+                'category_id' => !empty($_POST['category_id']) ? $_POST['category_id'] : (!empty($_POST['category_ids'][0]) ? $_POST['category_ids'][0] : null),
+                'category_ids' => !empty($_POST['category_ids']) ? $_POST['category_ids'] : (!empty($_POST['category_id']) ? [$_POST['category_id']] : []),
+                'price' => $_POST['price'] ?? 0,
+                'currency' => $_POST['currency'] ?? 'INR',
+                'sale_price' => !empty($_POST['sale_price']) ? $_POST['sale_price'] : null,
+                'stock_quantity' => $_POST['stock_quantity'] ?? 0,
+                'stock_status' => $_POST['stock_status'] ?? 'in_stock',
+                'gender' => $_POST['gender'] ?? 'unisex',
+                'brand' => $_POST['brand'] ?? null,
+                'status' => $_POST['status'] ?? 'draft',
+                // Fix SKU NULL handling
+                'sku' => !empty($_POST['sku']) ? trim($_POST['sku']) : null,
+                'featured' => isset($_POST['featured']) ? 1 : 0,
+                'highlights' => $_POST['highlights'] ?? null,
+                'shipping_policy' => $_POST['shipping_policy'] ?? null,
+                'return_policy' => $_POST['return_policy'] ?? null,
+                'images' => []
+            ];
         
         // Handle image uploads
         if (!empty($_POST['images'])) {
@@ -154,8 +161,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         // Redirect after successful update
         header('Location: ' . $baseUrl . '/admin/products/list.php?success=updated');
         exit;
-    } catch (Exception $e) {
-        $error = $e->getMessage();
+        } catch (Exception $e) {
+            $error = $e->getMessage();
+        }
     }
 }
 
@@ -185,8 +193,8 @@ $existingVariants = $product->getVariants($productId);
         <h1 class="text-3xl font-bold">Edit Product</h1>
         <p class="text-gray-600">Dashboard > Ecommerce > Edit product</p>
     </div>
-    <button type="button" onclick="document.getElementById('productForm').requestSubmit()" class="bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700 shadow-md transition-colors">
-        <i class="fas fa-save mr-2"></i> Save Changes
+    <button type="submit" form="productForm" id="topSubmitBtn" class="bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700 shadow-md transition-all flex items-center">
+        <i class="fas fa-save mr-2"></i> <span>Save Changes</span>
     </button>
 </div>
 
@@ -504,8 +512,8 @@ $existingVariants = $product->getVariants($productId);
         </div>
         
         <div class="flex space-x-4">
-            <button type="submit" class="admin-btn admin-btn-primary flex-1">
-                Update product
+            <button type="submit" id="bottomSubmitBtn" class="admin-btn admin-btn-primary flex-1 flex items-center justify-center">
+                <span>Update product</span>
             </button>
             <a href="<?php echo $baseUrl; ?>/admin/products/list.php" class="admin-btn border border-gray-300 text-gray-600 flex-1 text-center">
                 Cancel
@@ -579,6 +587,16 @@ function removeHighlightRow(btn, editorId) {
 }
 
 document.getElementById('productForm').addEventListener('submit', function(e) {
+    // Prevent double-submission
+    const submitBtns = [document.getElementById('topSubmitBtn'), document.getElementById('bottomSubmitBtn')];
+    submitBtns.forEach(btn => {
+        if (btn) {
+            btn.disabled = true;
+            const span = btn.querySelector('span');
+            if (span) span.textContent = 'Processing...';
+        }
+    });
+
     // Sync all TinyMCE instances
     if (typeof tinymce !== 'undefined') {
         tinymce.triggerSave();
@@ -589,7 +607,8 @@ document.getElementById('productForm').addEventListener('submit', function(e) {
     
     const highlights = [];
     for(let i=0; i<icons.length; i++) {
-        const content = tinymce.get(editors[i].id) ? tinymce.get(editors[i].id).getContent() : editors[i].innerHTML;
+        const editorId = editors[i].id;
+        const content = (editorId && tinymce.get(editorId)) ? tinymce.get(editorId).getContent() : editors[i].innerHTML;
         if(icons[i] || content) {
             highlights.push({ icon: icons[i], text: content });
         }

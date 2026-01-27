@@ -38,7 +38,7 @@ class Customer {
                 COALESCE(SUM(o.total_amount), 0) as total_spent,
                 MAX(o.created_at) as last_order_date
                 FROM customers c
-                LEFT JOIN orders o ON c.id = o.user_id
+                LEFT JOIN orders o ON c.customer_id = o.user_id
                 WHERE 1=1";
         $params = [];
         
@@ -55,7 +55,7 @@ class Customer {
             $params[] = $searchTerm;
         }
         
-        $sql .= " GROUP BY c.id ORDER BY c.created_at DESC";
+        $sql .= " GROUP BY c.customer_id ORDER BY c.created_at DESC";
         
         if (!empty($filters['limit'])) {
             $sql .= " LIMIT " . (int)$filters['limit'];
@@ -99,7 +99,7 @@ class Customer {
         // Add registered customers
         foreach ($registered as $customer) {
             $allCustomers[] = [
-                'id' => $customer['id'],
+                'id' => $customer['customer_id'], // Use 10-digit ID here
                 'name' => $customer['name'],
                 'email' => $customer['email'],
                 'phone' => $customer['phone'],
@@ -149,7 +149,7 @@ class Customer {
         }
         
         $customer = $this->db->fetchOne(
-            "SELECT * FROM customers WHERE id = ?",
+            "SELECT * FROM customers WHERE customer_id = ?",
             [$id]
         );
         
@@ -161,7 +161,7 @@ class Customer {
                 COALESCE(SUM(total_amount), 0) as total_spent,
                 MAX(created_at) as last_order_date
                 FROM orders WHERE user_id = ?",
-                [$id]
+                [$customer['customer_id']]
             );
             
             $customer['total_orders'] = (int)($stats['total_orders'] ?? 0);
@@ -170,6 +170,10 @@ class Customer {
         }
         
         return $customer;
+    }
+    
+    public function getByCustomerId($customerId) {
+        return $this->getById($customerId);
     }
     
     /**
@@ -267,7 +271,7 @@ class Customer {
      */
     public function updateStatus($id, $status) {
         return $this->db->execute(
-            "UPDATE customers SET status = ? WHERE id = ?",
+            "UPDATE customers SET status = ? WHERE customer_id = ?",
             [$status, $id]
         );
     }
