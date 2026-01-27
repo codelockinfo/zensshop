@@ -187,16 +187,72 @@ $productVariants = $variantsData['variants'] ?? [];
                 }
                 ?>
                 
+                <!-- Swiper CSS -->
+                <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.css" />
+                <style>
+                    .thumbnail-slider {
+                        padding: 0 30px; /* Space for arrows */
+                    }
+                    .thumbnail-slider .swiper-button-next,
+                    .thumbnail-slider .swiper-button-prev {
+                        color: #000;
+                        width: 20px;
+                        height: 20px;
+                    }
+                    .thumbnail-slider .swiper-button-next::after,
+                    .thumbnail-slider .swiper-button-prev::after {
+                        font-size: 16px;
+                        font-weight: bold;
+                    }
+                    .thumbnail-slider .swiper-slide {
+                        height: auto;
+                    }
+                    .thumbnail-slider .swiper-slide img {
+                        height: 80px; /* Fixed height for consistency */
+                        width: 100%;
+                    }
+                </style>
+
                 <?php if (count($galleryItems) > 1): ?>
-                <div class="grid grid-cols-5 gap-2">
-                    <?php foreach ($galleryItems as $index => $item): ?>
-                    <img src="<?php echo htmlspecialchars($item['url']); ?>" 
-                         alt="Thumbnail <?php echo $index + 1; ?>"
-                         class="thumbnail-img w-full object-cover rounded cursor-pointer border-2 transition hover:border-primary <?php echo $index === 0 ? 'border-primary' : 'border-transparent'; ?>"
-                         onclick="changeMainImage('<?php echo htmlspecialchars($item['url']); ?>', this, <?php echo $item['variant'] ? htmlspecialchars(json_encode($item['variant'])) : 'null'; ?>)"
-                         onerror="this.src='https://via.placeholder.com/150x150?text=No+Image'">
-                    <?php endforeach; ?>
+                <div class="relative">
+                    <div class="swiper thumbnail-slider mt-4">
+                        <div class="swiper-wrapper">
+                            <?php foreach ($galleryItems as $index => $item): ?>
+                            <div class="swiper-slide">
+                                <img src="<?php echo htmlspecialchars($item['url']); ?>" 
+                                     alt="Thumbnail <?php echo $index + 1; ?>"
+                                     class="thumbnail-img object-cover rounded cursor-pointer border-2 transition hover:border-primary <?php echo $index === 0 ? 'border-primary' : 'border-transparent'; ?>"
+                                     onclick="changeMainImage('<?php echo htmlspecialchars($item['url']); ?>', this, <?php echo $item['variant'] ? htmlspecialchars(json_encode($item['variant'])) : 'null'; ?>)"
+                                     onerror="this.src='https://via.placeholder.com/150x150?text=No+Image'">
+                            </div>
+                            <?php endforeach; ?>
+                        </div>
+                        <!-- Navigation arrows -->
+                        <div class="swiper-button-next"></div>
+                        <div class="swiper-button-prev"></div>
+                    </div>
                 </div>
+
+                <!-- Swiper JS -->
+                <script src="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.js"></script>
+                
+                <script>
+                document.addEventListener('DOMContentLoaded', function() {
+                    new Swiper('.thumbnail-slider', {
+                        slidesPerView: 4,
+                        spaceBetween: 10,
+                        navigation: {
+                            nextEl: '.swiper-button-next',
+                            prevEl: '.swiper-button-prev',
+                        },
+                        breakpoints: {
+                            640: {
+                                slidesPerView: 5,
+                            },
+                        }
+                    });
+                });
+                </script>
                 <?php endif; ?>
             </div>
             
