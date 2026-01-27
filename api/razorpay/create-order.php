@@ -24,7 +24,7 @@ ob_clean();
 // Only allow POST requests
 if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
     http_response_code(405);
-    echo json_encode(['success' => false, 'message' => 'Method not allowed']);
+    echo json_encode(['success' => false, 'message' => 'Something went wrong']);
     exit;
 }
 
@@ -32,7 +32,7 @@ if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
 $input = json_decode(file_get_contents('php://input'), true);
 
 if (!$input) {
-    echo json_encode(['success' => false, 'message' => 'Invalid request data']);
+    echo json_encode(['success' => false, 'message' => 'Something went wrong']);
     exit;
 }
 
@@ -41,7 +41,7 @@ $required = ['customer_name', 'customer_email', 'customer_phone', 'amount'];
 foreach ($required as $field) {
     if (!isset($input[$field]) || empty($input[$field])) {
         ob_clean();
-        echo json_encode(['success' => false, 'message' => "Missing required field: $field"]);
+        echo json_encode(['success' => false, 'message' => "Something went wrong"]);
         exit;
     }
 }
@@ -59,7 +59,7 @@ $discountAmount = isset($input['discount_amount']) ? floatval($input['discount_a
 // Validate amount
 if ($amount <= 0) {
     ob_clean();
-    echo json_encode(['success' => false, 'message' => 'Invalid amount']);
+    echo json_encode(['success' => false, 'message' => 'Something went wrong']);
     exit;
 }
 
@@ -86,14 +86,10 @@ if ($difference > 0.01) {
     ob_clean();
     echo json_encode([
         'success' => false, 
-        'message' => 'Amount mismatch: Payment amount does not match order total',
+        'message' => 'Something went wrong',
         'debug' => [
             'received_amount' => $amount,
-            'cart_total' => $cartTotal,
-            'shipping' => $shippingAmount,
-            'discount' => $discountAmount,
-            'expected_total' => $expectedTotal,
-            'difference' => $difference
+            'expected_total' => $expectedTotal
         ]
     ]);
     exit;
@@ -117,12 +113,12 @@ try {
     
     // Validate Razorpay keys
     if (empty($razorpayKeyId) || strpos($razorpayKeyId, 'YOUR_KEY') !== false) {
-        echo json_encode(['success' => false, 'message' => 'Razorpay Key ID is not configured']);
+        echo json_encode(['success' => false, 'message' => 'Something went wrong']);
         exit;
     }
     
     if (empty($razorpayKeySecret) || strpos($razorpayKeySecret, 'YOUR_KEY') !== false) {
-        echo json_encode(['success' => false, 'message' => 'Razorpay Key Secret is not configured']);
+        echo json_encode(['success' => false, 'message' => 'Something went wrong']);
         exit;
     }
     
@@ -174,29 +170,17 @@ try {
         error_log("Razorpay cURL Error: " . $curlError);
         echo json_encode([
             'success' => false, 
-            'message' => 'Connection error: ' . ($curlError ?: 'Failed to connect to Razorpay API')
+            'message' => 'Something went wrong'
         ]);
         exit;
     }
     
     // Check HTTP status code
     if ($httpCode !== 200) {
-        $errorData = json_decode($response, true);
-        $errorMsg = 'Failed to create order';
-        
-        if (isset($errorData['error'])) {
-            if (isset($errorData['error']['description'])) {
-                $errorMsg = $errorData['error']['description'];
-            } elseif (isset($errorData['error']['reason'])) {
-                $errorMsg = $errorData['error']['reason'];
-            }
-        }
-        
         error_log("Razorpay API Error (HTTP $httpCode): " . $response);
-        
         echo json_encode([
             'success' => false, 
-            'message' => $errorMsg
+            'message' => 'Something went wrong'
         ]);
         exit;
     }
@@ -207,7 +191,7 @@ try {
         error_log("Invalid Razorpay response: " . $response);
         echo json_encode([
             'success' => false, 
-            'message' => 'Invalid response from Razorpay'
+            'message' => 'Something went wrong'
         ]);
         exit;
     }
@@ -224,7 +208,7 @@ try {
 } catch (Exception $e) {
     error_log("Razorpay order creation error: " . $e->getMessage());
     ob_clean();
-    echo json_encode(['success' => false, 'message' => 'Failed to create payment order. Please try again.']);
+    echo json_encode(['success' => false, 'message' => 'Something went wrong']);
     exit;
 }
 

@@ -501,7 +501,7 @@ window.buyNowFromQV = function(productId) {
     .then(data => {
         if (data.success) {
             // Redirect directly to checkout
-            window.location.href = 'checkout.php';
+            window.location.href = 'checkout';
         } else {
             if (typeof showNotification === 'function') {
                 showNotification(data.message || 'Failed to add product to cart');

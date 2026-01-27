@@ -822,8 +822,7 @@ document.getElementById('razorpayPayButton').addEventListener('click', async fun
         const orderData = await orderResponse.json();
         
         if (!orderData.success) {
-            const errorMsg = orderData.message || 'Failed to create payment order';
-            showErrorMessage(errorMsg);
+            showErrorMessage('Something went wrong');
             setBtnLoading(button, false);
             return;
         }
@@ -889,11 +888,11 @@ document.getElementById('razorpayPayButton').addEventListener('click', async fun
                         // Use window.location.replace to prevent back button issues
                         window.location.replace(successUrl);
                     } else {
-                        showErrorMessage('Payment verification failed: ' + (verifyData.message || 'Unknown error'));
+                        showErrorMessage('Something went wrong');
                         setBtnLoading(button, false);
                     }
                 } catch (error) {
-                    showErrorMessage('An error occurred while verifying payment. Please contact support.');
+                    showErrorMessage('Something went wrong');
                     setBtnLoading(button, false);
                 }
             },
@@ -916,7 +915,7 @@ document.getElementById('razorpayPayButton').addEventListener('click', async fun
         razorpay.open();
         
     } catch (error) {
-        showErrorMessage('An error occurred: ' + (error.message || 'Unknown error. Please try again.'));
+        showErrorMessage('Something went wrong');
         setBtnLoading(button, false);
     }
 });

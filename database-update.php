@@ -324,8 +324,87 @@ if ($EXECUTE) {
 }
 
 // ==========================================
-// SUMMARY
+// STEP 9: Add OtherPlatform column to Landing Pages
 // ==========================================
+echo "STEP 9: Adding Other_platform column to landing_pages\n";
+echo "--------------------------------------------------\n";
+
+if (!columnExists($db, 'landing_pages', 'Other_platform')) {
+    executeSql($db, "ALTER TABLE landing_pages ADD COLUMN Other_platform JSON DEFAULT NULL AFTER section_order", "Add Other_platform to landing_pages", $errors, $success, $EXECUTE);
+}
+if (!columnExists($db, 'landing_pages', 'show_other_platforms')) {
+    executeSql($db, "ALTER TABLE landing_pages ADD COLUMN show_other_platforms TINYINT(1) DEFAULT 1 AFTER Other_platform", "Add show_other_platforms toggle to landing_pages", $errors, $success, $EXECUTE);
+}
+
+// ==========================================
+// STEP 10: Consolidated Section Data (10 Groups)
+// ==========================================
+echo "STEP 10: Adding 10 Grouped JSON columns for sections\n";
+echo "------------------------------------------------\n";
+
+$jsonColumns = [
+    'header_data' => 'JSON DEFAULT NULL COMMENT "Header section data"',
+    'hero_data' => 'JSON DEFAULT NULL COMMENT "Hero section data"',
+    'stats_data' => 'JSON DEFAULT NULL COMMENT "Stats section data"',
+    'why_data' => 'JSON DEFAULT NULL COMMENT "Why section data"',
+    'about_data' => 'JSON DEFAULT NULL COMMENT "About section data"',
+    'banner_data' => 'JSON DEFAULT NULL COMMENT "Banner section data"',
+    'testimonials_data' => 'JSON DEFAULT NULL COMMENT "Testimonials section data"',
+    'newsletter_data' => 'JSON DEFAULT NULL COMMENT "Newsletter section data"',
+    'platforms_data' => 'JSON DEFAULT NULL COMMENT "Platforms/Marketplaces section data"',
+    'footer_data' => 'JSON DEFAULT NULL COMMENT "Footer section data"',
+    'page_config' => 'JSON DEFAULT NULL COMMENT "Global page config"',
+    'seo_data' => 'JSON DEFAULT NULL COMMENT "SEO and Meta data"'
+];
+
+foreach ($jsonColumns as $col => $def) {
+    if (!columnExists($db, 'landing_pages', $col)) {
+        executeSql($db, "ALTER TABLE landing_pages ADD COLUMN $col $def", "Add $col to landing_pages", $errors, $success, $EXECUTE);
+    }
+}
+
+// ==========================================
+// STEP 11: Drop Legacy Columns (Production Cleanup)
+// ==========================================
+echo "STEP 11: Dropping legacy columns from landing_pages\n";
+echo "--------------------------------------------------\n";
+
+$legacyColumns = [
+    'hero_title', 'hero_subtitle', 'hero_description', 'hero_bg_color', 'hero_text_color',
+    'show_stats', 'stats_bg_color', 'stats_text_color',
+    'show_why', 'why_title', 'why_bg_color', 'why_text_color',
+    'show_about', 'about_title', 'about_text', 'about_image', 'about_bg_color', 'about_text_color',
+    'show_products', 'products_title',
+    'show_testimonials', 'testimonials_title', 'testimonials_bg_color', 'testimonials_text_color',
+    'show_newsletter', 'newsletter_title', 'newsletter_text', 'newsletter_bg_color', 'newsletter_text_color',
+    'show_banner', 'banner_image', 'banner_mobile_image', 'banner_heading', 'banner_text', 'banner_btn_text', 'banner_btn_link', 'banner_sections_json',
+    'Other_platform', 'show_other_platforms',
+    'meta_title', 'meta_description', 'custom_schema',
+    'footer_extra_content', 'footer_extra_bg', 'footer_extra_text', 'show_footer_extra',
+    'theme_color', 'body_bg_color', 'body_text_color', 'nav_links',
+    'hero_image', 'banner_bg_color', 'banner_text_color', 'show_brands', 'section_order'
+];
+
+foreach ($legacyColumns as $col) {
+    if (columnExists($db, 'landing_pages', $col)) {
+        executeSql($db, "ALTER TABLE landing_pages DROP COLUMN $col", "Drop legacy column $col", $errors, $success, $EXECUTE);
+    }
+}
+// ==========================================
+// STEP 12: Modernize Product Links in Landing Pages
+// ==========================================
+echo "STEP 12: Modernizing product links in landing_pages\n";
+echo "--------------------------------------------------\n";
+
+if (columnExists($db, 'landing_pages', 'product_id')) {
+    executeSql($db, "ALTER TABLE landing_pages MODIFY COLUMN product_id BIGINT", "Change product_id type to BIGINT", $errors, $success, $EXECUTE);
+    
+    $query = "UPDATE landing_pages lp 
+              INNER JOIN products p ON lp.product_id = p.id 
+              SET lp.product_id = p.product_id";
+    executeSql($db, $query, "Migrate relative PK IDs to custom product_id values", $errors, $success, $EXECUTE);
+}
+
 echo "\n========================================\n";
 echo "SUMMARY\n";
 echo "========================================\n";

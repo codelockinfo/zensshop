@@ -487,39 +487,42 @@ function setBtnLoading(btn, isLoading) {
         if (!btn.hasAttribute('data-original-html')) {
             btn.setAttribute('data-original-html', btn.innerHTML);
             
-            // Lock dimensions
-            const width = btn.offsetWidth;
-            const height = btn.offsetHeight;
+            // Lock dimensions precisely to prevent any shift or shrinking
+            const rect = btn.getBoundingClientRect();
+            btn.style.minWidth = rect.width + 'px';
+            btn.style.minHeight = rect.height + 'px';
             
-            btn.style.width = width + 'px';
-            btn.style.height = height + 'px';
-            
-            // Maintain display type if possible, or force inline-flex for centering
-            // If it was block, inline-flex might break layout slightly (e.g. margins), 
-            // so let's try to keep it simple but ensure centering.
-            // Using grid/place-items-center is also an option, but inline-flex is standard.
-            // We'll set justify/align for centering.
+            // Ensure centered content
             btn.style.display = 'inline-flex';
             btn.style.alignItems = 'center';
             btn.style.justifyContent = 'center';
+            btn.style.gap = '10px';
         }
         btn.disabled = true;
-        btn.innerHTML = `<i class="fas fa-spinner fa-spin"></i>`;
-        btn.classList.add('opacity-75', 'cursor-not-allowed');
+        
+        const loadingText = btn.getAttribute('data-loading-text');
+        if (loadingText) {
+            btn.innerHTML = `<i class="fas fa-circle-notch fa-spin"></i> <span>${loadingText}</span>`;
+        } else {
+            btn.innerHTML = `<i class="fas fa-circle-notch fa-spin"></i>`;
+        }
+        
+        btn.classList.add('opacity-80', 'cursor-wait');
     } else {
         const originalHtml = btn.getAttribute('data-original-html');
         if (originalHtml !== null) {
             btn.innerHTML = originalHtml;
-            // Restore dimensions and styles
-            btn.style.width = '';
-            btn.style.height = '';
+            // Restore styles
+            btn.style.minWidth = '';
+            btn.style.minHeight = '';
             btn.style.display = '';
             btn.style.alignItems = '';
             btn.style.justifyContent = '';
+            btn.style.gap = '';
             btn.removeAttribute('data-original-html');
         }
         btn.disabled = false;
-        btn.classList.remove('opacity-75', 'cursor-not-allowed');
+        btn.classList.remove('opacity-80', 'cursor-wait');
     }
 }
 

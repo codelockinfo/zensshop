@@ -1,6 +1,5 @@
 <?php
-// Start output buffering
-ob_start();
+// Main landing page loader
 
 require_once __DIR__ . '/classes/Product.php';
 require_once __DIR__ . '/classes/Database.php';
@@ -19,69 +18,67 @@ $pageSlug = $_GET['page'] ?? 'default';
 $landingPage = $db->fetchOne("SELECT * FROM landing_pages WHERE slug = ?", [$pageSlug]);
 
 if (!$landingPage) {
-    // If not found, try to fallback to the first available one or 404
     $landingPage = $db->fetchOne("SELECT * FROM landing_pages ORDER BY id ASC LIMIT 1");
-    if (!$landingPage) {
-        die("Landing page not found. Please create one in Admin > Landing Pages.");
-    }
+    if (!$landingPage) die("Landing page not found.");
 }
+
+// Grouped Data Decoders (10 Distinct Sections)
+$headerGrp = json_decode($landingPage['header_data'] ?? '{}', true) ?: [];
+$heroGrp = json_decode($landingPage['hero_data'] ?? '{}', true) ?: [];
+$bannerGrp = json_decode($landingPage['banner_data'] ?? '{}', true) ?: [];
+$statsGrp = json_decode($landingPage['stats_data'] ?? '{}', true) ?: [];
+$whyGrp = json_decode($landingPage['why_data'] ?? '{}', true) ?: [];
+$aboutGrp = json_decode($landingPage['about_data'] ?? '{}', true) ?: [];
+$testiGrp = json_decode($landingPage['testimonials_data'] ?? '{}', true) ?: [];
+$newsGrp = json_decode($landingPage['newsletter_data'] ?? '{}', true) ?: [];
+$platformsGrp = json_decode($landingPage['platforms_data'] ?? '{}', true) ?: [];
+$footerGrp = json_decode($landingPage['footer_data'] ?? '{}', true) ?: [];
+$configGrp = json_decode($landingPage['page_config'] ?? '{}', true) ?: [];
+$seoGrp = json_decode($landingPage['seo_data'] ?? '{}', true) ?: [];
 
 // 3. Fetch Product Data
-$productData = $productObj->getById($landingPage['product_id']);
+$productData = $productObj->getByProductId($landingPage['product_id']);
+if (!$productData || $productData['status'] !== 'active') die("The featured product is currently unavailable.");
 
-if (!$productData || $productData['status'] !== 'active') {
-    die("The featured product is currently unavailable.");
-}
+// Style Defaults
+$themeColor = $configGrp['theme_color'] ?? '#5F8D76';
+$bodyBg = $configGrp['body_bg_color'] ?? '#ffffff';
+$bodyText = $configGrp['body_text_color'] ?? '#000000';
 
-// Prepare Data
-$mainImage = !empty($landingPage['hero_image']) ? getImageUrl($landingPage['hero_image']) : getProductImage($productData);
+// Hero Section Content
+$heroTitle = !empty($heroGrp['title']) ? $heroGrp['title'] : ($productData['name'] ?? '');
+$heroSubtitle = $heroGrp['subtitle'] ?? '';
+$heroDescription = !empty($heroGrp['description']) ? $heroGrp['description'] : ($productData['description'] ?? '');
+$mainImage = !empty($heroGrp['image']) ? getImageUrl($heroGrp['image']) : getProductImage($productData);
+
+// Prepare Gallery
 $images = json_decode($productData['images'] ?? '[]', true);
 $price = $productData['sale_price'] ?? $productData['price'] ?? 0;
 $originalPrice = $productData['price'] ?? 0;
 $currentSalePrice = $productData['sale_price'] ?? 0;
 $hasSale = $currentSalePrice > 0 && $currentSalePrice < $originalPrice;
 
-// Setup Gallery Pool for Rotation
 $galleryPool = [];
 if (!empty($mainImage)) $galleryPool[] = $mainImage;
-
 if (is_array($images)) {
     foreach($images as $img) {
-        // Construct Full Path
         $fullPath = getImageUrl($img);
-
-        // Deduplicate based on filename to avoid path mismatches (e.g. relative vs absolute)
         $filename = basename($img);
         $isDuplicate = false;
         foreach ($galleryPool as $existing) {
-            if (strpos($existing, $filename) !== false) {
-                $isDuplicate = true;
-                break;
-            }
+            if (strpos($existing, $filename) !== false) { $isDuplicate = true; break; }
         }
-        
         if (!$isDuplicate) $galleryPool[] = $fullPath;
     }
 }
 $galleryPool = array_values(array_unique($galleryPool));
 $galleryCount = count($galleryPool);
-$currentImgIdx = 1; // Start from 1 since 0 is used by Hero
-
-
-// Hero Section Content
-$heroTitle = $landingPage['hero_title'] ?: $productData['name'];
-$heroSubtitle = $landingPage['hero_subtitle'] ?: 'Natural Inner Beauty';
-$heroDescription = $landingPage['hero_description'] ?: ($productData['description'] ?? '');
-
-$themeColor = $landingPage['theme_color'] ?: '#5F8D76';
+$currentImgIdx = 1; 
 
 // Helper to determine contrast color (Black or White)
 function getContrastColor($hexColor) {
-    // defaults
     if (!$hexColor) return '#000000';
     $hexColor = str_replace('#', '', $hexColor);
-    
-    // Check if valid hex
     if(strlen($hexColor) == 3) {
         $r = hexdec(str_repeat(substr($hexColor, 0, 1), 2));
         $g = hexdec(str_repeat(substr($hexColor, 1, 1), 2));
@@ -90,159 +87,76 @@ function getContrastColor($hexColor) {
         $r = hexdec(substr($hexColor, 0, 2));
         $g = hexdec(substr($hexColor, 2, 2));
         $b = hexdec(substr($hexColor, 4, 2));
-    } else {
-        return '#000000';
-    }
-
-    // Calculate luminance
+    } else { return '#000000'; }
     $luminance = (0.299 * $r + 0.587 * $g + 0.114 * $b) / 255;
-
-    // Return black for bright colors, white for dark colors
-    return ($luminance > 0.5) ? '#000000' : '#FFFFFF';
+    return $luminance > 150 ? '#000000' : '#ffffff';
 }
+// 4. Resolve Branding & Styles
+$themeColor = ($configGrp['theme_color'] ?? '') ?: '#5F8D76';
+$bodyBg = ($configGrp['body_bg_color'] ?? '') ?: '#ffffff';
+$bodyText = ($configGrp['body_text_color'] ?? '') ?: '#000000';
 
-// Style Overrides (Auto-Contrast Text)
-$heroBg = $landingPage['hero_bg_color'] ?: '#E8F0E9';
-$heroText = $landingPage['hero_text_color'] ?: getContrastColor($heroBg);
+$heroBg = $heroGrp['bg_color'] ?? '#E8F0E9';
+$heroText = $heroGrp['text_color'] ?? getContrastColor($heroBg);
 
-$bodyBg = $landingPage['body_bg_color'] ?: '#FFFFFF';
-$bodyText = $landingPage['body_text_color'] ?: getContrastColor($bodyBg); 
+// 5. Header Links (Decoded from headerGrp)
+$navLinks = $headerGrp['nav_links'] ?? [
+    ['label' => 'Home', 'url' => '#'],
+    ['label' => 'Shop', 'url' => '#'],
+    ['label' => 'About', 'url' => '#'],
+    ['label' => 'Contact', 'url' => '#']
+];
 
-$bannerBg = $landingPage['banner_bg_color'] ?: '#FFFFFF';
-$bannerText = $landingPage['banner_text_color'] ?: getContrastColor($bannerBg);
-
-$statsBg = $landingPage['stats_bg_color'] ?: '#F3F6F4';
-$statsText = $landingPage['stats_text_color'] ?: getContrastColor($statsBg);
-
-$whyBg = $landingPage['why_bg_color'] ?: '#FFFFFF';
-$whyText = $landingPage['why_text_color'] ?: getContrastColor($whyBg);
-
-$aboutBg = $landingPage['about_bg_color'] ?: '#F9F9F9';
-$aboutText = $landingPage['about_text_color'] ?: getContrastColor($aboutBg);
-
-$testiBg = $landingPage['testimonials_bg_color'] ?: '#FFFFFF';
-$testiText = $landingPage['testimonials_text_color'] ?: getContrastColor($testiBg);
-
-$newsBg = $landingPage['newsletter_bg_color'] ?: '#E8F0E9';
-$newsText = $landingPage['newsletter_text_color'] ?: getContrastColor($newsBg);
-
-
-// Decode JSON Configs
-$navLinks = json_decode($landingPage['nav_links'] ?? '[]', true);
-if (empty($navLinks)) {
-    $navLinks = [
-        ['label' => 'Home', 'url' => '#'],
-        ['label' => 'Shop', 'url' => '#'],
-        ['label' => 'About', 'url' => '#'],
-        ['label' => 'Contact', 'url' => '#']
-    ];
-}
-
-// --- STATS DATA ---
-$statsData = json_decode($landingPage['stats_data'] ?? '[]', true);
-if (empty($statsData)) {
-    // Fallback Mock Stats if nothing configured
-    $reviewStats = $db->fetchOne("SELECT COUNT(*) as count, AVG(rating) as avg_rating FROM reviews WHERE product_id = ? AND status = 'approved'", [$productData['id']]);
-    $reviewCount = $reviewStats['count'] ?? 0;
-    $avgRating = $reviewStats['avg_rating'] ?? 0;
-    $satisfactionPercent = $reviewCount > 0 ? round(($avgRating / 5) * 100) : 100;
-    
-    try {
-        $orderStats = $db->fetchOne("SELECT COUNT(DISTINCT order_id) as count FROM order_items WHERE product_id = ?", [$productData['id']]);
-        $soldCount = $orderStats['count'] ?? 0;
-    } catch (Exception $e) { $soldCount = 0; }
-    $usersCount = 100 + $soldCount * 2; 
-
-    $statsData = [
-        ['value' => number_format($soldCount), 'label' => 'Happy Customers'],
-        ['value' => number_format($usersCount), 'label' => 'Followers'],
-        ['value' => number_format($reviewCount), 'label' => 'Reviews'],
-        ['value' => $satisfactionPercent . '%', 'label' => 'Satisfaction']
-    ];
-}
-
-// SEO Meta Data Override
-if (!empty($landingPage['meta_title'])) {
-    $pageTitle = $landingPage['meta_title'];
-} else {
-    $pageTitle = $heroTitle; // Default fallback
-}
-
-$metaDescription = $landingPage['meta_description'] ?? '';
-$customSchema = $landingPage['custom_schema'] ?? '';
+// 6. SEO & Meta (Passed to header.php)
+$pageTitle = $seoGrp['meta_title'] ?? $heroTitle;
+$metaDescription = $seoGrp['meta_description'] ?? '';
+$customSchema = $seoGrp['custom_schema'] ?? '';
 
 if (!empty($customSchema)) {
-    // 1. Create Base Placeholders (Calculated values)
     $replacements = [
         '{{description}}' => preg_replace('/\s+/', ' ', strip_tags($heroDescription)),
         '{{url}}' => $baseUrl . '/special-product.php?page=' . $pageSlug,
         '{{image}}' => $mainImage,
         '{{currency}}' => $productData['currency'] ?? 'USD',
-        '{{brand}}' => "ZensShop", // Default Brand
-        '{{availability}}' => (isset($productData['quantity']) && $productData['quantity'] <= 0) ? 'https://schema.org/OutOfStock' : 'https://schema.org/InStock',
+        '{{brand}}' => "ZensShop",
         '{{price_valid_until}}' => date('Y-m-d', strtotime('+1 year'))
     ];
-
-    // 2. Auto-generate placeholders for ALL product fields
-    // This allows you to use {{weight}}, {{sku}}, {{material}}, etc. if they exist in DB
-    if (is_array($productData)) {
-        foreach ($productData as $key => $value) {
-            if (is_scalar($value)) { // Only string/int/float/bool
-                 $replacements['{{' . $key . '}}'] = $value;
-            }
-        }
+    foreach ($productData as $key => $value) {
+        if (is_scalar($value)) $replacements['{{' . $key . '}}'] = $value;
     }
-    
-    // 3. Perform Replacement
     foreach ($replacements as $key => $val) {
         $customSchema = str_replace($key, $val, $customSchema);
     }
-} 
-elseif ($productData) {
-    // AUTO-GENERATE standard Product Schema if nothing provided
-    $schemaUrl = $baseUrl . '/special-product.php?page=' . $pageSlug; 
-    $schemaImg = $mainImage; 
-    
-    $availability = 'https://schema.org/InStock'; 
-    if (isset($productData['quantity']) && $productData['quantity'] <= 0) {
-        $availability = 'https://schema.org/OutOfStock';
-    }
+} elseif ($productData) {
+    // Basic Auto Schema
+    $reviewStats = $db->fetchOne("SELECT COUNT(*) as count, AVG(rating) as avg_rating FROM reviews WHERE product_id = ? AND status = 'approved'", [$productData['id']]);
+    $reviewCount = $reviewStats['count'] ?? 0;
+    $avgRating = $reviewStats['avg_rating'] ?? 0;
 
     $productSchema = [
         "@context" => "https://schema.org",
         "@type" => "Product",
         "name" => $productData['name'],
-        "description" => strip_tags($heroDescription),
-        "url" => $schemaUrl,
-        "image" => [$schemaImg],
-        "brand" => [
-            "@type" => "Brand",
-            "name" => "ZensShop" 
-        ],
+        "description" => $metaDescription ?: strip_tags($heroDescription),
+        "url" => $baseUrl . '/special-product.php?page=' . $pageSlug,
+        "image" => [$mainImage],
+        "brand" => ["@type" => "Brand", "name" => "ZensShop"],
         "offers" => [
             "@type" => "Offer",
             "price" => (float)$price,
             "priceCurrency" => $productData['currency'] ?? 'USD',
-            "availability" => $availability,
-            "url" => $schemaUrl,
+            "availability" => (isset($productData['quantity']) && $productData['quantity'] <= 0) ? 'https://schema.org/OutOfStock' : 'https://schema.org/InStock',
+            "url" => $baseUrl . '/special-product.php?page=' . $pageSlug,
             "priceValidUntil" => date('Y-m-d', strtotime('+1 year'))
         ]
     ];
-    
-    if (!empty($reviewCount) && $reviewCount > 0) {
-        $productSchema['aggregateRating'] = [
-            "@type" => "AggregateRating",
-            "ratingValue" => $avgRating,
-            "reviewCount" => $reviewCount,
-            "bestRating" => "5",
-            "worstRating" => "1"
-        ];
+    if ($reviewCount > 0) {
+        $productSchema['aggregateRating'] = ["@type" => "AggregateRating", "ratingValue" => $avgRating, "reviewCount" => $reviewCount, "bestRating" => "5", "worstRating" => "1"];
     }
-    
     $customSchema = json_encode($productSchema, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES);
 }
 
-// --- 4. HEADER INJECTION ---
+// 7. Header Injection
 require_once __DIR__ . '/includes/header.php';
 ?>
 
@@ -284,40 +198,42 @@ require_once __DIR__ . '/includes/header.php';
         });
     }
 
-    // Read More Toggle for Hero Description
-    document.addEventListener('DOMContentLoaded', function() {
-        const container = document.getElementById('hero-description-container');
-        const btn = document.getElementById('hero-read-more-btn');
-        const fade = document.getElementById('hero-description-fade');
-        
-        if (container && btn) {
-            // Check if content is actually taller than max-height
-            const isTall = container.scrollHeight > 180;
+    document.addEventListener('DOMContentLoaded', () => {
+        // Read More Toggle for Hero Description
+        const setupReadMore = (containerId, btnId, fadeId, collapsedHeight) => {
+            const container = document.getElementById(containerId);
+            const btn = document.getElementById(btnId);
+            const fade = document.getElementById(fadeId);
             
-            if (!isTall) {
-                btn.style.display = 'none';
-                fade.style.display = 'none';
-                container.style.maxHeight = 'none';
-            }
-            
-            btn.addEventListener('click', function() {
-                const isExpanded = container.style.maxHeight === 'none';
+            if (container && btn) {
+                const isTall = container.scrollHeight > collapsedHeight;
                 
-                if (isExpanded) {
-                    container.style.maxHeight = '180px';
-                    fade.style.opacity = '1';
-                    btn.querySelector('span').textContent = 'Read More';
-                    btn.querySelector('i').style.transform = 'rotate(0deg)';
-                    // Scroll back to top of container if it's out of view
-                    container.scrollIntoView({ behavior: 'smooth', block: 'center' });
-                } else {
+                if (!isTall) {
+                    btn.style.display = 'none';
+                    if(fade) fade.style.display = 'none';
                     container.style.maxHeight = 'none';
-                    fade.style.opacity = '0';
-                    btn.querySelector('span').textContent = 'Show Less';
-                    btn.querySelector('i').style.transform = 'rotate(180deg)';
                 }
-            });
-        }
+                
+                btn.addEventListener('click', function() {
+                    const isCollapsed = !container.style.maxHeight || container.style.maxHeight !== 'none';
+                    
+                    if (isCollapsed) {
+                        container.style.maxHeight = 'none';
+                        if(fade) fade.style.opacity = '0';
+                        btn.querySelector('span').textContent = 'Show Less';
+                        btn.querySelector('i').style.transform = 'rotate(180deg)';
+                    } else {
+                        container.style.maxHeight = collapsedHeight + 'px';
+                        if(fade) fade.style.opacity = '1';
+                        btn.querySelector('span').textContent = 'Read More';
+                        btn.querySelector('i').style.transform = 'rotate(0deg)';
+                        container.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                    }
+                });
+            }
+        };
+
+        setupReadMore('hero-description-container', 'hero-read-more-btn', 'hero-description-fade', 200);
     });
 </script>
 
@@ -330,30 +246,29 @@ require_once __DIR__ . '/includes/header.php';
     /* Dynamic Theme Colors */
     :root {
         --theme-color: <?php echo htmlspecialchars($themeColor); ?>;
-        
-        --body-bg: <?php echo htmlspecialchars($landingPage['body_bg_color'] ?? '#ffffff'); ?>;
-        --body-text: <?php echo htmlspecialchars($landingPage['body_text_color'] ?? '#000000'); ?>;
+        --body-bg: <?php echo htmlspecialchars($bodyBg); ?>;
+        --body-text: <?php echo htmlspecialchars($bodyText); ?>;
 
-        --hero-bg: <?php echo htmlspecialchars($landingPage['hero_bg_color'] ?? '#f9fafb'); ?>;
-        --hero-text: <?php echo htmlspecialchars($landingPage['hero_text_color'] ?? '#111827'); ?>;
+        --hero-bg: <?php echo htmlspecialchars(($heroGrp['bg_color'] ?? '') ?: '#f9fafb'); ?>;
+        --hero-text: <?php echo htmlspecialchars(($heroGrp['text_color'] ?? '') ?: '#111827'); ?>;
 
-        --banner-bg: <?php echo htmlspecialchars($landingPage['banner_bg_color'] ?? '#ffffff'); ?>;
-        --banner-text: <?php echo htmlspecialchars($landingPage['banner_text_color'] ?? '#000000'); ?>;
+        --banner-bg: <?php echo htmlspecialchars(($bannerGrp['bg_color'] ?? '') ?: '#ffffff'); ?>;
+        --banner-text: <?php echo htmlspecialchars(($bannerGrp['text_color'] ?? '') ?: '#000000'); ?>;
         
-        --stats-bg: <?php echo htmlspecialchars($landingPage['stats_bg_color'] ?? '#ffffff'); ?>;
-        --stats-text: <?php echo htmlspecialchars($landingPage['stats_text_color'] ?? '#111827'); ?>;
+        --stats-bg: <?php echo htmlspecialchars(($statsGrp['bg_color'] ?? '') ?: '#ffffff'); ?>;
+        --stats-text: <?php echo htmlspecialchars(($statsGrp['text_color'] ?? '') ?: '#111827'); ?>;
         
-        --why-bg: <?php echo htmlspecialchars($landingPage['why_bg_color'] ?? '#f9fafb'); ?>;
-        --why-text: <?php echo htmlspecialchars($landingPage['why_text_color'] ?? '#111827'); ?>;
+        --why-bg: <?php echo htmlspecialchars(($whyGrp['bg_color'] ?? '') ?: '#f9fafb'); ?>;
+        --why-text: <?php echo htmlspecialchars(($whyGrp['text_color'] ?? '') ?: '#111827'); ?>;
         
-        --about-bg: <?php echo htmlspecialchars($landingPage['about_bg_color'] ?? '#ffffff'); ?>;
-        --about-text: <?php echo htmlspecialchars($landingPage['about_text_color'] ?? '#111827'); ?>;
+        --about-bg: <?php echo htmlspecialchars(($aboutGrp['bg_color'] ?? '') ?: '#ffffff'); ?>;
+        --about-text: <?php echo htmlspecialchars(($aboutGrp['text_color'] ?? '') ?: '#111827'); ?>;
         
-        --testi-bg: <?php echo htmlspecialchars($landingPage['testimonials_bg_color'] ?? '#f9fafb'); ?>;
-        --testi-text: <?php echo htmlspecialchars($landingPage['testimonials_text_color'] ?? '#111827'); ?>;
+        --testi-bg: <?php echo htmlspecialchars(($testiGrp['bg_color'] ?? '') ?: '#f9fafb'); ?>;
+        --testi-text: <?php echo htmlspecialchars(($testiGrp['text_color'] ?? '') ?: '#111827'); ?>;
         
-        --news-bg: <?php echo htmlspecialchars($landingPage['newsletter_bg_color'] ?? '#ffffff'); ?>;
-        --news-text: <?php echo htmlspecialchars($landingPage['newsletter_text_color'] ?? '#111827'); ?>;
+        --news-bg: <?php echo htmlspecialchars(($newsGrp['bg_color'] ?? '') ?: '#ffffff'); ?>;
+        --news-text: <?php echo htmlspecialchars(($newsGrp['text_color'] ?? '') ?: '#111827'); ?>;
     }
 
     /* Section Colors */
@@ -401,30 +316,30 @@ require_once __DIR__ . '/includes/header.php';
                 <?php // Price variables already defined at top ?>
 
                 <div class="mb-6 max-w-xl mx-auto lg:mx-0">
-                    <div id="hero-description-container" class="relative overflow-hidden transition-all duration-500 prose prose-lg max-w-none" style="max-height: 180px; color: inherit;">
+                    <div id="hero-description-container" class="relative overflow-hidden transition-all duration-500 prose prose-lg max-w-none" style="max-height: 200px; color: inherit;">
                         <div class="opacity-80 leading-relaxed">
                             <?php echo $heroDescription; ?>
                         </div>
                         <div id="hero-description-fade" class="absolute bottom-0 left-0 w-full h-16 pointer-events-none transition-opacity duration-300" style="background: linear-gradient(to top, var(--hero-bg), transparent);"></div>
                     </div>
-                    <button id="hero-read-more-btn" class="mb-4 text-sm font-bold uppercase tracking-widest hover:opacity-70 transition-all flex items-center gap-2" style="color: var(--theme-color);">
+                    <button id="hero-read-more-btn" class="mt-4 text-sm font-bold uppercase tracking-widest hover:opacity-70 transition-all flex items-center gap-2" style="color: var(--theme-color);">
                         <span>Read More</span>
                         <i class="fas fa-chevron-down text-xs transition-transform duration-300"></i>
                     </button>
                 </div>
 
-                <div class="product-price-container mb-6 flex items-center gap-3 justify-center lg:justify-start">
-                    <span class="text-xl font-bold text-gray-500 uppercase">Price:</span>
+                <div class="product-price-container mb-8 flex items-center gap-4 justify-center lg:justify-start flex-wrap">
+                    <span class="text-2xl font-extrabold text-[#707b8e] uppercase tracking-tight">Price:</span>
                     <?php if ($hasSale): ?>
-                        <span class="text-xl font-bold text-red-600 line-through opacity-70"><?php echo format_price($originalPrice, $productData['currency'] ?? 'INR'); ?></span>
-                        <span class="text-xl font-bold text-gray-900"><?php echo format_price($currentSalePrice, $productData['currency'] ?? 'INR'); ?></span>
-                        <span class="bg-red-500 text-white text-[10px] font-bold px-2 py-0.5 rounded ml-2">-<?php echo round((($originalPrice - $currentSalePrice) / $originalPrice) * 100); ?>% OFF</span>
+                        <span class="text-2xl font-bold text-[#e15a5a] line-through opacity-80"><?php echo format_price($originalPrice, $productData['currency'] ?? 'INR'); ?></span>
+                        <span class="text-3xl font-black text-[#000000]"><?php echo format_price($currentSalePrice, $productData['currency'] ?? 'INR'); ?></span>
+                        <span class="bg-[#ef4444] text-white text-[12px] font-black px-3 py-1 rounded-md shadow-sm">-<?php echo round((($originalPrice - $currentSalePrice) / $originalPrice) * 100); ?>% OFF</span>
                     <?php else: ?>
-                        <span class="text-xl font-bold text-gray-900"><?php echo format_price($originalPrice, $productData['currency'] ?? 'INR'); ?></span>
+                        <span class="text-3xl font-black text-[#000000]"><?php echo format_price($originalPrice, $productData['currency'] ?? 'INR'); ?></span>
                     <?php endif; ?>
                 </div>
                 
-                <button onclick="spAddToCart(<?php echo $productData['id']; ?>, this)" class="btn-accent px-10 py-4 rounded text-lg font-medium tracking-wide uppercase transition shadow-xl hover:shadow-2xl transform hover:-translate-y-0.5" data-loading-text="Adding...">
+                <button onclick="spAddToCart(<?php echo $productData['product_id']; ?>, this)" class="btn-accent px-10 py-4 rounded text-lg font-medium tracking-wide uppercase transition shadow-xl hover:shadow-2xl transform hover:-translate-y-0.5" data-loading-text="Adding...">
                     Add to your cart
                 </button>
             </div>
@@ -441,15 +356,17 @@ require_once __DIR__ . '/includes/header.php';
     $sections = [];
 
     // 1. Stats Section
-    if ($landingPage['show_stats']) {
+    $showStats = $statsGrp['show'] ?? ($landingPage['show_stats'] ?? 1);
+    if ($showStats) {
+        $statsItems = $statsGrp['items'] ?? [];
         ob_start(); ?>
         <section class="pt-10 pb-20 md:py-24 stats-section">
             <div class="container mx-auto px-6">
                 <div class="grid grid-cols-2 md:grid-cols-4 gap-12 text-center divide-x divide-gray-200">
-                    <?php foreach($statsData as $stat): ?>
+                    <?php foreach($statsItems as $stat): ?>
                     <div>
-                        <div class="text-5xl font-bold mb-2 stat-val"><?php echo htmlspecialchars($stat['value']); ?></div>
-                        <div class="text-sm uppercase tracking-wider stat-label"><?php echo htmlspecialchars($stat['label']); ?></div>
+                        <div class="text-5xl font-bold mb-2 stat-val"><?php echo htmlspecialchars($stat['value'] ?? ''); ?></div>
+                        <div class="text-sm uppercase tracking-wider stat-label"><?php echo htmlspecialchars($stat['label'] ?? ''); ?></div>
                     </div>
                     <?php endforeach; ?>
                 </div>
@@ -459,23 +376,10 @@ require_once __DIR__ . '/includes/header.php';
     }
 
     // 2. Banner Section(s)
-    if (!empty($landingPage['show_banner'])) {
+    $showBanner = $bannerGrp['show'] ?? ($landingPage['show_banner'] ?? 1);
+    if ($showBanner) {
+        $bannerSections = $bannerGrp['items'] ?? [];
         ob_start();
-        
-        $bannerSections = [];
-        if (!empty($landingPage['banner_sections_json'])) {
-            $bannerSections = json_decode($landingPage['banner_sections_json'], true);
-        }
-        if (empty($bannerSections) && !empty($landingPage['banner_image'])) {
-            $bannerSections = [[
-                'image' => $landingPage['banner_image'],
-                'mobile_image' => $landingPage['banner_mobile_image'],
-                'heading' => $landingPage['banner_heading'],
-                'text' => $landingPage['banner_text'],
-                'btn_text' => $landingPage['banner_btn_text'],
-                'btn_link' => $landingPage['banner_btn_link']
-            ]];
-        }
         
         foreach ($bannerSections as $banner): 
             $banImg = $banner['image'] ?? '';
@@ -488,32 +392,24 @@ require_once __DIR__ . '/includes/header.php';
             $banBtn = $banner['btn_text'] ?? '';
             $banLink = $banner['btn_link'] ?? '';
             
-            // 1. Resolve Desktop Media
             $desktopAsset = $banVideo ?: $banImg;
             $isDesktopVideo = !empty($banVideo) || preg_match('/\.(mp4|webm|ogg)$/i', $banImg);
             if($desktopAsset && strpos($desktopAsset, 'http') !== 0) $desktopAsset = $baseUrl . '/' . $desktopAsset;
             
-            // 2. Resolve Mobile Media
             $mobileAsset = $banMobVideo ?: $banMobImg;
             $isMobileVideo = !empty($banMobVideo) || ($mobileAsset && preg_match('/\.(mp4|webm|ogg)$/i', $mobileAsset));
             if($mobileAsset && strpos($mobileAsset, 'http') !== 0) $mobileAsset = $baseUrl . '/' . $mobileAsset;
             
             if (!$desktopAsset && !$mobileAsset) continue; 
-            
-            // Logic to wrap media in link if link exists but NO button
             $wrapLink = !empty($banLink) && empty($banBtn);
         ?>
         <section class="banner-section w-full relative my-10 px-20 md:px-40 py-10">
             <?php if ($wrapLink): ?><a href="<?php echo htmlspecialchars($banLink); ?>" class="block"><?php endif; ?>
-
-            <!-- Desktop Media -->
             <?php if($isDesktopVideo): ?>
                 <video src="<?php echo htmlspecialchars($desktopAsset); ?>" autoplay muted loop playsinline class="block w-full h-auto object-cover <?php echo $mobileAsset ? 'hidden md:block' : ''; ?>"></video>
             <?php else: ?>
                 <img src="<?php echo htmlspecialchars($desktopAsset); ?>" class="block w-full h-auto <?php echo $mobileAsset ? 'hidden md:block' : ''; ?>" alt="Banner">
             <?php endif; ?>
-            
-            <!-- Mobile Media -->
             <?php if($mobileAsset): ?>
                 <?php if($isMobileVideo): ?>
                     <video src="<?php echo htmlspecialchars($mobileAsset); ?>" autoplay muted loop playsinline class="block w-full h-auto object-cover md:hidden"></video>
@@ -521,25 +417,13 @@ require_once __DIR__ . '/includes/header.php';
                     <img src="<?php echo htmlspecialchars($mobileAsset); ?>" class="block w-full h-auto md:hidden" alt="Banner Mobile">
                 <?php endif; ?>
             <?php endif; ?>
-
             <?php if ($wrapLink): ?></a><?php endif; ?>
-    
             <?php if($banHead || $banText || $banBtn): ?>
             <div class="absolute inset-0 flex items-center justify-center text-center p-6 bg-black bg-opacity-20 hover:bg-opacity-30 transition pointer-events-none">
                 <div class="text-white max-w-2xl px-4 pointer-events-auto">
-                    <?php if($banHead): ?>
-                    <h2 class="text-4xl md:text-6xl font-bold mb-4 drop-shadow-md"><?php echo htmlspecialchars($banHead); ?></h2>
-                    <?php endif; ?>
-                    
-                    <?php if($banText): ?>
-                    <p class="text-lg md:text-xl mb-8 drop-shadow leading-relaxed"><?php echo nl2br(htmlspecialchars($banText)); ?></p>
-                    <?php endif; ?>
-                    
-                    <?php if($banBtn): ?>
-                    <a href="<?php echo $banLink ? htmlspecialchars($banLink) : '#'; ?>" class="inline-block bg-white text-gray-900 border-2 border-white px-8 py-3 rounded-full font-bold uppercase tracking-wider hover:bg-transparent hover:text-white transition transform hover:-translate-y-1 shadow-lg">
-                        <?php echo htmlspecialchars($banBtn); ?>
-                    </a>
-                    <?php endif; ?>
+                    <?php if($banHead): ?><h2 class="text-4xl md:text-6xl font-bold mb-4 drop-shadow-md"><?php echo htmlspecialchars($banHead); ?></h2><?php endif; ?>
+                    <?php if($banText): ?><p class="text-lg md:text-xl mb-8 drop-shadow leading-relaxed"><?php echo nl2br(htmlspecialchars($banText)); ?></p><?php endif; ?>
+                    <?php if($banBtn): ?><a href="<?php echo $banLink ? htmlspecialchars($banLink) : '#'; ?>" class="inline-block bg-white text-gray-900 border-2 border-white px-8 py-3 rounded-full font-bold uppercase tracking-wider hover:bg-transparent hover:text-white transition transform hover:-translate-y-1 shadow-lg"><?php echo htmlspecialchars($banBtn); ?></a><?php endif; ?>
                 </div>
             </div>
             <?php endif; ?>
@@ -549,11 +433,12 @@ require_once __DIR__ . '/includes/header.php';
     }
 
     // 3. Why Section
-    if ($landingPage['show_why']) {
-        $whyTitle = $landingPage['why_title'] ?: 'Why Us?';
-        $whyData = json_decode($landingPage['why_data'] ?? '[]', true);
-        if (empty($whyData)) {
-            $whyData = [
+    $showWhy = $whyGrp['show'] ?? ($landingPage['show_why'] ?? 1);
+    if ($showWhy) {
+        $whyTitle = $whyGrp['title'] ?? 'Why Us?';
+        $whyItems = $whyGrp['items'] ?? [];
+        if (empty($whyItems)) {
+            $whyItems = [
                 ['icon' => 'fas fa-leaf', 'title' => 'Natural', 'desc' => '100% natural ingredients sourced responsibly.'],
                 ['icon' => 'fas fa-ban', 'title' => 'No Chemicals', 'desc' => 'Free from harmful chemicals and parabens.'],
                 ['icon' => 'fas fa-seedling', 'title' => 'Organic', 'desc' => 'Certified organic compounds for your skin.']
@@ -564,13 +449,13 @@ require_once __DIR__ . '/includes/header.php';
             <div class="container mx-auto px-6 text-center">
                 <h2 class="text-5xl font-heading uppercase tracking-widest mb-6"><?php echo htmlspecialchars($whyTitle); ?></h2>
                 <div class="grid grid-cols-1 md:grid-cols-3 gap-16 max-w-6xl mx-auto mt-20">
-                    <?php foreach ($whyData as $why): ?>
+                    <?php foreach ($whyItems as $why): ?>
                     <div class="flex flex-col items-center">
                         <div class="w-20 h-20 mb-8 text-5xl accent-color">
-                            <i class="<?php echo htmlspecialchars($why['icon']); ?>"></i>
+                            <i class="<?php echo htmlspecialchars($why['icon'] ?? 'fas fa-check'); ?>"></i>
                         </div>
-                        <h3 class="font-bold text-2xl mb-4"><?php echo htmlspecialchars($why['title']); ?></h3>
-                        <p class="text-base leading-relaxed max-w-sm opacity-70"><?php echo htmlspecialchars($why['desc']); ?></p>
+                        <h3 class="font-bold text-2xl mb-4"><?php echo htmlspecialchars($why['title'] ?? ''); ?></h3>
+                        <p class="text-base leading-relaxed max-w-sm opacity-70"><?php echo htmlspecialchars($why['desc'] ?? ''); ?></p>
                     </div>
                     <?php endforeach; ?>
                 </div>
@@ -580,42 +465,27 @@ require_once __DIR__ . '/includes/header.php';
     }
 
     // 4. About Section
-    if ($landingPage['show_about']) {
-        $aboutTitle = $landingPage['about_title'] ?: 'About Us';
-        $aboutText = $landingPage['about_text'] ?: ($landingPage['hero_description'] ?: $productData['description']);
-        
-        // Image Logic: Manual override OR next in gallery
-        if (!empty($landingPage['about_image'])) {
-            $aboutImage = (strpos($landingPage['about_image'], 'http') === 0 ? $landingPage['about_image'] : $baseUrl . '/' . $landingPage['about_image']);
+    $showAbout = $aboutGrp['show'] ?? 1;
+    if ($showAbout) {
+        $aboutTitle = !empty($aboutGrp['title']) ? $aboutGrp['title'] : 'About Our Product';
+        $aboutText = !empty($aboutGrp['text']) ? $aboutGrp['text'] : ($productData['description'] ?? '');
+        if (!empty($aboutGrp['image'])) {
+            $aboutImage = (strpos($aboutGrp['image'], 'http') === 0 ? $aboutGrp['image'] : $baseUrl . '/' . $aboutGrp['image']);
         } else {
             $aboutImage = $galleryPool[$currentImgIdx % $galleryCount];
             $currentImgIdx++;
         }
-        
         ob_start(); ?>
         <section class="pt-10 pb-20 md:py-24 about-section overflow-hidden">
             <div class="container mx-auto px-6">
                 <div class="flex flex-col lg:flex-row items-center gap-20">
                     <div class="lg:w-1/2">
-                        <h2 class="text-5xl font-heading uppercase tracking-widest mb-10"><?php echo htmlspecialchars($aboutTitle); ?></h2>
-                        <div class="text-lg leading-8 space-y-6 opacity-80 prose prose-lg max-w-none" style="color: inherit;">
+                        <h2 class="text-4xl md:text-5xl font-heading mb-8 uppercase tracking-widest"><?php echo htmlspecialchars($aboutTitle); ?></h2>
+                        <div class="prose prose-lg opacity-80 leading-relaxed mb-8" style="color: inherit;">
                             <?php echo $aboutText; ?>
                         </div>
-
-                        <div class="product-price-container mb-6 flex items-center gap-3">
-                            <span class="text-xl font-bold text-gray-500 uppercase">Price:</span>
-                            <?php if ($hasSale): ?>
-                                <span class="text-xl font-bold text-red-600 line-through opacity-70"><?php echo format_price($originalPrice, $productData['currency'] ?? 'INR'); ?></span>
-                                <span class="text-xl font-bold text-gray-900"><?php echo format_price($currentSalePrice, $productData['currency'] ?? 'INR'); ?></span>
-                                <span class="bg-red-500 text-white text-[10px] font-bold px-2 py-0.5 rounded ml-2">-<?php echo round((($originalPrice - $currentSalePrice) / $originalPrice) * 100); ?>% OFF</span>
-                            <?php else: ?>
-                                <span class="text-xl font-bold text-gray-900"><?php echo format_price($originalPrice, $productData['currency'] ?? 'INR'); ?></span>
-                            <?php endif; ?>
-                        </div>
                         <div class="mt-6">
-                             <button onclick="spAddToCart(<?php echo $productData['id']; ?>, this)" class="btn-accent px-10 py-4 rounded text-lg font-medium tracking-wide uppercase transition shadow-lg hover:shadow-xl" data-loading-text="Adding...">
-                                Shop Now
-                            </button>
+                             <button onclick="spAddToCart(<?php echo $productData['product_id']; ?>, this)" class="btn-accent px-10 py-4 rounded text-lg font-medium tracking-wide uppercase transition shadow-lg hover:shadow-xl" data-loading-text="Adding...">Shop Now</button>
                         </div>
                     </div>
                     <div class="lg:w-1/2 relative">
@@ -628,12 +498,13 @@ require_once __DIR__ . '/includes/header.php';
     }
 
     // 5. Testimonials Section
-    if ($landingPage['show_testimonials']) {
-        $testimonialsTitle = $landingPage['testimonials_title'] ?: 'Testimonials';
+    $showTesti = $testiGrp['show'] ?? 1;
+    if ($showTesti) {
+        $testiTitle = $testiGrp['title'] ?? 'Testimonials';
         ob_start(); ?>
         <section class="pt-10 pb-20 md:py-24 testi-section border-t border-gray-100">
              <div class="container mx-auto px-6 text-center">
-                <h2 class="text-5xl font-heading font-thin mb-20 uppercase tracking-widest"><?php echo htmlspecialchars($testimonialsTitle); ?></h2>
+                <h2 class="text-5xl font-heading font-thin mb-20 uppercase tracking-widest"><?php echo htmlspecialchars($testiTitle); ?></h2>
                 <div id="testimonialsList" class="mx-auto">
                     <div class="text-center text-gray-500 py-12 text-xl">Loading reviews...</div>
                 </div>
@@ -643,102 +514,58 @@ require_once __DIR__ . '/includes/header.php';
     }
 
     // 6. Newsletter Section
-    if ($landingPage['show_newsletter']) {
-        $newsletterTitle = $landingPage['newsletter_title'] ?: 'Subscribe News';
-        $newsletterText = $landingPage['newsletter_text'] ?: 'Enter your email below.';
-        
-        // Image Logic: Next in gallery
+    $showNews = $newsGrp['show'] ?? 1;
+    if ($showNews) {
+        $newsTitle = $newsGrp['title'] ?? 'Subscribe News';
+        $newsText = $newsGrp['text'] ?? 'Enter your email below.';
         $newsImage = $galleryPool[$currentImgIdx % $galleryCount];
         $currentImgIdx++;
-
         ob_start(); ?>
         <section class="pt-10 pb-20 md:py-24 news-section">
             <div class="container mx-auto px-4 md:px-6">
                 <div class="flex flex-col md:flex-row items-center justify-between max-w-6xl mx-auto bg-white p-6 md:p-12 lg:p-16 rounded-2xl shadow-lg border border-gray-100/50">
-                    <!-- Image / Icon -->
                     <div class="w-full md:w-5/12 mb-8 md:mb-0 md:pr-10 border-b md:border-b-0 md:border-r border-gray-100 flex justify-center pb-8 md:pb-0">
                          <img src="<?php echo htmlspecialchars($newsImage); ?>" alt="Newsletter" class="w-100 md:w-100 h-auto object-contain drop-shadow-md hover:scale-105 transition duration-300">
                     </div>
-                    
-                    <!-- Content -->
                     <div class="w-full md:w-7/12 md:pl-10 lg:pl-16 text-center md:text-left">
-                         <h2 class="text-2xl md:text-3xl lg:text-4xl font-heading mb-4 text-gray-800 font-bold tracking-tight"><?php echo htmlspecialchars($newsletterTitle); ?></h2>
-                         <p class="text-gray-500 text-base md:text-lg mb-8 leading-relaxed max-w-lg mx-auto md:mx-0"><?php echo htmlspecialchars($newsletterText); ?></p>
-                         
+                         <h2 class="text-2xl md:text-3xl lg:text-4xl font-heading mb-4 text-gray-800 font-bold tracking-tight"><?php echo htmlspecialchars($newsTitle); ?></h2>
+                         <p class="text-gray-500 text-base md:text-lg mb-8 leading-relaxed max-w-lg mx-auto md:mx-0"><?php echo htmlspecialchars($newsText); ?></p>
                          <form id="landingNewsletterForm" class="flex flex-col sm:flex-row w-full gap-3 sm:gap-0">
                              <input type="email" name="email" placeholder="Enter your email" required class="w-full flex-grow px-5 py-3 md:px-6 md:py-4 bg-gray-50 border border-gray-200 rounded-lg sm:rounded-r-none focus:outline-none text-base md:text-lg focus:ring-2 focus:ring-gray-200 transition">
-                              <button type="submit" class="w-full sm:w-auto btn-accent px-8 py-3 md:py-4 rounded-lg sm:rounded-l-none text-sm md:text-base font-bold uppercase transition whitespace-nowrap shadow-md hover:shadow-lg transform active:scale-95" data-loading-text="Subscribing...">
-                                Get Started
-                              </button>
+                              <button type="submit" class="w-full sm:w-auto btn-accent px-8 py-3 md:py-4 rounded-lg sm:rounded-l-none text-sm md:text-base font-bold uppercase transition whitespace-nowrap shadow-md hover:shadow-lg transform active:scale-95" data-loading-text="Subscribing...">Get Started</button>
                          </form>
-                         
-                         <!-- Message Container -->
                          <div id="landingNewsletterMessage" class="hidden text-center text-sm mt-3"></div>
-                         
                          <p class="text-xs text-gray-400 mt-4"><i class="fas fa-lock mr-1"></i> Your privacy is our priority.</p>
                     </div>
                 </div>
             </div>
             <script>
-            document.getElementById('landingNewsletterForm').addEventListener('submit', async function(e) {
-                e.preventDefault();
-                const btn = this.querySelector('button');
-                if (btn) setBtnLoading(btn, true);
-                
-                // Hide any previous message
-                if (messageDiv) {
-                    messageDiv.classList.add('hidden');
-                }
-                
-                const email = this.querySelector('input[name="email"]').value;
-                const baseUrl = '<?php echo $baseUrl; ?>';
-                
-                try {
-                    const response = await fetch(`${baseUrl}/api/subscribe.php`, {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({ email: email })
-                    });
-                    const data = await response.json();
-                    
-                    if (data.success) {
-                        this.reset();
-                        if (messageDiv) {
-                            messageDiv.textContent = data.message || 'Successfully subscribed!';
-                            messageDiv.className = 'text-center text-sm mt-3 text-green-600 bg-green-50 py-2 px-4 rounded';
-                            messageDiv.classList.remove('hidden');
-                            
-                            // Auto-hide after 5 seconds
-                            setTimeout(() => {
-                                messageDiv.classList.add('hidden');
-                            }, 5000);
-                        }
-                    } else {
-                        if (messageDiv) {
-                            messageDiv.textContent = data.message || 'Error subscribing.';
-                            messageDiv.className = 'text-center text-sm mt-3 text-red-600 bg-red-50 py-2 px-4 rounded';
-                            messageDiv.classList.remove('hidden');
-                            
-                            // Auto-hide after 5 seconds
-                            setTimeout(() => {
-                                messageDiv.classList.add('hidden');
-                            }, 5000);
-                        }
-                    }
-                } catch (err) {
-                    console.error(err);
-                    if (messageDiv) {
-                        messageDiv.textContent = 'An error occurred.';
-                        messageDiv.className = 'text-center text-sm mt-3 text-red-600 bg-red-50 py-2 px-4 rounded';
-                        messageDiv.classList.remove('hidden');
+            document.addEventListener('DOMContentLoaded', () => {
+                const newsForm = document.getElementById('landingNewsletterForm');
+                const messageDiv = document.getElementById('landingNewsletterMessage');
+                if (newsForm) {
+                    newsForm.addEventListener('submit', async function(e) {
+                        e.preventDefault();
+                        const btn = this.querySelector('button');
+                        if (btn) setBtnLoading(btn, true);
+                        if (messageDiv) messageDiv.classList.add('hidden');
                         
-                        // Auto-hide after 5 seconds
-                        setTimeout(() => {
-                            messageDiv.classList.add('hidden');
-                        }, 5000);
-                    }
-                } finally {
-                    if (btn) setBtnLoading(btn, false);
+                        try {
+                            const email = this.querySelector('input[name="email"]').value;
+                            const res = await fetch('<?php echo $baseUrl; ?>/api/subscribe.php', {
+                                method: 'POST',
+                                headers: { 'Content-Type': 'application/json' },
+                                body: JSON.stringify({ email })
+                            });
+                            const data = await res.json();
+                            if (messageDiv) {
+                                messageDiv.textContent = data.message || 'Subscribed!';
+                                messageDiv.className = `text-center text-sm mt-3 ${data.success ? 'text-green-600' : 'text-red-600'}`;
+                                messageDiv.classList.remove('hidden');
+                            }
+                        } catch (err) { console.error(err); }
+                        finally { if (btn) setBtnLoading(btn, false); }
+                    });
                 }
             });
             </script>
@@ -746,22 +573,47 @@ require_once __DIR__ . '/includes/header.php';
         <?php $sections['secNews'] = ob_get_clean();
     }
 
-    // --- RENDER IN ORDER ---
-    $savedOrder = [];
-    if (!empty($landingPage['section_order'])) {
-        $savedOrder = json_decode($landingPage['section_order'], true);
+    // 7. Other Platforms Section
+    $showPlat = $platformsGrp['show'] ?? 1;
+    if ($showPlat) {
+        $platformData = $platformsGrp['items'] ?? [];
+        ob_start(); ?>
+        <section class="pt-10 pb-20 md:py-24 other-platforms-section overflow-hidden">
+            <div class="container mx-auto px-6 text-center">
+                <h2 class="text-3xl font-heading uppercase tracking-widest mb-4 opacity-60">Also Available At</h2>
+                <p class="text-gray-500 mb-12 max-w-2xl mx-auto">If you prefer buying from your favorite marketplace, you can find us on these platforms as well.</p>
+                <div class="flex flex-wrap justify-center gap-8 md:gap-16 items-center">
+                    <?php foreach ($platformData as $platform): 
+                        $platLink = $platform['link'] ?? '#';
+                        $platImg = !empty($platform['image']) ? (strpos($platform['image'], 'http') === 0 ? $platform['image'] : $baseUrl . '/' . $platform['image']) : '';
+                        $platName = $platform['name'] ?? 'Platform';
+                    ?>
+                    <a href="<?php echo htmlspecialchars($platLink); ?>" target="_blank" class="group transition-all duration-300 transform hover:-translate-y-2">
+                        <div class="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 group-hover:shadow-xl group-hover:border-theme transition-all w-48 h-24 flex items-center justify-center overflow-hidden">
+                            <?php if ($platImg): ?>
+                                <img src="<?php echo htmlspecialchars($platImg); ?>" alt="<?php echo htmlspecialchars($platName); ?>" class="max-w-full max-h-full object-contain grayscale group-hover:grayscale-0 transition-all duration-300">
+                            <?php else: ?>
+                                <span class="font-bold text-gray-400 group-hover:text-theme transition-colors"><?php echo htmlspecialchars($platName); ?></span>
+                            <?php endif; ?>
+                        </div>
+                        <p class="mt-4 text-xs font-bold uppercase tracking-widest text-gray-400 group-hover:text-theme transition-colors"><?php echo htmlspecialchars($platName); ?></p>
+                    </a>
+                    <?php endforeach; ?>
+                </div>
+            </div>
+        </section>
+        <?php $sections['secOtherPlatforms'] = ob_get_clean();
     }
+
+    // --- RENDER IN ORDER ---
+    $savedOrder = $configGrp['section_order'] ?? [];
+    $defaultOrder = ['secOtherPlatforms', 'secBanner', 'secStats', 'secWhy', 'secAbout', 'secTesti', 'secNews'];
     
-    // Default fallback order if empty (same as previous sequence)
-    $defaultOrder = ['secBanner', 'secStats', 'secWhy', 'secAbout', 'secTesti', 'secNews'];
-    
-    // Ensure all enabled sections are present in final order
-    $finalOrder = is_array($savedOrder) ? $savedOrder : [];
+    $finalOrder = is_array($savedOrder) && !empty($savedOrder) ? $savedOrder : $defaultOrder;
     foreach ($defaultOrder as $k) {
         if (!in_array($k, $finalOrder)) $finalOrder[] = $k;
     }
 
-    // Output Sections
     foreach ($finalOrder as $secId) {
         if (isset($sections[$secId])) {
             echo $sections[$secId];
@@ -772,10 +624,9 @@ require_once __DIR__ . '/includes/header.php';
     <script src="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.js"></script>
 
     <script>
-    <?php if ($landingPage['show_testimonials']): ?>
+    <?php if ($showTesti): ?>
     (function() {
-        // Data Source: Manual or API
-        const manualReviews = <?php echo !empty($landingPage['testimonials_data']) ? $landingPage['testimonials_data'] : 'null'; ?>;
+        const manualReviews = <?php echo json_encode($testiGrp['items'] ?? []); ?>;
         const container = document.getElementById('testimonialsList');
         const productId = '<?php echo $productData['id']; ?>';
         const baseUrl = '<?php echo $baseUrl; ?>';
@@ -953,7 +804,7 @@ function updateStickyQty(change) {
 function stickyAddToCart() {
     const btn = document.getElementById('sticky-atc-btn');
     const qty = parseInt(document.getElementById('sticky-qty').value) || 1;
-    const productId = <?php echo $productData['id']; ?>;
+    const productId = <?php echo $productData['product_id']; ?>;
     
     if (btn) {
         const originalText = btn.innerHTML;
@@ -993,15 +844,14 @@ function stickyAddToCart() {
 
 <?php require_once __DIR__ . '/includes/footer.php'; ?>
 
-<!-- SEO Content / Footer Extra -->
-<?php if (!empty($landingPage['show_footer_extra']) && !empty($landingPage['footer_extra_content'])): 
-    $footerBg = $landingPage['footer_extra_bg'] ?? '#f8f9fa';
-    $footerText = $landingPage['footer_extra_text'] ?? '#333333';
-?>
-<section class="pt-10 pb-20 md:py-24 border-t border-gray-100 relative z-10" style="background-color: <?php echo $footerBg; ?>; color: <?php echo $footerText; ?>;">
+<!-- SEO Content / Footer Extra (Consolidated) -->
+<?php 
+$footerData = $configGrp['footer_extra'] ?? [];
+if (!empty($footerData['show']) && !empty($footerData['content'])): ?>
+<section class="pt-10 pb-20 md:py-24 border-t border-gray-100 relative z-10" style="background-color: <?php echo $footerData['bg']; ?>; color: <?php echo $footerData['text']; ?>;">
     <div class="container mx-auto px-4">
-        <div class="prose max-w-none leading-relaxed" style="--tw-prose-body: <?php echo $footerText; ?>; --tw-prose-headings: <?php echo $footerText; ?>; --tw-prose-links: <?php echo $footerText; ?>; color: <?php echo $footerText; ?>;">
-            <?php echo $landingPage['footer_extra_content']; ?>
+        <div class="prose max-w-none leading-relaxed" style="color: <?php echo $footerData['text']; ?>;">
+            <?php echo $footerData['content']; ?>
         </div>
     </div>
 </section>

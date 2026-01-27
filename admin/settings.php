@@ -29,7 +29,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         
         if ($newName && $newSlug && $productId) {
             try {
-                $db->insert("INSERT INTO landing_pages (name, slug, product_id) VALUES (?, ?, ?)", [$newName, $newSlug, $productId]);
+                // Default styles to ensure new pages aren't black and all sections are enabled
+                $defaultOrder = ['secOtherPlatforms', 'secBanner', 'secStats', 'secWhy', 'secAbout', 'secTesti', 'secNews'];
+                $defaultPageConfig = json_encode(['theme_color' => '#5F8D76', 'body_bg_color' => '#ffffff', 'body_text_color' => '#000000', 'section_order' => $defaultOrder]);
+                
+                $enabledJson = json_encode(['show' => 1, 'items' => []]);
+                $db->insert("INSERT INTO landing_pages (name, slug, product_id, page_config, banner_data, stats_data, why_data, about_data, testimonials_data, newsletter_data, platforms_data) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)", 
+                    [$newName, $newSlug, $productId, $defaultPageConfig, $enabledJson, $enabledJson, $enabledJson, $enabledJson, $enabledJson, $enabledJson, $enabledJson]);
                 $_SESSION['flash_success'] = "New landing page created!";
                 header("Location: " . $baseUrl . '/admin/special-page?page=' . urlencode($newSlug));
                 exit;
@@ -60,10 +66,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         
         // General Data
         $productId = $_POST['product_id'];
+        $pageName = $_POST['page_name'] ?? '';
         $heroTitle = $_POST['hero_title'];
         $heroSubtitle = $_POST['hero_subtitle'];
         $heroDesc = $_POST['hero_description'];
-        $themeColor = $_POST['theme_color'];
+        $themeColor = $_POST['theme_color'] ?? '#5F8D76';
         $bodyBg = $_POST['body_bg_color'] ?? '#ffffff';
         $bodyText = $_POST['body_text_color'] ?? '#000000';
         
@@ -224,59 +231,150 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         }
         $testimonialsDataJson = json_encode($testimonialsItems);
         
+        // Handle Other Platforms Items (Dynamic)
+        $platformItems = [];
+        if (isset($_POST['platform_items']) && is_array($_POST['platform_items'])) {
+            foreach ($_POST['platform_items'] as $index => $pItem) {
+                $pImgUrl = $pItem['image'] ?? '';
+                
+                // Handle File Upload for this platform
+                if (isset($_FILES['platform_items']['name'][$index]['image_file']) && $_FILES['platform_items']['error'][$index]['image_file'] === UPLOAD_ERR_OK) {
+                    $fname = time() . '_plat_' . $index . '_' . preg_replace('/[^a-zA-Z0-9._-]/', '', basename($_FILES['platform_items']['name'][$index]['image_file']));
+                    $target = $uploadDir . $fname;
+                    if (move_uploaded_file($_FILES['platform_items']['tmp_name'][$index]['image_file'], $target)) {
+                        $pImgUrl = 'assets/images/banner/' . $fname;
+                    }
+                }
+
+                if (trim($pItem['name']) !== '' || trim($pItem['link']) !== '') {
+                    $platformItems[] = [
+                        'name' => $pItem['name'] ?? '',
+                        'link' => $pItem['link'] ?? '',
+                        'image' => $pImgUrl
+                    ];
+                }
+            }
+        }
+        $otherPlatformJson = json_encode($platformItems);
+
         // Single fields for backward compatibility (optional, using first item)
         $firstBan = $bannerItems[0] ?? [];
         $finalBannerImg = $firstBan['image'] ?? ($_POST['banner_image'] ?? '');
         $finalBannerMobImg = $firstBan['mobile_image'] ?? ($_POST['banner_mobile_image'] ?? '');
 
+        // Prepare Grouped Data for all 10 Sections (Array Storage)
+        
+        // 1. Header Data
+        $headerGrouped = json_encode([
+            'nav_links' => json_decode($_POST['nav_links_json'] ?? '[]', true)
+        ]);
+
+        // 2. Hero Data
+        $heroGrouped = json_encode([
+            'title' => $heroTitle,
+            'subtitle' => $heroSubtitle,
+            'description' => $heroDesc,
+            'bg_color' => $heroBg,
+            'text_color' => $heroText,
+            'image' => $lp['hero_image'] ?? ''
+        ]);
+
+        // 3. Banner Data
+        $bannerGrouped = json_encode([
+            'show' => $showBanner,
+            'bg_color' => $bannerBg,
+            'text_color' => $bannerText,
+            'items' => json_decode($bannerSectionsJson, true)
+        ]);
+
+        // 4. Stats Data
+        $statsGrouped = json_encode([
+            'show' => $showStats,
+            'bg_color' => $statsBg,
+            'text_color' => $statsText,
+            'items' => json_decode($statsDataJson, true)
+        ]);
+
+        // 5. Why Data
+        $whyGrouped = json_encode([
+            'show' => $showWhy,
+            'title' => $whyTitle,
+            'bg_color' => $whyBg,
+            'text_color' => $whyText,
+            'items' => json_decode($whyDataJson, true)
+        ]);
+
+        // 6. About Data
+        $aboutGrouped = json_encode([
+            'show' => $showAbout,
+            'title' => $aboutTitle,
+            'text' => $aboutText,
+            'image' => $_POST['about_image'] ?? '',
+            'bg_color' => $aboutBg,
+            'text_color' => $aboutText_color ?? '#333333'
+        ]);
+
+        // 7. Testimonials Data
+        $testiGrouped = json_encode([
+            'show' => $showTestimonials,
+            'title' => $testiTitle,
+            'bg_color' => $testiBg,
+            'text_color' => $testiText,
+            'items' => json_decode($testimonialsDataJson, true)
+        ]);
+
+        // 8. Newsletter Data
+        $newsGrouped = json_encode([
+            'show' => $showNewsletter,
+            'title' => $newsTitle,
+            'text' => $newsText,
+            'bg_color' => $newsBg,
+            'text_color' => $newsText_color ?? '#333333'
+        ]);
+
+        // 9. Platforms Data
+        $platformsGrouped = json_encode([
+            'show' => isset($_POST['show_other_platforms']) ? 1 : 0,
+            'items' => json_decode($otherPlatformJson, true)
+        ]);
+
+        // 10. Footer Data
+        $footerGrouped = json_encode([
+            'show_extra' => isset($_POST['show_footer_extra']) ? 1 : 0,
+            'extra_content' => $_POST['footer_extra_content'] ?? '',
+            'extra_bg' => $_POST['footer_extra_bg'] ?? '#f8f9fa',
+            'extra_text' => $_POST['footer_extra_text'] ?? '#333333',
+            'copyright' => $_POST['copyright_text'] ?? ''
+        ]);
+
+        // Global Config
+        $pageConfigGrouped = json_encode([
+            'theme_color' => $themeColor,
+            'body_bg_color' => $bodyBg,
+            'body_text_color' => $bodyText,
+            'section_order' => json_decode($_POST['section_order_json'] ?? '[]', true)
+        ]);
+
+        // SEO Data
+        $seoGrouped = json_encode([
+            'meta_title' => $_POST['meta_title'] ?? '',
+            'meta_description' => $_POST['meta_description'] ?? '',
+            'custom_schema' => $_POST['custom_schema'] ?? ''
+        ]);
+
         try {
             $db->execute(
                 "UPDATE landing_pages SET 
-                    product_id=?, hero_title=?, hero_subtitle=?, hero_description=?, theme_color=?,
-                    body_bg_color=?, body_text_color=?,
-                    hero_bg_color=?, hero_text_color=?,
-                    banner_bg_color=?, banner_text_color=?,
-                    stats_bg_color=?, stats_text_color=?,
-                    why_bg_color=?, why_text_color=?,
-                    about_bg_color=?, about_text_color=?,
-                    testimonials_bg_color=?, testimonials_text_color=?,
-                    newsletter_bg_color=?, newsletter_text_color=?,
-                    show_stats=?, show_why=?, show_about=?, show_testimonials=?, show_newsletter=?, show_banner=?,
-                    why_title=?, about_title=?, about_text=?, testimonials_title=?, newsletter_title=?, newsletter_text=?,
-                    about_image=?,
-                    banner_image=?, banner_mobile_image=?, banner_heading=?, banner_text=?, banner_btn_text=?, banner_btn_link=?, banner_sections_json=?, section_order=?, stats_data=?, why_data=?, testimonials_data=?,
-                    meta_title=?, meta_description=?, custom_schema=?,
-                    footer_extra_content=?, show_footer_extra=?,
-                    footer_extra_bg=?, footer_extra_text=?
+                    product_id=?, name=?, slug=?,
+                    header_data=?, hero_data=?, banner_data=?, stats_data=?, why_data=?, about_data=?, 
+                    testimonials_data=?, newsletter_data=?, platforms_data=?, footer_data=?,
+                    page_config=?, seo_data=?
                 WHERE id=?",
                 [
-                    $productId, $heroTitle, $heroSubtitle, $heroDesc, $themeColor,
-                    $bodyBg, $bodyText,
-                    $heroBg, $heroText, 
-                    $bannerBg, $bannerText,
-                    $statsBg, $statsText, $whyBg, $whyText, $aboutBg, $aboutText,
-                    $testiBg, $testiText, $newsBg, $newsText,
-                    $showStats, $showWhy, $showAbout, $showTestimonials, $showNewsletter, $showBanner,
-                    $whyTitle, $aboutTitle, $aboutText, $testiTitle, $newsTitle, $newsText,
-                    $_POST['about_image'] ?? '',
-                    $finalBannerImg,
-                    $finalBannerMobImg,
-                    $firstBan['heading'] ?? ($_POST['banner_heading'] ?? ''),
-                    $firstBan['text'] ?? ($_POST['banner_text'] ?? ''),
-                    $firstBan['btn_text'] ?? ($_POST['banner_btn_text'] ?? ''),
-                    $firstBan['btn_link'] ?? ($_POST['banner_btn_link'] ?? ''),
-                    $bannerSectionsJson,
-                    $_POST['section_order_json'] ?? '[]',
-                    $statsDataJson,
-                    $whyDataJson,
-                    $testimonialsDataJson,
-                    $_POST['meta_title'] ?? '',
-                    $_POST['meta_description'] ?? '',
-                    $_POST['custom_schema'] ?? '',
-                    $_POST['footer_extra_content'] ?? '',
-                    isset($_POST['show_footer_extra']) ? 1 : 0,
-                    $_POST['footer_extra_bg'] ?? '#f8f9fa',
-                    $_POST['footer_extra_text'] ?? '#333333',
+                    $productId, $pageName, $selectedSlug,
+                    $headerGrouped, $heroGrouped, $bannerGrouped, $statsGrouped, $whyGrouped, $aboutGrouped,
+                    $testiGrouped, $newsGrouped, $platformsGrouped, $footerGrouped,
+                    $pageConfigGrouped, $seoGrouped,
                     $id
                 ]
             );
@@ -347,8 +445,8 @@ if (empty($selectedSlug) && !empty($allPages)) {
     $selectedSlug = $allPages[0]['slug'];
 }
 
-// Fetch active products for dropdown (Adding back)
-$products = $db->fetchAll("SELECT id, name, price, currency FROM products WHERE status = 'active' ORDER BY name ASC");
+// Fetch active products for dropdown
+$products = $db->fetchAll("SELECT id, product_id, name, price, currency FROM products WHERE status = 'active' ORDER BY name ASC");
 
 // Fetch Current Page Data
 $lp = $db->fetchOne("SELECT * FROM landing_pages WHERE slug = ?", [$selectedSlug]);
@@ -357,6 +455,88 @@ $lp = $db->fetchOne("SELECT * FROM landing_pages WHERE slug = ?", [$selectedSlug
 if (!$lp && !empty($allPages)) {
     $selectedSlug = $allPages[0]['slug'];
     $lp = $db->fetchOne("SELECT * FROM landing_pages WHERE slug = ?", [$selectedSlug]);
+}
+
+// --- DATA RECONCILIATION & BACKWARD COMPATIBILITY ---
+// Map JSON grouped data back to individual keys for the form UI to avoid undefined index warnings.
+if ($lp) {
+    $headerGrp = json_decode($lp['header_data'] ?? '{}', true) ?: [];
+    $heroGrp = json_decode($lp['hero_data'] ?? '{}', true) ?: [];
+    $bannerGrp = json_decode($lp['banner_data'] ?? '{}', true) ?: [];
+    $statsGrp = json_decode($lp['stats_data'] ?? '{}', true) ?: [];
+    $whyGrp = json_decode($lp['why_data'] ?? '{}', true) ?: [];
+    $aboutGrp = json_decode($lp['about_data'] ?? '{}', true) ?: [];
+    $testiGrp = json_decode($lp['testimonials_data'] ?? '{}', true) ?: [];
+    $newsGrp = json_decode($lp['newsletter_data'] ?? '{}', true) ?: [];
+    $platformsGrp = json_decode($lp['platforms_data'] ?? '{}', true) ?: [];
+    $footerGrp = json_decode($lp['footer_data'] ?? '{}', true) ?: [];
+    $configGrp = json_decode($lp['page_config'] ?? '{}', true) ?: [];
+    $seoGrp = json_decode($lp['seo_data'] ?? '{}', true) ?: [];
+
+    // Map Hero
+    $lp['hero_title'] = $heroGrp['title'] ?? '';
+    $lp['hero_subtitle'] = $heroGrp['subtitle'] ?? '';
+    $lp['hero_description'] = $heroGrp['description'] ?? '';
+    $lp['hero_bg_color'] = $heroGrp['bg_color'] ?? '';
+    $lp['hero_text_color'] = $heroGrp['text_color'] ?? '';
+    $lp['hero_image'] = $heroGrp['image'] ?? '';
+
+    // Map Stats
+    $lp['show_stats'] = $statsGrp['show'] ?? 0;
+    $lp['stats_bg_color'] = $statsGrp['bg_color'] ?? '';
+    $lp['stats_text_color'] = $statsGrp['text_color'] ?? '';
+    $lp['stats_data'] = json_encode($statsGrp['items'] ?? []);
+
+    // Map Why
+    $lp['show_why'] = $whyGrp['show'] ?? 0;
+    $lp['why_title'] = $whyGrp['title'] ?? '';
+    $lp['why_bg_color'] = $whyGrp['bg_color'] ?? '';
+    $lp['why_text_color'] = $whyGrp['text_color'] ?? '';
+    $lp['why_data'] = json_encode($whyGrp['items'] ?? []);
+
+    // Map About
+    $lp['show_about'] = $aboutGrp['show'] ?? 0;
+    $lp['about_title'] = $aboutGrp['title'] ?? '';
+    $lp['about_text'] = $aboutGrp['text'] ?? '';
+    $lp['about_image'] = $aboutGrp['image'] ?? '';
+    $lp['about_bg_color'] = $aboutGrp['bg_color'] ?? '';
+    $lp['about_text_color'] = $aboutGrp['text_color'] ?? '';
+
+    // Map Testimonials
+    $lp['show_testimonials'] = $testiGrp['show'] ?? 0;
+    $lp['testimonials_title'] = $testiGrp['title'] ?? '';
+    $lp['testimonials_bg_color'] = $testiGrp['bg_color'] ?? '';
+    $lp['testimonials_text_color'] = $testiGrp['text_color'] ?? '';
+    $lp['testimonials_data'] = json_encode($testiGrp['items'] ?? []);
+
+    // Map Newsletter
+    $lp['show_newsletter'] = $newsGrp['show'] ?? 0;
+    $lp['newsletter_title'] = $newsGrp['title'] ?? '';
+    $lp['newsletter_text'] = $newsGrp['text'] ?? '';
+    $lp['newsletter_bg_color'] = $newsGrp['bg_color'] ?? '';
+    $lp['newsletter_text_color'] = $newsGrp['text_color'] ?? '';
+
+    // Map Banner
+    $lp['show_banner'] = $bannerGrp['show'] ?? 0;
+    $lp['banner_bg_color'] = $bannerGrp['bg_color'] ?? '';
+    $lp['banner_text_color'] = $bannerGrp['text_color'] ?? '';
+    $lp['banner_sections_json'] = json_encode($bannerGrp['items'] ?? []);
+
+    // Map Platforms
+    $lp['show_other_platforms'] = $platformsGrp['show'] ?? 0;
+    $lp['Other_platform'] = json_encode($platformsGrp['items'] ?? []);
+
+    // Map Footer & Config
+    $lp['theme_color'] = $configGrp['theme_color'] ?? '';
+    $lp['body_bg_color'] = $configGrp['body_bg_color'] ?? '';
+    $lp['body_text_color'] = $configGrp['body_text_color'] ?? '';
+    $lp['nav_links'] = json_encode($headerGrp['nav_links'] ?? []);
+    $lp['section_order'] = json_encode($configGrp['section_order'] ?? []);
+
+    // Map SEO
+    $lp['meta_title'] = $seoGrp['meta_title'] ?? '';
+    $lp['meta_description'] = $seoGrp['meta_description'] ?? '';
+    $lp['custom_schema'] = $seoGrp['custom_schema'] ?? '';
 }
 ?>
 
@@ -461,7 +641,7 @@ if (!$lp && !empty($allPages)) {
                     <select name="product_id" id="newProductSelect" class="w-full border p-2 rounded text-sm" required>
                         <option value="">Select Product...</option>
                         <?php foreach ($products as $pr): ?>
-                        <option value="<?php echo $pr['id']; ?>"><?php echo htmlspecialchars($pr['name']); ?></option>
+                        <option value="<?php echo $pr['product_id']; ?>"><?php echo htmlspecialchars($pr['name']); ?></option>
                         <?php endforeach; ?>
                     </select>
                 </div>
@@ -486,7 +666,10 @@ if (!$lp && !empty($allPages)) {
             <input type="hidden" name="page_id" value="<?php echo $lp['id']; ?>">
             
             <div class="flex justify-between items-center mb-6 border-b pb-4">
-                <h2 class="text-xl font-bold">Editing: <?php echo htmlspecialchars($lp['name']); ?></h2>
+                <div class="flex items-center gap-4">
+                    <h2 class="text-xl font-bold">Editing:</h2>
+                    <input type="text" name="page_name" value="<?php echo htmlspecialchars($lp['name']); ?>" class="border p-2 rounded font-bold text-xl" placeholder="Landing Page Name">
+                </div>
                 <div class="flex items-center gap-6">
                      <div class="flex items-center gap-2">
                          <label class="text-sm font-bold">Theme Color:</label>
@@ -494,11 +677,11 @@ if (!$lp && !empty($allPages)) {
                      </div>
                      <div class="flex items-center gap-2">
                          <label class="text-sm font-bold">Body Bg:</label>
-                         <input type="color" name="body_bg_color" value="<?php echo htmlspecialchars($lp['body_bg_color'] ?? '#ffffff'); ?>" class="h-8 w-12 p-0 border-0">
+                         <input type="color" name="body_bg_color" value="<?php echo htmlspecialchars(($lp['body_bg_color'] ?? '') ?: '#ffffff'); ?>" class="h-8 w-12 p-0 border-0">
                      </div>
                      <div class="flex items-center gap-2">
                          <label class="text-sm font-bold">Body Text:</label>
-                         <input type="color" name="body_text_color" value="<?php echo htmlspecialchars($lp['body_text_color'] ?? '#000000'); ?>" class="h-8 w-12 p-0 border-0">
+                         <input type="color" name="body_text_color" value="<?php echo htmlspecialchars(($lp['body_text_color'] ?? '') ?: '#000000'); ?>" class="h-8 w-12 p-0 border-0">
                      </div>
                 </div>
             </div>
@@ -518,7 +701,7 @@ if (!$lp && !empty($allPages)) {
                             <label class="block text-sm font-bold mb-1">Linked Product</label>
                             <select name="product_id" class="w-full border p-2 rounded">
                                  <?php foreach ($products as $pr): ?>
-                                <option value="<?php echo $pr['id']; ?>" <?php echo $pr['id'] == $lp['product_id'] ? 'selected' : ''; ?>>
+                                <option value="<?php echo $pr['product_id']; ?>" <?php echo $pr['product_id'] == $lp['product_id'] ? 'selected' : ''; ?>>
                                     <?php echo htmlspecialchars($pr['name']); ?> - <?php echo format_price($pr['price'], $pr['currency'] ?? 'INR'); ?>
                                 </option>
                                 <?php endforeach; ?>
@@ -534,18 +717,18 @@ if (!$lp && !empty($allPages)) {
                         </div>
                          <div class="col-span-2">
                             <label class="block text-sm font-bold mb-1">Description</label>
-                            <textarea name="hero_description" class="w-full border p-2 rounded" rows="3"><?php echo htmlspecialchars($lp['hero_description'] ?? ''); ?></textarea>
+                            <textarea name="hero_description" class="w-full border p-2 rounded" rows="3" placeholder="Leave empty to use main product description"><?php echo htmlspecialchars($lp['hero_description'] ?? ''); ?></textarea>
                         </div>
                      </div>
                      <!-- Added Hero Colors -->
                      <div class="grid grid-cols-2 gap-4 mt-4 border-t pt-4">
                          <div>
                             <label class="block text-xs font-bold mb-1">Hero Bg Color</label>
-                            <input type="color" name="hero_bg_color" value="<?php echo htmlspecialchars($lp['hero_bg_color'] ?? '#E8F0E9'); ?>" class="w-full h-8">
+                            <input type="color" name="hero_bg_color" value="<?php echo htmlspecialchars(($lp['hero_bg_color'] ?? '') ?: '#ffffff'); ?>" class="w-full h-8">
                         </div>
                         <div>
                             <label class="block text-xs font-bold mb-1">Hero Text Color</label>
-                            <input type="color" name="hero_text_color" value="<?php echo htmlspecialchars($lp['hero_text_color'] ?? '#4A4A4A'); ?>" class="w-full h-8">
+                            <input type="color" name="hero_text_color" value="<?php echo htmlspecialchars(($lp['hero_text_color'] ?? '') ?: '#000000'); ?>" class="w-full h-8">
                         </div>
                     </div>
                 </div>
@@ -590,15 +773,15 @@ if (!$lp && !empty($allPages)) {
                         </div>
                         <div class="flex items-center gap-3">
                              <label class="flex items-center cursor-pointer text-sm">
-                                <input type="checkbox" name="show_banner" class="mr-2" <?php echo ($lp['show_banner'] ?? 0) ? 'checked' : ''; ?>> Enable
+                                <input type="checkbox" name="show_banner" class="mr-2" <?php echo ($lp['show_banner'] ?? 1) ? 'checked' : ''; ?>> Enable
                             </label>
                             <button type="button" onclick="toggleSection('secBanner', this)" class="p-2 hover:bg-gray-100 rounded transition"><i class="fas fa-chevron-down text-gray-500"></i></button>
                         </div>
                     </div>
                     <div id="secBanner" class="p-4 hidden bg-white">
                         <div class="grid grid-cols-2 gap-4 mb-4">
-                             <div><label class="block text-xs font-bold mb-1">Bg Color</label><input type="color" name="banner_bg_color" value="<?php echo htmlspecialchars($lp['banner_bg_color'] ?? '#ffffff'); ?>" class="w-full h-8"></div>
-                             <div><label class="block text-xs font-bold mb-1">Text Color</label><input type="color" name="banner_text_color" value="<?php echo htmlspecialchars($lp['banner_text_color'] ?? '#000000'); ?>" class="w-full h-8"></div>
+                             <div><label class="block text-xs font-bold mb-1">Bg Color</label><input type="color" name="banner_bg_color" value="<?php echo htmlspecialchars(($lp['banner_bg_color'] ?? '') ?: '#ffffff'); ?>" class="w-full h-8"></div>
+                             <div><label class="block text-xs font-bold mb-1">Text Color</label><input type="color" name="banner_text_color" value="<?php echo htmlspecialchars(($lp['banner_text_color'] ?? '') ?: '#000000'); ?>" class="w-full h-8"></div>
                         </div>
                         <div id="bannerSectionsContainer" class="space-y-6"></div>
                         <button type="button" onclick="addBannerSection()" class="mt-4 text-blue-600 font-bold hover:underline text-sm">+ Add Another Banner Section</button>
@@ -617,15 +800,15 @@ if (!$lp && !empty($allPages)) {
                         </div>
                          <div class="flex items-center gap-3">
                              <label class="flex items-center cursor-pointer text-sm">
-                                <input type="checkbox" name="show_stats" class="mr-2" <?php echo $lp['show_stats'] ? 'checked' : ''; ?>> Enable
+                                <input type="checkbox" name="show_stats" class="mr-2" <?php echo ($lp['show_stats'] ?? 1) ? 'checked' : ''; ?>> Enable
                             </label>
                             <button type="button" onclick="toggleSection('secStats', this)" class="p-2 hover:bg-gray-100 rounded transition"><i class="fas fa-chevron-down text-gray-500"></i></button>
                         </div>
                     </div>
                     <div id="secStats" class="p-4 hidden bg-white">
                         <div class="grid grid-cols-2 gap-4 mb-4">
-                             <div><label class="block text-xs font-bold mb-1">Bg Color</label><input type="color" name="stats_bg_color" value="<?php echo htmlspecialchars($lp['stats_bg_color'] ?? ''); ?>" class="w-full h-8"></div>
-                             <div><label class="block text-xs font-bold mb-1">Text Color</label><input type="color" name="stats_text_color" value="<?php echo htmlspecialchars($lp['stats_text_color'] ?? ''); ?>" class="w-full h-8"></div>
+                             <div><label class="block text-xs font-bold mb-1">Bg Color</label><input type="color" name="stats_bg_color" value="<?php echo htmlspecialchars(($lp['stats_bg_color'] ?? '') ?: '#ffffff'); ?>" class="w-full h-8"></div>
+                             <div><label class="block text-xs font-bold mb-1">Text Color</label><input type="color" name="stats_text_color" value="<?php echo htmlspecialchars(($lp['stats_text_color'] ?? '') ?: '#000000'); ?>" class="w-full h-8"></div>
                         </div>
                         
                         <div id="statsItemsContainer" class="space-y-3"></div>
@@ -645,7 +828,7 @@ if (!$lp && !empty($allPages)) {
                         </div>
                          <div class="flex items-center gap-3">
                              <label class="flex items-center cursor-pointer text-sm">
-                                <input type="checkbox" name="show_why" class="mr-2" <?php echo $lp['show_why'] ? 'checked' : ''; ?>> Enable
+                                <input type="checkbox" name="show_why" class="mr-2" <?php echo ($lp['show_why'] ?? 1) ? 'checked' : ''; ?>> Enable
                             </label>
                             <button type="button" onclick="toggleSection('secWhy', this)" class="p-2 hover:bg-gray-100 rounded transition"><i class="fas fa-chevron-down text-gray-500"></i></button>
                         </div>
@@ -653,8 +836,8 @@ if (!$lp && !empty($allPages)) {
                     <div id="secWhy" class="p-4 hidden bg-white">
                          <div class="mb-4"><label class="block text-sm font-bold mb-1">Section Title</label><input type="text" name="why_title" value="<?php echo htmlspecialchars($lp['why_title'] ?? ''); ?>" class="w-full border p-2 rounded"></div>
                         <div class="grid grid-cols-2 gap-4 mb-4">
-                             <div><label class="block text-xs font-bold mb-1">Bg Color</label><input type="color" name="why_bg_color" value="<?php echo htmlspecialchars($lp['why_bg_color'] ?? ''); ?>" class="w-full h-8"></div>
-                            <div><label class="block text-xs font-bold mb-1">Text Color</label><input type="color" name="why_text_color" value="<?php echo htmlspecialchars($lp['why_text_color'] ?? ''); ?>" class="w-full h-8"></div>
+                             <div><label class="block text-xs font-bold mb-1">Bg Color</label><input type="color" name="why_bg_color" value="<?php echo htmlspecialchars(($lp['why_bg_color'] ?? '') ?: '#ffffff'); ?>" class="w-full h-8"></div>
+                            <div><label class="block text-xs font-bold mb-1">Text Color</label><input type="color" name="why_text_color" value="<?php echo htmlspecialchars(($lp['why_text_color'] ?? '') ?: '#000000'); ?>" class="w-full h-8"></div>
                         </div>
                         
                         <div id="whyItemsContainer" class="space-y-4"></div>
@@ -674,14 +857,14 @@ if (!$lp && !empty($allPages)) {
                         </div>
                          <div class="flex items-center gap-3">
                              <label class="flex items-center cursor-pointer text-sm">
-                                <input type="checkbox" name="show_about" class="mr-2" <?php echo $lp['show_about'] ? 'checked' : ''; ?>> Enable
+                                <input type="checkbox" name="show_about" class="mr-2" <?php echo ($lp['show_about'] ?? 1) ? 'checked' : ''; ?>> Enable
                             </label>
                             <button type="button" onclick="toggleSection('secAbout', this)" class="p-2 hover:bg-gray-100 rounded transition"><i class="fas fa-chevron-down text-gray-500"></i></button>
                         </div>
                     </div>
                     <div id="secAbout" class="p-4 hidden bg-white">
                          <div class="mb-4"><label class="block text-sm font-bold mb-1">Section Title</label><input type="text" name="about_title" value="<?php echo htmlspecialchars($lp['about_title'] ?? ''); ?>" class="w-full border p-2 rounded"></div>
-                        <div class="mb-4"><label class="block text-sm font-bold mb-1">Text Content</label><textarea name="about_text" class="w-full border p-2 rounded" rows="3"><?php echo htmlspecialchars($lp['about_text'] ?? ''); ?></textarea></div>
+                        <div class="mb-4"><label class="block text-sm font-bold mb-1">Text Content</label><textarea name="about_text" class="w-full border p-2 rounded" rows="3" placeholder="Leave empty to use main product description"><?php echo htmlspecialchars($lp['about_text'] ?? ''); ?></textarea></div>
                         <div class="mb-4">
                             <label class="block text-sm font-bold mb-1">About Image</label>
                             
@@ -710,8 +893,8 @@ if (!$lp && !empty($allPages)) {
                             </div>
                         </div>
                         <div class="grid grid-cols-2 gap-4">
-                             <div><label class="block text-xs font-bold mb-1">Bg Color</label><input type="color" name="about_bg_color" value="<?php echo htmlspecialchars($lp['about_bg_color'] ?? ''); ?>" class="w-full h-8"></div>
-                            <div><label class="block text-xs font-bold mb-1">Text Color</label><input type="color" name="about_text_color" value="<?php echo htmlspecialchars($lp['about_text_color'] ?? ''); ?>" class="w-full h-8"></div>
+                             <div><label class="block text-xs font-bold mb-1">Bg Color</label><input type="color" name="about_bg_color" value="<?php echo htmlspecialchars(($lp['about_bg_color'] ?? '') ?: '#ffffff'); ?>" class="w-full h-8"></div>
+                            <div><label class="block text-xs font-bold mb-1">Text Color</label><input type="color" name="about_text_color" value="<?php echo htmlspecialchars(($lp['about_text_color'] ?? '') ?: '#000000'); ?>" class="w-full h-8"></div>
                         </div>
                     </div>
                 </div>
@@ -727,7 +910,7 @@ if (!$lp && !empty($allPages)) {
                         </div>
                          <div class="flex items-center gap-3">
                              <label class="flex items-center cursor-pointer text-sm">
-                                <input type="checkbox" name="show_testimonials" class="mr-2" <?php echo $lp['show_testimonials'] ? 'checked' : ''; ?>> Enable
+                                <input type="checkbox" name="show_testimonials" class="mr-2" <?php echo ($lp['show_testimonials'] ?? 1) ? 'checked' : ''; ?>> Enable
                             </label>
                             <button type="button" onclick="toggleSection('secTesti', this)" class="p-2 hover:bg-gray-100 rounded transition"><i class="fas fa-chevron-down text-gray-500"></i></button>
                         </div>
@@ -735,8 +918,8 @@ if (!$lp && !empty($allPages)) {
                      <div id="secTesti" class="p-4 hidden bg-white">
                          <div class="mb-4"><label class="block text-sm font-bold mb-1">Section Title</label><input type="text" name="testimonials_title" value="<?php echo htmlspecialchars($lp['testimonials_title'] ?? ''); ?>" class="w-full border p-2 rounded"></div>
                         <div class="grid grid-cols-2 gap-4 mb-4">
-                             <div><label class="block text-xs font-bold mb-1">Bg Color</label><input type="color" name="testimonials_bg_color" value="<?php echo htmlspecialchars($lp['testimonials_bg_color'] ?? ''); ?>" class="w-full h-8"></div>
-                            <div><label class="block text-xs font-bold mb-1">Text Color</label><input type="color" name="testimonials_text_color" value="<?php echo htmlspecialchars($lp['testimonials_text_color'] ?? ''); ?>" class="w-full h-8"></div>
+                             <div><label class="block text-xs font-bold mb-1">Bg Color</label><input type="color" name="testimonials_bg_color" value="<?php echo htmlspecialchars(($lp['testimonials_bg_color'] ?? '') ?: '#ffffff'); ?>" class="w-full h-8"></div>
+                            <div><label class="block text-xs font-bold mb-1">Text Color</label><input type="color" name="testimonials_text_color" value="<?php echo htmlspecialchars(($lp['testimonials_text_color'] ?? '') ?: '#000000'); ?>" class="w-full h-8"></div>
                         </div>
                         
                         <div id="testimonialsItemsContainer" class="space-y-6"></div>
@@ -756,7 +939,7 @@ if (!$lp && !empty($allPages)) {
                         </div>
                          <div class="flex items-center gap-3">
                              <label class="flex items-center cursor-pointer text-sm">
-                                <input type="checkbox" name="show_newsletter" class="mr-2" <?php echo $lp['show_newsletter'] ? 'checked' : ''; ?>> Enable
+                                <input type="checkbox" name="show_newsletter" class="mr-2" <?php echo ($lp['show_newsletter'] ?? 1) ? 'checked' : ''; ?>> Enable
                             </label>
                             <button type="button" onclick="toggleSection('secNews', this)" class="p-2 hover:bg-gray-100 rounded transition"><i class="fas fa-chevron-down text-gray-500"></i></button>
                         </div>
@@ -765,15 +948,39 @@ if (!$lp && !empty($allPages)) {
                          <div class="mb-4"><label class="block text-sm font-bold mb-1">Section Title</label><input type="text" name="newsletter_title" value="<?php echo htmlspecialchars($lp['newsletter_title'] ?? ''); ?>" class="w-full border p-2 rounded"></div>
                         <div class="mb-4"><label class="block text-sm font-bold mb-1">Text Content</label><input type="text" name="newsletter_text" value="<?php echo htmlspecialchars($lp['newsletter_text'] ?? ''); ?>" class="w-full border p-2 rounded"></div>
                         <div class="grid grid-cols-2 gap-4">
-                             <div><label class="block text-xs font-bold mb-1">Bg Color</label><input type="color" name="newsletter_bg_color" value="<?php echo htmlspecialchars($lp['newsletter_bg_color'] ?? ''); ?>" class="w-full h-8"></div>
-                            <div><label class="block text-xs font-bold mb-1">Text Color</label><input type="color" name="newsletter_text_color" value="<?php echo htmlspecialchars($lp['newsletter_text_color'] ?? ''); ?>" class="w-full h-8"></div>
+                             <div><label class="block text-xs font-bold mb-1">Bg Color</label><input type="color" name="newsletter_bg_color" value="<?php echo htmlspecialchars(($lp['newsletter_bg_color'] ?? '') ?: '#ffffff'); ?>" class="w-full h-8"></div>
+                            <div><label class="block text-xs font-bold mb-1">Text Color</label><input type="color" name="newsletter_text_color" value="<?php echo htmlspecialchars(($lp['newsletter_text_color'] ?? '') ?: '#000000'); ?>" class="w-full h-8"></div>
                         </div>
                     </div>
                 </div>
                 <?php $sections['secNews'] = ob_get_clean();
 
+                // --- OTHER PLATFORMS SECTION ---
+                ob_start(); ?>
+                 <div class="border border-gray-200 rounded overflow-hidden" data-section-id="secOtherPlatforms">
+                    <div class="bg-gray-50 p-3 flex justify-between items-center border-b cursor-move" draggable="true">
+                        <div class="flex items-center gap-2">
+                             <i class="fas fa-grip-vertical text-gray-400"></i>
+                             <span class="font-bold text-gray-700">Other Platforms (Marketplaces)</span>
+                        </div>
+                         <div class="flex items-center gap-3">
+                             <label class="flex items-center cursor-pointer text-sm">
+                                <input type="checkbox" name="show_other_platforms" class="mr-2" <?php echo ($lp['show_other_platforms'] ?? 1) ? 'checked' : ''; ?>> Enable
+                            </label>
+                            <button type="button" onclick="toggleSection('secOtherPlatforms', this)" class="p-2 hover:bg-gray-100 rounded transition"><i class="fas fa-chevron-down text-gray-500"></i></button>
+                        </div>
+                    </div>
+                     <div id="secOtherPlatforms" class="p-4 hidden bg-white">
+                        <p class="text-xs text-gray-500 mb-4">Add direct links to your product on other platforms like Amazon, Flipkart, etc. to build trust.</p>
+                        <div id="platformItemsContainer" class="space-y-6"></div>
+                        <button type="button" onclick="addPlatformItem()" class="mt-2 text-blue-600 font-bold hover:underline text-sm">+ Add Marketplace Platform</button>
+                        <input type="hidden" id="initialPlatformData" value="<?php echo htmlspecialchars($lp['Other_platform'] ?? '[]'); ?>">
+                    </div>
+                </div>
+                <?php $sections['secOtherPlatforms'] = ob_get_clean();
+
                 // 2. Define Default Order
-                $defaultOrder = ['secHeaders', 'secBanner', 'secStats', 'secWhy', 'secAbout', 'secTesti', 'secNews'];
+                $defaultOrder = ['secOtherPlatforms', 'secHeaders', 'secBanner', 'secStats', 'secWhy', 'secAbout', 'secTesti', 'secNews'];
                 
                 // 3. Get Saved Order
                 $savedOrder = [];
@@ -957,7 +1164,7 @@ function updateNavLink(index, key, value) {
 
 // Exclusive Accordion Logic
 function toggleSection(id) {
-    const allSections = ['secHeaders', 'secBanner', 'secStats', 'secWhy', 'secAbout', 'secTesti', 'secNews', 'secFooter'];
+    const allSections = ['secHeaders', 'secBanner', 'secStats', 'secWhy', 'secAbout', 'secTesti', 'secNews', 'secOtherPlatforms', 'secFooter'];
     
     // Toggle the selected section
     const current = document.getElementById(id);
@@ -1178,7 +1385,66 @@ if (initialTestimonialsData) {
     } catch(e) { addTestimonialsItem(); }
 }
 
-// Toggle Section Content Visibility
+// --- Initialize Other Platforms ---
+const initialPlatformData = document.getElementById('initialPlatformData') ? document.getElementById('initialPlatformData').value : '[]';
+const platformContainer = document.getElementById('platformItemsContainer');
+let platformItemCount = 0;
+
+function addPlatformItem(data = {}) {
+    const index = platformItemCount++;
+    const div = document.createElement('div');
+    div.className = 'border border-gray-200 p-4 rounded bg-gray-50 relative animate-fade-in mb-4';
+    div.innerHTML = `
+         <button type="button" onclick="this.parentElement.remove()" class="absolute top-2 right-2 text-red-500 hover:text-red-700 font-bold bg-white rounded-full w-6 h-6 flex items-center justify-center shadow-sm" title="Remove">
+            <i class="fas fa-times text-xs"></i>
+         </button>
+         <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+            <div class="md:col-span-1">
+                 <label class="block text-xs font-bold mb-1">Platform Logo</label>
+                 <div class="relative group cursor-pointer border-2 border-dashed border-gray-300 rounded-lg p-2 bg-white flex flex-col items-center justify-center h-32 hover:border-blue-500 hover:bg-blue-50 transition" onclick="this.querySelector('input[type=file]').click()">
+                    
+                    ${data.image ? `
+                        <img src="${data.image.startsWith('http') ? data.image : '../'+data.image}" class="preview-img max-h-24 w-auto object-contain rounded mb-1">
+                    ` : `
+                        <img class="preview-img hidden max-h-24 w-auto object-contain rounded mb-1">
+                    `}
+                    
+                    <div class="text-center placeholder-box ${data.image ? 'hidden' : ''}">
+                        <i class="fas fa-store text-xl text-gray-400 mb-1"></i>
+                        <p class="text-[10px] text-gray-500 font-semibold leading-tight">Platform logo<br>(SVG/PNG)</p>
+                    </div>
+
+                    <input type="file" class="hidden" onchange="handleBannerUpload(this)">
+                    <input type="hidden" name="platform_items[${index}][image]" value="${data.image || ''}">
+                    <div class="upload-progress-container w-full absolute bottom-1 left-0 px-2"></div>
+                </div>
+            </div>
+            <div class="md:col-span-3 space-y-3">
+                <div>
+                     <label class="block text-xs font-bold mb-1">Platform Name</label>
+                    <input type="text" name="platform_items[${index}][name]" value="${data.name || ''}" class="w-full border p-2 rounded text-sm" placeholder="Amazon, Flipkart, etc.">
+                </div>
+                <div>
+                     <label class="block text-xs font-bold mb-1">Product Link (Full URL)</label>
+                    <input type="text" name="platform_items[${index}][link]" value="${data.link || ''}" class="w-full border p-2 rounded text-sm" placeholder="https://amazon.in/dp/...">
+                </div>
+            </div>
+         </div>
+    `;
+    if (platformContainer) platformContainer.appendChild(div);
+}
+
+if (initialPlatformData && platformContainer) {
+    try {
+        const platforms = JSON.parse(initialPlatformData);
+        if (Array.isArray(platforms) && platforms.length > 0) {
+            platforms.forEach(p => addPlatformItem(p));
+        } else {
+             // addPlatformItem();
+        }
+    } catch(e) { console.error("Error parsing platform data", e); }
+}
+
 // Toggle Section Content Visibility
 window.toggleSection = function(id, btn) {
     const el = document.getElementById(id);

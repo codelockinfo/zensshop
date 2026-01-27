@@ -92,6 +92,9 @@ function loadCart() {
 
 // Refresh cart from API
 async function refreshCart() {
+    // Show skeletons while loading
+    renderCartSkeleton(); 
+    
     try {
         const baseUrl = typeof BASE_URL !== 'undefined' ? BASE_URL : window.location.pathname.split('/').slice(0, -1).join('/') || '';
         const response = await fetch(baseUrl + '/api/cart.php', {
@@ -128,6 +131,36 @@ async function refreshCart() {
         // Fallback to cookie
         loadCart();
     }
+}
+
+/**
+ * Show skeleton loader in the cart
+ */
+function renderCartSkeleton() {
+    const cartItemsContainer = document.getElementById('cartItems');
+    if (!cartItemsContainer) return;
+
+    // Show 3 skeleton items
+    let html = '';
+    for (let i = 0; i < 3; i++) {
+        html += `
+            <div class="mb-4 pb-4 border-b animate-pulse">
+                <div class="flex items-center space-x-4">
+                    <div class="w-20 h-20 bg-gray-200 rounded"></div>
+                    <div class="flex-1 space-y-2">
+                        <div class="h-4 bg-gray-200 rounded w-3/4"></div>
+                        <div class="h-3 bg-gray-100 rounded w-1/2"></div>
+                        <div class="h-3 bg-gray-100 rounded w-1/4"></div>
+                    </div>
+                    <div class="w-12 text-right space-y-2">
+                        <div class="h-4 bg-gray-200 rounded ml-auto w-full"></div>
+                        <div class="h-6 w-6 bg-gray-100 rounded ml-auto"></div>
+                    </div>
+                </div>
+            </div>
+        `;
+    }
+    cartItemsContainer.innerHTML = html;
 }
 
 // Add to cart
@@ -529,9 +562,13 @@ function updateCartUI() {
         html += `
             <div class="side-cart-item-wrapper mb-4 pb-4 border-b" data-product-id="${item.product_id}" data-attributes='${attributesJson}'>
                 <div class="flex items-center space-x-4 side-cart-item" data-product-id="${item.product_id}">
-                    <img src="${escapeHtml(imageUrl)}" alt="${escapeHtml(item.name)}" class="w-20 h-20 object-cover rounded" onerror="this.src='data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iODAiIGhlaWdodD0iODAiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+PHJlY3Qgd2lkdGg9IjgwIiBoZWlnaHQ9IjgwIiBmaWxsPSIjRjNGNEY2Ii8+PGNpcmNsZSBjeD0iNDAiIGN5PSI0MCIgcj0iMjAiIGZpbGw9IiM5QjdBOEEiLz48L3N2Zz4='">
+                    <a href="product.php?slug=${item.slug}" class="shrink-0">
+                        <img src="${escapeHtml(imageUrl)}" alt="${escapeHtml(item.name)}" class="w-20 h-20 object-cover rounded" onerror="this.src='data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iODAiIGhlaWdodD0iODAiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+PHJlY3Qgd2lkdGg9IjgwIiBoZWlnaHQ9IjgwIiBmaWxsPSIjRjNGNEY2Ii8+PGNpcmNsZSBjeD0iNDAiIGN5PSI0MCIgcj0iMjAiIGZpbGw9IiM5QjdBOEEiLz48L3N2Zz4='">
+                    </a>
                     <div class="flex-1">
-                        <h4 class="font-semibold text-sm mb-1">${escapeHtml(item.name)}</h4>
+                        <h4 class="font-semibold text-sm mb-1">
+                            <a href="product.php?slug=${item.slug}" class="hover:text-[#1a3d32] transition-colors uppercase">${escapeHtml(item.name)}</a>
+                        </h4>
                         ${variantLabel}
                         <p class="text-gray-600 text-sm mt-1">${formatCurrency(itemPrice, item.currency)}</p>
                         <div class="flex items-center space-x-2 mt-2">
@@ -549,9 +586,13 @@ function updateCartUI() {
                 </div>
                 <!-- Side Cart Inline Remove Confirmation -->
                 <div class="side-cart-remove-confirm-inline flex items-center space-x-4 p-4 bg-gray-50 rounded border border-gray-300 hidden" data-product-id="${item.product_id}">
-                    <img src="${escapeHtml(imageUrl)}" alt="${escapeHtml(item.name)}" class="w-16 h-16 object-cover rounded border border-gray-200" onerror="this.src='data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iODAiIGhlaWdodD0iODAiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+PHJlY3Qgd2lkdGg9IjgwIiBoZWlnaHQ9IjgwIiBmaWxsPSIjRjNGNEY2Ii8+PGNpcmNsZSBjeD0iNDAiIGN5PSI0MCIgcj0iMjAiIGZpbGw9IiM5QjdBOEEiLz48L3N2Zz4='">
+                    <a href="product.php?slug=${item.slug}" class="shrink-0">
+                        <img src="${escapeHtml(imageUrl)}" alt="${escapeHtml(item.name)}" class="w-16 h-16 object-cover rounded border border-gray-200" onerror="this.src='data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iODAiIGhlaWdodD0iODAiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+PHJlY3Qgd2lkdGg9IjgwIiBoZWlnaHQ9IjgwIiBmaWxsPSIjRjNGNEY2Ii8+PGNpcmNsZSBjeD0iNDAiIGN5PSI0MCIgcj0iMjAiIGZpbGw9IiM5QjdBOEEiLz48L3N2Zz4='">
+                    </a>
                     <div class="flex-1">
-                        <h4 class="font-semibold text-sm mb-1 text-gray-800">${escapeHtml(item.name)}</h4>
+                        <h4 class="font-semibold text-sm mb-1 text-gray-800">
+                            <a href="product.php?slug=${item.slug}" class="hover:text-[#1a3d32] transition-colors uppercase">${escapeHtml(item.name)}</a>
+                        </h4>
                         <p class="text-gray-600 text-xs mb-2">Add to wishlist before remove?</p>
                         <div class="flex space-x-2">
                             <button onclick="confirmSideCartInlineRemoveWithWishlist(this, ${item.product_id}, ${attributesJson})" class="px-4 py-1.5 bg-black text-white text-xs font-medium rounded hover:bg-gray-800 transition">Yes</button>

@@ -25,7 +25,7 @@ ob_clean();
 // Only allow POST requests
 if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
     http_response_code(405);
-    echo json_encode(['success' => false, 'message' => 'Method not allowed']);
+    echo json_encode(['success' => false, 'message' => 'Something went wrong']);
     exit;
 }
 
@@ -33,7 +33,7 @@ if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
 $input = json_decode(file_get_contents('php://input'), true);
 
 if (!$input) {
-    echo json_encode(['success' => false, 'message' => 'Invalid request data']);
+    echo json_encode(['success' => false, 'message' => 'Something went wrong']);
     exit;
 }
 
@@ -41,7 +41,7 @@ if (!$input) {
 $required = ['razorpay_payment_id', 'razorpay_order_id', 'razorpay_signature', 'order_data'];
 foreach ($required as $field) {
     if (!isset($input[$field]) || empty($input[$field])) {
-        echo json_encode(['success' => false, 'message' => "Missing required field: $field"]);
+        echo json_encode(['success' => false, 'message' => "Something went wrong"]);
         exit;
     }
 }
@@ -66,14 +66,14 @@ try {
     $razorpayKeySecret = defined('RAZORPAY_KEY_SECRET') ? RAZORPAY_KEY_SECRET : '';
     
     if (empty($razorpayKeyId) || empty($razorpayKeySecret)) {
-        throw new Exception("Razorpay API keys are not configured. Please check admin settings.");
+        throw new Exception("Something went wrong");
     }
     
     // Verify signature
     $generatedSignature = hash_hmac('sha256', $orderId . '|' . $paymentId, $razorpayKeySecret);
     
     if ($generatedSignature !== $signature) {
-        echo json_encode(['success' => false, 'message' => 'Payment verification failed: Invalid signature']);
+        echo json_encode(['success' => false, 'message' => 'Something went wrong']);
         exit;
     }
     
@@ -103,19 +103,21 @@ try {
     if ($httpCode !== 200) {
         $errorMsg = 'Failed to verify payment with Razorpay. HTTP Code: ' . $httpCode;
         if ($curlError) $errorMsg .= ' - ' . $curlError;
-        echo json_encode(['success' => false, 'message' => $errorMsg]);
+        error_log($errorMsg);
+        echo json_encode(['success' => false, 'message' => 'Something went wrong']);
         exit;
     }
     
     $paymentData = json_decode($response, true);
     if (!$paymentData) {
-        throw new Exception("Invalid response from Razorpay API");
+        throw new Exception("Something went wrong");
     }
     
     // Check if payment is successful
     $paymentStatus = $paymentData['status'] ?? 'unknown';
     if ($paymentStatus !== 'captured' && $paymentStatus !== 'authorized') {
-        echo json_encode(['success' => false, 'message' => 'Payment not successful. Status: ' . $paymentStatus]);
+        error_log("Payment not successful. Status: " . $paymentStatus);
+        echo json_encode(['success' => false, 'message' => 'Something went wrong']);
         exit;
     }
     
@@ -124,7 +126,7 @@ try {
     $cartItems = $cart->getCart();
     
     if (empty($cartItems)) {
-        throw new Exception("Your cart is empty. The order could not be processed.");
+        throw new Exception("Something went wrong");
     }
     
     // Prepare order data
@@ -170,17 +172,9 @@ try {
     error_log("Payment verification error: " . $e->getMessage());
     ob_clean();
     
-    $msg = $e->getMessage();
-    $errorMessage = 'Payment verification failed: ' . $msg;
-    
-    // Check for common DB errors
-    if (strpos($msg, 'Column not found') !== false || strpos($msg, 'Unknown column') !== false) {
-        $errorMessage = 'Database error: One or more required columns are missing in production. Please run the database update script.';
-    }
-    
     echo json_encode([
         'success' => false, 
-        'message' => $errorMessage,
+        'message' => 'Something went wrong',
         'debug_error' => $msg
     ]);
     exit;
