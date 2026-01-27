@@ -1,1 +1,6 @@
 .htaccess
+*.log
+admin/*.log
+vendor/
+node_modules/
+.DS_Store
