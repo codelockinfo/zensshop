@@ -124,6 +124,22 @@ class Order {
         $taxAmount = $data['tax_amount'] ?? 0;
         $totalAmount = $subtotal - $discountAmount + $shippingAmount + $taxAmount;
         
+        // Automatic Customer Matching:
+        // If user_id is missing (guest checkout) OR is a legacy small ID, try to find an existing customer by email
+        if ((empty($data['user_id']) || $data['user_id'] < 1000000000) && !empty($data['customer_email'])) {
+            try {
+                $existingCustomer = $this->db->fetchOne(
+                    "SELECT customer_id FROM customers WHERE email = ?", 
+                    [$data['customer_email']]
+                );
+                if ($existingCustomer) {
+                    $data['user_id'] = $existingCustomer['customer_id'];
+                }
+            } catch (Exception $e) {
+                // Silently fail matching if DB error, proceed as guest
+            }
+        }
+        
         // Insert order
         $orderId = $this->db->insert(
             "INSERT INTO orders 

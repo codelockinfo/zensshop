@@ -147,6 +147,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['place_order']) && emp
         if ($auth->isLoggedIn()) {
             $currentUser = $auth->getCurrentCustomer();
             $userId = $currentUser['customer_id'] ?? null;
+            
+            // Force re-match if ID is legacy/invalid
+            if ($userId && $userId < 1000000000) {
+                $userId = null;
+            }
         }
         
         // Combine phone code and phone number
