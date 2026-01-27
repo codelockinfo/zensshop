@@ -192,7 +192,7 @@ $productVariants = $variantsData['variants'] ?? [];
                     <?php foreach ($galleryItems as $index => $item): ?>
                     <img src="<?php echo htmlspecialchars($item['url']); ?>" 
                          alt="Thumbnail <?php echo $index + 1; ?>"
-                         class="thumbnail-img w-full h-20 object-cover rounded cursor-pointer border-2 transition hover:border-primary <?php echo $index === 0 ? 'border-primary' : 'border-transparent'; ?>"
+                         class="thumbnail-img w-full object-cover rounded cursor-pointer border-2 transition hover:border-primary <?php echo $index === 0 ? 'border-primary' : 'border-transparent'; ?>"
                          onclick="changeMainImage('<?php echo htmlspecialchars($item['url']); ?>', this, <?php echo $item['variant'] ? htmlspecialchars(json_encode($item['variant'])) : 'null'; ?>)"
                          onerror="this.src='https://via.placeholder.com/150x150?text=No+Image'">
                     <?php endforeach; ?>
