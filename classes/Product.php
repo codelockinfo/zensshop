@@ -194,8 +194,8 @@ class Product {
                 $productId = $this->db->insert(
                     "INSERT INTO products 
                     (product_id, name, slug, sku, description, short_description, category_id, price, currency, sale_price, 
-                     cost_per_item, total_expense, stock_quantity, stock_status, images, featured_image, gender, brand, status, featured, highlights, shipping_policy, return_policy) 
-                    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+                     cost_per_item, total_expense, stock_quantity, stock_status, images, featured_image, brand, status, featured, highlights, shipping_policy, return_policy) 
+                    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
                     [
                         $customProductId,  // 10-digit random product ID (e.g., 5654148741)
                         $data['name'],
@@ -213,7 +213,6 @@ class Product {
                         $data['stock_status'] ?? 'in_stock',
                         $imagesJson,
                         $featuredImage,
-                        $data['gender'] ?? 'unisex',
                         $data['brand'] ?? null,
                         $data['status'] ?? 'draft',
                         $data['featured'] ?? 0,
@@ -284,7 +283,7 @@ class Product {
                 
                 $allowedFields = ['name', 'sku', 'description', 'short_description', 'category_id', 'price', 'currency', 
                                  'sale_price', 'cost_per_item', 'total_expense', 'stock_quantity', 'stock_status', 'images', 'featured_image',
-                                 'gender', 'brand', 'status', 'featured', 'highlights', 'shipping_policy', 'return_policy'];
+                                 'brand', 'status', 'featured', 'highlights', 'shipping_policy', 'return_policy'];
                 
                 // Handle category_id (use first category if multiple)
                 if (isset($data['category_ids']) && is_array($data['category_ids']) && !empty($data['category_ids'])) {

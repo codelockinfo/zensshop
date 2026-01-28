@@ -519,7 +519,7 @@ button.active {
                             </a>
                             
                             <?php if ($discount > 0): ?>
-                            <span class="absolute top-3 left-3 bg-red-500 text-white px-2 py-1 rounded text-sm font-semibold">
+                            <span class="absolute top-3 left-3 bg-red-500 text-white px-2 py-1 rounded text-sm font-semibold z-10">
                                 -<?php echo $discount; ?>%
                             </span>
                             <?php endif; ?>
@@ -528,11 +528,22 @@ button.active {
                             $currentId = !empty($item['product_id']) ? $item['product_id'] : $itemId;
                             $inWishlist = in_array($currentId, $wishlistIds);
                             ?>
-                            <button class="wishlist-btn absolute top-3 right-3 rounded-full w-9 h-9 flex items-center justify-center transition <?php echo $inWishlist ? 'bg-black text-white' : 'bg-white text-black'; ?> hover:bg-black hover:text-white"
+                            <button type="button" class="absolute top-2 right-2 w-10 h-10 rounded-full flex items-center justify-center <?php echo $inWishlist ? 'bg-black text-white' : 'bg-white text-black'; ?> hover:bg-black hover:text-white transition z-20 wishlist-btn" 
                                     data-product-id="<?php echo $currentId; ?>"
                                     title="<?php echo $inWishlist ? 'Remove from Wishlist' : 'Add to Wishlist'; ?>">
                                 <i class="<?php echo $inWishlist ? 'fas' : 'far'; ?> fa-heart"></i>
+                                <span class="product-tooltip"><?php echo $inWishlist ? 'Remove from Wishlist' : 'Add to Wishlist'; ?></span>
                             </button>
+                            
+                            <!-- Hover Action Buttons -->
+                            <div class="product-actions absolute right-2 top-12 flex flex-col gap-2 mt-2 opacity-0 group-hover:opacity-100 transition-opacity duration-300 z-30">
+                                <button type="button" class="product-action-btn w-10 h-10 bg-white rounded-full flex items-center justify-center hover:bg-black hover:text-white transition shadow-lg quick-view-btn relative group" 
+                                       data-product-id="<?php echo $currentId; ?>"
+                                       data-product-slug="<?php echo htmlspecialchars($itemSlug); ?>">
+                                    <i class="fas fa-eye"></i>
+                                    <span class="product-tooltip">Quick View</span>
+                                </button>
+                            </div>
                         </div>
                         
                         <div class="p-4 card-content">

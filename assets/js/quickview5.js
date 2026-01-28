@@ -38,7 +38,7 @@ function createQuickViewModal() {
         <div class="fixed inset-0 bg-gray-500 bg-opacity-75 transition-opacity backdrop-blur-sm" aria-hidden="true" id="quickViewBackdrop"></div>
 
         <!-- Modal Panel Container -->
-        <div class="fixed inset-0 z-10 overflow-hidden flex items-center justify-center p-4 sm:p-6">
+        <div class="fixed inset-0 z-10 overflow-hidden flex items-center justify-center p-4 sm:p-6" id="quickViewWrapper">
             <!-- Panel -->
             <div class="relative transform rounded-lg bg-white text-left shadow-xl transition-all w-full max-w-5xl h-[85vh] flex flex-col opacity-0 scale-95 duration-300" id="quickViewPanel">
                 
@@ -67,6 +67,13 @@ function createQuickViewModal() {
 
     // Close on backdrop click
     document.getElementById('quickViewBackdrop').addEventListener('click', closeQuickView);
+    
+    // Close on wrapper click (area around the modal)
+    document.getElementById('quickViewWrapper').addEventListener('click', function(e) {
+        if (e.target === this) {
+            closeQuickView();
+        }
+    });
     
     // Close on Escape
     document.addEventListener('keydown', function(e) {
@@ -264,7 +271,7 @@ function renderQuickView(product) {
 
     content.innerHTML = `
         <div class="h-full grid grid-cols-1 md:grid-cols-2 bg-white">
-            <div class="p-6 md:p-8 bg-white md:border-r border-gray-100 flex flex-col justify-between overflow-hidden relative max-h-[600px]">
+            <div class="p-6 md:p-8 bg-white md:border-r border-gray-100 flex flex-col justify-between overflow-hidden relative max-h-[500px]">
                 <div class="relative flex-1 flex flex-col items-center justify-center w-full min-h-0">
                     ${imagesHTML}
                 </div>

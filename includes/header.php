@@ -708,92 +708,173 @@ if (!empty($headerMenuItems)) {
     </div>
     
     <!-- Search Overlay -->
-    <div class="hidden fixed inset-0 bg-black bg-opacity-50 z-[60]" id="searchOverlay">
-        <div class="container mx-auto px-4 pt-24 relative h-full">
-            <div class="max-w-2xl mx-auto relative click-stop-propagation">
-                <form action="<?php echo url('shop'); ?>" method="GET" class="relative group">
-                    <input type="text" name="search" id="headerSearchInput" placeholder="Search products..." 
-                           class="w-full px-6 py-4 text-lg rounded-lg bg-white text-black focus:outline-none focus:ring-2 focus:ring-gray-200"
-                           autocomplete="off" autofocus>
-                    <button type="submit" class="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 hover:text-black p-2 transition-colors">
+    <div class="hidden fixed inset-0 bg-white z-[60] overflow-y-auto" id="searchOverlay">
+        <button id="closeSearchBtn" class="absolute top-6 right-6 text-gray-400 hover:text-black transition p-2">
+            <i class="fas fa-times text-2xl"></i>
+        </button>
+
+        <div class="container mx-auto px-4 pt-20 pb-12 relative max-w-6xl">
+            <h2 class="text-3xl font-serif text-center mb-8">Search Our Site</h2>
+            
+            <div class="max-w-3xl mx-auto relative mb-12">
+                <form action="<?php echo url('shop'); ?>" method="GET" class="relative group border border-gray-300 rounded-full focus-within:border-black transition-colors px-4" onclick="document.getElementById('headerSearchInput').focus()">
+                    <input type="text" name="search" id="headerSearchInput" placeholder="I'm looking for..." 
+                           class="w-full px-4 py-3 text-lg font-light bg-transparent text-left text-black focus:outline-none placeholder-gray-400"
+                           autocomplete="off">
+                    <button type="submit" class="absolute right-4 top-1/2 -translate-y-1/2 text-black p-2">
                         <i class="fas fa-search text-xl"></i>
                     </button>
                 </form>
-                
-                <!-- Live Search Results -->
-                <div id="headerSearchResults" class="absolute left-0 right-0 mt-2 bg-white rounded-lg shadow-xl overflow-hidden hidden max-h-[60vh] overflow-y-auto z-50">
-                    <!-- Results injected via JS -->
+            </div>
+
+            <!-- Trending Search (Always Visible) -->
+            <div class="mb-12 text-center">
+                <h3 class="text-lg font-serif mb-6 text-gray-900">Trending Search</h3>
+                <div class="flex flex-wrap justify-center gap-3">
+                    <?php
+                    // Fetch random categories for Trending Search
+                    $trendingCats = [];
+                    try {
+                        $trendingCats = $db->fetchAll("SELECT name, slug FROM categories WHERE status='active' ORDER BY RAND() LIMIT 5");
+                    } catch(PDOException $e) {}
+                    
+                    foreach ($trendingCats as $tc): 
+                    ?>
+                        <a href="<?php echo url('shop?category=' . $tc['slug']); ?>" 
+                           class="px-6 py-2 rounded-full border border-gray-200 text-gray-600 hover:border-black hover:text-black transition text-sm">
+                            <?php echo htmlspecialchars($tc['name']); ?>
+                        </a>
+                    <?php endforeach; ?>
+                    <?php if(empty($trendingCats)): ?>
+                        <a href="<?php echo url('shop'); ?>" class="px-6 py-2 rounded-full border border-gray-200 text-gray-600 hover:border-black hover:text-black transition text-sm">All Products</a>
+                        <a href="<?php echo url('shop?sort=best_selling'); ?>" class="px-6 py-2 rounded-full border border-gray-200 text-gray-600 hover:border-black hover:text-black transition text-sm">Best Sellers</a>
+                    <?php endif; ?>
                 </div>
+            </div>
+
+            <!-- Popular Products (Hidden on Search) -->
+            <div id="searchPopularContent" class="animate-fade-in">
+                <!-- Popular Products -->
+                <div>
+                    <h3 class="text-lg font-serif mb-8 text-gray-900">Popular Products</h3>
+                    <div class="grid grid-cols-2 md:grid-cols-5 gap-6">
+                        <?php
+                        // Fetch popular products (random 5 from active products)
+                        $popularProducts = [];
+                        try {
+                            $popularProducts = $db->fetchAll("SELECT id, name, slug, price, sale_price, images, featured_image FROM products WHERE status='active' ORDER BY RAND() LIMIT 5");
+                        } catch(PDOException $e) {}
+
+                        foreach ($popularProducts as $pp):
+                            $ppPrice = $pp['sale_price'] ?? $pp['price'];
+                            $ppOldPrice = $pp['sale_price'] ? $pp['price'] : null;
+                            $ppImg = getProductImage($pp); // using helper function from header/functions
+                        ?>
+                        <div class="group">
+                            <a href="<?php echo url('product?slug=' . $pp['slug']); ?>" class="block">
+                                <div class="relative overflow-hidden rounded-lg mb-3 aspect-[3/4]">
+                                    <img src="<?php echo htmlspecialchars($ppImg); ?>" 
+                                         alt="<?php echo htmlspecialchars($pp['name']); ?>" 
+                                         class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500">
+                                </div>
+                                <h4 class="font-medium text-gray-900 text-sm mb-1 truncate group-hover:text-primary transition"><?php echo htmlspecialchars($pp['name']); ?></h4>
+                                <div class="flex items-center gap-2 text-sm">
+                                    <?php if ($ppOldPrice): ?>
+                                        <span class="text-gray-400 line-through"><?php echo format_price($ppOldPrice); ?></span>
+                                        <span class="text-red-600 font-semibold"><?php echo format_price($ppPrice); ?></span>
+                                    <?php else: ?>
+                                        <span class="text-gray-900 font-semibold"><?php echo format_price($ppPrice); ?></span>
+                                    <?php endif; ?>
+                                </div>
+                                <div class="flex text-yellow-400 text-xs mt-1">
+                                    <i class="fas fa-star"></i>
+                                    <i class="fas fa-star"></i>
+                                    <i class="fas fa-star"></i>
+                                    <i class="fas fa-star"></i>
+                                    <i class="fas fa-star"></i>
+                                </div>
+                            </a>
+                        </div>
+                        <?php endforeach; ?>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Live Search Results -->
+            <div id="headerSearchResults" class="hidden mt-8">
+                 <!-- Results injected via JS -->
             </div>
         </div>
     </div>
 
     <script>
     document.addEventListener('DOMContentLoaded', function() {
-        const searchInput = document.getElementById('headerSearchInput');
-        const searchResults = document.getElementById('headerSearchResults');
         const searchOverlay = document.getElementById('searchOverlay');
-        const searchBtn = document.getElementById('searchBtn'); // The trigger button
+        const searchInput = document.getElementById('headerSearchInput');
+        const popularContent = document.getElementById('searchPopularContent');
+        const searchResults = document.getElementById('headerSearchResults');
+        const searchBtn = document.getElementById('searchBtn'); // Main trigger
+        const closeBtn = document.getElementById('closeSearchBtn');
         let searchTimeout;
 
-        // Focus input when overlay opens
-        if (searchBtn && searchInput) {
-            searchBtn.addEventListener('click', () => {
+        // Open Search
+        if (searchBtn && searchOverlay) {
+            searchBtn.addEventListener('click', (e) => {
+                e.preventDefault();
+                searchOverlay.classList.remove('hidden');
+                document.body.style.overflow = 'hidden'; // Prevent background scrolling
                 setTimeout(() => searchInput.focus(), 100);
             });
         }
 
-        if (searchInput && searchResults) {
+        // Close Search
+        const closeSearch = () => {
+            searchOverlay.classList.add('hidden');
+            document.body.style.overflow = '';
+            // Reset state
+            searchInput.value = '';
+            if(popularContent) popularContent.classList.remove('hidden');
+            searchResults.classList.add('hidden');
+            searchResults.innerHTML = '';
+        };
+
+        if (closeBtn) closeBtn.addEventListener('click', closeSearch);
+
+        // Close on ESC
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape' && !searchOverlay.classList.contains('hidden')) {
+                closeSearch();
+            }
+        });
+
+        // Live Search Logic
+        if (searchInput && searchResults && popularContent) {
             searchInput.addEventListener('input', function() {
                 const query = this.value.trim();
                 clearTimeout(searchTimeout);
 
-                if (query.length < 2) {
+                if (query.length < 1) {
+                    // Show popular content, hide results
+                    popularContent.classList.remove('hidden');
                     searchResults.classList.add('hidden');
                     searchResults.innerHTML = '';
                     return;
                 }
 
+                // Hide popular content, show loading or wait for results
+                popularContent.classList.add('hidden');
+                
                 searchTimeout = setTimeout(() => {
                     const baseUrl = typeof BASE_URL !== 'undefined' ? BASE_URL : '';
-                    fetch(`${baseUrl}/api/products.php?search=${encodeURIComponent(query)}&limit=5`)
+                    searchResults.classList.remove('hidden');
+                    searchResults.innerHTML = '<div class="text-center py-12"><i class="fas fa-spinner fa-spin text-3xl text-gray-300"></i></div>';
+
+                    fetch(`${baseUrl}/api/products.php?search=${encodeURIComponent(query)}&limit=10`)
                         .then(res => res.json())
                         .then(data => {
-                            if ((data.success && data.products && data.products.length > 0) || (data.categories && data.categories.length > 0)) {
-                                let html = '<div class="max-h-[50vh] overflow-y-auto custom-scrollbar">';
+                            if ((data.success && data.products && data.products.length > 0)) {
+                                let html = '<div class="grid grid-cols-2 md:grid-cols-5 gap-6 animate-fade-in">';
                                 
-                                // Collections (Categories) Section
-                                if (data.categories && data.categories.length > 0) {
-                                    html += '<div class="px-4 py-2 text-xs font-bold text-gray-500 uppercase tracking-wider bg-gray-50 sticky top-0 z-10">Collections</div>';
-                                    html += '<ul class="divide-y divide-gray-100">';
-                                    data.categories.forEach(c => {
-                                        let catImg = '';
-                                        if (c.image) {
-                                             if (c.image.startsWith('http')) catImg = c.image;
-                                             else catImg = baseUrl + '/' + c.image.replace(/^\//, '');
-                                        } else {
-                                            catImg = baseUrl + '/assets/images/placeholder.png';
-                                        }
-                                        
-                                        html += `
-                                            <li>
-                                                <a href="${baseUrl}/shop?category=${encodeURIComponent(c.slug)}" class="flex items-center px-4 py-3 hover:bg-gray-50 transition group">
-                                                    <img src="${catImg}" class="w-10 h-10 object-cover rounded-full mr-3 border border-gray-200" onerror="this.src='${baseUrl}/assets/images/placeholder.png'">
-                                                    <div class="flex-1 font-medium text-gray-900 group-hover:text-primary transition-colors">${c.name}</div>
-                                                    <i class="fas fa-chevron-right text-xs text-gray-300 group-hover:text-primary"></i>
-                                                </a>
-                                            </li>
-                                        `;
-                                    });
-                                    html += '</ul>';
-                                }
-                                
-                                // Products Section
-                                if (data.products && data.products.length > 0) {
-                                    if (data.categories && data.categories.length > 0) {
-                                         html += '<div class="px-4 py-2 text-xs font-bold text-gray-500 uppercase tracking-wider bg-gray-50 sticky top-0 z-10 border-t border-gray-100">Products</div>';
-                                    }
-                                    html += '<ul class="divide-y divide-gray-100">';
                                 data.products.forEach(p => {
                                     const price = parseFloat(p.sale_price || p.price);
                                     let imgSrc = '';
@@ -812,82 +893,60 @@ if (!empty($headerMenuItems)) {
                                     if (!imgSrc) imgSrc = baseUrl + '/assets/images/placeholder.png'; // Fallback
                                     
                                     const currencySymbol = typeof CURRENCY_SYMBOL !== 'undefined' ? CURRENCY_SYMBOL : '₹';
-                                    let categoryName = p.category_names || p.category_name || '';
-                                    
-                                    // Highlighting Logic
-                                    let displayName = p.name;
-                                    let displayCategory = categoryName;
-                                    
-                                    try {
-                                        if (query) {
-                                            // Escape special chars
-                                            const safeQuery = query.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-                                            const regex = new RegExp(`(${safeQuery})`, 'gi');
-                                            
-                                            displayName = p.name.replace(regex, '<span class="font-bold text-black bg-yellow-100">$1</span>');
-                                            
-                                            if (categoryName) {
-                                                displayCategory = categoryName.replace(regex, '<span class="font-bold text-black bg-yellow-100">$1</span>');
-                                            }
-                                        }
-                                    } catch(e) { console.error(e); }
                                     
                                     html += `
-                                        <li>
-                                            <a href="${baseUrl}/product?slug=${p.slug}" class="flex items-center px-4 py-3 hover:bg-gray-50 transition group">
-                                                <img src="${imgSrc}" class="w-12 h-12 object-cover rounded mr-3 border border-gray-100" onerror="this.src='${baseUrl}/assets/images/placeholder.png'">
-                                                <div class="flex-1 min-w-0">
-                                                    <div class="font-medium text-gray-900 group-hover:text-primary transition-colors truncate">${displayName}</div>
-                                                    ${displayCategory ? `<div class="text-xs text-gray-500 mt-0.5 truncate">${displayCategory}</div>` : ''}
-                                                    <div class="text-sm font-semibold text-gray-900 mt-0.5 flex items-center justify-between">
-                                                        <span>${currencySymbol}${price.toFixed(2)}</span>
-                                                        ${(p.stock_status === 'out_of_stock') ? '<span class="text-[10px] bg-orange-100 text-orange-600 px-1.5 py-0.5 rounded font-bold uppercase">Out of Stock</span>' : ((p.stock_quantity !== undefined && p.stock_quantity <= 0) ? (p.total_sales > 0 ? '<span class="text-[10px] bg-red-100 text-red-600 px-1.5 py-0.5 rounded font-bold uppercase">Sold Out</span>' : '<span class="text-[10px] bg-orange-100 text-orange-600 px-1.5 py-0.5 rounded font-bold uppercase">Out of Stock</span>') : '')}
-                                                    </div>
+                                        <div class="group">
+                                            <a href="${baseUrl}/product?slug=${p.slug}" class="block">
+                                                <div class="relative overflow-hidden rounded-lg mb-3 aspect-[3/4]">
+                                                    <img src="${imgSrc}" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" onerror="this.src='${baseUrl}/assets/images/placeholder.png'">
                                                 </div>
-                                                <i class="fas fa-chevron-right text-gray-300 group-hover:text-primary ml-2"></i>
+                                                <h4 class="font-medium text-gray-900 text-sm mb-1 truncate group-hover:text-primary transition">${p.name}</h4>
+                                                <div class="font-semibold text-gray-900 text-sm">
+                                                    ${currencySymbol}${price.toFixed(2)}
+                                                </div>
                                             </a>
-                                        </li>
+                                        </div>
                                     `;
                                 });
-                                html += '</ul>';
-                                }
                                 html += '</div>';
+                                
+                                // View All Link
                                 html += `
-                                    <div class="border-t border-gray-100 bg-gray-50">
-                                        <a href="${baseUrl}/shop.php?search=${encodeURIComponent(query)}" class="block text-center py-3 text-primary font-semibold hover:bg-gray-100 transition text-sm">
-                                            View all results
+                                    <div class="text-center mt-8">
+                                        <a href="${baseUrl}/shop.php?search=${encodeURIComponent(query)}" class="inline-block px-8 py-3 bg-black text-white hover:bg-gray-800 transition rounded-full text-sm font-medium">
+                                            View All Results
                                         </a>
                                     </div>
                                 `;
+                                
                                 searchResults.innerHTML = html;
-                                searchResults.classList.remove('hidden');
                             } else {
-                                searchResults.innerHTML = '<div class="px-4 py-6 text-gray-500 text-center">No products found</div>';
-                                searchResults.classList.remove('hidden');
+                                searchResults.innerHTML = `
+                                    <div class="text-center py-12">
+                                        <div class="text-gray-400 text-5xl mb-4"><i class="far fa-sad-tear"></i></div>
+                                        <h3 class="text-xl font-medium text-gray-900 mb-2">No products found</h3>
+                                        <p class="text-gray-500">Sorry, but nothing matched your search terms for "${escapeHtml(query)}". Please try again with different keywords.</p>
+                                    </div>
+                                `;
                             }
                         })
                         .catch(e => {
                             console.error("Search Error:", e);
+                            searchResults.innerHTML = '<div class="text-center py-12 text-red-500">An error occurred while searching.</div>';
                         });
                 }, 300);
             });
-
-            // Close on click outside (explicitly on overlay background)
-            searchOverlay.addEventListener('click', function(e) {
-                // If user clicks the overlay darker background, close it
-                if (e.target === searchOverlay || e.target.closest('.container') === e.target) {
-                     searchOverlay.classList.add('hidden');
-                     searchResults.classList.add('hidden');
-                }
-            });
-            
-            // Prevent closing when clicking inside the search box area
-            const searchContainer = document.querySelector('.click-stop-propagation');
-            if(searchContainer) {
-                searchContainer.addEventListener('click', function(e) {
-                    e.stopPropagation();
-                });
-            }
+        }
+        
+        function escapeHtml(text) {
+          const map = {
+            '&': '&amp;',
+            '<': '&lt;',
+            '>': '&gt;',
+            '"': '&quot;',
+            "'": '&#039;'
+          };
+          return text.replace(/[&<>"']/g, function(m) { return map[m]; });
         }
     });
     </script>

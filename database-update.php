@@ -629,6 +629,18 @@ if ($EXECUTE) {
     echo "Status: ✅ MIGRATED\n\n";
 }
 
+// ==========================================
+// STEP 18: Remove Gender Column
+// ==========================================
+echo "STEP 18: Removing gender column from products\n";
+echo "---------------------------------------------------\n";
+
+if (columnExists($db, 'products', 'gender')) {
+    executeSql($db, "ALTER TABLE products DROP COLUMN gender", "Drop gender column from products", $errors, $success, $EXECUTE);
+} else {
+    echo "Status: ⏭️  SKIPPED (column doesn't exist)\n\n";
+}
+
 echo "\n========================================\n";
 echo "SUMMARY\n";
 echo "========================================\n";

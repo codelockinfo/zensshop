@@ -66,8 +66,8 @@ document.addEventListener('DOMContentLoaded', function () {
                     if (trigger && trigger.classList.contains('sidebar-menu-item')) {
                         const arrow = trigger.querySelector('.fa-chevron-down, .fa-chevron-up');
                         if (arrow) {
-                            arrow.classList.add('fa-chevron-up');
-                            arrow.classList.remove('fa-chevron-down');
+                            arrow.classList.add('fa-chevron-down');
+                            arrow.classList.remove('fa-chevron-up');
                         }
                     }
                 });
@@ -136,14 +136,14 @@ document.addEventListener('DOMContentLoaded', function () {
                     if (submenu.classList.contains('hidden')) {
                         submenu.classList.remove('hidden');
                         if (arrow) {
-                            arrow.classList.remove('fa-chevron-up');
-                            arrow.classList.add('fa-chevron-down');
+                            arrow.classList.remove('fa-chevron-down');
+                            arrow.classList.add('fa-chevron-up');
                         }
                     } else {
                         submenu.classList.add('hidden');
                         if (arrow) {
-                            arrow.classList.add('fa-chevron-up');
-                            arrow.classList.remove('fa-chevron-down');
+                            arrow.classList.add('fa-chevron-down');
+                            arrow.classList.remove('fa-chevron-up');
                         }
                     }
                 });
@@ -156,8 +156,8 @@ document.addEventListener('DOMContentLoaded', function () {
                     if (window.location.pathname.includes(menuName)) {
                         submenu.classList.remove('hidden');
                         if (arrow) {
-                            arrow.classList.remove('fa-chevron-up');
-                            arrow.classList.add('fa-chevron-down');
+                            arrow.classList.remove('fa-chevron-down');
+                            arrow.classList.add('fa-chevron-up');
                         }
                     }
                 }

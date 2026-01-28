@@ -62,7 +62,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 'total_expense' => $_POST['total_expense'] ?? 0,
                 'stock_quantity' => $_POST['stock_quantity'] ?? 0,
                 'stock_status' => $_POST['stock_status'] ?? 'in_stock',
-                'gender' => $_POST['gender'] ?? 'unisex',
                 'brand' => $_POST['brand'] ?? null,
                 'status' => $_POST['status'] ?? 'draft',
                 // Fix SKU NULL handling
@@ -263,14 +262,6 @@ $existingVariants = $product->getVariants($productId);
                     <p class="text-sm text-gray-500 mt-1">Select one or more categories/collections for this product</p>
                 </div>
                 
-                <div class="admin-form-group">
-                    <label class="admin-form-label">Gender *</label>
-                    <select name="gender" required class="admin-form-select">
-                        <option value="male" <?php echo $productData['gender'] === 'male' ? 'selected' : ''; ?>>Male</option>
-                        <option value="female" <?php echo $productData['gender'] === 'female' ? 'selected' : ''; ?>>Female</option>
-                        <option value="unisex" <?php echo $productData['gender'] === 'unisex' ? 'selected' : ''; ?>>Unisex</option>
-                    </select>
-                </div>
                 
                 <div class="admin-form-group">
                     <div class="flex items-center justify-between mb-2">
@@ -379,6 +370,11 @@ $existingVariants = $product->getVariants($productId);
                     <button type="button" class="remove-image-btn absolute top-2 right-2 bg-red-500 text-white rounded-full w-6 h-6 flex items-center justify-center hover:bg-red-600 <?php echo $hasImage ? '' : 'hidden'; ?>">
                         <i class="fas fa-times text-xs"></i>
                     </button>
+                    <?php if ($i >= 4): ?>
+                    <button type="button" onclick="event.stopPropagation(); removeImageBox(this);" class="remove-box-btn absolute top-2 left-2 bg-gray-500 text-white rounded-full w-6 h-6 flex items-center justify-center hover:bg-gray-700" title="Remove this box">
+                        <i class="fas fa-trash text-xs"></i>
+                    </button>
+                    <?php endif; ?>
                 </div>
                 <?php endfor; ?>
             </div>

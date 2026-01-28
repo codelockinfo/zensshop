@@ -37,7 +37,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 'total_expense' => $_POST['total_expense'] ?? 0,
                 'stock_quantity' => $_POST['stock_quantity'] ?? 0,
                 'stock_status' => $_POST['stock_status'] ?? 'in_stock',
-                'gender' => $_POST['gender'] ?? 'unisex',
                 'brand' => $_POST['brand'] ?? null,
                 'status' => $_POST['status'] ?? 'draft',
                 // Fix SKU: If empty, use NULL to avoid duplicate key error ('')
@@ -198,14 +197,6 @@ $brands = $brandsResult ? json_decode($brandsResult['setting_value'], true) : []
                     </select>
                 </div>
                 
-                <div class="admin-form-group">
-                    <label class="admin-form-label">Gender *</label>
-                    <select name="gender" required class="admin-form-select">
-                        <option value="male">Male</option>
-                        <option value="female">Female</option>
-                        <option value="unisex">Unisex</option>
-                    </select>
-                </div>
                 
                 <div class="admin-form-group">
                     <div class="flex items-center justify-between mb-2">
@@ -282,6 +273,11 @@ $brands = $brandsResult ? json_decode($brandsResult['setting_value'], true) : []
                     <button type="button" class="remove-image-btn absolute top-2 right-2 bg-red-500 text-white rounded-full w-6 h-6 flex items-center justify-center hover:bg-red-600 hidden">
                         <i class="fas fa-times text-xs"></i>
                     </button>
+                    <?php if ($i >= 4): ?>
+                    <button type="button" onclick="event.stopPropagation(); removeImageBox(this);" class="remove-box-btn absolute top-2 left-2 bg-gray-500 text-white rounded-full w-6 h-6 flex items-center justify-center hover:bg-gray-700" title="Remove this box">
+                        <i class="fas fa-trash text-xs"></i>
+                    </button>
+                    <?php endif; ?>
                 </div>
                 <?php endfor; ?>
             </div>

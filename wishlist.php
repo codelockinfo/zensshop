@@ -94,8 +94,7 @@ require_once __DIR__ . '/includes/header.php';
                 <div class="group relative bg-white border border-gray-200 rounded-lg overflow-hidden hover:shadow-lg transition-shadow flex flex-col h-full">
                     <!-- Remove Button -->
                     <button onclick="removeFromWishlist(<?php echo $item['product_id']; ?>)" 
-                            class="absolute top-2 md:top-4 right-2 md:right-4 z-10 bg-white rounded-full h-9 w-9 shadow-md hover:bg-black hover:text-white transition"
-                            title="Remove from wishlist">
+                            class="absolute top-2 md:top-4 right-2 md:right-4 z-10 bg-white rounded-full h-9 w-9 shadow-md hover:bg-black hover:text-white transition">
                         <i class="fas fa-times"></i>
                     </button>
                     
@@ -306,6 +305,42 @@ document.addEventListener('DOMContentLoaded', function() {
             }
         <?php endforeach; ?>
     <?php endif; ?>
+
+    // Custom tooltip for remove buttons
+    document.querySelectorAll('button[onclick^="removeFromWishlist"]').forEach(btn => {
+        btn.addEventListener('mouseenter', function(e) {
+            const tooltip = document.createElement('div');
+            tooltip.className = 'custom-remove-tooltip';
+            tooltip.textContent = this.getAttribute('title') || 'Remove from Wishlist';
+            tooltip.style.cssText = `
+                position: fixed;
+                background: #000;
+                color: #fff;
+                padding: 6px 12px;
+                border-radius: 4px;
+                font-size: 12px;
+                white-space: nowrap;
+                z-index: 10000;
+                pointer-events: none;
+                font-weight: 500;
+            `;
+            
+            document.body.appendChild(tooltip);
+            
+            const rect = this.getBoundingClientRect();
+            tooltip.style.top = rect.top + (rect.height / 2) - (tooltip.offsetHeight / 2) + 'px';
+            tooltip.style.left = (rect.left - tooltip.offsetWidth - 8) + 'px';
+            
+            this._tooltip = tooltip;
+        });
+        
+        btn.addEventListener('mouseleave', function() {
+            if (this._tooltip) {
+                this._tooltip.remove();
+                this._tooltip = null;
+            }
+        });
+    });
 });
 </script>
 

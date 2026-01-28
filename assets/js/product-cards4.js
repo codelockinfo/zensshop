@@ -40,14 +40,14 @@ function initializeProductCards() {
             e.preventDefault();
             e.stopPropagation();
             const productSlug = this.getAttribute('data-product-slug');
-            const productId = this.getAttribute('data-product-id');
             
-            if (productSlug) {
-                // Navigate to product detail page
+            if (productSlug && typeof openQuickView === 'function') {
+                // Open quick view modal
+                openQuickView(productSlug);
+            } else if (productSlug) {
+                // Fallback: Navigate to product detail page if openQuickView not available
                 const baseUrl = typeof BASE_URL !== 'undefined' ? BASE_URL : window.location.pathname.split('/').slice(0, -1).join('/') || '';
                 window.location.href = baseUrl + '/product?slug=' + encodeURIComponent(productSlug);
-            } else {
-                showQuickView(productId);
             }
         });
     });
