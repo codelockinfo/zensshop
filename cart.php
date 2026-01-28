@@ -21,7 +21,7 @@ $cartTotal = $cart->getTotal();
             <i class="fas fa-shopping-cart text-6xl text-gray-300 mb-4"></i>
             <h2 class="text-2xl font-bold mb-2">Your cart is empty</h2>
             <p class="text-gray-600 mb-6">Start adding some products to your cart!</p>
-            <a href="<?php echo $baseUrl; ?>/" class="inline-block bg-primary text-white px-6 py-3 rounded-lg hover:bg-primary-light hover:text-white transition">
+            <a href="<?php echo $baseUrl; ?>/shop" class="inline-block bg-primary text-white px-6 py-3 rounded-lg hover:bg-primary-light hover:text-white transition">
                 Continue Shopping
             </a>
         </div>
