@@ -166,7 +166,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     'heading' => $item['heading'] ?? '',
                     'text' => $item['text'] ?? '',
                     'btn_text' => $item['btn_text'] ?? '',
-                    'btn_link' => $item['btn_link'] ?? ''
+                    'btn_link' => preg_replace('/\.php(\?|$)/', '$1', $item['btn_link'] ?? '')
                 ];
             }
         }
@@ -249,7 +249,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 if (trim($pItem['name']) !== '' || trim($pItem['link']) !== '') {
                     $platformItems[] = [
                         'name' => $pItem['name'] ?? '',
-                        'link' => $pItem['link'] ?? '',
+                        'link' => preg_replace('/\.php(\?|$)/', '$1', $pItem['link'] ?? ''),
                         'image' => $pImgUrl,
                         'bg' => $pItem['bg'] ?? '#ffffff',
                         'text' => $pItem['text'] ?? '#111827'
@@ -1581,7 +1581,7 @@ function addBannerSection(data = {}) {
             </div>
              <div>
                  <label class="block text-xs font-bold mb-1">Btn Link</label>
-                <input type="text" name="banner_items[${index}][btn_link]" value="${data.btn_link || ''}" class="w-full border p-2 rounded text-sm">
+                <input type="text" name="banner_items[${index}][btn_link]" value="${data.btn_link || ''}" class="w-full border p-2 rounded text-sm" placeholder="e.g. /shop">
             </div>
         </div>
     `;

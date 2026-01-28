@@ -45,7 +45,7 @@ function url($path = '') {
     }
     
     // Remove .php extension if present - DISABLED: Server requires .php
-    // $path = preg_replace('/\.php$/', '', $path);
+    $path = preg_replace('/\.php$/', '', $path);
     
     // If path is empty, return base URL
     if (empty($path)) {
@@ -136,6 +136,22 @@ function sanitize_input($data) {
         return array_map('sanitize_input', $data);
     }
     return htmlspecialchars(strip_tags(trim($data)), ENT_QUOTES, 'UTF-8');
+}
+
+/**
+ * Get display label for stock status
+ */
+function get_stock_status_text($status, $quantity, $totalSold = 0) {
+    if ($status === 'out_of_stock') {
+        return 'Out of Stock';
+    }
+    if ($quantity <= 0) {
+        return ($totalSold > 0) ? 'Sold Out' : 'Out of Stock';
+    }
+    if ($status === 'on_backorder') {
+        return 'On Backorder';
+    }
+    return 'In Stock';
 }
 
 /**

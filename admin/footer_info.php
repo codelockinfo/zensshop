@@ -19,7 +19,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             'footer_logo_type' => $_POST['footer_logo_type'] ?? 'text',
             'footer_logo_text' => $_POST['footer_logo_text'] ?? '',
             'footer_description' => $_POST['footer_description'] ?? '',
-            'footer_learn_more_url' => $_POST['footer_learn_more_url'] ?? '#',
+            'footer_learn_more_url' => preg_replace('/\.php(\?|$)/', '$1', $_POST['footer_learn_more_url'] ?? '#'),
             'footer_address' => $_POST['footer_address'] ?? '',
             'footer_phone' => $_POST['footer_phone'] ?? '',
             'footer_email' => $_POST['footer_email'] ?? '',

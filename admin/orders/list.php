@@ -54,7 +54,7 @@ $orders = $order->getAll($filters);
                        class="border border-gray-300 rounded px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 w-64 h-10">
             </div>
         </form>
-        <a href="<?php echo $baseUrl; ?>/admin/orders/export_csv.php" class="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600 transition flex items-center">
+        <a href="<?php echo url('admin/orders/export_csv.php'); ?>" class="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600 transition flex items-center">
             <i class="fas fa-file-export mr-2"></i>Export all order
         </a>
     </div>
@@ -144,10 +144,10 @@ $orders = $order->getAll($filters);
                 </td>
                 <td>
                     <div class="flex items-center space-x-2">
-                        <a href="<?php echo $baseUrl; ?>/admin/orders/detail.php?order_number=<?php echo urlencode($item['order_number']); ?>" class="text-blue-500 hover:text-blue-700">
+                        <a href="<?php echo url('admin/orders/detail.php?order_number=' . urlencode($item['order_number'])); ?>" class="text-blue-500 hover:text-blue-700">
                             <i class="fas fa-eye"></i>
                         </a>
-                        <a href="<?php echo $baseUrl; ?>/admin/orders/edit.php?order_number=<?php echo urlencode($item['order_number']); ?>" class="text-green-500 hover:text-green-700">
+                        <a href="<?php echo url('admin/orders/edit.php?order_number=' . urlencode($item['order_number'])); ?>" class="text-green-500 hover:text-green-700">
                             <i class="fas fa-edit"></i>
                         </a>
 

@@ -577,6 +577,58 @@ if ($EXECUTE) {
     }
 }
 
+// ==========================================
+// STEP 16: Stock Management Refinements
+// ==========================================
+echo "STEP 16: Adding total_sales and oversold_quantity\n";
+echo "---------------------------------------------------\n";
+
+if (!columnExists($db, 'products', 'total_sales')) {
+    executeSql($db, "ALTER TABLE products ADD COLUMN total_sales INT DEFAULT 0 AFTER stock_status", "Add total_sales to products", $errors, $success, $EXECUTE);
+    
+    if ($EXECUTE) {
+        // Populate total_sales from order_items
+        $updateSql = "
+            UPDATE products p 
+            SET total_sales = (
+                SELECT COALESCE(SUM(quantity), 0) 
+                FROM order_items oi 
+                WHERE oi.product_id = p.product_id 
+                   OR (oi.product_id < 1000000000 AND oi.product_id = p.id)
+            )
+        ";
+        executeSql($db, $updateSql, "Populate initial total_sales from order_items", $errors, $success, $EXECUTE);
+    }
+}
+
+if (!columnExists($db, 'order_items', 'oversold_quantity')) {
+    executeSql($db, "ALTER TABLE order_items ADD COLUMN oversold_quantity INT DEFAULT 0 AFTER quantity", "Add oversold_quantity to order_items", $errors, $success, $EXECUTE);
+}
+
+if (!columnExists($db, 'products', 'cost_per_item')) {
+    executeSql($db, "ALTER TABLE products ADD COLUMN cost_per_item DECIMAL(10,2) DEFAULT 0.00 AFTER sale_price", "Add cost_per_item to products", $errors, $success, $EXECUTE);
+}
+
+if (!columnExists($db, 'products', 'total_expense')) {
+    executeSql($db, "ALTER TABLE products ADD COLUMN total_expense DECIMAL(10,2) DEFAULT 0.00 AFTER cost_per_item", "Add total_expense to products", $errors, $success, $EXECUTE);
+}
+
+// ==========================================
+// STEP 17: Notification Link Migration
+// ==========================================
+echo "STEP 17: Migrating notification links (list -> detail)\n";
+echo "---------------------------------------------------\n";
+
+if ($EXECUTE) {
+    $db->execute("
+        UPDATE admin_notifications 
+        SET link = REPLACE(link, '/admin/orders/list.php?search=', '/admin/orders/detail.php?order_number=')
+        WHERE type = 'order' AND link LIKE '/admin/orders/list.php?search=%'
+    ");
+    $success[] = "Migrated notification links";
+    echo "Status: ✅ MIGRATED\n\n";
+}
+
 echo "\n========================================\n";
 echo "SUMMARY\n";
 echo "========================================\n";

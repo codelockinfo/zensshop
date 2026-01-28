@@ -10,7 +10,7 @@ if ($redirect) {
 }
 
 if ($auth->isLoggedIn()) {
-    $target = ($redirect === 'checkout') ? url('checkout.php') : url('account.php');
+    $target = ($redirect === 'checkout') ? url('checkout') : url('account');
     unset($_SESSION['login_redirect']);
     header('Location: ' . $target);
     exit;
@@ -36,7 +36,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $wishlist = new Wishlist();
         $wishlist->syncWishlistAfterLogin($customer_id);
         
-        $target = ($redirect === 'checkout') ? url('checkout.php') : url('account.php');
+        $target = ($redirect === 'checkout') ? url('checkout') : url('account');
         unset($_SESSION['login_redirect']);
         header('Location: ' . $target);
         exit;
@@ -98,7 +98,7 @@ require_once __DIR__ . '/includes/header.php';
                 <div class="mt-8 text-center">
                     <p class="text-gray-600 text-sm">
                         Already have an account? 
-                        <a href="<?php echo url('login.php'); ?>" class="text-black font-bold hover:underline">Sign In</a>
+                        <a href="<?php echo url('login'); ?>" class="text-black font-bold hover:underline">Sign In</a>
                     </p>
                 </div>
             </div>

@@ -50,7 +50,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             for ($i = 0; $i < count($titles); $i++) {
                 $id = $ids[$i] ?? null;
                 $title = trim($titles[$i]);
-                $link = trim($links[$i] ?? '');
+                $link = preg_replace('/\.php(\?|$)/', '$1', trim($links[$i] ?? ''));
                 $order = (int)($orders[$i] ?? 0);
                 
                 $log .= "Row $i: ID='$id', Title='$title'. ";
@@ -231,7 +231,7 @@ $categories = $db->fetchAll("SELECT * FROM section_categories ORDER BY sort_orde
                             </select>
                         </td>
                         <td class="px-6 py-4">
-                            <input type="text" name="link[]" value="<?php echo htmlspecialchars($cat['link']); ?>" class="w-full border rounded p-2 bg-gray-50" placeholder="e.g., shop.php?category=rings">
+                            <input type="text" name="link[]" value="<?php echo htmlspecialchars($cat['link']); ?>" class="w-full border rounded p-2 bg-gray-50" placeholder="e.g., shop?category=rings">
                         </td>
                         <td class="px-6 py-4 text-right">
                             <button type="button" onclick="markForDeletion(this, <?php echo $cat['id']; ?>)" class="text-red-500 hover:text-red-700 transition">
@@ -334,7 +334,7 @@ function updateLink(select) {
         const row = select.closest('tr');
         const linkInput = row.querySelector('input[name="link[]"]');
         if (linkInput) {
-            linkInput.value = 'shop.php?category=' + slug;
+            linkInput.value = 'shop?category=' + slug;
         }
     }
 }

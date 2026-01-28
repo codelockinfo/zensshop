@@ -10,7 +10,7 @@ if ($redirect) {
 }
 
 if ($auth->isLoggedIn()) {
-    $target = ($redirect === 'checkout') ? url('checkout.php') : url('account.php');
+    $target = ($redirect === 'checkout') ? url('checkout') : url('account');
     unset($_SESSION['login_redirect']);
     header('Location: ' . $target);
     exit;
@@ -36,7 +36,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $wishlist->syncWishlistAfterLogin($customer['customer_id']);
         
         // Better redirect: if redirect is checkout, go to checkout.php, else check if it's a valid relative path
-        $target = ($redirect === 'checkout') ? url('checkout.php') : url('account.php');
+        $target = ($redirect === 'checkout') ? url('checkout') : url('account');
         unset($_SESSION['login_redirect']);
         header('Location: ' . $target);
         exit;
@@ -139,7 +139,7 @@ require_once __DIR__ . '/includes/header.php';
                     <div>
                         <div class="flex justify-between mb-2">
                             <label class="block text-xs font-bold text-gray-400 uppercase tracking-widest">Password</label>
-                            <a href="<?php echo url('forgot-password.php'); ?>" class="text-xs font-bold text-blue-600 hover:underline">Forgot?</a>
+                            <a href="<?php echo url('forgot-password'); ?>" class="text-xs font-bold text-blue-600 hover:underline">Forgot?</a>
                         </div>
                         <div class="relative">
                             <i class="fas fa-lock absolute left-4 top-1/2 -translate-y-1/2 text-gray-400"></i>
@@ -161,7 +161,7 @@ require_once __DIR__ . '/includes/header.php';
                 <div class="mt-10 text-center">
                     <p class="text-gray-500 text-sm">
                         Don't have an account? 
-                        <a href="<?php echo url('register.php'); ?>" class="text-black font-bold hover:underline">Create One</a>
+                        <a href="<?php echo url('register'); ?>" class="text-black font-bold hover:underline">Create One</a>
                     </p>
                 </div>
             </div>

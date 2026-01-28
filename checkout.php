@@ -19,7 +19,7 @@ $auth = new CustomerAuth();
 // Require login for checkout
 if (!$auth->isLoggedIn()) {
     ob_end_clean();
-    header('Location: ' . url('login.php?redirect=checkout'));
+    header('Location: ' . url('login?redirect=checkout'));
     exit;
 }
 
@@ -35,7 +35,7 @@ if ($auth->isLoggedIn()) {
 // Redirect if cart is empty
 if (empty($cartItems)) {
     ob_end_clean();
-    header('Location: ' . url('cart.php'));
+    header('Location: ' . url('cart'));
     exit;
 }
 
@@ -317,7 +317,7 @@ nav.bg-white.sticky.top-0 {
         </script>
         <?php endif; ?>
 
-        <form method="POST" action="<?php echo url('checkout.php'); ?>" class="max-w-6xl mx-auto">
+        <form method="POST" action="<?php echo url('checkout'); ?>" class="max-w-6xl mx-auto">
             <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
                 <!-- Left Section: Shipping Information -->
                 <div class="lg:col-span-2">

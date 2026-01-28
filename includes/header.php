@@ -54,15 +54,15 @@ $topbarSlidesRow = $db->fetchOne("SELECT setting_value FROM site_settings WHERE 
 $topbarSlides = json_decode($topbarSlidesRow['setting_value'] ?? '[]', true) ?: [
     ['text' => '100% secure online payment', 'link' => '', 'link_text' => ''],
     ['text' => 'Free Shipping for all order over $99', 'link' => '', 'link_text' => ''],
-    ['text' => 'Sign up for 10% off your first order.', 'link' => 'signup.php', 'link_text' => 'Sign up']
+    ['text' => 'Sign up for 10% off your first order.', 'link' => 'signup', 'link_text' => 'Sign up']
 ];
 
 $topbarLinksRow = $db->fetchOne("SELECT setting_value FROM site_settings WHERE setting_key = 'topbar_links'");
 $topbarLinks = json_decode($topbarLinksRow['setting_value'] ?? '[]', true) ?: [
-    ['label' => 'Contact Us', 'url' => 'contact.php'],
-    ['label' => 'About Us', 'url' => 'about.php'],
-    ['label' => 'Help Center', 'url' => 'help.php'],
-    ['label' => 'Our Store', 'url' => 'store.php']
+    ['label' => 'Contact Us', 'url' => 'contact'],
+    ['label' => 'About Us', 'url' => 'about'],
+    ['label' => 'Help Center', 'url' => 'help'],
+    ['label' => 'Our Store', 'url' => 'store']
 ];
 
 
@@ -366,14 +366,14 @@ if (!empty($headerMenuItems)) {
                     
                     <?php if ($showUserIcon): ?>
                     <!-- User Account - Only visible on xl screens -->
-                    <a href="<?php echo url('account.php'); ?>" class="hidden xl:block text-black hover:text-gray-600 transition header-icon">
+                    <a href="<?php echo url('account'); ?>" class="hidden xl:block text-black hover:text-gray-600 transition header-icon">
                         <i class="fas fa-user text-lg"></i>
                     </a>
                     <?php endif; ?>
                     
                     <?php if ($showWishlistIcon): ?>
                     <!-- Wishlist - Only visible on xl screens -->
-                    <a href="<?php echo url('wishlist.php'); ?>" class="hidden xl:block text-gray-800 hover:text-primary transition relative">
+                    <a href="<?php echo url('wishlist'); ?>" class="hidden xl:block text-gray-800 hover:text-primary transition relative">
                         <i class="fas fa-heart text-xl"></i>
                         <span class="wishlist-count absolute -top-1 -right-1.5 font-medium bg-red-500 text-white text-xs rounded-full w-4 h-4 flex items-center justify-center">
                             <?php 
@@ -399,7 +399,7 @@ if (!empty($headerMenuItems)) {
                     $isCartPage = ($currentPage === 'cart.php' || strpos($requestUri, '/cart') !== false);
                     
                     if ($isCheckoutPage || $isCartPage): ?>
-                        <a href="<?php echo url('cart.php'); ?>" class="text-black hover:text-gray-600 transition relative focus:outline-none header-icon inline-block">
+                        <a href="<?php echo url('cart'); ?>" class="text-black hover:text-gray-600 transition relative focus:outline-none header-icon inline-block">
                             <i class="fas fa-shopping-cart text-lg"></i>
                             <span class="absolute -top-2 -right-2 bg-red-500 text-white text-[10px] rounded-full w-5 h-5 flex items-center justify-center cart-count font-bold border-2 border-white"><?php echo $cartCount; ?></span>
                         </a>
@@ -417,10 +417,10 @@ if (!empty($headerMenuItems)) {
             <div class="hidden pb-4" id="mobileMenu">
                 <div class="flex flex-col space-y-4">
                     <a href="<?php echo url(''); ?>" class="text-gray-800 hover:text-primary transition">Home</a>
-                    <a href="<?php echo url('shop.php'); ?>" class="text-gray-800 hover:text-primary transition">Shop</a>
-                    <a href="<?php echo url('products.php'); ?>" class="text-gray-800 hover:text-primary transition">Products</a>
-                    <a href="<?php echo url('pages.php'); ?>" class="text-gray-800 hover:text-primary transition">Pages</a>
-                    <a href="<?php echo url('blog.php'); ?>" class="text-gray-800 hover:text-primary transition">Blog</a>
+                    <a href="<?php echo url('shop'); ?>" class="text-gray-800 hover:text-primary transition">Shop</a>
+                    <a href="<?php echo url('products'); ?>" class="text-gray-800 hover:text-primary transition">Products</a>
+                    <a href="<?php echo url('pages'); ?>" class="text-gray-800 hover:text-primary transition">Pages</a>
+                    <a href="<?php echo url('blog'); ?>" class="text-gray-800 hover:text-primary transition">Blog</a>
                 </div>
             </div>
         </div>
@@ -457,7 +457,7 @@ if (!empty($headerMenuItems)) {
                 <span>Pages</span>
                 <i class="fas fa-chevron-right text-sm text-gray-400"></i>
             </button>
-            <a href="<?php echo url('blog.php'); ?>" onclick="if(typeof closeMobileMenu === 'function') closeMobileMenu();" class="flex items-center justify-between px-6 py-4 text-black border-b border-gray-200 hover:bg-gray-50 transition">
+            <a href="<?php echo url('blog'); ?>" onclick="if(typeof closeMobileMenu === 'function') closeMobileMenu();" class="flex items-center justify-between px-6 py-4 text-black border-b border-gray-200 hover:bg-gray-50 transition">
                 <span>Blog</span>
                 <i class="fas fa-chevron-right text-sm text-gray-400"></i>
             </a>
@@ -466,13 +466,13 @@ if (!empty($headerMenuItems)) {
             </a>
             
             <!-- Wishlist -->
-            <a href="<?php echo url('wishlist.php'); ?>" onclick="if(typeof closeMobileMenu === 'function') closeMobileMenu();" class="flex items-center px-6 py-4 text-black border-b border-gray-200 hover:bg-gray-50 transition">
+            <a href="<?php echo url('wishlist'); ?>" onclick="if(typeof closeMobileMenu === 'function') closeMobileMenu();" class="flex items-center px-6 py-4 text-black border-b border-gray-200 hover:bg-gray-50 transition">
                 <i class="fas fa-heart text-sm mr-3 text-gray-600"></i>
                 <span>Wishlist</span>
             </a>
             
             <!-- Login / Register -->
-            <a href="<?php echo url('account.php'); ?>" onclick="if(typeof closeMobileMenu === 'function') closeMobileMenu();" class="flex items-center px-6 py-4 text-black border-b border-gray-200 hover:bg-gray-50 transition">
+            <a href="<?php echo url('account'); ?>" onclick="if(typeof closeMobileMenu === 'function') closeMobileMenu();" class="flex items-center px-6 py-4 text-black border-b border-gray-200 hover:bg-gray-50 transition">
                 <i class="fas fa-user text-sm mr-3 text-gray-600"></i>
                 <span>Login / Register</span>
             </a>
@@ -493,11 +493,11 @@ if (!empty($headerMenuItems)) {
             </button>
         </div>
         <div class="flex flex-col">
-            <a href="<?php echo url('collections.php'); ?>" onclick="if(typeof closeMobileMenu === 'function') closeMobileMenu();" class="flex items-center justify-between px-6 py-4 text-black border-b border-gray-200 hover:bg-gray-50 transition">
+            <a href="<?php echo url('collections'); ?>" onclick="if(typeof closeMobileMenu === 'function') closeMobileMenu();" class="flex items-center justify-between px-6 py-4 text-black border-b border-gray-200 hover:bg-gray-50 transition">
                 <span>Collections</span>
                 <i class="fas fa-chevron-right text-sm text-gray-400"></i>
             </a>
-            <a href="<?php echo url('shop.php'); ?>" onclick="if(typeof closeMobileMenu === 'function') closeMobileMenu();" class="flex items-center justify-between px-6 py-4 text-black border-b border-gray-200 hover:bg-gray-50 transition">
+            <a href="<?php echo url('shop'); ?>" onclick="if(typeof closeMobileMenu === 'function') closeMobileMenu();" class="flex items-center justify-between px-6 py-4 text-black border-b border-gray-200 hover:bg-gray-50 transition">
                 <span>All Products</span>
                 <i class="fas fa-chevron-right text-sm text-gray-400"></i>
             </a>
@@ -518,31 +518,31 @@ if (!empty($headerMenuItems)) {
             </button>
         </div>
         <div class="flex flex-col">
-            <a href="<?php echo url('shop.php?layout=filter-left'); ?>" onclick="if(typeof closeMobileMenu === 'function') closeMobileMenu();" class="flex items-center justify-between px-6 py-4 text-black border-b border-gray-200 hover:bg-gray-50 transition">
+            <a href="<?php echo url('shop?layout=filter-left'); ?>" onclick="if(typeof closeMobileMenu === 'function') closeMobileMenu();" class="flex items-center justify-between px-6 py-4 text-black border-b border-gray-200 hover:bg-gray-50 transition">
                 <span>Filter left sidebar</span>
                 <i class="fas fa-chevron-right text-sm text-gray-400"></i>
             </a>
-            <a href="<?php echo url('shop.php?layout=filter-right'); ?>" onclick="if(typeof closeMobileMenu === 'function') closeMobileMenu();" class="flex items-center justify-between px-6 py-4 text-black border-b border-gray-200 hover:bg-gray-50 transition">
+            <a href="<?php echo url('shop?layout=filter-right'); ?>" onclick="if(typeof closeMobileMenu === 'function') closeMobileMenu();" class="flex items-center justify-between px-6 py-4 text-black border-b border-gray-200 hover:bg-gray-50 transition">
                 <span>Filter right sidebar</span>
                 <i class="fas fa-chevron-right text-sm text-gray-400"></i>
             </a>
-            <a href="<?php echo url('shop.php?layout=horizontal'); ?>" onclick="if(typeof closeMobileMenu === 'function') closeMobileMenu();" class="flex items-center justify-between px-6 py-4 text-black border-b border-gray-200 hover:bg-gray-50 transition">
+            <a href="<?php echo url('shop?layout=horizontal'); ?>" onclick="if(typeof closeMobileMenu === 'function') closeMobileMenu();" class="flex items-center justify-between px-6 py-4 text-black border-b border-gray-200 hover:bg-gray-50 transition">
                 <span>Horizontal filter</span>
                 <i class="fas fa-chevron-right text-sm text-gray-400"></i>
             </a>
-            <a href="<?php echo url('shop.php?layout=drawer'); ?>" onclick="if(typeof closeMobileMenu === 'function') closeMobileMenu();" class="flex items-center justify-between px-6 py-4 text-black border-b border-gray-200 hover:bg-gray-50 transition">
+            <a href="<?php echo url('shop?layout=drawer'); ?>" onclick="if(typeof closeMobileMenu === 'function') closeMobileMenu();" class="flex items-center justify-between px-6 py-4 text-black border-b border-gray-200 hover:bg-gray-50 transition">
                 <span>Filter drawer</span>
                 <i class="fas fa-chevron-right text-sm text-gray-400"></i>
             </a>
-            <a href="<?php echo url('shop.php?layout=grid-3'); ?>" onclick="if(typeof closeMobileMenu === 'function') closeMobileMenu();" class="flex items-center justify-between px-6 py-4 text-black border-b border-gray-200 hover:bg-gray-50 transition">
+            <a href="<?php echo url('shop?layout=grid-3'); ?>" onclick="if(typeof closeMobileMenu === 'function') closeMobileMenu();" class="flex items-center justify-between px-6 py-4 text-black border-b border-gray-200 hover:bg-gray-50 transition">
                 <span>Grid 3 columns</span>
                 <i class="fas fa-chevron-right text-sm text-gray-400"></i>
             </a>
-            <a href="<?php echo url('shop.php?layout=grid-4'); ?>" onclick="if(typeof closeMobileMenu === 'function') closeMobileMenu();" class="flex items-center justify-between px-6 py-4 text-black border-b border-gray-200 hover:bg-gray-50 transition">
+            <a href="<?php echo url('shop?layout=grid-4'); ?>" onclick="if(typeof closeMobileMenu === 'function') closeMobileMenu();" class="flex items-center justify-between px-6 py-4 text-black border-b border-gray-200 hover:bg-gray-50 transition">
                 <span>Grid 4 columns</span>
                 <i class="fas fa-chevron-right text-sm text-gray-400"></i>
             </a>
-            <a href="<?php echo url('shop.php'); ?>" onclick="if(typeof closeMobileMenu === 'function') closeMobileMenu();" class="flex items-center justify-between px-6 py-4 text-black border-b border-gray-200 hover:bg-gray-50 transition">
+            <a href="<?php echo url('shop'); ?>" onclick="if(typeof closeMobileMenu === 'function') closeMobileMenu();" class="flex items-center justify-between px-6 py-4 text-black border-b border-gray-200 hover:bg-gray-50 transition">
                 <span>All collections</span>
                 <i class="fas fa-chevron-right text-sm text-gray-400"></i>
             </a>
@@ -608,30 +608,25 @@ if (!empty($headerMenuItems)) {
                 <div>
                     <h3 class="font-bold text-lg mb-4">Shop Layouts</h3>
                     <ul class="space-y-2">
-                        <li><a href="<?php echo url('shop.php?layout=filter-left'); ?>" onclick="if(typeof closeMobileMenu === 'function') closeMobileMenu();" class="block text-gray-600 hover:text-primary transition py-2">Filter left sidebar</a></li>
-                        <li><a href="<?php echo url('shop.php?layout=filter-right'); ?>" onclick="if(typeof closeMobileMenu === 'function') closeMobileMenu();" class="block text-gray-600 hover:text-primary transition py-2">Filter right sidebar</a></li>
-                        <li><a href="<?php echo url('shop.php?layout=horizontal'); ?>" onclick="if(typeof closeMobileMenu === 'function') closeMobileMenu();" class="block text-gray-600 hover:text-primary transition py-2">Horizontal filter</a></li>
-                        <li><a href="<?php echo url('shop.php?layout=drawer'); ?>" onclick="if(typeof closeMobileMenu === 'function') closeMobileMenu();" class="block text-gray-600 hover:text-primary transition py-2">Filter drawer</a></li>
-                        <li><a href="<?php echo url('shop.php?layout=grid-3'); ?>" onclick="if(typeof closeMobileMenu === 'function') closeMobileMenu();" class="block text-gray-600 hover:text-primary transition py-2">Grid 3 columns</a></li>
-                        <li><a href="<?php echo url('shop.php?layout=grid-4'); ?>" onclick="if(typeof closeMobileMenu === 'function') closeMobileMenu();" class="block text-gray-600 hover:text-primary transition py-2">Grid 4 columns</a></li>
-                        <li><a href="<?php echo url('shop.php'); ?>" onclick="if(typeof closeMobileMenu === 'function') closeMobileMenu();" class="block text-gray-600 hover:text-primary transition py-2">All collections</a></li>
-                    </ul>
-                </div>
-                <div class="border-t pt-6">
-                    <h3 class="font-bold text-lg mb-4">Shop Pages</h3>
-                    <ul class="space-y-2">
-                        <li><a href="<?php echo url('collection-v1.php'); ?>" onclick="if(typeof closeMobileMenu === 'function') closeMobileMenu();" class="block text-gray-600 hover:text-primary transition py-2">Collection list v1</a></li>
-                        <li><a href="<?php echo url('collection-v2.php'); ?>" onclick="if(typeof closeMobileMenu === 'function') closeMobileMenu();" class="block text-gray-600 hover:text-primary transition py-2">Collection list v2</a></li>
-                        <li><a href="<?php echo url('shop.php?scroll=infinity'); ?>" onclick="if(typeof closeMobileMenu === 'function') closeMobileMenu();" class="block text-gray-600 hover:text-primary transition py-2">Infinity scroll</a></li>
-                        <li><a href="<?php echo url('shop.php?load=more'); ?>" onclick="if(typeof closeMobileMenu === 'function') closeMobileMenu();" class="block text-gray-600 hover:text-primary transition py-2">Load more button</a></li>
-                        <li><a href="<?php echo url('shop.php?pagination=1'); ?>" onclick="if(typeof closeMobileMenu === 'function') closeMobileMenu();" class="block text-gray-600 hover:text-primary transition py-2">Pagination page</a></li>
-                        <li><a href="<?php echo url('banner-collection.php'); ?>" onclick="if(typeof closeMobileMenu === 'function') closeMobileMenu();" class="block text-gray-600 hover:text-primary transition py-2">Banner collection</a></li>
+                        <li><a href="<?php echo url('shop?layout=filter-left'); ?>" onclick="if(typeof closeMobileMenu === 'function') closeMobileMenu();" class="block text-gray-600 hover:text-primary transition py-2">Filter left sidebar</a></li>
+                        <li><a href="<?php echo url('shop?layout=filter-right'); ?>" onclick="if(typeof closeMobileMenu === 'function') closeMobileMenu();" class="block text-gray-600 hover:text-primary transition py-2">Filter right sidebar</a></li>
+                        <li><a href="<?php echo url('shop?layout=horizontal'); ?>" onclick="if(typeof closeMobileMenu === 'function') closeMobileMenu();" class="block text-gray-600 hover:text-primary transition py-2">Horizontal filter</a></li>
+                        <li><a href="<?php echo url('shop?layout=drawer'); ?>" onclick="if(typeof closeMobileMenu === 'function') closeMobileMenu();" class="block text-gray-600 hover:text-primary transition py-2">Filter drawer</a></li>
+                        <li><a href="<?php echo url('shop?layout=grid-3'); ?>" onclick="if(typeof closeMobileMenu === 'function') closeMobileMenu();" class="block text-gray-600 hover:text-primary transition py-2">Grid 3 columns</a></li>
+                        <li><a href="<?php echo url('shop?layout=grid-4'); ?>" onclick="if(typeof closeMobileMenu === 'function') closeMobileMenu();" class="block text-gray-600 hover:text-primary transition py-2">Grid 4 columns</a></li>
+                        <li><a href="<?php echo url('shop'); ?>" onclick="if(typeof closeMobileMenu === 'function') closeMobileMenu();" class="block text-gray-600 hover:text-primary transition py-2">All collections</a></li>
+                        <li><a href="<?php echo url('collection-v1'); ?>" onclick="if(typeof closeMobileMenu === 'function') closeMobileMenu();" class="block text-gray-600 hover:text-primary transition py-2">Collection list v1</a></li>
+                        <li><a href="<?php echo url('collection-v2'); ?>" onclick="if(typeof closeMobileMenu === 'function') closeMobileMenu();" class="block text-gray-600 hover:text-primary transition py-2">Collection list v2</a></li>
+                        <li><a href="<?php echo url('shop?scroll=infinity'); ?>" onclick="if(typeof closeMobileMenu === 'function') closeMobileMenu();" class="block text-gray-600 hover:text-primary transition py-2">Infinity scroll</a></li>
+                        <li><a href="<?php echo url('shop?load=more'); ?>" onclick="if(typeof closeMobileMenu === 'function') closeMobileMenu();" class="block text-gray-600 hover:text-primary transition py-2">Load more button</a></li>
+                        <li><a href="<?php echo url('shop?pagination=1'); ?>" onclick="if(typeof closeMobileMenu === 'function') closeMobileMenu();" class="block text-gray-600 hover:text-primary transition py-2">Pagination page</a></li>
+                        <li><a href="<?php echo url('banner-collection'); ?>" onclick="if(typeof closeMobileMenu === 'function') closeMobileMenu();" class="block text-gray-600 hover:text-primary transition py-2">Banner collection</a></li>
                     </ul>
                 </div>
             </div>
             <!-- Featured Categories -->
             <div class="grid gap-4 mt-6">
-                <a href="<?php echo url('category.php?slug=bracelets'); ?>" onclick="if(typeof closeMobileMenu === 'function') closeMobileMenu();" class="block group">
+                <a href="<?php echo url('category?slug=bracelets'); ?>" onclick="if(typeof closeMobileMenu === 'function') closeMobileMenu();" class="block group">
                     <div class="relative overflow-hidden rounded-lg">
                         <img src="https://images.unsplash.com/photo-1611591437281-460bfbe1220a?w=300&h=400&fit=crop" 
                              alt="Bracelets" 
@@ -643,7 +638,7 @@ if (!empty($headerMenuItems)) {
                         </div>
                     </div>
                 </a>
-                <a href="<?php echo url('category.php?slug=rings'); ?>" onclick="if(typeof closeMobileMenu === 'function') closeMobileMenu();" class="block group">
+                <a href="<?php echo url('category?slug=rings'); ?>" onclick="if(typeof closeMobileMenu === 'function') closeMobileMenu();" class="block group">
                     <div class="relative overflow-hidden rounded-lg">
                         <img src="https://images.unsplash.com/photo-1603561591411-07134e71a2a9?w=300&h=400&fit=crop" 
                              alt="Rings" 
@@ -673,39 +668,39 @@ if (!empty($headerMenuItems)) {
             </button>
         </div>
         <div class="flex flex-col">
-            <a href="<?php echo url('about.php'); ?>" onclick="if(typeof closeMobileMenu === 'function') closeMobileMenu();" class="flex items-center justify-between px-6 py-4 text-black border-b border-gray-200 hover:bg-gray-50 transition">
+            <a href="<?php echo url('about'); ?>" onclick="if(typeof closeMobileMenu === 'function') closeMobileMenu();" class="flex items-center justify-between px-6 py-4 text-black border-b border-gray-200 hover:bg-gray-50 transition">
                 <span>About us</span>
                 <i class="fas fa-chevron-right text-sm text-gray-400"></i>
             </a>
-            <a href="<?php echo url('contact.php'); ?>" onclick="if(typeof closeMobileMenu === 'function') closeMobileMenu();" class="flex items-center justify-between px-6 py-4 text-black border-b border-gray-200 hover:bg-gray-50 transition">
+            <a href="<?php echo url('contact'); ?>" onclick="if(typeof closeMobileMenu === 'function') closeMobileMenu();" class="flex items-center justify-between px-6 py-4 text-black border-b border-gray-200 hover:bg-gray-50 transition">
                 <span>Contact us</span>
                 <i class="fas fa-chevron-right text-sm text-gray-400"></i>
             </a>
-            <a href="<?php echo url('sale.php'); ?>" onclick="if(typeof closeMobileMenu === 'function') closeMobileMenu();" class="flex items-center justify-between px-6 py-4 text-black border-b border-gray-200 hover:bg-gray-50 transition">
+            <a href="<?php echo url('sale'); ?>" onclick="if(typeof closeMobileMenu === 'function') closeMobileMenu();" class="flex items-center justify-between px-6 py-4 text-black border-b border-gray-200 hover:bg-gray-50 transition">
                 <span>Sale</span>
                 <i class="fas fa-chevron-right text-sm text-gray-400"></i>
             </a>
-            <a href="<?php echo url('store.php'); ?>" onclick="if(typeof closeMobileMenu === 'function') closeMobileMenu();" class="flex items-center justify-between px-6 py-4 text-black border-b border-gray-200 hover:bg-gray-50 transition">
+            <a href="<?php echo url('store'); ?>" onclick="if(typeof closeMobileMenu === 'function') closeMobileMenu();" class="flex items-center justify-between px-6 py-4 text-black border-b border-gray-200 hover:bg-gray-50 transition">
                 <span>Our store</span>
                 <i class="fas fa-chevron-right text-sm text-gray-400"></i>
             </a>
-            <a href="<?php echo url('faq.php'); ?>" onclick="if(typeof closeMobileMenu === 'function') closeMobileMenu();" class="flex items-center justify-between px-6 py-4 text-black border-b border-gray-200 hover:bg-gray-50 transition">
+            <a href="<?php echo url('faq'); ?>" onclick="if(typeof closeMobileMenu === 'function') closeMobileMenu();" class="flex items-center justify-between px-6 py-4 text-black border-b border-gray-200 hover:bg-gray-50 transition">
                 <span>FAQ</span>
                 <i class="fas fa-chevron-right text-sm text-gray-400"></i>
             </a>
-            <a href="<?php echo url('wishlist.php'); ?>" onclick="if(typeof closeMobileMenu === 'function') closeMobileMenu();" class="flex items-center justify-between px-6 py-4 text-black border-b border-gray-200 hover:bg-gray-50 transition">
+            <a href="<?php echo url('wishlist'); ?>" onclick="if(typeof closeMobileMenu === 'function') closeMobileMenu();" class="flex items-center justify-between px-6 py-4 text-black border-b border-gray-200 hover:bg-gray-50 transition">
                 <span>Wishlist</span>
                 <i class="fas fa-chevron-right text-sm text-gray-400"></i>
             </a>
-            <a href="<?php echo url('compare.php'); ?>" onclick="if(typeof closeMobileMenu === 'function') closeMobileMenu();" class="flex items-center justify-between px-6 py-4 text-black border-b border-gray-200 hover:bg-gray-50 transition">
+            <a href="<?php echo url('compare'); ?>" onclick="if(typeof closeMobileMenu === 'function') closeMobileMenu();" class="flex items-center justify-between px-6 py-4 text-black border-b border-gray-200 hover:bg-gray-50 transition">
                 <span>Compare</span>
                 <i class="fas fa-chevron-right text-sm text-gray-400"></i>
             </a>
-            <a href="<?php echo url('location.php'); ?>" onclick="if(typeof closeMobileMenu === 'function') closeMobileMenu();" class="flex items-center justify-between px-6 py-4 text-black border-b border-gray-200 hover:bg-gray-50 transition">
+            <a href="<?php echo url('location'); ?>" onclick="if(typeof closeMobileMenu === 'function') closeMobileMenu();" class="flex items-center justify-between px-6 py-4 text-black border-b border-gray-200 hover:bg-gray-50 transition">
                 <span>Store location</span>
                 <i class="fas fa-chevron-right text-sm text-gray-400"></i>
             </a>
-            <a href="<?php echo url('recently-viewed.php'); ?>" onclick="if(typeof closeMobileMenu === 'function') closeMobileMenu();" class="flex items-center justify-between px-6 py-4 text-black border-b border-gray-200 hover:bg-gray-50 transition">
+            <a href="<?php echo url('recently-viewed'); ?>" onclick="if(typeof closeMobileMenu === 'function') closeMobileMenu();" class="flex items-center justify-between px-6 py-4 text-black border-b border-gray-200 hover:bg-gray-50 transition">
                 <span>Recently viewed products</span>
                 <i class="fas fa-chevron-right text-sm text-gray-400"></i>
             </a>
@@ -716,7 +711,7 @@ if (!empty($headerMenuItems)) {
     <div class="hidden fixed inset-0 bg-black bg-opacity-50 z-[60]" id="searchOverlay">
         <div class="container mx-auto px-4 pt-24 relative h-full">
             <div class="max-w-2xl mx-auto relative click-stop-propagation">
-                <form action="<?php echo url('shop.php'); ?>" method="GET" class="relative group">
+                <form action="<?php echo url('shop'); ?>" method="GET" class="relative group">
                     <input type="text" name="search" id="headerSearchInput" placeholder="Search products..." 
                            class="w-full px-6 py-4 text-lg rounded-lg bg-white text-black focus:outline-none focus:ring-2 focus:ring-gray-200"
                            autocomplete="off" autofocus>
@@ -782,7 +777,7 @@ if (!empty($headerMenuItems)) {
                                         
                                         html += `
                                             <li>
-                                                <a href="${baseUrl}/shop.php?category=${encodeURIComponent(c.slug)}" class="flex items-center px-4 py-3 hover:bg-gray-50 transition group">
+                                                <a href="${baseUrl}/shop?category=${encodeURIComponent(c.slug)}" class="flex items-center px-4 py-3 hover:bg-gray-50 transition group">
                                                     <img src="${catImg}" class="w-10 h-10 object-cover rounded-full mr-3 border border-gray-200" onerror="this.src='${baseUrl}/assets/images/placeholder.png'">
                                                     <div class="flex-1 font-medium text-gray-900 group-hover:text-primary transition-colors">${c.name}</div>
                                                     <i class="fas fa-chevron-right text-xs text-gray-300 group-hover:text-primary"></i>
@@ -839,12 +834,15 @@ if (!empty($headerMenuItems)) {
                                     
                                     html += `
                                         <li>
-                                            <a href="${baseUrl}/product.php?slug=${p.slug}" class="flex items-center px-4 py-3 hover:bg-gray-50 transition group">
+                                            <a href="${baseUrl}/product?slug=${p.slug}" class="flex items-center px-4 py-3 hover:bg-gray-50 transition group">
                                                 <img src="${imgSrc}" class="w-12 h-12 object-cover rounded mr-3 border border-gray-100" onerror="this.src='${baseUrl}/assets/images/placeholder.png'">
                                                 <div class="flex-1 min-w-0">
                                                     <div class="font-medium text-gray-900 group-hover:text-primary transition-colors truncate">${displayName}</div>
                                                     ${displayCategory ? `<div class="text-xs text-gray-500 mt-0.5 truncate">${displayCategory}</div>` : ''}
-                                                    <div class="text-sm font-semibold text-gray-900 mt-0.5">${currencySymbol}${price.toFixed(2)}</div>
+                                                    <div class="text-sm font-semibold text-gray-900 mt-0.5 flex items-center justify-between">
+                                                        <span>${currencySymbol}${price.toFixed(2)}</span>
+                                                        ${(p.stock_status === 'out_of_stock') ? '<span class="text-[10px] bg-orange-100 text-orange-600 px-1.5 py-0.5 rounded font-bold uppercase">Out of Stock</span>' : ((p.stock_quantity !== undefined && p.stock_quantity <= 0) ? (p.total_sales > 0 ? '<span class="text-[10px] bg-red-100 text-red-600 px-1.5 py-0.5 rounded font-bold uppercase">Sold Out</span>' : '<span class="text-[10px] bg-orange-100 text-orange-600 px-1.5 py-0.5 rounded font-bold uppercase">Out of Stock</span>') : '')}
+                                                    </div>
                                                 </div>
                                                 <i class="fas fa-chevron-right text-gray-300 group-hover:text-primary ml-2"></i>
                                             </a>

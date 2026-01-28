@@ -26,7 +26,7 @@ require_once 'includes/header.php';
             <a href="<?php echo $baseUrl; ?>" class="inline-flex items-center justify-center px-8 py-3 border border-transparent text-base font-medium rounded-full text-white bg-black md:text-lg" style="background-color: #000000 !important; color: #ffffff !important; opacity: 1 !important;">
                 <i class="fas fa-home mr-2"></i> Back to Home
             </a>
-            <a href="<?php echo $baseUrl; ?>/shop.php" class="inline-flex items-center justify-center px-8 py-3 border border-gray-300 text-base font-medium rounded-full text-gray-700 bg-white hover:bg-gray-50 transition md:text-lg">
+            <a href="<?php echo $baseUrl; ?>/shop" class="inline-flex items-center justify-center px-8 py-3 border border-gray-300 text-base font-medium rounded-full text-gray-700 bg-white hover:bg-gray-50 transition md:text-lg">
                 <i class="fas fa-shopping-bag mr-2"></i> Continue Shopping
             </a>
         </div>

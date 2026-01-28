@@ -24,8 +24,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $id = $_POST['id'] ?? '';
         $heading = $_POST['heading'] ?? '';
         $subheading = $_POST['subheading'] ?? '';
-        $link = $_POST['link'] ?? '';
-        $link_mobile = $_POST['link_mobile'] ?? '';
+        $link = preg_replace('/\.php(\?|$)/', '$1', $_POST['link'] ?? '');
+        $link_mobile = preg_replace('/\.php(\?|$)/', '$1', $_POST['link_mobile'] ?? '');
         $button_text = $_POST['button_text'] ?? 'Shop Now';
         $image_desktop = '';
         $image_mobile = '';

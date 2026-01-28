@@ -149,7 +149,13 @@
         .then(() => {
             loadNotificationCount();
             if (link) {
-                window.location.href = BASE_URL + link;
+                // Compatibility: Rewrite old order list links to detail links
+                let finalLink = link;
+                if (link.includes('/admin/orders/list.php?search=')) {
+                    const orderNum = link.split('search=')[1];
+                    finalLink = '/admin/orders/detail.php?order_number=' + orderNum;
+                }
+                window.location.href = BASE_URL + finalLink;
             }
         })
         .catch(error => console.error('Error marking notification as read:', error));

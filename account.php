@@ -6,7 +6,7 @@ require_once __DIR__ . '/classes/Wishlist.php';
 
 $auth = new CustomerAuth();
 if (!$auth->isLoggedIn()) {
-    header('Location: ' . url('login.php'));
+    header('Location: ' . url('login'));
     exit;
 }
 
@@ -186,7 +186,7 @@ require_once __DIR__ . '/includes/header.php';
                             <span class="font-semibold">Customer support</span>
                         </a>
                         <div class="pt-2 mt-2 border-t border-gray-100">
-                            <a href="logout.php" class="flex items-center gap-3 px-4 py-3 rounded-xl text-red-500 hover:bg-red-50 transition">
+                            <a href="logout" class="flex items-center gap-3 px-4 py-3 rounded-xl text-red-500 hover:bg-red-50 transition">
                                 <div class="w-8 h-8 rounded-lg bg-red-100 flex items-center justify-center">
                                     <i class="fas fa-sign-out-alt text-sm"></i>
                                 </div>
@@ -212,7 +212,7 @@ require_once __DIR__ . '/includes/header.php';
                             <i class="fas fa-box-open text-5xl text-gray-200 mb-4"></i>
                             <h3 class="text-xl font-bold text-gray-900">No orders yet</h3>
                             <p class="text-gray-500 mt-2">When you shop, your orders will appear here.</p>
-                            <a href="<?php echo url('shop.php'); ?>" class="inline-block mt-6 bg-black text-white px-8 py-3 rounded-xl font-bold hover:bg-gray-900 transition">Start Shopping</a>
+                            <a href="<?php echo url('shop'); ?>" class="inline-block mt-6 bg-black text-white px-8 py-3 rounded-xl font-bold hover:bg-gray-900 transition">Start Shopping</a>
                         </div>
                     <?php else: ?>
                         <div class="space-y-6">
@@ -288,14 +288,14 @@ require_once __DIR__ . '/includes/header.php';
                                         <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                                             <?php foreach ($order['items'] as $item): ?>
                                                 <div class="flex items-center gap-4 bg-gray-50 p-4 rounded-2xl">
-                                                    <a href="<?php echo url('product.php?slug=' . ($item['product_slug'] ?? '')); ?>" class="w-20 h-24 bg-gray-200 rounded-xl overflow-hidden flex-shrink-0 block">
+                                                    <a href="<?php echo url('product?slug=' . ($item['product_slug'] ?? '')); ?>" class="w-20 h-24 bg-gray-200 rounded-xl overflow-hidden flex-shrink-0 block">
                                                         <?php if (!empty($item['product_image'])): ?>
                                                             <img src="<?php echo getProductImage(['featured_image'=>$item['product_image']]); ?>" alt="" class="w-full h-full object-cover">
                                                         <?php endif; ?>
                                                     </a>
                                                     <div class="flex-1 min-w-0">
                                                         <h4 class="font-bold text-gray-900 truncate hover:text-blue-600 transition">
-                                                            <a href="<?php echo url('product.php?slug=' . ($item['product_slug'] ?? '')); ?>">
+                                                            <a href="<?php echo url('product?slug=' . ($item['product_slug'] ?? '')); ?>">
                                                                 <?php echo htmlspecialchars($item['product_name'] ?? ''); ?>
                                                             </a>
                                                         </h4>
@@ -575,7 +575,7 @@ require_once __DIR__ . '/includes/header.php';
                         <div class="bg-white rounded-2xl p-12 text-center border border-gray-100">
                             <i class="fas fa-heart text-5xl text-gray-200 mb-4"></i>
                             <h3 class="text-xl font-bold text-gray-900">Wishlist is empty</h3>
-                            <a href="<?php echo url('shop.php'); ?>" class="inline-block mt-6 bg-black text-white px-8 py-3 rounded-xl font-bold">Start Explroring</a>
+                            <a href="<?php echo url('shop'); ?>" class="inline-block mt-6 bg-black text-white px-8 py-3 rounded-xl font-bold">Start Explroring</a>
                         </div>
                      <?php else: ?>
                         <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -591,18 +591,18 @@ require_once __DIR__ . '/includes/header.php';
                                         </button>
                                     </form>
 
-                                    <a href="<?php echo url('product.php?slug='.($product['slug'] ?? '')); ?>" class="h-48 bg-gray-100 overflow-hidden block">
+                                    <a href="<?php echo url('product?slug='.($product['slug'] ?? '')); ?>" class="h-48 bg-gray-100 overflow-hidden block">
                                         <img src="<?php echo getProductImage($product); ?>" alt="" class="w-full h-full object-cover">
                                     </a>
                                     <div class="p-4">
                                         <h3 class="font-bold truncate hover:text-blue-600">
-                                            <a href="<?php echo url('product.php?slug='.($product['slug'] ?? '')); ?>">
+                                            <a href="<?php echo url('product?slug='.($product['slug'] ?? '')); ?>">
                                                 <?php echo htmlspecialchars($product['name']); ?>
                                             </a>
                                         </h3>
                                         <div class="flex justify-between items-center mt-2">
                                              <span class="font-bold text-gray-900"><?php echo format_price($product['price'], $product['currency'] ?? 'INR'); ?></span>
-                                            <a href="<?php echo url('product.php?slug='.($product['slug'] ?? '')); ?>" class="text-sm text-blue-600 font-bold">View Product</a>
+                                            <a href="<?php echo url('product?slug='.($product['slug'] ?? '')); ?>" class="text-sm text-blue-600 font-bold">View Product</a>
                                         </div>
                                     </div>
                                 </div>
@@ -666,7 +666,7 @@ require_once __DIR__ . '/includes/header.php';
                                     <p class="text-xs text-gray-500">View your order status</p>
                                 </div>
                             </a>
-                            <a href="<?php echo url('support.php'); ?>" class="flex items-center gap-3 p-4 bg-white rounded-lg hover:shadow-md transition">
+                            <a href="<?php echo url('support'); ?>" class="flex items-center gap-3 p-4 bg-white rounded-lg hover:shadow-md transition">
                                 <i class="fas fa-question-circle text-blue-600"></i>
                                 <div>
                                     <h4 class="font-semibold text-sm">FAQ</h4>

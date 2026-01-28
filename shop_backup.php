@@ -1,23 +1,6 @@
 <?php
 $pageTitle = 'Shop';
-if (session_status() == PHP_SESSION_NONE) {
-    session_start();
-}
-// Define Base URL if not already defined (since header is included later)
-if (!isset($baseUrl)) {
-    $protocol = isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] === 'on' ? "https" : "http";
-    $host = $_SERVER['HTTP_HOST'];
-    // Assuming the script is in the root or a known subdirectory structure. 
-    // Adapting to common setups or reusing logic if available.
-    // Since we can't easily rely on header config yet, let's look at where it's usually defined.
-    // It seems it was in header.php or config.
-    // Let's use a relative path fallback or hardcode based on known environment 'zensshop' if needed, but dynamic is better.
-    // Actually, 'functions.php' or 'Database.php' might have config.
-    // Let's check if 'includes/functions.php' sets it.
-    // If not, we set a default.
-    $baseUrl = $protocol . "://" . $host . "/zensshop"; // Adjust based on user's path 'zensshop' seen in context
-}
-// require_once __DIR__ . '/includes/header.php'; // Moved down
+require_once __DIR__ . '/includes/header.php';
 require_once __DIR__ . '/classes/Product.php';
 require_once __DIR__ . '/classes/Database.php';
 require_once __DIR__ . '/includes/functions.php';
@@ -120,120 +103,6 @@ $priceRange = $db->fetchOne("SELECT MIN(COALESCE(p.sale_price, p.price)) as min_
                               $categorySlug ? [$categorySlug, $categorySlug] : []);
 $minPriceRange = $priceRange['min_price'] ?? 0;
 $maxPriceRange = $priceRange['max_price'] ?? 1000;
-
-// Handle AJAX Request
-if (isset($_GET['ajax'])) {
-    if (empty($products)) {
-        echo '<div class="col-span-full text-center py-12">
-                <i class="fas fa-box-open text-6xl text-gray-300 mb-4"></i>
-                <p class="text-gray-500 text-lg">No products found</p>
-              </div>';
-    } else {
-        foreach ($products as $item) {
-            // Skip invalid items
-            if (empty($item) || !is_array($item)) continue;
-            
-            $mainImage = getProductImage($item);
-            $price = $item['sale_price'] ?? $item['price'] ?? 0;
-            $originalPrice = !empty($item['sale_price']) ? ($item['price'] ?? 0) : null;
-            $discount = $originalPrice && $originalPrice > 0 ? round((($originalPrice - $price) / $originalPrice) * 100) : 0;
-            $itemName = $item['name'] ?? 'Product';
-            $itemSlug = $item['slug'] ?? '';
-            $itemId = $item['id'] ?? 0;
-            
-            $currentId = !empty($item['product_id']) ? $item['product_id'] : $itemId;
-            $inWishlist = in_array($currentId, $wishlistIds);
-            
-            // Rating calculation
-            $rating = floatval($item['rating'] ?? 0);
-            $fullStars = floor($rating);
-            $hasHalfStar = ($rating - $fullStars) >= 0.5;
-            
-            echo '<div class="product-card bg-white rounded-lg overflow-hidden shadow-md hover:shadow-xl transition-all duration-300 group relative">';
-                
-                // Image Wrapper
-                echo '<div class="relative overflow-hidden card-image-wrap">';
-                    echo '<a href="' . url('product?slug=' . urlencode($itemSlug)) . '">';
-                    echo '<img src="' . htmlspecialchars($mainImage) . '" alt="' . htmlspecialchars($itemName) . '" class="w-full h-64 object-contain group-hover:scale-110 transition-transform duration-500">';
-                    echo '</a>';
-                    
-                    if ($discount > 0) {
-                        echo '<span class="absolute top-3 left-3 bg-red-500 text-white px-2 py-1 rounded text-sm font-semibold">-' . $discount . '%</span>';
-                    }
-                    
-                    echo '<button class="wishlist-btn absolute top-3 right-3 rounded-full w-9 h-9 flex items-center justify-center transition ' . ($inWishlist ? 'bg-black text-white' : 'bg-white text-black') . ' hover:bg-black hover:text-white" data-product-id="' . $currentId . '" title="' . ($inWishlist ? 'Remove from Wishlist' : 'Add to Wishlist') . '">';
-                    echo '<i class="' . ($inWishlist ? 'fas' : 'far') . ' fa-heart"></i>';
-                    echo '</button>';
-                echo '</div>'; // End card-image-wrap
-                
-                // Content Wrapper
-                echo '<div class="p-4 card-content">';
-                    echo '<h3 class="font-semibold text-md mb-2 card-title">';
-                    echo '<a href="' . $baseUrl . '/product?slug=' . urlencode($itemSlug) . '" class="hover:text-primary transition">' . htmlspecialchars($itemName) . '</a>';
-                    echo '</h3>';
-                    
-                    // Star Rating
-                    echo '<div class="flex items-center mb-3 card-rating">';
-                    for ($i = 0; $i < 5; $i++) {
-                        $starClass = ($i < $fullStars) ? 'text-yellow-400' : (($i === $fullStars && $hasHalfStar) ? 'text-yellow-400' : 'text-gray-300');
-                        echo '<i class="fas fa-star text-sm ' . $starClass . '"></i>';
-                    }
-                    echo '</div>';
-                    
-                    // Description
-                    echo '<div class="card-description">';
-                    $desc = !empty($item['short_description']) ? $item['short_description'] : ($item['description'] ?? '');
-                    $desc = strip_tags($desc);
-                    echo htmlspecialchars($desc);
-                    echo '</div>';
-                    
-                    // Actions
-                    echo '<div class="flex items-center justify-between card-actions">';
-                        echo '<div>';
-                        if ($originalPrice) {
-                            echo '<span class="text-gray-400 text-sm line-through mr-2 text-red-500 font-bold">' . format_price($originalPrice, $item['currency'] ?? 'USD') . '</span>';
-                        }
-                        echo '<span class="text-md font-bold text-primary">' . format_price($price, $item['currency'] ?? 'USD') . '</span>';
-                        echo '</div>';
-                        
-                        $isOutOfStock = ($item['stock_status'] === 'out_of_stock' || (isset($item['stock_quantity']) && $item['stock_quantity'] <= 0));
-                        $stockLabel = get_stock_status_text($item['stock_status'], $item['stock_quantity'] ?? 0);
-                        echo '<button onclick="window.addToCart(' . $itemId . ', 1, this)" class="bg-primary text-white px-4 py-2 rounded hover:bg-primary-light hover:text-white transition text-sm ' . ($isOutOfStock ? 'opacity-50 cursor-not-allowed' : '') . '" ' . ($isOutOfStock ? 'disabled' : '') . '>';
-                        echo '<i class="fas fa-shopping-cart mr-1"></i> ' . ($isOutOfStock ? $stockLabel : 'Add to Cart');
-                        echo '</button>';
-                    echo '</div>'; // End actions
-                
-                echo '</div>'; // End card-content
-                
-            echo '</div>'; // End product-card
-        }
-    }
-    
-    // Pagination (Output hidden or processed by JS)
-    if ($totalPages > 1) {
-        echo '<div id="ajax-pagination" class="hidden">';
-        echo '<div class="flex justify-center items-center space-x-2 mt-8">';
-        
-        if ($page > 1) {
-            echo '<button onclick="applyFilters(' . ($page - 1) . ')" class="px-4 py-2 border rounded hover:bg-gray-50"><i class="fas fa-chevron-left"></i></button>';
-        }
-        
-        for ($i = 1; $i <= min($totalPages, 5); $i++) {
-            $activeClass = ($page === $i) ? 'bg-primary text-white' : 'hover:bg-gray-50';
-            echo '<button onclick="applyFilters(' . $i . ')" class="px-4 py-2 border rounded ' . $activeClass . '">' . $i . '</button>';
-        }
-        
-        if ($page < $totalPages) {
-             echo '<button onclick="applyFilters(' . ($page + 1) . ')" class="px-4 py-2 border rounded hover:bg-gray-50"><i class="fas fa-chevron-right"></i></button>';
-        }
-        echo '</div>';
-        echo '</div>';
-    }
-    
-    exit; // Stop executing script
-}
-
-require_once __DIR__ . '/includes/header.php';
 ?>
 
 <!-- Hero Section -->
@@ -279,11 +148,6 @@ require_once __DIR__ . '/includes/header.php';
 <!-- List View Styles -->
 <style>
 /* List View Styles */
-button.active {
-    background-color: #000; /* Primary color or black */
-    color: white;
-    border-color: #000;
-}
 #productsGrid.list-view .product-card {
     display: flex;
     flex-direction: row;
@@ -382,7 +246,10 @@ button.active {
 <section class="py-12 bg-white">
     <div class="container mx-auto px-4">
         <!-- Mobile Filter Button -->
-
+        <button onclick="openFilterDrawer()" class="lg:hidden mb-4 flex items-center space-x-2 bg-primary text-white px-4 py-2 rounded hover:bg-primary-light hover:text-white transition">
+            <i class="fas fa-filter"></i>
+            <span>Filters</span>
+        </button>
         
         <div class="flex flex-col lg:flex-row gap-8">
             <!-- Sidebar Filters (Desktop) -->
@@ -395,11 +262,11 @@ button.active {
                             <i class="fas fa-chevron-down text-sm" id="category-arrow"></i>
                         </h3>
                         <div id="category-filter" class="space-y-2">
-                            <a href="<?php echo $baseUrl; ?>/shop" class="block text-gray-600 hover:text-primary transition <?php echo !$categorySlug ? 'font-semibold text-primary' : ''; ?>">
+                            <a href="<?php echo $baseUrl; ?>/shop.php" class="block text-gray-600 hover:text-primary transition <?php echo !$categorySlug ? 'font-semibold text-primary' : ''; ?>">
                                 All Categories
                             </a>
                             <?php foreach ($categories as $cat): ?>
-                            <a href="<?php echo $baseUrl; ?>/shop?category=<?php echo urlencode($cat['slug'] ?? ''); ?>" 
+                            <a href="<?php echo $baseUrl; ?>/shop.php?category=<?php echo urlencode($cat['slug'] ?? ''); ?>" 
                                class="block text-gray-600 hover:text-primary transition <?php echo $categorySlug === ($cat['slug'] ?? '') ? 'font-semibold text-primary' : ''; ?>">
                                 <?php echo htmlspecialchars($cat['name'] ?? ''); ?> (<?php echo $cat['product_count'] ?? 0; ?>)
                             </a>
@@ -456,36 +323,27 @@ button.active {
             <!-- Products Grid -->
             <div class="lg:w-3/4">
                 <!-- Results and Sorting -->
-                <div class="flex flex-col-reverse md:flex-row justify-between items-center mb-6 gap-4">
-                    <p class="text-gray-600 text-sm mb-0 w-full md:w-auto text-center md:text-left">
+                <div class="flex flex-col md:flex-row justify-between items-start md:items-center mb-6 gap-4">
+                    <p class="text-gray-600 text-sm mb-4 md:mb-0">
                         There are <?php echo $totalProducts; ?> results in total
                     </p>
-                    <div class="flex w-full md:w-auto justify-between md:justify-end items-center gap-4">
-                         <!-- Filter Button (Mobile/Tablet only) -->
-                        <button onclick="openFilterDrawer()" class="lg:hidden flex items-center space-x-2 bg-primary text-white px-4 py-2 rounded hover:bg-primary-light hover:text-white transition">
-                            <i class="fas fa-filter"></i>
-                            <span>Filters</span>
-                        </button>
-
-                        <div class="flex items-center gap-4">
-                            <!-- Grid/List Toggle - Hidden on small screens -->
-                            <div class="hidden md:flex items-center space-x-2">
-                                <button id="gridView" class="p-2 border rounded active bg-primary text-white" onclick="setView('grid')">
-                                    <i class="fas fa-th"></i>
-                                </button>
-                                <button id="listView" class="p-2 border rounded" onclick="setView('list')">
-                                    <i class="fas fa-list"></i>
-                                </button>
-                            </div>
-                            <select id="sortSelect" onchange="applyFilters()" class="border rounded text-sm pl-2 py-2">
-                                <option value="created_at DESC" <?php echo $sort === 'created_at DESC' ? 'selected' : ''; ?>>Sort by: Featured</option>
-                                <option value="price ASC" <?php echo $sort === 'price ASC' ? 'selected' : ''; ?>>Price: Low to High</option>
-                                <option value="price DESC" <?php echo $sort === 'price DESC' ? 'selected' : ''; ?>>Price: High to Low</option>
-                                <option value="name ASC" <?php echo $sort === 'name ASC' ? 'selected' : ''; ?>>Name: A to Z</option>
-                                <option value="name DESC" <?php echo $sort === 'name DESC' ? 'selected' : ''; ?>>Name: Z to A</option>
-                                <option value="rating DESC" <?php echo $sort === 'rating DESC' ? 'selected' : ''; ?>>Rating: High to Low</option>
-                            </select>
+                    <div class="flex items-center space-x-4">
+                        <div class="flex items-center space-x-2">
+                            <button id="gridView" class="p-2 border rounded active bg-primary text-white" onclick="setView('grid')">
+                                <i class="fas fa-th"></i>
+                            </button>
+                            <button id="listView" class="p-2 border rounded" onclick="setView('list')">
+                                <i class="fas fa-list"></i>
+                            </button>
                         </div>
+                        <select id="sortSelect" onchange="applyFilters()" class="border rounded text-sm pl-2 py-2">
+                            <option value="created_at DESC" <?php echo $sort === 'created_at DESC' ? 'selected' : ''; ?>>Sort by: Featured</option>
+                            <option value="price ASC" <?php echo $sort === 'price ASC' ? 'selected' : ''; ?>>Price: Low to High</option>
+                            <option value="price DESC" <?php echo $sort === 'price DESC' ? 'selected' : ''; ?>>Price: High to Low</option>
+                            <option value="name ASC" <?php echo $sort === 'name ASC' ? 'selected' : ''; ?>>Name: A to Z</option>
+                            <option value="name DESC" <?php echo $sort === 'name DESC' ? 'selected' : ''; ?>>Name: Z to A</option>
+                            <option value="rating DESC" <?php echo $sort === 'rating DESC' ? 'selected' : ''; ?>>Rating: High to Low</option>
+                        </select>
                     </div>
                 </div>
                 
@@ -512,7 +370,7 @@ button.active {
                     <div class="product-card bg-white rounded-lg overflow-hidden shadow-md hover:shadow-xl transition-all duration-300 group relative">
 
                         <div class="relative overflow-hidden card-image-wrap">
-                            <a href="<?php echo url('product?slug=' . urlencode($itemSlug)); ?>">
+                            <a href="<?php echo url('product.php?slug=' . urlencode($itemSlug)); ?>">
                                 <img src="<?php echo htmlspecialchars($mainImage); ?>" 
                                      alt="<?php echo htmlspecialchars($itemName); ?>" 
                                      class="w-full h-64 object-contain  group-hover:scale-110 transition-transform duration-500">
@@ -537,7 +395,7 @@ button.active {
                         
                         <div class="p-4 card-content">
                             <h3 class="font-semibold text-md mb-2 card-title">
-                                <a href="<?php echo $baseUrl; ?>/product?slug=<?php echo urlencode($itemSlug); ?>" class="hover:text-primary transition">
+                                <a href="<?php echo $baseUrl; ?>/product.php?slug=<?php echo urlencode($itemSlug); ?>" class="hover:text-primary transition">
                                     <?php echo htmlspecialchars($itemName); ?>
                                 </a>
                             </h3>
@@ -570,11 +428,9 @@ button.active {
                                     <?php endif; ?>
                                     <span class="text-md font-bold text-primary"><?php echo format_price($price, $item['currency'] ?? 'USD'); ?></span>
                                 </div>
-                                 <?php $isOutOfStock = ($item['stock_status'] === 'out_of_stock' || (isset($item['stock_quantity']) && $item['stock_quantity'] <= 0)); ?>
                                  <button onclick="window.addToCart(<?php echo $itemId; ?>, 1, this)" 
-                                        class="bg-primary text-white px-4 py-2 rounded hover:bg-primary-light hover:text-white transition text-sm <?php echo $isOutOfStock ? 'opacity-50 cursor-not-allowed' : ''; ?>"
-                                        <?php echo $isOutOfStock ? 'disabled' : ''; ?>>
-                                    <i class="fas fa-shopping-cart mr-1"></i> <?php echo $isOutOfStock ? 'Out of Stock' : 'Add to Cart'; ?>
+                                        class="bg-primary text-white px-4 py-2 rounded hover:bg-primary-light hover:text-white transition text-sm">
+                                    <i class="fas fa-shopping-cart mr-1"></i> Add
                                 </button>
                             </div>
                         </div>
@@ -584,33 +440,30 @@ button.active {
                 </div>
                 
                 <!-- Pagination -->
-                <!-- Pagination Container -->
-                <div id="pagination-container">
-                    <?php if ($totalPages > 1): ?>
-                    <div class="flex justify-center items-center space-x-2 mt-8">
-                        <?php if ($page > 1): ?>
-                        <button onclick="applyFilters(<?php echo $page - 1; ?>)" 
-                           class="px-4 py-2 border rounded hover:bg-gray-50">
-                            <i class="fas fa-chevron-left"></i>
-                        </button>
-                        <?php endif; ?>
-                        
-                        <?php for ($i = 1; $i <= min($totalPages, 5); $i++): ?>
-                        <button onclick="applyFilters(<?php echo $i; ?>)" 
-                           class="px-4 py-2 border rounded <?php echo $page === $i ? 'bg-primary text-white' : 'hover:bg-gray-50'; ?>">
-                            <?php echo $i; ?>
-                        </button>
-                        <?php endfor; ?>
-                        
-                        <?php if ($page < $totalPages): ?>
-                        <button onclick="applyFilters(<?php echo $page + 1; ?>)" 
-                           class="px-4 py-2 border rounded hover:bg-gray-50">
-                            <i class="fas fa-chevron-right"></i>
-                        </button>
-                        <?php endif; ?>
-                    </div>
+                <?php if ($totalPages > 1): ?>
+                <div class="flex justify-center items-center space-x-2 mt-8">
+                    <?php if ($page > 1): ?>
+                    <a href="?<?php echo http_build_query(array_merge($_GET, ['page' => $page - 1])); ?>" 
+                       class="px-4 py-2 border rounded hover:bg-gray-50">
+                        <i class="fas fa-chevron-left"></i>
+                    </a>
+                    <?php endif; ?>
+                    
+                    <?php for ($i = 1; $i <= min($totalPages, 5); $i++): ?>
+                    <a href="?<?php echo http_build_query(array_merge($_GET, ['page' => $i])); ?>" 
+                       class="px-4 py-2 border rounded <?php echo $page === $i ? 'bg-primary text-white' : 'hover:bg-gray-50'; ?>">
+                        <?php echo $i; ?>
+                    </a>
+                    <?php endfor; ?>
+                    
+                    <?php if ($page < $totalPages): ?>
+                    <a href="?<?php echo http_build_query(array_merge($_GET, ['page' => $page + 1])); ?>" 
+                       class="px-4 py-2 border rounded hover:bg-gray-50">
+                        <i class="fas fa-chevron-right"></i>
+                    </a>
                     <?php endif; ?>
                 </div>
+                <?php endif; ?>
             </div>
         </div>
     </div>
@@ -621,51 +474,31 @@ function toggleFilter(filterName) {
     const filter = document.getElementById(filterName + '-filter');
     const arrow = document.getElementById(filterName + '-arrow');
     if (filter && arrow) {
-        if (filter.classList.contains('hidden')) {
-            filter.classList.remove('hidden');
+    if (filter.classList.contains('hidden')) {
+        filter.classList.remove('hidden');
             // Check if it's a drawer filter (chevron-right) or sidebar filter (chevron-up)
             if (arrow.classList.contains('fa-chevron-right')) {
                 arrow.classList.remove('fa-chevron-right');
                 arrow.classList.add('fa-chevron-down');
             } else {
-                arrow.classList.remove('fa-chevron-up');
-                arrow.classList.add('fa-chevron-down');
+        arrow.classList.remove('fa-chevron-up');
+        arrow.classList.add('fa-chevron-down');
             }
-        } else {
-            filter.classList.add('hidden');
+    } else {
+        filter.classList.add('hidden');
             // Check if it's a drawer filter (should go to chevron-right) or sidebar filter (should go to chevron-up)
             if (filterName.includes('drawer')) {
                 arrow.classList.remove('fa-chevron-down');
                 arrow.classList.add('fa-chevron-right');
             } else {
-                arrow.classList.remove('fa-chevron-down');
-                arrow.classList.add('fa-chevron-up');
+        arrow.classList.remove('fa-chevron-down');
+        arrow.classList.add('fa-chevron-up');
             }
         }
     }
 }
 
-
-// Add event listeners for stock checkboxes to implement radio-like behavior
-document.addEventListener('DOMContentLoaded', function() {
-    const stockCheckboxes = document.querySelectorAll('input[name="stock"]');
-    stockCheckboxes.forEach(checkbox => {
-        checkbox.addEventListener('change', function() {
-            if (this.checked) {
-                // If checking this one, uncheck others
-                stockCheckboxes.forEach(other => {
-                    if (other !== this) {
-                        other.checked = false;
-                    }
-                });
-            }
-            // Trigger filters automatically
-            applyFilters();
-        });
-    });
-});
-
-function applyFilters(page = 1) {
+function applyFilters() {
     const params = new URLSearchParams(window.location.search);
     
     // Category (keep existing)
@@ -673,12 +506,12 @@ function applyFilters(page = 1) {
         // Keep category
     }
     
-    // Stock status (Handle mutually exclusive check)
+    // Stock status
     const stockCheckboxes = document.querySelectorAll('input[name="stock"]:checked');
-    if (stockCheckboxes.length > 0) {
-        // Since we enforce one checkbox in the event listener, we just take the first one
+    if (stockCheckboxes.length === 1) {
         params.set('stock', stockCheckboxes[0].value);
     } else {
+        // If 0 or 2 (both) are checked, show all (remove filter)
         params.delete('stock');
     }
     
@@ -700,50 +533,10 @@ function applyFilters(page = 1) {
     const sort = document.getElementById('sortSelect').value;
     params.set('sort', sort);
     
-    // Page
-    if (page > 1) {
-        params.set('page', page);
-    } else {
-        params.delete('page');
-    }
+    // Reset to page 1
+    params.delete('page');
     
-    const queryString = params.toString();
-    const newUrl = '<?php echo $baseUrl; ?>/shop?' + queryString;
-    
-    // Update browser URL
-    history.pushState({}, '', newUrl);
-    
-    // Perform AJAX request
-    fetch('<?php echo $baseUrl; ?>/shop?ajax=1&' + queryString)
-        .then(response => response.text())
-        .then(html => {
-            // Create a temporary container to parse the HTML
-            const tempDiv = document.createElement('div');
-            tempDiv.innerHTML = html;
-            
-            const paginationContent = tempDiv.querySelector('#ajax-pagination');
-            
-            if (paginationContent) {
-                // Update pagination
-                const paginationContainer = document.getElementById('pagination-container');
-                if(paginationContainer) {
-                    paginationContainer.innerHTML = paginationContent.innerHTML;
-                }
-                // Remove pagination from tempDiv to get just products
-                paginationContent.remove();
-            } else {
-                // No result or single page
-                const paginationContainer = document.getElementById('pagination-container');
-                if(paginationContainer) paginationContainer.innerHTML = '';
-            }
-            
-            // Update Grid
-            const grid = document.getElementById('productsGrid');
-            if(grid) {
-                grid.innerHTML = tempDiv.innerHTML;
-            }
-        })
-        .catch(error => console.error('Error fetching products:', error));
+    window.location.href = '<?php echo $baseUrl; ?>/shop.php?' + params.toString();
 }
 
 function setView(view) {
@@ -837,39 +630,7 @@ function applyFiltersFromDrawer() {
     // Reset to page 1
     params.delete('page');
     
-    const queryString = params.toString();
-    const newUrl = '<?php echo $baseUrl; ?>/shop?' + queryString;
-    
-    // Update browser URL
-    history.pushState({}, '', newUrl);
-    
-    // Perform AJAX request (reusing logic but for drawer trigger)
-    fetch('<?php echo $baseUrl; ?>/shop?ajax=1&' + queryString)
-        .then(response => response.text())
-        .then(html => {
-             // Create temp div
-            const tempDiv = document.createElement('div');
-            tempDiv.innerHTML = html;
-            
-            // Update Pagination
-            const paginationContent = tempDiv.querySelector('#ajax-pagination');
-            const paginationContainer = document.getElementById('pagination-container');
-            if (paginationContent) {
-                 if(paginationContainer) paginationContainer.innerHTML = paginationContent.innerHTML;
-                 paginationContent.remove();
-            } else {
-                 if(paginationContainer) paginationContainer.innerHTML = '';
-            }
-            
-            // Update Grid
-            const grid = document.getElementById('productsGrid');
-            if(grid) {
-                grid.innerHTML = tempDiv.innerHTML;
-            }
-            // Close drawer after apply
-            closeFilterDrawer();
-        })
-        .catch(error => console.error('Error fetching products:', error));
+    window.location.href = '<?php echo $baseUrl; ?>/shop.php?' + params.toString();
 }
 </script>
 
@@ -892,11 +653,11 @@ function applyFiltersFromDrawer() {
                 <i class="fas fa-chevron-down text-sm" id="category-drawer-arrow"></i>
             </h3>
             <div id="category-drawer-filter" class="space-y-2">
-                <a href="<?php echo $baseUrl; ?>/shop" class="block text-gray-600 hover:text-primary transition <?php echo !$categorySlug ? 'font-semibold text-primary' : ''; ?>" onclick="closeFilterDrawer()">
+                <a href="<?php echo $baseUrl; ?>/shop.php" class="block text-gray-600 hover:text-primary transition <?php echo !$categorySlug ? 'font-semibold text-primary' : ''; ?>" onclick="closeFilterDrawer()">
                     All Categories
                 </a>
                 <?php foreach ($categories as $cat): ?>
-                <a href="<?php echo $baseUrl; ?>/shop?category=<?php echo urlencode($cat['slug'] ?? ''); ?>" 
+                <a href="<?php echo $baseUrl; ?>/shop.php?category=<?php echo urlencode($cat['slug'] ?? ''); ?>" 
                    class="block text-gray-600 hover:text-primary transition <?php echo $categorySlug === ($cat['slug'] ?? '') ? 'font-semibold text-primary' : ''; ?>"
                    onclick="closeFilterDrawer()">
                     <?php echo htmlspecialchars($cat['name'] ?? ''); ?> (<?php echo $cat['product_count'] ?? 0; ?>)

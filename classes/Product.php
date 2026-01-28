@@ -65,8 +65,37 @@ class Product {
             $params[] = $searchTerm;
         }
         
+        if (!empty($filters['stock_status'])) {
+            $sql .= " AND p.stock_status = ?";
+            $params[] = $filters['stock_status'];
+        }
+
+        if (!empty($filters['min_price'])) {
+            $sql .= " AND COALESCE(NULLIF(p.sale_price, 0), p.price) >= ?";
+            $params[] = $filters['min_price'];
+        }
+
+        if (!empty($filters['max_price'])) {
+            $sql .= " AND COALESCE(NULLIF(p.sale_price, 0), p.price) <= ?";
+            $params[] = $filters['max_price'];
+        }
+        
         $sql .= " GROUP BY p.product_id";
-        $sql .= " ORDER BY p.created_at DESC";
+        // Sorting
+        $allowedSorts = [
+            'price ASC' => 'p.price ASC',
+            'price DESC' => 'p.price DESC',
+            'name ASC' => 'p.name ASC',
+            'name DESC' => 'p.name DESC',
+            'rating DESC' => 'p.rating DESC',
+            'created_at DESC' => 'p.created_at DESC'
+        ];
+        
+        if (!empty($filters['sort']) && array_key_exists($filters['sort'], $allowedSorts)) {
+            $sql .= " ORDER BY " . $allowedSorts[$filters['sort']];
+        } else {
+            $sql .= " ORDER BY p.created_at DESC";
+        }
         
         if (!empty($filters['limit'])) {
             $limit = (int)$filters['limit'];
@@ -165,8 +194,8 @@ class Product {
                 $productId = $this->db->insert(
                     "INSERT INTO products 
                     (product_id, name, slug, sku, description, short_description, category_id, price, currency, sale_price, 
-                     stock_quantity, stock_status, images, featured_image, gender, brand, status, featured, highlights, shipping_policy, return_policy) 
-                    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+                     cost_per_item, total_expense, stock_quantity, stock_status, images, featured_image, gender, brand, status, featured, highlights, shipping_policy, return_policy) 
+                    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
                     [
                         $customProductId,  // 10-digit random product ID (e.g., 5654148741)
                         $data['name'],
@@ -178,6 +207,8 @@ class Product {
                         $data['price'] ?? 0,
                         $data['currency'] ?? 'INR',
                         $data['sale_price'] ?? null,
+                        $data['cost_per_item'] ?? 0,
+                        $data['total_expense'] ?? 0,
                         $data['stock_quantity'] ?? 0,
                         $data['stock_status'] ?? 'in_stock',
                         $imagesJson,
@@ -252,7 +283,7 @@ class Product {
                 $params = [];
                 
                 $allowedFields = ['name', 'sku', 'description', 'short_description', 'category_id', 'price', 'currency', 
-                                 'sale_price', 'stock_quantity', 'stock_status', 'images', 'featured_image',
+                                 'sale_price', 'cost_per_item', 'total_expense', 'stock_quantity', 'stock_status', 'images', 'featured_image',
                                  'gender', 'brand', 'status', 'featured', 'highlights', 'shipping_policy', 'return_policy'];
                 
                 // Handle category_id (use first category if multiple)

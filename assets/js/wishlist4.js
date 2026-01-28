@@ -228,73 +228,75 @@ async function toggleWishlist(productId, button) {
                 return;
             }
 
-            // Update button state (only if not on wishlist page)
-            if (button) {
-                const icon = button.querySelector('i');
-                const tooltip = button.querySelector('.product-tooltip');
+            // Update ALL buttons for this product across the page
+            document.querySelectorAll(`.wishlist-btn[data-product-id="${productId}"]`).forEach(btn => {
+                const icon = btn.querySelector('i');
+                const tooltip = btn.querySelector('.product-tooltip');
+                const isCardButton = btn.classList.contains('absolute');
                 
-                const isCardButton = button.classList.contains('absolute');
+                // Add labels for text update
+                const addText = 'Add to Wishlist';
+                const removeText = 'Remove from Wishlist';
 
                 if (isInWishlist) {
                     // It WAS in wishlist (so we are Removing) -> Show "Add" (Outline)
+                    btn.setAttribute('title', addText);
+                    
                     if (isCardButton) {
-                        button.classList.remove('bg-black', 'text-white');
-                        button.classList.add('bg-white', 'text-black');
+                        btn.classList.remove('bg-black', 'text-white');
+                        btn.classList.add('bg-white', 'text-black');
                         if (icon) {
-                            icon.classList.remove('fas');
-                            icon.classList.add('far');
+                            icon.className = 'far fa-heart'; // Reset specific classes
                         }
                     } else {
                         // Text Button
                         if (icon) {
-                            icon.classList.remove('fas', 'text-black');
-                            icon.classList.add('far');
+                            icon.className = 'far fa-heart';
                         }
                     }
 
                     if (tooltip) {
-                        tooltip.textContent = 'Add to Wishlist';
-                        button.setAttribute('title', 'Add to Wishlist');
-                    } else if (button.textContent.toLowerCase().includes('wishlist')) {
-                        if(icon) {
-                             button.innerHTML = '';
-                             button.appendChild(icon);
-                             button.appendChild(document.createTextNode(' Add to Wishlist'));
+                        tooltip.textContent = addText;
+                    } else if (btn.textContent.trim().toLowerCase().includes('wishlist')) {
+                        // Preserve icon if it exists
+                        if (icon) {
+                            btn.innerHTML = '';
+                            btn.appendChild(icon);
+                            btn.appendChild(document.createTextNode(' ' + addText));
                         } else {
-                             button.textContent = 'Add to Wishlist';
+                            btn.textContent = addText;
                         }
                     }
                 } else {
-                     // It WAS NOT in wishlist (so we are Adding) -> Show "Remove" (Filled)
+                    // It WAS NOT in wishlist (so we are Adding) -> Show "Remove" (Filled)
+                    btn.setAttribute('title', removeText);
+                    
                     if (isCardButton) {
-                        button.classList.remove('bg-white', 'text-black');
-                        button.classList.add('bg-black', 'text-white');
+                        btn.classList.remove('bg-white', 'text-black');
+                        btn.classList.add('bg-black', 'text-white');
                         if (icon) {
-                            icon.classList.remove('far');
-                            icon.classList.add('fas');
+                            icon.className = 'fas fa-heart'; // Using 'fas' for filled
                         }
                     } else {
                         // Text Button
                         if (icon) {
-                            icon.classList.remove('far');
-                            icon.classList.add('fas', 'text-black');
+                            icon.className = 'fas fa-heart text-black';
                         }
                     }
 
                     if (tooltip) {
-                        tooltip.textContent = 'Remove from Wishlist';
-                        button.setAttribute('title', 'Remove from Wishlist');
-                    } else if (button.textContent.toLowerCase().includes('wishlist')) {
-                        if(icon) {
-                             button.innerHTML = '';
-                             button.appendChild(icon);
-                             button.appendChild(document.createTextNode(' Remove from Wishlist'));
+                        tooltip.textContent = removeText;
+                    } else if (btn.textContent.trim().toLowerCase().includes('wishlist')) {
+                        if (icon) {
+                            btn.innerHTML = '';
+                            btn.appendChild(icon);
+                            btn.appendChild(document.createTextNode(' ' + removeText));
                         } else {
-                             button.textContent = 'Remove from Wishlist';
+                            btn.textContent = removeText;
                         }
                     }
                 }
-            }
+            });
 
             // Show notification
             const message = isInWishlist ? 'Removed from wishlist' : 'Added to wishlist';

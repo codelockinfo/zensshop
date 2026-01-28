@@ -788,7 +788,7 @@ require_once __DIR__ . '/includes/header.php';
                 <button onclick="updateStickyQty(1)" class="w-8 h-full flex items-center justify-center text-gray-600 hover:bg-gray-100 transition">+</button>
             </div>
 
-            <button onclick="stickyAddToCart()" class="bg-black text-white px-4 py-2.5 md:px-8 rounded-full font-bold hover:bg-gray-800 transition flex items-center justify-center gap-2 text-sm md:text-base whitespace-nowrap" id="sticky-atc-btn">
+            <button onclick="stickyAddToCart()" class="bg-[#1a3d32] text-white px-4 py-2.5 md:px-8 rounded-full font-bold hover:bg-black transition flex items-center justify-center gap-2 text-sm md:text-base whitespace-nowrap" id="sticky-atc-btn">
                 <i class="fas fa-shopping-cart text-xs md:text-sm"></i>
                 <span>Add To Cart</span>
             </button>

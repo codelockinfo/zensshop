@@ -170,21 +170,33 @@ class Order {
         
         // Insert order items - USING ORDER NUMBER NOW
         foreach ($data['items'] as $item) {
+            $pId = $item['product_id'];
+            $vAttrs = $item['variant_attributes'] ?? null;
+            $requestedQty = (int)$item['quantity'];
+            
+            // Get current stock to calculate oversold
+            $currentStock = $this->getCurrentStock($pId, $vAttrs);
+            $oversoldQty = max(0, $requestedQty - max(0, $currentStock));
+
             $this->db->insert(
                 "INSERT INTO order_items 
-                (order_num, product_id, product_name, product_sku, quantity, price, subtotal, variant_attributes) 
-                VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
+                (order_num, product_id, product_name, product_sku, quantity, oversold_quantity, price, subtotal, variant_attributes) 
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)",
                 [
                     $orderNumber, // Storing Order Number explicitly
-                    $item['product_id'],
+                    $pId,
                     $item['name'] ?? $item['product_name'],
                     $item['sku'] ?? $item['product_sku'] ?? null,
-                    $item['quantity'],
+                    $requestedQty,
+                    $oversoldQty,
                     $item['price'],
-                    $item['price'] * $item['quantity'],
-                    isset($item['variant_attributes']) ? (is_array($item['variant_attributes']) ? json_encode($item['variant_attributes']) : $item['variant_attributes']) : null
+                    $item['price'] * $requestedQty,
+                    isset($vAttrs) ? (is_array($vAttrs) ? json_encode($vAttrs) : $vAttrs) : null
                 ]
             );
+
+            // Decrease stock quantity
+            $this->adjustStock($pId, -$requestedQty, $vAttrs);
         }
 
         // Auto-sync customer data
@@ -285,22 +297,34 @@ class Order {
             $orderNumber = $order['order_number'];
         }
 
+        $pId = $itemData['product_id'];
+        $vAttrs = $itemData['variant_attributes'] ?? null;
+        $requestedQty = (int)$itemData['quantity'];
+        
+        // Calculate oversold
+        $currentStock = $this->getCurrentStock($pId, $vAttrs);
+        $oversoldQty = max(0, $requestedQty - max(0, $currentStock));
+
         $itemId = $this->db->insert(
             "INSERT INTO order_items 
-            (order_num, product_id, product_name, product_sku, quantity, price, subtotal, variant_attributes) 
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
+            (order_num, product_id, product_name, product_sku, quantity, oversold_quantity, price, subtotal, variant_attributes) 
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)",
             [
                 $orderNumber, // Always use Order Number
-                $itemData['product_id'],
+                $pId,
                 $itemData['product_name'],
                 $itemData['product_sku'] ?? null,
-                $itemData['quantity'],
+                $requestedQty,
+                $oversoldQty,
                 $itemData['price'],
-                $itemData['price'] * $itemData['quantity'],
-                isset($itemData['variant_attributes']) ? (is_array($itemData['variant_attributes']) ? json_encode($itemData['variant_attributes']) : $itemData['variant_attributes']) : null
+                $itemData['price'] * $requestedQty,
+                isset($vAttrs) ? (is_array($vAttrs) ? json_encode($vAttrs) : $vAttrs) : null
             ]
         );
         
+        // Decrease stock
+        $this->adjustStock($pId, -$requestedQty, $vAttrs);
+
         $this->recalculateTotals($orderNumber);
         
         return $itemId;
@@ -310,6 +334,9 @@ class Order {
      * Update order item
      */
     public function updateOrderItem($itemId, $itemData) {
+        // Get old item data for stock adjustment
+        $oldItem = $this->db->fetchOne("SELECT product_id, quantity, variant_attributes, order_num FROM order_items WHERE id = ?", [$itemId]);
+        
         $result = $this->db->execute(
             "UPDATE order_items 
             SET product_name = ?, quantity = ?, price = ?, subtotal = ? 
@@ -323,10 +350,16 @@ class Order {
             ]
         );
         
-        // Get order_num from item
-        $item = $this->db->fetchOne("SELECT order_num FROM order_items WHERE id = ?", [$itemId]);
-        if ($item) {
-            $this->recalculateTotals($item['order_num']);
+        if ($oldItem && $result) {
+            $newQuantity = (int)$itemData['quantity'];
+            $oldQuantity = (int)$oldItem['quantity'];
+            $diff = $oldQuantity - $newQuantity; // If new is 10, old was 5, diff is -5 (decrement)
+            
+            if ($diff !== 0) {
+                $this->adjustStock($oldItem['product_id'], $diff, $oldItem['variant_attributes']);
+            }
+            
+            $this->recalculateTotals($oldItem['order_num']);
         }
         
         return $result;
@@ -336,15 +369,90 @@ class Order {
      * Delete order item
      */
     public function deleteOrderItem($itemId) {
-        $item = $this->db->fetchOne("SELECT order_num FROM order_items WHERE id = ?", [$itemId]);
+        $item = $this->db->fetchOne("SELECT product_id, quantity, variant_attributes, order_num FROM order_items WHERE id = ?", [$itemId]);
         
         $result = $this->db->execute("DELETE FROM order_items WHERE id = ?", [$itemId]);
         
-        if ($item) {
+        if ($item && $result) {
+            // Restore stock
+            $this->adjustStock($item['product_id'], (int)$item['quantity'], $item['variant_attributes']);
             $this->recalculateTotals($item['order_num']);
         }
         
         return $result;
+    }
+
+    /**
+     * Get current stock for a product or variant
+     */
+    private function getCurrentStock($productId, $attributes = null) {
+        $pId = $productId;
+        $vAttrs = !empty($attributes) ? (is_array($attributes) ? json_encode($attributes) : $attributes) : null;
+        
+        // Resolve 10-digit product_id
+        $productIdValue = $pId;
+        if (is_numeric($pId) && (int)$pId < 1000000000) {
+            $prod = $this->db->fetchOne("SELECT product_id FROM products WHERE id = ?", [$pId]);
+            if ($prod) $productIdValue = $prod['product_id'];
+        }
+
+        if ($vAttrs) {
+            $v = $this->db->fetchOne(
+                "SELECT stock_quantity FROM product_variants WHERE product_id = ? AND variant_attributes = ?",
+                [$productIdValue, $vAttrs]
+            );
+            return $v ? (int)$v['stock_quantity'] : 0;
+        } else {
+            $p = $this->db->fetchOne(
+                "SELECT stock_quantity FROM products WHERE product_id = ? OR id = ?",
+                [$productIdValue, $pId]
+            );
+            return $p ? (int)$p['stock_quantity'] : 0;
+        }
+    }
+
+    /**
+     * Adjust stock for a product and its optional variant
+     * @param int|string $productId Product ID (auto-increment or 10-digit)
+     * @param int $quantity Amount to add (negative to subtract)
+     * @param string|array $attributes Variant attributes
+     */
+    private function adjustStock($productId, $quantity, $attributes = null) {
+        try {
+            $qty = (int)$quantity;
+            $pId = $productId;
+            $vAttrs = !empty($attributes) ? (is_array($attributes) ? json_encode($attributes) : $attributes) : null;
+
+            // 1. Resolve product_id (10-digit) if auto-increment ID passed
+            $productIdValue = $pId;
+            if (is_numeric($pId) && (int)$pId < 1000000000) {
+                $prod = $this->db->fetchOne("SELECT product_id FROM products WHERE id = ?", [$pId]);
+                if ($prod) {
+                    $productIdValue = $prod['product_id'];
+                }
+            }
+
+            // 2. Update main product stock and total_sales
+            $this->db->execute(
+                "UPDATE products 
+                 SET stock_quantity = stock_quantity + ?,
+                     total_sales = total_sales - ?
+                 WHERE product_id = ? OR id = ?", 
+                [$qty, $qty, $productIdValue, $pId]
+            );
+
+            // 3. Update variant stock if attributes exist
+            if ($vAttrs) {
+                $this->db->execute(
+                    "UPDATE product_variants 
+                     SET stock_quantity = stock_quantity + ?
+                     WHERE product_id = ? AND variant_attributes = ?",
+                    [$qty, $productIdValue, $vAttrs]
+                );
+            }
+        } catch (Exception $e) {
+            error_log("Order::adjustStock Error: " . $e->getMessage());
+        }
     }
     
     /**

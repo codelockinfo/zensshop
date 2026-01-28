@@ -72,7 +72,7 @@ if (empty($products)) {
                     <div class="min-w-[280px] md:min-w-[300px] my-2">
                         <div class="product-card bg-white rounded-lg overflow-hidden shadow-md transition-all duration-300 group relative">
                 <div class="relative overflow-hidden">
-                    <a href="<?php echo url('product.php?slug=' . urlencode($item['slug'] ?? '')); ?>">
+                    <a href="<?php echo url('product?slug=' . urlencode($item['slug'] ?? '')); ?>">
                         <img src="<?php echo htmlspecialchars($mainImage); ?>" alt="<?php echo htmlspecialchars($item['name']); ?>" 
                              class="w-full h-64 object-contain group-hover:scale-110 transition-transform duration-500">
                     </a>
@@ -104,7 +104,7 @@ if (empty($products)) {
                     
                     <!-- Hover Action Buttons -->
                     <div class="product-actions absolute right-2 top-12 flex flex-col mt-2 gap-2 opacity-0 group-hover:opacity-100 transition-opacity duration-300 z-30">
-                        <a href="<?php echo $baseUrl; ?>/product.php?slug=<?php echo urlencode($item['slug'] ?? ''); ?>" 
+                        <a href="<?php echo $baseUrl; ?>/product?slug=<?php echo urlencode($item['slug'] ?? ''); ?>" 
                            class="product-action-btn w-10 h-10 bg-white rounded-full flex items-center justify-center hover:bg-black hover:text-white transition shadow-lg quick-view-btn relative group" 
                            data-product-id="<?php echo $item['product_id']; ?>"
                            data-product-slug="<?php echo htmlspecialchars($item['slug'] ?? ''); ?>">
@@ -116,18 +116,19 @@ if (empty($products)) {
                             <i class="fas fa-layer-group"></i>
                             <span class="product-tooltip">Compare</span>
                         </button> -->
-                        <button class="product-action-btn w-10 h-10 bg-white rounded-full flex items-center justify-center hover:bg-black hover:text-white transition shadow-lg add-to-cart-hover-btn relative group" 
+                        <button class="product-action-btn w-10 h-10 bg-white rounded-full flex items-center justify-center hover:bg-black hover:text-white transition shadow-lg add-to-cart-hover-btn relative group <?php echo ($item['stock_status'] === 'out_of_stock' || $item['stock_quantity'] <= 0) ? 'opacity-50 cursor-not-allowed' : ''; ?>" 
                                 data-product-id="<?php echo $item['product_id']; ?>"
-                                data-attributes='<?php echo htmlspecialchars($attributesJson, ENT_QUOTES, 'UTF-8'); ?>'>
+                                data-attributes='<?php echo htmlspecialchars($attributesJson, ENT_QUOTES, 'UTF-8'); ?>'
+                                <?php echo ($item['stock_status'] === 'out_of_stock' || $item['stock_quantity'] <= 0) ? 'disabled' : ''; ?>>
                             <i class="fas fa-shopping-cart"></i>
-                            <span class="product-tooltip">Add to Cart</span>
+                            <span class="product-tooltip"><?php echo ($item['stock_status'] === 'out_of_stock' || $item['stock_quantity'] <= 0) ? get_stock_status_text($item['stock_status'], $item['stock_quantity']) : 'Add to Cart'; ?></span>
                         </button>
                     </div>
                 </div>
                 
                 <div class="p-4">
                     <h3 class="font-semibold text-sm md:text-base text-gray-800 mb-2 overflow-hidden  h-10 md:h-12 md:w-[250px] leading-tight" style="display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical;" title="<?php echo htmlspecialchars($item['name']); ?>">
-                        <a href="<?php echo $baseUrl; ?>/product.php?slug=<?php echo urlencode($item['slug'] ?? ''); ?>" class="hover:text-primary transition block">
+                        <a href="<?php echo $baseUrl; ?>/product?slug=<?php echo urlencode($item['slug'] ?? ''); ?>" class="hover:text-primary transition block">
                             <?php echo htmlspecialchars($item['name']); ?>
                         </a>
                     </h3>

@@ -146,6 +146,9 @@ require_once __DIR__ . '/../../includes/admin-header.php';
                         <?php endif; ?>
                         <p class="text-sm text-gray-600 mt-2">
                             Quantity: <span class="font-medium"><?php echo $item['quantity']; ?></span>
+                            <?php if (!empty($item['oversold_quantity']) && $item['oversold_quantity'] > 0): ?>
+                                <span class="ml-2 bg-red-100 text-red-600 px-2 py-0.5 rounded text-[10px] font-bold uppercase italic"><i class="fas fa-exclamation-circle mr-1"></i> Oversold: <?php echo $item['oversold_quantity']; ?></span>
+                            <?php endif; ?>
                         </p>
                         <p class="text-sm text-gray-600">
                             Price: <span class="font-medium"><?php echo format_currency($item['price']); ?></span>

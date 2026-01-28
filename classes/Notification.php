@@ -72,7 +72,7 @@ class Notification {
             'order',
             'New Order Received',
             "Order #$orderNumber from $customerName for $amount",
-            "/admin/orders/list.php?search=" . urlencode($orderNumber)
+            "/admin/orders/detail.php?order_number=" . urlencode($orderNumber)
         );
     }
     

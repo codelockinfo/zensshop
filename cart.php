@@ -65,7 +65,7 @@ $cartTotal = $cart->getTotal();
                             <div class="flex items-center border rounded">
                                 <button onclick='decrementCartItem(<?php echo $item['product_id']; ?>, this, <?php echo $attributesEscaped; ?>)' 
                                         class="px-4 py-2 hover:bg-gray-100" data-loading-text="">-</button>
-                                <span class="px-4 py-2 item-quantity" data-product-id="<?php echo $item['product_id']; ?>" data-attributes='<?php echo $attributesEscaped; ?>'><?php echo $item['quantity']; ?></span>
+                                <span class="w-12 text-center py-2 item-quantity font-semibold" data-product-id="<?php echo $item['product_id']; ?>" data-attributes='<?php echo $attributesEscaped; ?>'><?php echo $item['quantity']; ?></span>
                                 <button onclick='incrementCartItem(<?php echo $item['product_id']; ?>, this, <?php echo $attributesEscaped; ?>)' 
                                         class="px-4 py-2 hover:bg-gray-100" data-loading-text="">+</button>
                             </div>

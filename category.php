@@ -134,9 +134,10 @@ if (!empty($category['image'])) {
                                 title="Compare">
                             <i class="fas fa-layer-group"></i>
                         </button>
-                        <button class="w-10 h-10 bg-white rounded-full flex items-center justify-center hover:bg-primary hover:text-white transition shadow-lg add-to-cart-hover-btn" 
+                        <button class="w-10 h-10 bg-white rounded-full flex items-center justify-center hover:bg-primary hover:text-white transition shadow-lg add-to-cart-hover-btn <?php echo ($item['stock_status'] === 'out_of_stock' || $item['stock_quantity'] <= 0) ? 'opacity-50 cursor-not-allowed' : ''; ?>" 
                                 data-product-id="<?php echo $item['id']; ?>"
-                                title="Add to Cart">
+                                title="<?php echo ($item['stock_status'] === 'out_of_stock' || $item['stock_quantity'] <= 0) ? 'Out of Stock' : 'Add to Cart'; ?>"
+                                <?php echo ($item['stock_status'] === 'out_of_stock' || $item['stock_quantity'] <= 0) ? 'disabled' : ''; ?>>
                             <i class="fas fa-shopping-cart"></i>
                         </button>
                     </div>

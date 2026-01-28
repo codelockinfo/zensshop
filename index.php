@@ -23,7 +23,7 @@ if (empty($banners)) {
             'subheading' => 'NEW ARRIVALS',
             'heading' => 'Get Extra 15% Off',
             'button_text' => 'Shop Collection',
-            'link' => url('shop.php')
+            'link' => url('shop')
         ],
         [
             'image_desktop' => 'https://images.unsplash.com/photo-1605100804763-247f67b3557e?w=1200',
@@ -31,7 +31,7 @@ if (empty($banners)) {
             'subheading' => 'TRENDING NOW',
             'heading' => 'Elegant Jewelry Collection',
             'button_text' => 'Explore Now',
-            'link' => url('shop.php')
+            'link' => url('shop')
         ],
         [
             'image_desktop' => 'https://images.unsplash.com/photo-1599643478518-a784e5dc4c8f?w=1200',
@@ -39,7 +39,7 @@ if (empty($banners)) {
             'subheading' => 'LIMITED TIME',
             'heading' => 'Premium Quality, Best Prices',
             'button_text' => 'Shop Now',
-            'link' => url('shop.php')
+            'link' => url('shop')
         ]
     ];
 }
@@ -53,7 +53,7 @@ if (empty($banners)) {
                     if (empty($url)) return '';
                     if (preg_match('/^https?:\/\//', $url)) return $url;
                     if (strpos($url, 'mailto:') === 0 || strpos($url, 'tel:') === 0) return $url;
-                    return $base . '/' . ltrim($url, '/');
+                    return $base . '/' . preg_replace('/\.php($|\?)/', '$1', ltrim($url, '/'));
                 }
             }
 

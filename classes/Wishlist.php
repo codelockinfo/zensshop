@@ -58,43 +58,35 @@ class Wishlist {
         
         // Ensure all items have required fields and proper image URLs
         foreach ($wishlistItems as &$item) {
-            // Ensure product_id exists
-            if (empty($item['product_id'])) {
-                continue;
-            }
-            
-            // If image is missing or invalid, fetch from product
-            if (empty($item['image']) || $item['image'] === 'null' || $item['image'] === 'undefined') {
-                $productId = $item['product_id'];
+            // If user is not logged in, we still want fresh stock data from the database
+            $productId = $item['product_id'];
+            if ($productId) {
                 $product = $this->product->getByProductId($productId);
-
-                // Fallback for old auto-increment IDs
                 if (!$product && is_numeric($productId) && $productId < 1000000000) {
                     $product = $this->product->getById($productId);
-                    if ($product) {
-                        $item['product_id'] = $product['product_id'];
-                    }
                 }
 
                 if ($product) {
-                    if (!empty($product['featured_image'])) {
-                        $item['image'] = $product['featured_image'];
-                    } else {
-                        $images = json_decode($product['images'] ?? '[]', true);
-                        if (!empty($images[0])) {
-                            $item['image'] = $images[0];
-                        }
-                    }
+                    // Update fresh data from product table
+                    $item['name'] = $product['name'];
+                    $item['slug'] = $product['slug'];
+                    $item['sale_price'] = $product['sale_price'];
+                    $item['price'] = $product['price'];
+                    $item['currency'] = $product['currency'] ?? 'USD';
+                    $item['stock_status'] = $product['stock_status'] ?? 'in_stock';
+                    $item['stock_quantity'] = $product['stock_quantity'] ?? 0;
+                    $item['rating'] = $product['rating'] ?? 5;
+                    $item['review_count'] = $product['review_count'] ?? 0;
                     
-                    // Ensure name and price are set
-                    if (empty($item['name'])) {
-                        $item['name'] = $product['name'];
-                    }
-                    if (empty($item['price'])) {
-                        $item['price'] = $product['sale_price'] ?? $product['price'];
-                    }
-                    if (empty($item['slug'])) {
-                        $item['slug'] = $product['slug'];
+                    if (empty($item['image']) || $item['image'] === 'null' || $item['image'] === 'undefined') {
+                        if (!empty($product['featured_image'])) {
+                            $item['image'] = $product['featured_image'];
+                        } else {
+                            $images = json_decode($product['images'] ?? '[]', true);
+                            if (!empty($images[0])) {
+                                $item['image'] = $images[0];
+                            }
+                        }
                     }
                 }
             }
@@ -126,7 +118,7 @@ class Wishlist {
      */
     private function getWishlistFromDB($userId) {
         $items = $this->db->fetchAll(
-            "SELECT w.*, p.name, p.price, p.sale_price, p.featured_image, p.slug, p.rating, p.review_count, p.sku
+            "SELECT w.*, p.name, p.price, p.sale_price, p.featured_image, p.slug, p.rating, p.review_count, p.sku, p.stock_status, p.stock_quantity, p.currency
              FROM wishlist w
              LEFT JOIN products p ON (w.product_id = p.product_id OR (w.product_id = p.id AND w.product_id < 1000000000))
              WHERE w.user_id = ?",
@@ -163,13 +155,17 @@ class Wishlist {
             $wishlistItems[] = [
                 'product_id' => $item['product_id'],
                 'name' => $item['name'],
-                'price' => $item['sale_price'] ?? $item['price'],
+                'price' => $item['price'],
+                'sale_price' => $item['sale_price'],
                 'image' => $productImage,
                 'slug' => $item['slug'],
-                'rating' => $item['rating'] ?? 0,
+                'rating' => $item['rating'] ?? 5,
                 'review_count' => $item['review_count'] ?? 0,
                 'sku' => $item['sku'],
-                'featured_image' => $item['featured_image']
+                'featured_image' => $item['featured_image'],
+                'currency' => $item['currency'] ?? 'USD',
+                'stock_status' => $item['stock_status'],
+                'stock_quantity' => $item['stock_quantity']
             ];
         }
         
@@ -219,15 +215,18 @@ class Wishlist {
             }
         }
         
-        // Add new item
         $wishlistItems[] = [
             'product_id' => $productId,
             'name' => $product['name'],
-            'price' => $product['sale_price'] ?? $product['price'],
+            'price' => $product['price'],
+            'sale_price' => $product['sale_price'],
+            'currency' => $product['currency'] ?? 'USD',
             'image' => $productImage,
             'slug' => $product['slug'],
-            'rating' => $product['rating'] ?? 0,
-            'review_count' => $product['review_count'] ?? 0
+            'rating' => $product['rating'] ?? 5,
+            'review_count' => $product['review_count'] ?? 0,
+            'stock_status' => $product['stock_status'] ?? 'in_stock',
+            'stock_quantity' => $product['stock_quantity'] ?? 0
         ];
         
         // Save to cookie

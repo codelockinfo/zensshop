@@ -24,7 +24,7 @@ $categories = $db->fetchAll("SELECT * FROM categories ORDER BY sort_order ASC");
 </div>
 
 <div class="admin-card mb-6 flex flex-col md:flex-row justify-between items-center gap-4">
-    <a href="<?php echo $baseUrl; ?>/admin/categories/manage.php" class="admin-btn admin-btn-primary">
+    <a href="<?php echo url('admin/categories/manage.php'); ?>" class="admin-btn admin-btn-primary">
         + Add Category
     </a>
     
@@ -96,7 +96,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 <td><?php echo $cat['sort_order']; ?></td>
                 <td>
                     <div class="flex items-center space-x-2">
-                        <a href="<?php echo $baseUrl; ?>/admin/categories/manage.php?id=<?php echo $cat['id']; ?>" class="text-green-500 hover:text-green-700">
+                        <a href="<?php echo url('admin/categories/manage.php?id=' . $cat['id']); ?>" class="text-green-500 hover:text-green-700">
                             <i class="fas fa-edit"></i>
                         </a>
                         <button onclick="deleteCategory(<?php echo $cat['id']; ?>)" class="text-red-500 hover:text-red-700">

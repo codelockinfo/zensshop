@@ -51,7 +51,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     elseif ($action === 'save') {
         $id = $_POST['id'] ?? '';
         $title = $_POST['title'] ?? '';
-        $link = $_POST['link'] ?? '';
+        $link = preg_replace('/\.php(\?|$)/', '$1', $_POST['link'] ?? '');
         $button_text = $_POST['button_text'] ?? 'Shop Now';
         $image = '';
         $display_order = (int)($_POST['display_order'] ?? 0);

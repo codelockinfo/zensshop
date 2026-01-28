@@ -145,6 +145,13 @@ function formatQVPrice(amount) {
     return symbol + parseFloat(amount).toFixed(2);
 }
 
+function getStockStatusText(status, quantity, totalSold = 0) {
+    if (status === 'out_of_stock') return 'Out of Stock';
+    if (quantity <= 0) return (totalSold > 0) ? 'Sold Out' : 'Out of Stock';
+    if (status === 'on_backorder') return 'On Backorder';
+    return 'In Stock';
+}
+
 // Quick View Render Logic
 function renderQuickView(product) {
     const content = document.getElementById('quickViewContent');
@@ -195,7 +202,9 @@ function renderQuickView(product) {
         imagesHTML = `
         <div class="relative block group overflow-hidden rounded-lg h-full flex items-center justify-center w-full min-h-0 bg-gray-50">
             ${discountHTML ? `<div class="absolute top-2 left-2 z-10 shadow-sm" id="qvDiscountBadge">${discountHTML}</div>` : '<div id="qvDiscountBadge"></div>'}
-            <img id="qvMainImage" src="${galleryItems[0]}" alt="${product.name}" class="max-h-full max-w-full object-contain transition duration-500 group-hover:scale-105">
+            <a href="${productUrl}" class="h-full w-full flex items-center justify-center">
+                <img id="qvMainImage" src="${galleryItems[0]}" alt="${product.name}" class="max-h-full max-w-full object-contain transition duration-500 group-hover:scale-105">
+            </a>
         </div>`;
         
         if (galleryItems.length > 1) {
@@ -274,9 +283,9 @@ function renderQuickView(product) {
                 </div>
                 
                 <div class="mb-4 flex items-center gap-3">
-                    <span class="text-2xl font-bold text-black" id="qvPrice">${formatQVPrice(priceValue)}</span>
+                    <span class="text-2xl font-bold text-[#1a3d32]" id="qvPrice">${formatQVPrice(priceValue)}</span>
                     <span id="qvOriginalPriceContainer" class="${originalPriceValue ? '' : 'hidden'}">
-                        <span class="text-gray-400 line-through text-lg" id="qvOriginalPrice">${originalPriceValue ? formatQVPrice(originalPriceValue) : ''}</span>
+                        <span class="text-red-500 font-bold line-through text-lg" id="qvOriginalPrice">${originalPriceValue ? formatQVPrice(originalPriceValue) : ''}</span>
                     </span>
                 </div>
 
@@ -311,7 +320,7 @@ function renderQuickView(product) {
                     <div class="flex gap-3 h-12">
                         <div class="flex items-center border border-black rounded-full w-28 h-full shrink-0 overflow-hidden">
                             <button onclick="updateQVQuantity(-1)" class="w-8 h-full flex items-center justify-center hover:bg-gray-100 text-black transition text-lg font-medium focus:outline-none">-</button>
-                            <input type="number" id="qvQuantity" value="1" min="1" class="w-full flex-1 text-center pl-4 border-none focus:ring-0 outline-none focus:outline-none p-0 h-full text-black font-bold text-lg bg-transparent shadow-none" readonly>
+                            <input type="text" id="qvQuantity" value="1" class="w-full flex-1 text-center border-none focus:ring-0 outline-none focus:outline-none p-0 h-full text-black font-bold text-lg bg-transparent shadow-none" readonly>
                             <button onclick="updateQVQuantity(1)" class="w-8 h-full flex items-center justify-center hover:bg-gray-100 text-black transition text-lg font-medium focus:outline-none">+</button>
                         </div>
                         <button onclick="addToCartFromQV(${product.product_id || product.id})" class="flex-1 bg-black text-white h-full rounded-full hover:bg-gray-800 transition-all font-bold uppercase flex items-center justify-center gap-2 shadow-lg text-sm">
@@ -325,8 +334,7 @@ function renderQuickView(product) {
                 
                 <div class="flex gap-4 text-xs text-gray-500 mb-6 font-medium">
                     <button class="hover:text-black flex items-center gap-1 transition wishlist-btn" 
-                            data-product-id="${product.product_id || product.id}" 
-                            onclick="if(typeof toggleWishlist === 'function') toggleWishlist(this);">
+                            data-product-id="${product.product_id || product.id}">
                         <i class="${wishlistIconClass} fa-heart"></i> ${wishlistText}
                     </button>
                     <button class="hover:text-black flex items-center gap-1 transition" onclick="sharePage('${product.name.replace(/'/g, "\\'")}', 'Check out this product!', '${productUrl}')">
@@ -341,7 +349,7 @@ function renderQuickView(product) {
                     </div>
                     <div class="mt-2 pt-2 border-t border-gray-200">
                         <p><span class="font-bold text-gray-900">Sku:</span> <span id="qvSku">${product.sku || 'N/A'}</span></p>
-                        <p><span class="font-bold text-gray-900">Available:</span> <span id="qvAvailability" class="${product.stock_status === 'in_stock' ? 'text-green-600' : 'text-red-500'} font-bold">${product.stock_status === 'in_stock' ? 'In Stock' : 'Out of Stock'}</span></p>
+                        <p><span class="font-bold text-gray-900">Available:</span> <span id="qvAvailability" class="${(product.stock_status === 'in_stock' && (product.stock_quantity === undefined || product.stock_quantity > 0)) ? 'text-green-600' : 'text-red-500'} font-bold">${getStockStatusText(product.stock_status, product.stock_quantity, product.total_sales)}</span></p>
                     </div>
                     <div class="mt-2 text-right">
                         <a href="${productUrl}" class="text-primary hover:text-black underline font-bold text-xs uppercase tracking-wide">View full details <i class="fas fa-arrow-right ml-1"></i></a>
@@ -356,6 +364,12 @@ function renderQuickView(product) {
          const siblings = btn.parentElement.children;
          if (btn === siblings[0]) btn.click();
     });
+
+    // Check simple product stock (if no variants or before variant selection)
+    if (!product.variants || product.variants.length === 0) {
+        const isOutOfStock = product.stock_status === 'out_of_stock' || (product.stock_quantity !== undefined && product.stock_quantity <= 0);
+        updateQVButtons(isOutOfStock, getStockStatusText(product.stock_status, product.stock_quantity, product.total_sales));
+    }
 }
 
 window.switchQVImage = function(url, btn) {
@@ -428,9 +442,11 @@ window.selectQVVariant = function(btn, option, value) {
             // Update Availability
             const availEl = document.getElementById('qvAvailability');
             if (availEl) {
-                const isInStock = variant.stock_status === 'in_stock' && variant.stock_quantity > 0;
-                availEl.innerHTML = isInStock ? 'In Stock' : 'Out of Stock';
-                availEl.className = isInStock ? 'text-green-600 font-bold' : 'text-red-500 font-bold';
+                const statusLabel = getStockStatusText(variant.stock_status, variant.stock_quantity, currentQVProduct.total_sales);
+                const isOutOfStock = (variant.stock_status === 'out_of_stock' || variant.stock_quantity <= 0);
+                availEl.innerHTML = statusLabel;
+                availEl.className = !isOutOfStock ? 'text-green-600 font-bold' : 'text-red-500 font-bold';
+                updateQVButtons(isOutOfStock, statusLabel);
             }
         }
     }
@@ -525,5 +541,32 @@ window.buyNowFromQV = function(productId) {
         console.error('Error:', error);
         if (btn) setBtnLoading(btn, false);
     });
+};
+
+window.updateQVButtons = function(isOutOfStock, label = 'Out of Stock') {
+    const addToCartBtn = document.querySelector('#quickViewModal button[onclick*="addToCartFromQV"]');
+    const buyNowBtn = document.querySelector('#quickViewModal button[onclick*="buyNowFromQV"]');
+
+    if (isOutOfStock) {
+        if (addToCartBtn) {
+            addToCartBtn.disabled = true;
+            addToCartBtn.classList.add('opacity-50', 'cursor-not-allowed');
+            addToCartBtn.innerHTML = `<span>${label}</span>`;
+        }
+        if (buyNowBtn) {
+            buyNowBtn.disabled = true;
+            buyNowBtn.classList.add('opacity-50', 'cursor-not-allowed');
+        }
+    } else {
+        if (addToCartBtn) {
+            addToCartBtn.disabled = false;
+            addToCartBtn.classList.remove('opacity-50', 'cursor-not-allowed');
+            addToCartBtn.innerHTML = '<i class="fas fa-shopping-cart"></i> <span>Add to Cart</span>';
+        }
+        if (buyNowBtn) {
+            buyNowBtn.disabled = false;
+            buyNowBtn.classList.remove('opacity-50', 'cursor-not-allowed');
+        }
+    }
 };
 

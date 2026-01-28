@@ -29,12 +29,12 @@ if ($productIdParam) {
     $productData = $product->getById($id);
     $productId = $id;
 } else {
-    header('Location: ' . $baseUrl . '/admin/products/list.php');
+    header('Location: ' . $baseUrl . '/admin/products/list');
     exit;
 }
 
 if (!$productData) {
-    header('Location: ' . $baseUrl . '/admin/products/list.php');
+    header('Location: ' . $baseUrl . '/admin/products/list');
     exit;
 }
 
@@ -58,6 +58,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 'price' => $_POST['price'] ?? 0,
                 'currency' => $_POST['currency'] ?? 'INR',
                 'sale_price' => !empty($_POST['sale_price']) ? $_POST['sale_price'] : null,
+                'cost_per_item' => $_POST['cost_per_item'] ?? 0,
+                'total_expense' => $_POST['total_expense'] ?? 0,
                 'stock_quantity' => $_POST['stock_quantity'] ?? 0,
                 'stock_status' => $_POST['stock_status'] ?? 'in_stock',
                 'gender' => $_POST['gender'] ?? 'unisex',
@@ -159,7 +161,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         );
         
         // Redirect after successful update
-        header('Location: ' . $baseUrl . '/admin/products/list.php?success=updated');
+        header('Location: ' . $baseUrl . '/admin/products/list?success=updated');
         exit;
         } catch (Exception $e) {
             $error = $e->getMessage();
@@ -467,6 +469,25 @@ $existingVariants = $product->getVariants($productId);
                        value="<?php echo htmlspecialchars($productData['sale_price'] ?? ''); ?>"
                        class="admin-form-input">
             </div>
+
+            <div class="grid grid-cols-2 gap-4">
+                <div class="admin-form-group">
+                    <label class="admin-form-label">Cost per item</label>
+                    <input type="number" 
+                           name="cost_per_item" 
+                           step="0.01"
+                           value="<?php echo htmlspecialchars($productData['cost_per_item'] ?? ''); ?>"
+                           class="admin-form-input">
+                </div>
+                <div class="admin-form-group">
+                    <label class="admin-form-label">Total expense</label>
+                    <input type="number" 
+                           name="total_expense" 
+                           step="0.01"
+                           value="<?php echo htmlspecialchars($productData['total_expense'] ?? ''); ?>"
+                           class="admin-form-input">
+                </div>
+            </div>
             
             <div class="admin-form-group">
                 <label class="admin-form-label">Stock Quantity *</label>
@@ -515,7 +536,7 @@ $existingVariants = $product->getVariants($productId);
             <button type="submit" id="bottomSubmitBtn" class="admin-btn admin-btn-primary flex-1 flex items-center justify-center">
                 <span>Update product</span>
             </button>
-            <a href="<?php echo $baseUrl; ?>/admin/products/list.php" class="admin-btn border border-gray-300 text-gray-600 flex-1 text-center">
+            <a href="<?php echo url('admin/products/list.php'); ?>" class="admin-btn border border-gray-300 text-gray-600 flex-1 text-center">
                 Cancel
             </a>
         </div>

@@ -78,7 +78,7 @@ document.addEventListener('DOMContentLoaded', function() {
         
         clearTimeout(debounceTimer);
         debounceTimer = setTimeout(() => {
-            const url = '<?php echo $baseUrl; ?>/admin/search_products_ajax.php?search=' + encodeURIComponent(query);
+            const url = '<?php echo $baseUrl; ?>/admin/search_products_ajax?search=' + encodeURIComponent(query);
             
             fetch(url)
                 .then(response => response.text())
@@ -133,17 +133,32 @@ document.addEventListener('DOMContentLoaded', function() {
                 </td>
                 <td>#<?php echo $item['product_id']; ?></td>
                 <td><?php echo format_price($item['price'], $item['currency'] ?? 'USD'); ?></td>
-                <td><?php echo $item['stock_quantity']; ?></td>
+                <td class="<?php echo ($item['stock_quantity'] < 0) ? 'text-red-600 font-bold' : ''; ?>">
+                    <?php echo $item['stock_quantity']; ?>
+                </td>
                 <td><?php echo $item['sale_price'] ? round((($item['price'] - $item['sale_price']) / $item['price']) * 100) : 0; ?>%</td>
                 <td>
                     <?php 
+                    $stockQuantity = isset($item['stock_quantity']) ? (int)$item['stock_quantity'] : 0;
+                    $totalSold = isset($item['total_sales']) ? (int)$item['total_sales'] : 0;
                     $stockStatus = !empty($item['stock_status']) ? $item['stock_status'] : 'in_stock';
-                    $isInStock = ($stockStatus === 'in_stock');
-                    $stockBg = $isInStock ? '#d1fae5' : '#ffedd5';
-                    $stockText = $isInStock ? '#065f46' : '#9a3412';
+                    $displayText = get_stock_status_text($stockStatus, $stockQuantity, $totalSold);
+                    
+                    $isAvailable = ($displayText === 'In Stock');
+                    $isSoldOut = ($displayText === 'Sold Out');
+                    $isOutOfStock = ($displayText === 'Out of Stock');
+                    $isOversold = ($stockQuantity < 0);
+                    
+                    // Priority colors: Oversold (Red) -> Sold Out (Red) -> Out of Stock (Orange) -> In Stock (Green)
+                    $stockBg = $isAvailable ? '#d1fae5' : ($isOversold || $isSoldOut ? '#fee2e2' : '#ffedd5');
+                    $stockText = $isAvailable ? '#065f46' : ($isOversold || $isSoldOut ? '#991b1b' : '#9a3412');
+                    
+                    if ($isOversold) {
+                        $displayText = 'Oversold';
+                    }
                     ?>
                     <span class="px-2 py-1 rounded shadow-sm" style="background-color: <?php echo $stockBg; ?>; color: <?php echo $stockText; ?>; font-size: 0.75rem; font-weight: 600; display: inline-block;">
-                        <?php echo ucfirst(str_replace('_', ' ', $stockStatus)); ?>
+                        <?php echo $displayText; ?>
                     </span>
                 </td>
                 <td>

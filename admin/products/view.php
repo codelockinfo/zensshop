@@ -151,9 +151,20 @@ $variants = $variantsData['variants'] ?? [];
                             </span>
                         </td>
                         <td class="px-4 py-3 whitespace-nowrap">
-                            <span class="px-2 py-1 rounded-full text-xs font-bold whitespace-nowrap <?php echo $variant['stock_quantity'] > 0 ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'; ?>">
-                                <?php echo $variant['stock_quantity']; ?> in stock
-                            </span>
+                            <?php 
+                            $vQty = (int)$variant['stock_quantity'];
+                            $vStatus = $variant['stock_status'] ?? 'in_stock';
+                            $vLabel = get_stock_status_text($vStatus, $vQty);
+                            $vIsNegative = $vQty < 0;
+                            ?>
+                            <div class="flex flex-col">
+                                <span class="px-2 py-1 rounded-full text-xs font-bold whitespace-nowrap inline-block w-fit <?php echo $vQty > 0 ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'; ?>">
+                                    <?php echo $vQty; ?> in stock
+                                </span>
+                                <?php if ($vIsNegative): ?>
+                                    <span class="text-[10px] text-red-600 font-bold mt-1 uppercase italic"><i class="fas fa-exclamation-triangle mr-1"></i> Oversold</span>
+                                <?php endif; ?>
+                            </div>
                         </td>
                         <td class="px-4 py-3 text-right">
                             <a href="<?php echo url('admin/products/edit.php?product_id=' . $product_id); ?>" 
@@ -237,27 +248,73 @@ $variants = $variantsData['variants'] ?? [];
                     <label class="admin-form-label">Sale Price</label>
                     <p class="text-xl font-bold text-red-600"><?php echo format_price($productData['sale_price'], $productData['currency'] ?? 'USD'); ?></p>
                     <p class="text-sm text-gray-500">
-                        <?php 
+                        Discount: <?php 
                         $discount = round((($productData['price'] - $productData['sale_price']) / $productData['price']) * 100);
                         echo $discount . '% off';
                         ?>
                     </p>
                 </div>
                 <?php endif; ?>
+
+                <div class="grid grid-cols-2 gap-4 pt-2 border-t border-gray-100">
+                    <div>
+                        <label class="admin-form-label">Cost per item</label>
+                        <p class="text-lg font-semibold text-gray-700"><?php echo format_price($productData['cost_per_item'] ?? 0, $productData['currency'] ?? 'USD'); ?></p>
+                    </div>
+                    <div>
+                        <label class="admin-form-label">Total expense</label>
+                        <p class="text-lg font-semibold text-gray-700"><?php echo format_price($productData['total_expense'] ?? 0, $productData['currency'] ?? 'USD'); ?></p>
+                    </div>
+                </div>
+
+                <div class="mt-2 bg-gray-50 p-2 rounded border border-dashed border-gray-200">
+                    <label class="text-[10px] font-bold uppercase text-gray-400">Total Expenditure</label>
+                    <p class="text-xl font-bold text-primary">
+                        <?php 
+                        $totalExp = (float)($productData['cost_per_item'] ?? 0) + (float)($productData['total_expense'] ?? 0);
+                        echo format_price($totalExp, $productData['currency'] ?? 'USD'); 
+                        ?>
+                    </p>
+                </div>
                 
                 <div>
                     <label class="admin-form-label">Stock Quantity</label>
-                    <p class="text-lg font-semibold text-gray-900"><?php echo number_format($productData['stock_quantity']); ?></p>
+                    <div class="flex items-center space-x-2">
+                        <p class="text-lg font-semibold <?php echo $productData['stock_quantity'] < 0 ? 'text-red-600' : 'text-gray-900'; ?>">
+                            <?php echo number_format($productData['stock_quantity']); ?>
+                        </p>
+                        <?php if ($productData['stock_quantity'] < 0): ?>
+                            <span class="bg-red-600 text-white text-[10px] px-2 py-0.5 rounded font-bold uppercase ring-2 ring-red-100 animate-pulse">Oversold</span>
+                        <?php endif; ?>
+                    </div>
                 </div>
                 
                 <div>
                     <label class="admin-form-label">Stock Status</label>
-                    <span class="px-3 py-1 rounded text-sm font-semibold <?php 
-                        echo $productData['stock_status'] === 'in_stock' ? 'bg-green-100 text-green-800' : 
-                            ($productData['stock_status'] === 'out_of_stock' ? 'bg-red-100 text-red-800' : 'bg-orange-100 text-orange-800'); 
-                    ?>">
-                        <?php echo ucfirst(str_replace('_', ' ', $productData['stock_status'])); ?>
+                    <?php 
+                    $qty = (int)$productData['stock_quantity'];
+                    $totalSold = (int)($productData['total_sales'] ?? 0);
+                    $status = $productData['stock_status'] ?? 'in_stock';
+                    $labelText = get_stock_status_text($status, $qty, $totalSold);
+                    
+                    $isAvailable = ($labelText === 'In Stock');
+                    $isSoldOut = ($labelText === 'Sold Out');
+                    $isBackorder = ($labelText === 'On Backorder');
+                    
+                    $statusClass = $isAvailable ? 'bg-green-100 text-green-800' : 
+                                  ($isSoldOut ? 'bg-red-100 text-red-800' : 'bg-orange-100 text-orange-800');
+                    ?>
+                    <span class="px-3 py-1 rounded text-sm font-semibold <?php echo $statusClass; ?>">
+                        <?php echo $labelText; ?>
                     </span>
+                </div>
+
+                <div>
+                    <label class="admin-form-label">Total Sales</label>
+                    <p class="text-lg font-bold text-gray-900">
+                        <i class="fas fa-shopping-basket text-primary mr-1"></i>
+                        <?php echo number_format($totalSold); ?> Units
+                    </p>
                 </div>
             </div>
         </div>

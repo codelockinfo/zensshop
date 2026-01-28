@@ -44,7 +44,7 @@ try {
     try {
         require_once __DIR__ . '/../classes/Wishlist.php';
         $wishlistObj = new Wishlist();
-        $inWishlist = $wishlistObj->isInWishlist($product['id']);
+        $inWishlist = $wishlistObj->isInWishlist($product['product_id']);
     } catch (Exception $e) {
         $inWishlist = false;
     }
@@ -72,6 +72,7 @@ try {
         'sku' => $product['sku'] ?? 'N/A',
         'in_wishlist' => $inWishlist,
         'stock_status' => $product['stock_status'],
+        'stock_quantity' => $product['stock_quantity'],
         'highlights' => json_decode($product['highlights'] ?? '[]', true),
         'shipping_policy' => $product['shipping_policy'] ?? '',
         'return_policy' => $product['return_policy'] ?? '',

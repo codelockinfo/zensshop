@@ -33,6 +33,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 'price' => $_POST['price'] ?? 0,
                 'currency' => $_POST['currency'] ?? 'INR',
                 'sale_price' => !empty($_POST['sale_price']) ? $_POST['sale_price'] : null,
+                'cost_per_item' => $_POST['cost_per_item'] ?? 0,
+                'total_expense' => $_POST['total_expense'] ?? 0,
                 'stock_quantity' => $_POST['stock_quantity'] ?? 0,
                 'stock_status' => $_POST['stock_status'] ?? 'in_stock',
                 'gender' => $_POST['gender'] ?? 'unisex',
@@ -108,7 +110,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             );
             
             // Redirect before any output
-            header('Location: ' . $baseUrl . '/admin/products/list.php');
+            header('Location: ' . $baseUrl . '/admin/products/list');
             exit;
         } catch (Exception $e) {
             $error = $e->getMessage();
@@ -367,6 +369,23 @@ $brands = $brandsResult ? json_decode($brandsResult['setting_value'], true) : []
                        name="sale_price" 
                        step="0.01"
                        class="admin-form-input">
+            </div>
+
+            <div class="grid grid-cols-2 gap-4">
+                <div class="admin-form-group">
+                    <label class="admin-form-label">Cost per item</label>
+                    <input type="number" 
+                           name="cost_per_item" 
+                           step="0.01"
+                           class="admin-form-input">
+                </div>
+                <div class="admin-form-group">
+                    <label class="admin-form-label">Total expense</label>
+                    <input type="number" 
+                           name="total_expense" 
+                           step="0.01"
+                           class="admin-form-input">
+                </div>
             </div>
             
             <div class="admin-form-group">

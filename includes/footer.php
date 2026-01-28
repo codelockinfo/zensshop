@@ -31,6 +31,8 @@ if ($footerMenuData) {
 
 function renderFooterLinkRecursive($item, $baseUrl) {
     $url = htmlspecialchars(str_replace('SITE_URL', $baseUrl, $item['url']));
+    // Remove .php extension if present
+    $url = preg_replace('/\.php($|\?)/', '$1', $url);
     $label = htmlspecialchars($item['label']);
     
     // Special check for Social Icons in the "Follow Us" column
@@ -280,7 +282,7 @@ function renderFooterLinkRecursive($item, $baseUrl) {
                     <span class="text-lg font-semibold">Total:</span>
                     <span class="text-xl font-bold" id="cartTotal">₹0.00</span>
                 </div>
-                <a href="<?php echo url('cart.php'); ?>" class="block w-full bg-primary text-white text-center py-3 rounded-lg hover:bg-primary-light hover:text-white transition mb-2">
+                <a href="<?php echo url('cart'); ?>" class="block w-full bg-primary text-white text-center py-3 rounded-lg hover:bg-primary-light hover:text-white transition mb-2">
                             View Cart
                         </a>
                 <a href="<?php echo url('checkout'); ?>" class="block w-full bg-black text-white text-center py-3 rounded-lg hover:text-white hover:bg-gray-800 transition">
@@ -341,11 +343,11 @@ function renderFooterLinkRecursive($item, $baseUrl) {
     
     <!-- Scripts -->
     <script src="<?php echo $baseUrl; ?>/assets/js/main5.js"></script>
-    <script src="<?php echo $baseUrl; ?>/assets/js/cart7.js"></script>
+    <script src="<?php echo $baseUrl; ?>/assets/js/cart8.js"></script>
     <script src="<?php echo $baseUrl; ?>/assets/js/product-cards3.js"></script>
-    <script src="<?php echo $baseUrl; ?>/assets/js/wishlist3.js"></script>
+    <script src="<?php echo $baseUrl; ?>/assets/js/wishlist4.js"></script>
     <script src="<?php echo $baseUrl; ?>/assets/js/notification.js"></script>
-    <script src="<?php echo $baseUrl; ?>/assets/js/quickview3.js"></script>
+    <script src="<?php echo $baseUrl; ?>/assets/js/quickview4.js"></script>
     <script src="<?php echo $baseUrl; ?>/assets/js/add-to-cart2.js"></script>
     
     <!-- Remove from Cart Confirmation Script -->

@@ -88,7 +88,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 if (!empty(trim($slideTexts[$i]))) {
                     $slides[] = [
                         'text' => trim($slideTexts[$i]),
-                        'link' => trim($slideLinks[$i] ?? ''),
+                        'link' => preg_replace('/\.php(\?|$)/', '$1', trim($slideLinks[$i] ?? '')),
                         'link_text' => trim($_POST['slide_link_texts'][$i] ?? '')
                     ];
                 }
@@ -112,7 +112,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 if (!empty(trim($linkLabels[$i]))) {
                     $links[] = [
                         'label' => trim($linkLabels[$i]),
-                        'url' => trim($linkUrls[$i] ?? '#')
+                        'url' => preg_replace('/\.php(\?|$)/', '$1', trim($linkUrls[$i] ?? '#'))
                     ];
                 }
             }
@@ -455,7 +455,7 @@ function addLink(data = null) {
         </div>
         <div class="flex-1">
             <input type="text" name="link_urls[]" value="${data ? data.url : ''}" 
-                   class="w-full border p-2 rounded text-sm" placeholder="Link URL (e.g., /contact.php)" required>
+                   class="w-full border p-2 rounded text-sm" placeholder="Link URL (e.g., /contact)" required>
         </div>
         <button type="button" onclick="removeRow(this)" class="text-red-500 hover:text-red-700 p-2">
             <i class="fas fa-trash"></i>

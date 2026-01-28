@@ -350,12 +350,12 @@ nav.bg-white.sticky.top-0 {
                         
                         <!-- Action Buttons -->
                         <div class="mt-6 space-y-3">
-                            <a href="<?php echo url('/'); ?>" 
+                            <a href="<?php echo url('/shop'); ?>" 
                                style="color: #ffffff !important;"
                                class="block w-full bg-black text-white text-center py-3 rounded-lg hover:bg-gray-800 transition font-medium">
                                 Continue Shopping
                             </a>
-                            <a href="<?php echo url('shop'); ?>" 
+                            <a href="<?php echo url('/shop'); ?>" 
                                class="block w-full bg-white border border-gray-300 text-gray-900 text-center py-3 rounded-lg hover:bg-gray-50 transition font-medium">
                                 Browse Products
                             </a>

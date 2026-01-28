@@ -562,18 +562,18 @@ function updateCartUI() {
         html += `
             <div class="side-cart-item-wrapper mb-4 pb-4 border-b" data-product-id="${item.product_id}" data-attributes='${attributesJson}'>
                 <div class="flex items-center space-x-4 side-cart-item" data-product-id="${item.product_id}">
-                    <a href="product.php?slug=${item.slug}" class="shrink-0">
+                    <a href="product?slug=${item.slug}" class="shrink-0">
                         <img src="${escapeHtml(imageUrl)}" alt="${escapeHtml(item.name)}" class="w-20 h-20 object-cover rounded" onerror="this.src='data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iODAiIGhlaWdodD0iODAiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+PHJlY3Qgd2lkdGg9IjgwIiBoZWlnaHQ9IjgwIiBmaWxsPSIjRjNGNEY2Ii8+PGNpcmNsZSBjeD0iNDAiIGN5PSI0MCIgcj0iMjAiIGZpbGw9IiM5QjdBOEEiLz48L3N2Zz4='">
                     </a>
                     <div class="flex-1">
                         <h4 class="font-semibold text-sm mb-1">
-                            <a href="product.php?slug=${item.slug}" class="hover:text-[#1a3d32] transition-colors uppercase">${escapeHtml(item.name)}</a>
+                            <a href="product?slug=${item.slug}" class="hover:text-[#1a3d32] transition-colors uppercase">${escapeHtml(item.name)}</a>
                         </h4>
                         ${variantLabel}
                         <p class="text-gray-600 text-sm mt-1">${formatCurrency(itemPrice, item.currency)}</p>
                         <div class="flex items-center space-x-2 mt-2">
                             <button onclick="updateCartItem(${item.product_id}, ${itemQuantity - 1}, null, ${attributesJson})" class="w-8 h-8 border rounded flex items-center justify-center hover:bg-gray-100 text-sm">-</button>
-                            <span class="w-8 text-center text-sm">${itemQuantity}</span>
+                            <span class="w-8 text-center text-sm font-semibold">${itemQuantity}</span>
                             <button onclick="updateCartItem(${item.product_id}, ${itemQuantity + 1}, null, ${attributesJson})" class="w-8 h-8 border rounded flex items-center justify-center hover:bg-gray-100 text-sm">+</button>
                         </div>
                     </div>
@@ -586,12 +586,12 @@ function updateCartUI() {
                 </div>
                 <!-- Side Cart Inline Remove Confirmation -->
                 <div class="side-cart-remove-confirm-inline flex items-center space-x-4 p-4 bg-gray-50 rounded border border-gray-300 hidden" data-product-id="${item.product_id}">
-                    <a href="product.php?slug=${item.slug}" class="shrink-0">
+                    <a href="product?slug=${item.slug}" class="shrink-0">
                         <img src="${escapeHtml(imageUrl)}" alt="${escapeHtml(item.name)}" class="w-16 h-16 object-cover rounded border border-gray-200" onerror="this.src='data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iODAiIGhlaWdodD0iODAiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+PHJlY3Qgd2lkdGg9IjgwIiBoZWlnaHQ9IjgwIiBmaWxsPSIjRjNGNEY2Ii8+PGNpcmNsZSBjeD0iNDAiIGN5PSI0MCIgcj0iMjAiIGZpbGw9IiM5QjdBOEEiLz48L3N2Zz4='">
                     </a>
                     <div class="flex-1">
                         <h4 class="font-semibold text-sm mb-1 text-gray-800">
-                            <a href="product.php?slug=${item.slug}" class="hover:text-[#1a3d32] transition-colors uppercase">${escapeHtml(item.name)}</a>
+                            <a href="product?slug=${item.slug}" class="hover:text-[#1a3d32] transition-colors uppercase">${escapeHtml(item.name)}</a>
                         </h4>
                         <p class="text-gray-600 text-xs mb-2">Add to wishlist before remove?</p>
                         <div class="flex space-x-2">

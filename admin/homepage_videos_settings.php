@@ -129,7 +129,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $newItem = [
                     'title' => $titles[$i] ?? '',
                     'subtitle' => $subtitles[$i] ?? '',
-                    'link_url' => $links[$i] ?? '',
+                    'link_url' => preg_replace('/\.php(\?|$)/', '$1', $links[$i] ?? ''),
                     'embed_code' => $embed_codes[$i] ?? '',
                     'video_url' => $videoPath ?: ($video_urls[$i] ?? ''),
                     'poster_url' => $posterPath ?: ($poster_urls[$i] ?? ''),
@@ -294,7 +294,7 @@ require_once __DIR__ . '/../includes/admin-header.php';
                         </div>
                         <div class="col-span-2">
                             <label class="block text-xs font-bold mb-1">Link URL (Shop Now)</label>
-                            <input type="text" name="link[]" value="<?php echo htmlspecialchars($v['link_url']); ?>" class="w-full border p-2 rounded text-sm">
+                            <input type="text" name="link[]" value="<?php echo htmlspecialchars($v['link_url']); ?>" class="w-full border p-2 rounded text-sm" placeholder="e.g. /shop">
                         </div>
                     </div>
 
@@ -411,7 +411,7 @@ require_once __DIR__ . '/../includes/admin-header.php';
             </div>
             <div class="col-span-2">
                 <label class="block text-xs font-bold mb-1">Link URL (Shop Now)</label>
-                <input type="text" name="link[]" value="" class="w-full border p-2 rounded text-sm">
+                <input type="text" name="link[]" value="" class="w-full border p-2 rounded text-sm" placeholder="e.g. /shop">
             </div>
         </div>
 

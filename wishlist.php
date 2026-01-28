@@ -83,15 +83,15 @@ require_once __DIR__ . '/includes/header.php';
             <i class="fas fa-heart text-6xl text-gray-300 mb-4"></i>
             <h2 class="text-2xl font-heading font-bold mb-2">Your wishlist is empty</h2>
             <p class="text-gray-600 mb-6">Start adding products you love to your wishlist!</p>
-            <a href="<?php echo $baseUrl; ?>/shop.php" class="inline-block bg-primary text-white px-8 py-3 rounded-lg hover:bg-primary-light hover:text-white transition">
+            <a href="<?php echo $baseUrl; ?>/shop" class="inline-block bg-primary text-white px-8 py-3 rounded-lg hover:bg-primary-light hover:text-white transition">
                 Continue Shopping
             </a>
         </div>
     <?php else: ?>
         <!-- Wishlist Items -->
-        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 mb-16">
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-16">
             <?php foreach ($wishlistItems as $item): ?>
-                <div class="group relative bg-white border border-gray-200 rounded-lg overflow-hidden hover:shadow-lg transition-shadow">
+                <div class="group relative bg-white border border-gray-200 rounded-lg overflow-hidden hover:shadow-lg transition-shadow flex flex-col h-full">
                     <!-- Remove Button -->
                     <button onclick="removeFromWishlist(<?php echo $item['product_id']; ?>)" 
                             class="absolute top-2 md:top-4 right-2 md:right-4 z-10 bg-white rounded-full h-9 w-9 shadow-md hover:bg-black hover:text-white transition"
@@ -100,83 +100,84 @@ require_once __DIR__ . '/includes/header.php';
                     </button>
                     
                     <!-- Product Image -->
-                    <a href="<?php echo url('product.php?slug=' . urlencode($item['slug'] ?? '')); ?>">
-                        <div class="relative overflow-hidden bg-gray-100" style="padding-top: 100%;">
+                    <a href="<?php echo url('product?slug=' . urlencode($item['slug'] ?? '')); ?>">
+                        <div class="relative overflow-hidden bg-gray-50 h-64">
                             <?php 
-                            $imageUrl = $item['image'] ?? '';
-                            if (empty($imageUrl) || $imageUrl === 'null' || $imageUrl === 'undefined') {
-                                $imageUrl = 'data:image/svg+xml;base64,' . base64_encode('<svg width="400" height="400" xmlns="http://www.w3.org/2000/svg"><rect width="400" height="400" fill="#F3F4F6"/><circle cx="200" cy="200" r="60" fill="#9B7A8A"/></svg>');
-                            } elseif (strpos($imageUrl, 'http') !== 0 && strpos($imageUrl, '/') !== 0 && strpos($imageUrl, 'data:') !== 0) {
-                                $imageUrl = $baseUrl . '/assets/images/uploads/' . $imageUrl;
-                            } elseif (strpos($imageUrl, '/') !== 0 && strpos($imageUrl, 'http') !== 0 && strpos($imageUrl, 'data:') !== 0) {
-                                $imageUrl = $baseUrl . $imageUrl;
-                            }
+                            $imageUrl = getImageUrl($item['image'] ?? '');
                             ?>
                             <img src="<?php echo htmlspecialchars($imageUrl); ?>" 
                                  alt="<?php echo htmlspecialchars($item['name'] ?? 'Product'); ?>"
-                                 class="absolute top-0 left-0 w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
+                                 class="w-full h-full object-contain group-hover:scale-110 transition-transform duration-500"
                                  onerror="this.src='data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNDAwIiBoZWlnaHQ9IjQwMCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB3aWR0aD0iNDAwIiBoZWlnaHQ9IjQwMCIgZmlsbD0iI0YzRjRGNiIvPjxjaXJjbGUgY3g9IjIwMCIgY3k9IjIwMCIgcj0iNjAiIGZpbGw9IiM5QjdBOEEiLz48L3N2Zz4='">
                         </div>
                     </a>
                     
                     <!-- Product Info -->
-                    <div class="py-6 px-4">
-                        <h3 class="text-md font-heading font-semibold mb-2">
-                                <a href="<?php echo $baseUrl; ?>/product.php?slug=<?php echo htmlspecialchars($item['slug'] ?? ''); ?>" 
+                    <div class="p-4 flex flex-col flex-1">
+                        <h3 class="text-sm font-semibold text-gray-800 mb-2 h-10 overflow-hidden line-clamp-2">
+                                <a href="<?php echo $baseUrl; ?>/product?slug=<?php echo htmlspecialchars($item['slug'] ?? ''); ?>"  
                                class="hover:text-primary transition">
                                     <?php echo htmlspecialchars($item['name'] ?? 'Product'); ?>
                                 </a>
                         </h3>
                         
                         <!-- Rating -->
-                        <div class="flex items-center mb-3 text-sm">
-                            <?php 
-                            $rating = floatval($item['rating'] ?? 0);
-                            $fullStars = floor($rating);
-                            $hasHalfStar = ($rating - $fullStars) >= 0.5;
-                            for ($i = 0; $i < 5; $i++): 
-                                if ($i < $fullStars): ?>
-                                    <i class="fas fa-star text-yellow-400"></i>
-                                <?php elseif ($i == $fullStars && $hasHalfStar): ?>
-                                    <i class="fas fa-star-half-alt text-yellow-400"></i>
-                                <?php else: ?>
-                                    <i class="far fa-star text-yellow-400"></i>
-                                <?php endif;
-                            endfor; ?>
+                        <div class="flex items-center mb-3">
+                            <div class="flex text-yellow-400">
+                                <?php 
+                                $rating = floor($item['rating'] ?? 5);
+                                for ($i = 0; $i < 5; $i++): 
+                                ?>
+                                <i class="fas fa-star text-xs <?php echo $i < $rating ? '' : 'text-gray-300'; ?>"></i>
+                                <?php endfor; ?>
+                            </div>
                         </div>
                         
-                        <!-- Price -->
-                        <div class="flex items-center justify-between">
-                            <span class="text-md font-bold text-primary">
-                                $<?php echo number_format(floatval($item['price'] ?? 0), 2); ?>
-                            </span>
-                            
-                            <!-- Add to Cart Button -->
-                            <?php
-                            // Get default variant attributes
-                            $variantsData = $product->getVariants($item['product_id']);
-                            $defaultAttributes = [];
-                            if (!empty($variantsData['variants'])) {
-                                $defaultVariant = $variantsData['variants'][0];
-                                foreach ($variantsData['variants'] as $v) {
-                                    if (!empty($v['is_default'])) {
-                                        $defaultVariant = $v;
-                                        break;
-                                    }
-                                }
-                                $defaultAttributes = $defaultVariant['variant_attributes'];
-                            }
-                            $attributesJson = json_encode($defaultAttributes);
+                        <div class="flex items-center gap-2 mb-4 mt-auto">
+                            <?php 
+                            $displayPrice = !empty($item['sale_price']) ? $item['sale_price'] : $item['price'];
+                            $originalPrice = (!empty($item['sale_price']) && $item['sale_price'] < $item['price']) ? $item['price'] : null;
                             ?>
-                            <button onclick='addToCart(<?php echo $item['product_id']; ?>, 1, this, <?php echo htmlspecialchars($attributesJson, ENT_QUOTES, 'UTF-8'); ?>)' 
-                                    class="bg-primary text-white px-4 py-2 rounded-lg hover:bg-primary-light hover:text-white transition text-sm">
-                                <i class="fas fa-shopping-cart mr-2"></i>Add to Cart
-                            </button>
+                            <span class="text-base font-bold <?php echo $originalPrice ? 'text-[#1a3d32]' : 'text-primary'; ?>">
+                                <?php echo format_price($displayPrice, $item['currency'] ?? 'USD'); ?>
+                            </span>
+                            <?php if ($originalPrice): ?>
+                                <span class="text-red-500 font-bold line-through text-xs"><?php echo format_price($originalPrice, $item['currency'] ?? 'USD'); ?></span>
+                            <?php endif; ?>
+                        </div>
+                            
+                        <!-- Add to Cart Button -->
+                        <?php
+                        // Get default variant attributes
+                        $variantsData = $product->getVariants($item['product_id']);
+                        $defaultAttributes = [];
+                        if (!empty($variantsData['variants'])) {
+                            $defaultVariant = $variantsData['variants'][0];
+                            foreach ($variantsData['variants'] as $v) {
+                                if (!empty($v['is_default'])) {
+                                    $defaultVariant = $v;
+                                    break;
+                                }
+                            }
+                            $defaultAttributes = $defaultVariant['variant_attributes'];
+                        }
+                        $attributesJson = json_encode($defaultAttributes);
+                        $isOutOfStock = (($item['stock_status'] ?? 'in_stock') === 'out_of_stock' || (isset($item['stock_quantity']) && $item['stock_quantity'] <= 0));
+                        ?>
+                        <button onclick='addToCart(<?php echo $item['product_id']; ?>, 1, this, <?php echo htmlspecialchars($attributesJson, ENT_QUOTES, 'UTF-8'); ?>)' 
+                                class="w-full bg-[#1a3d32] text-white px-4 py-2.5 rounded hover:bg-black transition text-xs font-bold flex items-center justify-center gap-2 <?php echo $isOutOfStock ? 'opacity-50 cursor-not-allowed' : ''; ?>"
+                                <?php echo $isOutOfStock ? 'disabled' : ''; ?>>
+                            <?php if ($isOutOfStock): ?>
+                                <span><?php echo strtoupper(get_stock_status_text($item['stock_status'] ?? 'in_stock', $item['stock_quantity'] ?? 0)); ?></span>
+                            <?php else: ?>
+                                <i class="fas fa-shopping-cart text-[10px]"></i>
+                                <span>ADD TO CART</span>
+                            <?php endif; ?>
+                        </button>
                         </div>
                     </div>
-                </div>
-            <?php endforeach; ?>
-        </div>
+                <?php endforeach; ?>
+            </div>
     <?php endif; ?>
     
     <!-- Recently Viewed Section -->
@@ -187,7 +188,7 @@ require_once __DIR__ . '/includes/header.php';
                 Explore your recently viewed items, blending quality and style for a refined living experience.
             </p>
             
-            <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-16">
                 <?php foreach ($recentlyViewed as $recentProduct): 
                     $recentImages = json_decode($recentProduct['images'] ?? '[]', true);
                     $recentImage = getProductImage($recentProduct);
@@ -202,7 +203,7 @@ require_once __DIR__ . '/includes/header.php';
                         }
                     }
                 ?>
-                    <div class="group relative bg-white border border-gray-200 rounded-lg overflow-hidden hover:shadow-lg transition-shadow">
+                    <div class="group relative bg-white border border-gray-200 rounded-lg overflow-hidden hover:shadow-lg transition-shadow flex flex-col h-full">
                         <!-- Wishlist Button -->
                         <button onclick="toggleWishlist(<?php echo $recentProduct['id']; ?>, this)" 
                                 class="absolute top-4 right-4 z-10 bg-white rounded-full w-9 h-9 shadow-md hover:bg-black hover:text-white transition <?php echo $isInWishlist ? 'bg-red-500 text-white' : ''; ?>"
@@ -212,42 +213,46 @@ require_once __DIR__ . '/includes/header.php';
                         </button>
                         
                         <!-- Product Image -->
-                        <a href="<?php echo $baseUrl; ?>/product.php?slug=<?php echo htmlspecialchars($recentProduct['slug'] ?? ''); ?>">
-                            <div class="relative overflow-hidden bg-gray-100" style="padding-top: 100%;">
+                        <a href="<?php echo $baseUrl; ?>/product?slug=<?php echo htmlspecialchars($recentProduct['slug'] ?? ''); ?>">
+                            <div class="relative overflow-hidden bg-gray-50 h-64">
                                 <img src="<?php echo htmlspecialchars($recentImage); ?>" 
                                      alt="<?php echo htmlspecialchars($recentProduct['name'] ?? 'Product'); ?>"
-                                     class="absolute top-0 left-0 w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
+                                     class="w-full h-full object-contain group-hover:scale-110 transition-transform duration-500"
                                      onerror="this.src='data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNDAwIiBoZWlnaHQ9IjQwMCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB3aWR0aD0iNDAwIiBoZWlnaHQ9IjQwMCIgZmlsbD0iI0YzRjRGNiIvPjxjaXJjbGUgY3g9IjIwMCIgY3k9IjIwMCIgcj0iNjAiIGZpbGw9IiM5QjdBOEEiLz48L3N2Zz4='">
                             </div>
                         </a>
                         
                         <!-- Product Info -->
-                        <div class="p-4">
-                            <h3 class="text-base font-heading font-semibold mb-2 line-clamp-2">
-                                <a href="<?php echo $baseUrl; ?>/product.php?slug=<?php echo htmlspecialchars($recentProduct['slug'] ?? ''); ?>" 
+                        <div class="p-4 flex flex-col flex-1">
+                            <h3 class="text-sm font-semibold text-gray-800 mb-2 h-10 overflow-hidden line-clamp-2">
+                                <a href="<?php echo $baseUrl; ?>/product?slug=<?php echo htmlspecialchars($recentProduct['slug'] ?? ''); ?>" 
                                    class="hover:text-primary transition">
                                     <?php echo htmlspecialchars($recentProduct['name'] ?? 'Product'); ?>
                                 </a>
                             </h3>
                             
-                            <!-- Rating -->
-                            <div class="flex items-center mb-2">
-                                <?php for ($i = 0; $i < 5; $i++): 
-                                    if ($i < $recentFullStars): ?>
-                                        <i class="fas fa-star text-yellow-400 text-sm"></i>
-                                    <?php elseif ($i == $recentFullStars && $recentHasHalfStar): ?>
-                                        <i class="fas fa-star-half-alt text-yellow-400 text-sm"></i>
-                                    <?php else: ?>
-                                        <i class="far fa-star text-yellow-400 text-sm"></i>
-                                    <?php endif;
-                                endfor; ?>
+                            <div class="flex items-center mb-3">
+                                <div class="flex text-yellow-400">
+                                    <?php 
+                                    $ratingValue = floor($recentProduct['rating'] ?? 5);
+                                    for ($i = 0; $i < 5; $i++): 
+                                    ?>
+                                    <i class="fas fa-star text-xs <?php echo $i < $ratingValue ? '' : 'text-gray-300'; ?>"></i>
+                                    <?php endfor; ?>
+                                </div>
                             </div>
                             
-                            <!-- Price -->
-                            <div class="flex items-center justify-between">
-                                <span class="text-lg font-bold text-primary">
-                                    $<?php echo number_format(floatval($recentProduct['sale_price'] ?? $recentProduct['price'] ?? 0), 2); ?>
+                            <div class="flex items-center gap-2 mt-auto">
+                                <?php 
+                                $rPrice = !empty($recentProduct['sale_price']) ? $recentProduct['sale_price'] : $recentProduct['price'];
+                                $rOrgPrice = (!empty($recentProduct['sale_price']) && $recentProduct['sale_price'] < $recentProduct['price']) ? $recentProduct['price'] : null;
+                                ?>
+                                <span class="text-base font-bold <?php echo $rOrgPrice ? 'text-red-500' : 'text-primary'; ?>">
+                                    <?php echo format_price($rPrice, $recentProduct['currency'] ?? 'USD'); ?>
                                 </span>
+                                <?php if ($rOrgPrice): ?>
+                                <span class="text-gray-400 line-through text-xs"><?php echo format_price($rOrgPrice, $recentProduct['currency'] ?? 'USD'); ?></span>
+                                <?php endif; ?>
                             </div>
                         </div>
                     </div>

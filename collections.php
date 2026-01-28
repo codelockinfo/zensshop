@@ -44,7 +44,7 @@ $categories = $db->fetchAll(
                     // Use inline SVG placeholder to prevent external requests and reload loops
                     $categoryImage = 'data:image/svg+xml;base64,' . base64_encode('<svg width="400" height="500" viewBox="0 0 400 500" xmlns="http://www.w3.org/2000/svg"><rect width="400" height="500" fill="#F3F4F6"/><circle cx="200" cy="200" r="50" fill="#9B7A8A"/><path d="M100 350C100 300 150 250 200 250C250 250 300 300 300 350" fill="#9B7A8A"/></svg>');
                 }
-                $categoryUrl = $baseUrl . '/shop.php?category=' . urlencode($category['slug']);
+                $categoryUrl = $baseUrl . '/shop?category=' . urlencode($category['slug']);
             ?>
             <a href="<?php echo htmlspecialchars($categoryUrl); ?>" class="group">
                 <div class="relative overflow-hidden rounded-xl bg-gray-100 aspect-[3/4]">

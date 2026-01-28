@@ -22,7 +22,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $heading = trim($_POST['heading'] ?? '');
         $content = trim($_POST['content'] ?? '');
         $link_text = trim($_POST['link_text'] ?? '');
-        $link_url = trim($_POST['link_url'] ?? '');
+        $link_url = preg_replace('/\.php(\?|$)/', '$1', trim($_POST['link_url'] ?? ''));
         $text_color = trim($_POST['text_color'] ?? '#eee4d3');
         $active = 1; // Always active since toggle is removed
 
@@ -134,7 +134,7 @@ require_once __DIR__ . '/../includes/admin-header.php';
                 </div>
                 <div>
                     <label class="block text-sm font-bold mb-2">Link URL</label>
-                    <input type="text" name="link_url" value="<?php echo htmlspecialchars($data['link_url'] ?? ''); ?>" class="w-full border p-2 rounded" placeholder="page.php">
+                    <input type="text" name="link_url" value="<?php echo htmlspecialchars($data['link_url'] ?? ''); ?>" class="w-full border p-2 rounded" placeholder="page">
                 </div>
             </div>
 

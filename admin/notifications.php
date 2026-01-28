@@ -176,8 +176,15 @@ unset($_SESSION['success']);
                                     
                                     <!-- Actions -->
                                     <div class="flex items-center gap-2 ml-4">
-                                        <?php if ($notif['link']): ?>
-                                            <a href="<?php echo $baseUrl . $notif['link']; ?>" 
+                                        <?php 
+                                        if ($notif['link']): 
+                                            $finalLink = $notif['link'];
+                                            if ($notif['type'] === 'order' && strpos($finalLink, '/admin/orders/list.php?search=') !== false) {
+                                                $orderNum = explode('search=', $finalLink)[1];
+                                                $finalLink = '/admin/orders/detail.php?order_number=' . $orderNum;
+                                            }
+                                        ?>
+                                            <a href="<?php echo url($finalLink); ?>" 
                                                class="text-blue-600 hover:text-blue-800 text-sm font-medium">
                                                 View
                                             </a>

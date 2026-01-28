@@ -75,7 +75,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     elseif ($action === 'add_menu_item') {
         $menuId = intval($_POST['menu_id']);
         $label = trim($_POST['label']);
-        $url = trim($_POST['url']);
+        $url = preg_replace('/\.php(\?|$)/', '$1', trim($_POST['url']));
         $sortOrder = intval($_POST['sort_order'] ?? 0);
         $parentId = !empty($_POST['parent_id']) ? intval($_POST['parent_id']) : null;
         
@@ -102,7 +102,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $itemId = intval($_POST['item_id']);
         $menuId = intval($_POST['menu_id']);
         $label = trim($_POST['label']);
-        $url = trim($_POST['url']);
+        $url = preg_replace('/\.php(\?|$)/', '$1', trim($_POST['url']));
         $sortOrder = intval($_POST['sort_order'] ?? 0);
         $parentId = !empty($_POST['parent_id']) ? intval($_POST['parent_id']) : null;
         $badgeText = trim($_POST['badge_text'] ?? '');
@@ -169,7 +169,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $cnt = 0;
         foreach ($items as $idx => $item) {
             $lbl = trim($item['label']);
-            $lnk = trim($item['url']);
+            $lnk = preg_replace('/\.php(\?|$)/', '$1', trim($item['url']));
             $badge = trim($item['badge'] ?? '');
             $order = intval($item['order'] ?? 0);
             

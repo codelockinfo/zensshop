@@ -94,11 +94,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
              unset($_SESSION['reset_email']);
              
              $response['success'] = true;
-             $response['redirect'] = url('login.php?message=Password reset successfully. Please login with your new password.');
+             $response['redirect'] = url('login?message=Password reset successfully. Please login with your new password.');
         } else {
             $error = "Session expired. Please start over.";
             $step = 1;
-            $response['redirect'] = url('forgot-password.php');
+            $response['redirect'] = url('forgot-password');
         }
     } else if ($action === 'back') {
          unset($_SESSION['reset_step']);
@@ -222,7 +222,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     </button>
                     
                     <div class="text-center">
-                         <a href="<?php echo url('login.php'); ?>" class="text-sm text-gray-500 hover:text-black hover:underline">Back to Login</a>
+                         <a href="<?php echo url('login'); ?>" class="text-sm text-gray-500 hover:text-black hover:underline">Back to Login</a>
                     </div>
                 </form>
 
@@ -350,7 +350,7 @@ document.addEventListener('DOMContentLoaded', function() {
             formData.append('ajax', '1');
 
             try {
-                const response = await fetch('forgot-password.php', {
+                const response = await fetch('forgot-password', {
                     method: 'POST',
                     body: formData
                 });
