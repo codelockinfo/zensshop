@@ -331,7 +331,7 @@ $_COOKIE['recently_viewed'] = json_encode($recentIds);
                 <!-- Price -->
                 <div class="mb-6">
                     <span id="original-price" class="text-2xl text-gray-400 line-through mr-2 <?php echo !$originalPrice ? 'hidden' : ''; ?>"><?php echo format_price($originalPrice ?: 0, $productData['currency'] ?? 'USD'); ?></span>
-                    <span id="product-price" class="text-2xl font-bold text-gray-900"><?php echo format_price($price, $productData['currency'] ?? 'USD'); ?></span>
+                    <span id="product-price" class="text-2xl font-bold text-[#1a3d32]"><?php echo format_price($price, $productData['currency'] ?? 'USD'); ?></span>
                 </div>
                 
                 <!-- Description with Read More -->
