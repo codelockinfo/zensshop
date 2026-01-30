@@ -15,10 +15,11 @@ class Discount {
     /**
      * Get discount by code
      */
-    public function getByCode($code) {
+    public function getByCode($code, $storeId = null) {
+        if (!$storeId) $storeId = $_SESSION['store_id'] ?? null;
         return $this->db->fetchOne(
-            "SELECT * FROM discounts WHERE code = ? AND status = 'active'",
-            [$code]
+            "SELECT * FROM discounts WHERE code = ? AND status = 'active' AND store_id = ?",
+            [$code, $storeId]
         );
     }
     

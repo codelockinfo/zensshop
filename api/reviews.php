@@ -49,11 +49,22 @@ try {
                 exit;
             }
             
+            // Determine Store ID
+            $storeId = $_SESSION['store_id'] ?? null;
+            if (!$storeId && isset($_SESSION['user_email'])) {
+                 $storeUser = $db->fetchOne("SELECT store_id FROM users WHERE email = ?", [$_SESSION['user_email']]);
+                 $storeId = $storeUser['store_id'] ?? null;
+            }
+            if (!$storeId) {
+                 $storeUser = $db->fetchOne("SELECT store_id FROM users WHERE store_id IS NOT NULL LIMIT 1");
+                 $storeId = $storeUser['store_id'] ?? null;
+            }
+
             // Insert review
             $reviewId = $db->insert(
-                "INSERT INTO reviews (product_id, user_name, user_email, rating, title, comment, status) 
-                 VALUES (?, ?, ?, ?, ?, ?, 'approved')",
-                [$productId, $userName, $userEmail, $rating, $title, $comment]
+                "INSERT INTO reviews (product_id, user_name, user_email, rating, title, comment, status, store_id) 
+                 VALUES (?, ?, ?, ?, ?, ?, 'approved', ?)",
+                [$productId, $userName, $userEmail, $rating, $title, $comment, $storeId]
             );
             
             // Update product rating and review count

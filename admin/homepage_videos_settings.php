@@ -16,8 +16,15 @@ $success = $_SESSION['flash_success'] ?? '';
 $error = $_SESSION['flash_error'] ?? '';
 unset($_SESSION['flash_success'], $_SESSION['flash_error']);
 
+// --- Store ID Filtering ---
+$storeId = $_SESSION['store_id'] ?? null;
+if (!$storeId && isset($_SESSION['user_email'])) {
+     $storeUser = $db->fetchOne("SELECT store_id FROM users WHERE email = ?", [$_SESSION['user_email']]);
+     $storeId = $storeUser['store_id'] ?? null;
+}
+
 // Fetch Current Settings
-$videosData = $db->fetchAll("SELECT * FROM section_videos ORDER BY sort_order ASC");
+$videosData = $db->fetchAll("SELECT * FROM section_videos WHERE store_id = ? ORDER BY sort_order ASC", [$storeId]);
 
 // Handle POST
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
@@ -35,11 +42,16 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $subheading = $_POST['subheading'] ?? '';
             
             // Update ALL rows in section_videos (denormalized section settings)
-            $exists = $db->fetchOne("SELECT id FROM section_videos LIMIT 1");
+            $storeId = $_SESSION['store_id'] ?? null;
+            if (!$storeId && isset($_SESSION['user_email'])) {
+     $storeUser = $db->fetchOne("SELECT store_id FROM users WHERE email = ?", [$_SESSION['user_email']]);
+     $storeId = $storeUser['store_id'] ?? null;
+}
+            $exists = $db->fetchOne("SELECT id FROM section_videos WHERE store_id = ? LIMIT 1", [$storeId]);
             
             if ($exists) {
                 // Update all entries so they all carry the same section metadata
-                $db->execute("UPDATE section_videos SET heading = ?, subheading = ?", [$heading, $subheading]);
+                $db->execute("UPDATE section_videos SET heading = ?, subheading = ? WHERE store_id = ?", [$heading, $subheading, $storeId]);
             } else {
                 // If no videos, insert a placeholder to save the settings
                 // We'll mark it with a specific flag or just rely on title checks later if needed
@@ -47,7 +59,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 // Best approach: Insert a dummy row with title 'Placeholder' that is hidden in frontend or handled.
                 // However, without a 'status' column, it might show up.
                 // Let's assume user accepts this limitation of "ALTER existing table" means usage of rows.
-                $db->execute("INSERT INTO section_videos (title, sort_order, heading, subheading) VALUES ('Placeholder', 999, ?, ?)", [$heading, $subheading]);
+                // Determine Store ID
+                $storeId = $_SESSION['store_id'] ?? null;
+                if (!$storeId && isset($_SESSION['user_email'])) {
+                     $storeUser = $db->fetchOne("SELECT store_id FROM users WHERE email = ?", [$_SESSION['user_email']]);
+                     $storeId = $storeUser['store_id'] ?? null;
+                }
+                $db->execute("INSERT INTO section_videos (title, sort_order, heading, subheading, store_id) VALUES ('Placeholder', 999, ?, ?, ?)", [$heading, $subheading, $storeId]);
             }
             
             $_SESSION['flash_success'] = "Section settings updated successfully!";
@@ -63,7 +81,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             // ... (rest of normal save logic) ...
             
             // Capture existing heading/subheading to re-apply to new rows
-            $currentSettings = $db->fetchOne("SELECT heading, subheading FROM section_videos LIMIT 1");
+            $storeId = $_SESSION['store_id'] ?? null;
+            if (!$storeId && isset($_SESSION['user_email'])) {
+     $storeUser = $db->fetchOne("SELECT store_id FROM users WHERE email = ?", [$_SESSION['user_email']]);
+     $storeId = $storeUser['store_id'] ?? null;
+}
+            $currentSettings = $db->fetchOne("SELECT heading, subheading FROM section_videos WHERE store_id = ? LIMIT 1", [$storeId]);
             $h = $currentSettings['heading'] ?? 'Video Reels';
             $s = $currentSettings['subheading'] ?? 'Watch our latest stories';
 
@@ -139,14 +162,26 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $newRows[] = $newItem;
             }
             
-            // Transaction: Replace All
+            // Transaction: Replace All for this store
             $db->beginTransaction(); 
-            $db->execute("DELETE FROM section_videos");
+            $storeId = $_SESSION['store_id'] ?? null;
+            if (!$storeId && isset($_SESSION['user_email'])) {
+     $storeUser = $db->fetchOne("SELECT store_id FROM users WHERE email = ?", [$_SESSION['user_email']]);
+     $storeId = $storeUser['store_id'] ?? null;
+}
+            $db->execute("DELETE FROM section_videos WHERE store_id = ?", [$storeId]);
             
             foreach ($newRows as $row) {
+                // Determine Store ID
+                $storeId = $_SESSION['store_id'] ?? null;
+                if (!$storeId && isset($_SESSION['user_email'])) {
+                     $storeUser = $db->fetchOne("SELECT store_id FROM users WHERE email = ?", [$_SESSION['user_email']]);
+                     $storeId = $storeUser['store_id'] ?? null;
+                }
+
                 // Incorporating the section heading/subheading into each row
-                $sql = "INSERT INTO section_videos (title, subtitle, video_url, poster_url, link_url, embed_code, sort_order, heading, subheading) 
-                        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)";
+                $sql = "INSERT INTO section_videos (title, subtitle, video_url, poster_url, link_url, embed_code, sort_order, heading, subheading, store_id) 
+                        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
                 $db->execute($sql, [
                     $row['title'],
                     $row['subtitle'],
@@ -156,7 +191,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     $row['embed_code'],
                     $row['sort_order'],
                     $h, // Apply section heading to all rows
-                    $s  // Apply section subheading to all rows
+                    $s,  // Apply section subheading to all rows
+                    $storeId
                 ]);
             }
             $db->commit();
@@ -222,9 +258,13 @@ require_once __DIR__ . '/../includes/admin-header.php';
         </div>
     <?php endif; ?>
 
-    <?php
-    // Fetch Section Settings from the first row of section_videos
-    $sectionSettings = $db->fetchOne("SELECT heading, subheading FROM section_videos LIMIT 1");
+    // Fetch Section Settings from the first row of section_videos for this store
+    $storeId = $_SESSION['store_id'] ?? null;
+    if (!$storeId && isset($_SESSION['user_email'])) {
+         $storeUser = $db->fetchOne("SELECT store_id FROM users WHERE email = ?", [$_SESSION['user_email']]);
+         $storeId = $storeUser['store_id'] ?? null;
+    }
+    $sectionSettings = $db->fetchOne("SELECT heading, subheading FROM section_videos WHERE store_id = ? LIMIT 1", [$storeId]);
     if (!$sectionSettings) {
         $sectionSettings = ['heading' => 'Video Reels', 'subheading' => 'Watch our latest stories.'];
     }

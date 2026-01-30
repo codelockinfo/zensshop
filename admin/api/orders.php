@@ -15,18 +15,26 @@ $input = json_decode(file_get_contents('php://input'), true);
 
 $order = new Order();
 
+// Determine Store ID
+$storeId = $_SESSION['store_id'] ?? null;
+if (!$storeId && isset($_SESSION['user_email'])) {
+     $storeUser = Database::getInstance()->fetchOne("SELECT store_id FROM users WHERE email = ?", [$_SESSION['user_email']]);
+     $storeId = $storeUser['store_id'] ?? null;
+}
+
 try {
     switch ($method) {
         case 'GET':
             $id = $_GET['id'] ?? null;
             if ($id) {
-                $item = $order->getById($id);
+                $item = $order->getById($id, $storeId);
                 echo json_encode(['success' => true, 'order' => $item]);
             } else {
                 $filters = [
                     'order_status' => $_GET['status'] ?? null,
                     'payment_status' => $_GET['payment'] ?? null,
-                    'search' => $_GET['search'] ?? null
+                    'search' => $_GET['search'] ?? null,
+                    'store_id' => $storeId
                 ];
                 $orders = $order->getAll($filters);
                 echo json_encode(['success' => true, 'orders' => $orders]);
@@ -40,13 +48,13 @@ try {
             }
             
             if (isset($input['order_status'])) {
-                $order->updateStatus($id, $input['order_status']);
+                $order->updateStatus($id, $input['order_status'], $storeId);
             }
             if (isset($input['payment_status'])) {
-                $order->updatePaymentStatus($id, $input['payment_status']);
+                $order->updatePaymentStatus($id, $input['payment_status'], $storeId);
             }
             if (isset($input['tracking_number'])) {
-                $order->updateTracking($id, $input['tracking_number']);
+                $order->updateTracking($id, $input['tracking_number'], $storeId);
             }
             
             echo json_encode(['success' => true, 'message' => 'Order updated successfully']);

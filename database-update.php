@@ -116,9 +116,98 @@ function columnExists($db, $table, $column) {
 executeSql($db, "SET FOREIGN_KEY_CHECKS = 0", "Disable foreign key checks", $errors, $success, $EXECUTE);
 
 // ==========================================
-// STEP 1: Add variant_attributes columns
+// STEP 1: Setup Store ID Foundation (Users)
 // ==========================================
-echo "STEP 1: Adding/Checking variant_attributes columns\n";
+echo "STEP 1: Setup Store ID Foundation\n";
+echo "---------------------------------\n";
+
+if (!columnExists($db, 'users', 'store_id')) {
+    executeSql($db, "ALTER TABLE users ADD COLUMN store_id VARCHAR(50) DEFAULT NULL AFTER id", "Add store_id to users", $errors, $success, $EXECUTE);
+}
+
+$masterStoreId = null;
+
+if ($EXECUTE) {
+    try {
+        // 1. Generate IDs for users who don't have one
+        $usersWithoutStoreId = $db->fetchAll("SELECT id FROM users WHERE store_id IS NULL OR store_id = ''");
+        if (!empty($usersWithoutStoreId)) {
+            echo "Generating Store IDs for " . count($usersWithoutStoreId) . " users...\n";
+            foreach ($usersWithoutStoreId as $user) {
+                // Generate unique Store ID
+                $genStoreId = 'STORE-' . strtoupper(substr(md5(uniqid(mt_rand(), true)), 0, 8));
+                $db->execute("UPDATE users SET store_id = ? WHERE id = ?", [$genStoreId, $user['id']]);
+                echo "  - Generated Store ID for User #{$user['id']}: $genStoreId\n";
+            }
+            $success[] = "Populated Store IDs for existing users";
+        }
+        
+        // 2. Get Master Store ID (use first valid one)
+        $user = $db->fetchOne("SELECT store_id FROM users WHERE store_id IS NOT NULL AND store_id != '' LIMIT 1");
+        if ($user && !empty($user['store_id'])) {
+            $masterStoreId = $user['store_id'];
+            echo "✅ MASTER STORE ID: $masterStoreId\n\n";
+        } else {
+             // Fallback if no users exist?
+             $masterStoreId = 'STORE-DEFAULT'; 
+             echo "⚠️ No users found. Using fallback Master Store ID: $masterStoreId\n\n";
+        }
+        
+    } catch (Exception $e) {
+        $errors[] = "Store ID Setup Error: " . $e->getMessage();
+        echo "Status: ❌ ERROR - " . $e->getMessage() . "\n\n";
+    }
+}
+
+// ==========================================
+// STEP 2: Propagate Store ID to All Tables
+// ==========================================
+echo "STEP 2: Propagating Store ID to All Tables\n";
+echo "------------------------------------------\n";
+
+if ($EXECUTE && $masterStoreId) {
+    try {
+        $tablesResult = $db->fetchAll("SHOW TABLES");
+        foreach ($tablesResult as $row) {
+            $tableName = current($row);
+            
+            if ($tableName === 'users') continue; // Already handled
+            
+            // Add column if missing
+            if (!columnExists($db, $tableName, 'store_id')) {
+                // Try to add after 'id' if possible
+                $afterSql = columnExists($db, $tableName, 'id') ? "AFTER id" : "";
+                executeSql($db, "ALTER TABLE `$tableName` ADD COLUMN store_id VARCHAR(50) DEFAULT NULL $afterSql", "Add store_id to $tableName", $errors, $success, $EXECUTE);
+            }
+            
+            // Add Index if missing
+            try {
+                $idxCheck = $db->fetchOne("SHOW INDEX FROM `$tableName` WHERE Key_name = 'idx_store_id'");
+                if (!$idxCheck) {
+                     executeSql($db, "CREATE INDEX idx_store_id ON `$tableName` (store_id)", "Add Index idx_store_id to $tableName", $errors, $success, $EXECUTE);
+                }
+            } catch(Exception $ex) {}
+            
+            // Backfill data
+            // Only update if table has rows
+            $count = $db->fetchOne("SELECT COUNT(*) as c FROM `$tableName`")['c'];
+            if ($count > 0) {
+                 $db->execute("UPDATE `$tableName` SET store_id = ? WHERE store_id IS NULL OR store_id = ''", [$masterStoreId]);
+            }
+        }
+        $success[] = "Propagated Store ID to all tables";
+    } catch (Exception $e) {
+        $errors[] = "Store ID Propagation Error: " . $e->getMessage();
+        echo "Status: ❌ ERROR - " . $e->getMessage() . "\n\n";
+    }
+} else {
+    echo "Skipped (dry-run or no master/store id)\n\n";
+}
+
+// ==========================================
+// STEP 3: Add variant_attributes columns
+// ==========================================
+echo "STEP 3: Adding/Checking variant_attributes columns\n";
 echo "------------------------------------------------\n";
 
 if (!columnExists($db, 'cart', 'variant_attributes')) {
@@ -129,9 +218,9 @@ if (!columnExists($db, 'order_items', 'variant_attributes')) {
 }
 
 // ==========================================
-// STEP 2: Drop Old Incorrect Foreign Keys
+// STEP 4: Drop Old Incorrect Foreign Keys
 // ==========================================
-echo "STEP 2: Dropping Old Foreign Keys (if they exist)\n";
+echo "STEP 4: Dropping Old Foreign Keys (if they exist)\n";
 echo "-------------------------------------------------\n";
 
 // Cart Table - Drop known old keys (cart_ibfk_2 usually points to products.id)
@@ -154,9 +243,9 @@ dropForeignKeyIfExists($db, 'order_items', 'order_items_ibfk_2', $errors, $succe
 dropForeignKeyIfExists($db, 'order_items', 'fk_order_items_product_id', $errors, $success, $EXECUTE); // For idempotency
 
 // ==========================================
-// STEP 3: Update Column Types (BIGINT)
+// STEP 5: Update Column Types (BIGINT)
 // ==========================================
-echo "STEP 3: Updating IDs to BIGINT\n";
+echo "STEP 5: Updating IDs to BIGINT\n";
 echo "------------------------------\n";
 
 $tablesToUpdate = [
@@ -187,9 +276,9 @@ executeSql($db, "ALTER TABLE cart ADD INDEX IF NOT EXISTS idx_cart_user (user_id
 executeSql($db, "ALTER TABLE wishlist ADD INDEX IF NOT EXISTS idx_wishlist_user (user_id)", "Add index to wishlist.user_id", $errors, $success, $EXECUTE);
 
 // ==========================================
-// STEP 4: Re-Add Correct Foreign Keys
+// STEP 6: Re-Add Correct Foreign Keys
 // ==========================================
-echo "STEP 4: Adding Correct Foreign Keys\n";
+echo "STEP 6: Adding Correct Foreign Keys\n";
 echo "-----------------------------------\n";
 
 // Cart: Product FK -> products(product_id)
@@ -246,9 +335,9 @@ executeSql(
 executeSql($db, "SET FOREIGN_KEY_CHECKS = 1", "Re-enable foreign key checks", $errors, $success, $EXECUTE);
 
 // ==========================================
-// STEP 5: Data Migration
+// STEP 7: Data Migration
 // ==========================================
-echo "STEP 5: Data Migration (Old IDs -> New IDs)\n";
+echo "STEP 7: Data Migration (Old IDs -> New IDs)\n";
 echo "-------------------------------------------\n";
 
 if ($EXECUTE) {
@@ -291,9 +380,9 @@ if ($EXECUTE) {
 }
 
 // ==========================================
-// STEP 6: Add Highlights and Policies
+// STEP 8: Add Highlights and Policies
 // ==========================================
-echo "STEP 6: Adding Product Highlights and Policies\n";
+echo "STEP 8: Adding Product Highlights and Policies\n";
 echo "----------------------------------------------\n";
 
 if (!columnExists($db, 'products', 'highlights')) {
@@ -307,9 +396,9 @@ if (!columnExists($db, 'products', 'return_policy')) {
 }
 
 // ==========================================
-// STEP 7: Add Razorpay & Delivery Columns to Orders
+// STEP 9: Add Razorpay & Delivery Columns to Orders
 // ==========================================
-echo "STEP 7: Adding Razorpay & Delivery Columns\n";
+echo "STEP 9: Adding Razorpay & Delivery Columns\n";
 echo "------------------------------------------\n";
 
 if (!columnExists($db, 'orders', 'razorpay_payment_id')) {
@@ -323,9 +412,9 @@ if (!columnExists($db, 'orders', 'delivery_date')) {
 }
 
 // ==========================================
-// STEP 8: Seed Brands into site_settings
+// STEP 10: Seed Brands into site_settings
 // ==========================================
-echo "STEP 8: Seeding Brands into site_settings\n";
+echo "STEP 10: Seeding Brands into site_settings\n";
 echo "----------------------------------------\n";
 
 if ($EXECUTE) {
@@ -333,7 +422,10 @@ if ($EXECUTE) {
         $brandsExist = $db->fetchOne("SELECT setting_key FROM site_settings WHERE setting_key = 'Brands'");
         if (!$brandsExist) {
             $initialBrands = json_encode(['Milano', 'Luxury', 'Premium']);
-            $db->execute("INSERT INTO site_settings (setting_key, setting_value) VALUES ('Brands', ?)", [$initialBrands]);
+            $db->execute(
+                "INSERT INTO site_settings (setting_key, setting_value, store_id) VALUES ('Brands', ?, ?)", 
+                [$initialBrands, $masterStoreId ?: 'STORE-DEFAULT']
+            );
             $success[] = "Seeded Brands into site_settings";
             echo "Status: ✅ SEEDED\n\n";
         } else {
@@ -348,9 +440,9 @@ if ($EXECUTE) {
 }
 
 // ==========================================
-// STEP 9: Add OtherPlatform column to Landing Pages
+// STEP 11: Add OtherPlatform column to Landing Pages
 // ==========================================
-echo "STEP 9: Adding Other_platform column to landing_pages\n";
+echo "STEP 11: Adding Other_platform column to landing_pages\n";
 echo "--------------------------------------------------\n";
 
 if (!columnExists($db, 'landing_pages', 'Other_platform')) {
@@ -361,9 +453,9 @@ if (!columnExists($db, 'landing_pages', 'show_other_platforms')) {
 }
 
 // ==========================================
-// STEP 10: Consolidated Section Data (10 Groups)
+// STEP 12: Consolidated Section Data (10 Groups)
 // ==========================================
-echo "STEP 10: Adding 10 Grouped JSON columns for sections\n";
+echo "STEP 12: Adding 10 Grouped JSON columns for sections\n";
 echo "------------------------------------------------\n";
 
 $jsonColumns = [
@@ -388,9 +480,9 @@ foreach ($jsonColumns as $col => $def) {
 }
 
 // ==========================================
-// STEP 11: Drop Legacy Columns (Production Cleanup)
+// STEP 13: Drop Legacy Columns (Production Cleanup)
 // ==========================================
-echo "STEP 11: Dropping legacy columns from landing_pages\n";
+echo "STEP 13: Dropping legacy columns from landing_pages\n";
 echo "--------------------------------------------------\n";
 
 $legacyColumns = [
@@ -415,9 +507,9 @@ foreach ($legacyColumns as $col) {
     }
 }
 // ==========================================
-// STEP 12: Modernize Product Links in Landing Pages
+// STEP 14: Modernize Product Links in Landing Pages
 // ==========================================
-echo "STEP 12: Modernizing product links in landing_pages\n";
+echo "STEP 14: Modernizing product links in landing_pages\n";
 echo "--------------------------------------------------\n";
 
 if (columnExists($db, 'landing_pages', 'product_id')) {
@@ -430,9 +522,9 @@ if (columnExists($db, 'landing_pages', 'product_id')) {
 }
 
 // ==========================================
-// STEP 13: Increase Column Sizes for Large Payloads
+// STEP 15: Increase Column Sizes for Large Payloads
 // ==========================================
-echo "STEP 13: Increasing Column Sizes for Large Payloads\n";
+echo "STEP 15: Increasing Column Sizes for Large Payloads\n";
 echo "--------------------------------------------------\n";
 
 executeSql($db, "ALTER TABLE products MODIFY COLUMN images MEDIUMTEXT", "Upgrade products.images to MEDIUMTEXT", $errors, $success, $EXECUTE);
@@ -440,9 +532,9 @@ executeSql($db, "ALTER TABLE product_variants MODIFY COLUMN variant_attributes M
 
 
 // ==========================================
-// STEP 14: Customer ID Modernization (10-digit)
+// STEP 16: Customer ID Modernization (10-digit)
 // ==========================================
-echo "STEP 14: Modernizing Customer IDs to 10-digit format\n";
+echo "STEP 16: Modernizing Customer IDs to 10-digit format\n";
 echo "---------------------------------------------------\n";
 
 if (!columnExists($db, 'customers', 'customer_id')) {
@@ -518,9 +610,9 @@ if ($EXECUTE) {
 }
 
 // ==========================================
-// STEP 15: Migrate Order Items to use Order Number
+// STEP 17: Migrate Order Items to use Order Number
 // ==========================================
-echo "STEP 15: Migrating order_items schema (order_id -> order_num)\n";
+echo "STEP 17: Migrating order_items schema (order_id -> order_num)\n";
 echo "---------------------------------------------------\n";
 
 if ($EXECUTE) {
@@ -578,9 +670,9 @@ if ($EXECUTE) {
 }
 
 // ==========================================
-// STEP 16: Stock Management Refinements
+// STEP 18: Stock Management Refinements
 // ==========================================
-echo "STEP 16: Adding total_sales and oversold_quantity\n";
+echo "STEP 18: Adding total_sales and oversold_quantity\n";
 echo "---------------------------------------------------\n";
 
 if (!columnExists($db, 'products', 'total_sales')) {
@@ -614,9 +706,9 @@ if (!columnExists($db, 'products', 'total_expense')) {
 }
 
 // ==========================================
-// STEP 17: Notification Link Migration
+// STEP 19: Notification Link Migration
 // ==========================================
-echo "STEP 17: Migrating notification links (list -> detail)\n";
+echo "STEP 19: Migrating notification links (list -> detail)\n";
 echo "---------------------------------------------------\n";
 
 if ($EXECUTE) {
@@ -630,15 +722,86 @@ if ($EXECUTE) {
 }
 
 // ==========================================
-// STEP 18: Remove Gender Column
+// STEP 20: Remove Gender Column
 // ==========================================
-echo "STEP 18: Removing gender column from products\n";
+echo "STEP 20: Removing gender column from products\n";
 echo "---------------------------------------------------\n";
 
 if (columnExists($db, 'products', 'gender')) {
     executeSql($db, "ALTER TABLE products DROP COLUMN gender", "Drop gender column from products", $errors, $success, $EXECUTE);
 } else {
     echo "Status: ⏭️  SKIPPED (column doesn't exist)\n\n";
+}
+
+// ==========================================
+// STEP 21: Specific Section & Category Enhancements
+// ==========================================
+echo "STEP 21: Specific Section & Category Enhancements\n";
+echo "---------------------------------------------------\n";
+
+if (!columnExists($db, 'categories', 'icon')) {
+    executeSql($db, "ALTER TABLE categories ADD COLUMN icon VARCHAR(50) DEFAULT NULL AFTER banner", "Add icon to categories", $errors, $success, $EXECUTE);
+}
+
+if (!columnExists($db, 'special_offers', 'heading')) {
+    executeSql($db, "ALTER TABLE special_offers ADD COLUMN heading VARCHAR(255) DEFAULT NULL AFTER store_id", "Add heading to special_offers", $errors, $success, $EXECUTE);
+}
+if (!columnExists($db, 'special_offers', 'subheading')) {
+    executeSql($db, "ALTER TABLE special_offers ADD COLUMN subheading TEXT DEFAULT NULL AFTER heading", "Add subheading to special_offers", $errors, $success, $EXECUTE);
+}
+
+if (!columnExists($db, 'section_videos', 'heading')) {
+    executeSql($db, "ALTER TABLE section_videos ADD COLUMN heading VARCHAR(255) DEFAULT NULL AFTER store_id", "Add heading to section_videos", $errors, $success, $EXECUTE);
+}
+if (!columnExists($db, 'section_videos', 'subheading')) {
+    executeSql($db, "ALTER TABLE section_videos ADD COLUMN subheading TEXT DEFAULT NULL AFTER heading", "Add subheading to section_videos", $errors, $success, $EXECUTE);
+}
+
+// Ensure section_newsletter has heading/subheading too if not present
+if (!columnExists($db, 'section_newsletter', 'heading')) {
+    executeSql($db, "ALTER TABLE section_newsletter ADD COLUMN heading VARCHAR(255) DEFAULT NULL AFTER store_id", "Add heading to section_newsletter", $errors, $success, $EXECUTE);
+}
+if (!columnExists($db, 'section_newsletter', 'subheading')) {
+    executeSql($db, "ALTER TABLE section_newsletter ADD COLUMN subheading TEXT DEFAULT NULL AFTER heading", "Add subheading to section_newsletter", $errors, $success, $EXECUTE);
+}
+
+
+// ==========================================
+// STEP 22: Create Pages Table
+// ==========================================
+echo "STEP 22: Creating Pages Table (JSON Content)\n";
+echo "---------------------------------------------------\n";
+
+// Check if table exists properly
+$tableExists = false;
+try {
+    $db->fetchOne("SELECT 1 FROM pages LIMIT 1");
+    $tableExists = true;
+} catch (Exception $e) {
+    // Table likely doesn't exist
+}
+
+if (!$tableExists) {
+    $sql = "CREATE TABLE IF NOT EXISTS pages (
+        id INT AUTO_INCREMENT PRIMARY KEY,
+        store_id VARCHAR(50) NOT NULL,
+        title VARCHAR(255) NOT NULL,
+        slug VARCHAR(255) NOT NULL,
+        content JSON DEFAULT NULL COMMENT 'Stores HTML body, banner settings, SEO, etc. as JSON',
+        status ENUM('active', 'inactive') DEFAULT 'active',
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+        INDEX idx_store (store_id),
+        UNIQUE KEY idx_slug_store (slug, store_id)
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci";
+    
+    executeSql($db, $sql, "Create pages table", $errors, $success, $EXECUTE);
+} else {
+    echo "Status: ⏭️  SKIPPED (table already exists)\n\n";
+    // Migration logic if needed
+    if (columnExists($db, 'pages', 'banner_image')) {
+         echo "Detected old schema columns. Use a drop/recreate manually if needed.\n";
+    }
 }
 
 echo "\n========================================\n";

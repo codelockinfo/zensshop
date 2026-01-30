@@ -12,7 +12,7 @@ require_once __DIR__ . '/includes/header.php';
 <section id="hero-section" class="relative overflow-hidden">
 <?php
 // Fetch banners from database
-$banners = $db->fetchAll("SELECT * FROM banners WHERE active = 1 ORDER BY display_order ASC");
+$banners = $db->fetchAll("SELECT * FROM banners WHERE active = 1 AND store_id = ? ORDER BY display_order ASC", [$storeId]);
 
 // Fallback to default banners if none exist
 if (empty($banners)) {
@@ -147,6 +147,7 @@ document.addEventListener('DOMContentLoaded', function() {
     const prevBtn = document.querySelector('.hero-prev');
     const nextBtn = document.querySelector('.hero-next');
     const indicators = document.querySelectorAll('.hero-indicator');
+    const sliderContainer = document.querySelector('.hero-slider');
     
     if (slides.length === 0) return;
     
@@ -186,11 +187,12 @@ document.addEventListener('DOMContentLoaded', function() {
     }
     
     function startAutoSlide() {
+        stopAutoSlide(); // Ensure no duplicates
         slideInterval = setInterval(nextSlide, 5000); // Change slide every 5 seconds
     }
     
     function stopAutoSlide() {
-        clearInterval(slideInterval);
+        if(slideInterval) clearInterval(slideInterval);
     }
     
     // Event listeners
@@ -223,6 +225,81 @@ document.addEventListener('DOMContentLoaded', function() {
     if (heroSection) {
         heroSection.addEventListener('mouseenter', stopAutoSlide);
         heroSection.addEventListener('mouseleave', startAutoSlide);
+    }
+
+    // Keyboard Navigation
+    document.addEventListener('keydown', function(e) {
+        if (e.key === 'ArrowLeft') {
+            stopAutoSlide();
+            prevSlide();
+            startAutoSlide();
+        }
+        if (e.key === 'ArrowRight') {
+            stopAutoSlide();
+            nextSlide();
+            startAutoSlide();
+        }
+    });
+
+    // Swipe and Drag Logic
+    if (sliderContainer) {
+        let touchStartX = 0;
+        let touchEndX = 0;
+        let isDragging = false;
+
+        // Touch Events (Mobile)
+        sliderContainer.addEventListener('touchstart', e => {
+            touchStartX = e.changedTouches[0].screenX;
+            stopAutoSlide();
+        }, {passive: true});
+
+        sliderContainer.addEventListener('touchend', e => {
+            touchEndX = e.changedTouches[0].screenX;
+            handleSwipe();
+            startAutoSlide();
+        }, {passive: true});
+
+        // Mouse Events (Desktop)
+        sliderContainer.addEventListener('mousedown', e => {
+            isDragging = true;
+            touchStartX = e.clientX;
+            stopAutoSlide();
+            sliderContainer.style.cursor = 'grabbing';
+            // Prevent text selection during drag
+            e.preventDefault();
+        });
+
+        sliderContainer.addEventListener('mousemove', e => {
+            if (!isDragging) return;
+            // Optional: You could add logic here to visually drag the slide
+        });
+
+        sliderContainer.addEventListener('mouseup', e => {
+            if (!isDragging) return;
+            isDragging = false;
+            touchEndX = e.clientX;
+            handleSwipe();
+            startAutoSlide();
+            sliderContainer.style.cursor = 'default';
+        });
+
+        sliderContainer.addEventListener('mouseleave', e => {
+            if (isDragging) {
+                isDragging = false;
+                startAutoSlide();
+                sliderContainer.style.cursor = 'default';
+            }
+        });
+
+        function handleSwipe() {
+            const threshold = 50; // Minimum distance for swipe
+            if (touchEndX < touchStartX - threshold) {
+                nextSlide(); // Swiped Left -> Next
+            }
+            if (touchEndX > touchStartX + threshold) {
+                prevSlide(); // Swiped Right -> Prev
+            }
+        }
     }
     
     // Initialize

@@ -38,15 +38,29 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             }
         }
 
+        // Determine Store ID
+        $storeId = $_SESSION['store_id'] ?? null;
+        if (!$storeId && isset($_SESSION['user_email'])) {
+             $storeUser = $db->fetchOne("SELECT store_id FROM users WHERE email = ?", [$_SESSION['user_email']]);
+             $storeId = $storeUser['store_id'] ?? null;
+        }
+
         // Ensure we always have one row
-        $check = $db->fetchOne("SELECT id FROM section_newsletter LIMIT 1");
+        $check = $db->fetchOne("SELECT id FROM section_newsletter WHERE store_id = ? LIMIT 1", [$storeId]);
         
         if ($check) {
             $sql = "UPDATE section_newsletter SET heading = ?, subheading = ?, button_text = ?, footer_content = ?, background_image = ? WHERE id = ?";
             $db->execute($sql, [$heading, $subheading, $button_text, $footer_content, $background_image, $check['id']]);
         } else {
-            $sql = "INSERT INTO section_newsletter (heading, subheading, button_text, footer_content, background_image) VALUES (?, ?, ?, ?, ?)";
-            $db->execute($sql, [$heading, $subheading, $button_text, $footer_content, $background_image]);
+            // Determine Store ID
+            $storeId = $_SESSION['store_id'] ?? null;
+            if (!$storeId && isset($_SESSION['user_email'])) {
+                 $storeUser = $db->fetchOne("SELECT store_id FROM users WHERE email = ?", [$_SESSION['user_email']]);
+                 $storeId = $storeUser['store_id'] ?? null;
+            }
+
+            $sql = "INSERT INTO section_newsletter (heading, subheading, button_text, footer_content, background_image, store_id) VALUES (?, ?, ?, ?, ?, ?)";
+            $db->execute($sql, [$heading, $subheading, $button_text, $footer_content, $background_image, $storeId]);
         }
 
         $_SESSION['flash_success'] = "Newsletter section updated successfully!";
@@ -59,7 +73,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 }
 
 // Fetch Data
-$data = $db->fetchOne("SELECT * FROM section_newsletter LIMIT 1");
+$storeId = $_SESSION['store_id'] ?? null;
+if (!$storeId && isset($_SESSION['user_email'])) {
+     $storeUser = $db->fetchOne("SELECT store_id FROM users WHERE email = ?", [$_SESSION['user_email']]);
+     $storeId = $storeUser['store_id'] ?? null;
+}
+$data = $db->fetchOne("SELECT * FROM section_newsletter WHERE store_id = ? LIMIT 1", [$storeId]);
 if (!$data) {
     $data = [
         'heading' => 'Join our family',

@@ -129,13 +129,14 @@ class Cart {
     /**
      * Get cart from database
      */
-    private function getCartFromDB($userId) {
+    private function getCartFromDB($userId, $storeId = null) {
+        if (!$storeId) $storeId = $_SESSION['store_id'] ?? null;
         $items = $this->db->fetchAll(
             "SELECT c.*, p.name, p.price, p.currency, p.sale_price, p.featured_image, p.stock_quantity, p.stock_status, p.slug
              FROM cart c
              LEFT JOIN products p ON (c.product_id = p.product_id OR (c.product_id = p.id AND c.product_id < 1000000000))
-             WHERE c.user_id = ?",
-            [$userId]
+             WHERE c.user_id = ? AND c.store_id = ?",
+            [$userId, $storeId]
         );
         
         $cartItems = [];
@@ -346,9 +347,10 @@ class Cart {
         $loggedId = $_SESSION['customer_id'] ?? null;
         if ($loggedId) {
             try {
+                $storeId = $_SESSION['store_id'] ?? null;
                 $this->db->execute(
-                    "DELETE FROM cart WHERE user_id = ?",
-                    [$loggedId]
+                    "DELETE FROM cart WHERE user_id = ? AND store_id = ?",
+                    [$loggedId, $storeId]
                 );
             } catch (Exception $e) {
                 // Table might not exist, ignore
@@ -419,18 +421,37 @@ class Cart {
     private function saveCartToDB($userId, $cartItems) {
         $this->dbError = '';
         try {
+            // Determine Store ID
+            $storeId = $_SESSION['store_id'] ?? null;
+            if (!$storeId) {
+                if (isset($_SESSION['user_email'])) {
+                    $storeUser = $this->db->fetchOne("SELECT store_id FROM users WHERE email = ?", [$_SESSION['user_email']]);
+                    $storeId = $storeUser['store_id'] ?? null;
+                } elseif (isset($_SESSION['customer_email'])) {
+                    $storeCustomer = $this->db->fetchOne("SELECT store_id FROM customers WHERE email = ?", [$_SESSION['customer_email']]);
+                    $storeId = $storeCustomer['store_id'] ?? null;
+                }
+            }
+            if (!$storeId) {
+                // Try to get from users table
+                try {
+                     $storeUser = $this->db->fetchOne("SELECT store_id FROM users WHERE store_id IS NOT NULL LIMIT 1");
+                     $storeId = $storeUser['store_id'] ?? null;
+                } catch(Exception $ex) {}
+            }
+
             // Clear existing cart
             $this->db->execute(
-                "DELETE FROM cart WHERE user_id = ?",
-                [$userId]
+                "DELETE FROM cart WHERE user_id = ? AND store_id = ?",
+                [$userId, $storeId]
             );
-            
+
             // Insert new items
             foreach ($cartItems as $item) {
                 try {
                     $this->db->insert(
-                        "INSERT INTO cart (user_id, product_id, quantity, variant_attributes) VALUES (?, ?, ?, ?)",
-                        [$userId, $item['product_id'], $item['quantity'], json_encode($item['variant_attributes'] ?? [])]
+                        "INSERT INTO cart (user_id, product_id, quantity, variant_attributes, store_id) VALUES (?, ?, ?, ?, ?)",
+                        [$userId, $item['product_id'], $item['quantity'], json_encode($item['variant_attributes'] ?? []), $storeId]
                     );
                 } catch (Exception $e) {
                     $this->dbError .= "Item " . $item['product_id'] . " Error: " . $e->getMessage() . "; ";

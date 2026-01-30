@@ -16,11 +16,23 @@ class CustomerAuth {
         $hashedPassword = password_hash($password, PASSWORD_DEFAULT);
         // Generate unique 10-digit customer ID
         $customCustomerId = mt_rand(1000000000, 9999999999);
-        
+        // Determine Store ID
+        $storeId = $_SESSION['store_id'] ?? null;
+        try {
+            if (!$storeId && isset($_SESSION['user_email'])) {
+                 $storeUser = $this->db->fetchOne("SELECT store_id FROM users WHERE email = ?", [$_SESSION['user_email']]);
+                 $storeId = $storeUser['store_id'] ?? null;
+            }
+            if (!$storeId) {
+                 $storeUser = $this->db->fetchOne("SELECT store_id FROM users WHERE store_id IS NOT NULL LIMIT 1");
+                 $storeId = $storeUser['store_id'] ?? null;
+            }
+        } catch(Exception $ex) {}
+
         try {
             $insertedId = $this->db->insert(
-                "INSERT INTO customers (customer_id, name, email, password) VALUES (?, ?, ?, ?)",
-                [$customCustomerId, $name, $email, $hashedPassword]
+                "INSERT INTO customers (customer_id, name, email, password, store_id) VALUES (?, ?, ?, ?, ?)",
+                [$customCustomerId, $name, $email, $hashedPassword, $storeId]
             );
             
             $customerId = $customCustomerId; // Use the 10-digit ID as the reference
@@ -56,7 +68,7 @@ class CustomerAuth {
         
         $this->setCustomerSession($customer);
         // Always enable persistent login (auto-login on return)
-        $this->setRememberMe($customer['customer_id']);
+        $this->setRememberMe($customer['customer_id'], $customer['store_id'] ?? null);
         
         return $customer;
     }
@@ -71,10 +83,23 @@ class CustomerAuth {
         } else {
             // Generate unique 10-digit customer ID
             $customCustomerId = mt_rand(1000000000, 9999999999);
-            
+
+            // Determine Store ID
+            $storeId = $_SESSION['store_id'] ?? null;
+            try {
+                if (!$storeId && isset($_SESSION['user_email'])) {
+                     $storeUser = $this->db->fetchOne("SELECT store_id FROM users WHERE email = ?", [$_SESSION['user_email']]);
+                     $storeId = $storeUser['store_id'] ?? null;
+                }
+                if (!$storeId) {
+                     $storeUser = $this->db->fetchOne("SELECT store_id FROM users WHERE store_id IS NOT NULL LIMIT 1");
+                     $storeId = $storeUser['store_id'] ?? null;
+                }
+            } catch(Exception $ex) {}
+
             $id = $this->db->insert(
-                "INSERT INTO customers (customer_id, name, email, google_id) VALUES (?, ?, ?, ?)",
-                [$customCustomerId, $name, $email, $googleId]
+                "INSERT INTO customers (customer_id, name, email, google_id, store_id) VALUES (?, ?, ?, ?, ?)",
+                [$customCustomerId, $name, $email, $googleId, $storeId]
             );
             $customer = $this->db->fetchOne("SELECT * FROM customers WHERE customer_id = ?", [$customCustomerId]);
             
@@ -94,7 +119,7 @@ class CustomerAuth {
         }
         
         $this->setCustomerSession($customer);
-        $this->setRememberMe($customer['customer_id']);
+        $this->setRememberMe($customer['customer_id'], $customer['store_id'] ?? null);
         return $customer;
     }
     
@@ -102,6 +127,7 @@ class CustomerAuth {
         $_SESSION['customer_id'] = $customer['customer_id'];
         $_SESSION['customer_name'] = $customer['name'];
         $_SESSION['customer_email'] = $customer['email'];
+        $_SESSION['store_id'] = $customer['store_id'] ?? null;
         $_SESSION['customer_logged_in'] = true;
     }
     
@@ -134,21 +160,28 @@ class CustomerAuth {
         return $this->db->execute($sql, $params);
     }
 
-    private function setRememberMe($customerId) {
+    private function setRememberMe($customerId, $storeId = null) {
         try {
             $selector = bin2hex(random_bytes(16));
             $validator = bin2hex(random_bytes(32));
             $token = hash('sha256', $validator);
             $expires = date('Y-m-d H:i:s', time() + 30 * 24 * 60 * 60); // 30 days
             
+            // Get store_id if not provided
+            if (!$storeId) {
+                $customer = $this->db->fetchOne("SELECT store_id FROM customers WHERE customer_id = ?", [$customerId]);
+                $storeId = $customer['store_id'] ?? null;
+            }
+
             $this->db->execute(
-                "INSERT INTO customer_sessions (customer_id, selector, token, expires_at) VALUES (?, ?, ?, ?)",
-                [$customerId, $selector, $token, $expires]
+                "INSERT INTO customer_sessions (customer_id, selector, token, expires_at, store_id) VALUES (?, ?, ?, ?, ?)",
+                [$customerId, $selector, $token, $expires, $storeId]
             );
             
             setcookie('remember_me', $selector . ':' . $validator, time() + 30 * 24 * 60 * 60, '/', '', false, true);
         } catch (Exception $e) {
             // Ignore generic errors to prevent login block
+            error_log("Remember Me Error: " . $e->getMessage());
         }
     }
 

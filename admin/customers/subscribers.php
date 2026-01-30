@@ -11,7 +11,8 @@ $db = Database::getInstance();
 // Handle delete action
 if (isset($_POST['action']) && $_POST['action'] === 'delete' && isset($_POST['id'])) {
     $id = intval($_POST['id']);
-    $db->execute("DELETE FROM subscribers WHERE id = ?", [$id]);
+    $storeId = $_SESSION['store_id'] ?? null;
+    $db->execute("DELETE FROM subscribers WHERE id = ? AND store_id = ?", [$id, $storeId]);
     $_SESSION['success'] = "Subscriber deleted successfully.";
     header("Location: " . $_SERVER['PHP_SELF']);
     exit;
@@ -19,7 +20,8 @@ if (isset($_POST['action']) && $_POST['action'] === 'delete' && isset($_POST['id
 
 // Handle export action
 if (isset($_GET['export']) && $_GET['export'] === 'csv') {
-    $subscribers = $db->fetchAll("SELECT * FROM subscribers ORDER BY created_at DESC");
+    $storeId = $_SESSION['store_id'] ?? null;
+    $subscribers = $db->fetchAll("SELECT * FROM subscribers WHERE store_id = ? ORDER BY created_at DESC", [$storeId]);
     
     header('Content-Type: text/csv');
     header('Content-Disposition: attachment; filename="subscribers_' . date('Y-m-d') . '.csv"');
@@ -46,17 +48,18 @@ $perPage = 20;
 $offset = ($page - 1) * $perPage;
 
 // Search
-$search = isset($_GET['search']) ? trim($_GET['search']) : '';
-$whereClause = '';
-$params = [];
+$search = $_GET['search'] ?? '';
+$storeId = $_SESSION['store_id'] ?? null;
+$whereClause = "WHERE s.store_id = ?";
+$params = [$storeId];
 
 if ($search) {
-    $whereClause = "WHERE email LIKE ?";
+    $whereClause .= " AND s.email LIKE ?";
     $params[] = "%$search%";
 }
 
 // Get total count
-$totalCount = $db->fetchOne("SELECT COUNT(*) as count FROM subscribers $whereClause", $params)['count'];
+$totalCount = $db->fetchOne("SELECT COUNT(*) as count FROM subscribers s $whereClause", $params)['count'];
 $totalPages = ceil($totalCount / $perPage);
 
 // Get subscribers with customer information
@@ -125,7 +128,7 @@ unset($_SESSION['success'], $_SESSION['error']);
             <div class="text-gray-500 text-sm">Logged-in Users</div>
             <div class="text-2xl font-bold">
                 <?php 
-                $loggedInCount = $db->fetchOne("SELECT COUNT(*) as count FROM subscribers WHERE user_id IS NOT NULL")['count'];
+                $loggedInCount = $db->fetchOne("SELECT COUNT(*) as count FROM subscribers WHERE store_id = ? AND user_id IS NOT NULL", [$storeId])['count'];
                 echo number_format($loggedInCount); 
                 ?>
             </div>
@@ -134,7 +137,7 @@ unset($_SESSION['success'], $_SESSION['error']);
             <div class="text-gray-500 text-sm">Guest Subscribers</div>
             <div class="text-2xl font-bold">
                 <?php 
-                $guestCount = $db->fetchOne("SELECT COUNT(*) as count FROM subscribers WHERE user_id IS NULL")['count'];
+                $guestCount = $db->fetchOne("SELECT COUNT(*) as count FROM subscribers WHERE store_id = ? AND user_id IS NULL", [$storeId])['count'];
                 echo number_format($guestCount); 
                 ?>
             </div>

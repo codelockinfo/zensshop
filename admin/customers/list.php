@@ -23,6 +23,12 @@ if ($status) {
 }
 
 // Get all customers
+$storeId = $_SESSION['store_id'] ?? null;
+if (!$storeId && isset($_SESSION['user_email'])) {
+     $storeUser = Database::getInstance()->fetchOne("SELECT store_id FROM users WHERE email = ?", [$_SESSION['user_email']]);
+     $storeId = $storeUser['store_id'] ?? null;
+}
+$filters['store_id'] = $storeId;
 $customers = $customer->getAllCustomers($filters);
 ?>
 

@@ -17,18 +17,26 @@ $input = json_decode(file_get_contents('php://input'), true);
 $product = new Product();
 $retryHandler = new RetryHandler();
 
+// Determine Store ID
+$storeId = $_SESSION['store_id'] ?? null;
+if (!$storeId && isset($_SESSION['user_email'])) {
+     $storeUser = Database::getInstance()->fetchOne("SELECT store_id FROM users WHERE email = ?", [$_SESSION['user_email']]);
+     $storeId = $storeUser['store_id'] ?? null;
+}
+
 try {
     switch ($method) {
         case 'GET':
             $id = $_GET['id'] ?? null;
             if ($id) {
-                $item = $product->getById($id);
+                $item = $product->getById($id, $storeId);
                 echo json_encode(['success' => true, 'product' => $item]);
             } else {
                 $filters = [
                     'status' => $_GET['status'] ?? null,
                     'category_id' => $_GET['category_id'] ?? null,
-                    'search' => $_GET['search'] ?? null
+                    'search' => $_GET['search'] ?? null,
+                    'store_id' => $storeId
                 ];
                 $products = $product->getAll($filters);
                 echo json_encode(['success' => true, 'products' => $products]);

@@ -15,15 +15,22 @@ $input = json_decode(file_get_contents('php://input'), true);
 
 $db = Database::getInstance();
 
+// Determine Store ID
+$storeId = $_SESSION['store_id'] ?? null;
+if (!$storeId && isset($_SESSION['user_email'])) {
+     $storeUser = $db->fetchOne("SELECT store_id FROM users WHERE email = ?", [$_SESSION['user_email']]);
+     $storeId = $storeUser['store_id'] ?? null;
+}
+
 try {
     switch ($method) {
         case 'GET':
             $id = $_GET['id'] ?? null;
             if ($id) {
-                $item = $db->fetchOne("SELECT * FROM discounts WHERE id = ?", [$id]);
+                $item = $db->fetchOne("SELECT * FROM discounts WHERE id = ? AND store_id = ?", [$id, $storeId]);
                 echo json_encode(['success' => true, 'discount' => $item]);
             } else {
-                $discounts = $db->fetchAll("SELECT * FROM discounts ORDER BY created_at DESC");
+                $discounts = $db->fetchAll("SELECT * FROM discounts WHERE store_id = ? ORDER BY created_at DESC", [$storeId]);
                 echo json_encode(['success' => true, 'discounts' => $discounts]);
             }
             break;
@@ -33,7 +40,7 @@ try {
             if (!$id) {
                 throw new Exception('Discount ID is required');
             }
-            $db->execute("DELETE FROM discounts WHERE id = ?", [$id]);
+            $db->execute("DELETE FROM discounts WHERE id = ? AND store_id = ?", [$id, $storeId]);
             echo json_encode(['success' => true, 'message' => 'Discount deleted successfully']);
             break;
             

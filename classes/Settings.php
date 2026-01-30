@@ -16,24 +16,40 @@ class Settings {
     /**
      * Get a setting value
      */
-    public function get($key, $default = null) {
+    public function get($key, $default = null, $storeId = null) {
+        if (!$storeId) {
+            $storeId = $_SESSION['store_id'] ?? null;
+            if (!$storeId) {
+                if (isset($_SESSION['user_email'])) {
+                    $storeUser = $this->db->fetchOne("SELECT store_id FROM users WHERE email = ?", [$_SESSION['user_email']]);
+                    $storeId = $storeUser['store_id'] ?? null;
+                } elseif (isset($_SESSION['customer_email'])) {
+                    $storeCustomer = $this->db->fetchOne("SELECT store_id FROM customers WHERE email = ?", [$_SESSION['customer_email']]);
+                    $storeId = $storeCustomer['store_id'] ?? null;
+                }
+            }
+        }
+        
+        // Use a store-specific cache key
+        $cacheKey = ($storeId ?: 'global') . ':' . $key;
+        
         // Check cache first
-        if (isset(self::$cache[$key])) {
-            return self::$cache[$key];
+        if (isset(self::$cache[$cacheKey])) {
+            return self::$cache[$cacheKey];
         }
         
         // Try primary settings table
         $result = $this->db->fetchOne(
-            "SELECT setting_value FROM settings WHERE setting_key = ?",
-            [$key]
+            "SELECT setting_value FROM settings WHERE setting_key = ? AND store_id = ?",
+            [$key, $storeId]
         );
         
         // Fallback to site_settings table (for logo, appearance, etc.)
         if (!$result) {
             try {
                 $result = $this->db->fetchOne(
-                    "SELECT setting_value FROM site_settings WHERE setting_key = ?",
-                    [$key]
+                    "SELECT setting_value FROM site_settings WHERE setting_key = ? AND store_id = ?",
+                    [$key, $storeId]
                 );
             } catch (Exception $e) {
                 // Ignore if table doesn't exist
@@ -41,7 +57,7 @@ class Settings {
         }
         
         $value = $result ? $result['setting_value'] : $default;
-        self::$cache[$key] = $value;
+        self::$cache[$cacheKey] = $value;
         
         return $value;
     }
@@ -51,14 +67,22 @@ class Settings {
      */
     public function set($key, $value, $group = 'general') {
         try {
+            // Determine Store ID
+            $storeId = $_SESSION['store_id'] ?? null;
+            if (!$storeId && isset($_SESSION['user_email'])) {
+                 $storeUser = $this->db->fetchOne("SELECT store_id FROM users WHERE email = ?", [$_SESSION['user_email']]);
+                 $storeId = $storeUser['store_id'] ?? null;
+            }
+
             $this->db->insert(
-                "INSERT INTO settings (setting_key, setting_value, setting_group) VALUES (?, ?, ?)
+                "INSERT INTO settings (setting_key, setting_value, setting_group, store_id) VALUES (?, ?, ?, ?)
                  ON DUPLICATE KEY UPDATE setting_value = ?, updated_at = NOW()",
-                [$key, $value, $group, $value]
+                [$key, $value, $group, $storeId, $value]
             );
             
             // Update cache
-            self::$cache[$key] = $value;
+            $cacheKey = ($storeId ?: 'global') . ':' . $key;
+            self::$cache[$cacheKey] = $value;
             
             return true;
         } catch (Exception $e) {
@@ -70,26 +94,48 @@ class Settings {
     /**
      * Get all settings by group
      */
-    public function getByGroup($group) {
+    public function getByGroup($group, $storeId = null) {
+        if (!$storeId) {
+            $storeId = $_SESSION['store_id'] ?? null;
+            if (!$storeId && isset($_SESSION['user_email'])) {
+                $storeUser = $this->db->fetchOne("SELECT store_id FROM users WHERE email = ?", [$_SESSION['user_email']]);
+                $storeId = $storeUser['store_id'] ?? null;
+            }
+        }
         return $this->db->fetchAll(
-            "SELECT setting_key, setting_value FROM settings WHERE setting_group = ?",
-            [$group]
+            "SELECT setting_key, setting_value FROM settings WHERE setting_group = ? AND store_id = ?",
+            [$group, $storeId]
         );
     }
     
     /**
      * Get all settings
      */
-    public function getAll() {
-        return $this->db->fetchAll("SELECT * FROM settings ORDER BY setting_group, setting_key");
+    public function getAll($storeId = null) {
+        if (!$storeId) {
+            $storeId = $_SESSION['store_id'] ?? null;
+            if (!$storeId && isset($_SESSION['user_email'])) {
+                $storeUser = $this->db->fetchOne("SELECT store_id FROM users WHERE email = ?", [$_SESSION['user_email']]);
+                $storeId = $storeUser['store_id'] ?? null;
+            }
+        }
+        return $this->db->fetchAll("SELECT * FROM settings WHERE store_id = ? ORDER BY setting_group, setting_key", [$storeId]);
     }
     
     /**
      * Delete a setting
      */
-    public function delete($key) {
-        $this->db->execute("DELETE FROM settings WHERE setting_key = ?", [$key]);
-        unset(self::$cache[$key]);
+    public function delete($key, $storeId = null) {
+        if (!$storeId) {
+            $storeId = $_SESSION['store_id'] ?? null;
+            if (!$storeId && isset($_SESSION['user_email'])) {
+                $storeUser = $this->db->fetchOne("SELECT store_id FROM users WHERE email = ?", [$_SESSION['user_email']]);
+                $storeId = $storeUser['store_id'] ?? null;
+            }
+        }
+        $this->db->execute("DELETE FROM settings WHERE setting_key = ? AND store_id = ?", [$key, $storeId]);
+        $cacheKey = ($storeId ?: 'global') . ':' . $key;
+        unset(self::$cache[$cacheKey]);
     }
     
     /**

@@ -8,6 +8,11 @@ $auth->requireLogin();
 $currentUser = $auth->getCurrentUser();
 
 $db = Database::getInstance();
+$storeId = $_SESSION['store_id'] ?? null;
+if (!$storeId && isset($_SESSION['user_email'])) {
+     $storeUser = $db->fetchOne("SELECT store_id FROM users WHERE email = ?", [$_SESSION['user_email']]);
+     $storeId = $storeUser['store_id'] ?? null;
+}
 $success = '';
 $error = '';
 
@@ -80,13 +85,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
         // 4. Save to Database (Key-Value Store)
         foreach ($settings as $key => $value) {
-            // Check if exists
-            $exists = $db->fetchOne("SELECT setting_key FROM site_settings WHERE setting_key = ?", [$key]);
-            if ($exists) {
-                $db->execute("UPDATE site_settings SET setting_value = ? WHERE setting_key = ?", [$value, $key]);
-            } else {
-                $db->insert("INSERT INTO site_settings (setting_key, setting_value) VALUES (?, ?)", [$key, $value]);
-            }
+            $db->execute(
+                "INSERT INTO site_settings (setting_key, setting_value, store_id) VALUES (?, ?, ?) 
+                 ON DUPLICATE KEY UPDATE setting_value = ?",
+                [$key, $value, $storeId, $value]
+            );
         }
         
         $_SESSION['flash_success'] = "Footer information updated successfully!";
@@ -104,8 +107,15 @@ if (isset($_SESSION['flash_success'])) {
     unset($_SESSION['flash_success']);
 }
 
+// Determine Store ID
+$storeId = $_SESSION['store_id'] ?? null;
+if (!$storeId && isset($_SESSION['user_email'])) {
+     $storeUser = $db->fetchOne("SELECT store_id FROM users WHERE email = ?", [$_SESSION['user_email']]);
+     $storeId = $storeUser['store_id'] ?? null;
+}
+
 // Fetch Current Settings
-$rawSettings = $db->fetchAll("SELECT * FROM site_settings");
+$rawSettings = $db->fetchAll("SELECT * FROM site_settings WHERE store_id = ?", [$storeId]);
 $currentSettings = [];
 foreach ($rawSettings as $s) {
     $currentSettings[$s['setting_key']] = $s['setting_value'];
@@ -298,6 +308,20 @@ require_once __DIR__ . '/../includes/admin-header.php';
     </form>
 </div>
 
+<!-- CKEditor 5 -->
+<script src="https://cdn.ckeditor.com/ckeditor5/41.1.0/classic/ckeditor.js"></script>
+<style>
+/* CKEditor content styling fix for Tailwind */
+.ck-editor__editable_inline {
+    min-height: 200px;
+    background-color: white !important;
+}
+.ck-content {
+    font-size: 14px;
+    line-height: 1.6;
+}
+</style>
+
 <script>
 function toggleLogoFields(type) {
     if (type === 'text') {
@@ -354,8 +378,17 @@ if (socialData && socialData.length > 0) {
 } else {
     addSocialRow(); // Add one empty row by default
 }
+
+// Initialize CKEditor
+ClassicEditor
+    .create(document.querySelector('textarea[name="footer_description"]'), {
+        toolbar: ['heading', '|', 'bold', 'italic', 'link', 'bulletedList', 'numberedList', 'blockQuote', 'undo', 'redo'],
+    })
+    .catch(error => {
+        console.error(error);
+    });
 </script>
 
-<?php require_once __DIR__ . '/../includes/footer.php'; // Admin footer usually? Or just end body. ?>
+<?php require_once __DIR__ . '/../includes/admin-footer.php'; ?>
 </body>
 </html>

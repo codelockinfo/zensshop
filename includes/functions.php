@@ -239,6 +239,39 @@ function getCurrencies() {
 }
 
 /**
+ * Format timestamp to relative time string (e.g. 2 hours ago)
+ */
+function time_elapsed_string($datetime, $full = false) {
+    if (!$datetime) return 'N/A';
+    $now = new DateTime;
+    $ago = new DateTime($datetime);
+    $diff = $now->diff($ago);
+
+    $diff->w = floor($diff->d / 7);
+    $diff->d -= $diff->w * 7;
+
+    $string = array(
+        'y' => 'year',
+        'm' => 'month',
+        'w' => 'week',
+        'd' => 'day',
+        'h' => 'hour',
+        'i' => 'minute',
+        's' => 'second',
+    );
+    foreach ($string as $k => &$v) {
+        if ($diff->$k) {
+            $v = $diff->$k . ' ' . $v . ($diff->$k > 1 ? 's' : '');
+        } else {
+            unset($string[$k]);
+        }
+    }
+
+    if (!$full) $string = array_slice($string, 0, 1);
+    return $string ? implode(', ', $string) . ' ago' : 'just now';
+}
+
+/**
  * Recursive Function to Render Frontend Menu
  * Moved from header.php to avoid scope/duplication issues.
  */

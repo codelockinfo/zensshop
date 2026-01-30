@@ -64,7 +64,7 @@ require_once __DIR__ . '/includes/header.php';
                     </div>
                 <?php endif; ?>
 
-                <form method="POST" class="space-y-6">
+                <form method="POST" class="space-y-6" id="registerForm">
                     <div>
                         <label class="block text-sm font-medium text-gray-700 mb-1">Full Name</label>
                         <input type="text" name="name" required 
@@ -89,11 +89,20 @@ require_once __DIR__ . '/includes/header.php';
                         </div>
                     </div>
 
-                    <button type="submit" 
-                            class="w-full bg-black text-white py-4 rounded-xl font-bold hover:bg-gray-900 transition transform active:scale-95">
+                    <button type="submit" id="registerBtn"
+                            class="w-full bg-black text-white py-4 rounded-xl font-bold hover:bg-gray-900 transition transform active:scale-95 disabled:opacity-70 disabled:cursor-not-allowed">
                         Create Account
                     </button>
                 </form>
+
+                <script>
+                document.getElementById('registerForm').addEventListener('submit', function() {
+                    const btn = document.getElementById('registerBtn');
+                    const originalText = btn.innerText;
+                    btn.disabled = true;
+                    btn.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i> Creating Account...';
+                });
+                </script>
 
                 <div class="mt-8 text-center">
                     <p class="text-gray-600 text-sm">

@@ -13,6 +13,14 @@ $db = Database::getInstance();
 $error = '';
 $success = '';
 
+// Determine Store ID
+$storeId = $_SESSION['store_id'] ?? null;
+if (!$storeId && isset($_SESSION['user_email'])) {
+     $storeUser = $db->fetchOne("SELECT store_id FROM users WHERE email = ?", [$_SESSION['user_email']]);
+     $storeId = $storeUser['store_id'] ?? null;
+}
+
+
 // Process POST request BEFORE including header (to allow redirects)
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $product = new Product();
@@ -122,10 +130,10 @@ $pageTitle = 'Add Product';
 require_once __DIR__ . '/../../includes/admin-header.php';
 require_once __DIR__ . '/../../includes/functions.php';
 
-$categories = $db->fetchAll("SELECT * FROM categories WHERE status = 'active' ORDER BY name");
+$categories = $db->fetchAll("SELECT * FROM categories WHERE status = 'active' AND store_id = ? ORDER BY name", [$storeId]);
 
 // Fetch brands from site_settings
-$brandsResult = $db->fetchOne("SELECT setting_value FROM site_settings WHERE setting_key = 'Brands'");
+$brandsResult = $db->fetchOne("SELECT setting_value FROM site_settings WHERE setting_key = 'Brands' AND store_id = ?", [$storeId]);
 $brands = $brandsResult ? json_decode($brandsResult['setting_value'], true) : [];
 ?>
 

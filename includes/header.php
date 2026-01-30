@@ -19,10 +19,29 @@ $cartCount = $cart->getCount();
 
 require_once __DIR__ . '/../classes/Database.php';
 $db = Database::getInstance();
-$landingPagesList = $db->fetchAll("SELECT name, slug FROM landing_pages ORDER BY name ASC");
+
+// Determine Store ID
+$storeId = $_SESSION['store_id'] ?? null;
+if (!$storeId) {
+    try {
+        if (isset($_SESSION['user_email'])) {
+             $storeUser = $db->fetchOne("SELECT store_id FROM users WHERE email = ?", [$_SESSION['user_email']]);
+             $storeId = $storeUser['store_id'] ?? null;
+        }
+        
+        if (!$storeId) {
+             $storeUser = $db->fetchOne("SELECT store_id FROM users WHERE store_id IS NOT NULL LIMIT 1");
+             $storeId = $storeUser['store_id'] ?? null;
+        }
+        
+        if ($storeId) $_SESSION['store_id'] = $storeId;
+    } catch(Exception $ex) {}
+}
+
+$landingPagesList = $db->fetchAll("SELECT name, slug FROM landing_pages WHERE store_id = ? ORDER BY name ASC", [$storeId]);
 
 // Fetch Header Menu
-$headerMenuIdVal = $db->fetchOne("SELECT id FROM menus WHERE location = 'header_main'");
+$headerMenuIdVal = $db->fetchOne("SELECT id FROM menus WHERE location = 'header_main' AND store_id = ?", [$storeId]);
 $headerMenuItems = [];
 if ($headerMenuIdVal) {
     $allItems = $db->fetchAll("SELECT * FROM menu_items WHERE menu_id = ? ORDER BY sort_order ASC", [$headerMenuIdVal['id']]);
@@ -32,32 +51,32 @@ if ($headerMenuIdVal) {
 }
 
 // Fetch Header Settings
-$siteLogoType = $db->fetchOne("SELECT setting_value FROM site_settings WHERE setting_key = 'site_logo_type'")['setting_value'] ?? 'image';
-$siteLogoText = $db->fetchOne("SELECT setting_value FROM site_settings WHERE setting_key = 'site_logo_text'")['setting_value'] ?? 'milano';
-$siteLogo = $db->fetchOne("SELECT setting_value FROM site_settings WHERE setting_key = 'site_logo'")['setting_value'] ?? 'logo.png';
-$showSearchIcon = ($db->fetchOne("SELECT setting_value FROM site_settings WHERE setting_key = 'header_icon_search'")['setting_value'] ?? '1') == '1';
-$showUserIcon = ($db->fetchOne("SELECT setting_value FROM site_settings WHERE setting_key = 'header_icon_user'")['setting_value'] ?? '1') == '1';
-$showWishlistIcon = ($db->fetchOne("SELECT setting_value FROM site_settings WHERE setting_key = 'header_icon_wishlist'")['setting_value'] ?? '1') == '1';
-$showCartIcon = ($db->fetchOne("SELECT setting_value FROM site_settings WHERE setting_key = 'header_icon_cart'")['setting_value'] ?? '1') == '1';
+$siteLogoType = $db->fetchOne("SELECT setting_value FROM site_settings WHERE setting_key = 'site_logo_type' AND store_id = ?", [$storeId])['setting_value'] ?? 'image';
+$siteLogoText = $db->fetchOne("SELECT setting_value FROM site_settings WHERE setting_key = 'site_logo_text' AND store_id = ?", [$storeId])['setting_value'] ?? 'milano';
+$siteLogo = $db->fetchOne("SELECT setting_value FROM site_settings WHERE setting_key = 'site_logo' AND store_id = ?", [$storeId])['setting_value'] ?? 'logo.png';
+$showSearchIcon = ($db->fetchOne("SELECT setting_value FROM site_settings WHERE setting_key = 'header_icon_search' AND store_id = ?", [$storeId])['setting_value'] ?? '1') == '1';
+$showUserIcon = ($db->fetchOne("SELECT setting_value FROM site_settings WHERE setting_key = 'header_icon_user' AND store_id = ?", [$storeId])['setting_value'] ?? '1') == '1';
+$showWishlistIcon = ($db->fetchOne("SELECT setting_value FROM site_settings WHERE setting_key = 'header_icon_wishlist' AND store_id = ?", [$storeId])['setting_value'] ?? '1') == '1';
+$showCartIcon = ($db->fetchOne("SELECT setting_value FROM site_settings WHERE setting_key = 'header_icon_cart' AND store_id = ?", [$storeId])['setting_value'] ?? '1') == '1';
 
 // Fetch SEO & Branding Settings
-$siteTitleSuffix = $db->fetchOne("SELECT setting_value FROM settings WHERE setting_key = 'site_title_suffix'")['setting_value'] ?? 'Milano - Elegant Jewelry Store';
-// Deprecated: $faviconIcon = $db->fetchOne("SELECT setting_value FROM settings WHERE setting_key = 'favicon_icon'")['setting_value'] ?? '';
-$faviconPng = $db->fetchOne("SELECT setting_value FROM settings WHERE setting_key = 'favicon_png'")['setting_value'] ?? '';
-$faviconIco = $db->fetchOne("SELECT setting_value FROM settings WHERE setting_key = 'favicon_ico'")['setting_value'] ?? ''; // Google preferred
-$globalMetaDesc = $db->fetchOne("SELECT setting_value FROM settings WHERE setting_key = 'global_meta_description'")['setting_value'] ?? '';
-$globalSchema = $db->fetchOne("SELECT setting_value FROM settings WHERE setting_key = 'global_schema_json'")['setting_value'] ?? '';
-$headerScripts = $db->fetchOne("SELECT setting_value FROM settings WHERE setting_key = 'header_scripts'")['setting_value'] ?? '';
+$siteTitleSuffix = $db->fetchOne("SELECT setting_value FROM settings WHERE setting_key = 'site_title_suffix' AND store_id = ?", [$storeId])['setting_value'] ?? 'Milano - Elegant Jewelry Store';
+// Deprecated: $faviconIcon = $db->fetchOne("SELECT setting_value FROM settings WHERE setting_key = 'favicon_icon' AND store_id = ?", [$storeId])['setting_value'] ?? '';
+$faviconPng = $db->fetchOne("SELECT setting_value FROM settings WHERE setting_key = 'favicon_png' AND store_id = ?", [$storeId])['setting_value'] ?? '';
+$faviconIco = $db->fetchOne("SELECT setting_value FROM settings WHERE setting_key = 'favicon_ico' AND store_id = ?", [$storeId])['setting_value'] ?? ''; // Google preferred
+$globalMetaDesc = $db->fetchOne("SELECT setting_value FROM settings WHERE setting_key = 'global_meta_description' AND store_id = ?", [$storeId])['setting_value'] ?? '';
+$globalSchema = $db->fetchOne("SELECT setting_value FROM settings WHERE setting_key = 'global_schema_json' AND store_id = ?", [$storeId])['setting_value'] ?? '';
+$headerScripts = $db->fetchOne("SELECT setting_value FROM settings WHERE setting_key = 'header_scripts' AND store_id = ?", [$storeId])['setting_value'] ?? '';
 
 // Fetch Top Bar Settings
-$topbarSlidesRow = $db->fetchOne("SELECT setting_value FROM site_settings WHERE setting_key = 'topbar_slides'");
+$topbarSlidesRow = $db->fetchOne("SELECT setting_value FROM site_settings WHERE setting_key = 'topbar_slides' AND store_id = ?", [$storeId]);
 $topbarSlides = json_decode($topbarSlidesRow['setting_value'] ?? '[]', true) ?: [
     ['text' => '100% secure online payment', 'link' => '', 'link_text' => ''],
     ['text' => 'Free Shipping for all order over $99', 'link' => '', 'link_text' => ''],
     ['text' => 'Sign up for 10% off your first order.', 'link' => 'signup', 'link_text' => 'Sign up']
 ];
 
-$topbarLinksRow = $db->fetchOne("SELECT setting_value FROM site_settings WHERE setting_key = 'topbar_links'");
+$topbarLinksRow = $db->fetchOne("SELECT setting_value FROM site_settings WHERE setting_key = 'topbar_links' AND store_id = ?", [$storeId]);
 $topbarLinks = json_decode($topbarLinksRow['setting_value'] ?? '[]', true) ?: [
     ['label' => 'Contact Us', 'url' => 'contact'],
     ['label' => 'About Us', 'url' => 'about'],
@@ -108,7 +127,10 @@ if (!function_exists('url')) {
     <meta name="description" content="<?php echo htmlspecialchars($finalMetaDesc); ?>">
     <?php endif; ?>
 
-    <?php if (!empty($globalSchema)): ?>
+    <?php if (!empty($globalSchema)): 
+        // Automatically fix placeholder domain in schema
+        $globalSchema = str_replace(['https://yourdomain.com', 'http://yourdomain.com'], $baseUrl, $globalSchema);
+    ?>
     <script type="application/ld+json">
         <?php echo $globalSchema; ?>
     </script>
@@ -439,276 +461,118 @@ if (!empty($headerMenuItems)) {
             </button>
         </div>
         
-        <!-- Menu Items -->
         <div class="flex flex-col">
-            <a href="<?php echo url(''); ?>" onclick="if(typeof closeMobileMenu === 'function') closeMobileMenu();" class="flex items-center justify-between px-6 py-4 text-black border-b border-gray-200 hover:bg-gray-50 transition">
-                <span>Home</span>
-                <i class="fas fa-chevron-right text-sm text-gray-400"></i>
-            </a>
-            <button onclick="openSubmenu('shop')" class="flex items-center justify-between px-6 py-4 text-black border-b border-gray-200 hover:bg-gray-50 transition w-full text-left">
-                <span>Shop</span>
-                <i class="fas fa-chevron-right text-sm text-gray-400"></i>
-            </button>
-            <button onclick="openSubmenu('products')" class="flex items-center justify-between px-6 py-4 text-black border-b border-gray-200 hover:bg-gray-50 transition w-full text-left">
-                <span>Products</span>
-                <i class="fas fa-chevron-right text-sm text-gray-400"></i>
-            </button>
-            <button onclick="openSubmenu('pages')" class="flex items-center justify-between px-6 py-4 text-black border-b border-gray-200 hover:bg-gray-50 transition w-full text-left">
-                <span>Pages</span>
-                <i class="fas fa-chevron-right text-sm text-gray-400"></i>
-            </button>
-            <a href="<?php echo url('blog'); ?>" onclick="if(typeof closeMobileMenu === 'function') closeMobileMenu();" class="flex items-center justify-between px-6 py-4 text-black border-b border-gray-200 hover:bg-gray-50 transition">
-                <span>Blog</span>
-                <i class="fas fa-chevron-right text-sm text-gray-400"></i>
-            </a>
-            <a href="#" onclick="if(typeof closeMobileMenu === 'function') closeMobileMenu();" class="flex items-center justify-between px-6 py-4 text-black border-b border-gray-200 hover:bg-gray-50 transition">
-                <span>Buy Theme!</span>
-            </a>
+            <?php 
+            if (!function_exists('renderMobileMenuItem')) {
+                function renderMobileMenuItem($item) {
+                     $hasChildren = !empty($item['children']);
+                     $url = url($item['url'] ?? '#');
+                     $name = htmlspecialchars($item['label'] ?? $item['name'] ?? '');
+                     $id = $item['id'] ?? uniqid();
+                     
+                     if ($hasChildren) {
+                         echo '<button onclick="openMobileSubmenu(\'mobile-menu-' . $id . '\')" class="flex items-center justify-between px-6 py-4 text-black border-b border-gray-200 hover:bg-gray-50 transition w-full text-left">';
+                         echo '<span>' . $name . '</span>';
+                         echo '<i class="fas fa-chevron-right text-sm text-gray-400"></i>';
+                         echo '</button>';
+                     } else {
+                         echo '<a href="' . $url . '" onclick="if(typeof closeMobileMenu === \'function\') closeMobileMenu();" class="flex items-center justify-between px-6 py-4 text-black border-b border-gray-200 hover:bg-gray-50 transition">';
+                         echo '<span>' . $name . '</span>';
+                         if ($hasChildren) { 
+                            echo '<i class="fas fa-chevron-right text-sm text-gray-400"></i>';
+                         }
+                         echo '</a>';
+                     }
+                }
+            }
             
-            <!-- Wishlist -->
+            foreach ($headerMenuItems as $item) {
+                renderMobileMenuItem($item);
+            }
+            ?>
+            
+             <!-- Wishlist -->
             <a href="<?php echo url('wishlist'); ?>" onclick="if(typeof closeMobileMenu === 'function') closeMobileMenu();" class="flex items-center px-6 py-4 text-black border-b border-gray-200 hover:bg-gray-50 transition">
                 <i class="fas fa-heart text-sm mr-3 text-gray-600"></i>
                 <span>Wishlist</span>
             </a>
             
-            <!-- Login / Register -->
-            <a href="<?php echo url('account'); ?>" onclick="if(typeof closeMobileMenu === 'function') closeMobileMenu();" class="flex items-center px-6 py-4 text-black border-b border-gray-200 hover:bg-gray-50 transition">
-                <i class="fas fa-user text-sm mr-3 text-gray-600"></i>
-                <span>Login / Register</span>
-            </a>
+            <!-- Login / Register Info -->
+            <?php if ($currentCustomer): ?>
+                <a href="<?php echo url('account'); ?>" onclick="if(typeof closeMobileMenu === 'function') closeMobileMenu();" class="flex items-center px-6 py-4 text-black border-b border-gray-200 hover:bg-gray-50 transition">
+                    <i class="fas fa-user text-sm mr-3 text-gray-600"></i>
+                    <span>Account</span>
+                </a>
+            <?php else: ?>
+                <a href="<?php echo url('login'); ?>" onclick="if(typeof closeMobileMenu === 'function') closeMobileMenu();" class="flex items-center px-6 py-4 text-black border-b border-gray-200 hover:bg-gray-50 transition">
+                    <i class="fas fa-user text-sm mr-3 text-gray-600"></i>
+                    <span>Login / Register</span>
+                </a>
+            <?php endif; ?>
         </div>
     </div>
     
-    <!-- Shop Submenu -->
-    <div id="shopSubmenu" class="hidden fixed top-0 left-0 h-full w-80 bg-white shadow-2xl z-50 transform translate-x-full transition-transform duration-300 overflow-y-auto xl:hidden">
-        <div class="bg-black text-white px-6 py-4 flex items-center justify-between">
-            <div class="flex items-center space-x-4">
-                <button onclick="closeSubmenu('shop')" class="text-white hover:text-gray-300">
-                    <i class="fas fa-chevron-left"></i>
-                </button>
-                <span class="font-semibold">Shop</span>
-            </div>
-            <button onclick="closeMobileMenu()" class="text-white hover:text-gray-300">
-                <i class="fas fa-times text-xl"></i>
-            </button>
-        </div>
-        <div class="flex flex-col">
-            <a href="<?php echo url('collections'); ?>" onclick="if(typeof closeMobileMenu === 'function') closeMobileMenu();" class="flex items-center justify-between px-6 py-4 text-black border-b border-gray-200 hover:bg-gray-50 transition">
-                <span>Collections</span>
-                <i class="fas fa-chevron-right text-sm text-gray-400"></i>
-            </a>
-            <a href="<?php echo url('shop'); ?>" onclick="if(typeof closeMobileMenu === 'function') closeMobileMenu();" class="flex items-center justify-between px-6 py-4 text-black border-b border-gray-200 hover:bg-gray-50 transition">
-                <span>All Products</span>
-                <i class="fas fa-chevron-right text-sm text-gray-400"></i>
-            </a>
-        </div>
-    </div>
-    
-    <!-- Shop Layouts Submenu -->
-    <div id="shopLayoutsSubmenu" class="hidden fixed top-0 left-0 h-full w-80 bg-white shadow-2xl z-50 transform translate-x-full transition-transform duration-300 overflow-y-auto xl:hidden">
-        <div class="bg-black text-white px-6 py-4 flex items-center justify-between">
-            <div class="flex items-center space-x-4">
-                <button onclick="closeSubSubmenu('shop-layouts')" class="text-white hover:text-gray-300">
-                    <i class="fas fa-chevron-left"></i>
-                </button>
-                <span class="font-semibold">Shop Layouts</span>
-            </div>
-            <button onclick="closeMobileMenu()" class="text-white hover:text-gray-300">
-                <i class="fas fa-times text-xl"></i>
-            </button>
-        </div>
-        <div class="flex flex-col">
-            <a href="<?php echo url('shop?layout=filter-left'); ?>" onclick="if(typeof closeMobileMenu === 'function') closeMobileMenu();" class="flex items-center justify-between px-6 py-4 text-black border-b border-gray-200 hover:bg-gray-50 transition">
-                <span>Filter left sidebar</span>
-                <i class="fas fa-chevron-right text-sm text-gray-400"></i>
-            </a>
-            <a href="<?php echo url('shop?layout=filter-right'); ?>" onclick="if(typeof closeMobileMenu === 'function') closeMobileMenu();" class="flex items-center justify-between px-6 py-4 text-black border-b border-gray-200 hover:bg-gray-50 transition">
-                <span>Filter right sidebar</span>
-                <i class="fas fa-chevron-right text-sm text-gray-400"></i>
-            </a>
-            <a href="<?php echo url('shop?layout=horizontal'); ?>" onclick="if(typeof closeMobileMenu === 'function') closeMobileMenu();" class="flex items-center justify-between px-6 py-4 text-black border-b border-gray-200 hover:bg-gray-50 transition">
-                <span>Horizontal filter</span>
-                <i class="fas fa-chevron-right text-sm text-gray-400"></i>
-            </a>
-            <a href="<?php echo url('shop?layout=drawer'); ?>" onclick="if(typeof closeMobileMenu === 'function') closeMobileMenu();" class="flex items-center justify-between px-6 py-4 text-black border-b border-gray-200 hover:bg-gray-50 transition">
-                <span>Filter drawer</span>
-                <i class="fas fa-chevron-right text-sm text-gray-400"></i>
-            </a>
-            <a href="<?php echo url('shop?layout=grid-3'); ?>" onclick="if(typeof closeMobileMenu === 'function') closeMobileMenu();" class="flex items-center justify-between px-6 py-4 text-black border-b border-gray-200 hover:bg-gray-50 transition">
-                <span>Grid 3 columns</span>
-                <i class="fas fa-chevron-right text-sm text-gray-400"></i>
-            </a>
-            <a href="<?php echo url('shop?layout=grid-4'); ?>" onclick="if(typeof closeMobileMenu === 'function') closeMobileMenu();" class="flex items-center justify-between px-6 py-4 text-black border-b border-gray-200 hover:bg-gray-50 transition">
-                <span>Grid 4 columns</span>
-                <i class="fas fa-chevron-right text-sm text-gray-400"></i>
-            </a>
-            <a href="<?php echo url('shop'); ?>" onclick="if(typeof closeMobileMenu === 'function') closeMobileMenu();" class="flex items-center justify-between px-6 py-4 text-black border-b border-gray-200 hover:bg-gray-50 transition">
-                <span>All collections</span>
-                <i class="fas fa-chevron-right text-sm text-gray-400"></i>
-            </a>
-        </div>
-    </div>
-    
-    <!-- Shop Pages Submenu -->
-    <div id="shopPagesSubmenu" class="hidden fixed top-0 left-0 h-full w-80 bg-white shadow-2xl z-50 transform translate-x-full transition-transform duration-300 overflow-y-auto xl:hidden">
-        <div class="bg-black text-white px-6 py-4 flex items-center justify-between">
-            <div class="flex items-center space-x-4">
-                <button onclick="closeSubSubmenu('shop-pages')" class="text-white hover:text-gray-300">
-                    <i class="fas fa-chevron-left"></i>
-                </button>
-                <span class="font-semibold">Shop Pages</span>
-            </div>
-            <button onclick="closeMobileMenu()" class="text-white hover:text-gray-300">
-                <i class="fas fa-times text-xl"></i>
-            </button>
-        </div>
-        <div class="flex flex-col">
-            <a href="<?php echo url('collection-v1.php'); ?>" onclick="if(typeof closeMobileMenu === 'function') closeMobileMenu();" class="flex items-center justify-between px-6 py-4 text-black border-b border-gray-200 hover:bg-gray-50 transition">
-                <span>Collection list v1</span>
-                <i class="fas fa-chevron-right text-sm text-gray-400"></i>
-            </a>
-            <a href="<?php echo url('collection-v2.php'); ?>" onclick="if(typeof closeMobileMenu === 'function') closeMobileMenu();" class="flex items-center justify-between px-6 py-4 text-black border-b border-gray-200 hover:bg-gray-50 transition">
-                <span>Collection list v2</span>
-                <i class="fas fa-chevron-right text-sm text-gray-400"></i>
-            </a>
-            <a href="<?php echo url('shop.php?scroll=infinity'); ?>" onclick="if(typeof closeMobileMenu === 'function') closeMobileMenu();" class="flex items-center justify-between px-6 py-4 text-black border-b border-gray-200 hover:bg-gray-50 transition">
-                <span>Infinity scroll</span>
-                <i class="fas fa-chevron-right text-sm text-gray-400"></i>
-            </a>
-            <a href="<?php echo url('shop.php?load=more'); ?>" onclick="if(typeof closeMobileMenu === 'function') closeMobileMenu();" class="flex items-center justify-between px-6 py-4 text-black border-b border-gray-200 hover:bg-gray-50 transition">
-                <span>Load more button</span>
-                <i class="fas fa-chevron-right text-sm text-gray-400"></i>
-            </a>
-            <a href="<?php echo url('shop.php?pagination=1'); ?>" onclick="if(typeof closeMobileMenu === 'function') closeMobileMenu();" class="flex items-center justify-between px-6 py-4 text-black border-b border-gray-200 hover:bg-gray-50 transition">
-                <span>Pagination page</span>
-                <i class="fas fa-chevron-right text-sm text-gray-400"></i>
-            </a>
-            <a href="<?php echo url('banner-collection.php'); ?>" onclick="if(typeof closeMobileMenu === 'function') closeMobileMenu();" class="flex items-center justify-between px-6 py-4 text-black border-b border-gray-200 hover:bg-gray-50 transition">
-                <span>Banner collection</span>
-                <i class="fas fa-chevron-right text-sm text-gray-400"></i>
-            </a>
-        </div>
-    </div>
-    
-    <!-- Products Submenu -->
-    <div id="productsSubmenu" class="hidden fixed top-0 left-0 h-full w-80 bg-white shadow-2xl z-50 transform translate-x-full transition-transform duration-300 overflow-y-auto xl:hidden">
-        <div class="bg-black text-white px-6 py-4 flex items-center justify-between sticky top-0 z-50">
-            <div class="flex items-center space-x-4">
-                <button onclick="closeSubmenu('products')" class="text-white hover:text-gray-300">
-                    <i class="fas fa-chevron-left"></i>
-                </button>
-                <span class="font-semibold">Products</span>
-            </div>
-            <button onclick="closeMobileMenu()" class="text-white hover:text-gray-300">
-                <i class="fas fa-times text-xl"></i>
-            </button>
-        </div>
-        <div class="p-6">
-            <div class="grid grid-cols-1 gap-4 mb-6">
-                <div>
-                    <h3 class="font-bold text-lg mb-4">Shop Layouts</h3>
-                    <ul class="space-y-2">
-                        <li><a href="<?php echo url('shop?layout=filter-left'); ?>" onclick="if(typeof closeMobileMenu === 'function') closeMobileMenu();" class="block text-gray-600 hover:text-primary transition py-2">Filter left sidebar</a></li>
-                        <li><a href="<?php echo url('shop?layout=filter-right'); ?>" onclick="if(typeof closeMobileMenu === 'function') closeMobileMenu();" class="block text-gray-600 hover:text-primary transition py-2">Filter right sidebar</a></li>
-                        <li><a href="<?php echo url('shop?layout=horizontal'); ?>" onclick="if(typeof closeMobileMenu === 'function') closeMobileMenu();" class="block text-gray-600 hover:text-primary transition py-2">Horizontal filter</a></li>
-                        <li><a href="<?php echo url('shop?layout=drawer'); ?>" onclick="if(typeof closeMobileMenu === 'function') closeMobileMenu();" class="block text-gray-600 hover:text-primary transition py-2">Filter drawer</a></li>
-                        <li><a href="<?php echo url('shop?layout=grid-3'); ?>" onclick="if(typeof closeMobileMenu === 'function') closeMobileMenu();" class="block text-gray-600 hover:text-primary transition py-2">Grid 3 columns</a></li>
-                        <li><a href="<?php echo url('shop?layout=grid-4'); ?>" onclick="if(typeof closeMobileMenu === 'function') closeMobileMenu();" class="block text-gray-600 hover:text-primary transition py-2">Grid 4 columns</a></li>
-                        <li><a href="<?php echo url('shop'); ?>" onclick="if(typeof closeMobileMenu === 'function') closeMobileMenu();" class="block text-gray-600 hover:text-primary transition py-2">All collections</a></li>
-                        <li><a href="<?php echo url('collection-v1'); ?>" onclick="if(typeof closeMobileMenu === 'function') closeMobileMenu();" class="block text-gray-600 hover:text-primary transition py-2">Collection list v1</a></li>
-                        <li><a href="<?php echo url('collection-v2'); ?>" onclick="if(typeof closeMobileMenu === 'function') closeMobileMenu();" class="block text-gray-600 hover:text-primary transition py-2">Collection list v2</a></li>
-                        <li><a href="<?php echo url('shop?scroll=infinity'); ?>" onclick="if(typeof closeMobileMenu === 'function') closeMobileMenu();" class="block text-gray-600 hover:text-primary transition py-2">Infinity scroll</a></li>
-                        <li><a href="<?php echo url('shop?load=more'); ?>" onclick="if(typeof closeMobileMenu === 'function') closeMobileMenu();" class="block text-gray-600 hover:text-primary transition py-2">Load more button</a></li>
-                        <li><a href="<?php echo url('shop?pagination=1'); ?>" onclick="if(typeof closeMobileMenu === 'function') closeMobileMenu();" class="block text-gray-600 hover:text-primary transition py-2">Pagination page</a></li>
-                        <li><a href="<?php echo url('banner-collection'); ?>" onclick="if(typeof closeMobileMenu === 'function') closeMobileMenu();" class="block text-gray-600 hover:text-primary transition py-2">Banner collection</a></li>
-                    </ul>
-                </div>
-            </div>
-            <!-- Featured Categories -->
-            <div class="grid gap-4 mt-6">
-                <a href="<?php echo url('category?slug=bracelets'); ?>" onclick="if(typeof closeMobileMenu === 'function') closeMobileMenu();" class="block group">
-                    <div class="relative overflow-hidden rounded-lg">
-                        <img src="https://images.unsplash.com/photo-1611591437281-460bfbe1220a?w=300&h=400&fit=crop" 
-                             alt="Bracelets" 
-                             class="w-full h-48 object-cover group-hover:scale-110 transition-transform duration-500">
-                        <div class="absolute bottom-0 left-0 right-0 p-3 flex items-center justify-center">
-                            <div class="bg-white px-4 py-2 w-full max-w-[90%] rounded-full">
-                                <h3 class="text-center text-sm font-semibold text-gray-900">Bracelets</h3>
+    <!-- Dynamic Submenus -->
+    <?php
+    if (!function_exists('renderMobileSubmenusRecursive')) {
+        function renderMobileSubmenusRecursive($items) {
+            foreach ($items as $item) {
+                if (!empty($item['children'])) {
+                    $id = $item['id'] ?? uniqid();
+                    $name = htmlspecialchars($item['label'] ?? $item['name'] ?? '');
+                    ?>
+                    <div id="mobile-menu-<?php echo $id; ?>" class="hidden fixed top-0 left-0 h-full w-80 bg-white shadow-2xl z-50 transform translate-x-full transition-transform duration-300 overflow-y-auto xl:hidden">
+                        <div class="bg-black text-white px-6 py-4 flex items-center justify-between sticky top-0 z-50">
+                            <div class="flex items-center space-x-4">
+                                <button onclick="closeMobileSubmenu('mobile-menu-<?php echo $id; ?>')" class="text-white hover:text-gray-300">
+                                    <i class="fas fa-chevron-left"></i>
+                                </button>
+                                <span class="font-semibold"><?php echo $name; ?></span>
                             </div>
+                            <button onclick="closeMobileMenu()" class="text-white hover:text-gray-300">
+                                <i class="fas fa-times text-xl"></i>
+                            </button>
+                        </div>
+                        <div class="flex flex-col">
+                            <?php 
+                            foreach ($item['children'] as $child) {
+                                renderMobileMenuItem($child);
+                            } 
+                            ?>
                         </div>
                     </div>
-                </a>
-                <a href="<?php echo url('category?slug=rings'); ?>" onclick="if(typeof closeMobileMenu === 'function') closeMobileMenu();" class="block group">
-                    <div class="relative overflow-hidden rounded-lg">
-                        <img src="https://images.unsplash.com/photo-1603561591411-07134e71a2a9?w=300&h=400&fit=crop" 
-                             alt="Rings" 
-                             class="w-full h-48 object-cover group-hover:scale-110 transition-transform duration-500">
-                        <div class="absolute bottom-0 left-0 right-0 p-3 flex items-center justify-center">
-                            <div class="bg-white px-4 py-2 w-full max-w-[90%] rounded-full">
-                                <h3 class="text-center text-sm font-semibold text-gray-900">Rings</h3>
-                            </div>
-                        </div>
-                    </div>
-                </a>
-            </div>
-        </div>
-    </div>
-    
-    <!-- Pages Submenu -->
-    <div id="pagesSubmenu" class="hidden fixed top-0 left-0 h-full w-80 bg-white shadow-2xl z-50 transform translate-x-full transition-transform duration-300 overflow-y-auto xl:hidden">
-        <div class="bg-black text-white px-6 py-4 flex items-center justify-between">
-            <div class="flex items-center space-x-4">
-                <button onclick="closeSubmenu('pages')" class="text-white hover:text-gray-300">
-                    <i class="fas fa-chevron-left"></i>
-                </button>
-                <span class="font-semibold">Pages</span>
-            </div>
-            <button onclick="closeMobileMenu()" class="text-white hover:text-gray-300">
-                <i class="fas fa-times text-xl"></i>
-            </button>
-        </div>
-        <div class="flex flex-col">
-            <a href="<?php echo url('about'); ?>" onclick="if(typeof closeMobileMenu === 'function') closeMobileMenu();" class="flex items-center justify-between px-6 py-4 text-black border-b border-gray-200 hover:bg-gray-50 transition">
-                <span>About us</span>
-                <i class="fas fa-chevron-right text-sm text-gray-400"></i>
-            </a>
-            <a href="<?php echo url('contact'); ?>" onclick="if(typeof closeMobileMenu === 'function') closeMobileMenu();" class="flex items-center justify-between px-6 py-4 text-black border-b border-gray-200 hover:bg-gray-50 transition">
-                <span>Contact us</span>
-                <i class="fas fa-chevron-right text-sm text-gray-400"></i>
-            </a>
-            <a href="<?php echo url('sale'); ?>" onclick="if(typeof closeMobileMenu === 'function') closeMobileMenu();" class="flex items-center justify-between px-6 py-4 text-black border-b border-gray-200 hover:bg-gray-50 transition">
-                <span>Sale</span>
-                <i class="fas fa-chevron-right text-sm text-gray-400"></i>
-            </a>
-            <a href="<?php echo url('store'); ?>" onclick="if(typeof closeMobileMenu === 'function') closeMobileMenu();" class="flex items-center justify-between px-6 py-4 text-black border-b border-gray-200 hover:bg-gray-50 transition">
-                <span>Our store</span>
-                <i class="fas fa-chevron-right text-sm text-gray-400"></i>
-            </a>
-            <a href="<?php echo url('faq'); ?>" onclick="if(typeof closeMobileMenu === 'function') closeMobileMenu();" class="flex items-center justify-between px-6 py-4 text-black border-b border-gray-200 hover:bg-gray-50 transition">
-                <span>FAQ</span>
-                <i class="fas fa-chevron-right text-sm text-gray-400"></i>
-            </a>
-            <a href="<?php echo url('wishlist'); ?>" onclick="if(typeof closeMobileMenu === 'function') closeMobileMenu();" class="flex items-center justify-between px-6 py-4 text-black border-b border-gray-200 hover:bg-gray-50 transition">
-                <span>Wishlist</span>
-                <i class="fas fa-chevron-right text-sm text-gray-400"></i>
-            </a>
-            <a href="<?php echo url('compare'); ?>" onclick="if(typeof closeMobileMenu === 'function') closeMobileMenu();" class="flex items-center justify-between px-6 py-4 text-black border-b border-gray-200 hover:bg-gray-50 transition">
-                <span>Compare</span>
-                <i class="fas fa-chevron-right text-sm text-gray-400"></i>
-            </a>
-            <a href="<?php echo url('location'); ?>" onclick="if(typeof closeMobileMenu === 'function') closeMobileMenu();" class="flex items-center justify-between px-6 py-4 text-black border-b border-gray-200 hover:bg-gray-50 transition">
-                <span>Store location</span>
-                <i class="fas fa-chevron-right text-sm text-gray-400"></i>
-            </a>
-            <a href="<?php echo url('recently-viewed'); ?>" onclick="if(typeof closeMobileMenu === 'function') closeMobileMenu();" class="flex items-center justify-between px-6 py-4 text-black border-b border-gray-200 hover:bg-gray-50 transition">
-                <span>Recently viewed products</span>
-                <i class="fas fa-chevron-right text-sm text-gray-400"></i>
-            </a>
-        </div>
-    </div>
+                    <?php
+                    renderMobileSubmenusRecursive($item['children']);
+                }
+            }
+        }
+    }
+    renderMobileSubmenusRecursive($headerMenuItems);
+    ?>
+
+    <script>
+    function openMobileSubmenu(id) {
+        const el = document.getElementById(id);
+        if(el) {
+            el.classList.remove('hidden');
+            // Force reflow
+            void el.offsetWidth; 
+            el.classList.remove('translate-x-full');
+        }
+    }
+    function closeMobileSubmenu(id) {
+        const el = document.getElementById(id);
+        if(el) {
+            el.classList.add('translate-x-full');
+            setTimeout(() => {
+                el.classList.add('hidden');
+            }, 300);
+        }
+    }
+    </script>
     
     <!-- Search Overlay -->
-    <div class="hidden fixed inset-0 bg-white z-[60] overflow-y-auto" id="searchOverlay">
+    <div class="fixed inset-0 bg-white z-[60] overflow-y-auto transition-transform duration-500 ease-in-out transform -translate-y-full invisible" id="searchOverlay">
         <button id="closeSearchBtn" class="absolute top-6 right-6 text-gray-400 hover:text-black transition p-2">
             <i class="fas fa-times text-2xl"></i>
         </button>
@@ -721,14 +585,17 @@ if (!empty($headerMenuItems)) {
                     <input type="text" name="search" id="headerSearchInput" placeholder="I'm looking for..." 
                            class="w-full px-4 py-3 text-lg font-light bg-transparent text-left text-black focus:outline-none placeholder-gray-400"
                            autocomplete="off">
-                    <button type="submit" class="absolute right-4 top-1/2 -translate-y-1/2 text-black p-2">
+                    <button type="submit" id="headerSearchSubmitBtn" class="absolute right-4 top-1/2 -translate-y-1/2 text-black p-2">
                         <i class="fas fa-search text-xl"></i>
+                    </button>
+                    <button type="button" id="headerSearchClearBtn" class="hidden absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 hover:text-black p-2 transition-colors">
+                        <i class="fas fa-times text-xl"></i>
                     </button>
                 </form>
             </div>
 
             <!-- Trending Search (Always Visible) -->
-            <div class="mb-12 text-center">
+            <div class="mb-12 text-center hidden md:block">
                 <h3 class="text-lg font-serif mb-6 text-gray-900">Trending Search</h3>
                 <div class="flex flex-wrap justify-center gap-3">
                     <?php
@@ -756,47 +623,63 @@ if (!empty($headerMenuItems)) {
             <div id="searchPopularContent" class="animate-fade-in">
                 <!-- Popular Products -->
                 <div>
-                    <h3 class="text-lg font-serif mb-8 text-gray-900">Popular Products</h3>
-                    <div class="grid grid-cols-2 md:grid-cols-5 gap-6">
-                        <?php
-                        // Fetch popular products (random 5 from active products)
-                        $popularProducts = [];
-                        try {
-                            $popularProducts = $db->fetchAll("SELECT id, name, slug, price, sale_price, images, featured_image FROM products WHERE status='active' ORDER BY RAND() LIMIT 5");
-                        } catch(PDOException $e) {}
+                    <h3 class="text-lg font-serif mb-8 text-gray-900 text-center">Popular Products</h3>
+                    
+                    <!-- Popular Products Slider -->
+                    <div class="relative group/slider">
+                        <div class="overflow-hidden px-1">
+                            <div id="popularProductsSlider" class="flex transition-transform duration-500 ease-out will-change-transform gap-4">
+                                <?php
+                                // Fetch popular products (random 5 from active products)
+                                $popularProducts = [];
+                                try {
+                                    $popularProducts = $db->fetchAll("SELECT id, name, slug, price, sale_price, images, featured_image FROM products WHERE status='active' ORDER BY RAND() LIMIT 5");
+                                } catch(PDOException $e) {}
 
-                        foreach ($popularProducts as $pp):
-                            $ppPrice = $pp['sale_price'] ?? $pp['price'];
-                            $ppOldPrice = $pp['sale_price'] ? $pp['price'] : null;
-                            $ppImg = getProductImage($pp); // using helper function from header/functions
-                        ?>
-                        <div class="group">
-                            <a href="<?php echo url('product?slug=' . $pp['slug']); ?>" class="block">
-                                <div class="relative overflow-hidden rounded-lg mb-3 aspect-[3/4]">
-                                    <img src="<?php echo htmlspecialchars($ppImg); ?>" 
-                                         alt="<?php echo htmlspecialchars($pp['name']); ?>" 
-                                         class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500">
+                                foreach ($popularProducts as $pp):
+                                    $ppPrice = $pp['sale_price'] ?? $pp['price'];
+                                    $ppOldPrice = $pp['sale_price'] ? $pp['price'] : null;
+                                    $ppImg = getProductImage($pp); // using helper function from header/functions
+                                    $currencySymbol = defined('CURRENCY_SYMBOL') ? CURRENCY_SYMBOL : '₹';
+                                ?>
+                                <div class="min-w-[200px] w-[200px] flex-shrink-0">
+                                    <a href="<?php echo url('product?slug=' . $pp['slug']); ?>" class="block h-full bg-white border border-gray-100 rounded-lg shadow-sm hover:shadow-md transition p-3">
+                                        <div class="relative overflow-hidden rounded-lg mb-3 aspect-[3/4]">
+                                            <img src="<?php echo htmlspecialchars($ppImg); ?>" 
+                                                 alt="<?php echo htmlspecialchars($pp['name']); ?>" 
+                                                 class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500">
+                                        </div>
+                                        <h4 class="font-medium text-gray-900 text-sm mb-1 truncate group-hover:text-primary transition"><?php echo htmlspecialchars($pp['name']); ?></h4>
+                                        <div class="flex items-center gap-2 text-sm">
+                                            <?php if ($ppOldPrice): ?>
+                                                <span class="text-gray-400 line-through"><?php echo format_price($ppOldPrice); ?></span>
+                                                <span class="text-red-600 font-semibold"><?php echo format_price($ppPrice); ?></span>
+                                            <?php else: ?>
+                                                <span class="text-gray-900 font-semibold"><?php echo format_price($ppPrice); ?></span>
+                                            <?php endif; ?>
+                                        </div>
+                                        <div class="flex text-yellow-400 text-xs mt-1">
+                                            <i class="fas fa-star"></i>
+                                            <i class="fas fa-star"></i>
+                                            <i class="fas fa-star"></i>
+                                            <i class="fas fa-star"></i>
+                                            <i class="fas fa-star"></i>
+                                        </div>
+                                    </a>
                                 </div>
-                                <h4 class="font-medium text-gray-900 text-sm mb-1 truncate group-hover:text-primary transition"><?php echo htmlspecialchars($pp['name']); ?></h4>
-                                <div class="flex items-center gap-2 text-sm">
-                                    <?php if ($ppOldPrice): ?>
-                                        <span class="text-gray-400 line-through"><?php echo format_price($ppOldPrice); ?></span>
-                                        <span class="text-red-600 font-semibold"><?php echo format_price($ppPrice); ?></span>
-                                    <?php else: ?>
-                                        <span class="text-gray-900 font-semibold"><?php echo format_price($ppPrice); ?></span>
-                                    <?php endif; ?>
-                                </div>
-                                <div class="flex text-yellow-400 text-xs mt-1">
-                                    <i class="fas fa-star"></i>
-                                    <i class="fas fa-star"></i>
-                                    <i class="fas fa-star"></i>
-                                    <i class="fas fa-star"></i>
-                                    <i class="fas fa-star"></i>
-                                </div>
-                            </a>
+                                <?php endforeach; ?>
+                            </div>
                         </div>
-                        <?php endforeach; ?>
+
+                        <!-- Navigation Arrows (Popular) -->
+                        <button class="absolute -left-2 top-1/2 -translate-y-1/2 bg-white shadow-lg border border-gray-100 rounded-full w-10 h-10 flex items-center justify-center text-gray-800 hover:bg-black hover:text-white transition z-10 hidden" id="popularPrev">
+                            <i class="fas fa-chevron-left text-sm"></i>
+                        </button>
+                        <button class="absolute -right-2 top-1/2 -translate-y-1/2 bg-white shadow-lg border border-gray-100 rounded-full w-10 h-10 flex items-center justify-center text-gray-800 hover:bg-black hover:text-white transition z-10 hidden" id="popularNext">
+                            <i class="fas fa-chevron-right text-sm"></i>
+                        </button>
                     </div>
+
                 </div>
             </div>
 
@@ -809,49 +692,207 @@ if (!empty($headerMenuItems)) {
 
     <script>
     document.addEventListener('DOMContentLoaded', function() {
+        // ... (Existing variables)
         const searchOverlay = document.getElementById('searchOverlay');
         const searchInput = document.getElementById('headerSearchInput');
         const popularContent = document.getElementById('searchPopularContent');
         const searchResults = document.getElementById('headerSearchResults');
-        const searchBtn = document.getElementById('searchBtn'); // Main trigger
+        const searchBtn = document.getElementById('searchBtn'); 
         const closeBtn = document.getElementById('closeSearchBtn');
+        const searchSubmitBtn = document.getElementById('headerSearchSubmitBtn');
+        const searchClearBtn = document.getElementById('headerSearchClearBtn');
         let searchTimeout;
+
+        // --- REUSABLE SLIDER LOGIC ---
+        function setupNativeSlider(sliderId, prevId, nextId) {
+            const slider = document.getElementById(sliderId);
+            const prevBtn = document.getElementById(prevId);
+            const nextBtn = document.getElementById(nextId);
+
+            if (!slider || !prevBtn || !nextBtn) return;
+
+            let currentIndex = 0;
+            const itemWidth = 200; // width of card
+            const gap = 16; // gap-4 = 16px
+            let keyHandler = null;
+            
+            function updateSlider() {
+                const containerWidth = slider.parentElement.offsetWidth;
+                const totalWidth = slider.scrollWidth;
+                const effectiveItemWidth = itemWidth + gap;
+                const itemsInView = Math.floor(containerWidth / effectiveItemWidth);
+                const maxIndex = Math.max(0, slider.children.length - itemsInView);
+                
+                // Clamp index
+                if (currentIndex < 0) currentIndex = 0;
+                if (currentIndex > maxIndex) currentIndex = maxIndex;
+
+                const translateX = -(currentIndex * effectiveItemWidth);
+                slider.style.transform = `translateX(${translateX}px)`;
+
+                // Update buttons
+                prevBtn.style.display = currentIndex > 0 ? 'flex' : 'none';
+                nextBtn.style.display = currentIndex < maxIndex ? 'flex' : 'none';
+            }
+
+            // Click Handlers
+            prevBtn.onclick = (e) => { e.preventDefault(); currentIndex--; updateSlider(); };
+            nextBtn.onclick = (e) => { e.preventDefault(); currentIndex++; updateSlider(); };
+
+            // Input Handling (Touch, Mouse, Keyboard)
+            let startX, currentX, isDragging = false;
+
+            const startDrag = (x) => {
+                startX = x;
+                isDragging = true;
+                slider.style.transition = 'none';
+                slider.style.cursor = 'grabbing';
+            };
+
+            const moveDrag = (x) => {
+                if (!isDragging) return;
+                currentX = x;
+            };
+
+            const endDrag = (x) => {
+                if (!isDragging) return;
+                isDragging = false;
+                slider.style.transition = '';
+                slider.style.cursor = 'grab';
+                const diff = x - startX;
+                
+                if (Math.abs(diff) > 50) { 
+                    if (diff > 0) currentIndex--; 
+                    else currentIndex++; 
+                }
+                updateSlider();
+            };
+
+            // Touch Events
+            slider.addEventListener('touchstart', (e) => startDrag(e.touches[0].clientX), {passive: true});
+            slider.addEventListener('touchmove', (e) => moveDrag(e.touches[0].clientX), {passive: true});
+            slider.addEventListener('touchend', (e) => endDrag(e.changedTouches[0].clientX));
+
+            // Mouse Events
+            slider.style.cursor = 'grab';
+            slider.addEventListener('mousedown', (e) => { e.preventDefault(); startDrag(e.clientX); });
+            slider.addEventListener('mousemove', (e) => { if(isDragging) e.preventDefault(); moveDrag(e.clientX); });
+            slider.addEventListener('mouseup', (e) => endDrag(e.clientX));
+            slider.addEventListener('mouseleave', (e) => { if (isDragging) endDrag(e.clientX); });
+
+            // Keyboard Navigation
+            const handleKeyNav = (e) => {
+                if (document.activeElement.id === 'headerSearchInput') return;
+                if (!document.getElementById('searchOverlay') || document.getElementById('searchOverlay').classList.contains('invisible')) return;
+
+                // Check visibility of this specific slider
+                // If both are present, we might have a conflict, but usually only one is visible
+                const wrapper = slider.closest('#searchPopularContent') || slider.closest('#headerSearchResults');
+                if (wrapper && (wrapper.classList.contains('hidden') || wrapper.style.display === 'none')) return;
+
+                if (e.key === 'ArrowLeft') { e.preventDefault(); currentIndex--; updateSlider(); } 
+                else if (e.key === 'ArrowRight') { e.preventDefault(); currentIndex++; updateSlider(); }
+            };
+            
+            document.removeEventListener('keydown', slider._keyHandler);
+            slider._keyHandler = handleKeyNav;
+            document.addEventListener('keydown', handleKeyNav);
+
+            // Initial and Resize
+            updateSlider();
+            window.addEventListener('resize', updateSlider);
+        }
+
+        // Initialize Popular Slider immediately
+        setupNativeSlider('popularProductsSlider', 'popularPrev', 'popularNext');
+
+        // --- EXISTING LOGIC ---
 
         // Open Search
         if (searchBtn && searchOverlay) {
             searchBtn.addEventListener('click', (e) => {
                 e.preventDefault();
-                searchOverlay.classList.remove('hidden');
+                searchOverlay.classList.remove('invisible');
                 document.body.style.overflow = 'hidden'; // Prevent background scrolling
-                setTimeout(() => searchInput.focus(), 100);
+                
+                // Slight delay to allow display change to register before transform
+                requestAnimationFrame(() => {
+                    searchOverlay.classList.remove('-translate-y-full');
+                });
+                
+                setTimeout(() => searchInput.focus(), 300);
             });
         }
 
-        // Close Search
+        // Close Search (General Overlay Close)
         const closeSearch = () => {
-            searchOverlay.classList.add('hidden');
+            searchOverlay.classList.add('-translate-y-full');
             document.body.style.overflow = '';
-            // Reset state
-            searchInput.value = '';
-            if(popularContent) popularContent.classList.remove('hidden');
-            searchResults.classList.add('hidden');
-            searchResults.innerHTML = '';
+            
+            // Wait for transition to finish
+            setTimeout(() => {
+                searchOverlay.classList.add('invisible');
+                
+                // Reset state
+                searchInput.value = '';
+                if(popularContent) popularContent.classList.remove('hidden');
+                searchResults.classList.add('hidden');
+                searchResults.innerHTML = '';
+                // Reset Icons
+                if(searchSubmitBtn) searchSubmitBtn.classList.remove('hidden');
+                if(searchClearBtn) searchClearBtn.classList.add('hidden');
+            }, 500); // Match duration-500
         };
 
         if (closeBtn) closeBtn.addEventListener('click', closeSearch);
 
         // Close on ESC
         document.addEventListener('keydown', (e) => {
-            if (e.key === 'Escape' && !searchOverlay.classList.contains('hidden')) {
+            if (e.key === 'Escape' && !searchOverlay.classList.contains('invisible')) {
                 closeSearch();
             }
         });
+
+        // Close on Click Outside
+        searchOverlay.addEventListener('click', (e) => {
+            // Check if the click target is the overlay itself or the main container wrapper
+            // This prevents closing when clicking inside the functionality
+            if (e.target === searchOverlay || e.target.classList.contains('container')) {
+                closeSearch();
+            }
+        });
+
+        // Clear Button Logic
+        if (searchClearBtn) {
+            searchClearBtn.addEventListener('click', function() {
+                searchInput.value = '';
+                searchInput.focus();
+                
+                // Toggle Icons
+                searchSubmitBtn.classList.remove('hidden');
+                searchClearBtn.classList.add('hidden');
+
+                // Reset View
+                if(popularContent) popularContent.classList.remove('hidden');
+                searchResults.classList.add('hidden');
+                searchResults.innerHTML = '';
+            });
+        }
 
         // Live Search Logic
         if (searchInput && searchResults && popularContent) {
             searchInput.addEventListener('input', function() {
                 const query = this.value.trim();
                 clearTimeout(searchTimeout);
+
+                // Toggle Clear/Submit Buttons
+                if (this.value.length > 0) {
+                    if (searchSubmitBtn) searchSubmitBtn.classList.add('hidden');
+                    if (searchClearBtn) searchClearBtn.classList.remove('hidden');
+                } else {
+                    if (searchSubmitBtn) searchSubmitBtn.classList.remove('hidden');
+                    if (searchClearBtn) searchClearBtn.classList.add('hidden');
+                }
 
                 if (query.length < 1) {
                     // Show popular content, hide results
@@ -873,30 +914,28 @@ if (!empty($headerMenuItems)) {
                         .then(res => res.json())
                         .then(data => {
                             if ((data.success && data.products && data.products.length > 0)) {
-                                let html = '<div class="grid grid-cols-2 md:grid-cols-5 gap-6 animate-fade-in">';
+                                // Slider Structure
+                                let html = `
+                                <div class="mb-4">
+                                     <h3 class="text-lg font-serif mb-4 text-gray-900 text-center">Search Results</h3>
+                                </div>
+                                <div class="relative group/slider">
+                                    <div class="overflow-hidden px-1">
+                                        <div id="searchResultsSlider" class="flex transition-transform duration-500 ease-out will-change-transform gap-4">`;
                                 
                                 data.products.forEach(p => {
+                                    // ... (Existing inner loop logic)
                                     const price = parseFloat(p.sale_price || p.price);
                                     let imgSrc = '';
-                                    if (p.images) {
-                                        try {
-                                            const imgs = JSON.parse(p.images);
-                                            imgSrc = imgs[0] || '';
-                                        } catch(e) {}
-                                    }
+                                    if (p.images) { try { const imgs = JSON.parse(p.images); imgSrc = imgs[0] || ''; } catch(e) {} }
                                     if (!imgSrc && p.featured_image) imgSrc = p.featured_image;
-                                    
-                                    // Handle relative paths
-                                    if (imgSrc && !imgSrc.startsWith('http')) {
-                                        imgSrc = baseUrl + '/' + imgSrc.replace(/^\//, '');
-                                    }
-                                    if (!imgSrc) imgSrc = baseUrl + '/assets/images/placeholder.png'; // Fallback
-                                    
+                                    if (imgSrc && !imgSrc.startsWith('http')) imgSrc = baseUrl + '/' + imgSrc.replace(/^\//, '');
+                                    if (!imgSrc) imgSrc = baseUrl + '/assets/images/placeholder.png';
                                     const currencySymbol = typeof CURRENCY_SYMBOL !== 'undefined' ? CURRENCY_SYMBOL : '₹';
                                     
                                     html += `
-                                        <div class="group">
-                                            <a href="${baseUrl}/product?slug=${p.slug}" class="block">
+                                        <div class="min-w-[200px] w-[200px] flex-shrink-0">
+                                            <a href="${baseUrl}/product?slug=${p.slug}" class="block h-full bg-white border border-gray-100 rounded-lg shadow-sm hover:shadow-md transition p-3">
                                                 <div class="relative overflow-hidden rounded-lg mb-3 aspect-[3/4]">
                                                     <img src="${imgSrc}" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" onerror="this.src='${baseUrl}/assets/images/placeholder.png'">
                                                 </div>
@@ -908,7 +947,19 @@ if (!empty($headerMenuItems)) {
                                         </div>
                                     `;
                                 });
-                                html += '</div>';
+                                
+                                html += `
+                                        </div>
+                                    </div>
+                                    
+                                    <!-- Navigation Arrows -->
+                                    <button class="absolute -left-2 top-1/2 -translate-y-1/2 bg-white shadow-lg border border-gray-100 rounded-full w-10 h-10 flex items-center justify-center text-gray-800 hover:bg-black hover:text-white transition z-10 hidden" id="searchResultPrev">
+                                        <i class="fas fa-chevron-left text-sm"></i>
+                                    </button>
+                                    <button class="absolute -right-2 top-1/2 -translate-y-1/2 bg-white shadow-lg border border-gray-100 rounded-full w-10 h-10 flex items-center justify-center text-gray-800 hover:bg-black hover:text-white transition z-10 hidden" id="searchResultNext">
+                                        <i class="fas fa-chevron-right text-sm"></i>
+                                    </button>
+                                </div>`;
                                 
                                 // View All Link
                                 html += `
@@ -920,6 +971,11 @@ if (!empty($headerMenuItems)) {
                                 `;
                                 
                                 searchResults.innerHTML = html;
+                                
+                                // Initialize Slider
+                                setTimeout(() => {
+                                    setupNativeSlider('searchResultsSlider', 'searchResultPrev', 'searchResultNext');
+                                }, 100);
                             } else {
                                 searchResults.innerHTML = `
                                     <div class="text-center py-12">

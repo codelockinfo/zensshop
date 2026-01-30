@@ -21,15 +21,28 @@ class Product {
     public function getAll($filters = []) {
         $sql = "SELECT DISTINCT p.*, GROUP_CONCAT(DISTINCT c.name SEPARATOR ', ') as category_names
                 FROM products p 
-                LEFT JOIN product_categories pc ON p.id = pc.product_id
+                LEFT JOIN product_categories pc ON p.product_id = pc.product_id
                 LEFT JOIN categories c ON pc.category_id = c.id 
-                WHERE p.status = 'active'";
+                WHERE 1=1";
         $params = [];
+
+        $storeId = $filters['store_id'] ?? $_SESSION['store_id'] ?? null;
+        if ($storeId) {
+            $sql .= " AND p.store_id = ?";
+            $params[] = $storeId;
+        }
+
+        if (!empty($filters['status'])) {
+            $sql .= " AND p.status = ?";
+            $params[] = $filters['status'];
+        } else {
+             $sql .= " AND p.status = 'active'";
+        }
         
         if (!empty($filters['category_id'])) {
             $sql .= " AND (p.category_id = ? OR EXISTS (
                 SELECT 1 FROM product_categories pc2 
-                WHERE pc2.product_id = p.id AND pc2.category_id = ?
+                WHERE pc2.product_id = p.product_id AND pc2.category_id = ?
             ))";
             $params[] = $filters['category_id'];
             $params[] = $filters['category_id'];
@@ -41,15 +54,14 @@ class Product {
             ) OR EXISTS (
                 SELECT 1 FROM product_categories pc3 
                 INNER JOIN categories c2 ON pc3.category_id = c2.id
-                WHERE pc3.product_id = p.id AND c2.slug = ?
+                WHERE pc3.product_id = p.product_id AND c2.slug = ?
             ))";
             $params[] = $filters['category_slug'];
             $params[] = $filters['category_slug'];
         }
         
-        if (!empty($filters['status'])) {
-            $sql .= " AND p.status = ?";
-            $params[] = $filters['status'];
+        if (!empty($filters['status']) && empty($filters['store_id'])) { // Handled above if store_id present or not
+             // Already handled
         }
         
         if (!empty($filters['featured'])) {
@@ -120,41 +132,50 @@ class Product {
     /**
      * Get product by ID
      */
-    public function getById($id) {
-        return $this->db->fetchOne(
-            "SELECT p.*, c.name as category_name 
-             FROM products p 
-             LEFT JOIN categories c ON p.category_id = c.id 
-             WHERE p.id = ?",
-            [$id]
-        );
+    public function getById($id, $storeId = null) {
+        if (!$storeId) $storeId = $_SESSION['store_id'] ?? null;
+        $sql = "SELECT p.*, c.name as category_name 
+                 FROM products p 
+                 LEFT JOIN categories c ON p.category_id = c.id 
+                 WHERE p.id = ?";
+        $params = [$id];
+        if ($storeId) {
+            $sql .= " AND p.store_id = ?";
+            $params[] = $storeId;
+        }
+        return $this->db->fetchOne($sql, $params);
     }
     
     /**
      * Get product by 10-digit product_id
      */
-    public function getByProductId($productId) {
-        return $this->db->fetchOne(
-            "SELECT p.*, c.name as category_name 
-             FROM products p 
-             LEFT JOIN categories c ON p.category_id = c.id 
-             WHERE p.product_id = ?",
-            [$productId]
-        );
+    public function getByProductId($productId, $storeId = null) {
+        if (!$storeId) $storeId = $_SESSION['store_id'] ?? null;
+        $sql = "SELECT p.*, c.name as category_name 
+                 FROM products p 
+                 LEFT JOIN categories c ON p.category_id = c.id 
+                 WHERE p.product_id = ?";
+        $params = [$productId];
+        if ($storeId) {
+            $sql .= " AND p.store_id = ?";
+            $params[] = $storeId;
+        }
+        return $this->db->fetchOne($sql, $params);
     }
     
     /**
      * Get product by slug
      */
-    public function getBySlug($slug) {
+    public function getBySlug($slug, $storeId = null) {
+        if (!$storeId) $storeId = $_SESSION['store_id'] ?? null;
         return $this->db->fetchOne(
             "SELECT DISTINCT p.*, GROUP_CONCAT(DISTINCT c.name SEPARATOR ', ') as category_names
              FROM products p 
-             LEFT JOIN product_categories pc ON p.id = pc.product_id
+             LEFT JOIN product_categories pc ON p.product_id = pc.product_id
              LEFT JOIN categories c ON pc.category_id = c.id 
-             WHERE p.slug = ?
+             WHERE p.slug = ? AND p.store_id = ?
              GROUP BY p.id",
-            [$slug]
+            [$slug, $storeId]
         );
     }
     
@@ -190,12 +211,23 @@ class Product {
                     $primaryCategoryId = $data['category_id'];
                 }
                 
+                // Determine Store ID
+                $storeId = $_SESSION['store_id'] ?? ($data['store_id'] ?? null);
+                if (!$storeId && isset($_SESSION['user_email'])) {
+                    $storeUser = $this->db->fetchOne("SELECT store_id FROM users WHERE email = ?", [$_SESSION['user_email']]);
+                    $storeId = $storeUser['store_id'] ?? null;
+                }
+                if (!$storeId) {
+                    $storeUser = $this->db->fetchOne("SELECT store_id FROM users WHERE store_id IS NOT NULL LIMIT 1");
+                    $storeId = $storeUser['store_id'] ?? null;
+                }
+
                 // Insert product with custom 10-digit product_id
                 $productId = $this->db->insert(
                     "INSERT INTO products 
                     (product_id, name, slug, sku, description, short_description, category_id, price, currency, sale_price, 
-                     cost_per_item, total_expense, stock_quantity, stock_status, images, featured_image, brand, status, featured, highlights, shipping_policy, return_policy) 
-                    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+                     cost_per_item, total_expense, stock_quantity, stock_status, images, featured_image, brand, status, featured, highlights, shipping_policy, return_policy, store_id) 
+                    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
                     [
                         $customProductId,  // 10-digit random product ID (e.g., 5654148741)
                         $data['name'],
@@ -218,7 +250,8 @@ class Product {
                         $data['featured'] ?? 0,
                         $data['highlights'] ?? null,
                         $data['shipping_policy'] ?? null,
-                        $data['return_policy'] ?? null
+                        $data['return_policy'] ?? null,
+                        $storeId
                     ]
                 );
                 
@@ -228,8 +261,8 @@ class Product {
                         if ($categoryId) {
                             try {
                                 $this->db->insert(
-                                    "INSERT INTO product_categories (product_id, category_id) VALUES (?, ?)",
-                                    [$productId, $categoryId]
+                                    "INSERT INTO product_categories (product_id, category_id, store_id) VALUES (?, ?, ?)",
+                                    [$customProductId, $categoryId, $storeId]
                                 );
                             } catch (Exception $e) {
                                 // Ignore duplicate key errors
@@ -240,8 +273,8 @@ class Product {
                     // Fallback: use primary category
                     try {
                         $this->db->insert(
-                            "INSERT INTO product_categories (product_id, category_id) VALUES (?, ?)",
-                            [$productId, $primaryCategoryId]
+                            "INSERT INTO product_categories (product_id, category_id, store_id) VALUES (?, ?, ?)",
+                            [$customProductId, $primaryCategoryId, $storeId]
                         );
                     } catch (Exception $e) {
                         // Ignore duplicate key errors
@@ -334,23 +367,30 @@ class Product {
                     throw new Exception("SQL parameter count mismatch");
                 }
                 
+                $storeId = $_SESSION['store_id'] ?? null;
                 $this->db->execute($sql, $params);
                 
                 // Update product categories (many-to-many)
                 if (isset($data['category_ids']) && is_array($data['category_ids'])) {
-                    // Delete existing relationships
-                    $this->db->execute("DELETE FROM product_categories WHERE product_id = ?", [$id]);
+                    // Fetch the 10-digit product_id because $id is the internal ID
+                    $productInfo = $this->getById($id, $storeId);
+                    $tenDigitProductId = $productInfo['product_id'] ?? null;
                     
-                    // Insert new relationships
-                    foreach ($data['category_ids'] as $categoryId) {
-                        if ($categoryId) {
-                            try {
-                                $this->db->insert(
-                                    "INSERT INTO product_categories (product_id, category_id) VALUES (?, ?)",
-                                    [$id, $categoryId]
-                                );
-                            } catch (Exception $e) {
-                                // Ignore duplicate key errors
+                    if ($tenDigitProductId) {
+                        // Delete existing relationships using the 10-digit product_id
+                        $this->db->execute("DELETE FROM product_categories WHERE product_id = ?", [$tenDigitProductId]);
+                        
+                        // Insert new relationships
+                        foreach ($data['category_ids'] as $categoryId) {
+                            if ($categoryId) {
+                                try {
+                                    $this->db->insert(
+                                        "INSERT INTO product_categories (product_id, category_id, store_id) VALUES (?, ?, ?)",
+                                        [$tenDigitProductId, $categoryId, $storeId]
+                                    );
+                                } catch (Exception $e) {
+                                    // Ignore duplicate key errors
+                                }
                             }
                         }
                     }
@@ -372,12 +412,20 @@ class Product {
             
             // 1. Delete Foreign Key Dependencies (that might not be ON DELETE CASCADE)
             // Variants
-            $this->deleteVariants($id);
+            $storeId = $_SESSION['store_id'] ?? null;
+            
+            // Fetch the 10-digit product_id for other deletions
+            $productInfo = $this->getById($id, $storeId);
+            $tenDigitProductId = $productInfo['product_id'] ?? null;
+            
+            $this->deleteVariants($id, $storeId);
             // Categories
-            $this->db->execute("DELETE FROM product_categories WHERE product_id = ?", [$id]);
+            if ($tenDigitProductId) {
+                $this->db->execute("DELETE FROM product_categories WHERE product_id = ?", [$tenDigitProductId]);
+            }
             
             // 2. Delete Product
-            $this->db->execute("DELETE FROM products WHERE id = ?", [$id]);
+            $this->db->execute("DELETE FROM products WHERE id = ? AND store_id = ?", [$id, $storeId]);
             
             return true;
         } catch (Exception $e) {
@@ -386,8 +434,8 @@ class Product {
             error_log("Hard delete failed for product $id: " . $e->getMessage() . ". Falling back to soft delete.");
             
             return $this->db->execute(
-                "UPDATE products SET status = 'archived', slug = CONCAT(slug, '-deleted-', UNIX_TIMESTAMP()) WHERE id = ?",
-                [$id]
+                "UPDATE products SET status = 'archived', slug = CONCAT(slug, '-deleted-', UNIX_TIMESTAMP()) WHERE id = ? AND store_id = ?",
+                [$id, $storeId]
             );
         }
     }
@@ -434,7 +482,8 @@ class Product {
         // Ensure uniqueness
         $originalSlug = $slug;
         $counter = 1;
-        while ($this->db->fetchOne("SELECT id FROM products WHERE slug = ?", [$slug])) {
+        $storeId = $_SESSION['store_id'] ?? null;
+        while ($this->db->fetchOne("SELECT id FROM products WHERE slug = ? AND store_id = ?", [$slug, $storeId])) {
             $slug = $originalSlug . '-' . $counter;
             $counter++;
         }
@@ -454,7 +503,8 @@ class Product {
         // Ensure uniqueness (excluding current product)
         $originalSlug = $slug;
         $counter = 1;
-        while ($existing = $this->db->fetchOne("SELECT id FROM products WHERE slug = ? AND id != ?", [$slug, $excludeId])) {
+        $storeId = $_SESSION['store_id'] ?? null;
+        while ($existing = $this->db->fetchOne("SELECT id FROM products WHERE slug = ? AND id != ? AND store_id = ?", [$slug, $excludeId, $storeId])) {
             $slug = $originalSlug . '-' . $counter;
             $counter++;
         }
@@ -465,30 +515,32 @@ class Product {
     /**
      * Get best selling products
      */
-    public function getBestSelling($limit = 6) {
+    public function getBestSelling($limit = 6, $storeId = null) {
+        if (!$storeId) $storeId = $_SESSION['store_id'] ?? null;
         return $this->db->fetchAll(
             "SELECT p.*, c.name as category_name 
              FROM products p 
              LEFT JOIN categories c ON p.category_id = c.id 
-             WHERE p.status = 'active' 
+             WHERE p.status = 'active' AND p.store_id = ?
              ORDER BY p.review_count DESC, p.rating DESC, p.created_at DESC 
              LIMIT ?",
-            [$limit]
+            [$storeId, $limit]
         );
     }
     
     /**
      * Get trending products
      */
-    public function getTrending($limit = 6) {
+    public function getTrending($limit = 6, $storeId = null) {
+        if (!$storeId) $storeId = $_SESSION['store_id'] ?? null;
         return $this->db->fetchAll(
             "SELECT p.*, c.name as category_name 
              FROM products p 
              LEFT JOIN categories c ON p.category_id = c.id 
-             WHERE p.status = 'active' AND p.featured = 1 
+             WHERE p.status = 'active' AND p.featured = 1 AND p.store_id = ?
              ORDER BY p.created_at DESC 
              LIMIT ?",
-            [$limit]
+            [$storeId, $limit]
         );
     }
     
@@ -496,7 +548,8 @@ class Product {
      * Save product variants
      * @param int|string $productId - Can be auto-increment id or 10-digit product_id
      */
-    public function saveVariants($productId, $variantsData) {
+    public function saveVariants($productId, $variantsData, $storeId = null) {
+        if (!$storeId) $storeId = $_SESSION['store_id'] ?? null;
         $log = "Saving variants for PID $productId. ";
         // Check if variants data exists
         if (empty($variantsData['variants']) || !is_array($variantsData['variants'])) {
@@ -509,7 +562,7 @@ class Product {
         $log .= "Data: " . json_encode($variantsData['variants']) . ". ";
         
         // Convert auto-increment id to 10-digit product_id if needed
-        $productIdValue = $this->getProductIdValue($productId);
+        $productIdValue = $this->getProductIdValue($productId, $storeId);
         $log .= "PID Value: $productIdValue. ";
         
         // Save individual variants to product_variants table
@@ -532,8 +585,8 @@ class Product {
                 
                 $this->db->insert(
                     "INSERT INTO product_variants 
-                    (product_id, sku, price, sale_price, stock_quantity, stock_status, image, variant_attributes, is_default) 
-                    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)",
+                    (product_id, sku, price, sale_price, stock_quantity, stock_status, image, variant_attributes, is_default, store_id) 
+                    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
                     [
                         $productIdValue,  // Use 10-digit product_id
                         !empty($variant['sku']) ? trim($variant['sku']) : null,
@@ -543,7 +596,8 @@ class Product {
                         !empty($variant['stock_status']) ? $variant['stock_status'] : 'in_stock',
                         !empty($variant['image']) ? trim($variant['image']) : null,
                         json_encode($variant['attributes']),
-                        !empty($variant['is_default']) ? 1 : 0
+                        !empty($variant['is_default']) ? 1 : 0,
+                        $storeId
                     ]
                 );
             }
@@ -561,15 +615,16 @@ class Product {
      * Get product variants
      * @param int|string $productId - Can be auto-increment id or 10-digit product_id
      */
-    public function getVariants($productId) {
+    public function getVariants($productId, $storeId = null) {
+        if (!$storeId) $storeId = $_SESSION['store_id'] ?? null;
         // Convert auto-increment id to 10-digit product_id if needed
-        $productIdValue = $this->getProductIdValue($productId);
+        $productIdValue = $this->getProductIdValue($productId, $storeId);
         
         try {
             // Get variants from product_variants table
             $variants = $this->db->fetchAll(
-                "SELECT * FROM product_variants WHERE product_id = ? ORDER BY is_default DESC, id ASC",
-                [$productIdValue]
+                "SELECT * FROM product_variants WHERE product_id = ? AND store_id = ? ORDER BY is_default DESC, id ASC",
+                [$productIdValue, $storeId]
             );
         } catch (Exception $e) {
             $variants = [];
@@ -620,14 +675,15 @@ class Product {
      * Delete product variants
      * @param int|string $productId - Can be auto-increment id or 10-digit product_id
      */
-    public function deleteVariants($productId) {
+    public function deleteVariants($productId, $storeId = null) {
+        if (!$storeId) $storeId = $_SESSION['store_id'] ?? null;
         // Convert auto-increment id to 10-digit product_id if needed
-        $productIdValue = $this->getProductIdValue($productId);
+        $productIdValue = $this->getProductIdValue($productId, $storeId);
         
         try {
             $this->db->execute(
-                "DELETE FROM product_variants WHERE product_id = ?",
-                [$productIdValue]
+                "DELETE FROM product_variants WHERE product_id = ? AND store_id = ?",
+                [$productIdValue, $storeId]
             );
         } catch (Exception $e) {
             // Table might not exist, ignore the error
@@ -640,14 +696,15 @@ class Product {
      * @param int|string $productId - Can be auto-increment id or 10-digit product_id
      * @return string|int - Returns the 10-digit product_id
      */
-    private function getProductIdValue($productId) {
+    private function getProductIdValue($productId, $storeId = null) {
+        if (!$storeId) $storeId = $_SESSION['store_id'] ?? null;
         // If it's already a 10-digit number (between 1000000000 and 9999999999), return as is
         if (is_numeric($productId) && $productId >= 1000000000 && $productId <= 9999999999) {
             return $productId;
         }
         
         // Otherwise, assume it's an auto-increment id and get the product_id
-        $product = $this->db->fetchOne("SELECT product_id FROM products WHERE id = ?", [$productId]);
+        $product = $this->db->fetchOne("SELECT product_id FROM products WHERE id = ? AND store_id = ?", [$productId, $storeId]);
         if ($product && !empty($product['product_id'])) {
             return $product['product_id'];
         }
@@ -659,10 +716,12 @@ class Product {
     /**
      * Get products by multiple IDs
      */
-    public function getByIds($ids, $preserveOrder = true) {
+    public function getByIds($ids, $preserveOrder = true, $storeId = null) {
         if (empty($ids)) {
             return [];
         }
+        
+        if (!$storeId) $storeId = $_SESSION['store_id'] ?? null;
         
         // Ensure IDs are integers
         $ids = array_map('intval', $ids);
@@ -671,13 +730,13 @@ class Product {
         $sql = "SELECT p.*, c.name as category_name 
                 FROM products p 
                 LEFT JOIN categories c ON p.category_id = c.id 
-                WHERE p.id IN ($idsStr) AND p.status = 'active'";
+                WHERE p.id IN ($idsStr) AND p.status = 'active' AND p.store_id = ?";
         
         if ($preserveOrder) {
             $sql .= " ORDER BY FIELD(p.id, $idsStr)";
         }
         
-        return $this->db->fetchAll($sql);
+        return $this->db->fetchAll($sql, [$storeId]);
     }
 }
 

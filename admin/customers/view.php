@@ -19,26 +19,28 @@ $customerId = $_GET['id'] ?? null;
 $customerEmail = $_GET['email'] ?? null;
 
 if ($customerId) {
-    $customerData = $customer->getById($customerId);
+    $storeId = $_SESSION['store_id'] ?? null;
+    $customerData = $customer->getById($customerId, $storeId);
     if (!$customerData) {
         header('Location: ' . $baseUrl . '/admin/customers/list.php');
         exit;
     }
     $customerData['is_registered'] = true;
-    $orders = $customer->getCustomerOrders($customerId);
+    $orders = $customer->getCustomerOrders($customerId, null, $storeId);
     
     // Check if customer is a newsletter subscriber
     require_once __DIR__ . '/../../classes/Database.php';
     $db = Database::getInstance();
-    $isSubscriber = $db->fetchOne("SELECT id FROM subscribers WHERE user_id = ?", [$customerId]);
+    $isSubscriber = $db->fetchOne("SELECT id FROM subscribers WHERE user_id = ? AND store_id = ?", [$customerId, $storeId]);
     $customerData['is_subscriber'] = !empty($isSubscriber);
 } else if ($customerEmail) {
-    $customerData = $customer->getCustomerByEmail($customerEmail);
+    $storeId = $_SESSION['store_id'] ?? null;
+    $customerData = $customer->getCustomerByEmail($customerEmail, $storeId);
     if (!$customerData) {
         header('Location: ' . $baseUrl . '/admin/customers/list.php');
         exit;
     }
-    $orders = $customer->getCustomerOrders(null, $customerEmail);
+    $orders = $customer->getCustomerOrders(null, $customerEmail, $storeId);
     $customerData['is_subscriber'] = false; // Guest customers don't have subscriber status linked
 } else {
     header('Location: ' . $baseUrl . '/admin/customers/list.php');

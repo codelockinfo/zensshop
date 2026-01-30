@@ -52,7 +52,20 @@ try {
         exit;
     }
 
-    $db->insert("INSERT INTO subscribers (email, user_id) VALUES (?, ?)", [$email, $userId]);
+    // Determine Store ID
+    $storeId = $_SESSION['store_id'] ?? null;
+    if (!$storeId && isset($_SESSION['user_email'])) {
+         $storeUser = $db->fetchOne("SELECT store_id FROM users WHERE email = ?", [$_SESSION['user_email']]);
+         $storeId = $storeUser['store_id'] ?? null;
+    }
+    if (!$storeId) {
+         try {
+            $storeUser = $db->fetchOne("SELECT store_id FROM users WHERE store_id IS NOT NULL LIMIT 1");
+            $storeId = $storeUser['store_id'] ?? null;
+         } catch(Exception $ex) {}
+    }
+
+    $db->insert("INSERT INTO subscribers (email, user_id, store_id) VALUES (?, ?, ?)", [$email, $userId, $storeId]);
 
     // Create notification for admin
     require_once __DIR__ . '/../classes/Notification.php';

@@ -22,10 +22,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         
         // Update ALL rows with the new heading/subheading (Since it's a section property denormalized)
         // Check if any rows exist
-        $exists = $db->fetchOne("SELECT id FROM special_offers LIMIT 1");
+        $storeId = $_SESSION['store_id'] ?? null;
+        if (!$storeId && isset($_SESSION['user_email'])) {
+             $storeUser = $db->fetchOne("SELECT store_id FROM users WHERE email = ?", [$_SESSION['user_email']]);
+             $storeId = $storeUser['store_id'] ?? null;
+        }
+        $exists = $db->fetchOne("SELECT id FROM special_offers WHERE store_id = ? LIMIT 1", [$storeId]);
         
         if ($exists) {
-            $db->execute("UPDATE special_offers SET heading = ?, subheading = ?", [$heading, $subheading]);
+            $db->execute("UPDATE special_offers SET heading = ?, subheading = ? WHERE store_id = ?", [$heading, $subheading, $storeId]);
         } else {
              // If no offers exist, we can't strictly save the settings unless we created a dummy row or had a separate table.
              // BUT, user insisted on altering table.
@@ -34,7 +39,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
              // We'll attempt to Insert a dummy row IF empty, but that might clutter. 
              // Let's just update if exists. If not, we might lose settings until an offer is added.
              // EDIT: We will insert a placeholder if empty to save settings.
-             $db->execute("INSERT INTO special_offers (heading, subheading, title, active) VALUES (?, ?, 'Placeholder', 0)", [$heading, $subheading]);
+             // Determine Store ID
+            $storeId = $_SESSION['store_id'] ?? null;
+            if (!$storeId && isset($_SESSION['user_email'])) {
+                 $storeUser = $db->fetchOne("SELECT store_id FROM users WHERE email = ?", [$_SESSION['user_email']]);
+                 $storeId = $storeUser['store_id'] ?? null;
+            }
+             $db->execute("INSERT INTO special_offers (heading, subheading, title, active, store_id) VALUES (?, ?, 'Placeholder', 0, ?)", [$heading, $subheading, $storeId]);
         }
         
         $_SESSION['flash_success'] = "Section settings updated!";
@@ -43,7 +54,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     }
     elseif ($action === 'delete') {
         $id = (int)$_POST['id'];
-        $db->execute("DELETE FROM special_offers WHERE id = ?", [$id]);
+        $storeId = $_SESSION['store_id'] ?? null;
+        if (!$storeId && isset($_SESSION['user_email'])) {
+             $storeUser = $db->fetchOne("SELECT store_id FROM users WHERE email = ?", [$_SESSION['user_email']]);
+             $storeId = $storeUser['store_id'] ?? null;
+        }
+        $db->execute("DELETE FROM special_offers WHERE id = ? AND store_id = ?", [$id, $storeId]);
         $_SESSION['flash_success'] = "Offer deleted successfully!";
         header("Location: " . $baseUrl . '/admin/offers');
         exit;
@@ -73,7 +89,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         if (empty($error)) {
             if ($id) {
                 // Fetch current heading/subheading to preserve them
-                $current = $db->fetchOne("SELECT heading, subheading FROM special_offers LIMIT 1");
+                $storeId = $_SESSION['store_id'] ?? null;
+                if (!$storeId && isset($_SESSION['user_email'])) {
+                     $storeUser = $db->fetchOne("SELECT store_id FROM users WHERE email = ?", [$_SESSION['user_email']]);
+                     $storeId = $storeUser['store_id'] ?? null;
+                }
+                $current = $db->fetchOne("SELECT heading, subheading FROM special_offers WHERE store_id = ? LIMIT 1", [$storeId]);
                 $h = $current['heading'] ?? null;
                 $s = $current['subheading'] ?? null;
 
@@ -93,8 +114,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     $params[] = $s;
                 }
 
-                $sql .= " WHERE id = ?";
+                $sql .= " WHERE id = ? AND store_id = ?";
                 $params[] = $id;
+                $params[] = $storeId;
                 
                 $db->execute($sql, $params);
                 $_SESSION['flash_success'] = "Offer updated successfully!";
@@ -104,13 +126,23 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     $error = "Image is required for new offers.";
                 } else {
                     // Fetch existing settings to apply to new row
-                    $current = $db->fetchOne("SELECT heading, subheading FROM special_offers LIMIT 1");
+                    if (!$storeId && isset($_SESSION['user_email'])) {
+                         $storeUser = $db->fetchOne("SELECT store_id FROM users WHERE email = ?", [$_SESSION['user_email']]);
+                         $storeId = $storeUser['store_id'] ?? null;
+                    }
+                    $current = $db->fetchOne("SELECT heading, subheading FROM special_offers WHERE store_id = ? LIMIT 1", [$storeId]);
                     $h = $current['heading'] ?? 'Special Offers';
                     $s = $current['subheading'] ?? 'Grab limited-time deals on our best products.';
 
+                    // Determine Store ID
+                    if (!$storeId && isset($_SESSION['user_email'])) {
+                         $storeUser = $db->fetchOne("SELECT store_id FROM users WHERE email = ?", [$_SESSION['user_email']]);
+                         $storeId = $storeUser['store_id'] ?? null;
+                    }
+
                     $db->execute(
-                        "INSERT INTO special_offers (title, link, button_text, image, display_order, active, heading, subheading) VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
-                        [$title, $link, $button_text, $image, $display_order, $active, $h, $s]
+                        "INSERT INTO special_offers (title, link, button_text, image, display_order, active, heading, subheading, store_id) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)",
+                        [$title, $link, $button_text, $image, $display_order, $active, $h, $s, $storeId]
                     );
                     $_SESSION['flash_success'] = "Offer added successfully!";
                 }
@@ -134,14 +166,19 @@ $pageTitle = 'Special Offers Settings';
 require_once __DIR__ . '/../includes/admin-header.php';
 
 // Fetch Section Settings
-$sectionSettings = $db->fetchOne("SELECT heading, subheading FROM special_offers LIMIT 1");
+$storeId = $_SESSION['store_id'] ?? null;
+if (!$storeId && isset($_SESSION['user_email'])) {
+     $storeUser = $db->fetchOne("SELECT store_id FROM users WHERE email = ?", [$_SESSION['user_email']]);
+     $storeId = $storeUser['store_id'] ?? null;
+}
+$sectionSettings = $db->fetchOne("SELECT heading, subheading FROM special_offers WHERE store_id = ? LIMIT 1", [$storeId]);
 if (!$sectionSettings) {
     // Default values if no record exists
     $sectionSettings = ['heading' => 'Special Offers', 'subheading' => 'Grab limited-time deals on our best products.'];
 }
 
 // Fetch Offers
-$offers = $db->fetchAll("SELECT * FROM special_offers ORDER BY display_order ASC, created_at DESC");
+$offers = $db->fetchAll("SELECT * FROM special_offers WHERE store_id = ? ORDER BY display_order ASC, created_at DESC", [$storeId]);
 ?>
 
 <div class="container mx-auto p-6">

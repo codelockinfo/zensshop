@@ -52,10 +52,13 @@ class Auth {
         // Hash password
         $hashedPassword = password_hash($password, PASSWORD_DEFAULT);
         
+        // Generate unique Store ID
+        $storeId = 'STORE-' . strtoupper(substr(md5(uniqid(mt_rand(), true)), 0, 8));
+        
         // Insert user
         $userId = $this->db->insert(
-            "INSERT INTO users (name, email, password, role, status) VALUES (?, ?, ?, 'admin', 'active')",
-            [$name, $email, $hashedPassword]
+            "INSERT INTO users (name, email, password, role, status, store_id) VALUES (?, ?, ?, 'admin', 'active', ?)",
+            [$name, $email, $hashedPassword, $storeId]
         );
         
         return $userId;
@@ -89,6 +92,7 @@ class Auth {
         $_SESSION['user_name'] = $user['name'];
         $_SESSION['user_email'] = $user['email'];
         $_SESSION['user_role'] = $user['role'];
+        $_SESSION['store_id'] = $user['store_id'] ?? null;
         $_SESSION['logged_in'] = true;
         
         return $user;
@@ -126,7 +130,7 @@ class Auth {
         
         // Fetch from database to get latest data including profile_image
         $user = $this->db->fetchOne(
-            "SELECT id, name, email, role, profile_image FROM users WHERE id = ?",
+            "SELECT id, name, email, role, profile_image, store_id FROM users WHERE id = ?",
             [$_SESSION['user_id']]
         );
         
@@ -155,6 +159,7 @@ class Auth {
             'name' => $_SESSION['user_name'],
             'email' => $_SESSION['user_email'],
             'role' => $_SESSION['user_role'],
+            'store_id' => $_SESSION['store_id'] ?? null,
             'profile_image' => null
         ];
     }

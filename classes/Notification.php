@@ -13,9 +13,22 @@ class Notification {
      */
     public function create($type, $title, $message, $link = null) {
         try {
+            // Determine Store ID
+            $storeId = $_SESSION['store_id'] ?? null;
+            if (!$storeId && isset($_SESSION['user_email'])) {
+                $storeUser = $this->db->fetchOne("SELECT store_id FROM users WHERE email = ?", [$_SESSION['user_email']]);
+                $storeId = $storeUser['store_id'] ?? null;
+            }
+            if (!$storeId) {
+                try {
+                     $storeUser = $this->db->fetchOne("SELECT store_id FROM users WHERE store_id IS NOT NULL LIMIT 1");
+                     $storeId = $storeUser['store_id'] ?? null;
+                } catch(Exception $ex) {}
+            }
+
             $this->db->insert(
-                "INSERT INTO admin_notifications (type, title, message, link) VALUES (?, ?, ?, ?)",
-                [$type, $title, $message, $link]
+                "INSERT INTO admin_notifications (type, title, message, link, store_id) VALUES (?, ?, ?, ?, ?)",
+                [$type, $title, $message, $link, $storeId]
             );
             return true;
         } catch (Exception $e) {
@@ -27,34 +40,38 @@ class Notification {
     /**
      * Get unread notification count
      */
-    public function getUnreadCount() {
-        $result = $this->db->fetchOne("SELECT COUNT(*) as count FROM admin_notifications WHERE is_read = 0");
+    public function getUnreadCount($storeId = null) {
+        if (!$storeId) $storeId = $_SESSION['store_id'] ?? null;
+        $result = $this->db->fetchOne("SELECT COUNT(*) as count FROM admin_notifications WHERE is_read = 0 AND store_id = ?", [$storeId]);
         return $result['count'] ?? 0;
     }
     
     /**
      * Get recent notifications
      */
-    public function getRecent($limit = 10, $unreadOnly = false) {
-        $where = $unreadOnly ? "WHERE is_read = 0" : "";
+    public function getRecent($limit = 10, $unreadOnly = false, $storeId = null) {
+        if (!$storeId) $storeId = $_SESSION['store_id'] ?? null;
+        $where = $unreadOnly ? "WHERE is_read = 0 AND store_id = ?" : "WHERE store_id = ?";
         return $this->db->fetchAll(
             "SELECT * FROM admin_notifications $where ORDER BY created_at DESC LIMIT ?",
-            [$limit]
+            [$storeId, $limit]
         );
     }
     
     /**
      * Mark notification as read
      */
-    public function markAsRead($id) {
-        $this->db->execute("UPDATE admin_notifications SET is_read = 1 WHERE id = ?", [$id]);
+    public function markAsRead($id, $storeId = null) {
+        if (!$storeId) $storeId = $_SESSION['store_id'] ?? null;
+        $this->db->execute("UPDATE admin_notifications SET is_read = 1 WHERE id = ? AND store_id = ?", [$id, $storeId]);
     }
     
     /**
      * Mark all notifications as read
      */
-    public function markAllAsRead() {
-        $this->db->execute("UPDATE admin_notifications SET is_read = 1 WHERE is_read = 0");
+    public function markAllAsRead($storeId = null) {
+        if (!$storeId) $storeId = $_SESSION['store_id'] ?? null;
+        $this->db->execute("UPDATE admin_notifications SET is_read = 1 WHERE is_read = 0 AND store_id = ?", [$storeId]);
     }
     
     /**

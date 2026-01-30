@@ -10,13 +10,18 @@ $auth->requireLogin();
 
 $db = Database::getInstance();
 $search = $_GET['search'] ?? '';
+$storeId = $_SESSION['store_id'] ?? null;
+if (!$storeId && isset($_SESSION['user_email'])) {
+     $storeUser = $db->fetchOne("SELECT store_id FROM users WHERE email = ?", [$_SESSION['user_email']]);
+     $storeId = $storeUser['store_id'] ?? null;
+}
 
 $sql = "SELECT DISTINCT p.*, GROUP_CONCAT(DISTINCT c.name SEPARATOR ', ') as category_names
         FROM products p 
         LEFT JOIN product_categories pc ON p.id = pc.product_id
         LEFT JOIN categories c ON pc.category_id = c.id 
-        WHERE p.status != 'archived'";
-$params = [];
+        WHERE p.status != 'archived' AND p.store_id = ?";
+$params = [$storeId];
 
 if (!empty($search)) {
     // Search by name, description, SKU, or ID

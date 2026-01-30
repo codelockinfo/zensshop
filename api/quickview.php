@@ -6,8 +6,29 @@ require_once __DIR__ . '/../includes/functions.php';
 
 header('Content-Type: application/json');
 
+if (session_status() === PHP_SESSION_NONE) {
+    session_start();
+}
+
 $slug = $_GET['slug'] ?? '';
 $id = $_GET['id'] ?? '';
+
+// Determine Store ID
+$storeId = $_SESSION['store_id'] ?? null;
+if (!$storeId) {
+    try {
+        if (isset($_SESSION['user_email'])) {
+             $storeUser = Database::getInstance()->fetchOne("SELECT store_id FROM users WHERE email = ?", [$_SESSION['user_email']]);
+             $storeId = $storeUser['store_id'] ?? null;
+        }
+        if (!$storeId) {
+             $storeUser = Database::getInstance()->fetchOne("SELECT store_id FROM users WHERE store_id IS NOT NULL LIMIT 1");
+             $storeId = $storeUser['store_id'] ?? null;
+        }
+        if ($storeId) $_SESSION['store_id'] = $storeId;
+    } catch(Exception $ex) {}
+}
+
 
 if (empty($slug) && empty($id)) {
     echo json_encode(['success' => false, 'message' => 'Product identifier missing']);
@@ -20,9 +41,9 @@ try {
     
     $product = null;
     if ($slug) {
-        $product = $productObj->getBySlug($slug);
+        $product = $productObj->getBySlug($slug, $storeId);
     } elseif ($id) {
-        $product = $productObj->getById($id);
+        $product = $productObj->getById($id, $storeId);
     }
     
     if (!$product) {

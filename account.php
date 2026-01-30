@@ -201,10 +201,10 @@ require_once __DIR__ . '/includes/header.php';
             <div class="flex-1">
                 <?php if ($section === 'orders'): ?>
                     <!-- Orders Section -->
-                    <div class="mb-8 p-1 bg-gray-200 rounded-xl inline-flex">
-                        <a href="?section=orders&tab=current" class="px-8 py-2 rounded-lg font-semibold transition <?php echo $tab === 'current' ? 'bg-white shadow-sm' : 'text-gray-600 hover:text-black'; ?>">Current</a>
-                        <a href="?section=orders&tab=unpaid" class="px-8 py-2 rounded-lg font-semibold transition <?php echo $tab === 'unpaid' ? 'bg-white shadow-sm' : 'text-gray-600 hover:text-black'; ?>">Unpaid</a>
-                        <a href="?section=orders&tab=all" class="px-8 py-2 rounded-lg font-semibold transition <?php echo $tab === 'all' || $tab === '' ? 'bg-white shadow-sm' : 'text-gray-600 hover:text-black'; ?>">All orders</a>
+                    <div class="mb-8 p-1 bg-gray-200 rounded-xl flex flex-wrap md:inline-flex w-full md:w-auto">
+                        <a href="?section=orders&tab=current" class="flex-1 text-center md:flex-none px-4 md:px-8 py-2 rounded-lg font-semibold transition text-sm md:text-base <?php echo $tab === 'current' ? 'bg-white shadow-sm' : 'text-gray-600 hover:text-black'; ?>">Current</a>
+                        <a href="?section=orders&tab=unpaid" class="flex-1 text-center md:flex-none px-4 md:px-8 py-2 rounded-lg font-semibold transition text-sm md:text-base <?php echo $tab === 'unpaid' ? 'bg-white shadow-sm' : 'text-gray-600 hover:text-black'; ?>">Unpaid</a>
+                        <a href="?section=orders&tab=all" class="flex-1 text-center md:flex-none px-4 md:px-8 py-2 rounded-lg font-semibold transition text-sm md:text-base <?php echo $tab === 'all' || $tab === '' ? 'bg-white shadow-sm' : 'text-gray-600 hover:text-black'; ?>">All orders</a>
                     </div>
 
                     <?php if (empty($orders)): ?>

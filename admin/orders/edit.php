@@ -27,8 +27,9 @@ $orderNumber = $_GET['order_number'] ?? null;
 $order = new Order();
 $orderData = null;
 
+$storeId = $_SESSION['store_id'] ?? null;
 if ($orderNumber) {
-    $orderData = $order->getByOrderNumber($orderNumber);
+    $orderData = $order->getByOrderNumber($orderNumber, $storeId);
     if ($orderData) {
         $orderId = $orderData['id'];
     }
@@ -36,7 +37,7 @@ if ($orderNumber) {
     // Convert to integer if it's a numeric ID
     if (is_numeric($orderId)) {
         $orderId = (int)$orderId;
-        $orderData = $order->getById($orderId);
+        $orderData = $order->getById($orderId, $storeId);
     }
 }
 
@@ -102,7 +103,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         
         // Handle new order item
         if (!empty($_POST['new_product_id']) && !empty($_POST['new_quantity']) && !empty($_POST['new_price'])) {
-            $productData = $product->getById($_POST['new_product_id']);
+            $productData = $product->getById($_POST['new_product_id'], $storeId);
             if ($productData) {
                 $order->addOrderItem($orderId, [
                     'product_id' => $_POST['new_product_id'],
@@ -119,7 +120,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         if ($itemsModified) {
             $order->recalculateTotals($orderId);
             // Reload order to get recalculated values
-            $orderData = $order->getById($orderId);
+            $orderData = $order->getById($orderId, $storeId);
         }
         
         // Prepare update data
@@ -204,7 +205,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         if (isset($_POST['recalculate_totals']) && $_POST['recalculate_totals'] == '1') {
             $order->recalculateTotals($orderId);
             // Reload order to get recalculated values
-            $orderData = $order->getById($orderId);
+            $orderData = $order->getById($orderId, $storeId);
             // Update with recalculated totals
             $updateData['subtotal'] = $orderData['subtotal'];
             $updateData['total_amount'] = $orderData['total_amount'];
@@ -225,12 +226,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 }
 
 // Reload order data after potential updates
-$orderData = $order->getById($orderId);
+$orderData = $order->getById($orderId, $storeId);
 $billingAddress = !empty($orderData['billing_address']) ? json_decode($orderData['billing_address'], true) : [];
 $shippingAddress = !empty($orderData['shipping_address']) ? json_decode($orderData['shipping_address'], true) : [];
 
 // Get all products for adding items
-$products = $db->fetchAll("SELECT id, name, price, sale_price, sku FROM products WHERE status = 'active' ORDER BY name");
+$products = $db->fetchAll("SELECT id, name, price, sale_price, sku FROM products WHERE status = 'active' AND store_id = ? ORDER BY name", [$storeId]);
 
 $pageTitle = 'Edit Order - ' . $orderData['order_number'];
 require_once __DIR__ . '/../../includes/admin-header.php';

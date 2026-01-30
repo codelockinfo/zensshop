@@ -45,11 +45,24 @@ try {
     $customer = $customerAuth->getCurrentCustomer();
     $customerId = $customer ? $customer['id'] : null;
 
+    // Determine Store ID
+    $storeId = $_SESSION['store_id'] ?? null;
+    if (!$storeId && isset($_SESSION['user_email'])) {
+         $storeUser = $db->fetchOne("SELECT store_id FROM users WHERE email = ?", [$_SESSION['user_email']]);
+         $storeId = $storeUser['store_id'] ?? null;
+    }
+    if (!$storeId) {
+         try {
+            $storeUser = $db->fetchOne("SELECT store_id FROM users WHERE store_id IS NOT NULL LIMIT 1");
+            $storeId = $storeUser['store_id'] ?? null;
+         } catch(Exception $ex) {}
+    }
+
     // Insert support message
     $messageId = $db->insert(
-        "INSERT INTO support_messages (customer_id, customer_name, customer_email, subject, message) 
-         VALUES (?, ?, ?, ?, ?)",
-        [$customerId, $customerName, $customerEmail, $subject, $message]
+        "INSERT INTO support_messages (customer_id, customer_name, customer_email, subject, message, store_id) 
+         VALUES (?, ?, ?, ?, ?, ?)",
+        [$customerId, $customerName, $customerEmail, $subject, $message, $storeId]
     );
 
     if (!$messageId) {

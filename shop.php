@@ -3,25 +3,30 @@ $pageTitle = 'Shop';
 if (session_status() == PHP_SESSION_NONE) {
     session_start();
 }
-// Define Base URL if not already defined (since header is included later)
-if (!isset($baseUrl)) {
-    $protocol = isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] === 'on' ? "https" : "http";
-    $host = $_SERVER['HTTP_HOST'];
-    // Assuming the script is in the root or a known subdirectory structure. 
-    // Adapting to common setups or reusing logic if available.
-    // Since we can't easily rely on header config yet, let's look at where it's usually defined.
-    // It seems it was in header.php or config.
-    // Let's use a relative path fallback or hardcode based on known environment 'zensshop' if needed, but dynamic is better.
-    // Actually, 'functions.php' or 'Database.php' might have config.
-    // Let's check if 'includes/functions.php' sets it.
-    // If not, we set a default.
-    $baseUrl = $protocol . "://" . $host . "/zensshop"; // Adjust based on user's path 'zensshop' seen in context
-}
-// require_once __DIR__ . '/includes/header.php'; // Moved down
-require_once __DIR__ . '/classes/Product.php';
 require_once __DIR__ . '/classes/Database.php';
 require_once __DIR__ . '/includes/functions.php';
+require_once __DIR__ . '/classes/Product.php';
 require_once __DIR__ . '/classes/Wishlist.php';
+
+// Define Base URL if not already defined (since header is included later)
+// Determine Store ID
+$storeId = $_SESSION['store_id'] ?? null;
+if (!$storeId) {
+    try {
+        if (isset($_SESSION['user_email'])) {
+             $storeUser = Database::getInstance()->fetchOne("SELECT store_id FROM users WHERE email = ?", [$_SESSION['user_email']]);
+             $storeId = $storeUser['store_id'] ?? null;
+        }
+        if (!$storeId) {
+             $storeUser = Database::getInstance()->fetchOne("SELECT store_id FROM users WHERE store_id IS NOT NULL LIMIT 1");
+             $storeId = $storeUser['store_id'] ?? null;
+        }
+        if ($storeId) $_SESSION['store_id'] = $storeId;
+    } catch(Exception $ex) {}
+}
+
+$baseUrl = getBaseUrl();
+// require_once __DIR__ . '/includes/header.php'; // Moved down
 
 $product = new Product();
 $db = Database::getInstance();
@@ -43,13 +48,14 @@ $perPage = 12;
 
 // Build filters
 $filters = [
-    'status' => 'active'
+    'status' => 'active',
+    'store_id' => $storeId
 ];
 
 if ($categorySlug) {
     $filters['category_slug'] = $categorySlug;
     // Get category info for hero section
-    $category = $db->fetchOne("SELECT * FROM categories WHERE slug = ? AND status = 'active'", [$categorySlug]);
+    $category = $db->fetchOne("SELECT * FROM categories WHERE slug = ? AND status = 'active' AND store_id = ?", [$categorySlug, $storeId]);
 } else {
     $category = null;
 }
@@ -88,36 +94,36 @@ $products = $product->getAll($filters);
 $categories = $db->fetchAll("SELECT c.*, 
                                (SELECT COUNT(DISTINCT p.id) 
                                 FROM products p 
-                                LEFT JOIN product_categories pc ON p.id = pc.product_id
-                                WHERE p.status = 'active' AND (p.category_id = c.id OR pc.category_id = c.id)
+                                LEFT JOIN product_categories pc ON p.product_id = pc.product_id
+                                WHERE p.status = 'active' AND p.store_id = ? AND (p.category_id = c.id OR pc.category_id = c.id)
                                ) as product_count 
                                FROM categories c 
-                               WHERE c.status = 'active' 
-                               ORDER BY c.sort_order ASC, c.name ASC");
+                               WHERE c.status = 'active' AND c.store_id = ? 
+                               ORDER BY c.sort_order ASC, c.name ASC", [$storeId, $storeId]);
 
 // Get stock counts
 $inStockCount = $db->fetchOne("SELECT COUNT(DISTINCT p.id) as count 
                                 FROM products p 
-                                LEFT JOIN product_categories pc ON p.id = pc.product_id
-                                WHERE p.status = 'active' AND p.stock_status = 'in_stock'" . 
-                                ($categorySlug ? " AND (p.category_id = (SELECT id FROM categories WHERE slug = ?) OR EXISTS (SELECT 1 FROM product_categories pc2 INNER JOIN categories c2 ON pc2.category_id = c2.id WHERE pc2.product_id = p.id AND c2.slug = ?))" : ""),
-                                $categorySlug ? [$categorySlug, $categorySlug] : [])['count'] ?? 0;
+                                LEFT JOIN product_categories pc ON p.product_id = pc.product_id
+                                WHERE p.status = 'active' AND p.store_id = ? AND p.stock_status = 'in_stock'" . 
+                                ($categorySlug ? " AND (p.category_id = (SELECT id FROM categories WHERE slug = ? AND store_id = ?) OR EXISTS (SELECT 1 FROM product_categories pc2 INNER JOIN categories c2 ON pc2.category_id = c2.id WHERE pc2.product_id = p.product_id AND c2.slug = ? AND c2.store_id = ?))" : ""),
+                                array_merge([$storeId], $categorySlug ? [$categorySlug, $storeId, $categorySlug, $storeId] : []))['count'] ?? 0;
 
 $outOfStockCount = $db->fetchOne("SELECT COUNT(DISTINCT p.id) as count 
                                    FROM products p 
-                                   LEFT JOIN product_categories pc ON p.id = pc.product_id
-                                   WHERE p.status = 'active' AND p.stock_status = 'out_of_stock'" . 
-                                   ($categorySlug ? " AND (p.category_id = (SELECT id FROM categories WHERE slug = ?) OR EXISTS (SELECT 1 FROM product_categories pc2 INNER JOIN categories c2 ON pc2.category_id = c2.id WHERE pc2.product_id = p.id AND c2.slug = ?))" : ""),
-                                   $categorySlug ? [$categorySlug, $categorySlug] : [])['count'] ?? 0;
+                                   LEFT JOIN product_categories pc ON p.product_id = pc.product_id
+                                   WHERE p.status = 'active' AND p.store_id = ? AND p.stock_status = 'out_of_stock'" . 
+                                   ($categorySlug ? " AND (p.category_id = (SELECT id FROM categories WHERE slug = ? AND store_id = ?) OR EXISTS (SELECT 1 FROM product_categories pc2 INNER JOIN categories c2 ON pc2.category_id = c2.id WHERE pc2.product_id = p.product_id AND c2.slug = ? AND c2.store_id = ?))" : ""),
+                                   array_merge([$storeId], $categorySlug ? [$categorySlug, $storeId, $categorySlug, $storeId] : []))['count'] ?? 0;
 
 // Get price range
 $priceRange = $db->fetchOne("SELECT MIN(COALESCE(p.sale_price, p.price)) as min_price, 
                               MAX(COALESCE(p.sale_price, p.price)) as max_price 
                               FROM products p 
-                              LEFT JOIN product_categories pc ON p.id = pc.product_id
-                              WHERE p.status = 'active'" . 
-                              ($categorySlug ? " AND (p.category_id = (SELECT id FROM categories WHERE slug = ?) OR EXISTS (SELECT 1 FROM product_categories pc2 INNER JOIN categories c2 ON pc2.category_id = c2.id WHERE pc2.product_id = p.id AND c2.slug = ?))" : ""),
-                              $categorySlug ? [$categorySlug, $categorySlug] : []);
+                              LEFT JOIN product_categories pc ON p.product_id = pc.product_id
+                              WHERE p.status = 'active' AND p.store_id = ?" . 
+                              ($categorySlug ? " AND (p.category_id = (SELECT id FROM categories WHERE slug = ? AND store_id = ?) OR EXISTS (SELECT 1 FROM product_categories pc2 INNER JOIN categories c2 ON pc2.category_id = c2.id WHERE pc2.product_id = p.product_id AND c2.slug = ? AND c2.store_id = ?))" : ""),
+                              array_merge([$storeId], $categorySlug ? [$categorySlug, $storeId, $categorySlug, $storeId] : []));
 $minPriceRange = $priceRange['min_price'] ?? 0;
 $maxPriceRange = $priceRange['max_price'] ?? 1000;
 

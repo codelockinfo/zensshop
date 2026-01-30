@@ -18,19 +18,26 @@ unset($_SESSION['header_error']);
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $action = $_POST['action'] ?? '';
     
+    // Determine Store ID
+    $storeId = $_SESSION['store_id'] ?? null;
+    if (!$storeId && isset($_SESSION['user_email'])) {
+         $storeUser = $db->fetchOne("SELECT store_id FROM users WHERE email = ?", [$_SESSION['user_email']]);
+         $storeId = $storeUser['store_id'] ?? null;
+    }
+
     // Update Logo
     if ($action === 'update_logo') {
         $logoType = $_POST['logo_type'] ?? 'image';
         $logoText = trim($_POST['logo_text'] ?? '');
         
         // Save logo type
-        $db->execute("INSERT INTO site_settings (setting_key, setting_value) VALUES ('site_logo_type', ?) 
-                     ON DUPLICATE KEY UPDATE setting_value = ?", [$logoType, $logoType]);
+        $db->execute("INSERT INTO site_settings (setting_key, setting_value, store_id) VALUES ('site_logo_type', ?, ?) 
+                     ON DUPLICATE KEY UPDATE setting_value = ?", [$logoType, $storeId, $logoType]);
         
         // Save logo text if type is text
         if ($logoType === 'text' && !empty($logoText)) {
-            $db->execute("INSERT INTO site_settings (setting_key, setting_value) VALUES ('site_logo_text', ?) 
-                         ON DUPLICATE KEY UPDATE setting_value = ?", [$logoText, $logoText]);
+            $db->execute("INSERT INTO site_settings (setting_key, setting_value, store_id) VALUES ('site_logo_text', ?, ?) 
+                         ON DUPLICATE KEY UPDATE setting_value = ?", [$logoText, $storeId, $logoText]);
             $_SESSION['header_success'] = "Logo text updated successfully!";
         }
         // Handle image upload if type is image
@@ -38,12 +45,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $uploadDir = __DIR__ . '/../assets/images/';
             if (!is_dir($uploadDir)) mkdir($uploadDir, 0777, true);
             
-            $filename = 'logo.' . pathinfo($_FILES['logo']['name'], PATHINFO_EXTENSION);
+            $filename = 'logo_' . $storeId . '.' . pathinfo($_FILES['logo']['name'], PATHINFO_EXTENSION);
             
             if (move_uploaded_file($_FILES['logo']['tmp_name'], $uploadDir . $filename)) {
                 // Save logo path to database
-                $db->execute("INSERT INTO site_settings (setting_key, setting_value) VALUES ('site_logo', ?) 
-                             ON DUPLICATE KEY UPDATE setting_value = ?", [$filename, $filename]);
+                $db->execute("INSERT INTO site_settings (setting_key, setting_value, store_id) VALUES ('site_logo', ?, ?) 
+                             ON DUPLICATE KEY UPDATE setting_value = ?", [$filename, $storeId, $filename]);
                 
                 $_SESSION['header_success'] = "Logo image updated successfully!";
             } else {
@@ -67,8 +74,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         ];
         
         foreach ($iconSettings as $key => $value) {
-            $db->execute("INSERT INTO site_settings (setting_key, setting_value) VALUES (?, ?) 
-                         ON DUPLICATE KEY UPDATE setting_value = ?", [$key, $value, $value]);
+            $db->execute("INSERT INTO site_settings (setting_key, setting_value, store_id) VALUES (?, ?, ?) 
+                         ON DUPLICATE KEY UPDATE setting_value = ?", [$key, $value, $storeId, $value]);
         }
         
         $_SESSION['header_success'] = "Header icons updated successfully!";
@@ -95,12 +102,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             }
         }
         $slidesValue = json_encode($slides);
-        $existsSlides = $db->fetchOne("SELECT setting_key FROM site_settings WHERE setting_key = 'topbar_slides'");
-        if ($existsSlides) {
-            $db->execute("UPDATE site_settings SET setting_value = ? WHERE setting_key = 'topbar_slides'", [$slidesValue]);
-        } else {
-            $db->insert("INSERT INTO site_settings (setting_key, setting_value) VALUES ('topbar_slides', ?)", [$slidesValue]);
-        }
+        $db->execute("INSERT INTO site_settings (setting_key, setting_value, store_id) VALUES ('topbar_slides', ?, ?) 
+                     ON DUPLICATE KEY UPDATE setting_value = ?", [$slidesValue, $storeId, $slidesValue]);
         
         // Handle top bar links
         $links = [];
@@ -118,12 +121,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             }
         }
         $linksValue = json_encode($links);
-        $existsLinks = $db->fetchOne("SELECT setting_key FROM site_settings WHERE setting_key = 'topbar_links'");
-        if ($existsLinks) {
-            $db->execute("UPDATE site_settings SET setting_value = ? WHERE setting_key = 'topbar_links'", [$linksValue]);
-        } else {
-            $db->insert("INSERT INTO site_settings (setting_key, setting_value) VALUES ('topbar_links', ?)", [$linksValue]);
-        }
+        $db->execute("INSERT INTO site_settings (setting_key, setting_value, store_id) VALUES ('topbar_links', ?, ?) 
+                     ON DUPLICATE KEY UPDATE setting_value = ?", [$linksValue, $storeId, $linksValue]);
         
         $_SESSION['header_success'] = "Top bar settings updated successfully!";
         header("Location: " . $_SERVER['PHP_SELF']);
@@ -131,21 +130,28 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     }
 }
 
+// Determine Store ID
+$storeId = $_SESSION['store_id'] ?? null;
+if (!$storeId && isset($_SESSION['user_email'])) {
+     $storeUser = $db->fetchOne("SELECT store_id FROM users WHERE email = ?", [$_SESSION['user_email']]);
+     $storeId = $storeUser['store_id'] ?? null;
+}
+
 // Fetch Current Settings
-$logoType = $db->fetchOne("SELECT setting_value FROM site_settings WHERE setting_key = 'site_logo_type'")['setting_value'] ?? 'image';
-$logoText = $db->fetchOne("SELECT setting_value FROM site_settings WHERE setting_key = 'site_logo_text'")['setting_value'] ?? 'milano';
-$logoPath = $db->fetchOne("SELECT setting_value FROM site_settings WHERE setting_key = 'site_logo'")['setting_value'] ?? 'logo.png';
-$iconSearch = $db->fetchOne("SELECT setting_value FROM site_settings WHERE setting_key = 'header_icon_search'")['setting_value'] ?? '1';
-$iconUser = $db->fetchOne("SELECT setting_value FROM site_settings WHERE setting_key = 'header_icon_user'")['setting_value'] ?? '1';
-$iconWishlist = $db->fetchOne("SELECT setting_value FROM site_settings WHERE setting_key = 'header_icon_wishlist'")['setting_value'] ?? '1';
-$iconCart = $db->fetchOne("SELECT setting_value FROM site_settings WHERE setting_key = 'header_icon_cart'")['setting_value'] ?? '1';
+$logoType = $db->fetchOne("SELECT setting_value FROM site_settings WHERE setting_key = 'site_logo_type' AND store_id = ?", [$storeId])['setting_value'] ?? 'image';
+$logoText = $db->fetchOne("SELECT setting_value FROM site_settings WHERE setting_key = 'site_logo_text' AND store_id = ?", [$storeId])['setting_value'] ?? 'milano';
+$logoPath = $db->fetchOne("SELECT setting_value FROM site_settings WHERE setting_key = 'site_logo' AND store_id = ?", [$storeId])['setting_value'] ?? 'logo.png';
+$iconSearch = $db->fetchOne("SELECT setting_value FROM site_settings WHERE setting_key = 'header_icon_search' AND store_id = ?", [$storeId])['setting_value'] ?? '1';
+$iconUser = $db->fetchOne("SELECT setting_value FROM site_settings WHERE setting_key = 'header_icon_user' AND store_id = ?", [$storeId])['setting_value'] ?? '1';
+$iconWishlist = $db->fetchOne("SELECT setting_value FROM site_settings WHERE setting_key = 'header_icon_wishlist' AND store_id = ?", [$storeId])['setting_value'] ?? '1';
+$iconCart = $db->fetchOne("SELECT setting_value FROM site_settings WHERE setting_key = 'header_icon_cart' AND store_id = ?", [$storeId])['setting_value'] ?? '1';
 
 // Fetch Top Bar Settings
-$topbarSlidesRow = $db->fetchOne("SELECT setting_value FROM site_settings WHERE setting_key = 'topbar_slides'");
+$topbarSlidesRow = $db->fetchOne("SELECT setting_value FROM site_settings WHERE setting_key = 'topbar_slides' AND store_id = ?", [$storeId]);
 $topbarSlidesJson = $topbarSlidesRow['setting_value'] ?? '[]';
 $topbarSlides = json_decode($topbarSlidesJson, true) ?: [];
 
-$topbarLinksRow = $db->fetchOne("SELECT setting_value FROM site_settings WHERE setting_key = 'topbar_links'");
+$topbarLinksRow = $db->fetchOne("SELECT setting_value FROM site_settings WHERE setting_key = 'topbar_links' AND store_id = ?", [$storeId]);
 $topbarLinksJson = $topbarLinksRow['setting_value'] ?? '[]';
 $topbarLinks = json_decode($topbarLinksJson, true) ?: [];
 

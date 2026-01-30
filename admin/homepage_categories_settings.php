@@ -21,15 +21,22 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $ids = $_POST['id'] ?? [];
     $delete_ids = $_POST['delete_id'] ?? [];
     
+    // Determine Store ID
+    $storeId = $_SESSION['store_id'] ?? null;
+    if (!$storeId && isset($_SESSION['user_email'])) {
+         $storeUser = $db->fetchOne("SELECT store_id FROM users WHERE email = ?", [$_SESSION['user_email']]);
+         $storeId = $storeUser['store_id'] ?? null;
+    }
+
     // Update all existing rows with the global heading/subheading if titles are empty but heading changed
     if (empty($titles) && (!empty($section_heading) || !empty($section_subheading))) {
-        $db->execute("UPDATE section_categories SET heading = ?, subheading = ?", [$section_heading, $section_subheading]);
+        $db->execute("UPDATE section_categories SET heading = ?, subheading = ? WHERE store_id = ?", [$section_heading, $section_subheading, $storeId]);
     }
     
     // Handle Deletions
     if (!empty($delete_ids)) {
         $placeholders = str_repeat('?,', count($delete_ids) - 1) . '?';
-        $db->execute("DELETE FROM section_categories WHERE id IN ($placeholders)", $delete_ids);
+        $db->execute("DELETE FROM section_categories WHERE id IN ($placeholders) AND store_id = ?", array_merge($delete_ids, [$storeId]));
     }
     
     // Check for POST size limit
@@ -79,9 +86,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
                 $exists = false;
                 if (!empty($id)) {
-                    $exists = $db->fetchOne("SELECT id FROM section_categories WHERE id = ?", [$id]);
+                    $exists = $db->fetchOne("SELECT id FROM section_categories WHERE id = ? AND store_id = ?", [$id, $storeId]);
                 }
                 
+
+
                 if ($exists) {
                     // Update
                     $log .= "Updating ID $id.\n";
@@ -91,8 +100,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                         $sql .= ", image = ?";
                         $params[] = $imagePath;
                     }
-                    $sql .= " WHERE id = ?";
+                    $sql .= " WHERE id = ? AND store_id = ?";
                     $params[] = $id;
+                    $params[] = $storeId;
                     $db->execute($sql, $params);
                     $updatedCount++;
                 } else {
@@ -100,8 +110,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     $log .= "Inserting New.\n";
                     $imgToSave = $imagePath ? $imagePath : ''; 
                     $db->execute(
-                        "INSERT INTO section_categories (title, link, sort_order, image, heading, subheading) VALUES (?, ?, ?, ?, ?, ?)",
-                        [$title, $link, $order, $imgToSave, $section_heading, $section_subheading]
+                        "INSERT INTO section_categories (title, link, sort_order, image, heading, subheading, store_id) VALUES (?, ?, ?, ?, ?, ?, ?)",
+                        [$title, $link, $order, $imgToSave, $section_heading, $section_subheading, $storeId]
                     );
                     $insertedCount++;
                 }
@@ -127,8 +137,18 @@ if (isset($_SESSION['flash_success'])) {
 $pageTitle = 'Homepage Categories';
 require_once __DIR__ . '/../includes/admin-header.php';
 
+// Determine Store ID
+$storeId = $_SESSION['store_id'] ?? null;
+if (!$storeId && isset($_SESSION['user_email'])) {
+     $storeUser = $db->fetchOne("SELECT store_id FROM users WHERE email = ?", [$_SESSION['user_email']]);
+     $storeId = $storeUser['store_id'] ?? null;
+}
+
 // Fetch Categories
-$categories = $db->fetchAll("SELECT * FROM section_categories ORDER BY sort_order ASC");
+$categories = $db->fetchAll("SELECT * FROM section_categories WHERE store_id = ? ORDER BY sort_order ASC", [$storeId]);
+
+// Fetch valid categories for the dropdown
+$validCategories = $db->fetchAll("SELECT id, name, slug FROM categories WHERE status = 'active' AND store_id = ? ORDER BY name ASC", [$storeId]);
 ?>
 
 <div class="p-6 pl-0">
@@ -160,10 +180,7 @@ $categories = $db->fetchAll("SELECT * FROM section_categories ORDER BY sort_orde
 
 
 
-        <?php 
-        // Fetch valid categories for the dropdown
-        $validCategories = $db->fetchAll("SELECT id, name, slug FROM categories WHERE status = 'active' ORDER BY name ASC");
-        ?>
+
 
         <!-- Section Headers -->
         <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-6 mb-8">

@@ -29,14 +29,20 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $tr_heading = $_POST['tr_heading'] ?? '';
     $tr_subheading = $_POST['tr_subheading'] ?? '';
     
+    $storeId = $_SESSION['store_id'] ?? null;
+    if (!$storeId && isset($_SESSION['user_email'])) {
+         $storeUser = $db->fetchOne("SELECT store_id FROM users WHERE email = ?", [$_SESSION['user_email']]);
+         $storeId = $storeUser['store_id'] ?? null;
+    }
+
     // Process Best Selling
-    $db->execute("DELETE FROM section_best_selling_products"); 
+    $db->execute("DELETE FROM section_best_selling_products WHERE store_id = ?", [$storeId]); 
     if (!empty($bestSellingIds)) {
         $ids = array_filter(explode(',', $bestSellingIds));
         $order = 1;
         foreach ($ids as $id) {
             $id = trim($id);
-            if($id) $db->execute("INSERT INTO section_best_selling_products (product_id, sort_order, heading, subheading) VALUES (?, ?, ?, ?)", [$id, $order++, $bs_heading, $bs_subheading]);
+            if($id) $db->execute("INSERT INTO section_best_selling_products (product_id, sort_order, heading, subheading, store_id) VALUES (?, ?, ?, ?, ?)", [$id, $order++, $bs_heading, $bs_subheading, $storeId]);
         }
     } else {
         // Even if no products, update headers if something exists or just update the table?
@@ -45,13 +51,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     }
 
     // Process Trending
-    $db->execute("DELETE FROM section_trending_products"); 
+    $db->execute("DELETE FROM section_trending_products WHERE store_id = ?", [$storeId]); 
     if (!empty($trendingIds)) {
         $ids = array_filter(explode(',', $trendingIds));
         $order = 1;
         foreach ($ids as $id) {
             $id = trim($id);
-            if($id) $db->execute("INSERT INTO section_trending_products (product_id, sort_order, heading, subheading) VALUES (?, ?, ?, ?)", [$id, $order++, $tr_heading, $tr_subheading]);
+            if($id) $db->execute("INSERT INTO section_trending_products (product_id, sort_order, heading, subheading, store_id) VALUES (?, ?, ?, ?, ?)", [$id, $order++, $tr_heading, $tr_subheading, $storeId]);
         }
     }
     
@@ -78,21 +84,28 @@ if (isset($_SESSION['flash_success'])) {
 }
 
 // Fetch Selected Products JOINING on product_id
+$storeId = $_SESSION['store_id'] ?? null;
+if (!$storeId && isset($_SESSION['user_email'])) {
+     $storeUser = $db->fetchOne("SELECT store_id FROM users WHERE email = ?", [$_SESSION['user_email']]);
+     $storeId = $storeUser['store_id'] ?? null;
+}
 $queryBS = "SELECT p.*, h.sort_order, h.heading, h.subheading FROM products p 
             JOIN section_best_selling_products h ON p.product_id = h.product_id 
+            WHERE h.store_id = ? AND p.store_id = ?
             ORDER BY h.sort_order ASC";
-$bestSellingProducts = $db->fetchAll($queryBS);
+$bestSellingProducts = $db->fetchAll($queryBS, [$storeId, $storeId]);
 
 // Get headers for Best Selling
-$bsHeaders = $db->fetchOne("SELECT heading, subheading FROM section_best_selling_products LIMIT 1");
+$bsHeaders = $db->fetchOne("SELECT heading, subheading FROM section_best_selling_products WHERE store_id = ? LIMIT 1", [$storeId]);
 
 $queryTR = "SELECT p.*, h.sort_order, h.heading, h.subheading FROM products p 
             JOIN section_trending_products h ON p.product_id = h.product_id 
+            WHERE h.store_id = ? AND p.store_id = ?
             ORDER BY h.sort_order ASC";
-$trendingProducts = $db->fetchAll($queryTR);
+$trendingProducts = $db->fetchAll($queryTR, [$storeId, $storeId]);
 
 // Get headers for Trending
-$trHeaders = $db->fetchOne("SELECT heading, subheading FROM section_trending_products LIMIT 1");
+$trHeaders = $db->fetchOne("SELECT heading, subheading FROM section_trending_products WHERE store_id = ? LIMIT 1", [$storeId]);
 
 // Create ID strings for JS state - using product_id
 $bestSellingIdsStr = implode(',', array_column($bestSellingProducts, 'product_id'));

@@ -28,6 +28,11 @@ class Order {
                 LEFT JOIN order_items oi ON o.order_number = oi.order_num
                 WHERE 1=1";
         $params = [];
+
+        if (!empty($filters['store_id'])) {
+            $sql .= " AND o.store_id = ?";
+            $params[] = $filters['store_id'];
+        }
         
         if (!empty($filters['user_id'])) {
             $sql .= " AND o.user_id = ?";
@@ -64,10 +69,10 @@ class Order {
     /**
      * Get order by ID
      */
-    public function getById($id) {
+    public function getById($id, $storeId = null) {
         $order = $this->db->fetchOne(
-            "SELECT * FROM orders WHERE id = ?",
-            [$id]
+            "SELECT * FROM orders WHERE id = ? " . ($storeId ? " AND store_id = ?" : ""),
+            $storeId ? [$id, $storeId] : [$id]
         );
         
         if ($order) {
@@ -80,10 +85,10 @@ class Order {
     /**
      * Get order by Order Number
      */
-    public function getByOrderNumber($orderNumber) {
+    public function getByOrderNumber($orderNumber, $storeId = null) {
         $order = $this->db->fetchOne(
-            "SELECT * FROM orders WHERE order_number = ?",
-            [$orderNumber]
+            "SELECT * FROM orders WHERE order_number = ? " . ($storeId ? " AND store_id = ?" : ""),
+            $storeId ? [$orderNumber, $storeId] : [$orderNumber]
         );
         
         if ($order) {
@@ -97,13 +102,14 @@ class Order {
      * Get order items
      * @param string $orderNumber The order number string
      */
-    public function getOrderItems($orderNumber) {
+    public function getOrderItems($orderNumber, $storeId = null) {
+        if (!$storeId) $storeId = $_SESSION['store_id'] ?? null;
         return $this->db->fetchAll(
             "SELECT oi.*, p.name as product_name, p.featured_image as product_image, p.sku as product_sku, p.slug as product_slug
              FROM order_items oi 
              LEFT JOIN products p ON (oi.product_id = p.product_id OR (oi.product_id < 1000000000 AND oi.product_id = p.id))
-             WHERE oi.order_num = ?",
-            [$orderNumber]
+             WHERE oi.order_num = ? AND oi.store_id = ?",
+            [$orderNumber, $storeId]
         );
     }
     
@@ -138,14 +144,30 @@ class Order {
             } catch (Exception $e) {}
         }
         
+        // Determine Store ID
+        $storeId = $_SESSION['store_id'] ?? null;
+        if (!$storeId) {
+            if (isset($_SESSION['user_email'])) {
+                $storeUser = $this->db->fetchOne("SELECT store_id FROM users WHERE email = ?", [$_SESSION['user_email']]);
+                $storeId = $storeUser['store_id'] ?? null;
+            } elseif (isset($_SESSION['customer_email'])) {
+                $storeCustomer = $this->db->fetchOne("SELECT store_id FROM customers WHERE email = ?", [$_SESSION['customer_email']]);
+                $storeId = $storeCustomer['store_id'] ?? null;
+            }
+        }
+        if (!$storeId) {
+            $storeUser = $this->db->fetchOne("SELECT store_id FROM users WHERE store_id IS NOT NULL LIMIT 1");
+            $storeId = $storeUser['store_id'] ?? null;
+        }
+
         // Insert order
         $orderId = $this->db->insert(
             "INSERT INTO orders 
             (order_number, user_id, customer_name, customer_email, customer_phone,
              billing_address, shipping_address, subtotal, discount_amount, 
              shipping_amount, tax_amount, total_amount, payment_method, 
-             payment_status, order_status, razorpay_payment_id, razorpay_order_id, delivery_date) 
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+             payment_status, order_status, razorpay_payment_id, razorpay_order_id, delivery_date, store_id) 
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
             [
                 $orderNumber,
                 $data['user_id'] ?? null,
@@ -164,7 +186,8 @@ class Order {
                 'pending',
                 $data['razorpay_payment_id'] ?? null,
                 $data['razorpay_order_id'] ?? null,
-                date('Y-m-d', strtotime('+3 days'))
+                date('Y-m-d', strtotime('+3 days')),
+                $storeId
             ]
         );
         
@@ -180,8 +203,8 @@ class Order {
 
             $this->db->insert(
                 "INSERT INTO order_items 
-                (order_num, product_id, product_name, product_sku, quantity, oversold_quantity, price, subtotal, variant_attributes) 
-                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)",
+                (order_num, product_id, product_name, product_sku, quantity, oversold_quantity, price, subtotal, variant_attributes, store_id) 
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
                 [
                     $orderNumber, // Storing Order Number explicitly
                     $pId,
@@ -191,7 +214,8 @@ class Order {
                     $oversoldQty,
                     $item['price'],
                     $item['price'] * $requestedQty,
-                    isset($vAttrs) ? (is_array($vAttrs) ? json_encode($vAttrs) : $vAttrs) : null
+                    isset($vAttrs) ? (is_array($vAttrs) ? json_encode($vAttrs) : $vAttrs) : null,
+                    $storeId
                 ]
             );
 
@@ -256,16 +280,20 @@ class Order {
     }
     
     // ... [updateStatus, updatePaymentStatus, updateTracking, update methods unchanged] ...
-    public function updateStatus($id, $status) {
-        return $this->db->execute("UPDATE orders SET order_status = ? WHERE id = ?", [$status, $id]);
+    public function updateStatus($id, $status, $storeId = null) {
+        if (!$storeId) $storeId = $_SESSION['store_id'] ?? null;
+        return $this->db->execute("UPDATE orders SET order_status = ? WHERE id = ? AND store_id = ?", [$status, $id, $storeId]);
     }
-    public function updatePaymentStatus($id, $status) {
-        return $this->db->execute("UPDATE orders SET payment_status = ? WHERE id = ?", [$status, $id]);
+    public function updatePaymentStatus($id, $status, $storeId = null) {
+        if (!$storeId) $storeId = $_SESSION['store_id'] ?? null;
+        return $this->db->execute("UPDATE orders SET payment_status = ? WHERE id = ? AND store_id = ?", [$status, $id, $storeId]);
     }
-    public function updateTracking($id, $trackingNumber) {
-        return $this->db->execute("UPDATE orders SET tracking_number = ? WHERE id = ?", [$trackingNumber, $id]);
+    public function updateTracking($id, $trackingNumber, $storeId = null) {
+        if (!$storeId) $storeId = $_SESSION['store_id'] ?? null;
+        return $this->db->execute("UPDATE orders SET tracking_number = ? WHERE id = ? AND store_id = ?", [$trackingNumber, $id, $storeId]);
     }
-    public function update($id, $data) {
+    public function update($id, $data, $storeId = null) {
+        if (!$storeId) $storeId = $_SESSION['store_id'] ?? null;
         $updates = [];
         $params = [];
         $allowedFields = ['order_status', 'payment_status', 'tracking_number', 'notes', 'customer_name', 'customer_email', 'customer_phone', 'billing_address', 'shipping_address', 'subtotal', 'discount_amount', 'shipping_amount', 'tax_amount', 'total_amount', 'payment_method'];
@@ -282,7 +310,8 @@ class Order {
         }
         if (empty($updates)) return false;
         $params[] = $id;
-        return $this->db->execute("UPDATE orders SET " . implode(', ', $updates) . " WHERE id = ?", $params);
+        $params[] = $storeId;
+        return $this->db->execute("UPDATE orders SET " . implode(', ', $updates) . " WHERE id = ? AND store_id = ?", $params);
     }
 
     /**
@@ -305,10 +334,21 @@ class Order {
         $currentStock = $this->getCurrentStock($pId, $vAttrs);
         $oversoldQty = max(0, $requestedQty - max(0, $currentStock));
 
+        // Determine Store ID
+        $storeId = $_SESSION['store_id'] ?? null;
+        if (!$storeId && isset($_SESSION['user_email'])) {
+            $storeUser = $this->db->fetchOne("SELECT store_id FROM users WHERE email = ?", [$_SESSION['user_email']]);
+            $storeId = $storeUser['store_id'] ?? null;
+        }
+        if (!$storeId) {
+            $storeUser = $this->db->fetchOne("SELECT store_id FROM users WHERE store_id IS NOT NULL LIMIT 1");
+            $storeId = $storeUser['store_id'] ?? null;
+        }
+
         $itemId = $this->db->insert(
             "INSERT INTO order_items 
-            (order_num, product_id, product_name, product_sku, quantity, oversold_quantity, price, subtotal, variant_attributes) 
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)",
+            (order_num, product_id, product_name, product_sku, quantity, oversold_quantity, price, subtotal, variant_attributes, store_id) 
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
             [
                 $orderNumber, // Always use Order Number
                 $pId,
@@ -318,7 +358,8 @@ class Order {
                 $oversoldQty,
                 $itemData['price'],
                 $itemData['price'] * $requestedQty,
-                isset($vAttrs) ? (is_array($vAttrs) ? json_encode($vAttrs) : $vAttrs) : null
+                isset($vAttrs) ? (is_array($vAttrs) ? json_encode($vAttrs) : $vAttrs) : null,
+                $storeId
             ]
         );
         
@@ -333,20 +374,22 @@ class Order {
     /**
      * Update order item
      */
-    public function updateOrderItem($itemId, $itemData) {
+    public function updateOrderItem($itemId, $itemData, $storeId = null) {
+        if (!$storeId) $storeId = $_SESSION['store_id'] ?? null;
         // Get old item data for stock adjustment
-        $oldItem = $this->db->fetchOne("SELECT product_id, quantity, variant_attributes, order_num FROM order_items WHERE id = ?", [$itemId]);
+        $oldItem = $this->db->fetchOne("SELECT product_id, quantity, variant_attributes, order_num FROM order_items WHERE id = ? AND store_id = ?", [$itemId, $storeId]);
         
         $result = $this->db->execute(
             "UPDATE order_items 
             SET product_name = ?, quantity = ?, price = ?, subtotal = ? 
-            WHERE id = ?",
+            WHERE id = ? AND store_id = ?",
             [
                 $itemData['product_name'],
                 $itemData['quantity'],
                 $itemData['price'],
                 $itemData['price'] * $itemData['quantity'],
-                $itemId
+                $itemId,
+                $storeId
             ]
         );
         
@@ -359,7 +402,7 @@ class Order {
                 $this->adjustStock($oldItem['product_id'], $diff, $oldItem['variant_attributes']);
             }
             
-            $this->recalculateTotals($oldItem['order_num']);
+            $this->recalculateTotals($oldItem['order_num'], $storeId);
         }
         
         return $result;
@@ -368,15 +411,16 @@ class Order {
     /**
      * Delete order item
      */
-    public function deleteOrderItem($itemId) {
-        $item = $this->db->fetchOne("SELECT product_id, quantity, variant_attributes, order_num FROM order_items WHERE id = ?", [$itemId]);
+    public function deleteOrderItem($itemId, $storeId = null) {
+        if (!$storeId) $storeId = $_SESSION['store_id'] ?? null;
+        $item = $this->db->fetchOne("SELECT product_id, quantity, variant_attributes, order_num FROM order_items WHERE id = ? AND store_id = ?", [$itemId, $storeId]);
         
-        $result = $this->db->execute("DELETE FROM order_items WHERE id = ?", [$itemId]);
+        $result = $this->db->execute("DELETE FROM order_items WHERE id = ? AND store_id = ?", [$itemId, $storeId]);
         
         if ($item && $result) {
             // Restore stock
             $this->adjustStock($item['product_id'], (int)$item['quantity'], $item['variant_attributes']);
-            $this->recalculateTotals($item['order_num']);
+            $this->recalculateTotals($item['order_num'], $storeId);
         }
         
         return $result;
@@ -385,27 +429,28 @@ class Order {
     /**
      * Get current stock for a product or variant
      */
-    private function getCurrentStock($productId, $attributes = null) {
+    private function getCurrentStock($productId, $attributes = null, $storeId = null) {
+        if (!$storeId) $storeId = $_SESSION['store_id'] ?? null;
         $pId = $productId;
         $vAttrs = !empty($attributes) ? (is_array($attributes) ? json_encode($attributes) : $attributes) : null;
         
         // Resolve 10-digit product_id
         $productIdValue = $pId;
         if (is_numeric($pId) && (int)$pId < 1000000000) {
-            $prod = $this->db->fetchOne("SELECT product_id FROM products WHERE id = ?", [$pId]);
+            $prod = $this->db->fetchOne("SELECT product_id FROM products WHERE id = ? AND store_id = ?", [$pId, $storeId]);
             if ($prod) $productIdValue = $prod['product_id'];
         }
 
         if ($vAttrs) {
             $v = $this->db->fetchOne(
-                "SELECT stock_quantity FROM product_variants WHERE product_id = ? AND variant_attributes = ?",
-                [$productIdValue, $vAttrs]
+                "SELECT stock_quantity FROM product_variants WHERE product_id = ? AND variant_attributes = ? AND store_id = ?",
+                [$productIdValue, $vAttrs, $storeId]
             );
             return $v ? (int)$v['stock_quantity'] : 0;
         } else {
             $p = $this->db->fetchOne(
-                "SELECT stock_quantity FROM products WHERE product_id = ? OR id = ?",
-                [$productIdValue, $pId]
+                "SELECT stock_quantity FROM products WHERE (product_id = ? OR id = ?) AND store_id = ?",
+                [$productIdValue, $pId, $storeId]
             );
             return $p ? (int)$p['stock_quantity'] : 0;
         }
@@ -417,8 +462,9 @@ class Order {
      * @param int $quantity Amount to add (negative to subtract)
      * @param string|array $attributes Variant attributes
      */
-    private function adjustStock($productId, $quantity, $attributes = null) {
+    private function adjustStock($productId, $quantity, $attributes = null, $storeId = null) {
         try {
+            if (!$storeId) $storeId = $_SESSION['store_id'] ?? null;
             $qty = (int)$quantity;
             $pId = $productId;
             $vAttrs = !empty($attributes) ? (is_array($attributes) ? json_encode($attributes) : $attributes) : null;
@@ -426,7 +472,7 @@ class Order {
             // 1. Resolve product_id (10-digit) if auto-increment ID passed
             $productIdValue = $pId;
             if (is_numeric($pId) && (int)$pId < 1000000000) {
-                $prod = $this->db->fetchOne("SELECT product_id FROM products WHERE id = ?", [$pId]);
+                $prod = $this->db->fetchOne("SELECT product_id FROM products WHERE id = ? AND store_id = ?", [$pId, $storeId]);
                 if ($prod) {
                     $productIdValue = $prod['product_id'];
                 }
@@ -437,8 +483,8 @@ class Order {
                 "UPDATE products 
                  SET stock_quantity = stock_quantity + ?,
                      total_sales = total_sales - ?
-                 WHERE product_id = ? OR id = ?", 
-                [$qty, $qty, $productIdValue, $pId]
+                 WHERE (product_id = ? OR id = ?) AND store_id = ?", 
+                [$qty, $qty, $productIdValue, $pId, $storeId]
             );
 
             // 3. Update variant stock if attributes exist
@@ -446,8 +492,8 @@ class Order {
                 $this->db->execute(
                     "UPDATE product_variants 
                      SET stock_quantity = stock_quantity + ?
-                     WHERE product_id = ? AND variant_attributes = ?",
-                    [$qty, $productIdValue, $vAttrs]
+                     WHERE product_id = ? AND variant_attributes = ? AND store_id = ?",
+                    [$qty, $productIdValue, $vAttrs, $storeId]
                 );
             }
         } catch (Exception $e) {
@@ -459,13 +505,14 @@ class Order {
      * Recalculate order totals based on items
      * @param int|string $identifier Order ID or Order Number
      */
-    public function recalculateTotals($identifier) {
+    public function recalculateTotals($identifier, $storeId = null) {
+        if (!$storeId) $storeId = $_SESSION['store_id'] ?? null;
         // Handle Identifier (ID or Number)
         $order = null;
         if (is_numeric($identifier) && strpos((string)$identifier, 'ORD-') === false) {
-             $order = $this->getById($identifier);
+             $order = $this->getById($identifier, $storeId);
         } else {
-             $order = $this->getByOrderNumber($identifier);
+             $order = $this->getByOrderNumber($identifier, $storeId);
         }
 
         if (!$order) return false;
@@ -474,7 +521,7 @@ class Order {
         $orderNumber = $order['order_number'];
 
         // Get items using order_number
-        $items = $this->getOrderItems($orderNumber);
+        $items = $this->getOrderItems($orderNumber, $storeId);
         
         $subtotal = 0;
         foreach ($items as $item) {
@@ -487,8 +534,8 @@ class Order {
         $totalAmount = $subtotal - $discountAmount + $shippingAmount + $taxAmount;
         
         return $this->db->execute(
-            "UPDATE orders SET subtotal = ?, total_amount = ? WHERE id = ?",
-            [$subtotal, $totalAmount, $orderId]
+            "UPDATE orders SET subtotal = ?, total_amount = ? WHERE id = ? AND store_id = ?",
+            [$subtotal, $totalAmount, $orderId, $storeId]
         );
     }
 }

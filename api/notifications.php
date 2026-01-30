@@ -13,23 +13,24 @@ if (!$auth->isLoggedIn()) {
 
 $notification = new Notification();
 $action = $_GET['action'] ?? 'list';
+$storeId = $_SESSION['store_id'] ?? null;
 
 try {
     switch ($action) {
         case 'count':
-            echo json_encode(['count' => $notification->getUnreadCount()]);
+            echo json_encode(['count' => $notification->getUnreadCount($storeId)]);
             break;
             
         case 'list':
             $limit = isset($_GET['limit']) ? intval($_GET['limit']) : 10;
             $unreadOnly = isset($_GET['unread']) && $_GET['unread'] === '1';
-            $notifications = $notification->getRecent($limit, $unreadOnly);
+            $notifications = $notification->getRecent($limit, $unreadOnly, $storeId);
             echo json_encode(['notifications' => $notifications]);
             break;
             
         case 'mark_read':
             if (isset($_POST['id'])) {
-                $notification->markAsRead(intval($_POST['id']));
+                $notification->markAsRead(intval($_POST['id']), $storeId);
                 echo json_encode(['success' => true]);
             } else {
                 throw new Exception('ID required');
@@ -37,7 +38,7 @@ try {
             break;
             
         case 'mark_all_read':
-            $notification->markAllAsRead();
+            $notification->markAllAsRead($storeId);
             echo json_encode(['success' => true]);
             break;
             

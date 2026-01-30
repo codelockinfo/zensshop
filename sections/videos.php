@@ -8,7 +8,7 @@ $baseUrl = getBaseUrl();
 $db = Database::getInstance();
 
 // Fetch videos from database
-$videos = $db->fetchAll("SELECT * FROM section_videos ORDER BY sort_order ASC");
+$videos = $db->fetchAll("SELECT * FROM section_videos WHERE store_id = ? ORDER BY sort_order ASC", [$storeId]);
 
 // Fallback if empty
 if (empty($videos)) {

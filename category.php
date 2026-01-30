@@ -14,6 +14,10 @@ require_once __DIR__ . '/includes/functions.php';
 $baseUrl = getBaseUrl();
 $product = new Product();
 $db = Database::getInstance();
+require_once __DIR__ . '/classes/Wishlist.php';
+$wishlistObj = new Wishlist();
+$wishlistItems = $wishlistObj->getWishlist();
+$wishlistIds = array_column($wishlistItems, 'product_id');
 
 // Get category slug from URL
 $categorySlug = $_GET['slug'] ?? '';
@@ -45,20 +49,15 @@ require_once __DIR__ . '/includes/header.php';
 // Get products for this category
 $products = $product->getByCategory($categorySlug);
 
-// Get category image
-$categoryImage = null;
-if (!empty($category['image'])) {
-    if (strpos($category['image'], 'http://') === 0 || strpos($category['image'], 'https://') === 0) {
-        $categoryImage = $category['image'];
-    } elseif (strpos($category['image'], '/') === 0) {
-        $categoryImage = $category['image'];
-    } else {
-        $categoryImage = $baseUrl . '/assets/images/uploads/' . $category['image'];
-    }
-} else {
-    // Use placeholder
+// Get category image (prefer banner if available, then fallback to image)
+$catImageRaw = !empty($category['banner']) ? $category['banner'] : ($category['image'] ?? null);
+$categoryImage = getImageUrl($catImageRaw);
+
+if (empty($catImageRaw)) {
+    // Use placeholder if absolutely no image
     $categoryImage = 'data:image/svg+xml;base64,' . base64_encode('<svg width="1200" height="400" viewBox="0 0 1200 400" xmlns="http://www.w3.org/2000/svg"><rect width="1200" height="400" fill="#F3F4F6"/><circle cx="600" cy="200" r="80" fill="#9B7A8A"/><path d="M400 350C400 300 500 250 600 250C700 250 800 300 800 350" fill="#9B7A8A"/></svg>');
 }
+
 ?>
 
 <section class="py-16 md:py-24 bg-white min-h-screen">
@@ -78,7 +77,7 @@ if (!empty($category['image'])) {
                      class="w-full h-full object-cover">
                 <div class="absolute inset-0 bg-black bg-opacity-40 flex items-center justify-center">
                     <div class="text-center text-white">
-                        <h1 class="text-4xl md:text-5xl font-heading font-bold mb-4">
+                        <h1 class="text-4xl md:text-5xl font-heading font-bold mb-4 text-white">
                             <?php echo htmlspecialchars($category['name']); ?>
                         </h1>
                         <?php if (!empty($category['description'])): ?>
@@ -113,32 +112,37 @@ if (!empty($category['image'])) {
                     <span class="absolute top-2 left-2 bg-red-500 text-white px-2 py-1 text-xs font-bold rounded">-<?php echo $discount; ?>%</span>
                     <?php endif; ?>
                     
-                    <!-- Wishlist Icon -->
-                    <button class="absolute top-2 right-2 w-10 h-10 bg-white rounded-full flex items-center justify-center hover:bg-red-500 hover:text-white transition z-20 wishlist-btn" 
-                            data-product-id="<?php echo $item['id']; ?>"
-                            title="Add to Wishlist">
-                        <i class="far fa-heart"></i>
+                    <!-- Wishlist Icon (Always Visible) -->
+                    <?php 
+                    $currentId = !empty($item['product_id']) ? $item['product_id'] : $item['id'];
+                    $inWishlist = in_array($currentId, $wishlistIds);
+                    ?>
+                    <button class="absolute top-2 right-2 w-10 h-10 rounded-full flex items-center justify-center <?php echo $inWishlist ? 'bg-black text-white' : 'bg-white text-black'; ?> hover:bg-black hover:text-white transition z-20 wishlist-btn" 
+                            data-product-id="<?php echo $currentId; ?>"
+                            title="<?php echo $inWishlist ? 'Remove from Wishlist' : 'Add to Wishlist'; ?>">
+                        <i class="<?php echo $inWishlist ? 'fas' : 'far'; ?> fa-heart"></i>
+                        <span class="product-tooltip"><?php echo $inWishlist ? 'Remove from Wishlist' : 'Add to Wishlist'; ?></span>
                     </button>
                     
                     <!-- Hover Action Buttons -->
-                    <div class="product-actions absolute right-2 top-12 flex flex-col gap-2 opacity-0 group-hover:opacity-100 transition-opacity duration-300 z-30">
+                    <div class="product-actions absolute right-2 top-12 flex flex-col gap-2 mt-2 opacity-0 group-hover:opacity-100 transition-opacity duration-300 z-30">
                         <a href="<?php echo $baseUrl; ?>/product.php?slug=<?php echo urlencode($item['slug'] ?? ''); ?>" 
-                           class="w-10 h-10 bg-white rounded-full flex items-center justify-center hover:bg-primary hover:text-white transition shadow-lg quick-view-btn" 
-                           data-product-id="<?php echo $item['id']; ?>"
-                           data-product-slug="<?php echo htmlspecialchars($item['slug'] ?? ''); ?>"
-                           title="Quick View">
+                           class="product-action-btn w-10 h-10 bg-white rounded-full flex items-center justify-center hover:bg-black hover:text-white transition shadow-lg quick-view-btn relative group" 
+                           data-product-id="<?php echo $item['product_id']; ?>"
+                           data-product-slug="<?php echo htmlspecialchars($item['slug'] ?? ''); ?>">
                             <i class="fas fa-eye"></i>
+                            <span class="product-tooltip">Quick View</span>
                         </a>
-                        <button class="w-10 h-10 bg-white rounded-full flex items-center justify-center hover:bg-primary hover:text-white transition shadow-lg compare-btn" 
-                                data-product-id="<?php echo $item['id']; ?>"
-                                title="Compare">
+                        <!-- <button class="product-action-btn w-10 h-10 bg-white rounded-full flex items-center justify-center hover:bg-black hover:text-white transition shadow-lg compare-btn relative group" 
+                                data-product-id="<?php echo $item['id']; ?>">
                             <i class="fas fa-layer-group"></i>
-                        </button>
-                        <button class="w-10 h-10 bg-white rounded-full flex items-center justify-center hover:bg-primary hover:text-white transition shadow-lg add-to-cart-hover-btn <?php echo ($item['stock_status'] === 'out_of_stock' || $item['stock_quantity'] <= 0) ? 'opacity-50 cursor-not-allowed' : ''; ?>" 
-                                data-product-id="<?php echo $item['id']; ?>"
-                                title="<?php echo ($item['stock_status'] === 'out_of_stock' || $item['stock_quantity'] <= 0) ? 'Out of Stock' : 'Add to Cart'; ?>"
+                            <span class="product-tooltip">Compare</span>
+                        </button> -->
+                        <button class="product-action-btn w-10 h-10 bg-white rounded-full flex items-center justify-center hover:bg-black hover:text-white transition shadow-lg add-to-cart-hover-btn relative group <?php echo ($item['stock_status'] === 'out_of_stock' || $item['stock_quantity'] <= 0) ? 'opacity-50 cursor-not-allowed' : ''; ?>" 
+                                data-product-id="<?php echo $item['product_id']; ?>"
                                 <?php echo ($item['stock_status'] === 'out_of_stock' || $item['stock_quantity'] <= 0) ? 'disabled' : ''; ?>>
                             <i class="fas fa-shopping-cart"></i>
+                            <span class="product-tooltip"><?php echo ($item['stock_status'] === 'out_of_stock' || $item['stock_quantity'] <= 0) ? 'Out of Stock' : 'Add to Cart'; ?></span>
                         </button>
                     </div>
                 </div>
@@ -159,11 +163,11 @@ if (!empty($category['image'])) {
                             <?php endfor; ?>
                         </div>
                     </div>
-                    <div>
+                    <div class="flex items-center gap-2">
+                        <p class="text-md font-bold <?php echo $discount > 0 ? 'text-red-500' : 'text-primary'; ?>"><?php echo format_price($price, $item['currency'] ?? 'USD'); ?></p>
                         <?php if ($originalPrice): ?>
-                        <span class="text-gray-400 line-through text-sm block">$<?php echo number_format($originalPrice, 2); ?></span>
+                        <span class="text-gray-400 line-through text-sm block"><?php echo format_price($originalPrice, $item['currency'] ?? 'USD'); ?></span>
                         <?php endif; ?>
-                        <p class="text-xl font-bold <?php echo $discount > 0 ? 'text-red-500' : 'text-primary'; ?>">$<?php echo number_format($price, 2); ?></p>
                     </div>
                 </div>
             </div>

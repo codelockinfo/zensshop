@@ -11,8 +11,24 @@ if (!isset($baseUrl) && function_exists('getBaseUrl')) {
 require_once __DIR__ . '/../classes/Database.php';
 $db = Database::getInstance();
 
+// Determine Store ID
+$storeId = $_SESSION['store_id'] ?? null;
+if (!$storeId) {
+    try {
+        if (isset($_SESSION['user_email'])) {
+             $storeUser = $db->fetchOne("SELECT store_id FROM users WHERE email = ?", [$_SESSION['user_email']]);
+             $storeId = $storeUser['store_id'] ?? null;
+        }
+        if (!$storeId) {
+             $storeUser = $db->fetchOne("SELECT store_id FROM users WHERE store_id IS NOT NULL LIMIT 1");
+             $storeId = $storeUser['store_id'] ?? null;
+        }
+        if ($storeId) $_SESSION['store_id'] = $storeId;
+    } catch(Exception $ex) {}
+}
+
 // Fetch Settings
-$settingsRows = $db->fetchAll("SELECT * FROM site_settings");
+$settingsRows = $db->fetchAll("SELECT * FROM site_settings WHERE store_id = ?", [$storeId]);
 $footerSettings = [];
 foreach ($settingsRows as $row) {
     $footerSettings[$row['setting_key']] = $row['setting_value'];
@@ -22,10 +38,10 @@ foreach ($settingsRows as $row) {
 // We now use a SINGLE "Footer Menu" (footer_main)
 // Top level items = Columns
 // Children = Links
-$footerMenuData = $db->fetchOne("SELECT id FROM menus WHERE location = 'footer_main'");
+$footerMenuData = $db->fetchOne("SELECT id FROM menus WHERE location = 'footer_main' AND store_id = ?", [$storeId]);
 $footerColumns = [];
 if ($footerMenuData) {
-    $rawItems = $db->fetchAll("SELECT * FROM menu_items WHERE menu_id = ? ORDER BY sort_order ASC", [$footerMenuData['id']]);
+    $rawItems = $db->fetchAll("SELECT * FROM menu_items WHERE menu_id = ? AND store_id = ? ORDER BY sort_order ASC", [$footerMenuData['id'], $storeId]);
     $footerColumns = buildMenuTree($rawItems);
 }
 
@@ -136,9 +152,15 @@ function renderFooterLinkRecursive($item, $baseUrl) {
                     // Special handing for "Follow Us" to show icons if needed?
                     // For now, standard list as requested by "change text" requirement.
                 ?>
-                <div class="column w-full md:w-1/2 lg:w-1/6 px-4 mb-8 lg:mb-0">
-                    <h3 class="text-lg font-sans mb-4 text-black nav-link"><?php echo htmlspecialchars($colTitle); ?></h3>
-                    
+                <div class="column w-full md:w-1/2 lg:w-1/6 px-4 mb-6 lg:mb-0 border-b border-gray-100 md:border-none pb-4 md:pb-0 last:border-0">
+                    <div class="flex items-center justify-between cursor-pointer md:cursor-default group" onclick="toggleFooterAccordion(this)">
+                        <h3 class="text-lg font-sans text-black nav-link font-bold select-none"><?php echo htmlspecialchars($colTitle); ?></h3>
+                        <span class="md:hidden text-gray-500 group-hover:text-black transition-colors">
+                            <i class="fas fa-plus"></i>
+                        </span>
+                    </div>
+                
+                    <div class="hidden md:block mt-4 footer-accordion-content transition-all duration-300">
                     <?php if (stripos($colTitle, 'Follow') !== false): // Basic detection for Follow Us ?>
                         <!-- Social Icons Logic -->
                         <div class="flex space-x-3">
@@ -163,6 +185,7 @@ function renderFooterLinkRecursive($item, $baseUrl) {
                             <?php foreach ($colItems as $item) { renderFooterLinkRecursive($item, $baseUrl); } ?>
                         </ul>
                     <?php endif; ?>
+                    </div>
                 </div>
                 <?php endforeach; ?>
             </div>
@@ -454,6 +477,28 @@ function renderFooterLinkRecursive($item, $baseUrl) {
     window.closeRemoveConfirm = closeRemoveConfirm;
     window.confirmRemoveWithWishlist = confirmRemoveWithWishlist;
     window.confirmRemoveWithoutWishlist = confirmRemoveWithoutWishlist;
+    </script>
+    <script>
+    function toggleFooterAccordion(element) {
+        if (window.innerWidth >= 768) return;
+        
+        const content = element.nextElementSibling;
+        const icon = element.querySelector('i');
+        
+        // Check if currently hidden
+        const isHidden = content.classList.contains('hidden');
+        
+        // Toggle Hidden
+        if (isHidden) {
+            content.classList.remove('hidden');
+            icon.classList.remove('fa-plus');
+            icon.classList.add('fa-times');
+        } else {
+            content.classList.add('hidden');
+            icon.classList.remove('fa-times');
+            icon.classList.add('fa-plus');
+        }
+    }
     </script>
 </body>
 </html>

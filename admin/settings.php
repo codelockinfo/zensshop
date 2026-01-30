@@ -34,8 +34,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $defaultPageConfig = json_encode(['theme_color' => '#5F8D76', 'body_bg_color' => '#ffffff', 'body_text_color' => '#000000', 'section_order' => $defaultOrder]);
                 
                 $enabledJson = json_encode(['show' => 1, 'items' => []]);
-                $db->insert("INSERT INTO landing_pages (name, slug, product_id, page_config, banner_data, stats_data, why_data, about_data, testimonials_data, newsletter_data, platforms_data) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)", 
-                    [$newName, $newSlug, $productId, $defaultPageConfig, $enabledJson, $enabledJson, $enabledJson, $enabledJson, $enabledJson, $enabledJson, $enabledJson]);
+                // Determine Store ID
+                $storeId = $_SESSION['store_id'] ?? null;
+                if (!$storeId && isset($_SESSION['user_email'])) {
+                     $storeUser = $db->fetchOne("SELECT store_id FROM users WHERE email = ?", [$_SESSION['user_email']]);
+                     $storeId = $storeUser['store_id'] ?? null;
+                }
+                
+                $db->insert("INSERT INTO landing_pages (name, slug, product_id, page_config, banner_data, stats_data, why_data, about_data, testimonials_data, newsletter_data, platforms_data, store_id) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)", 
+                    [$newName, $newSlug, $productId, $defaultPageConfig, $enabledJson, $enabledJson, $enabledJson, $enabledJson, $enabledJson, $enabledJson, $enabledJson, $storeId]);
                 $_SESSION['flash_success'] = "New landing page created!";
                 header("Location: " . $baseUrl . '/admin/special-page?page=' . urlencode($newSlug));
                 exit;
@@ -48,10 +55,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     } elseif ($action === 'delete_page') {
         // Delete Page
         $delId = intval($_POST['page_id']);
+        $storeId = $_SESSION['store_id'] ?? null;
+        if (!$storeId && isset($_SESSION['user_email'])) {
+             $storeUser = $db->fetchOne("SELECT store_id FROM users WHERE email = ?", [$_SESSION['user_email']]);
+             $storeId = $storeUser['store_id'] ?? null;
+        }
         // Prevent deleting 'default' if you want to keep one master page
-        $check = $db->fetchOne("SELECT slug FROM landing_pages WHERE id = ?", [$delId]);
+        $check = $db->fetchOne("SELECT slug FROM landing_pages WHERE id = ? AND store_id = ?", [$delId, $storeId]);
         if ($check && $check['slug'] !== 'default') {
-            $db->execute("DELETE FROM landing_pages WHERE id = ?", [$delId]);
+            $db->execute("DELETE FROM landing_pages WHERE id = ? AND store_id = ?", [$delId, $storeId]);
             $_SESSION['flash_success'] = "Page deleted successfully.";
             header("Location: " . $baseUrl . '/admin/special-page?page=default');
             exit;
@@ -371,13 +383,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     header_data=?, hero_data=?, banner_data=?, stats_data=?, why_data=?, about_data=?, 
                     testimonials_data=?, newsletter_data=?, platforms_data=?, footer_data=?,
                     page_config=?, seo_data=?
-                WHERE id=?",
+                WHERE id=? AND store_id=?",
                 [
                     $productId, $pageName, $selectedSlug,
                     $headerGrouped, $heroGrouped, $bannerGrouped, $statsGrouped, $whyGrouped, $aboutGrouped,
                     $testiGrouped, $newsGrouped, $platformsGrouped, $footerGrouped,
                     $pageConfigGrouped, $seoGrouped,
-                    $id
+                    $id, $storeId
                 ]
             );
             $_SESSION['flash_success'] = "Page settings saved successfully!";
@@ -437,7 +449,12 @@ require_once __DIR__ . '/../includes/admin-header.php';
 <?php
 
 // Fetch all pages for selector
-$allPages = $db->fetchAll("SELECT id, name, slug FROM landing_pages ORDER BY name ASC");
+$storeId = $_SESSION['store_id'] ?? null;
+if (!$storeId && isset($_SESSION['user_email'])) {
+     $storeUser = $db->fetchOne("SELECT store_id FROM users WHERE email = ?", [$_SESSION['user_email']]);
+     $storeId = $storeUser['store_id'] ?? null;
+}
+$allPages = $db->fetchAll("SELECT id, name, slug FROM landing_pages WHERE store_id = ? ORDER BY name ASC", [$storeId]);
 
 // Determine which page to edit
 $selectedSlug = $_GET['page'] ?? '';
@@ -448,15 +465,15 @@ if (empty($selectedSlug) && !empty($allPages)) {
 }
 
 // Fetch active products for dropdown
-$products = $db->fetchAll("SELECT id, product_id, name, price, currency FROM products WHERE status = 'active' ORDER BY name ASC");
+$products = $db->fetchAll("SELECT id, product_id, name, price, currency FROM products WHERE status = 'active' AND store_id = ? ORDER BY name ASC", [$storeId]);
 
 // Fetch Current Page Data
-$lp = $db->fetchOne("SELECT * FROM landing_pages WHERE slug = ?", [$selectedSlug]);
+$lp = $db->fetchOne("SELECT * FROM landing_pages WHERE slug = ? AND store_id = ?", [$selectedSlug, $storeId]);
 
 // If still no page found (e.g. invalid slug provided and not caught above), try first page again
 if (!$lp && !empty($allPages)) {
     $selectedSlug = $allPages[0]['slug'];
-    $lp = $db->fetchOne("SELECT * FROM landing_pages WHERE slug = ?", [$selectedSlug]);
+    $lp = $db->fetchOne("SELECT * FROM landing_pages WHERE slug = ? AND store_id = ?", [$selectedSlug, $storeId]);
 }
 
 // --- DATA RECONCILIATION & BACKWARD COMPATIBILITY ---

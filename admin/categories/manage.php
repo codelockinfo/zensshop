@@ -13,8 +13,15 @@ $category = null;
 $error = '';
 $success = '';
 
+// Determine Store ID
+$storeId = $_SESSION['store_id'] ?? null;
+if (!$storeId && isset($_SESSION['user_email'])) {
+     $storeUser = $db->fetchOne("SELECT store_id FROM users WHERE email = ?", [$_SESSION['user_email']]);
+     $storeId = $storeUser['store_id'] ?? null;
+}
+
 if ($id) {
-    $category = $db->fetchOne("SELECT * FROM categories WHERE id = ?", [$id]);
+    $category = $db->fetchOne("SELECT * FROM categories WHERE id = ? AND store_id = ?", [$id, $storeId]);
 }
 
 // Process POST request BEFORE including header
@@ -79,19 +86,21 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $bannerPath = ''; // User removed banner
     }
 
+    $icon = $_POST['icon'] ?? '';
+
     try {
         if ($id && $category) {
             $db->execute(
-                "UPDATE categories SET name = ?, slug = ?, description = ?, status = ?, sort_order = ?, image = ?, banner = ? WHERE id = ?",
-                [$name, $slug, $description, $status, $sortOrder, $imagePath, $bannerPath, $id]
+                "UPDATE categories SET name = ?, slug = ?, description = ?, status = ?, sort_order = ?, image = ?, banner = ?, icon = ? WHERE id = ? AND store_id = ?",
+                [$name, $slug, $description, $status, $sortOrder, $imagePath, $bannerPath, $icon, $id, $storeId]
             );
             $success = 'Category updated successfully!';
             // Refresh category data
-            $category = $db->fetchOne("SELECT * FROM categories WHERE id = ?", [$id]);
+            $category = $db->fetchOne("SELECT * FROM categories WHERE id = ? AND store_id = ?", [$id, $storeId]);
         } else {
             $db->insert(
-                "INSERT INTO categories (name, slug, description, status, sort_order, image, banner) VALUES (?, ?, ?, ?, ?, ?, ?)",
-                [$name, $slug, $description, $status, $sortOrder, $imagePath, $bannerPath]
+                "INSERT INTO categories (name, slug, description, status, sort_order, image, banner, icon, store_id) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)",
+                [$name, $slug, $description, $status, $sortOrder, $imagePath, $bannerPath, $icon, $storeId]
             );
             header('Location: ' . $baseUrl . '/admin/categories/list.php');
             exit;

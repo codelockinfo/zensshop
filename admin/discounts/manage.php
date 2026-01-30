@@ -15,7 +15,8 @@ $error = '';
 $success = '';
 
 if ($id) {
-    $discount = $db->fetchOne("SELECT * FROM discounts WHERE id = ?", [$id]);
+    $storeId = $_SESSION['store_id'] ?? null;
+    $discount = $db->fetchOne("SELECT * FROM discounts WHERE id = ? AND store_id = ?", [$id, $storeId]);
 }
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
@@ -31,6 +32,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $endDate = $_POST['end_date'] ?? null;
     $status = $_POST['status'] ?? 'active';
     
+    // Determine Store ID
+    $storeId = $_SESSION['store_id'] ?? null;
+    if (!$storeId && isset($_SESSION['user_email'])) {
+         $storeUser = $db->fetchOne("SELECT store_id FROM users WHERE email = ?", [$_SESSION['user_email']]);
+         $storeId = $storeUser['store_id'] ?? null;
+    }
+
     try {
         if ($id && $discount) {
             $db->execute(
@@ -44,10 +52,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         } else {
             $db->insert(
                 "INSERT INTO discounts (code, name, description, type, value, min_purchase_amount, 
-                 max_discount_amount, usage_limit, start_date, end_date, status) 
-                 VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+                 max_discount_amount, usage_limit, start_date, end_date, status, store_id) 
+                 VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
                 [$code, $name, $description, $type, $value, $minPurchase, $maxDiscount, 
-                 $usageLimit, $startDate, $endDate, $status]
+                 $usageLimit, $startDate, $endDate, $status, $storeId]
             );
             $success = 'Discount created successfully!';
         }
@@ -56,7 +64,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     }
 }
 
-$discounts = $db->fetchAll("SELECT * FROM discounts ORDER BY created_at DESC");
+$storeId = $_SESSION['store_id'] ?? null;
+$discounts = $db->fetchAll("SELECT * FROM discounts WHERE store_id = ? ORDER BY created_at DESC", [$storeId]);
 ?>
 
 <div class="mb-6">

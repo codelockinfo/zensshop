@@ -28,14 +28,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $error = "Please enter a valid email address.";
         } else {
             // Check if user exists
-            $user = $db->fetchOne("SELECT id FROM customers WHERE email = ?", [$email]);
+            $user = $db->fetchOne("SELECT id, store_id FROM customers WHERE email = ?", [$email]);
             if ($user) {
                 // Generate secure persistent OTP
                 $otp = sprintf("%06d", mt_rand(1, 999999));
+                $storeId = $user['store_id'] ?? null;
                 
                 // Delete old OTPs
                 $db->execute("DELETE FROM customer_reset_password WHERE email = ?", [$email]);
-                $db->execute("INSERT INTO customer_reset_password (email, otp) VALUES (?, ?)", [$email, $otp]);
+                $db->execute("INSERT INTO customer_reset_password (email, otp, store_id) VALUES (?, ?, ?)", [$email, $otp, $storeId]);
                 
                 // Send Email
                 $emailService = new Email();

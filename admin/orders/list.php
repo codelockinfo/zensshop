@@ -11,10 +11,16 @@ $pageTitle = 'Order List';
 require_once __DIR__ . '/../../includes/admin-header.php';
 
 $order = new Order();
+$storeId = $_SESSION['store_id'] ?? null;
+if (!$storeId && isset($_SESSION['user_email'])) {
+     $storeUser = Database::getInstance()->fetchOne("SELECT store_id FROM users WHERE email = ?", [$_SESSION['user_email']]);
+     $storeId = $storeUser['store_id'] ?? null;
+}
 $filters = [
     'order_status' => $_GET['status'] ?? null,
     'payment_status' => $_GET['payment'] ?? null,
-    'search' => $_GET['search'] ?? ''
+    'search' => $_GET['search'] ?? '',
+    'store_id' => $storeId
 ];
 $orders = $order->getAll($filters);
 ?>

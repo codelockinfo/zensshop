@@ -30,6 +30,10 @@ $cartTotal = $cart->getTotal();
 $customer = null;
 if ($auth->isLoggedIn()) {
     $customer = $auth->getCurrentCustomer();
+    // Ensure store_id is in session if not already (for users logged in before the fix)
+    if (!isset($_SESSION['store_id']) && $customer && isset($customer['store_id'])) {
+        $_SESSION['store_id'] = $customer['store_id'];
+    }
 }
 
 // Redirect if cart is empty

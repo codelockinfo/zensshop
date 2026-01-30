@@ -19,8 +19,9 @@ $orderNumber = $_GET['order_number'] ?? null;
 $order = new Order();
 $orderData = null;
 
+$storeId = $_SESSION['store_id'] ?? null;
 if ($orderNumber) {
-    $orderData = $order->getByOrderNumber($orderNumber);
+    $orderData = $order->getByOrderNumber($orderNumber, $storeId);
     if ($orderData) {
         $orderId = $orderData['id'];
     }
@@ -28,7 +29,7 @@ if ($orderNumber) {
     // Convert to integer if it's a numeric ID
     if (is_numeric($orderId)) {
         $orderId = (int)$orderId;
-        $orderData = $order->getById($orderId);
+        $orderData = $order->getById($orderId, $storeId);
     }
 }
 

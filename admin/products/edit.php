@@ -15,18 +15,24 @@ $error = '';
 $success = '';
 
 // Fetch brands from site_settings
-$brandsResult = $db->fetchOne("SELECT setting_value FROM site_settings WHERE setting_key = 'Brands'");
+$storeId = $_SESSION['store_id'] ?? null;
+$brandsResult = $db->fetchOne("SELECT setting_value FROM site_settings WHERE setting_key = 'Brands' AND store_id = ?", [$storeId]);
 $brands = $brandsResult ? json_decode($brandsResult['setting_value'], true) : [];
 
 // Get product ID or 10-digit product_id
 $id = $_GET['id'] ?? null;
 $productIdParam = $_GET['product_id'] ?? null;
+$storeId = $_SESSION['store_id'] ?? null;
+if (!$storeId && isset($_SESSION['user_email'])) {
+     $storeUser = $db->fetchOne("SELECT store_id FROM users WHERE email = ?", [$_SESSION['user_email']]);
+     $storeId = $storeUser['store_id'] ?? null;
+}
 
 if ($productIdParam) {
-    $productData = $product->getByProductId($productIdParam);
+    $productData = $product->getByProductId($productIdParam, $storeId);
     $productId = $productData['id'] ?? null;
 } elseif ($id) {
-    $productData = $product->getById($id);
+    $productData = $product->getById($id, $storeId);
     $productId = $id;
 } else {
     header('Location: ' . $baseUrl . '/admin/products/list');
@@ -173,7 +179,7 @@ $pageTitle = 'Edit Product';
 require_once __DIR__ . '/../../includes/functions.php';
 require_once __DIR__ . '/../../includes/admin-header.php';
 
-$categories = $db->fetchAll("SELECT * FROM categories WHERE status = 'active' ORDER BY name");
+$categories = $db->fetchAll("SELECT * FROM categories WHERE status = 'active' AND store_id = ? ORDER BY name", [$storeId]);
 
 // Get existing product categories
 $existingCategoryIds = $db->fetchAll(

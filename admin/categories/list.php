@@ -11,7 +11,8 @@ $pageTitle = 'Categories';
 require_once __DIR__ . '/../../includes/admin-header.php';
 
 $db = Database::getInstance();
-$categories = $db->fetchAll("SELECT * FROM categories ORDER BY sort_order ASC");
+$storeId = $_SESSION['store_id'] ?? null;
+$categories = $db->fetchAll("SELECT * FROM categories WHERE store_id = ? ORDER BY sort_order ASC", [$storeId]);
 // Debug: uncomment if needed
 // print_r($categories);
 ?>

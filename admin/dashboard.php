@@ -33,32 +33,39 @@ function getTrendHtml($percent) {
     }
 }
 
+// --- Store ID Filtering ---
+$storeId = $_SESSION['store_id'] ?? null;
+if (!$storeId && isset($_SESSION['user_email'])) {
+     $storeUser = $db->fetchOne("SELECT store_id FROM users WHERE email = ?", [$_SESSION['user_email']]);
+     $storeId = $storeUser['store_id'] ?? null;
+}
+
 // --- Total Statistics (All Time) ---
-$totalProducts = $db->fetchOne("SELECT COUNT(*) as count FROM products")['count'];
-$totalOrders = $db->fetchOne("SELECT COUNT(*) as count FROM orders")['count'];
-$totalRevenue = $db->fetchOne("SELECT SUM(total_amount) as total FROM orders WHERE payment_status = 'paid'")['total'] ?? 0;
-$totalCustomers = $db->fetchOne("SELECT COUNT(DISTINCT customer_email) as count FROM orders")['count'];
+$totalProducts = $db->fetchOne("SELECT COUNT(*) as count FROM products WHERE store_id = ?", [$storeId])['count'];
+$totalOrders = $db->fetchOne("SELECT COUNT(*) as count FROM orders WHERE store_id = ?", [$storeId])['count'];
+$totalRevenue = $db->fetchOne("SELECT SUM(total_amount) as total FROM orders WHERE payment_status = 'paid' AND store_id = ?", [$storeId])['total'] ?? 0;
+$totalCustomers = $db->fetchOne("SELECT COUNT(DISTINCT customer_email) as count FROM orders WHERE store_id = ?", [$storeId])['count'];
 
 // --- Monthly Growth Statistics (This Month vs Last Month) ---
 // Orders
-$ordersThisMonth = $db->fetchOne("SELECT COUNT(*) as count FROM orders WHERE MONTH(created_at) = MONTH(CURRENT_DATE()) AND YEAR(created_at) = YEAR(CURRENT_DATE())")['count'];
-$ordersLastMonth = $db->fetchOne("SELECT COUNT(*) as count FROM orders WHERE MONTH(created_at) = MONTH(CURRENT_DATE() - INTERVAL 1 MONTH) AND YEAR(created_at) = YEAR(CURRENT_DATE() - INTERVAL 1 MONTH)")['count'];
+$ordersThisMonth = $db->fetchOne("SELECT COUNT(*) as count FROM orders WHERE MONTH(created_at) = MONTH(CURRENT_DATE()) AND YEAR(created_at) = YEAR(CURRENT_DATE()) AND store_id = ?", [$storeId])['count'];
+$ordersLastMonth = $db->fetchOne("SELECT COUNT(*) as count FROM orders WHERE MONTH(created_at) = MONTH(CURRENT_DATE() - INTERVAL 1 MONTH) AND YEAR(created_at) = YEAR(CURRENT_DATE() - INTERVAL 1 MONTH) AND store_id = ?", [$storeId])['count'];
 $ordersGrowth = getPercentageChange($ordersThisMonth, $ordersLastMonth);
 
 // Revenue
-$revenueThisMonth = $db->fetchOne("SELECT SUM(total_amount) as total FROM orders WHERE payment_status = 'paid' AND MONTH(created_at) = MONTH(CURRENT_DATE()) AND YEAR(created_at) = YEAR(CURRENT_DATE())")['total'] ?? 0;
-$revenueLastMonth = $db->fetchOne("SELECT SUM(total_amount) as total FROM orders WHERE payment_status = 'paid' AND MONTH(created_at) = MONTH(CURRENT_DATE() - INTERVAL 1 MONTH) AND YEAR(created_at) = YEAR(CURRENT_DATE() - INTERVAL 1 MONTH)")['total'] ?? 0;
+$revenueThisMonth = $db->fetchOne("SELECT SUM(total_amount) as total FROM orders WHERE payment_status = 'paid' AND MONTH(created_at) = MONTH(CURRENT_DATE()) AND YEAR(created_at) = YEAR(CURRENT_DATE()) AND store_id = ?", [$storeId])['total'] ?? 0;
+$revenueLastMonth = $db->fetchOne("SELECT SUM(total_amount) as total FROM orders WHERE payment_status = 'paid' AND MONTH(created_at) = MONTH(CURRENT_DATE() - INTERVAL 1 MONTH) AND YEAR(created_at) = YEAR(CURRENT_DATE() - INTERVAL 1 MONTH) AND store_id = ?", [$storeId])['total'] ?? 0;
 $revenueGrowth = getPercentageChange($revenueThisMonth, $revenueLastMonth);
 
 // Customers
-$customersThisMonth = $db->fetchOne("SELECT COUNT(DISTINCT customer_email) as count FROM orders WHERE MONTH(created_at) = MONTH(CURRENT_DATE()) AND YEAR(created_at) = YEAR(CURRENT_DATE())")['count'];
-$customersLastMonth = $db->fetchOne("SELECT COUNT(DISTINCT customer_email) as count FROM orders WHERE MONTH(created_at) = MONTH(CURRENT_DATE() - INTERVAL 1 MONTH) AND YEAR(created_at) = YEAR(CURRENT_DATE() - INTERVAL 1 MONTH)")['count'];
+$customersThisMonth = $db->fetchOne("SELECT COUNT(DISTINCT customer_email) as count FROM orders WHERE MONTH(created_at) = MONTH(CURRENT_DATE()) AND YEAR(created_at) = YEAR(CURRENT_DATE()) AND store_id = ?", [$storeId])['count'];
+$customersLastMonth = $db->fetchOne("SELECT COUNT(DISTINCT customer_email) as count FROM orders WHERE MONTH(created_at) = MONTH(CURRENT_DATE() - INTERVAL 1 MONTH) AND YEAR(created_at) = YEAR(CURRENT_DATE() - INTERVAL 1 MONTH) AND store_id = ?", [$storeId])['count'];
 $customersGrowth = getPercentageChange($customersThisMonth, $customersLastMonth);
 
 
 // --- Last 30 Days Statistics (Rolling Window for Bottom Cards) ---
-$revenueLast30Days = $db->fetchOne("SELECT SUM(total_amount) as total FROM orders WHERE payment_status = 'paid' AND created_at >= NOW() - INTERVAL 30 DAY")['total'] ?? 0;
-$revenuePrevious30Days = $db->fetchOne("SELECT SUM(total_amount) as total FROM orders WHERE payment_status = 'paid' AND created_at >= NOW() - INTERVAL 60 DAY AND created_at < NOW() - INTERVAL 30 DAY")['total'] ?? 0;
+$revenueLast30Days = $db->fetchOne("SELECT SUM(total_amount) as total FROM orders WHERE payment_status = 'paid' AND created_at >= NOW() - INTERVAL 30 DAY AND store_id = ?", [$storeId])['total'] ?? 0;
+$revenuePrevious30Days = $db->fetchOne("SELECT SUM(total_amount) as total FROM orders WHERE payment_status = 'paid' AND created_at >= NOW() - INTERVAL 60 DAY AND created_at < NOW() - INTERVAL 30 DAY AND store_id = ?", [$storeId])['total'] ?? 0;
 $revenue30DayGrowth = getPercentageChange($revenueLast30Days, $revenuePrevious30Days);
 $profitLast30Days = $revenueLast30Days * 0.75; // Estimated 75% profit margin logic
 ?>

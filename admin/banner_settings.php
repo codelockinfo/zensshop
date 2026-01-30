@@ -15,7 +15,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     
     if ($action === 'delete') {
         $id = (int)$_POST['id'];
-        $db->execute("DELETE FROM banners WHERE id = ?", [$id]);
+        $storeId = $_SESSION['store_id'] ?? null;
+        if (!$storeId && isset($_SESSION['user_email'])) {
+             $storeUser = $db->fetchOne("SELECT store_id FROM users WHERE email = ?", [$_SESSION['user_email']]);
+             $storeId = $storeUser['store_id'] ?? null;
+        }
+        $db->execute("DELETE FROM banners WHERE id = ? AND store_id = ?", [$id, $storeId]);
         $_SESSION['flash_success'] = "Banner deleted successfully!";
         header("Location: " . $_SERVER['PHP_SELF']);
         exit;
@@ -73,8 +78,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     $params[] = $image_mobile;
                 }
                 
-                $sql .= " WHERE id = ?";
+                $sql .= " WHERE id = ? AND store_id = ?";
                 $params[] = $id;
+                $params[] = $_SESSION['store_id'] ?? null;
                 
                 $db->execute($sql, $params);
                 $_SESSION['flash_success'] = "Banner updated successfully!";
@@ -83,9 +89,16 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 if (empty($image_desktop) && empty($_FILES['image_desktop']['name'])) {
                     $error = "Desktop image is required for new banners.";
                 } else {
+                    // Determine Store ID
+                    $storeId = $_SESSION['store_id'] ?? null;
+                    if (!$storeId && isset($_SESSION['user_email'])) {
+                     $storeUser = $db->fetchOne("SELECT store_id FROM users WHERE email = ?", [$_SESSION['user_email']]);
+                     $storeId = $storeUser['store_id'] ?? null;
+                }
+
                     $db->execute(
-                        "INSERT INTO banners (heading, subheading, link, link_mobile, button_text, image_desktop, image_mobile, display_order, active) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)",
-                        [$heading, $subheading, $link, $link_mobile, $button_text, $image_desktop, $image_mobile, $display_order, $active]
+                        "INSERT INTO banners (heading, subheading, link, link_mobile, button_text, image_desktop, image_mobile, display_order, active, store_id) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+                        [$heading, $subheading, $link, $link_mobile, $button_text, $image_desktop, $image_mobile, $display_order, $active, $storeId]
                     );
                     $_SESSION['flash_success'] = "Banner added successfully!";
                 }
@@ -108,8 +121,13 @@ if (isset($_SESSION['flash_success'])) {
 $pageTitle = 'Banner Settings';
 require_once __DIR__ . '/../includes/admin-header.php';
 
+$storeId = $_SESSION['store_id'] ?? null;
+if (!$storeId && isset($_SESSION['user_email'])) {
+     $storeUser = $db->fetchOne("SELECT store_id FROM users WHERE email = ?", [$_SESSION['user_email']]);
+     $storeId = $storeUser['store_id'] ?? null;
+}
 // Fetch Banners
-$banners = $db->fetchAll("SELECT * FROM banners ORDER BY display_order ASC, created_at DESC");
+$banners = $db->fetchAll("SELECT * FROM banners WHERE store_id = ? ORDER BY display_order ASC, created_at DESC", [$storeId]);
 ?>
 
 <div class="container mx-auto p-6">

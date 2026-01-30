@@ -14,14 +14,15 @@ require_once __DIR__ . '/../../includes/admin-header.php';
 $product = new Product();
 $db = Database::getInstance();
 $search = $_GET['search'] ?? '';
+$storeId = $_SESSION['store_id'] ?? null;
 
-// For admin, get ALL products regardless of status
+// For admin, get products for their store
 $sql = "SELECT DISTINCT p.*, GROUP_CONCAT(DISTINCT c.name SEPARATOR ', ') as category_names
         FROM products p 
         LEFT JOIN product_categories pc ON p.id = pc.product_id
         LEFT JOIN categories c ON pc.category_id = c.id 
-        WHERE p.status != 'archived'";
-$params = [];
+        WHERE p.status != 'archived' AND p.store_id = ?";
+$params = [$storeId];
 
 if (!empty($search)) {
     $sql .= " AND (p.name LIKE ? OR p.description LIKE ? OR p.sku LIKE ? OR p.id LIKE ?)";

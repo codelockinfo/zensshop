@@ -192,40 +192,40 @@ unset($_SESSION['success']);
             <p class="text-sm text-gray-600 mb-6">Configure email sending for order confirmations, support messages, and newsletters</p>
 
             <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <?php foreach ($emailSettings as $setting): ?>
+                <?php 
+                $emailFields = [
+                    'smtp_host' => ['label' => 'SMTP Host', 'placeholder' => 'smtp.gmail.com', 'type' => 'text'],
+                    'smtp_port' => ['label' => 'SMTP Port', 'placeholder' => '587', 'type' => 'number'],
+                    'smtp_encryption' => ['label' => 'SMTP Encryption', 'placeholder' => 'tls', 'type' => 'text'],
+                    'smtp_username' => ['label' => 'SMTP Username', 'placeholder' => 'your-email@gmail.com', 'type' => 'text'],
+                    'smtp_password' => ['label' => 'SMTP Password', 'placeholder' => 'Enter SMTP password', 'type' => 'password'],
+                    'smtp_from_email' => ['label' => 'From Email', 'placeholder' => 'noreply@yourstore.com', 'type' => 'text'],
+                    'smtp_from_name' => ['label' => 'From Name', 'placeholder' => 'Milano Store', 'type' => 'text'],
+                ];
+                foreach ($emailFields as $key => $field): 
+                    $val = $settings->get($key, '');
+                ?>
                     <div>
                         <label class="block text-sm font-medium text-gray-700 mb-2">
-                            <?php echo ucwords(str_replace('_', ' ', $setting['setting_key'])); ?>
+                            <?php echo $field['label']; ?>
                         </label>
-                        <input type="hidden" name="group_<?php echo $setting['setting_key']; ?>" value="email">
-                        <?php if ($setting['setting_key'] === 'smtp_password'): ?>
-                            <div class="relative">
-                                <input type="password" 
-                                       id="<?php echo $setting['setting_key']; ?>"
-                                       name="setting_<?php echo $setting['setting_key']; ?>" 
-                                       value="<?php echo htmlspecialchars($setting['setting_value']); ?>"
-                                       class="w-full px-4 py-2 pr-10 border rounded focus:ring-2 focus:ring-blue-500"
-                                       placeholder="Enter SMTP password">
+                        <input type="hidden" name="group_<?php echo $key; ?>" value="email">
+                        <div class="relative">
+                            <input type="<?php echo $field['type']; ?>" 
+                                   id="<?php echo $key; ?>"
+                                   name="setting_<?php echo $key; ?>" 
+                                   value="<?php echo htmlspecialchars($val); ?>"
+                                   class="w-full px-4 py-2 <?php echo $field['type'] === 'password' ? 'pr-10' : ''; ?> border rounded focus:ring-2 focus:ring-blue-500"
+                                   placeholder="<?php echo $field['placeholder']; ?>">
+                            <?php if ($field['type'] === 'password'): ?>
                                 <button type="button" 
-                                        onclick="togglePassword('<?php echo $setting['setting_key']; ?>')"
+                                        onclick="togglePassword('<?php echo $key; ?>')"
                                         class="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-700">
-                                    <i class="fas fa-eye" id="eye-<?php echo $setting['setting_key']; ?>"></i>
+                                    <i class="fas fa-eye" id="eye-<?php echo $key; ?>"></i>
                                 </button>
-                            </div>
-                        <?php elseif ($setting['setting_key'] === 'smtp_port'): ?>
-                            <input type="number" 
-                                   name="setting_<?php echo $setting['setting_key']; ?>" 
-                                   value="<?php echo htmlspecialchars($setting['setting_value']); ?>"
-                                   class="w-full px-4 py-2 border rounded focus:ring-2 focus:ring-blue-500"
-                                   placeholder="587">
-                        <?php else: ?>
-                            <input type="text" 
-                                   name="setting_<?php echo $setting['setting_key']; ?>" 
-                                   value="<?php echo htmlspecialchars($setting['setting_value']); ?>"
-                                   class="w-full px-4 py-2 border rounded focus:ring-2 focus:ring-blue-500"
-                                   placeholder="Enter value">
-                        <?php endif; ?>
-                        <?php if ($setting['setting_key'] === 'smtp_password'): ?>
+                            <?php endif; ?>
+                        </div>
+                        <?php if ($key === 'smtp_password'): ?>
                             <p class="text-xs text-gray-500 mt-1">For Gmail, use an App Password</p>
                         <?php endif; ?>
                     </div>
@@ -252,26 +252,24 @@ unset($_SESSION['success']);
             </h2>
 
             <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <?php foreach ($generalSettings as $setting): ?>
+                <?php 
+                $genFields = [
+                    'site_name' => ['label' => 'Site Name', 'placeholder' => 'Milano'],
+                    'otp_expiry_minutes' => ['label' => 'OTP Expiry (Minutes)', 'placeholder' => '5', 'type' => 'number'],
+                ];
+                foreach ($genFields as $key => $field): 
+                    $val = $settings->get($key, '');
+                ?>
                     <div>
                         <label class="block text-sm font-medium text-gray-700 mb-2">
-                            <?php echo ucwords(str_replace('_', ' ', $setting['setting_key'])); ?>
+                            <?php echo $field['label']; ?>
                         </label>
-                        <input type="hidden" name="group_<?php echo $setting['setting_key']; ?>" value="general">
-                        <?php if ($setting['setting_key'] === 'otp_expiry_minutes'): ?>
-                            <input type="number" 
-                                   name="setting_<?php echo $setting['setting_key']; ?>" 
-                                   value="<?php echo htmlspecialchars($setting['setting_value']); ?>"
-                                   class="w-full px-4 py-2 border rounded focus:ring-2 focus:ring-blue-500"
-                                   placeholder="10">
-                            <p class="text-xs text-gray-500 mt-1">OTP validity in minutes</p>
-                        <?php else: ?>
-                            <input type="text" 
-                                   name="setting_<?php echo $setting['setting_key']; ?>" 
-                                   value="<?php echo htmlspecialchars($setting['setting_value']); ?>"
-                                   class="w-full px-4 py-2 border rounded focus:ring-2 focus:ring-blue-500"
-                                   placeholder="Enter value">
-                        <?php endif; ?>
+                        <input type="hidden" name="group_<?php echo $key; ?>" value="general">
+                        <input type="<?php echo $field['type'] ?? 'text'; ?>" 
+                               name="setting_<?php echo $key; ?>" 
+                               value="<?php echo htmlspecialchars($val); ?>"
+                               class="w-full px-4 py-2 border rounded focus:ring-2 focus:ring-blue-500"
+                               placeholder="<?php echo $field['placeholder']; ?>">
                     </div>
                 <?php endforeach; ?>
             </div>
@@ -286,49 +284,40 @@ unset($_SESSION['success']);
             <p class="text-sm text-gray-600 mb-6">Configure payment gateway and authentication services</p>
 
             <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <?php foreach ($apiSettings as $setting): ?>
+                <?php 
+                $apiFields = [
+                    'razorpay_key_id' => ['label' => 'Razorpay Key ID', 'placeholder' => 'rzp_test_...'],
+                    'razorpay_key_secret' => ['label' => 'Razorpay Key Secret', 'placeholder' => '...', 'type' => 'password'],
+                    'razorpay_mode' => ['label' => 'Razorpay Mode', 'placeholder' => 'test or live'],
+                    'google_client_id' => ['label' => 'Google Client ID', 'placeholder' => '...-apps.googleusercontent.com'],
+                ];
+                foreach ($apiFields as $key => $field): 
+                     $val = $settings->get($key, '');
+                ?>
                     <div>
                         <label class="block text-sm font-medium text-gray-700 mb-2">
-                            <?php echo ucwords(str_replace('_', ' ', $setting['setting_key'])); ?>
+                            <?php echo $field['label']; ?>
                         </label>
-                        <input type="hidden" name="group_<?php echo $setting['setting_key']; ?>" value="api">
-                        <?php if (strpos($setting['setting_key'], 'secret') !== false || strpos($setting['setting_key'], 'key') !== false): ?>
-                            <div class="relative">
-                                <input type="password" 
-                                       id="<?php echo $setting['setting_key']; ?>"
-                                       name="setting_<?php echo $setting['setting_key']; ?>" 
-                                       value="<?php echo htmlspecialchars($setting['setting_value']); ?>"
-                                       class="w-full px-4 py-2 pr-10 border rounded focus:ring-2 focus:ring-purple-500 font-mono text-sm"
-                                       placeholder="Enter API key">
+                        <input type="hidden" name="group_<?php echo $key; ?>" value="api">
+                        <div class="relative">
+                            <input type="<?php echo $field['type'] ?? 'text'; ?>" 
+                                   id="<?php echo $key; ?>"
+                                   name="setting_<?php echo $key; ?>" 
+                                   value="<?php echo htmlspecialchars($val); ?>"
+                                   class="w-full px-4 py-2 <?php echo ($field['type'] ?? '') === 'password' ? 'pr-10' : ''; ?> border rounded focus:ring-2 focus:ring-blue-500"
+                                   placeholder="<?php echo $field['placeholder']; ?>">
+                            <?php if (($field['type'] ?? '') === 'password'): ?>
                                 <button type="button" 
-                                        onclick="togglePassword('<?php echo $setting['setting_key']; ?>')"
+                                        onclick="togglePassword('<?php echo $key; ?>')"
                                         class="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-700">
-                                    <i class="fas fa-eye" id="eye-<?php echo $setting['setting_key']; ?>"></i>
+                                    <i class="fas fa-eye" id="eye-<?php echo $key; ?>"></i>
                                 </button>
-                            </div>
-                        <?php elseif ($setting['setting_key'] === 'razorpay_mode'): ?>
-                            <select name="setting_<?php echo $setting['setting_key']; ?>" 
-                                    class="w-full px-4 py-2 border rounded focus:ring-2 focus:ring-purple-500">
-                                <option value="test" <?php echo $setting['setting_value'] === 'test' ? 'selected' : ''; ?>>Test Mode</option>
-                                <option value="live" <?php echo $setting['setting_value'] === 'live' ? 'selected' : ''; ?>>Live Mode</option>
-                            </select>
-                        <?php else: ?>
-                            <input type="text" 
-                                   name="setting_<?php echo $setting['setting_key']; ?>" 
-                                   value="<?php echo htmlspecialchars($setting['setting_value']); ?>"
-                                   class="w-full px-4 py-2 border rounded focus:ring-2 focus:ring-purple-500 font-mono text-sm"
-                                   placeholder="Enter value">
-                        <?php endif; ?>
-                        
-                        <?php if ($setting['setting_key'] === 'razorpay_key_id'): ?>
-                            <p class="text-xs text-gray-500 mt-1">Get from Razorpay Dashboard → Settings → API Keys</p>
-                        <?php elseif ($setting['setting_key'] === 'google_client_id'): ?>
-                            <p class="text-xs text-gray-500 mt-1">Get from Google Cloud Console → APIs & Services → Credentials</p>
-                        <?php endif; ?>
+                            <?php endif; ?>
+                        </div>
                     </div>
                 <?php endforeach; ?>
             </div>
-
+        </div>
             <div class="mt-6 grid grid-cols-1 md:grid-cols-2 gap-4">
                 <!-- Razorpay Info -->
                 <div class="p-4 bg-purple-50 rounded border border-purple-200">

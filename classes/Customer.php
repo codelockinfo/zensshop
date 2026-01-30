@@ -42,6 +42,11 @@ class Customer {
                 WHERE 1=1";
         $params = [];
         
+        if (!empty($filters['store_id'])) {
+            $sql .= " AND c.store_id = ?";
+            $params[] = $filters['store_id'];
+        }
+        
         if (!empty($filters['status'])) {
             $sql .= " AND c.status = ?";
             $params[] = $filters['status'];
@@ -67,7 +72,7 @@ class Customer {
     /**
      * Get customers from orders (for non-registered customers)
      */
-    public function getCustomersFromOrders() {
+    public function getCustomersFromOrders($storeId = null) {
         $sql = "SELECT 
                 customer_email as email,
                 customer_name as name,
@@ -79,11 +84,17 @@ class Customer {
                 MAX(created_at) as last_order_date,
                 MIN(created_at) as first_order_date
                 FROM orders
-                WHERE user_id IS NULL OR user_id = 0
-                GROUP BY customer_email, customer_name, customer_phone
-                ORDER BY last_order_date DESC";
+                WHERE (user_id IS NULL OR user_id = 0)";
+        $params = [];
         
-        return $this->db->fetchAll($sql);
+        if ($storeId) {
+            $sql .= " AND store_id = ?";
+            $params[] = $storeId;
+        }
+        
+        $sql .= " GROUP BY customer_email, customer_name, customer_phone ORDER BY last_order_date DESC";
+        
+        return $this->db->fetchAll($sql, $params);
     }
     
     /**
@@ -91,7 +102,7 @@ class Customer {
      */
     public function getAllCustomers($filters = []) {
         $registered = $this->getAll($filters);
-        $fromOrders = $this->getCustomersFromOrders();
+        $fromOrders = $this->getCustomersFromOrders($filters['store_id'] ?? null);
         
         // Combine and format
         $allCustomers = [];
@@ -143,26 +154,36 @@ class Customer {
     /**
      * Get customer by ID
      */
-    public function getById($id) {
+    public function getById($id, $storeId = null) {
         if (!$this->tableExists()) {
             return null;
         }
         
-        $customer = $this->db->fetchOne(
-            "SELECT * FROM customers WHERE customer_id = ?",
-            [$id]
-        );
+        $sql = "SELECT * FROM customers WHERE customer_id = ?";
+        $params = [$id];
+        
+        if ($storeId) {
+            $sql .= " AND store_id = ?";
+            $params[] = $storeId;
+        }
+        
+        $customer = $this->db->fetchOne($sql, $params);
         
         if ($customer) {
             // Get order stats
-            $stats = $this->db->fetchOne(
-                "SELECT 
+            $statsSql = "SELECT 
                 COUNT(*) as total_orders,
                 COALESCE(SUM(total_amount), 0) as total_spent,
                 MAX(created_at) as last_order_date
-                FROM orders WHERE user_id = ?",
-                [$customer['customer_id']]
-            );
+                FROM orders WHERE user_id = ?";
+            $statsParams = [$customer['customer_id']];
+            
+            if ($storeId) {
+                $statsSql .= " AND store_id = ?";
+                $statsParams[] = $storeId;
+            }
+            
+            $stats = $this->db->fetchOne($statsSql, $statsParams);
             
             $customer['total_orders'] = (int)($stats['total_orders'] ?? 0);
             $customer['total_spent'] = (float)($stats['total_spent'] ?? 0);
@@ -172,50 +193,60 @@ class Customer {
         return $customer;
     }
     
-    public function getByCustomerId($customerId) {
-        return $this->getById($customerId);
+    public function getByCustomerId($customerId, $storeId = null) {
+        return $this->getById($customerId, $storeId);
     }
     
     /**
      * Get customer by email
      */
-    public function getByEmail($email) {
+    public function getByEmail($email, $storeId = null) {
         if (!$this->tableExists()) {
             return null;
         }
         
-        return $this->db->fetchOne(
-            "SELECT * FROM customers WHERE email = ?",
-            [$email]
-        );
+        $sql = "SELECT * FROM customers WHERE email = ?";
+        $params = [$email];
+        
+        if ($storeId) {
+            $sql .= " AND store_id = ?";
+            $params[] = $storeId;
+        }
+        
+        return $this->db->fetchOne($sql, $params);
     }
     
     /**
      * Get customer orders
      */
-    public function getCustomerOrders($customerId, $email = null) {
+    public function getCustomerOrders($customerId, $email = null, $storeId = null) {
+        $params = [];
         if ($customerId) {
-            return $this->db->fetchAll(
-                "SELECT o.*, 
-                COUNT(oi.id) as item_count
-                FROM orders o
-                LEFT JOIN order_items oi ON o.order_number = oi.order_num
-                WHERE o.user_id = ?
-                GROUP BY o.id
-                ORDER BY o.created_at DESC",
-                [$customerId]
-            );
+            $sql = "SELECT o.*, 
+                    COUNT(oi.id) as item_count
+                    FROM orders o
+                    LEFT JOIN order_items oi ON o.order_number = oi.order_num
+                    WHERE o.user_id = ?";
+            $params[] = $customerId;
+            if ($storeId) {
+                $sql .= " AND o.store_id = ?";
+                $params[] = $storeId;
+            }
+            $sql .= " GROUP BY o.id ORDER BY o.created_at DESC";
+            return $this->db->fetchAll($sql, $params);
         } else if ($email) {
-            return $this->db->fetchAll(
-                "SELECT o.*, 
-                COUNT(oi.id) as item_count
-                FROM orders o
-                LEFT JOIN order_items oi ON o.order_number = oi.order_num
-                WHERE o.customer_email = ?
-                GROUP BY o.id
-                ORDER BY o.created_at DESC",
-                [$email]
-            );
+            $sql = "SELECT o.*, 
+                    COUNT(oi.id) as item_count
+                    FROM orders o
+                    LEFT JOIN order_items oi ON o.order_number = oi.order_num
+                    WHERE o.customer_email = ?";
+            $params[] = $email;
+            if ($storeId) {
+                $sql .= " AND o.store_id = ?";
+                $params[] = $storeId;
+            }
+            $sql .= " GROUP BY o.id ORDER BY o.created_at DESC";
+            return $this->db->fetchAll($sql, $params);
         }
         
         return [];
@@ -224,19 +255,25 @@ class Customer {
     /**
      * Get customer details by email (for non-registered customers)
      */
-    public function getCustomerByEmail($email) {
-        $orders = $this->db->fetchAll(
-            "SELECT DISTINCT 
-            customer_name as name,
-            customer_email as email,
-            customer_phone as phone,
-            billing_address,
-            shipping_address
-            FROM orders
-            WHERE customer_email = ?
-            LIMIT 1",
-            [$email]
-        );
+    public function getCustomerByEmail($email, $storeId = null) {
+        $sql = "SELECT DISTINCT 
+                customer_name as name,
+                customer_email as email,
+                customer_phone as phone,
+                billing_address,
+                shipping_address
+                FROM orders
+                WHERE customer_email = ?";
+        $params = [$email];
+        
+        if ($storeId) {
+            $sql .= " AND store_id = ?";
+            $params[] = $storeId;
+        }
+        
+        $sql .= " LIMIT 1";
+        
+        $orders = $this->db->fetchAll($sql, $params);
         
         if (!empty($orders)) {
             $customer = $orders[0];
@@ -244,16 +281,21 @@ class Customer {
             $customer['is_registered'] = false;
             
             // Get order stats
-            $stats = $this->db->fetchOne(
-                "SELECT 
+            $statsSql = "SELECT 
                 COUNT(*) as total_orders,
                 SUM(total_amount) as total_spent,
                 MAX(created_at) as last_order_date,
                 MIN(created_at) as first_order_date
                 FROM orders
-                WHERE customer_email = ?",
-                [$email]
-            );
+                WHERE customer_email = ?";
+            $statsParams = [$email];
+            
+            if ($storeId) {
+                $statsSql .= " AND store_id = ?";
+                $statsParams[] = $storeId;
+            }
+            
+            $stats = $this->db->fetchOne($statsSql, $statsParams);
             
             $customer['total_orders'] = (int)($stats['total_orders'] ?? 0);
             $customer['total_spent'] = (float)($stats['total_spent'] ?? 0);

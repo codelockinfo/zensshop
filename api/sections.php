@@ -11,6 +11,30 @@ ini_set('log_errors', 1);
 
 header('Content-Type: text/html; charset=utf-8');
 
+// Start session if not started
+if (session_status() === PHP_SESSION_NONE) {
+    session_start();
+}
+
+require_once __DIR__ . '/../classes/Database.php';
+$db = Database::getInstance();
+
+// Determine Store ID
+$storeId = $_SESSION['store_id'] ?? null;
+if (!$storeId) {
+    try {
+        if (isset($_SESSION['user_email'])) {
+             $storeUser = $db->fetchOne("SELECT store_id FROM users WHERE email = ?", [$_SESSION['user_email']]);
+             $storeId = $storeUser['store_id'] ?? null;
+        }
+        if (!$storeId) {
+             $storeUser = $db->fetchOne("SELECT store_id FROM users WHERE store_id IS NOT NULL LIMIT 1");
+             $storeId = $storeUser['store_id'] ?? null;
+        }
+        if ($storeId) $_SESSION['store_id'] = $storeId;
+    } catch(Exception $ex) {}
+}
+
 // Get section parameter
 $section = isset($_GET['section']) ? trim($_GET['section']) : '';
 

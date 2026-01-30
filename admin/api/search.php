@@ -20,6 +20,7 @@ if (!$auth->isLoggedIn()) {
 
 $db = Database::getInstance();
 $query = trim($_GET['q'] ?? '');
+$storeId = $_SESSION['store_id'] ?? null;
 
 if (empty($query) || strlen($query) < 2) {
     echo json_encode([
@@ -44,10 +45,10 @@ try {
     $products = $db->fetchAll(
         "SELECT id, name, sku, price, status, featured_image 
          FROM products 
-         WHERE name LIKE ? OR sku LIKE ? OR id = ?
+         WHERE store_id = ? AND (name LIKE ? OR sku LIKE ? OR id = ?)
          ORDER BY name ASC 
          LIMIT 5",
-        [$searchTerm, $searchTerm, is_numeric($query) ? (int)$query : -1]
+        [$storeId, $searchTerm, $searchTerm, is_numeric($query) ? (int)$query : -1]
     );
     
     foreach ($products as $product) {
@@ -66,10 +67,10 @@ try {
     $categories = $db->fetchAll(
         "SELECT id, name, slug, image, status 
          FROM categories 
-         WHERE name LIKE ? OR id = ?
+         WHERE store_id = ? AND (name LIKE ? OR id = ?)
          ORDER BY name ASC 
          LIMIT 5",
-        [$searchTerm, is_numeric($query) ? (int)$query : -1]
+        [$storeId, $searchTerm, is_numeric($query) ? (int)$query : -1]
     );
     
     foreach ($categories as $category) {
@@ -92,13 +93,13 @@ try {
                     COALESCE(o.order_number, CONCAT('ORD-', o.id)) as order_number
              FROM orders o
              LEFT JOIN users u ON o.user_id = u.id
-             WHERE CAST(o.id AS CHAR) LIKE ?
+             WHERE o.store_id = ? AND (CAST(o.id AS CHAR) LIKE ?
                 OR COALESCE(o.order_number, '') LIKE ?
                 OR u.name LIKE ?
-                OR u.email LIKE ?
+                OR u.email LIKE ?)
              ORDER BY o.created_at DESC 
              LIMIT 5",
-            [$searchTerm, $searchTerm, $searchTerm, $searchTerm]
+            [$storeId, $searchTerm, $searchTerm, $searchTerm, $searchTerm]
         );
     } catch (Exception $e) {
         $orders = [];
@@ -123,10 +124,10 @@ try {
         $customers = $db->fetchAll(
             "SELECT id, name, email, phone, created_at 
              FROM customers 
-             WHERE name LIKE ? OR email LIKE ? OR phone LIKE ? OR id = ?
+             WHERE store_id = ? AND (name LIKE ? OR email LIKE ? OR phone LIKE ? OR id = ?)
              ORDER BY name ASC 
              LIMIT 5",
-            [$searchTerm, $searchTerm, $searchTerm, is_numeric($query) ? (int)$query : -1]
+            [$storeId, $searchTerm, $searchTerm, $searchTerm, is_numeric($query) ? (int)$query : -1]
         );
         
         foreach ($customers as $customer) {

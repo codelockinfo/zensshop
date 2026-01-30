@@ -3,6 +3,10 @@
  * Global Constants
  */
 
+if (session_status() === PHP_SESSION_NONE) {
+    session_start();
+}
+
 // Site Configuration - SITE_NAME is now managed in database settings (see admin/system-settings.php)
 // Detect environment and set SITE_URL accordingly
 $isProduction = (isset($_SERVER['HTTP_HOST']) && strpos($_SERVER['HTTP_HOST'], 'kartoai.com') !== false);

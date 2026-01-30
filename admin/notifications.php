@@ -12,14 +12,16 @@ $notification = new Notification();
 
 // Handle mark as read action
 if (isset($_POST['action']) && $_POST['action'] === 'mark_read' && isset($_POST['id'])) {
-    $notification->markAsRead(intval($_POST['id']));
+    $storeId = $_SESSION['store_id'] ?? null;
+    $notification->markAsRead(intval($_POST['id']), $storeId);
     header("Location: " . $_SERVER['PHP_SELF']);
     exit;
 }
 
 // Handle mark all as read
 if (isset($_POST['action']) && $_POST['action'] === 'mark_all_read') {
-    $notification->markAllAsRead();
+    $storeId = $_SESSION['store_id'] ?? null;
+    $notification->markAllAsRead($storeId);
     header("Location: " . $_SERVER['PHP_SELF']);
     exit;
 }
@@ -27,7 +29,8 @@ if (isset($_POST['action']) && $_POST['action'] === 'mark_all_read') {
 // Handle delete action
 if (isset($_POST['action']) && $_POST['action'] === 'delete' && isset($_POST['id'])) {
     $id = intval($_POST['id']);
-    $db->execute("DELETE FROM admin_notifications WHERE id = ?", [$id]);
+    $storeId = $_SESSION['store_id'] ?? null;
+    $db->execute("DELETE FROM admin_notifications WHERE id = ? AND store_id = ?", [$id, $storeId]);
     $_SESSION['success'] = "Notification deleted successfully.";
     header("Location: " . $_SERVER['PHP_SELF']);
     exit;
@@ -40,13 +43,14 @@ $offset = ($page - 1) * $perPage;
 
 // Filter
 $filter = isset($_GET['filter']) ? $_GET['filter'] : 'all';
-$whereClause = '';
-$params = [];
+$storeId = $_SESSION['store_id'] ?? null;
+$whereClause = "WHERE store_id = ?";
+$params = [$storeId];
 
 if ($filter === 'unread') {
-    $whereClause = "WHERE is_read = 0";
+    $whereClause .= " AND is_read = 0";
 } elseif ($filter !== 'all') {
-    $whereClause = "WHERE type = ?";
+    $whereClause .= " AND type = ?";
     $params[] = $filter;
 }
 
@@ -61,7 +65,7 @@ $notifications = $db->fetchAll(
 );
 
 // Get unread count
-$unreadCount = $notification->getUnreadCount();
+$unreadCount = $notification->getUnreadCount($storeId);
 
 $pageTitle = 'Notifications';
 require_once __DIR__ . '/../includes/admin-header.php';

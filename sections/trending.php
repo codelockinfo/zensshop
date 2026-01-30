@@ -17,8 +17,9 @@ $products = $db->fetchAll(
     "SELECT p.*, h.heading, h.subheading
      FROM products p 
      JOIN section_trending_products h ON p.product_id = h.product_id 
-     WHERE p.status != 'archived' 
-     ORDER BY h.sort_order ASC"
+     WHERE p.status != 'archived' AND h.store_id = ?
+     ORDER BY h.sort_order ASC",
+    [$storeId]
 );
 
 // Fetch dynamic headers if available from any row
@@ -29,7 +30,7 @@ if (!empty($products)) {
     $sectionSubheading = !empty($products[0]['subheading']) ? $products[0]['subheading'] : $sectionSubheading;
 } else {
     // Fallback headers if table is empty but we want to check if headers exist anyway
-    $headers = $db->fetchOne("SELECT heading, subheading FROM section_trending_products LIMIT 1");
+    $headers = $db->fetchOne("SELECT heading, subheading FROM section_trending_products WHERE store_id = ? LIMIT 1", [$storeId]);
     if ($headers) {
         $sectionHeading = !empty($headers['heading']) ? $headers['heading'] : $sectionHeading;
         $sectionSubheading = !empty($headers['subheading']) ? $headers['subheading'] : $sectionSubheading;
@@ -38,7 +39,7 @@ if (!empty($products)) {
 
 // Fallback if no specific products selected
 if (empty($products)) {
-    $products = $product->getTrending(6);
+    $products = $product->getTrending(6, $storeId);
 }
 ?>
 
@@ -59,12 +60,11 @@ if (empty($products)) {
                 $price = $item['sale_price'] ?? $item['price'];
                 $originalPrice = $item['sale_price'] ? $item['price'] : null;
                 $discount = $originalPrice ? round((($originalPrice - $price) / $originalPrice) * 100) : 0;
-                $hasTimer = ($discount > 0 && $item['product_id'] % 2 == 0); // Show timer on some discounted items
                 
                 // Get first variant for default attributes
                 $firstVariant = $db->fetchOne(
-                    "SELECT variant_attributes FROM product_variants WHERE product_id = ? ORDER BY is_default DESC, id ASC LIMIT 1",
-                    [$item['product_id']]
+                    "SELECT variant_attributes FROM product_variants WHERE product_id = ? AND store_id = ? ORDER BY is_default DESC, id ASC LIMIT 1",
+                    [$item['product_id'], $storeId]
                 );
                 $defaultAttributes = $firstVariant ? json_decode($firstVariant['variant_attributes'], true) : [];
                 $attributesJson = json_encode($defaultAttributes);
@@ -94,13 +94,7 @@ if (empty($products)) {
                         <span class="product-tooltip"><?php echo $inWishlist ? 'Remove from Wishlist' : 'Add to Wishlist'; ?></span>
                     </button>
                     
-                    <!-- Timer (for some discounted items) -->
-                    <?php if ($hasTimer): ?>
-                    <div class="absolute bottom-2 left-2 right-2 bg-red-500 text-white px-2 py-1 text-xs font-semibold h-8 text-center countdown-timer" 
-                         data-product-id="<?php echo $item['product_id']; ?>">
-                        <span class="countdown-days">00</span> d : <span class="countdown-hours">00</span> h : <span class="countdown-minutes">00</span> m : <span class="countdown-seconds">00</span> s
-                    </div>
-                    <?php endif; ?>
+
                     
                     <!-- Hover Action Buttons -->
                     <div class="product-actions absolute right-2 top-12 flex flex-col mt-2 gap-2 opacity-0 group-hover:opacity-100 transition-opacity duration-300 z-30">

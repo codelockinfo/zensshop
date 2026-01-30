@@ -215,16 +215,46 @@ function renderQuickView(product) {
         </div>`;
         
         if (galleryItems.length > 1) {
-            thumbnailsHTML = `<div class="flex gap-2 mt-4 overflow-x-auto pb-2 custom-scrollbar w-full" id="qvThumbContainer">`;
+            thumbnailsHTML = `
+            <div class="relative w-full">
+                <style>
+                    .qv-thumbnail-slider {
+                        padding: 0 30px; 
+                        position: relative;
+                    }
+                    .qv-thumbnail-slider .swiper-button-next,
+                    .qv-thumbnail-slider .swiper-button-prev {
+                        color: #000;
+                        width: 20px;
+                        height: 20px;
+                        top: 50%;
+                        transform: translateY(-50%);
+                        margin-top: 0;
+                        position: absolute;
+                    }
+                    .qv-thumbnail-slider .swiper-button-next { right: 0; }
+                    .qv-thumbnail-slider .swiper-button-prev { left: 0; }
+                    .qv-thumbnail-slider .swiper-button-next::after,
+                    .qv-thumbnail-slider .swiper-button-prev::after { font-size: 14px; font-weight: bold; }
+                </style>
+                <div class="swiper qv-thumbnail-slider mt-4">
+                    <div class="swiper-wrapper">`;
             galleryItems.forEach((img, idx) => {
                  thumbnailsHTML += `
-                 <button onclick="switchQVImage('${img}', this)" 
-                         data-img-url="${img}"
-                         class="qv-thumb w-16 h-16 border-2 rounded-md overflow-hidden flex-shrink-0 transition focus:outline-none bg-white ${idx === 0 ? 'border-primary' : 'border-transparent'}">
-                    <img src="${img}" class="w-full h-full object-cover">
-                 </button>`;
+                 <div class="swiper-slide h-auto">
+                     <button onclick="switchQVImage('${img}', this)" 
+                             data-img-url="${img}"
+                             class="qv-thumb w-full h-16 border-2 rounded-md overflow-hidden block transition focus:outline-none bg-white ${idx === 0 ? 'border-primary' : 'border-transparent'}">
+                        <img src="${img}" class="w-full h-full object-cover">
+                     </button>
+                 </div>`;
             });
-            thumbnailsHTML += `</div>`;
+            thumbnailsHTML += `
+                    </div>
+                    <div class="swiper-button-next"></div>
+                    <div class="swiper-button-prev"></div>
+                </div>
+            </div>`;
         }
     }
 
@@ -376,6 +406,23 @@ function renderQuickView(product) {
     if (!product.variants || product.variants.length === 0) {
         const isOutOfStock = product.stock_status === 'out_of_stock' || (product.stock_quantity !== undefined && product.stock_quantity <= 0);
         updateQVButtons(isOutOfStock, getStockStatusText(product.stock_status, product.stock_quantity, product.total_sales));
+    }
+
+    // Initialize Swiper for Thumbnails
+    if (galleryItems.length > 1) {
+        loadSwiperIfNeeded(() => {
+            new Swiper('.qv-thumbnail-slider', {
+                slidesPerView: 4,
+                spaceBetween: 10,
+                navigation: {
+                    nextEl: '.swiper-button-next',
+                    prevEl: '.swiper-button-prev',
+                },
+                breakpoints: {
+                    640: { slidesPerView: 4 }
+                }
+            });
+        });
     }
 }
 
@@ -577,3 +624,27 @@ window.updateQVButtons = function(isOutOfStock, label = 'Out of Stock') {
     }
 };
 
+
+
+function loadSwiperIfNeeded(callback) {
+    if (typeof Swiper !== 'undefined') {
+        callback();
+        return;
+    }
+    
+    // Check if CSS is already present
+    if (!document.querySelector('link[href*="swiper-bundle.min.css"]')) {
+        const link = document.createElement('link');
+        link.rel = 'stylesheet';
+        link.href = 'https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.css';
+        document.head.appendChild(link);
+    }
+
+    // Check if Script is already present (but maybe not loaded yet?) 
+    // If we're here, Swiper global is undefined.
+    // We should check if we already injected it to avoid double injection, but simpler to just inject.
+    const script = document.createElement('script');
+    script.src = 'https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.js';
+    script.onload = callback;
+    document.body.appendChild(script);
+}

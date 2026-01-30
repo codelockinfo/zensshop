@@ -26,15 +26,24 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $text_color = trim($_POST['text_color'] ?? '#eee4d3');
         $active = 1; // Always active since toggle is removed
 
+        // Determine Store ID
+        $storeId = $_SESSION['store_id'] ?? null;
+        if (!$storeId && isset($_SESSION['user_email'])) {
+         $storeUser = $db->fetchOne("SELECT store_id FROM users WHERE email = ?", [$_SESSION['user_email']]);
+         $storeId = $storeUser['store_id'] ?? null;
+    }
+
         // Ensure we always have one row
-        $check = $db->fetchOne("SELECT id FROM philosophy_section LIMIT 1");
+        $check = $db->fetchOne("SELECT id FROM philosophy_section WHERE store_id = ? LIMIT 1", [$storeId]);
         
+        $bg_color = trim($_POST['background_color'] ?? '#384135');
+
         if ($check) {
-            $sql = "UPDATE philosophy_section SET heading = ?, content = ?, link_text = ?, link_url = ?, background_color = ?, text_color = ?, active = ? WHERE id = ?";
-            $db->execute($sql, [$heading, $content, $link_text, $link_url, $bg_color, $text_color, $active, $check['id']]);
+            $sql = "UPDATE philosophy_section SET heading = ?, content = ?, link_text = ?, link_url = ?, background_color = ?, text_color = ?, active = ? WHERE id = ? AND store_id = ?";
+            $db->execute($sql, [$heading, $content, $link_text, $link_url, $bg_color, $text_color, $active, $check['id'], $storeId]);
         } else {
-            $sql = "INSERT INTO philosophy_section (heading, content, link_text, link_url, background_color, text_color, active) VALUES (?, ?, ?, ?, ?, ?, ?)";
-            $db->execute($sql, [$heading, $content, $link_text, $link_url, $bg_color, $text_color, $active]);
+            $sql = "INSERT INTO philosophy_section (heading, content, link_text, link_url, background_color, text_color, active, store_id) VALUES (?, ?, ?, ?, ?, ?, ?, ?)";
+            $db->execute($sql, [$heading, $content, $link_text, $link_url, $bg_color, $text_color, $active, $storeId]);
         }
 
         $_SESSION['flash_success'] = "Philosophy section updated successfully!";
@@ -47,7 +56,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 }
 
 // Fetch Current Data
-$data = $db->fetchOne("SELECT * FROM philosophy_section LIMIT 1");
+$storeId = $_SESSION['store_id'] ?? null;
+if (!$storeId && isset($_SESSION['user_email'])) {
+     $storeUser = $db->fetchOne("SELECT store_id FROM users WHERE email = ?", [$_SESSION['user_email']]);
+     $storeId = $storeUser['store_id'] ?? null;
+}
+$data = $db->fetchOne("SELECT * FROM philosophy_section WHERE store_id = ? LIMIT 1", [$storeId]);
 if (!$data) {
     // defaults just in case
     $data = [

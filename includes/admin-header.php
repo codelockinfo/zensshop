@@ -8,6 +8,33 @@ require_once __DIR__ . '/../classes/Auth.php';
 $auth = new Auth();
 $currentUser = $auth->getCurrentUser();
 
+// Get unread message count for header
+// Get unread message count for header
+$h_storeId = $_SESSION['store_id'] ?? null;
+require_once __DIR__ . '/../classes/Database.php';
+$h_db = Database::getInstance();
+
+if (empty($h_storeId) && !empty($currentUser) && isset($currentUser['email'])) {
+    try {
+        $h_storeUser = $h_db->fetchOne("SELECT store_id FROM users WHERE email = ?", [$currentUser['email']]);
+        $h_storeId = $h_storeUser['store_id'] ?? null;
+    } catch (Exception $e) {
+        // Ignore error if users table issue
+    }
+}
+
+$h_unreadCount = 0;
+if (!empty($h_storeId)) {
+    try {
+        $h_result = $h_db->fetchOne("SELECT COUNT(*) as count FROM support_messages WHERE store_id = ? AND status = 'open'", [$h_storeId]);
+        if ($h_result && isset($h_result['count'])) {
+            $h_unreadCount = $h_result['count'];
+        }
+    } catch (Exception $e) {
+        $h_unreadCount = 0;
+    }
+}
+
 // Get base URL using the centralized function
 $baseUrl = getBaseUrl();
 
@@ -208,15 +235,17 @@ $action = $segments[count($segments) - 1] ?? '';  // add, list
                             <a href="<?php echo url('admin/inbox'); ?>" class="user-dropdown-item">
                                 <i class="fas fa-envelope w-5"></i>
                                 <span>Inbox</span>
-                                <span class="ml-auto bg-red-500 text-white text-xs px-2 py-0.5 rounded-full">27</span>
+                                <?php if (isset($h_unreadCount) && $h_unreadCount > 0): ?>
+                                <span class="ml-auto bg-red-500 text-white text-xs px-2 py-0.5 rounded-full"><?php echo $h_unreadCount; ?></span>
+                                <?php endif; ?>
                             </a>
                         </li>
-                        <li>
+                        <!-- <li>
                             <a href="<?php echo url('admin/taskboard'); ?>" class="user-dropdown-item">
                                 <i class="fas fa-clipboard-list w-5"></i>
                                 <span>Taskboard</span>
                             </a>
-                        </li>
+                        </li> -->
                         <li>
                             <a href="<?php echo url('admin/settings'); ?>" class="user-dropdown-item">
                                 <i class="fas fa-cog w-5"></i>
@@ -332,7 +361,9 @@ $isSettingsPage = strpos($_SERVER['PHP_SELF'], 'settings') !== false
                || strpos($_SERVER['PHP_SELF'], 'banner_settings') !== false
                || strpos($_SERVER['PHP_SELF'], 'homepage_categories_settings') !== false
                || strpos($_SERVER['PHP_SELF'], 'homepage_products_settings') !== false
-               || strpos($_SERVER['PHP_SELF'], 'homepage_videos_settings') !== false;
+               || strpos($_SERVER['PHP_SELF'], 'homepage_videos_settings') !== false
+               || strpos($_SERVER['PHP_SELF'], 'pages') !== false
+               || strpos($_SERVER['PHP_SELF'], 'page-edit') !== false;
 
 $currentPage = basename($_SERVER['PHP_SELF']);
 ?>
@@ -366,13 +397,6 @@ $currentPage = basename($_SERVER['PHP_SELF']);
             <span>Banner</span>
         </a>
 
-        <a href="<?php echo url('admin/offers'); ?>"
-           class="flex items-center space-x-2 py-1 px-4 text-sm <?php echo ($currentPage === 'special_offers_settings' || strpos($_SERVER['REQUEST_URI'], 'admin/offers') !== false) ? 'bg-gray-700' : ''; ?>"
-           title="Special Offers">
-            <i class="fas fa-tags text-xs"></i>
-            <span>Special Offers</span>
-        </a>
-
         <a href="<?php echo url('admin/category'); ?>"
            class="flex items-center space-x-2 py-1 px-4 text-sm <?php echo ($currentPage === 'homepage_categories_settings' || strpos($_SERVER['REQUEST_URI'], 'admin/category') !== false) ? 'bg-gray-700' : ''; ?>"
            title="Homepage categories">
@@ -385,6 +409,13 @@ $currentPage = basename($_SERVER['PHP_SELF']);
            title="Homepage Products">
             <i class="fas fa-box-open text-xs"></i>
             <span>Products</span>
+        </a>
+
+        <a href="<?php echo url('admin/offers'); ?>"
+           class="flex items-center space-x-2 py-1 px-4 text-sm <?php echo ($currentPage === 'special_offers_settings' || strpos($_SERVER['REQUEST_URI'], 'admin/offers') !== false) ? 'bg-gray-700' : ''; ?>"
+           title="Special Offers">
+            <i class="fas fa-tags text-xs"></i>
+            <span>Special Offers</span>
         </a>
 
         <a href="<?php echo url('admin/shorts'); ?>"
@@ -441,6 +472,13 @@ $currentPage = basename($_SERVER['PHP_SELF']);
            title="System Settings">
             <i class="fas fa-cog text-xs"></i>
             <span>System Settings</span>
+        </a>
+
+        <a href="<?php echo url('admin/pages.php'); ?>"
+           class="flex items-center space-x-2 py-1 px-4 text-sm <?php echo (strpos($_SERVER['REQUEST_URI'], 'admin/pages') !== false || strpos($_SERVER['REQUEST_URI'], 'page-edit') !== false) ? 'bg-gray-700' : ''; ?>"
+           title="Custom Pages">
+            <i class="fas fa-file-alt text-xs"></i>
+            <span>Custom Pages</span>
         </a>
 
     </div>

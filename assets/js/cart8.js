@@ -567,7 +567,7 @@ function updateCartUI() {
                     </a>
                     <div class="flex-1">
                         <h4 class="font-semibold text-sm mb-1">
-                            <a href="product?slug=${item.slug}" class="hover:text-[#1a3d32] transition-colors uppercase">${escapeHtml(item.name)}</a>
+                            <a href="product?slug=${item.slug}" class="hover:text-[#1a3d32] transition-colors uppercase line-clamp-2" style="display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;">${escapeHtml(item.name)}</a>
                         </h4>
                         ${variantLabel}
                         <p class="text-gray-600 text-sm mt-1">${formatCurrency(itemPrice, item.currency)}</p>
@@ -591,7 +591,7 @@ function updateCartUI() {
                     </a>
                     <div class="flex-1">
                         <h4 class="font-semibold text-sm mb-1 text-gray-800">
-                            <a href="product?slug=${item.slug}" class="hover:text-[#1a3d32] transition-colors uppercase">${escapeHtml(item.name)}</a>
+                            <a href="product?slug=${item.slug}" class="hover:text-[#1a3d32] transition-colors uppercase line-clamp-2" style="display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;">${escapeHtml(item.name)}</a>
                         </h4>
                         <p class="text-gray-600 text-xs mb-2">Add to wishlist before remove?</p>
                         <div class="flex space-x-2">

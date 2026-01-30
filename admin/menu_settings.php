@@ -16,27 +16,68 @@ unset($_SESSION['flash_success'], $_SESSION['flash_error']);
 
 // Define Available Locations
 $locations = [
-    'header_main' => 'Header - Main Menu',
-    'footer_company' => 'Footer - Our Company',
-    'footer_quick_links' => 'Footer - Quick Links',
-    'footer_categories' => 'Footer - Shop Categories',
-    'footer_social' => 'Footer - Follow Us'
+    'header_main' => 'Header',
+    'footer_main' => 'Footer'
 ];
+
+// Fetch active categories for menu link selection
+$storeId = $_SESSION['store_id'] ?? null;
+if (!$storeId && isset($_SESSION['user_email'])) {
+    $storeUser = $db->fetchOne("SELECT store_id FROM users WHERE email = ?", [$_SESSION['user_email']]);
+    $storeId = $storeUser['store_id'] ?? null;
+}
+$activeCategories = $db->fetchAll("SELECT name, slug FROM categories WHERE status='active' AND store_id = ? ORDER BY name ASC", [$storeId]);
+
+// Helper for Quick Links dropdown
+function renderQuickLinkOptions($categories) {
+    echo '<option value="">-- Choose Page --</option>';
+    echo '<optgroup label="System Pages">';
+    echo '<option value="/" data-label="Home">Home</option>';
+    echo '<option value="shop" data-label="Shop">Shop All</option>';
+    echo '<option value="account" data-label="My Account">My Account</option>';
+    echo '<option value="account?section=orders" data-label="My Orders">My Orders</option>';
+    echo '<option value="wishlist" data-label="Wishlist">Wishlist</option>';
+    echo '<option value="cart" data-label="Shopping Cart">Shopping Cart</option>';
+    echo '<option value="checkout" data-label="Checkout">Checkout</option>';
+    echo '<option value="about" data-label="About Us">About Us</option>';
+    echo '<option value="contact" data-label="Contact">Contact Us</option>';
+    echo '</optgroup>';
+    
+    if (!empty($categories)) {
+        echo '<optgroup label="Categories">';
+        foreach ($categories as $cat) {
+            $catUrl = 'category/' . $cat['slug'];
+            echo '<option value="' . htmlspecialchars($catUrl) . '" data-label="' . htmlspecialchars($cat['name']) . '">' . htmlspecialchars($cat['name']) . '</option>';
+        }
+        echo '</optgroup>';
+    }
+}
 
 // Handle Actions
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $baseUrl = getBaseUrl();
     $action = $_POST['action'] ?? '';
+    // Determine Store ID
+    $storeId = $_SESSION['store_id'] ?? null;
+    if (!$storeId && isset($_SESSION['user_email'])) {
+         $storeUser = $db->fetchOne("SELECT store_id FROM users WHERE email = ?", [$_SESSION['user_email']]);
+         $storeId = $storeUser['store_id'] ?? null;
+    }
+
     $redirectUrl = $baseUrl . '/admin/menu'; // Use clean URL
 
     // 1. Create Menu
     if ($action === 'create_menu') {
         $name = trim($_POST['menu_name']);
+        $location = !empty($_POST['location']) ? $_POST['location'] : null;
         if ($name) {
             try {
-                $db->insert("INSERT INTO menus (name) VALUES (?)", [$name]);
+                if ($location) {
+                    $db->execute("UPDATE menus SET location = NULL WHERE location = ? AND store_id = ?", [$location, $storeId]);
+                }
+                $db->insert("INSERT INTO menus (name, store_id, location) VALUES (?, ?, ?)", [$name, $storeId, $location]);
                 $newId = $db->lastInsertId();
-                $_SESSION['flash_success'] = "Menu created successfully.";
+                $_SESSION['flash_success'] = "Menu created and assigned successfully.";
                 $redirectUrl .= "?menu_id=" . $newId;
             } catch (Exception $e) { $_SESSION['flash_error'] = $e->getMessage(); }
         }
@@ -46,8 +87,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     elseif ($action === 'delete_menu') {
         $menuId = intval($_POST['menu_id_delete']);
         if($menuId) {
-             $db->execute("DELETE FROM menus WHERE id = ?", [$menuId]);
-             $db->execute("DELETE FROM menu_items WHERE menu_id = ?", [$menuId]); 
+             $db->execute("DELETE FROM menus WHERE id = ? AND store_id = ?", [$menuId, $storeId]);
+             $db->execute("DELETE FROM menu_items WHERE menu_id = ? AND store_id = ?", [$menuId, $storeId]); 
              $_SESSION['flash_success'] = "Menu deleted successfully.";
              // Redirect to base URL (will load first menu)
         }
@@ -62,9 +103,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         if ($menuId && $newName) {
             try {
                 if ($location) {
-                    $db->execute("UPDATE menus SET location = NULL WHERE location = ?", [$location]);
+                    $db->execute("UPDATE menus SET location = NULL WHERE location = ? AND store_id = ?", [$location, $storeId]);
                 }
-                $db->execute("UPDATE menus SET name = ?, location = ? WHERE id = ?", [$newName, $location, $menuId]);
+                $db->execute("UPDATE menus SET name = ?, location = ? WHERE id = ? AND store_id = ?", [$newName, $location, $menuId, $storeId]);
                 $_SESSION['flash_success'] = "Menu updated successfully.";
                 $redirectUrl .= "?menu_id=" . $menuId;
             } catch (Exception $e) { $_SESSION['flash_error'] = $e->getMessage(); $redirectUrl .= "?menu_id=" . $menuId; }
@@ -90,8 +131,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         }
 
         if ($menuId && $label) {
-            $db->insert("INSERT INTO menu_items (menu_id, label, url, sort_order, parent_id, image_path) VALUES (?, ?, ?, ?, ?, ?)", 
-                [$menuId, $label, $url, $sortOrder, $parentId, $imagePath]);
+            $db->insert("INSERT INTO menu_items (menu_id, label, url, sort_order, parent_id, image_path, store_id) VALUES (?, ?, ?, ?, ?, ?, ?)", 
+                [$menuId, $label, $url, $sortOrder, $parentId, $imagePath, $storeId]);
             $_SESSION['flash_success'] = "Item added successfully.";
             $redirectUrl .= "?menu_id=" . $menuId;
         }
@@ -138,7 +179,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     elseif ($action === 'delete_menu_item') {
         $itemId = intval($_POST['item_id']);
         $menuId = intval($_POST['menu_id']); // Ensure we pass this in form
-        $db->execute("DELETE FROM menu_items WHERE id = ?", [$itemId]);
+        $db->execute("DELETE FROM menu_items WHERE id = ? AND store_id = ?", [$itemId, $storeId]);
         $_SESSION['flash_success'] = "Item deleted successfully.";
         $redirectUrl .= "?menu_id=" . $menuId;
     }
@@ -151,8 +192,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
          $menuId = intval($_POST['menu_id']);
          $target = $_POST['handle'];
          try {
-             $db->execute("UPDATE menus SET location = NULL WHERE location = ?", [$target]); 
-             $db->execute("UPDATE menus SET location = ? WHERE id = ?", [$target, $menuId]); // set new
+             // First, remove this location from any other menu of THIS STORE
+             $db->execute("UPDATE menus SET location = NULL WHERE location = ? AND store_id = ?", [$target, $storeId]); 
+             // Then set it for the requested menu
+             $db->execute("UPDATE menus SET location = ? WHERE id = ? AND store_id = ?", [$target, $menuId, $storeId]); // set new
              echo json_encode(['status'=>'success']); 
          } catch(Exception $e) { 
              echo json_encode(['status'=>'error', 'message'=>$e->getMessage()]); 
@@ -187,8 +230,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 }
             }
 
-            $db->insert("INSERT INTO menu_items (menu_id, label, url, parent_id, image_path, sort_order, badge_text) VALUES (?, ?, ?, ?, ?, ?, ?)", 
-                [$menuId, $lbl, $lnk, $parentId, $imgPath, $order, $badge]);
+            $db->insert("INSERT INTO menu_items (menu_id, label, url, parent_id, image_path, sort_order, badge_text, store_id) VALUES (?, ?, ?, ?, ?, ?, ?, ?)", 
+                [$menuId, $lbl, $lnk, $parentId, $imgPath, $order, $badge, $storeId]);
             $cnt++;
         }
         if($cnt > 0) $_SESSION['flash_success'] = "$cnt items added successfully.";
@@ -243,8 +286,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 }
 
 // Init Data
+$storeId = $_SESSION['store_id'] ?? null;
+if (!$storeId && isset($_SESSION['user_email'])) {
+     $storeUser = $db->fetchOne("SELECT store_id FROM users WHERE email = ?", [$_SESSION['user_email']]);
+     $storeId = $storeUser['store_id'] ?? null;
+}
 // Sort by ID ASC ensures created order (Header first, then Footer)
-$menus = $db->fetchAll("SELECT * FROM menus ORDER BY id ASC");
+$menus = $db->fetchAll("SELECT * FROM menus WHERE store_id = ? ORDER BY id ASC", [$storeId]);
 $selectedMenuId = isset($_GET['menu_id']) ? intval($_GET['menu_id']) : ($menus[0]['id'] ?? 0);
 // If ID not found, default to first?
 if (!in_array($selectedMenuId, array_column($menus, 'id')) && !empty($menus)) {
@@ -364,10 +412,59 @@ require_once __DIR__ . '/../includes/admin-header.php';
         <h3 class="font-bold text-lg mb-4">Create New Menu</h3>
         <form method="POST">
             <input type="hidden" name="action" value="create_menu">
-            <input type="text" name="menu_name" placeholder="Menu Name" class="w-full border p-2 rounded mb-4" required>
+            <div class="mb-4">
+                <label class="block text-xs font-bold text-gray-400 uppercase mb-2">Menu Name</label>
+                <input type="text" name="menu_name" placeholder="e.g. Main Header" class="w-full border p-3 rounded-xl bg-gray-50 focus:bg-white outline-none" required>
+            </div>
+            <div class="mb-6">
+                <label class="block text-xs font-bold text-gray-400 uppercase mb-2">Assign to Location (Optional)</label>
+                <select name="location" class="w-full border p-3 rounded-xl bg-gray-50 focus:bg-white outline-none">
+                    <option value="">None (Hidden)</option>
+                    <?php foreach($locations as $val => $lbl): ?>
+                        <option value="<?php echo $val; ?>"><?php echo $lbl; ?></option>
+                    <?php endforeach; ?>
+                </select>
+            </div>
             <div class="flex justify-end gap-2">
-                <button type="button" onclick="document.getElementById('createMenuModal').classList.add('hidden')" class="px-4 py-2 text-gray-500">Cancel</button>
-                <button type="submit" class="bg-blue-600 text-white px-4 py-2 rounded font-bold">Create</button>
+                <button type="button" onclick="document.getElementById('createMenuModal').classList.add('hidden')" class="px-4 py-2 text-gray-500 font-medium">Cancel</button>
+                <button type="submit" class="bg-black text-white px-6 py-2 rounded-xl font-bold shadow-lg">Create Menu</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Rename Menu Modal -->
+<div id="renameMenuModal" class="hidden fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center">
+    <div class="bg-white rounded-lg p-6 w-96 shadow-2xl">
+        <h3 class="font-bold text-xl mb-4 text-gray-800">Menu Settings</h3>
+        <form method="POST">
+            <input type="hidden" name="action" value="rename_menu">
+            <input type="hidden" name="menu_id" id="rename_menu_id">
+            
+            <div class="mb-5">
+                <label class="block text-xs font-bold text-gray-400 uppercase tracking-widest mb-2">Menu Name</label>
+                <input type="text" name="menu_name" id="rename_menu_name" placeholder="Menu Name" 
+                       class="w-full border border-gray-100 bg-gray-50 p-3 rounded-xl focus:bg-white focus:ring-2 focus:ring-black outline-none transition" required>
+            </div>
+            
+            <div class="mb-6">
+                <label class="block text-xs font-bold text-gray-400 uppercase tracking-widest mb-2">Display Location</label>
+                <select name="location" id="rename_location" 
+                        class="w-full border border-gray-100 bg-gray-50 p-3 rounded-xl focus:bg-white focus:ring-2 focus:ring-black outline-none transition">
+                    <option value="">(Not Assigned - Will not show on site)</option>
+                    <?php foreach($locations as $val => $lbl): ?>
+                        <option value="<?php echo $val; ?>"><?php echo $lbl; ?></option>
+                    <?php endforeach; ?>
+                </select>
+                <p class="text-[10px] text-gray-400 mt-2 italic flex items-start gap-1">
+                    <i class="fas fa-info-circle mt-0.5"></i>
+                    <span>This menu will appear in the selected location. Assigning a location will unassign any other menu currently in that spot.</span>
+                </p>
+            </div>
+
+            <div class="flex justify-end gap-3 pt-4 border-t border-gray-100">
+                <button type="button" onclick="closeModal('renameMenuModal')" class="px-5 py-2.5 text-gray-500 font-medium hover:bg-gray-50 rounded-xl transition">Cancel</button>
+                <button type="submit" class="bg-black text-white px-8 py-2.5 rounded-xl font-bold shadow-lg shadow-gray-200 hover:scale-105 active:scale-95 transition-all">Save Changes</button>
             </div>
         </form>
     </div>
@@ -382,6 +479,12 @@ require_once __DIR__ . '/../includes/admin-header.php';
             <input type="hidden" name="item_id" id="edit_item_id">
             <input type="hidden" name="menu_id" value="<?php echo $selectedMenuId; ?>">
             <div class="grid grid-cols-2 gap-4">
+                <div class="col-span-2">
+                    <label class="block text-xs font-bold mb-1">Quick Link (Auto-fill)</label>
+                    <select onchange="autoFillEdit(this)" class="w-full border p-2 rounded text-sm bg-blue-50">
+                        <?php renderQuickLinkOptions($activeCategories); ?>
+                    </select>
+                </div>
                 <div class="col-span-2"><label class="block text-xs font-bold mb-1">Label</label><input type="text" name="label" id="edit_label" class="w-full border p-2 rounded" required></div>
                 <div class="col-span-2"><label class="block text-xs font-bold mb-1">URL</label><input type="text" name="url" id="edit_url" class="w-full border p-2 rounded"></div>
                 <!-- <div><label class="block text-xs font-bold mb-1">Order</label><input type="number" name="sort_order" id="edit_sort_order" class="w-full border p-2 rounded"></div> -->
@@ -465,13 +568,23 @@ function addBulkRow() {
     const row = document.createElement('div');
     row.className = "flex gap-3 items-start bg-gray-50 p-3 rounded border border-gray-100 group relative";
     row.innerHTML = `
+        <div class="flex-none w-48">
+            <label class="block text-xs font-bold text-gray-400 mb-1">Quick Link</label>
+            <select onchange="autoFillBulk(this, ${index})" class="w-full border p-2 rounded text-sm bg-blue-50 focus:ring-1 focus:ring-blue-500 outline-none">
+                <?php 
+                   ob_start();
+                   renderQuickLinkOptions($activeCategories); 
+                   echo addslashes(ob_get_clean());
+                ?>
+            </select>
+        </div>
         <div class="flex-1">
             <label class="block text-xs font-bold text-gray-400 mb-1">Label</label>
-            <input type="text" name="items[${index}][label]" placeholder="Name" class="w-full border p-2 rounded text-sm focus:ring-1 focus:ring-blue-500 outline-none" required>
+            <input type="text" name="items[${index}][label]" id="bulk_label_${index}" placeholder="Name" class="w-full border p-2 rounded text-sm focus:ring-1 focus:ring-blue-500 outline-none" required>
         </div>
         <div class="flex-1">
             <label class="block text-xs font-bold text-gray-400 mb-1">Link</label>
-            <input type="text" name="items[${index}][url]" placeholder="#" class="w-full border p-2 rounded text-sm focus:ring-1 focus:ring-blue-500 outline-none">
+            <input type="text" name="items[${index}][url]" id="bulk_url_${index}" placeholder="#" class="w-full border p-2 rounded text-sm focus:ring-1 focus:ring-blue-500 outline-none">
         </div>
         <div class="w-20">
              <label class="block text-xs font-bold text-gray-400 mb-1">Badge</label>
@@ -528,6 +641,22 @@ function editItem(item) {
 function removeCurrentImage() {
     document.getElementById('remove_image_flag').value = '1';
     document.getElementById('current_image_container').classList.add('hidden');
+}
+
+function autoFillEdit(select) {
+    if (!select.value) return;
+    const label = select.options[select.selectedIndex].getAttribute('data-label');
+    document.getElementById('edit_label').value = label;
+    document.getElementById('edit_url').value = select.value;
+}
+
+function autoFillBulk(select, index) {
+    if (!select.value) return;
+    const label = select.options[select.selectedIndex].getAttribute('data-label');
+    const labelInput = document.getElementById('bulk_label_' + index);
+    const urlInput = document.getElementById('bulk_url_' + index);
+    if (labelInput) labelInput.value = label;
+    if (urlInput) urlInput.value = select.value;
 }
 
 function previewNewImage(input) {

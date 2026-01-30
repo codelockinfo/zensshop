@@ -6,7 +6,8 @@ require_once __DIR__ . '/../includes/functions.php';
 $baseUrl = getBaseUrl();
 $db = Database::getInstance();
 $categories = $db->fetchAll(
-    "SELECT * FROM categories WHERE status = 'active' ORDER BY sort_order ASC LIMIT 6"
+    "SELECT * FROM categories WHERE status = 'active' AND store_id = ? ORDER BY sort_order ASC LIMIT 6",
+    [$storeId]
 );
 ?>
 
@@ -15,7 +16,7 @@ $categories = $db->fetchAll(
         <div class="text-center mb-12">
             <?php 
                 // Fetch section headers from first row
-                $sectionData = $db->fetchOne("SELECT heading, subheading FROM section_categories LIMIT 1");
+                $sectionData = $db->fetchOne("SELECT heading, subheading FROM section_categories WHERE store_id = ? LIMIT 1", [$storeId]);
                 $heading = !empty($sectionData['heading']) ? $sectionData['heading'] : 'Shop By Category';
                 $subheading = !empty($sectionData['subheading']) ? $sectionData['subheading'] : 'Express your style with our standout collection—fashion meets sophistication.';
             ?>
@@ -26,7 +27,7 @@ $categories = $db->fetchAll(
         <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-6">
             <?php 
             // Fetch from homepage_categories table
-            $homeCategories = $db->fetchAll("SELECT * FROM section_categories WHERE active = 1 ORDER BY sort_order ASC LIMIT 6");
+            $homeCategories = $db->fetchAll("SELECT * FROM section_categories WHERE active = 1 AND store_id = ? ORDER BY sort_order ASC LIMIT 6", [$storeId]);
             
             // Fallback for demonstration if table is empty
             if (empty($homeCategories)) {
@@ -41,7 +42,7 @@ $categories = $db->fetchAll(
                 
                 // Fetch default categories if no custom ones
                 $homeCategories = [];
-                $dbCategories = $db->fetchAll("SELECT * FROM categories WHERE status = 'active' ORDER BY sort_order ASC LIMIT 6");
+                $dbCategories = $db->fetchAll("SELECT * FROM categories WHERE status = 'active' AND store_id = ? ORDER BY sort_order ASC LIMIT 6", [$storeId]);
                 foreach ($dbCategories as $index => $cat) {
                     $homeCategories[] = [
                         'title' => $cat['name'],

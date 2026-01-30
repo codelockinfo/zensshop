@@ -126,7 +126,7 @@ require_once __DIR__ . '/includes/header.php';
                     <div class="flex-1 h-px bg-gray-200"></div>
                 </div>
 
-                <form method="POST" class="space-y-6">
+                <form method="POST" class="space-y-6" id="loginForm">
                     <div>
                         <label class="block text-xs font-bold text-gray-400 uppercase tracking-widest mb-2">Email Address</label>
                         <div class="relative">
@@ -152,11 +152,19 @@ require_once __DIR__ . '/includes/header.php';
                         </div>
                     </div>
 
-                    <button type="submit" 
-                            class="w-full bg-black text-white py-4 rounded-xl font-bold hover:bg-gray-900 transition translate-z-10 shadow-lg shadow-gray-200">
+                    <button type="submit" id="loginBtn"
+                            class="w-full bg-black text-white py-4 rounded-xl font-bold hover:bg-gray-900 transition translate-z-10 shadow-lg shadow-gray-200 disabled:opacity-70 disabled:cursor-not-allowed">
                         Sign In
                     </button>
                 </form>
+
+                <script>
+                document.getElementById('loginForm').addEventListener('submit', function() {
+                    const btn = document.getElementById('loginBtn');
+                    btn.disabled = true;
+                    btn.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i> Signing In...';
+                });
+                </script>
 
                 <div class="mt-10 text-center">
                     <p class="text-gray-500 text-sm">

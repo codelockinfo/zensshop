@@ -20,33 +20,38 @@ $daysAgo = $dateRange === '7' ? 7 : ($dateRange === '365' ? 365 : 30);
 $startDate = date('Y-m-d', strtotime("-{$daysAgo} days"));
 
 // Get statistics
-$totalProducts = $db->fetchOne("SELECT COUNT(*) as count FROM products")['count'];
-$totalOrders = $db->fetchOne("SELECT COUNT(*) as count FROM orders WHERE created_at >= ?", [$startDate])['count'];
-$totalRevenue = $db->fetchOne("SELECT SUM(total_amount) as total FROM orders WHERE payment_status = 'paid' AND created_at >= ?", [$startDate])['total'] ?? 0;
-$totalCustomers = $db->fetchOne("SELECT COUNT(DISTINCT customer_email) as count FROM orders WHERE created_at >= ?", [$startDate])['count'];
+$storeId = $_SESSION['store_id'] ?? null;
+if (!$storeId && isset($_SESSION['user_email'])) {
+     $storeUser = $db->fetchOne("SELECT store_id FROM users WHERE email = ?", [$_SESSION['user_email']]);
+     $storeId = $storeUser['store_id'] ?? null;
+}
+$totalProducts = $db->fetchOne("SELECT COUNT(*) as count FROM products WHERE store_id = ?", [$storeId])['count'];
+$totalOrders = $db->fetchOne("SELECT COUNT(*) as count FROM orders WHERE store_id = ? AND created_at >= ?", [$storeId, $startDate])['count'];
+$totalRevenue = $db->fetchOne("SELECT SUM(total_amount) as total FROM orders WHERE store_id = ? AND payment_status = 'paid' AND created_at >= ?", [$storeId, $startDate])['total'] ?? 0;
+$totalCustomers = $db->fetchOne("SELECT COUNT(DISTINCT customer_email) as count FROM orders WHERE store_id = ? AND created_at >= ?", [$storeId, $startDate])['count'];
 
 // Get recent orders
-$recentOrders = $db->fetchAll("SELECT * FROM orders ORDER BY created_at DESC LIMIT 10");
+$recentOrders = $db->fetchAll("SELECT * FROM orders WHERE store_id = ? ORDER BY created_at DESC LIMIT 10", [$storeId]);
 
 // Get top products
 $topProducts = $db->fetchAll("
     SELECT p.id, p.name, COUNT(oi.id) as order_count, SUM(oi.quantity) as total_sold, SUM(oi.subtotal) as total_revenue
     FROM products p
     LEFT JOIN order_items oi ON p.id = oi.product_id
-    LEFT JOIN orders o ON oi.order_id = o.id
-    WHERE o.created_at >= ? OR o.created_at IS NULL
+    LEFT JOIN orders o ON oi.order_num = o.order_number
+    WHERE p.store_id = ? AND (o.created_at >= ? OR o.created_at IS NULL)
     GROUP BY p.id
     ORDER BY total_sold DESC
     LIMIT 10
-", [$startDate]);
+", [$storeId, $startDate]);
 
 // Get sales by status
 $salesByStatus = $db->fetchAll("
     SELECT payment_status, COUNT(*) as count, SUM(total_amount) as total
     FROM orders
-    WHERE created_at >= ?
+    WHERE store_id = ? AND created_at >= ?
     GROUP BY payment_status
-", [$startDate]);
+", [$storeId, $startDate]);
 ?>
 
 <div class="mb-6">

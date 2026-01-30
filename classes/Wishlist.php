@@ -116,13 +116,24 @@ class Wishlist {
     /**
      * Get wishlist from database
      */
-    private function getWishlistFromDB($userId) {
+    private function getWishlistFromDB($userId, $storeId = null) {
+        if (!$storeId) $storeId = $_SESSION['store_id'] ?? null;
+        if (!$storeId && isset($_SESSION['user_email'])) {
+             $storeUser = $this->db->fetchOne("SELECT store_id FROM users WHERE email = ?", [$_SESSION['user_email']]);
+             $storeId = $storeUser['store_id'] ?? null;
+        }
+        if (!$storeId) {
+            try {
+                 $storeUser = $this->db->fetchOne("SELECT store_id FROM users WHERE store_id IS NOT NULL LIMIT 1");
+                 $storeId = $storeUser['store_id'] ?? null;
+            } catch(Exception $ex) {}
+        }
         $items = $this->db->fetchAll(
             "SELECT w.*, p.name, p.price, p.sale_price, p.featured_image, p.slug, p.rating, p.review_count, p.sku, p.stock_status, p.stock_quantity, p.currency
              FROM wishlist w
              LEFT JOIN products p ON (w.product_id = p.product_id OR (w.product_id = p.id AND w.product_id < 1000000000))
-             WHERE w.user_id = ?",
-            [$userId]
+             WHERE w.user_id = ? AND w.store_id = ?",
+            [$userId, $storeId]
         );
         
         $wishlistItems = [];
@@ -326,19 +337,37 @@ class Wishlist {
      * Save wishlist to database
      */
     private function saveWishlistToDB($userId, $wishlistItems) {
+        // Determine Store ID
+        $storeId = $_SESSION['store_id'] ?? null;
+        if (!$storeId) {
+            if (isset($_SESSION['user_email'])) {
+                $storeUser = $this->db->fetchOne("SELECT store_id FROM users WHERE email = ?", [$_SESSION['user_email']]);
+                $storeId = $storeUser['store_id'] ?? null;
+            } elseif (isset($_SESSION['customer_email'])) {
+                $storeCustomer = $this->db->fetchOne("SELECT store_id FROM customers WHERE email = ?", [$_SESSION['customer_email']]);
+                $storeId = $storeCustomer['store_id'] ?? null;
+            }
+        }
+        if (!$storeId) {
+            try {
+                 $storeUser = $this->db->fetchOne("SELECT store_id FROM users WHERE store_id IS NOT NULL LIMIT 1");
+                 $storeId = $storeUser['store_id'] ?? null;
+            } catch(Exception $ex) {}
+        }
+
         // Clear existing wishlist
         $this->db->execute(
-            "DELETE FROM wishlist WHERE user_id = ?",
-            [$userId]
+            "DELETE FROM wishlist WHERE user_id = ? AND store_id = ?",
+            [$userId, $storeId]
         );
-        
+
         // Insert new items
         foreach ($wishlistItems as $item) {
             try {
                 $this->db->insert(
-                    "INSERT INTO wishlist (user_id, product_id) VALUES (?, ?)
+                    "INSERT INTO wishlist (user_id, product_id, store_id) VALUES (?, ?, ?)
                      ON DUPLICATE KEY UPDATE created_at = CURRENT_TIMESTAMP",
-                    [$userId, $item['product_id']]
+                    [$userId, $item['product_id'], $storeId]
                 );
             } catch (Exception $e) {
                 error_log("Error saving wishlist item to DB: " . $e->getMessage());
@@ -349,7 +378,20 @@ class Wishlist {
      * Sync guest wishlist (cookie) with user wishlist (database) after login
      */
     public function syncWishlistAfterLogin($userId) {
-        // Get guest items from cookie
+        // Determine Store ID
+        $storeId = $_SESSION['store_id'] ?? null;
+        if (!$storeId && isset($_SESSION['user_email'])) {
+             $storeUser = $this->db->fetchOne("SELECT store_id FROM users WHERE email = ?", [$_SESSION['user_email']]);
+             $storeId = $storeUser['store_id'] ?? null;
+        }
+        if (!$storeId) {
+            try {
+                 $storeUser = $this->db->fetchOne("SELECT store_id FROM users WHERE store_id IS NOT NULL LIMIT 1");
+                 $storeId = $storeUser['store_id'] ?? null;
+                 if ($storeId) $_SESSION['store_id'] = $storeId;
+            } catch(Exception $ex) {}
+        }
+
         if (isset($_COOKIE[WISHLIST_COOKIE_NAME])) {
             $cookieItems = json_decode($_COOKIE[WISHLIST_COOKIE_NAME], true);
             if (is_array($cookieItems) && !empty($cookieItems)) {
@@ -357,9 +399,9 @@ class Wishlist {
                 foreach ($cookieItems as $item) {
                     if (!empty($item['product_id'])) {
                         $this->db->insert(
-                            "INSERT INTO wishlist (user_id, product_id) VALUES (?, ?)
+                            "INSERT INTO wishlist (user_id, product_id, store_id) VALUES (?, ?, ?)
                              ON DUPLICATE KEY UPDATE created_at = CURRENT_TIMESTAMP",
-                            [$userId, $item['product_id']]
+                            [$userId, $item['product_id'], $storeId]
                         );
                     }
                 }

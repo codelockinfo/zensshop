@@ -16,11 +16,12 @@ $product = new Product();
 // Get product ID or 10-digit product_id
 $id = $_GET['id'] ?? null;
 $productIdParam = $_GET['product_id'] ?? null;
+$storeId = $_SESSION['store_id'] ?? null;
 
 if ($productIdParam) {
-    $productData = $product->getByProductId($productIdParam);
+    $productData = $product->getByProductId($productIdParam, $storeId);
 } elseif ($id) {
-    $productData = $product->getById($id);
+    $productData = $product->getById($id, $storeId);
 } else {
     header('Location: ' . url('admin/products/list.php'));
     exit;

@@ -96,11 +96,10 @@ if ($difference > 0.01) {
 }
 
 // Get user ID if logged in
-$userId = null;
 $auth = new CustomerAuth();
 if ($auth->isLoggedIn()) {
     $currentUser = $auth->getCurrentCustomer();
-    $userId = $currentUser['id'] ?? null;
+    $userId = $currentUser['customer_id'] ?? null;
 }
 
 // Convert amount to paise (Razorpay uses smallest currency unit)

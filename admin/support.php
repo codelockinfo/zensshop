@@ -18,10 +18,15 @@ if (isset($_POST['action']) && $_POST['action'] === 'reply' && isset($_POST['id'
         $message = $db->fetchOne("SELECT * FROM support_messages WHERE id = ?", [$id]);
         
         if ($message) {
+            $storeId = $_SESSION['store_id'] ?? null;
+            if (!$storeId && isset($_SESSION['user_email'])) {
+                 $storeUser = $db->fetchOne("SELECT store_id FROM users WHERE email = ?", [$_SESSION['user_email']]);
+                 $storeId = $storeUser['store_id'] ?? null;
+            }
             // Update message
             $db->execute(
-                "UPDATE support_messages SET admin_reply = ?, status = 'replied', replied_at = NOW(), replied_by = ? WHERE id = ?",
-                [$reply, $auth->getCurrentUser()['id'], $id]
+                "UPDATE support_messages SET admin_reply = ?, status = 'replied', replied_at = NOW(), replied_by = ? WHERE id = ? AND store_id = ?",
+                [$reply, $auth->getCurrentUser()['id'], $id, $storeId]
             );
             
             // Try to send email to customer
@@ -55,7 +60,12 @@ if (isset($_POST['action']) && $_POST['action'] === 'reply' && isset($_POST['id'
 if (isset($_POST['action']) && $_POST['action'] === 'change_status' && isset($_POST['id'])) {
     $id = intval($_POST['id']);
     $status = $_POST['status'] ?? 'open';
-    $db->execute("UPDATE support_messages SET status = ? WHERE id = ?", [$status, $id]);
+    $storeId = $_SESSION['store_id'] ?? null;
+    if (!$storeId && isset($_SESSION['user_email'])) {
+         $storeUser = $db->fetchOne("SELECT store_id FROM users WHERE email = ?", [$_SESSION['user_email']]);
+         $storeId = $storeUser['store_id'] ?? null;
+    }
+    $db->execute("UPDATE support_messages SET status = ? WHERE id = ? AND store_id = ?", [$status, $id, $storeId]);
     $_SESSION['success'] = "Status updated successfully.";
     header("Location: " . $_SERVER['PHP_SELF']);
     exit;
@@ -64,7 +74,12 @@ if (isset($_POST['action']) && $_POST['action'] === 'change_status' && isset($_P
 // Handle delete
 if (isset($_POST['action']) && $_POST['action'] === 'delete' && isset($_POST['id'])) {
     $id = intval($_POST['id']);
-    $db->execute("DELETE FROM support_messages WHERE id = ?", [$id]);
+    $storeId = $_SESSION['store_id'] ?? null;
+    if (!$storeId && isset($_SESSION['user_email'])) {
+         $storeUser = $db->fetchOne("SELECT store_id FROM users WHERE email = ?", [$_SESSION['user_email']]);
+         $storeId = $storeUser['store_id'] ?? null;
+    }
+    $db->execute("DELETE FROM support_messages WHERE id = ? AND store_id = ?", [$id, $storeId]);
     $_SESSION['success'] = "Message deleted successfully.";
     header("Location: " . $_SERVER['PHP_SELF']);
     exit;
@@ -76,16 +91,21 @@ $perPage = 20;
 $offset = ($page - 1) * $perPage;
 
 // Filter
-$filter = isset($_GET['filter']) ? $_GET['filter'] : 'all';
-$whereClause = '';
-$params = [];
+$filter = $_GET['filter'] ?? 'all';
+$storeId = $_SESSION['store_id'] ?? null;
+if (!$storeId && isset($_SESSION['user_email'])) {
+     $storeUser = $db->fetchOne("SELECT store_id FROM users WHERE email = ?", [$_SESSION['user_email']]);
+     $storeId = $storeUser['store_id'] ?? null;
+}
+$whereClause = "WHERE store_id = ?";
+$params = [$storeId];
 
 if ($filter === 'open') {
-    $whereClause = "WHERE status = 'open'";
+    $whereClause .= " AND status = 'open'";
 } elseif ($filter === 'replied') {
-    $whereClause = "WHERE status = 'replied'";
+    $whereClause .= " AND status = 'replied'";
 } elseif ($filter === 'closed') {
-    $whereClause = "WHERE status = 'closed'";
+    $whereClause .= " AND status = 'closed'";
 }
 
 // Get total count
@@ -99,9 +119,9 @@ $messages = $db->fetchAll(
 );
 
 // Get counts
-$openCount = $db->fetchOne("SELECT COUNT(*) as count FROM support_messages WHERE status = 'open'")['count'];
-$repliedCount = $db->fetchOne("SELECT COUNT(*) as count FROM support_messages WHERE status = 'replied'")['count'];
-$closedCount = $db->fetchOne("SELECT COUNT(*) as count FROM support_messages WHERE status = 'closed'")['count'];
+$openCount = $db->fetchOne("SELECT COUNT(*) as count FROM support_messages WHERE store_id = ? AND status = 'open'", [$storeId])['count'];
+$repliedCount = $db->fetchOne("SELECT COUNT(*) as count FROM support_messages WHERE store_id = ? AND status = 'replied'", [$storeId])['count'];
+$closedCount = $db->fetchOne("SELECT COUNT(*) as count FROM support_messages WHERE store_id = ? AND status = 'closed'", [$storeId])['count'];
 
 $pageTitle = 'Support Messages';
 require_once __DIR__ . '/../includes/admin-header.php';

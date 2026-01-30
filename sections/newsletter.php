@@ -4,7 +4,7 @@ require_once __DIR__ . '/../classes/Database.php';
 $db = Database::getInstance();
 
 // Fetch settings
-$data = $db->fetchOne("SELECT * FROM section_newsletter LIMIT 1");
+$data = $db->fetchOne("SELECT * FROM section_newsletter WHERE store_id = ? LIMIT 1", [$storeId]);
 
 if (!$data) return;
 

@@ -12,19 +12,20 @@ if (!$auth->isLoggedIn()) {
 
 $db = Database::getInstance();
 $action = $_GET['action'] ?? 'count';
+$storeId = $_SESSION['store_id'] ?? null;
 
 try {
     switch ($action) {
         case 'count':
-            $result = $db->fetchOne("SELECT COUNT(*) as count FROM support_messages WHERE status = 'open'");
+            $result = $db->fetchOne("SELECT COUNT(*) as count FROM support_messages WHERE status = 'open' AND store_id = ?", [$storeId]);
             echo json_encode(['count' => $result['count'] ?? 0]);
             break;
             
         case 'list':
             $limit = isset($_GET['limit']) ? intval($_GET['limit']) : 10;
             $messages = $db->fetchAll(
-                "SELECT * FROM support_messages ORDER BY created_at DESC LIMIT ?",
-                [$limit]
+                "SELECT * FROM support_messages WHERE store_id = ? ORDER BY created_at DESC LIMIT ?",
+                [$storeId, $limit]
             );
             echo json_encode(['messages' => $messages]);
             break;

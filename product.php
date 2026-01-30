@@ -228,12 +228,23 @@ $_COOKIE['recently_viewed'] = json_encode($recentIds);
                 <style>
                     .thumbnail-slider {
                         padding: 0 30px; /* Space for arrows */
+                        position: relative;
                     }
                     .thumbnail-slider .swiper-button-next,
                     .thumbnail-slider .swiper-button-prev {
                         color: #000;
                         width: 20px;
                         height: 20px;
+                        top: 50%;
+                        transform: translateY(-50%);
+                        margin-top: 0; /* Reset default swiper margin */
+                        position: absolute;
+                    }
+                    .thumbnail-slider .swiper-button-next {
+                        right: 0;
+                    }
+                    .thumbnail-slider .swiper-button-prev {
+                        left: 0;
                     }
                     .thumbnail-slider .swiper-button-next::after,
                     .thumbnail-slider .swiper-button-prev::after {
@@ -322,7 +333,7 @@ $_COOKIE['recently_viewed'] = json_encode($recentIds);
                 <!-- Description with Read More -->
                 <div class="mb-6">
                     <div id="product-description-text" class="text-gray-700 leading-relaxed relative overflow-hidden transition-all duration-300 prose prose-sm max-w-none" style="max-height: 200px;">
-                        <?php echo $productData['description'] ?? $productData['short_description'] ?? 'No description available.'; ?>
+                        <?php echo htmlspecialchars_decode($productData['description'] ?? $productData['short_description'] ?? 'No description available.'); ?>
                         <div id="description-fade" class="absolute bottom-0 left-0 w-full h-12 bg-gradient-to-t from-white to-transparent pointer-events-none"></div>
                     </div>
                     <button id="toggle-description-btn" 
@@ -561,7 +572,9 @@ $_COOKIE['recently_viewed'] = json_encode($recentIds);
                         <i class="fas fa-plus text-gray-400" id="description-icon"></i>
                     </button>
                     <div id="description-content" class="hidden pb-4 text-gray-700 text-sm">
-                        <?php echo nl2br(htmlspecialchars($productData['description'] ?? 'No description available.')); ?>
+                        <div class="prose prose-sm max-w-none">
+                            <?php echo htmlspecialchars_decode($productData['description'] ?? 'No description available.'); ?>
+                        </div>
                     </div>
                 </div>
                 
@@ -666,103 +679,228 @@ $_COOKIE['recently_viewed'] = json_encode($recentIds);
                 <h2 class="text-2xl font-heading font-bold mb-2">People Also Bought</h2>
                 <p class="text-gray-600">Here's some of our most similar products people are buying. Click to discover trending style.</p>
             </div>
-            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-                <?php foreach ($relatedProducts as $item): 
-                    $itemImage = getProductImage($item);
-                    $itemPrice = $item['sale_price'] ?? $item['price'] ?? 0;
-                    $itemOriginalPrice = !empty($item['sale_price']) ? $item['price'] : null;
-                    $itemDiscount = $itemOriginalPrice && $itemOriginalPrice > 0 ? round((($itemOriginalPrice - $itemPrice) / $itemOriginalPrice) * 100) : 0;
-                    
-                    // Use product_id (10-digit) if available, matching best-selling logic
-                    $currentId = !empty($item['product_id']) ? $item['product_id'] : $item['id'];
-                    $inWishlist = in_array($currentId, $wishlistIds);
-                ?>
-                <div class="group product-card bg-white rounded-lg overflow-hidden shadow-md hover:shadow-xl transition-all duration-300 relative flex flex-col h-full">
-                    <div class="relative overflow-hidden">
-                        <a href="<?php echo $baseUrl; ?>/product?slug=<?php echo urlencode($item['slug'] ?? ''); ?>" class="block">
-                            <img src="<?php echo htmlspecialchars($itemImage); ?>" 
-                                 alt="<?php echo htmlspecialchars($item['name'] ?? 'Product'); ?>"
-                                 class="w-full h-64 object-contain group-hover:scale-110 transition-transform duration-500">
-                        </a>
-                        <?php if ($itemDiscount > 0): ?>
-                        <span class="absolute top-3 left-3 bg-red-500 text-white px-2 py-1 rounded text-xs font-semibold z-10">
-                            -<?php echo $itemDiscount; ?>%
-                        </span>
-                        <?php endif; ?>
-                        <button type="button" class="absolute top-2 right-2 w-10 h-10 rounded-full flex items-center justify-center <?php echo $inWishlist ? 'bg-black text-white' : 'bg-white text-black'; ?> hover:bg-black hover:text-white transition z-20 wishlist-btn"
-                                data-product-id="<?php echo $currentId; ?>"
-                                title="<?php echo $inWishlist ? 'Remove from Wishlist' : 'Add to Wishlist'; ?>">
-                            <i class="<?php echo $inWishlist ? 'fas' : 'far'; ?> fa-heart"></i>
-                            <span class="product-tooltip"><?php echo $inWishlist ? 'Remove from Wishlist' : 'Add to Wishlist'; ?></span>
-                        </button>
-                        
-                        <!-- Hover Action Buttons -->
-                        <div class="product-actions absolute right-2 top-12 flex flex-col gap-2 mt-2 opacity-0 group-hover:opacity-100 transition-opacity duration-300 z-30">
-                            <button type="button" class="product-action-btn w-10 h-10 bg-white rounded-full flex items-center justify-center hover:bg-black hover:text-white transition shadow-lg quick-view-btn relative group" 
-                                   data-product-id="<?php echo $currentId; ?>"
-                                   data-product-slug="<?php echo htmlspecialchars($item['slug'] ?? ''); ?>">
-                                <i class="fas fa-eye"></i>
-                                <span class="product-tooltip">Quick View</span>
-                            </button>
-                        </div>
-                    </div>
-                    <div class="p-4 flex flex-col flex-1">
-                        <h3 class="font-semibold text-gray-800 mb-2 h-10 overflow-hidden line-clamp-2">
-                            <a href="<?php echo $baseUrl; ?>/product?slug=<?php echo urlencode($item['slug'] ?? ''); ?>" class="hover:text-primary transition">
-                                <?php echo htmlspecialchars($item['name'] ?? 'Product'); ?>
-                            </a>
-                        </h3>
-                        <div class="flex items-center mb-3">
-                            <div class="flex text-yellow-400">
-                                <?php 
-                                $itemRatingValue = floor($item['rating'] ?? 5);
-                                for ($i = 0; $i < 5; $i++): 
-                                ?>
-                                <i class="fas fa-star text-[10px] <?php echo $i < $itemRatingValue ? '' : 'text-gray-300'; ?>"></i>
-                                <?php endfor; ?>
+            <div class="relative group-slider">
+                <div class="overflow-hidden">
+                    <div class="flex transition-transform duration-500 ease-out" id="peopleBoughtSlider" style="will-change: transform;">
+                        <?php foreach ($relatedProducts as $item): 
+                            $itemImage = getProductImage($item);
+                            $itemPrice = $item['sale_price'] ?? $item['price'] ?? 0;
+                            $itemOriginalPrice = !empty($item['sale_price']) ? $item['price'] : null;
+                            $itemDiscount = $itemOriginalPrice && $itemOriginalPrice > 0 ? round((($itemOriginalPrice - $itemPrice) / $itemOriginalPrice) * 100) : 0;
+                            
+                            // Use product_id (10-digit) if available, matching best-selling logic
+                            $currentId = !empty($item['product_id']) ? $item['product_id'] : $item['id'];
+                            $inWishlist = in_array($currentId, $wishlistIds);
+                        ?>
+                        <div class="min-w-[280px] md:min-w-[300px] p-3">
+                            <div class="group product-card bg-white rounded-lg overflow-hidden shadow-md hover:shadow-xl transition-all duration-300 relative flex flex-col h-full">
+                                <div class="relative overflow-hidden">
+                                    <a href="<?php echo $baseUrl; ?>/product?slug=<?php echo urlencode($item['slug'] ?? ''); ?>" class="block">
+                                        <img src="<?php echo htmlspecialchars($itemImage); ?>" 
+                                             alt="<?php echo htmlspecialchars($item['name'] ?? 'Product'); ?>"
+                                             class="w-full h-64 object-contain group-hover:scale-110 transition-transform duration-500">
+                                    </a>
+                                    <?php if ($itemDiscount > 0): ?>
+                                    <span class="absolute top-3 left-3 bg-red-500 text-white px-2 py-1 rounded text-xs font-semibold z-10">
+                                        -<?php echo $itemDiscount; ?>%
+                                    </span>
+                                    <?php endif; ?>
+                                    <button type="button" class="absolute top-2 right-2 w-10 h-10 rounded-full flex items-center justify-center <?php echo $inWishlist ? 'bg-black text-white' : 'bg-white text-black'; ?> hover:bg-black hover:text-white transition z-20 wishlist-btn"
+                                            data-product-id="<?php echo $currentId; ?>"
+                                            title="<?php echo $inWishlist ? 'Remove from Wishlist' : 'Add to Wishlist'; ?>">
+                                        <i class="<?php echo $inWishlist ? 'fas' : 'far'; ?> fa-heart"></i>
+                                        <span class="product-tooltip"><?php echo $inWishlist ? 'Remove from Wishlist' : 'Add to Wishlist'; ?></span>
+                                    </button>
+                                    
+                                    <!-- Hover Action Buttons -->
+                                    <div class="product-actions absolute right-2 top-12 flex flex-col gap-2 mt-2 opacity-0 group-hover:opacity-100 transition-opacity duration-300 z-30">
+                                        <button type="button" class="product-action-btn w-10 h-10 bg-white rounded-full flex items-center justify-center hover:bg-black hover:text-white transition shadow-lg quick-view-btn relative group" 
+                                               data-product-id="<?php echo $currentId; ?>"
+                                               data-product-slug="<?php echo htmlspecialchars($item['slug'] ?? ''); ?>">
+                                            <i class="fas fa-eye"></i>
+                                            <span class="product-tooltip">Quick View</span>
+                                        </button>
+                                    </div>
+                                </div>
+                                <div class="p-4 flex flex-col flex-1">
+                                    <h3 class="font-semibold text-gray-800 mb-2 h-10 overflow-hidden line-clamp-2">
+                                        <a href="<?php echo $baseUrl; ?>/product?slug=<?php echo urlencode($item['slug'] ?? ''); ?>" class="hover:text-primary transition">
+                                            <?php echo htmlspecialchars($item['name'] ?? 'Product'); ?>
+                                        </a>
+                                    </h3>
+                                    <div class="flex items-center mb-3">
+                                        <div class="flex text-yellow-400">
+                                            <?php 
+                                            $itemRatingValue = floor($item['rating'] ?? 5);
+                                            for ($i = 0; $i < 5; $i++): 
+                                            ?>
+                                            <i class="fas fa-star text-[10px] <?php echo $i < $itemRatingValue ? '' : 'text-gray-300'; ?>"></i>
+                                            <?php endfor; ?>
+                                        </div>
+                                    </div>
+                                    <div class="flex items-center gap-2 mb-4 mt-auto">
+                                        <span class="text-base font-bold <?php echo $itemOriginalPrice ? 'text-[#1a3d32]' : 'text-primary'; ?>">
+                                            <?php echo format_price($itemPrice, $item['currency'] ?? 'USD'); ?>
+                                        </span>
+                                        <?php if ($itemOriginalPrice): ?>
+                                            <span class="text-red-500 font-bold line-through text-xs"><?php echo format_price($itemOriginalPrice, $item['currency'] ?? 'USD'); ?></span>
+                                        <?php endif; ?>
+                                    </div>
+
+                                    <!-- Add to Cart Button -->
+                                    <?php
+                                    // Get default variant attributes
+                                    $variantsData = $product->getVariants($item['id']);
+                                    $defaultAttributes = [];
+                                    if (!empty($variantsData['variants'])) {
+                                        $defaultVariant = $variantsData['variants'][0];
+                                        foreach ($variantsData['variants'] as $v) {
+                                            if (!empty($v['is_default'])) {
+                                                $defaultVariant = $v;
+                                                break;
+                                            }
+                                        }
+                                        $defaultAttributes = $defaultVariant['variant_attributes'];
+                                    }
+                                    $attributesJson = json_encode($defaultAttributes);
+                                    $isOutOfStock = (($item['stock_status'] ?? 'in_stock') === 'out_of_stock' || (isset($item['stock_quantity']) && $item['stock_quantity'] <= 0));
+                                    ?>
+                                    <button onclick='addToCart(<?php echo $item['product_id']; ?>, 1, this, <?php echo htmlspecialchars($attributesJson, ENT_QUOTES, 'UTF-8'); ?>)' 
+                                            class="w-full bg-[#1a3d32] text-white px-4 py-2.5 rounded hover:bg-black transition text-xs font-bold flex items-center justify-center gap-2 <?php echo $isOutOfStock ? 'opacity-50 cursor-not-allowed' : ''; ?>"
+                                            <?php echo $isOutOfStock ? 'disabled' : ''; ?>>
+                                        <?php if ($isOutOfStock): ?>
+                                            <span><?php echo strtoupper(get_stock_status_text($item['stock_status'] ?? 'in_stock', $item['stock_quantity'] ?? 0)); ?></span>
+                                        <?php else: ?>
+                                            <i class="fas fa-shopping-cart text-[10px]"></i>
+                                            <span>ADD TO CART</span>
+                                        <?php endif; ?>
+                                    </button>
+                                </div>
                             </div>
                         </div>
-                        <div class="flex items-center gap-2 mb-4 mt-auto">
-                            <span class="text-base font-bold <?php echo $itemOriginalPrice ? 'text-[#1a3d32]' : 'text-primary'; ?>">
-                                <?php echo format_price($itemPrice, $item['currency'] ?? 'USD'); ?>
-                            </span>
-                            <?php if ($itemOriginalPrice): ?>
-                                <span class="text-red-500 font-bold line-through text-xs"><?php echo format_price($itemOriginalPrice, $item['currency'] ?? 'USD'); ?></span>
-                            <?php endif; ?>
-                        </div>
-
-                        <!-- Add to Cart Button -->
-                        <?php
-                        // Get default variant attributes
-                        $variantsData = $product->getVariants($item['id']);
-                        $defaultAttributes = [];
-                        if (!empty($variantsData['variants'])) {
-                            $defaultVariant = $variantsData['variants'][0];
-                            foreach ($variantsData['variants'] as $v) {
-                                if (!empty($v['is_default'])) {
-                                    $defaultVariant = $v;
-                                    break;
-                                }
-                            }
-                            $defaultAttributes = $defaultVariant['variant_attributes'];
-                        }
-                        $attributesJson = json_encode($defaultAttributes);
-                        $isOutOfStock = (($item['stock_status'] ?? 'in_stock') === 'out_of_stock' || (isset($item['stock_quantity']) && $item['stock_quantity'] <= 0));
-                        ?>
-                        <button onclick='addToCart(<?php echo $item['product_id']; ?>, 1, this, <?php echo htmlspecialchars($attributesJson, ENT_QUOTES, 'UTF-8'); ?>)' 
-                                class="w-full bg-[#1a3d32] text-white px-4 py-2.5 rounded hover:bg-black transition text-xs font-bold flex items-center justify-center gap-2 <?php echo $isOutOfStock ? 'opacity-50 cursor-not-allowed' : ''; ?>"
-                                <?php echo $isOutOfStock ? 'disabled' : ''; ?>>
-                            <?php if ($isOutOfStock): ?>
-                                <span><?php echo strtoupper(get_stock_status_text($item['stock_status'] ?? 'in_stock', $item['stock_quantity'] ?? 0)); ?></span>
-                            <?php else: ?>
-                                <i class="fas fa-shopping-cart text-[10px]"></i>
-                                <span>ADD TO CART</span>
-                            <?php endif; ?>
-                        </button>
+                        <?php endforeach; ?>
                     </div>
                 </div>
-                <?php endforeach; ?>
+                
+                <!-- Navigation Arrows -->
+                <button class="absolute left-0 top-1/2 -translate-y-1/2 bg-white shadow-lg rounded-full w-10 h-10 flex items-center justify-center text-gray-800 hover:text-primary hover:bg-gray-50 transition z-10" id="peopleBoughtPrev" style="display: none;">
+                    <i class="fas fa-chevron-left"></i>
+                </button>
+                <button class="absolute right-0 top-1/2 -translate-y-1/2 bg-white shadow-lg rounded-full w-10 h-10 flex items-center justify-center text-gray-800 hover:text-primary hover:bg-gray-50 transition z-10" id="peopleBoughtNext" style="display: flex;">
+                    <i class="fas fa-chevron-right"></i>
+                </button>
             </div>
+
+            <script>
+            document.addEventListener('DOMContentLoaded', function() {
+                // Initialize People Bought Slider
+                setTimeout(function() {
+                    const slider = document.getElementById('peopleBoughtSlider');
+                    const prevBtn = document.getElementById('peopleBoughtPrev');
+                    const nextBtn = document.getElementById('peopleBoughtNext');
+                    const sliderWrapper = slider ? slider.parentElement : null;
+
+                    if (!slider || !prevBtn || !nextBtn) return;
+
+                    let currentIndex = 0;
+                    let startX = 0;
+                    let currentTranslate = 0;
+                    let isDragging = false;
+                    let initialTranslate = 0;
+
+                    function getItemsPerView() {
+                        // Approximate based on min-width logic
+                        const w = window.innerWidth;
+                        if (w >= 1024) return 4;
+                        if (w >= 640) return 2;
+                        return 1;
+                    }
+
+                    function getMaxIndex() {
+                        const firstItem = slider.children[0];
+                        if (!firstItem) return 0;
+                        const itemWidth = firstItem.offsetWidth; // Includes padding
+                        const containerWidth = slider.parentElement.offsetWidth;
+                        
+                        // How many items fully fit?
+                        const itemsInView = Math.floor(containerWidth / itemWidth);
+                        return Math.max(0, slider.children.length - itemsInView);
+                    }
+
+                    function updateSlider() {
+                        const firstItem = slider.children[0];
+                        if (!firstItem) return;
+                        const itemWidth = firstItem.offsetWidth;
+                        
+                        const maxIndex = getMaxIndex();
+                        if (currentIndex > maxIndex) currentIndex = maxIndex;
+                        if (currentIndex < 0) currentIndex = 0;
+
+                        const translateX = -currentIndex * itemWidth;
+                        slider.style.transform = `translateX(${translateX}px)`;
+
+                        // Update buttons
+                        prevBtn.style.display = currentIndex > 0 ? 'flex' : 'none';
+                        nextBtn.style.display = currentIndex < maxIndex ? 'flex' : 'none';
+                    }
+
+                    prevBtn.addEventListener('click', () => {
+                        if (currentIndex > 0) {
+                            currentIndex--;
+                            updateSlider();
+                        }
+                    });
+
+                    nextBtn.addEventListener('click', () => {
+                        if (currentIndex < getMaxIndex()) {
+                            currentIndex++;
+                            updateSlider();
+                        }
+                    });
+                    
+                    // Touch/Swipe Logic
+                    if (sliderWrapper) {
+                        sliderWrapper.addEventListener('touchstart', (e) => {
+                            startX = e.touches[0].clientX;
+                            isDragging = true;
+                            initialTranslate = -currentIndex * slider.children[0].offsetWidth;
+                            slider.style.transition = 'none';
+                        }, {passive: true});
+
+                        sliderWrapper.addEventListener('touchmove', (e) => {
+                            if (!isDragging) return;
+                            const currentX = e.touches[0].clientX;
+                            const diff = currentX - startX;
+                            currentTranslate = initialTranslate + diff;
+                            slider.style.transform = `translateX(${currentTranslate}px)`;
+                        }, {passive: true});
+
+                        sliderWrapper.addEventListener('touchend', (e) => {
+                             if (!isDragging) return;
+                            isDragging = false;
+                            slider.style.transition = 'transform 0.5s ease-out';
+                            const endX = e.changedTouches[0].clientX;
+                            const diff = endX - startX;
+                            
+                            if (Math.abs(diff) > 50) {
+                                if (diff < 0) { // Swipe Left -> Next
+                                    if (currentIndex < getMaxIndex()) currentIndex++;
+                                } else { // Swipe Right -> Prev
+                                    if (currentIndex > 0) currentIndex--;
+                                }
+                            }
+                            updateSlider();
+                        });
+                    }
+
+                    window.addEventListener('resize', updateSlider);
+                    
+                    // Initial update
+                     // Wait for images to potentially affect width logic
+                    setTimeout(updateSlider, 100);
+                }, 500);
+            });
+            </script>
         </div>
         <?php endif; ?>
         

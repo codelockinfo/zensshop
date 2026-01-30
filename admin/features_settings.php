@@ -17,9 +17,15 @@ $error = $_SESSION['flash_error'] ?? '';
 unset($_SESSION['flash_success'], $_SESSION['flash_error']);
 
 // Handle Delete
+$storeId = $_SESSION['store_id'] ?? null;
+if (!$storeId && isset($_SESSION['user_email'])) {
+     $storeUser = $db->fetchOne("SELECT store_id FROM users WHERE email = ?", [$_SESSION['user_email']]);
+     $storeId = $storeUser['store_id'] ?? null;
+}
+
 if (isset($_POST['delete_id'])) {
     try {
-        $db->execute("DELETE FROM section_features WHERE id = ?", [$_POST['delete_id']]);
+        $db->execute("DELETE FROM section_features WHERE id = ? AND store_id = ?", [$_POST['delete_id'], $storeId]);
         $_SESSION['flash_success'] = "Feature removed successfully.";
         header("Location: " . $baseUrl . '/admin/features');
         exit;
@@ -39,18 +45,19 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
 
         if ($id) {
             // Update
-            $sql = "UPDATE section_features SET icon = ?, heading = ?, content = ?, sort_order = ? WHERE id = ?";
-            $db->execute($sql, [$icon, $heading, $content, $sort_order, $id]);
+            $sql = "UPDATE section_features SET icon = ?, heading = ?, content = ?, sort_order = ? WHERE id = ? AND store_id = ?";
+            $db->execute($sql, [$icon, $heading, $content, $sort_order, $id, $storeId]);
             $_SESSION['flash_success'] = "Feature updated successfully.";
         } else {
             // Insert - Check Limit first
-            $count = $db->fetchOne("SELECT COUNT(*) as c FROM section_features")['c'];
+            $countResult = $db->fetchOne("SELECT COUNT(*) as c FROM section_features WHERE store_id = ?", [$storeId]);
+            $count = $countResult['c'];
             if ($count >= 3) {
                  throw new Exception("Maximum 3 features allowed.");
             }
             
-            $sql = "INSERT INTO section_features (icon, heading, content, sort_order) VALUES (?, ?, ?, ?)";
-            $db->execute($sql, [$icon, $heading, $content, $sort_order]);
+            $sql = "INSERT INTO section_features (icon, heading, content, sort_order, store_id) VALUES (?, ?, ?, ?, ?)";
+            $db->execute($sql, [$icon, $heading, $content, $sort_order, $storeId]);
             $_SESSION['flash_success'] = "Feature added successfully.";
         }
         
@@ -63,7 +70,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
 }
 
 // Fetch Data
-$features = $db->fetchAll("SELECT * FROM section_features ORDER BY sort_order ASC");
+$features = $db->fetchAll("SELECT * FROM section_features WHERE store_id = ? ORDER BY sort_order ASC", [$storeId]);
 $count = count($features);
 
 $pageTitle = 'Features Section Manager';
@@ -114,7 +121,7 @@ require_once __DIR__ . '/../includes/admin-header.php';
                     <!-- Echoing Raw SVG -->
                     <?php echo $f['icon']; ?>
                 </div>
-                <h3 class="font-bold text-lg text-center mb-2"><?php echo htmlspecialchars($f['title'] ?? ''); ?></h3>
+                <h3 class="font-bold text-lg text-center mb-2"><?php echo htmlspecialchars($f['heading'] ?? ''); ?></h3>
                 <p class="text-gray-600 text-center text-sm"><?php echo nl2br(htmlspecialchars($f['content'] ?? '')); ?></p>
             </div>
         <?php endforeach; ?>

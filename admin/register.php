@@ -25,7 +25,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     } else {
         try {
             $auth->register($name, $email, $password);
-            $success = 'Registration successful! You can now login.';
+            $success = 'Registration successful! Redirecting to login...';
+            $shouldRedirect = true;
         } catch (Exception $e) {
             $error = $e->getMessage();
         }
@@ -88,24 +89,34 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 <label class="block text-gray-700 text-sm font-bold mb-2" for="password">
                     Password
                 </label>
-                <input type="password" 
-                       id="password" 
-                       name="password" 
-                       required
-                       minlength="6"
-                       class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
+                <div class="relative">
+                    <input type="password" 
+                           id="password" 
+                           name="password" 
+                           required
+                           minlength="6"
+                           class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 pr-10">
+                    <button type="button" onclick="togglePassword('password')" class="absolute inset-y-0 right-0 px-3 flex items-center text-gray-600 hover:text-gray-800 focus:outline-none">
+                        <i class="fas fa-eye-slash" id="password-icon"></i>
+                    </button>
+                </div>
             </div>
             
             <div class="mb-6">
                 <label class="block text-gray-700 text-sm font-bold mb-2" for="confirm_password">
                     Confirm Password
                 </label>
-                <input type="password" 
-                       id="confirm_password" 
-                       name="confirm_password" 
-                       required
-                       minlength="6"
-                       class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
+                <div class="relative">
+                    <input type="password" 
+                           id="confirm_password" 
+                           name="confirm_password" 
+                           required
+                           minlength="6"
+                           class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 pr-10">
+                    <button type="button" onclick="togglePassword('confirm_password')" class="absolute inset-y-0 right-0 px-3 flex items-center text-gray-600 hover:text-gray-800 focus:outline-none">
+                        <i class="fas fa-eye-slash" id="confirm_password-icon"></i>
+                    </button>
+                </div>
             </div>
             
             <button type="submit" 
@@ -136,7 +147,28 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             }, 3000);
         });
     });
+
+    function togglePassword(fieldId) {
+        const input = document.getElementById(fieldId);
+        const icon = document.getElementById(fieldId + '-icon');
+        if (input.type === 'password') {
+            input.type = 'text';
+            icon.classList.remove('fa-eye-slash');
+            icon.classList.add('fa-eye');
+        } else {
+            input.type = 'password';
+            icon.classList.remove('fa-eye');
+            icon.classList.add('fa-eye-slash');
+        }
+    }
     </script>
+    <?php if (isset($shouldRedirect) && $shouldRedirect): ?>
+    <script>
+    setTimeout(function() {
+        window.location.href = '<?php echo $baseUrl; ?>/admin/index.php';
+    }, 2000);
+    </script>
+    <?php endif; ?>
 </body>
 </html>
 

@@ -15,15 +15,22 @@ $input = json_decode(file_get_contents('php://input'), true);
 
 $db = Database::getInstance();
 
+// Determine Store ID
+$storeId = $_SESSION['store_id'] ?? null;
+if (!$storeId && isset($_SESSION['user_email'])) {
+     $storeUser = $db->fetchOne("SELECT store_id FROM users WHERE email = ?", [$_SESSION['user_email']]);
+     $storeId = $storeUser['store_id'] ?? null;
+}
+
 try {
     switch ($method) {
         case 'GET':
             $id = $_GET['id'] ?? null;
             if ($id) {
-                $item = $db->fetchOne("SELECT * FROM categories WHERE id = ?", [$id]);
+                $item = $db->fetchOne("SELECT * FROM categories WHERE id = ? AND store_id = ?", [$id, $storeId]);
                 echo json_encode(['success' => true, 'category' => $item]);
             } else {
-                $categories = $db->fetchAll("SELECT * FROM categories ORDER BY sort_order ASC");
+                $categories = $db->fetchAll("SELECT * FROM categories WHERE store_id = ? ORDER BY sort_order ASC", [$storeId]);
                 echo json_encode(['success' => true, 'categories' => $categories]);
             }
             break;
@@ -33,7 +40,7 @@ try {
             if (!$id) {
                 throw new Exception('Category ID is required');
             }
-            $db->execute("DELETE FROM categories WHERE id = ?", [$id]);
+            $db->execute("DELETE FROM categories WHERE id = ? AND store_id = ?", [$id, $storeId]);
             echo json_encode(['success' => true, 'message' => 'Category deleted successfully']);
             break;
             

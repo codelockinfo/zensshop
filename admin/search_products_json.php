@@ -9,12 +9,17 @@ $auth->requireLogin();
 
 $db = Database::getInstance();
 $search = $_GET['term'] ?? '';
+$storeId = $_SESSION['store_id'] ?? null;
+if (!$storeId && isset($_SESSION['user_email'])) {
+     $storeUser = $db->fetchOne("SELECT store_id FROM users WHERE email = ?", [$_SESSION['user_email']]);
+     $storeId = $storeUser['store_id'] ?? null;
+}
 
 header('Content-Type: application/json');
 
 try {
-    $sql = "SELECT p.* FROM products p WHERE p.status != 'archived'";
-    $params = [];
+    $sql = "SELECT p.* FROM products p WHERE p.status != 'archived' AND p.store_id = ?";
+    $params = [$storeId];
 
     if (!empty($search)) {
         $sql .= " AND (p.name LIKE ? OR p.sku LIKE ? OR p.id LIKE ?)";
