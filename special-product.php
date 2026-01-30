@@ -386,7 +386,7 @@ require_once __DIR__ . '/includes/header.php';
                 </div>
                 
                 <div class="flex items-center gap-4 justify-center lg:justify-start flex-wrap">
-                    <button onclick="spAddToCart(<?php echo $productData['product_id']; ?>, this, <?php echo htmlspecialchars(json_encode($firstVariant['variant_attributes'] ?? (object)[])); ?>)" class="btn-accent px-6 h-[58px] py-[17px] rounded text-[11px] font-bold tracking-widest uppercase transition transform flex items-center justify-center gap-3" data-loading-text="Adding...">
+                    <button onclick="spAddToCart(<?php echo $productData['product_id']; ?>, this, <?php echo htmlspecialchars(json_encode($firstVariant['variant_attributes'] ?? (object)[])); ?>)" class="bg-[#1a3d32] btn-accent px-6 h-[58px] py-[17px] rounded text-[11px] font-bold tracking-widest uppercase transition transform flex items-center justify-center gap-3" data-loading-text="Adding...">
                         <i class="fas fa-shopping-cart text-[13px]"></i>
                         <span>Add to cart</span>
                     </button>
@@ -400,7 +400,7 @@ require_once __DIR__ . '/includes/header.php';
                         ?>
                         <a href="<?php echo htmlspecialchars($pLink); ?>" target="_blank" class="h-[58px] px-6 rounded flex items-center gap-3 shadow-lg hover:shadow-xl transition-all transform hover:-translate-y-1 group border border-gray-100" style="background-color: <?php echo $pBg; ?>; color: <?php echo $pText; ?>;" title="Buy on <?php echo htmlspecialchars($pName); ?>">
                             <?php if ($pImg): ?>
-                                <img src="<?php echo htmlspecialchars($pImg); ?>" alt="" class="h-7 md:h-8 w-auto object-contain">
+                                <img src="<?php echo htmlspecialchars($pImg); ?>" alt="" class="h-7 md:h-8 w-auto object-contain rounded-full">
                             <?php endif; ?>
                             <?php if (!empty($pName)): ?>
                                 <span class="font-bold uppercase text-[11px] tracking-widest" style="color: <?php echo $pText; ?>;"><?php echo htmlspecialchars($pName); ?></span>
@@ -790,9 +790,12 @@ require_once __DIR__ . '/includes/header.php';
             </div>
             
              <div class="hidden md:flex items-center border border-gray-300 rounded-md w-24 h-10 overflow-hidden bg-white">
-                <button onclick="updateStickyQty(-1)" class="w-8 h-full flex items-center justify-center text-gray-600 hover:bg-gray-100 transition">-</button>
-                <input type="number" id="sticky-qty" value="1" min="1" class="flex-1 w-full text-center border-none focus:ring-0 p-0 text-gray-900 font-semibold appearance-none bg-transparent h-full text-sm" readonly>
-                <button onclick="updateStickyQty(1)" class="w-8 h-full flex items-center justify-center text-gray-600 hover:bg-gray-100 transition">+</button>
+                <button onclick="updateStickyQty(-1)" class="w-8 h-full flex items-center justify-center text-gray-600 hover:bg-gray-100 transition select-none">-</button>
+                <div class="flex-1 h-full flex items-center justify-center">
+                    <span id="sticky-qty-display" class="text-gray-900 font-semibold text-sm select-none">1</span>
+                    <input type="hidden" id="sticky-qty" value="1">
+                </div>
+                <button onclick="updateStickyQty(1)" class="w-8 h-full flex items-center justify-center text-gray-600 hover:bg-gray-100 transition select-none">+</button>
             </div>
 
             <button onclick="stickyAddToCart()" class="bg-[#1a3d32] text-white px-4 py-2.5 md:px-8 rounded-full font-bold hover:bg-black transition flex items-center justify-center gap-2 text-sm md:text-base whitespace-nowrap" id="sticky-atc-btn">
@@ -831,9 +834,11 @@ document.addEventListener('scroll', function() {
 
 function updateStickyQty(change) {
     const input = document.getElementById('sticky-qty');
+    const display = document.getElementById('sticky-qty-display');
     let val = parseInt(input.value) + change;
     if (val < 1) val = 1;
     input.value = val;
+    if (display) display.textContent = val;
 }
 
 function stickyAddToCart() {

@@ -11,6 +11,13 @@ $baseUrl = getBaseUrl();
 $success = '';
 $error = '';
 
+// Determine Store ID early for all actions
+$storeId = $_SESSION['store_id'] ?? null;
+if (!$storeId && isset($_SESSION['user_email'])) {
+     $storeUser = $db->fetchOne("SELECT store_id FROM users WHERE email = ?", [$_SESSION['user_email']]);
+     $storeId = $storeUser['store_id'] ?? null;
+}
+
 // Determine which page to edit (defaults to 'default')
 $selectedSlug = $_GET['page'] ?? 'default';
 
@@ -95,12 +102,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $statsText = $_POST['stats_text_color'] ?? '';
         $whyBg = $_POST['why_bg_color'];
         $whyText = $_POST['why_text_color'];
-        $aboutBg = $_POST['about_bg_color'];
-        $aboutText = $_POST['about_text_color'];
-        $testiBg = $_POST['testimonials_bg_color'];
-        $testiText = $_POST['testimonials_text_color'];
-        $newsBg = $_POST['newsletter_bg_color'];
-        $newsText = $_POST['newsletter_text_color'];
+        $aboutBg = $_POST['about_bg_color'] ?? '';
+        $aboutTextColor = $_POST['about_text_color'] ?? '#333333';
+        $testiBg = $_POST['testimonials_bg_color'] ?? '';
+        $testiText = $_POST['testimonials_text_color'] ?? '';
+        $newsBg = $_POST['newsletter_bg_color'] ?? '';
+        $newsTextColor = $_POST['newsletter_text_color'] ?? '#333333';
         
         // Toggles
         $showStats = isset($_POST['show_stats']) ? 1 : 0;
@@ -325,7 +332,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             'text' => $aboutText,
             'image' => $_POST['about_image'] ?? '',
             'bg_color' => $aboutBg,
-            'text_color' => $aboutText_color ?? '#333333'
+            'text_color' => $aboutTextColor
         ]);
 
         // 7. Testimonials Data
@@ -343,7 +350,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             'title' => $newsTitle,
             'text' => $newsText,
             'bg_color' => $newsBg,
-            'text_color' => $newsText_color ?? '#333333'
+            'text_color' => $newsTextColor
         ]);
 
         // 9. Platforms Data
@@ -448,12 +455,6 @@ require_once __DIR__ . '/../includes/admin-header.php';
 </script>
 <?php
 
-// Fetch all pages for selector
-$storeId = $_SESSION['store_id'] ?? null;
-if (!$storeId && isset($_SESSION['user_email'])) {
-     $storeUser = $db->fetchOne("SELECT store_id FROM users WHERE email = ?", [$_SESSION['user_email']]);
-     $storeId = $storeUser['store_id'] ?? null;
-}
 $allPages = $db->fetchAll("SELECT id, name, slug FROM landing_pages WHERE store_id = ? ORDER BY name ASC", [$storeId]);
 
 // Determine which page to edit
