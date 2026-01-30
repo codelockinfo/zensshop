@@ -457,13 +457,16 @@ $_COOKIE['recently_viewed'] = json_encode($recentIds);
                 </div> -->
                 <?php endif; ?>
                 
-                <!-- Quantity Selector -->
+                <!-- Quantity Selector - Premium Non-clickable Style -->
                 <div class="flex items-center gap-4 mb-6">
                     <label class="font-semibold text-gray-900">Quantity:</label>
-                    <div class="flex items-center border border-gray-300 rounded-md w-32 h-10 overflow-hidden">
-                        <button onclick="updateProductQuantity(-1)" class="w-10 h-full flex items-center justify-center text-gray-600 hover:text-black hover:bg-gray-100 transition leading-none">-</button>
-                        <input type="text" id="productQuantity" value="1" readonly class="flex-1 w-full text-center border-none focus:ring-0 p-0 text-gray-900 font-bold bg-transparent h-full" style="text-align: center; border: 0 !important; outline: none !important; box-shadow: none !important;">
-                        <button onclick="updateProductQuantity(1)" class="w-10 h-full flex items-center justify-center text-gray-600 hover:text-black hover:bg-gray-100 transition leading-none">+</button>
+                    <div class="flex items-center border border-gray-300 rounded-md w-28 h-10 overflow-hidden bg-white">
+                        <button onclick="updateProductQuantity(-1)" class="w-10 h-full flex-shrink-0 flex items-center justify-center text-gray-600 hover:text-black hover:bg-gray-100 transition select-none">-</button>
+                        <div class="flex-1 h-full grid place-items-center">
+                            <span id="productQuantityDisplay" class="text-gray-900 font-bold text-base select-none">1</span>
+                        </div>
+                        <input type="hidden" id="productQuantity" value="1">
+                        <button onclick="updateProductQuantity(1)" class="w-10 h-full flex-shrink-0 flex items-center justify-center text-gray-600 hover:text-black hover:bg-gray-100 transition select-none">+</button>
                     </div>
                 </div>
 
@@ -727,7 +730,7 @@ $_COOKIE['recently_viewed'] = json_encode($recentIds);
                                     </div>
                                 </div>
                                 <div class="p-4 flex flex-col flex-1">
-                                    <h3 class="font-semibold text-gray-800 mb-2 h-10 overflow-hidden line-clamp-2">
+                                    <h3 class="font-semibold text-gray-800 mb-2 h-10 overflow-hidden line-clamp-2" style="display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical;" title="<?php echo htmlspecialchars($item['name'] ?? 'Product'); ?>">
                                         <a href="<?php echo $baseUrl; ?>/product?slug=<?php echo urlencode($item['slug'] ?? ''); ?>" class="hover:text-primary transition">
                                             <?php echo htmlspecialchars($item['name'] ?? 'Product'); ?>
                                         </a>
@@ -943,7 +946,7 @@ $_COOKIE['recently_viewed'] = json_encode($recentIds);
                         </button>
                     </div>
                     <div class="p-4 flex flex-col flex-1">
-                        <h3 class="font-semibold text-gray-800 mb-2 h-10 overflow-hidden line-clamp-2">
+                        <h3 class="font-semibold text-gray-800 mb-2 h-10 overflow-hidden line-clamp-2" style="display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical;" title="<?php echo htmlspecialchars($item['name'] ?? 'Product'); ?>">
                             <a href="<?php echo $baseUrl; ?>/product?slug=<?php echo urlencode($item['slug'] ?? ''); ?>" class="hover:text-primary transition">
                                 <?php echo htmlspecialchars($item['name'] ?? 'Product'); ?>
                             </a>
@@ -1022,13 +1025,20 @@ let selectedOptions = <?php echo !empty($firstVariant['variant_attributes']) ? j
 // Quantity Helper Functions
 function updateProductQuantity(change) {
     const input = document.getElementById('productQuantity');
+    const display = document.getElementById('productQuantityDisplay');
+    const stickyQtyInput = document.getElementById('sticky-qty');
+    const stickyQtyDisplay = document.getElementById('sticky-qty-display');
+    
     let val = parseInt(input.value) + change;
     if (val < 1) val = 1;
-    input.value = val;
     
-    // Sync with sticky quantity
-    const stickyQty = document.getElementById('sticky-qty');
-    if (stickyQty) stickyQty.value = val;
+    // Update main
+    input.value = val;
+    if (display) display.textContent = val;
+    
+    // Sync with sticky bar
+    if (stickyQtyInput) stickyQtyInput.value = val;
+    if (stickyQtyDisplay) stickyQtyDisplay.textContent = val;
 }
 
 function formatPriceJS(amount, currency) {
@@ -1824,11 +1834,14 @@ async function toggleProductWishlist(productId, btn) {
                  </div>
             </div>
             
-            <!-- Quantity - simplified -->
-            <div class="hidden md:flex items-center border border-gray-300 rounded-md w-32 h-10 overflow-hidden bg-white">
-                <button onclick="updateStickyQty(-1)" class="w-10 h-full flex items-center justify-center text-gray-600 hover:text-black hover:bg-gray-100 transition leading-none">-</button>
-                <input type="number" id="sticky-qty" value="1" min="1" class="flex-1 pl-4 w-full text-center border-none focus:ring-0 p-0 text-gray-900 font-semibold appearance-none bg-transparent h-full" style="text-align: center; border: 0 !important; outline: none !important; box-shadow: none !important;" readonly>
-                <button onclick="updateStickyQty(1)" class="w-10 h-full flex items-center justify-center text-gray-600 hover:text-black hover:bg-gray-100 transition leading-none">+</button>
+            <!-- Quantity - Balanced grid centering -->
+            <div class="hidden md:flex items-center border border-gray-300 rounded-md w-28 h-10 overflow-hidden bg-white">
+                <button onclick="updateStickyQty(-1)" class="w-10 h-full flex-shrink-0 flex items-center justify-center text-gray-600 hover:text-black hover:bg-gray-100 transition select-none">-</button>
+                <div class="flex-1 h-full grid place-items-center">
+                    <span id="sticky-qty-display" class="text-gray-900 font-semibold text-base select-none">1</span>
+                </div>
+                <input type="hidden" id="sticky-qty" value="1">
+                <button onclick="updateStickyQty(1)" class="w-10 h-full flex-shrink-0 flex items-center justify-center text-gray-600 hover:text-black hover:bg-gray-100 transition select-none">+</button>
             </div>
 
             <button onclick="stickyAddToCart()" 
@@ -1890,13 +1903,20 @@ document.addEventListener('scroll', function() {
 
 function updateStickyQty(change) {
     const input = document.getElementById('sticky-qty');
+    const display = document.getElementById('sticky-qty-display');
+    const mainQtyInput = document.getElementById('productQuantity');
+    const mainQtyDisplay = document.getElementById('productQuantityDisplay');
+    
     let val = parseInt(input.value) + change;
     if (val < 1) val = 1;
+    
+    // Update sticky
     input.value = val;
+    if (display) display.textContent = val;
     
     // Sync with main quantity if exists
-    const mainQty = document.getElementById('productQuantity');
-    if(mainQty) mainQty.value = val;
+    if (mainQtyInput) mainQtyInput.value = val;
+    if (mainQtyDisplay) mainQtyDisplay.textContent = val;
 }
 
 function stickyAddToCart() {
@@ -1955,140 +1975,6 @@ function stickyAddToCart() {
 }
 </script>
 
-<!-- Sticky Bar -->
-<div id="sticky-bar" class="fixed bottom-0 left-0 w-full bg-white border-t border-gray-200 shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.1)] transform translate-y-full transition-transform duration-300 z-40 px-3 py-3 md:px-4">
-    <div class="container mx-auto flex items-center justify-between gap-3">
-        <div class="flex items-center gap-3 overflow-hidden">
-            <img src="<?php echo htmlspecialchars($mainImage); ?>" 
-                 alt="Sticky Bar Product" 
-                 class="w-10 h-10 md:w-12 md:h-12 object-contain rounded border border-gray-100 flex-shrink-0"
-                 onerror="this.src='https://via.placeholder.com/100x100?text=Product'">
-            <div class="min-w-0">
-                <h3 class="font-bold text-gray-900 leading-tight text-sm md:text-base truncate"><?php echo htmlspecialchars($productData['name']); ?></h3>
-                <div class="hidden md:flex text-xs text-yellow-500 items-center mt-1">
-                    <?php 
-                    $rating = floatval($productData['rating'] ?? 5);
-                    for ($i = 0; $i < 5; $i++) {
-                        echo '<i class="fas fa-star ' . ($i < $rating ? '' : 'text-gray-300') . '"></i>';
-                    }
-                    ?>
-                </div>
-            </div>
-        </div>
-        
-        <div class="flex items-center gap-3 flex-shrink-0">
-            <div class="text-right mr-2 hidden md:block">
-                 <div class="text-xs text-gray-500">Total Price:</div>
-                 <div class="flex items-center justify-end gap-2">
-                     <span id="sticky-original-price" class="text-sm text-gray-400 line-through <?php echo !$originalPrice ? 'hidden' : ''; ?>"><?php echo format_price($originalPrice ?: 0, $productData['currency'] ?? 'USD'); ?></span>
-                     <div class="font-bold text-lg text-[#1a3d32]" id="sticky-price"><?php echo format_price($price, $productData['currency'] ?? 'USD'); ?></div>
-                 </div>
-            </div>
-            
-            <!-- Quantity - simplified -->
-            <div class="hidden md:flex items-center border border-gray-300 rounded-md w-32 h-10 overflow-hidden bg-white">
-                <button onclick="updateStickyQty(-1)" class="w-10 h-full flex items-center justify-center text-gray-600 hover:text-black hover:bg-gray-100 transition leading-none">-</button>
-                <input type="number" id="sticky-qty" value="1" min="1" class="flex-1 pl-4 w-full text-center border-none focus:ring-0 p-0 text-gray-900 font-semibold appearance-none bg-transparent h-full" style="text-align: center; border: 0 !important; outline: none !important; box-shadow: none !important;" readonly>
-                <button onclick="updateStickyQty(1)" class="w-10 h-full flex items-center justify-center text-gray-600 hover:text-black hover:bg-gray-100 transition leading-none">+</button>
-            </div>
-
-            <button onclick="stickyAddToCart()" 
-                    class="bg-[#1a3d32] text-white px-4 py-2.5 md:px-8 rounded-full font-bold hover:bg-black transition flex items-center justify-center gap-2 text-sm md:text-base whitespace-nowrap <?php echo $isOutOfStock ? 'opacity-50 cursor-not-allowed' : ''; ?>" 
-                    id="sticky-atc-btn"
-                    <?php echo $isOutOfStock ? 'disabled' : ''; ?>>
-                <?php if ($isOutOfStock): ?>
-                    <span><?php echo $stockLabel; ?></span>
-                <?php else: ?>
-                    <i class="fas fa-shopping-cart text-xs md:text-sm"></i>
-                    <span>Add To Cart</span>
-                <?php endif; ?>
-            </button>
-        </div>
-    </div>
-</div>
-
-<script>
-// Sticky Bar Logic
-document.addEventListener('DOMContentLoaded', function() {
-    const stickyBar = document.getElementById('sticky-bar');
-    const mainAddToCartBtn = document.querySelector('.add-to-cart-btn'); // Assuming there's a main ATC button
-    
-    // Show sticky bar when scrolling past the main image or add to cart button
-    window.addEventListener('scroll', function() {
-        if (window.scrollY > 500) { // Adjust threshold as needed
-            stickyBar.classList.remove('translate-y-full');
-        } else {
-            stickyBar.classList.add('translate-y-full');
-        }
-    });
-});
-
-function updateStickyQty(change) {
-    const stickyQtyInput = document.getElementById('sticky-qty');
-    let val = parseInt(stickyQtyInput.value) + change;
-    if (val < 1) val = 1;
-    stickyQtyInput.value = val;
-    // Sync with main quantity if exists
-    const mainQtyInput = document.getElementById('productQuantity');
-    if (mainQtyInput) mainQtyInput.value = val;
-}
-
-function stickyAddToCart() {
-    const qty = parseInt(document.getElementById('sticky-qty').value);
-    const productId = <?php echo $productData['id']; ?>;
-    const btn = document.getElementById('sticky-atc-btn');
-    
-    // Reuse existing addToCart logic but pass our button 
-    // Need to collect variant options if any selected
-    // Assuming 'selectedOptions' is global from previous scripts or we re-collect
-    
-    if (typeof addToCart === 'function') {
-         addToCart(productId, qty, btn, selectedOptions);
-    }
-}
-
-// Hook into existing variant selection to update sticky bar
-// We override or extend the existing updateUI function if it exists, or duplicate the logic here.
-// Since I can't easily hook into 'updateProductUI' inside the module if it's not global, 
-// I will assume the user has a global function or I need to patch the original function.
-// For now, let's create a global function that the main script SHOULD call.
-
-window.updateStickyBarStock = function(isOutOfStock, label, price, originalPrice) {
-    const btn = document.getElementById('sticky-atc-btn');
-    const priceEl = document.getElementById('sticky-price');
-    const originalPriceEl = document.getElementById('sticky-original-price');
-    
-    if (btn) {
-        if (isOutOfStock) {
-            btn.disabled = true;
-            btn.classList.add('opacity-50', 'cursor-not-allowed');
-            btn.innerHTML = `<span>${label}</span>`;
-        } else {
-            btn.disabled = false;
-            btn.classList.remove('opacity-50', 'cursor-not-allowed');
-            btn.innerHTML = `<i class="fas fa-shopping-cart text-xs md:text-sm"></i><span>Add To Cart</span>`;
-        }
-    }
-    
-    if (priceEl && price) {
-        priceEl.textContent = price;
-    }
-    if (originalPriceEl) {
-        if (originalPrice) {
-            originalPriceEl.textContent = originalPrice;
-            originalPriceEl.classList.remove('hidden');
-        } else {
-             originalPriceEl.classList.add('hidden');
-        }
-    }
-};
-// Initialize UI on load
-document.addEventListener('DOMContentLoaded', function() {
-    if (typeof updateVariantDisplay === 'function') {
-        updateVariantDisplay();
-    }
-});
-</script>
 
 <?php require_once __DIR__ . '/includes/footer.php'; ?>
 

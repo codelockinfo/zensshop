@@ -157,11 +157,41 @@ if (isset($_GET['ajax'])) {
                     echo '<button class="wishlist-btn absolute top-3 right-3 rounded-full w-9 h-9 flex items-center justify-center transition ' . ($inWishlist ? 'bg-black text-white' : 'bg-white text-black') . ' hover:bg-black hover:text-white" data-product-id="' . $currentId . '" title="' . ($inWishlist ? 'Remove from Wishlist' : 'Add to Wishlist') . '">';
                     echo '<i class="' . ($inWishlist ? 'fas' : 'far') . ' fa-heart"></i>';
                     echo '</button>';
+
+                    // Hover Action Buttons
+                    echo '<div class="product-actions absolute right-3 top-12 flex flex-col gap-2 mt-2 opacity-0 group-hover:opacity-100 transition-opacity duration-300 z-30">';
+                        echo '<a href="' . $baseUrl . '/product?slug=' . urlencode($itemSlug) . '" class="product-action-btn w-10 h-10 bg-white rounded-full flex items-center justify-center hover:bg-black hover:text-white transition shadow-lg quick-view-btn relative group" data-product-id="' . $currentId . '" data-product-slug="' . htmlspecialchars($itemSlug) . '">';
+                        echo '<i class="fas fa-eye"></i>';
+                        echo '<span class="product-tooltip">Quick View</span>';
+                        echo '</a>';
+
+                        // Get first variant for default attributes
+                        $vData = $product->getVariants($currentId);
+                        $defaultAttributes = [];
+                        if (!empty($vData['variants'])) {
+                            $defaultVariant = $vData['variants'][0];
+                            foreach ($vData['variants'] as $v) {
+                                if (!empty($v['is_default'])) {
+                                    $defaultVariant = $v;
+                                    break;
+                                }
+                            }
+                            $defaultAttributes = $defaultVariant['variant_attributes'];
+                        }
+                        $attributesJson = json_encode($defaultAttributes);
+                        $isOutOfStock = ($item['stock_status'] === 'out_of_stock' || (isset($item['stock_quantity']) && $item['stock_quantity'] <= 0));
+
+                        echo '<button class="product-action-btn w-10 h-10 bg-white rounded-full flex items-center justify-center hover:bg-black hover:text-white transition shadow-lg add-to-cart-hover-btn relative group ' . ($isOutOfStock ? 'opacity-50 cursor-not-allowed' : '') . '" data-product-id="' . $currentId . '" data-attributes=\'' . htmlspecialchars($attributesJson, ENT_QUOTES, 'UTF-8') . '\' ' . ($isOutOfStock ? 'disabled' : '') . '>';
+                        echo '<i class="fas fa-shopping-cart"></i>';
+                        echo '<span class="product-tooltip">' . ($isOutOfStock ? get_stock_status_text($item['stock_status'], $item['stock_quantity'] ?? 0) : 'Add to Cart') . '</span>';
+                        echo '</button>';
+                    echo '</div>'; 
+
                 echo '</div>'; // End card-image-wrap
                 
                 // Content Wrapper
                 echo '<div class="p-4 card-content">';
-                    echo '<h3 class="font-semibold text-md mb-2 card-title">';
+                    echo '<h3 class="font-semibold text-md mb-2 h-10 overflow-hidden line-clamp-2" style="display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical;" title="' . htmlspecialchars($itemName) . '">';
                     echo '<a href="' . $baseUrl . '/product?slug=' . urlencode($itemSlug) . '" class="hover:text-primary transition">' . htmlspecialchars($itemName) . '</a>';
                     echo '</h3>';
                     
@@ -189,11 +219,6 @@ if (isset($_GET['ajax'])) {
                         echo '<span class="text-md font-bold ' . ($originalPrice ? 'text-[#1a3d32]' : 'text-primary') . '">' . format_price($price, $item['currency'] ?? 'USD') . '</span>';
                         echo '</div>';
                         
-                        $isOutOfStock = ($item['stock_status'] === 'out_of_stock' || (isset($item['stock_quantity']) && $item['stock_quantity'] <= 0));
-                        $stockLabel = get_stock_status_text($item['stock_status'], $item['stock_quantity'] ?? 0);
-                        echo '<button onclick="window.addToCart(' . $itemId . ', 1, this)" class="bg-primary text-white px-4 py-2 rounded hover:bg-primary-light hover:text-white transition text-sm ' . ($isOutOfStock ? 'opacity-50 cursor-not-allowed' : '') . '" ' . ($isOutOfStock ? 'disabled' : '') . '>';
-                        echo '<i class="fas fa-shopping-cart mr-1"></i> ' . ($isOutOfStock ? $stockLabel : 'Add to Cart');
-                        echo '</button>';
                     echo '</div>'; // End actions
                 
                 echo '</div>'; // End card-content
@@ -536,6 +561,31 @@ button.active {
                                     <i class="fas fa-eye"></i>
                                     <span class="product-tooltip">Quick View</span>
                                 </button>
+                                
+                                <?php
+                                // Get first variant for default attributes
+                                $vData = $product->getVariants($currentId);
+                                $defaultAttributes = [];
+                                if (!empty($vData['variants'])) {
+                                    $defaultVariant = $vData['variants'][0];
+                                    foreach ($vData['variants'] as $v) {
+                                        if (!empty($v['is_default'])) {
+                                            $defaultVariant = $v;
+                                            break;
+                                        }
+                                    }
+                                    $defaultAttributes = $defaultVariant['variant_attributes'];
+                                }
+                                $attributesJson = json_encode($defaultAttributes);
+                                $isOutOfStock = ($item['stock_status'] === 'out_of_stock' || (isset($item['stock_quantity']) && $item['stock_quantity'] <= 0));
+                                ?>
+                                <button type="button" class="product-action-btn w-10 h-10 bg-white rounded-full flex items-center justify-center hover:bg-black hover:text-white transition shadow-lg add-to-cart-hover-btn relative group <?php echo $isOutOfStock ? 'opacity-50 cursor-not-allowed' : ''; ?>" 
+                                        data-product-id="<?php echo $currentId; ?>"
+                                        data-attributes='<?php echo htmlspecialchars($attributesJson, ENT_QUOTES, 'UTF-8'); ?>'
+                                        <?php echo $isOutOfStock ? 'disabled' : ''; ?>>
+                                    <i class="fas fa-shopping-cart"></i>
+                                    <span class="product-tooltip"><?php echo $isOutOfStock ? get_stock_status_text($item['stock_status'], $item['stock_quantity']) : 'Add to Cart'; ?></span>
+                                </button>
                             </div>
                         </div>
                         
@@ -575,10 +625,10 @@ button.active {
                                     <span class="text-md font-bold <?php echo $originalPrice ? 'text-[#1a3d32]' : 'text-primary'; ?>"><?php echo format_price($price, $item['currency'] ?? 'USD'); ?></span>
                                 </div>
                                  <?php $isOutOfStock = ($item['stock_status'] === 'out_of_stock' || (isset($item['stock_quantity']) && $item['stock_quantity'] <= 0)); ?>
-                                 <button onclick="window.addToCart(<?php echo $itemId; ?>, 1, this)" 
+                                 <button onclick='addToCart(<?php echo $currentId; ?>, 1, this, <?php echo htmlspecialchars($attributesJson, ENT_QUOTES, 'UTF-8'); ?>)' 
                                         class="bg-primary text-white px-4 py-2 rounded hover:bg-primary-light hover:text-white transition text-sm <?php echo $isOutOfStock ? 'opacity-50 cursor-not-allowed' : ''; ?>"
                                         <?php echo $isOutOfStock ? 'disabled' : ''; ?>>
-                                    <i class="fas fa-shopping-cart mr-1"></i> <?php echo $isOutOfStock ? 'Out of Stock' : 'Add to Cart'; ?>
+                                    <i class="fas fa-shopping-cart mr-1"></i> <?php echo $isOutOfStock ? get_stock_status_text($item['stock_status'], $item['stock_quantity']) : 'Add to Cart'; ?>
                                 </button>
                             </div>
                         </div>

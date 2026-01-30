@@ -790,12 +790,12 @@ require_once __DIR__ . '/includes/header.php';
             </div>
             
              <div class="hidden md:flex items-center border border-gray-300 rounded-md w-24 h-10 overflow-hidden bg-white">
-                <button onclick="updateStickyQty(-1)" class="w-8 h-full flex items-center justify-center text-gray-600 hover:bg-gray-100 transition select-none">-</button>
-                <div class="flex-1 h-full flex items-center justify-center">
+                <button onclick="updateStickyQty(-1)" class="w-8 h-full flex-shrink-0 flex items-center justify-center text-gray-600 hover:bg-gray-100 transition select-none">-</button>
+                <div class="flex-1 h-full grid place-items-center">
                     <span id="sticky-qty-display" class="text-gray-900 font-semibold text-sm select-none">1</span>
-                    <input type="hidden" id="sticky-qty" value="1">
                 </div>
-                <button onclick="updateStickyQty(1)" class="w-8 h-full flex items-center justify-center text-gray-600 hover:bg-gray-100 transition select-none">+</button>
+                <input type="hidden" id="sticky-qty" value="1">
+                <button onclick="updateStickyQty(1)" class="w-8 h-full flex-shrink-0 flex items-center justify-center text-gray-600 hover:bg-gray-100 transition select-none">+</button>
             </div>
 
             <button onclick="stickyAddToCart()" class="bg-[#1a3d32] text-white px-4 py-2.5 md:px-8 rounded-full font-bold hover:bg-black transition flex items-center justify-center gap-2 text-sm md:text-base whitespace-nowrap" id="sticky-atc-btn">
