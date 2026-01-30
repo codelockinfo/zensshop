@@ -12,14 +12,12 @@ $wishlistObj = new Wishlist();
 $wishlistItems = $wishlistObj->getWishlist();
 $wishlistIds = array_column($wishlistItems, 'product_id');
 
-// Check for manual selection from dedicated table
 $products = $db->fetchAll(
     "SELECT p.*, h.heading, h.subheading
      FROM products p 
      JOIN section_trending_products h ON p.product_id = h.product_id 
-     WHERE p.status != 'archived' AND h.store_id = ?
-     ORDER BY h.sort_order ASC",
-    [$storeId]
+     WHERE p.status != 'archived'
+     ORDER BY h.sort_order ASC"
 );
 
 // Fetch dynamic headers if available from any row
@@ -30,7 +28,7 @@ if (!empty($products)) {
     $sectionSubheading = !empty($products[0]['subheading']) ? $products[0]['subheading'] : $sectionSubheading;
 } else {
     // Fallback headers if table is empty but we want to check if headers exist anyway
-    $headers = $db->fetchOne("SELECT heading, subheading FROM section_trending_products WHERE store_id = ? LIMIT 1", [$storeId]);
+    $headers = $db->fetchOne("SELECT heading, subheading FROM section_trending_products LIMIT 1");
     if ($headers) {
         $sectionHeading = !empty($headers['heading']) ? $headers['heading'] : $sectionHeading;
         $sectionSubheading = !empty($headers['subheading']) ? $headers['subheading'] : $sectionSubheading;
@@ -61,10 +59,9 @@ if (empty($products)) {
                 $originalPrice = $item['sale_price'] ? $item['price'] : null;
                 $discount = $originalPrice ? round((($originalPrice - $price) / $originalPrice) * 100) : 0;
                 
-                // Get first variant for default attributes
                 $firstVariant = $db->fetchOne(
-                    "SELECT variant_attributes FROM product_variants WHERE product_id = ? AND store_id = ? ORDER BY is_default DESC, id ASC LIMIT 1",
-                    [$item['product_id'], $storeId]
+                    "SELECT variant_attributes FROM product_variants WHERE product_id = ? ORDER BY is_default DESC, id ASC LIMIT 1",
+                    [$item['product_id']]
                 );
                 $defaultAttributes = $firstVariant ? json_decode($firstVariant['variant_attributes'], true) : [];
                 $attributesJson = json_encode($defaultAttributes);

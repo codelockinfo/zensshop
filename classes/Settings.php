@@ -17,7 +17,7 @@ class Settings {
      * Get a setting value
      */
     public function get($key, $default = null, $storeId = null) {
-        if (!$storeId) {
+        if (!$storeId && strpos($_SERVER['PHP_SELF'] ?? '', '/admin/') !== false) {
             $storeId = $_SESSION['store_id'] ?? null;
             if (!$storeId) {
                 if (isset($_SESSION['user_email'])) {
@@ -39,18 +39,28 @@ class Settings {
         }
         
         // Try primary settings table
-        $result = $this->db->fetchOne(
-            "SELECT setting_value FROM settings WHERE setting_key = ? AND store_id = ?",
-            [$key, $storeId]
-        );
+        $sql = "SELECT setting_value FROM settings WHERE setting_key = ?";
+        $params = [$key];
+        if ($storeId) {
+            $sql .= " AND store_id = ?";
+            $params[] = $storeId;
+        } else {
+            $sql .= " AND (store_id IS NULL OR store_id = '')";
+        }
+        $result = $this->db->fetchOne($sql, $params);
         
         // Fallback to site_settings table (for logo, appearance, etc.)
         if (!$result) {
             try {
-                $result = $this->db->fetchOne(
-                    "SELECT setting_value FROM site_settings WHERE setting_key = ? AND store_id = ?",
-                    [$key, $storeId]
-                );
+                $sql = "SELECT setting_value FROM site_settings WHERE setting_key = ?";
+                $params = [$key];
+                if ($storeId) {
+                    $sql .= " AND store_id = ?";
+                    $params[] = $storeId;
+                } else {
+                    $sql .= " AND (store_id IS NULL OR store_id = '')";
+                }
+                $result = $this->db->fetchOne($sql, $params);
             } catch (Exception $e) {
                 // Ignore if table doesn't exist
             }
@@ -95,45 +105,71 @@ class Settings {
      * Get all settings by group
      */
     public function getByGroup($group, $storeId = null) {
-        if (!$storeId) {
+        if (!$storeId && strpos($_SERVER['PHP_SELF'] ?? '', '/admin/') !== false) {
             $storeId = $_SESSION['store_id'] ?? null;
-            if (!$storeId && isset($_SESSION['user_email'])) {
-                $storeUser = $this->db->fetchOne("SELECT store_id FROM users WHERE email = ?", [$_SESSION['user_email']]);
-                $storeId = $storeUser['store_id'] ?? null;
+            if (!$storeId) {
+                if (isset($_SESSION['user_email'])) {
+                    $storeUser = $this->db->fetchOne("SELECT store_id FROM users WHERE email = ?", [$_SESSION['user_email']]);
+                    $storeId = $storeUser['store_id'] ?? null;
+                }
             }
         }
-        return $this->db->fetchAll(
-            "SELECT setting_key, setting_value FROM settings WHERE setting_group = ? AND store_id = ?",
-            [$group, $storeId]
-        );
+
+        $sql = "SELECT setting_key, setting_value FROM settings WHERE setting_group = ?";
+        $params = [$group];
+        if ($storeId) {
+            $sql .= " AND store_id = ?";
+            $params[] = $storeId;
+        } else {
+            $sql .= " AND (store_id IS NULL OR store_id = '')";
+        }
+        return $this->db->fetchAll($sql, $params);
     }
     
     /**
      * Get all settings
      */
     public function getAll($storeId = null) {
-        if (!$storeId) {
+        if (!$storeId && strpos($_SERVER['PHP_SELF'] ?? '', '/admin/') !== false) {
             $storeId = $_SESSION['store_id'] ?? null;
-            if (!$storeId && isset($_SESSION['user_email'])) {
-                $storeUser = $this->db->fetchOne("SELECT store_id FROM users WHERE email = ?", [$_SESSION['user_email']]);
-                $storeId = $storeUser['store_id'] ?? null;
+            if (!$storeId) {
+                if (isset($_SESSION['user_email'])) {
+                    $storeUser = $this->db->fetchOne("SELECT store_id FROM users WHERE email = ?", [$_SESSION['user_email']]);
+                    $storeId = $storeUser['store_id'] ?? null;
+                }
             }
         }
-        return $this->db->fetchAll("SELECT * FROM settings WHERE store_id = ? ORDER BY setting_group, setting_key", [$storeId]);
+
+        $sql = "SELECT * FROM settings WHERE 1=1";
+        $params = [];
+        if ($storeId) {
+            $sql .= " AND store_id = ?";
+            $params[] = $storeId;
+        } else {
+            $sql .= " AND (store_id IS NULL OR store_id = '')";
+        }
+        $sql .= " ORDER BY setting_group, setting_key";
+        return $this->db->fetchAll($sql, $params);
     }
     
     /**
      * Delete a setting
      */
     public function delete($key, $storeId = null) {
-        if (!$storeId) {
+        if (!$storeId && strpos($_SERVER['PHP_SELF'] ?? '', '/admin/') !== false) {
             $storeId = $_SESSION['store_id'] ?? null;
-            if (!$storeId && isset($_SESSION['user_email'])) {
-                $storeUser = $this->db->fetchOne("SELECT store_id FROM users WHERE email = ?", [$_SESSION['user_email']]);
-                $storeId = $storeUser['store_id'] ?? null;
-            }
         }
-        $this->db->execute("DELETE FROM settings WHERE setting_key = ? AND store_id = ?", [$key, $storeId]);
+
+        $sql = "DELETE FROM settings WHERE setting_key = ?";
+        $params = [$key];
+        if ($storeId) {
+            $sql .= " AND store_id = ?";
+            $params[] = $storeId;
+        } else {
+            $sql .= " AND (store_id IS NULL OR store_id = '')";
+        }
+
+        $this->db->execute($sql, $params);
         $cacheKey = ($storeId ?: 'global') . ':' . $key;
         unset(self::$cache[$cacheKey]);
     }

@@ -19,21 +19,9 @@ if (session_status() === PHP_SESSION_NONE) {
 require_once __DIR__ . '/../classes/Database.php';
 $db = Database::getInstance();
 
-// Determine Store ID
-$storeId = $_SESSION['store_id'] ?? null;
-if (!$storeId) {
-    try {
-        if (isset($_SESSION['user_email'])) {
-             $storeUser = $db->fetchOne("SELECT store_id FROM users WHERE email = ?", [$_SESSION['user_email']]);
-             $storeId = $storeUser['store_id'] ?? null;
-        }
-        if (!$storeId) {
-             $storeUser = $db->fetchOne("SELECT store_id FROM users WHERE store_id IS NOT NULL LIMIT 1");
-             $storeId = $storeUser['store_id'] ?? null;
-        }
-        if ($storeId) $_SESSION['store_id'] = $storeId;
-    } catch(Exception $ex) {}
-}
+// Store ID is only used for admin side logic. 
+// On the front side we show everything regardless of store_id as it's filtered by domain/installation.
+$storeId = null;
 
 // Get section parameter
 $section = isset($_GET['section']) ? trim($_GET['section']) : '';

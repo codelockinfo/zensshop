@@ -43,22 +43,14 @@ try {
             }
             
             // Check if product exists
-            $product = $db->fetchOne("SELECT id FROM products WHERE id = ? AND status = 'active'", [$productId]);
+            $product = $db->fetchOne("SELECT id, store_id FROM products WHERE id = ? AND status = 'active'", [$productId]);
             if (!$product) {
                 echo json_encode(['success' => false, 'message' => 'Product not found']);
                 exit;
             }
             
-            // Determine Store ID
-            $storeId = $_SESSION['store_id'] ?? null;
-            if (!$storeId && isset($_SESSION['user_email'])) {
-                 $storeUser = $db->fetchOne("SELECT store_id FROM users WHERE email = ?", [$_SESSION['user_email']]);
-                 $storeId = $storeUser['store_id'] ?? null;
-            }
-            if (!$storeId) {
-                 $storeUser = $db->fetchOne("SELECT store_id FROM users WHERE store_id IS NOT NULL LIMIT 1");
-                 $storeId = $storeUser['store_id'] ?? null;
-            }
+            // Assign review to the product's store
+            $storeId = $product['store_id'] ?? null;
 
             // Insert review
             $reviewId = $db->insert(

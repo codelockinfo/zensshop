@@ -20,28 +20,12 @@ $cartCount = $cart->getCount();
 require_once __DIR__ . '/../classes/Database.php';
 $db = Database::getInstance();
 
-// Determine Store ID
-$storeId = $_SESSION['store_id'] ?? null;
-if (!$storeId) {
-    try {
-        if (isset($_SESSION['user_email'])) {
-             $storeUser = $db->fetchOne("SELECT store_id FROM users WHERE email = ?", [$_SESSION['user_email']]);
-             $storeId = $storeUser['store_id'] ?? null;
-        }
-        
-        if (!$storeId) {
-             $storeUser = $db->fetchOne("SELECT store_id FROM users WHERE store_id IS NOT NULL LIMIT 1");
-             $storeId = $storeUser['store_id'] ?? null;
-        }
-        
-        if ($storeId) $_SESSION['store_id'] = $storeId;
-    } catch(Exception $ex) {}
-}
-
-$landingPagesList = $db->fetchAll("SELECT name, slug FROM landing_pages WHERE store_id = ? ORDER BY name ASC", [$storeId]);
+// Store ID is only used for admin side logic. 
+// On the front side we show everything regardless of store_id as it's filtered by domain/installation.
+$landingPagesList = $db->fetchAll("SELECT name, slug FROM landing_pages ORDER BY name ASC");
 
 // Fetch Header Menu
-$headerMenuIdVal = $db->fetchOne("SELECT id FROM menus WHERE location = 'header_main' AND store_id = ?", [$storeId]);
+$headerMenuIdVal = $db->fetchOne("SELECT id FROM menus WHERE location = 'header_main' LIMIT 1");
 $headerMenuItems = [];
 if ($headerMenuIdVal) {
     $allItems = $db->fetchAll("SELECT * FROM menu_items WHERE menu_id = ? ORDER BY sort_order ASC", [$headerMenuIdVal['id']]);
@@ -51,32 +35,32 @@ if ($headerMenuIdVal) {
 }
 
 // Fetch Header Settings
-$siteLogoType = $db->fetchOne("SELECT setting_value FROM site_settings WHERE setting_key = 'site_logo_type' AND store_id = ?", [$storeId])['setting_value'] ?? 'image';
-$siteLogoText = $db->fetchOne("SELECT setting_value FROM site_settings WHERE setting_key = 'site_logo_text' AND store_id = ?", [$storeId])['setting_value'] ?? 'milano';
-$siteLogo = $db->fetchOne("SELECT setting_value FROM site_settings WHERE setting_key = 'site_logo' AND store_id = ?", [$storeId])['setting_value'] ?? 'logo.png';
-$showSearchIcon = ($db->fetchOne("SELECT setting_value FROM site_settings WHERE setting_key = 'header_icon_search' AND store_id = ?", [$storeId])['setting_value'] ?? '1') == '1';
-$showUserIcon = ($db->fetchOne("SELECT setting_value FROM site_settings WHERE setting_key = 'header_icon_user' AND store_id = ?", [$storeId])['setting_value'] ?? '1') == '1';
-$showWishlistIcon = ($db->fetchOne("SELECT setting_value FROM site_settings WHERE setting_key = 'header_icon_wishlist' AND store_id = ?", [$storeId])['setting_value'] ?? '1') == '1';
-$showCartIcon = ($db->fetchOne("SELECT setting_value FROM site_settings WHERE setting_key = 'header_icon_cart' AND store_id = ?", [$storeId])['setting_value'] ?? '1') == '1';
+// Use fetchOne without store_id to get the first/global setting
+$siteLogoType = $db->fetchOne("SELECT setting_value FROM site_settings WHERE setting_key = 'site_logo_type'")['setting_value'] ?? 'image';
+$siteLogoText = $db->fetchOne("SELECT setting_value FROM site_settings WHERE setting_key = 'site_logo_text'")['setting_value'] ?? 'milano';
+$siteLogo = $db->fetchOne("SELECT setting_value FROM site_settings WHERE setting_key = 'site_logo'")['setting_value'] ?? 'logo.png';
+$showSearchIcon = ($db->fetchOne("SELECT setting_value FROM site_settings WHERE setting_key = 'header_icon_search'")['setting_value'] ?? '1') == '1';
+$showUserIcon = ($db->fetchOne("SELECT setting_value FROM site_settings WHERE setting_key = 'header_icon_user'")['setting_value'] ?? '1') == '1';
+$showWishlistIcon = ($db->fetchOne("SELECT setting_value FROM site_settings WHERE setting_key = 'header_icon_wishlist'")['setting_value'] ?? '1') == '1';
+$showCartIcon = ($db->fetchOne("SELECT setting_value FROM site_settings WHERE setting_key = 'header_icon_cart'")['setting_value'] ?? '1') == '1';
 
 // Fetch SEO & Branding Settings
-$siteTitleSuffix = $db->fetchOne("SELECT setting_value FROM settings WHERE setting_key = 'site_title_suffix' AND store_id = ?", [$storeId])['setting_value'] ?? 'Milano - Elegant Jewelry Store';
-// Deprecated: $faviconIcon = $db->fetchOne("SELECT setting_value FROM settings WHERE setting_key = 'favicon_icon' AND store_id = ?", [$storeId])['setting_value'] ?? '';
-$faviconPng = $db->fetchOne("SELECT setting_value FROM settings WHERE setting_key = 'favicon_png' AND store_id = ?", [$storeId])['setting_value'] ?? '';
-$faviconIco = $db->fetchOne("SELECT setting_value FROM settings WHERE setting_key = 'favicon_ico' AND store_id = ?", [$storeId])['setting_value'] ?? ''; // Google preferred
-$globalMetaDesc = $db->fetchOne("SELECT setting_value FROM settings WHERE setting_key = 'global_meta_description' AND store_id = ?", [$storeId])['setting_value'] ?? '';
-$globalSchema = $db->fetchOne("SELECT setting_value FROM settings WHERE setting_key = 'global_schema_json' AND store_id = ?", [$storeId])['setting_value'] ?? '';
-$headerScripts = $db->fetchOne("SELECT setting_value FROM settings WHERE setting_key = 'header_scripts' AND store_id = ?", [$storeId])['setting_value'] ?? '';
+$siteTitleSuffix = $db->fetchOne("SELECT setting_value FROM settings WHERE setting_key = 'site_title_suffix'")['setting_value'] ?? 'Milano - Elegant Jewelry Store';
+$faviconPng = $db->fetchOne("SELECT setting_value FROM settings WHERE setting_key = 'favicon_png'")['setting_value'] ?? '';
+$faviconIco = $db->fetchOne("SELECT setting_value FROM settings WHERE setting_key = 'favicon_ico'")['setting_value'] ?? ''; 
+$globalMetaDesc = $db->fetchOne("SELECT setting_value FROM settings WHERE setting_key = 'global_meta_description'")['setting_value'] ?? '';
+$globalSchema = $db->fetchOne("SELECT setting_value FROM settings WHERE setting_key = 'global_schema_json'")['setting_value'] ?? '';
+$headerScripts = $db->fetchOne("SELECT setting_value FROM settings WHERE setting_key = 'header_scripts'")['setting_value'] ?? '';
 
 // Fetch Top Bar Settings
-$topbarSlidesRow = $db->fetchOne("SELECT setting_value FROM site_settings WHERE setting_key = 'topbar_slides' AND store_id = ?", [$storeId]);
+$topbarSlidesRow = $db->fetchOne("SELECT setting_value FROM site_settings WHERE setting_key = 'topbar_slides'");
 $topbarSlides = json_decode($topbarSlidesRow['setting_value'] ?? '[]', true) ?: [
     ['text' => '100% secure online payment', 'link' => '', 'link_text' => ''],
     ['text' => 'Free Shipping for all order over $99', 'link' => '', 'link_text' => ''],
     ['text' => 'Sign up for 10% off your first order.', 'link' => 'signup', 'link_text' => 'Sign up']
 ];
 
-$topbarLinksRow = $db->fetchOne("SELECT setting_value FROM site_settings WHERE setting_key = 'topbar_links' AND store_id = ?", [$storeId]);
+$topbarLinksRow = $db->fetchOne("SELECT setting_value FROM site_settings WHERE setting_key = 'topbar_links'");
 $topbarLinks = json_decode($topbarLinksRow['setting_value'] ?? '[]', true) ?: [
     ['label' => 'Contact Us', 'url' => 'contact'],
     ['label' => 'About Us', 'url' => 'about'],

@@ -11,37 +11,26 @@ if (!isset($baseUrl) && function_exists('getBaseUrl')) {
 require_once __DIR__ . '/../classes/Database.php';
 $db = Database::getInstance();
 
-// Determine Store ID
-$storeId = $_SESSION['store_id'] ?? null;
-if (!$storeId) {
-    try {
-        if (isset($_SESSION['user_email'])) {
-             $storeUser = $db->fetchOne("SELECT store_id FROM users WHERE email = ?", [$_SESSION['user_email']]);
-             $storeId = $storeUser['store_id'] ?? null;
-        }
-        if (!$storeId) {
-             $storeUser = $db->fetchOne("SELECT store_id FROM users WHERE store_id IS NOT NULL LIMIT 1");
-             $storeId = $storeUser['store_id'] ?? null;
-        }
-        if ($storeId) $_SESSION['store_id'] = $storeId;
-    } catch(Exception $ex) {}
-}
+// Store ID is only used for admin side logic. 
+// On the front side we show everything regardless of store_id as it's filtered by domain/installation.
 
 // Fetch Settings
-$settingsRows = $db->fetchAll("SELECT * FROM site_settings WHERE store_id = ?", [$storeId]);
+$settingsRows = $db->fetchAll("SELECT * FROM site_settings");
 $footerSettings = [];
 foreach ($settingsRows as $row) {
-    $footerSettings[$row['setting_key']] = $row['setting_value'];
+    if (!isset($footerSettings[$row['setting_key']])) {
+        $footerSettings[$row['setting_key']] = $row['setting_value'];
+    }
 }
 
 // Fetch Footer Menus
 // We now use a SINGLE "Footer Menu" (footer_main)
 // Top level items = Columns
 // Children = Links
-$footerMenuData = $db->fetchOne("SELECT id FROM menus WHERE location = 'footer_main' AND store_id = ?", [$storeId]);
+$footerMenuData = $db->fetchOne("SELECT id FROM menus WHERE location = 'footer_main'");
 $footerColumns = [];
 if ($footerMenuData) {
-    $rawItems = $db->fetchAll("SELECT * FROM menu_items WHERE menu_id = ? AND store_id = ? ORDER BY sort_order ASC", [$footerMenuData['id'], $storeId]);
+    $rawItems = $db->fetchAll("SELECT * FROM menu_items WHERE menu_id = ? ORDER BY sort_order ASC", [$footerMenuData['id']]);
     $footerColumns = buildMenuTree($rawItems);
 }
 

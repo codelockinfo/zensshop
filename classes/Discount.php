@@ -16,11 +16,19 @@ class Discount {
      * Get discount by code
      */
     public function getByCode($code, $storeId = null) {
-        if (!$storeId) $storeId = $_SESSION['store_id'] ?? null;
-        return $this->db->fetchOne(
-            "SELECT * FROM discounts WHERE code = ? AND status = 'active' AND store_id = ?",
-            [$code, $storeId]
-        );
+        if (!$storeId && strpos($_SERVER['PHP_SELF'] ?? '', '/admin/') !== false) {
+            $storeId = $_SESSION['store_id'] ?? null;
+        }
+
+        $sql = "SELECT * FROM discounts WHERE code = ? AND status = 'active'";
+        $params = [$code];
+
+        if ($storeId) {
+            $sql .= " AND store_id = ?";
+            $params[] = $storeId;
+        }
+
+        return $this->db->fetchOne($sql, $params);
     }
     
     /**

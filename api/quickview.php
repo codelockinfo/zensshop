@@ -13,21 +13,9 @@ if (session_status() === PHP_SESSION_NONE) {
 $slug = $_GET['slug'] ?? '';
 $id = $_GET['id'] ?? '';
 
-// Determine Store ID
-$storeId = $_SESSION['store_id'] ?? null;
-if (!$storeId) {
-    try {
-        if (isset($_SESSION['user_email'])) {
-             $storeUser = Database::getInstance()->fetchOne("SELECT store_id FROM users WHERE email = ?", [$_SESSION['user_email']]);
-             $storeId = $storeUser['store_id'] ?? null;
-        }
-        if (!$storeId) {
-             $storeUser = Database::getInstance()->fetchOne("SELECT store_id FROM users WHERE store_id IS NOT NULL LIMIT 1");
-             $storeId = $storeUser['store_id'] ?? null;
-        }
-        if ($storeId) $_SESSION['store_id'] = $storeId;
-    } catch(Exception $ex) {}
-}
+// Store ID is only used for admin side logic. 
+// On the front side we show everything regardless of store_id as it's filtered by domain/installation.
+$storeId = null;
 
 
 if (empty($slug) && empty($id)) {

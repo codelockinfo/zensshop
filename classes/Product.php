@@ -26,7 +26,12 @@ class Product {
                 WHERE 1=1";
         $params = [];
 
-        $storeId = $filters['store_id'] ?? $_SESSION['store_id'] ?? null;
+        // Store ID filtering only for admin side
+        $storeId = $filters['store_id'] ?? null;
+        if (!$storeId && strpos($_SERVER['PHP_SELF'] ?? '', '/admin/') !== false) {
+            $storeId = $_SESSION['store_id'] ?? null;
+        }
+
         if ($storeId) {
             $sql .= " AND p.store_id = ?";
             $params[] = $storeId;
@@ -133,7 +138,9 @@ class Product {
      * Get product by ID
      */
     public function getById($id, $storeId = null) {
-        if (!$storeId) $storeId = $_SESSION['store_id'] ?? null;
+        if (!$storeId && strpos($_SERVER['PHP_SELF'] ?? '', '/admin/') !== false) {
+            $storeId = $_SESSION['store_id'] ?? null;
+        }
         $sql = "SELECT p.*, c.name as category_name 
                  FROM products p 
                  LEFT JOIN categories c ON p.category_id = c.id 
@@ -150,7 +157,9 @@ class Product {
      * Get product by 10-digit product_id
      */
     public function getByProductId($productId, $storeId = null) {
-        if (!$storeId) $storeId = $_SESSION['store_id'] ?? null;
+        if (!$storeId && strpos($_SERVER['PHP_SELF'] ?? '', '/admin/') !== false) {
+            $storeId = $_SESSION['store_id'] ?? null;
+        }
         $sql = "SELECT p.*, c.name as category_name 
                  FROM products p 
                  LEFT JOIN categories c ON p.category_id = c.id 
@@ -167,16 +176,25 @@ class Product {
      * Get product by slug
      */
     public function getBySlug($slug, $storeId = null) {
-        if (!$storeId) $storeId = $_SESSION['store_id'] ?? null;
-        return $this->db->fetchOne(
-            "SELECT DISTINCT p.*, GROUP_CONCAT(DISTINCT c.name SEPARATOR ', ') as category_names
+        if (!$storeId && strpos($_SERVER['PHP_SELF'] ?? '', '/admin/') !== false) {
+            $storeId = $_SESSION['store_id'] ?? null;
+        }
+
+        $sql = "SELECT DISTINCT p.*, GROUP_CONCAT(DISTINCT c.name SEPARATOR ', ') as category_names
              FROM products p 
              LEFT JOIN product_categories pc ON p.product_id = pc.product_id
              LEFT JOIN categories c ON pc.category_id = c.id 
-             WHERE p.slug = ? AND p.store_id = ?
-             GROUP BY p.id",
-            [$slug, $storeId]
-        );
+             WHERE p.slug = ?";
+        $params = [$slug];
+
+        if ($storeId) {
+            $sql .= " AND p.store_id = ?";
+            $params[] = $storeId;
+        }
+
+        $sql .= " GROUP BY p.id";
+
+        return $this->db->fetchOne($sql, $params);
     }
     
     /**
@@ -516,32 +534,50 @@ class Product {
      * Get best selling products
      */
     public function getBestSelling($limit = 6, $storeId = null) {
-        if (!$storeId) $storeId = $_SESSION['store_id'] ?? null;
-        return $this->db->fetchAll(
-            "SELECT p.*, c.name as category_name 
-             FROM products p 
-             LEFT JOIN categories c ON p.category_id = c.id 
-             WHERE p.status = 'active' AND p.store_id = ?
-             ORDER BY p.review_count DESC, p.rating DESC, p.created_at DESC 
-             LIMIT ?",
-            [$storeId, $limit]
-        );
+        if (!$storeId && strpos($_SERVER['PHP_SELF'] ?? '', '/admin/') !== false) {
+            $storeId = $_SESSION['store_id'] ?? null;
+        }
+        
+        $sql = "SELECT p.*, c.name as category_name 
+                FROM products p 
+                LEFT JOIN categories c ON p.category_id = c.id 
+                WHERE p.status = 'active'";
+        $params = [];
+
+        if ($storeId) {
+            $sql .= " AND p.store_id = ?";
+            $params[] = $storeId;
+        }
+
+        $sql .= " ORDER BY p.review_count DESC, p.rating DESC, p.created_at DESC LIMIT ?";
+        $params[] = $limit;
+
+        return $this->db->fetchAll($sql, $params);
     }
     
     /**
      * Get trending products
      */
     public function getTrending($limit = 6, $storeId = null) {
-        if (!$storeId) $storeId = $_SESSION['store_id'] ?? null;
-        return $this->db->fetchAll(
-            "SELECT p.*, c.name as category_name 
-             FROM products p 
-             LEFT JOIN categories c ON p.category_id = c.id 
-             WHERE p.status = 'active' AND p.featured = 1 AND p.store_id = ?
-             ORDER BY p.created_at DESC 
-             LIMIT ?",
-            [$storeId, $limit]
-        );
+        if (!$storeId && strpos($_SERVER['PHP_SELF'] ?? '', '/admin/') !== false) {
+            $storeId = $_SESSION['store_id'] ?? null;
+        }
+
+        $sql = "SELECT p.*, c.name as category_name 
+                FROM products p 
+                LEFT JOIN categories c ON p.category_id = c.id 
+                WHERE p.status = 'active' AND p.featured = 1";
+        $params = [];
+
+        if ($storeId) {
+            $sql .= " AND p.store_id = ?";
+            $params[] = $storeId;
+        }
+
+        $sql .= " ORDER BY p.created_at DESC LIMIT ?";
+        $params[] = $limit;
+
+        return $this->db->fetchAll($sql, $params);
     }
     
     /**
@@ -616,16 +652,24 @@ class Product {
      * @param int|string $productId - Can be auto-increment id or 10-digit product_id
      */
     public function getVariants($productId, $storeId = null) {
-        if (!$storeId) $storeId = $_SESSION['store_id'] ?? null;
+        if (!$storeId && strpos($_SERVER['PHP_SELF'] ?? '', '/admin/') !== false) {
+            $storeId = $_SESSION['store_id'] ?? null;
+        }
         // Convert auto-increment id to 10-digit product_id if needed
         $productIdValue = $this->getProductIdValue($productId, $storeId);
         
         try {
             // Get variants from product_variants table
-            $variants = $this->db->fetchAll(
-                "SELECT * FROM product_variants WHERE product_id = ? AND store_id = ? ORDER BY is_default DESC, id ASC",
-                [$productIdValue, $storeId]
-            );
+            $sql = "SELECT * FROM product_variants WHERE product_id = ?";
+            $params = [$productIdValue];
+
+            if ($storeId) {
+                $sql .= " AND store_id = ?";
+                $params[] = $storeId;
+            }
+
+            $sql .= " ORDER BY is_default DESC, id ASC";
+            $variants = $this->db->fetchAll($sql, $params);
         } catch (Exception $e) {
             $variants = [];
         }
@@ -697,14 +741,24 @@ class Product {
      * @return string|int - Returns the 10-digit product_id
      */
     private function getProductIdValue($productId, $storeId = null) {
-        if (!$storeId) $storeId = $_SESSION['store_id'] ?? null;
+        if (!$storeId && strpos($_SERVER['PHP_SELF'] ?? '', '/admin/') !== false) {
+            $storeId = $_SESSION['store_id'] ?? null;
+        }
         // If it's already a 10-digit number (between 1000000000 and 9999999999), return as is
         if (is_numeric($productId) && $productId >= 1000000000 && $productId <= 9999999999) {
             return $productId;
         }
         
         // Otherwise, assume it's an auto-increment id and get the product_id
-        $product = $this->db->fetchOne("SELECT product_id FROM products WHERE id = ? AND store_id = ?", [$productId, $storeId]);
+        $sql = "SELECT product_id FROM products WHERE (id = ? OR product_id = ?)";
+        $params = [$productId, $productId];
+
+        if ($storeId) {
+            $sql .= " AND store_id = ?";
+            $params[] = $storeId;
+        }
+
+        $product = $this->db->fetchOne($sql, $params);
         if ($product && !empty($product['product_id'])) {
             return $product['product_id'];
         }
@@ -721,7 +775,9 @@ class Product {
             return [];
         }
         
-        if (!$storeId) $storeId = $_SESSION['store_id'] ?? null;
+        if (!$storeId && strpos($_SERVER['PHP_SELF'] ?? '', '/admin/') !== false) {
+            $storeId = $_SESSION['store_id'] ?? null;
+        }
         
         // Ensure IDs are integers
         $ids = array_map('intval', $ids);
@@ -730,13 +786,19 @@ class Product {
         $sql = "SELECT p.*, c.name as category_name 
                 FROM products p 
                 LEFT JOIN categories c ON p.category_id = c.id 
-                WHERE p.id IN ($idsStr) AND p.status = 'active' AND p.store_id = ?";
+                WHERE p.id IN ($idsStr) AND p.status = 'active'";
+        $params = [];
+
+        if ($storeId) {
+            $sql .= " AND p.store_id = ?";
+            $params[] = $storeId;
+        }
         
         if ($preserveOrder) {
             $sql .= " ORDER BY FIELD(p.id, $idsStr)";
         }
         
-        return $this->db->fetchAll($sql, [$storeId]);
+        return $this->db->fetchAll($sql, $params);
     }
 }
 

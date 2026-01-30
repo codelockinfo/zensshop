@@ -70,10 +70,19 @@ class Order {
      * Get order by ID
      */
     public function getById($id, $storeId = null) {
-        $order = $this->db->fetchOne(
-            "SELECT * FROM orders WHERE id = ? " . ($storeId ? " AND store_id = ?" : ""),
-            $storeId ? [$id, $storeId] : [$id]
-        );
+        if (!$storeId && strpos($_SERVER['PHP_SELF'] ?? '', '/admin/') !== false) {
+            $storeId = $_SESSION['store_id'] ?? null;
+        }
+
+        $sql = "SELECT * FROM orders WHERE id = ?";
+        $params = [$id];
+
+        if ($storeId) {
+            $sql .= " AND store_id = ?";
+            $params[] = $storeId;
+        }
+
+        $order = $this->db->fetchOne($sql, $params);
         
         if ($order) {
             $order['items'] = $this->getOrderItems($order['order_number']);
@@ -86,10 +95,19 @@ class Order {
      * Get order by Order Number
      */
     public function getByOrderNumber($orderNumber, $storeId = null) {
-        $order = $this->db->fetchOne(
-            "SELECT * FROM orders WHERE order_number = ? " . ($storeId ? " AND store_id = ?" : ""),
-            $storeId ? [$orderNumber, $storeId] : [$orderNumber]
-        );
+        if (!$storeId && strpos($_SERVER['PHP_SELF'] ?? '', '/admin/') !== false) {
+            $storeId = $_SESSION['store_id'] ?? null;
+        }
+
+        $sql = "SELECT * FROM orders WHERE order_number = ?";
+        $params = [$orderNumber];
+
+        if ($storeId) {
+            $sql .= " AND store_id = ?";
+            $params[] = $storeId;
+        }
+
+        $order = $this->db->fetchOne($sql, $params);
         
         if ($order) {
             $order['items'] = $this->getOrderItems($order['order_number']);
@@ -103,14 +121,22 @@ class Order {
      * @param string $orderNumber The order number string
      */
     public function getOrderItems($orderNumber, $storeId = null) {
-        if (!$storeId) $storeId = $_SESSION['store_id'] ?? null;
-        return $this->db->fetchAll(
-            "SELECT oi.*, p.name as product_name, p.featured_image as product_image, p.sku as product_sku, p.slug as product_slug
+        if (!$storeId && strpos($_SERVER['PHP_SELF'] ?? '', '/admin/') !== false) {
+            $storeId = $_SESSION['store_id'] ?? null;
+        }
+
+        $sql = "SELECT oi.*, p.name as product_name, p.featured_image as product_image, p.sku as product_sku, p.slug as product_slug
              FROM order_items oi 
              LEFT JOIN products p ON (oi.product_id = p.product_id OR (oi.product_id < 1000000000 AND oi.product_id = p.id))
-             WHERE oi.order_num = ? AND oi.store_id = ?",
-            [$orderNumber, $storeId]
-        );
+             WHERE oi.order_num = ?";
+        $params = [$orderNumber];
+
+        if ($storeId) {
+            $sql .= " AND oi.store_id = ?";
+            $params[] = $storeId;
+        }
+
+        return $this->db->fetchAll($sql, $params);
     }
     
     /**
@@ -430,28 +456,42 @@ class Order {
      * Get current stock for a product or variant
      */
     private function getCurrentStock($productId, $attributes = null, $storeId = null) {
-        if (!$storeId) $storeId = $_SESSION['store_id'] ?? null;
+        if (!$storeId && strpos($_SERVER['PHP_SELF'] ?? '', '/admin/') !== false) {
+            $storeId = $_SESSION['store_id'] ?? null;
+        }
         $pId = $productId;
         $vAttrs = !empty($attributes) ? (is_array($attributes) ? json_encode($attributes) : $attributes) : null;
         
         // Resolve 10-digit product_id
         $productIdValue = $pId;
         if (is_numeric($pId) && (int)$pId < 1000000000) {
-            $prod = $this->db->fetchOne("SELECT product_id FROM products WHERE id = ? AND store_id = ?", [$pId, $storeId]);
+            $sql = "SELECT product_id FROM products WHERE id = ?";
+            $params = [$pId];
+            if ($storeId) {
+                $sql .= " AND store_id = ?";
+                $params[] = $storeId;
+            }
+            $prod = $this->db->fetchOne($sql, $params);
             if ($prod) $productIdValue = $prod['product_id'];
         }
 
         if ($vAttrs) {
-            $v = $this->db->fetchOne(
-                "SELECT stock_quantity FROM product_variants WHERE product_id = ? AND variant_attributes = ? AND store_id = ?",
-                [$productIdValue, $vAttrs, $storeId]
-            );
+            $sql = "SELECT stock_quantity FROM product_variants WHERE product_id = ? AND variant_attributes = ?";
+            $params = [$productIdValue, $vAttrs];
+            if ($storeId) {
+                $sql .= " AND store_id = ?";
+                $params[] = $storeId;
+            }
+            $v = $this->db->fetchOne($sql, $params);
             return $v ? (int)$v['stock_quantity'] : 0;
         } else {
-            $p = $this->db->fetchOne(
-                "SELECT stock_quantity FROM products WHERE (product_id = ? OR id = ?) AND store_id = ?",
-                [$productIdValue, $pId, $storeId]
-            );
+            $sql = "SELECT stock_quantity FROM products WHERE (product_id = ? OR id = ?)";
+            $params = [$productIdValue, $pId];
+            if ($storeId) {
+                $sql .= " AND store_id = ?";
+                $params[] = $storeId;
+            }
+            $p = $this->db->fetchOne($sql, $params);
             return $p ? (int)$p['stock_quantity'] : 0;
         }
     }
@@ -464,7 +504,9 @@ class Order {
      */
     private function adjustStock($productId, $quantity, $attributes = null, $storeId = null) {
         try {
-            if (!$storeId) $storeId = $_SESSION['store_id'] ?? null;
+            if (!$storeId && strpos($_SERVER['PHP_SELF'] ?? '', '/admin/') !== false) {
+                $storeId = $_SESSION['store_id'] ?? null;
+            }
             $qty = (int)$quantity;
             $pId = $productId;
             $vAttrs = !empty($attributes) ? (is_array($attributes) ? json_encode($attributes) : $attributes) : null;
@@ -472,29 +514,44 @@ class Order {
             // 1. Resolve product_id (10-digit) if auto-increment ID passed
             $productIdValue = $pId;
             if (is_numeric($pId) && (int)$pId < 1000000000) {
-                $prod = $this->db->fetchOne("SELECT product_id FROM products WHERE id = ? AND store_id = ?", [$pId, $storeId]);
+                $sql = "SELECT product_id FROM products WHERE id = ?";
+                $params = [$pId];
+                if ($storeId) {
+                    $sql .= " AND store_id = ?";
+                    $params[] = $storeId;
+                }
+                $prod = $this->db->fetchOne($sql, $params);
                 if ($prod) {
                     $productIdValue = $prod['product_id'];
                 }
             }
 
-            // 2. Update main product stock and total_sales
-            $this->db->execute(
-                "UPDATE products 
+            $sql = "UPDATE products 
                  SET stock_quantity = stock_quantity + ?,
                      total_sales = total_sales - ?
-                 WHERE (product_id = ? OR id = ?) AND store_id = ?", 
-                [$qty, $qty, $productIdValue, $pId, $storeId]
-            );
+                 WHERE (product_id = ? OR id = ?)";
+            $params = [$qty, $qty, $productIdValue, $pId];
+
+            if ($storeId) {
+                $sql .= " AND store_id = ?";
+                $params[] = $storeId;
+            }
+
+            $this->db->execute($sql, $params);
 
             // 3. Update variant stock if attributes exist
             if ($vAttrs) {
-                $this->db->execute(
-                    "UPDATE product_variants 
+                $sql = "UPDATE product_variants 
                      SET stock_quantity = stock_quantity + ?
-                     WHERE product_id = ? AND variant_attributes = ? AND store_id = ?",
-                    [$qty, $productIdValue, $vAttrs, $storeId]
-                );
+                     WHERE product_id = ? AND variant_attributes = ?";
+                $params = [$qty, $productIdValue, $vAttrs];
+
+                if ($storeId) {
+                    $sql .= " AND store_id = ?";
+                    $params[] = $storeId;
+                }
+
+                $this->db->execute($sql, $params);
             }
         } catch (Exception $e) {
             error_log("Order::adjustStock Error: " . $e->getMessage());

@@ -12,7 +12,7 @@ require_once __DIR__ . '/includes/header.php';
 <section id="hero-section" class="relative overflow-hidden">
 <?php
 // Fetch banners from database
-$banners = $db->fetchAll("SELECT * FROM banners WHERE active = 1 AND store_id = ? ORDER BY display_order ASC", [$storeId]);
+$banners = $db->fetchAll("SELECT * FROM banners WHERE active = 1 ORDER BY display_order ASC");
 
 // Fallback to default banners if none exist
 if (empty($banners)) {

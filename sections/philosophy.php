@@ -6,7 +6,7 @@ $baseUrl = getBaseUrl();
 $db = Database::getInstance();
 
 // Fetch settings
-$philosophy = $db->fetchOne("SELECT * FROM philosophy_section WHERE store_id = ? LIMIT 1", [$storeId]);
+$philosophy = $db->fetchOne("SELECT * FROM philosophy_section LIMIT 1");
 
 // If not active or no data, return empty (hide section)
 if (!$philosophy || (isset($philosophy['active']) && $philosophy['active'] == 0)) {
