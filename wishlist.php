@@ -141,7 +141,7 @@ require_once __DIR__ . '/includes/header.php';
                                 <?php echo format_price($displayPrice, $item['currency'] ?? 'USD'); ?>
                             </span>
                             <?php if ($originalPrice): ?>
-                                <span class="text-red-500 font-bold line-through text-xs"><?php echo format_price($originalPrice, $item['currency'] ?? 'USD'); ?></span>
+                                <span class="text-gray-400 font-bold line-through text-xs"><?php echo format_price($originalPrice, $item['currency'] ?? 'USD'); ?></span>
                             <?php endif; ?>
                         </div>
                             
@@ -246,7 +246,7 @@ require_once __DIR__ . '/includes/header.php';
                                 $rPrice = !empty($recentProduct['sale_price']) ? $recentProduct['sale_price'] : $recentProduct['price'];
                                 $rOrgPrice = (!empty($recentProduct['sale_price']) && $recentProduct['sale_price'] < $recentProduct['price']) ? $recentProduct['price'] : null;
                                 ?>
-                                <span class="text-base font-bold <?php echo $rOrgPrice ? 'text-red-500' : 'text-primary'; ?>">
+                                <span class="text-base font-bold <?php echo $rOrgPrice ? 'text-[#1a3d32]' : 'text-primary'; ?>">
                                     <?php echo format_price($rPrice, $recentProduct['currency'] ?? 'USD'); ?>
                                 </span>
                                 <?php if ($rOrgPrice): ?>

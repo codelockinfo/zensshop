@@ -360,7 +360,7 @@ function renderFooterLinkRecursive($item, $baseUrl) {
     <script src="<?php echo $baseUrl; ?>/assets/js/product-cards4.js"></script>
     <script src="<?php echo $baseUrl; ?>/assets/js/wishlist4.js"></script>
     <script src="<?php echo $baseUrl; ?>/assets/js/notification.js"></script>
-    <script src="<?php echo $baseUrl; ?>/assets/js/quickview6.js"></script>
+    <script src="<?php echo $baseUrl; ?>/assets/js/quickview7.js"></script>
     <script src="<?php echo $baseUrl; ?>/assets/js/add-to-cart2.js"></script>
     
     <!-- Remove from Cart Confirmation Script -->

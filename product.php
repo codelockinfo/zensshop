@@ -233,22 +233,26 @@ $_COOKIE['recently_viewed'] = json_encode($recentIds);
                     .thumbnail-slider .swiper-button-next,
                     .thumbnail-slider .swiper-button-prev {
                         color: #000;
-                        width: 20px;
-                        height: 20px;
+                        width: 30px;
+                        height: 30px;
+                        background: #fff;
+                        border: 1px solid #e5e7eb;
+                        border-radius: 50%;
                         top: 50%;
                         transform: translateY(-50%);
                         margin-top: 0; /* Reset default swiper margin */
                         position: absolute;
+                        box-shadow: 0 2px 4px rgba(0,0,0,0.05);
                     }
-                    .thumbnail-slider .swiper-button-next {
-                        right: 0;
-                    }
-                    .thumbnail-slider .swiper-button-prev {
-                        left: 0;
+                    .thumbnail-slider .swiper-button-next { right: 0; }
+                    .thumbnail-slider .swiper-button-prev { left: 0; }
+                    .thumbnail-slider .swiper-button-next:hover,
+                    .thumbnail-slider .swiper-button-prev:hover {
+                        background: #f9fafb;
                     }
                     .thumbnail-slider .swiper-button-next::after,
                     .thumbnail-slider .swiper-button-prev::after {
-                        font-size: 16px;
+                        font-size: 14px;
                         font-weight: bold;
                     }
                     .thumbnail-slider .swiper-slide {

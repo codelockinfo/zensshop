@@ -225,17 +225,25 @@ function renderQuickView(product) {
                     .qv-thumbnail-slider .swiper-button-next,
                     .qv-thumbnail-slider .swiper-button-prev {
                         color: #000;
-                        width: 20px;
-                        height: 20px;
+                        width: 28px;
+                        height: 28px;
+                        background: #fff;
+                        border: 1px solid #e5e7eb;
+                        border-radius: 50%;
                         top: 50%;
                         transform: translateY(-50%);
                         margin-top: 0;
                         position: absolute;
+                        box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+                    }
+                    .qv-thumbnail-slider .swiper-button-next:hover,
+                    .qv-thumbnail-slider .swiper-button-prev:hover {
+                        background: #f9fafb;
                     }
                     .qv-thumbnail-slider .swiper-button-next { right: 0; }
                     .qv-thumbnail-slider .swiper-button-prev { left: 0; }
                     .qv-thumbnail-slider .swiper-button-next::after,
-                    .qv-thumbnail-slider .swiper-button-prev::after { font-size: 14px; font-weight: bold; }
+                    .qv-thumbnail-slider .swiper-button-prev::after { font-size: 12px; font-weight: bold; }
                 </style>
                 <div class="swiper qv-thumbnail-slider mt-4">
                     <div class="swiper-wrapper">`;
@@ -322,7 +330,7 @@ function renderQuickView(product) {
                 <div class="mb-4 flex items-center gap-3">
                     <span class="text-2xl font-bold text-[#1a3d32]" id="qvPrice">${formatQVPrice(priceValue)}</span>
                     <span id="qvOriginalPriceContainer" class="${originalPriceValue ? '' : 'hidden'}">
-                        <span class="text-red-500 font-bold line-through text-lg" id="qvOriginalPrice">${originalPriceValue ? formatQVPrice(originalPriceValue) : ''}</span>
+                        <span class="text-gray-400 font-bold line-through text-lg" id="qvOriginalPrice">${originalPriceValue ? formatQVPrice(originalPriceValue) : ''}</span>
                     </span>
                 </div>
 

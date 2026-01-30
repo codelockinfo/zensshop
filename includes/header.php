@@ -637,7 +637,7 @@ if (!empty($headerMenuItems)) {
                                         <div class="flex items-center gap-2 text-sm">
                                             <?php if ($ppOldPrice): ?>
                                                 <span class="text-gray-400 line-through"><?php echo format_price($ppOldPrice); ?></span>
-                                                <span class="text-red-600 font-semibold"><?php echo format_price($ppPrice); ?></span>
+                                                <span class="text-[#1a3d32] font-semibold"><?php echo format_price($ppPrice); ?></span>
                                             <?php else: ?>
                                                 <span class="text-gray-900 font-semibold"><?php echo format_price($ppPrice); ?></span>
                                             <?php endif; ?>

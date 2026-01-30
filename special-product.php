@@ -377,8 +377,8 @@ require_once __DIR__ . '/includes/header.php';
                 <div class="product-price-container mb-8 flex items-center gap-4 justify-center lg:justify-start flex-wrap">
                     <span class="text-2xl font-extrabold text-[#707b8e] uppercase tracking-tight">Price:</span>
                     <?php if ($hasSale): ?>
-                        <span class="text-2xl font-bold text-[#e15a5a] line-through opacity-80"><?php echo format_price($originalPrice, $productData['currency'] ?? 'INR'); ?></span>
-                        <span class="text-3xl font-black text-[#000000]"><?php echo format_price($currentSalePrice, $productData['currency'] ?? 'INR'); ?></span>
+                        <span class="text-2xl font-bold text-gray-400 line-through opacity-80"><?php echo format_price($originalPrice, $productData['currency'] ?? 'INR'); ?></span>
+                        <span class="text-3xl font-black text-[#1a3d32]"><?php echo format_price($currentSalePrice, $productData['currency'] ?? 'INR'); ?></span>
                         <span class="bg-[#ef4444] text-white text-[12px] font-black px-3 py-1 rounded-md shadow-sm">-<?php echo round((($originalPrice - $currentSalePrice) / $originalPrice) * 100); ?>% OFF</span>
                     <?php else: ?>
                         <span class="text-3xl font-black text-[#000000]"><?php echo format_price($originalPrice, $productData['currency'] ?? 'INR'); ?></span>
@@ -781,8 +781,8 @@ require_once __DIR__ . '/includes/header.php';
                  <div class="text-xs text-gray-500">Total Price:</div>
                  <div class="font-bold text-lg text-gray-900">
                      <?php if ($hasSale): ?>
-                        <span class="text-red-500 line-through text-xs mr-1"><?php echo format_price($originalPrice, $productData['currency'] ?? 'INR'); ?></span>
-                        <span><?php echo format_price($currentSalePrice, $productData['currency'] ?? 'INR'); ?></span>
+                        <span class="text-gray-400 line-through text-xs mr-1"><?php echo format_price($originalPrice, $productData['currency'] ?? 'INR'); ?></span>
+                        <span class="text-[#1a3d32]"><?php echo format_price($currentSalePrice, $productData['currency'] ?? 'INR'); ?></span>
                      <?php else: ?>
                         <span><?php echo format_price($originalPrice, $productData['currency'] ?? 'INR'); ?></span>
                      <?php endif; ?>

@@ -135,7 +135,7 @@ if (empty($products)) {
                     </div>
                     <div class="flex items-center justify-between">
                         <div class="flex items-center gap-2">
-                        <p class="text-md font-bold <?php echo $discount > 0 ? 'text-red-500' : 'text-[var(--color-primary)]'; ?>"><?php echo format_price($price, $item['currency'] ?? 'USD'); ?></p>
+                        <p class="text-md font-bold <?php echo $discount > 0 ? 'text-[#1a3d32]' : 'text-[var(--color-primary)]'; ?>"><?php echo format_price($price, $item['currency'] ?? 'USD'); ?></p>
                             <?php if ($originalPrice): ?>
                             <span class="text-gray-400 line-through text-sm block"><?php echo format_price($originalPrice, $item['currency'] ?? 'USD'); ?></span>
                             <?php endif; ?>
