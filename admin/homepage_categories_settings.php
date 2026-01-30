@@ -236,8 +236,8 @@ $validCategories = $db->fetchAll("SELECT id, name, slug FROM categories WHERE st
                                 <?php foreach ($validCategories as $vCat): ?>
                                     <?php 
                                     $isSelected = false;
-                                    // Check if link matches shop.php?category=slug
-                                    if (strpos($cat['link'], 'category=' . $vCat['slug']) !== false) {
+                                    // Check if link matches category?slug=slug
+                                    if (strpos($cat['link'], 'slug=' . $vCat['slug']) !== false) {
                                         $isSelected = true;
                                     }
                                     ?>
@@ -351,7 +351,7 @@ function updateLink(select) {
         const row = select.closest('tr');
         const linkInput = row.querySelector('input[name="link[]"]');
         if (linkInput) {
-            linkInput.value = 'shop?category=' + slug;
+            linkInput.value = 'category?slug=' + slug;
         }
     }
 }

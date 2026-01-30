@@ -72,7 +72,7 @@ require_once __DIR__ . '/includes/header.php';
         <div class="absolute inset-0 bg-black bg-opacity-40 flex items-center justify-center">
             <div class="text-center text-white px-4">
                 <?php if (!empty($banner['heading'])): ?>
-                <h1 class="text-3xl md:text-5xl font-bold mb-4 drop-shadow-lg"><?php echo htmlspecialchars($banner['heading']); ?></h1>
+                <h1 class="text-3xl md:text-5xl font-bold mb-4 drop-shadow-lg text-white"><?php echo htmlspecialchars($banner['heading']); ?></h1>
                 <?php endif; ?>
                 
                 <?php if (!empty($banner['subheading'])): ?>
