@@ -367,11 +367,11 @@ function renderFooterLinkRecursive($item, $baseUrl) {
     
     <!-- Scripts -->
     <script src="<?php echo $baseUrl; ?>/assets/js/main5.js"></script>
-    <script src="<?php echo $baseUrl; ?>/assets/js/cart8.js"></script>
+    <script src="<?php echo $baseUrl; ?>/assets/js/cart9.js"></script>
     <script src="<?php echo $baseUrl; ?>/assets/js/product-cards4.js"></script>
     <script src="<?php echo $baseUrl; ?>/assets/js/wishlist4.js"></script>
     <script src="<?php echo $baseUrl; ?>/assets/js/notification.js"></script>
-    <script src="<?php echo $baseUrl; ?>/assets/js/quickview5.js"></script>
+    <script src="<?php echo $baseUrl; ?>/assets/js/quickview6.js"></script>
     <script src="<?php echo $baseUrl; ?>/assets/js/add-to-cart2.js"></script>
     
     <!-- Remove from Cart Confirmation Script -->
