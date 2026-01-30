@@ -9,15 +9,16 @@ if (session_status() === PHP_SESSION_NONE) {
 
 // Site Configuration - SITE_NAME is now managed in database settings (see admin/system-settings.php)
 // Detect environment and set SITE_URL accordingly
-$isProduction = (isset($_SERVER['HTTP_HOST']) && strpos($_SERVER['HTTP_HOST'], 'kartoai.com') !== false);
+$protocol = (isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] === 'on') ? 'https://' : 'http://';
+$host = $_SERVER['HTTP_HOST'] ?? 'localhost';
 
-if ($isProduction) {
-    // Production environment
-    define('SITE_URL', 'https://zensshop.kartoai.com');
-} else {
+if (strpos($host, 'localhost') !== false || strpos($host, '127.0.0.1') !== false) {
     // Local development environment
     $projectDir = basename(dirname(__DIR__));
-    define('SITE_URL', 'http://localhost/' . $projectDir);
+    define('SITE_URL', $protocol . $host . '/' . $projectDir);
+} else {
+    // Production / Remote environment - Automatically detect
+    define('SITE_URL', $protocol . $host);
 }
 
 define('BASE_PATH', dirname(__DIR__));

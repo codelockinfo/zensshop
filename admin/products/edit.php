@@ -881,10 +881,11 @@ async function addNewBrand() {
             renderBrandList(data.brands);
             updateBrandSelect(data.brands);
         } else {
-            console.log(data.message);
+            alert(data.message || 'Failed to add brand');
         }
     } catch (error) {
-        console.log('Failed to add brand');
+        console.error('Error:', error);
+        alert('An error occurred. Please try again.');
     }
 }
 
