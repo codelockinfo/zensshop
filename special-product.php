@@ -779,7 +779,7 @@ require_once __DIR__ . '/includes/header.php';
         <div class="flex items-center gap-3 flex-shrink-0">
             <div class="text-right mr-2 hidden md:block">
                  <div class="text-xs text-gray-500">Total Price:</div>
-                 <div class="font-bold text-lg text-gray-900">
+                 <div class="font-bold text-lg text-[#1a3d32]">
                      <?php if ($hasSale): ?>
                         <span class="text-gray-400 line-through text-xs mr-1"><?php echo format_price($originalPrice, $productData['currency'] ?? 'INR'); ?></span>
                         <span class="text-[#1a3d32]"><?php echo format_price($currentSalePrice, $productData['currency'] ?? 'INR'); ?></span>

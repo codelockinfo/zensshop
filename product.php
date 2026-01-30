@@ -1820,7 +1820,7 @@ async function toggleProductWishlist(productId, btn) {
                  <div class="text-xs text-gray-500">Total Price:</div>
                  <div class="flex items-center justify-end gap-2">
                      <span id="sticky-original-price" class="text-sm text-gray-400 line-through <?php echo !$originalPrice ? 'hidden' : ''; ?>"><?php echo format_price($originalPrice ?: 0, $productData['currency'] ?? 'USD'); ?></span>
-                     <div class="font-bold text-lg text-gray-900" id="sticky-price"><?php echo format_price($price, $productData['currency'] ?? 'USD'); ?></div>
+                     <div class="font-bold text-lg text-[#1a3d32]" id="sticky-price"><?php echo format_price($price, $productData['currency'] ?? 'USD'); ?></div>
                  </div>
             </div>
             
@@ -1981,7 +1981,7 @@ function stickyAddToCart() {
                  <div class="text-xs text-gray-500">Total Price:</div>
                  <div class="flex items-center justify-end gap-2">
                      <span id="sticky-original-price" class="text-sm text-gray-400 line-through <?php echo !$originalPrice ? 'hidden' : ''; ?>"><?php echo format_price($originalPrice ?: 0, $productData['currency'] ?? 'USD'); ?></span>
-                     <div class="font-bold text-lg text-gray-900" id="sticky-price"><?php echo format_price($price, $productData['currency'] ?? 'USD'); ?></div>
+                     <div class="font-bold text-lg text-[#1a3d32]" id="sticky-price"><?php echo format_price($price, $productData['currency'] ?? 'USD'); ?></div>
                  </div>
             </div>
             
