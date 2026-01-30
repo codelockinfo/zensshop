@@ -486,7 +486,7 @@ $currentPage = basename($_SERVER['PHP_SELF']);
 
                 
 
-                <a href="<?php echo url('admin/logout'); ?>" class="sidebar-menu-item flex items-center space-x-3 py-2 px-4 mt-2 <?php echo basename($_SERVER['PHP_SELF'], '.php') === 'logout' ? 'bg-gray-700' : ''; ?>" title="Logout">
+                <a href="<?php echo url('admin/logout.php'); ?>" class="sidebar-menu-item flex items-center space-x-3 py-2 px-4 mt-2 <?php echo basename($_SERVER['PHP_SELF'], '.php') === 'logout' ? 'bg-gray-700' : ''; ?>" title="Logout">
                     <i class="fas fa-sign-out-alt text-md md:text-lg"></i>
                     <span class="sidebar-menu-text">Logout</span>
                 </a>

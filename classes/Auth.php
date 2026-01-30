@@ -20,6 +20,7 @@ class Auth {
         if (session_status() === PHP_SESSION_NONE && !headers_sent()) {
             session_start();
         }
+        $this->checkRememberMe();
     }
     
     /**
@@ -88,12 +89,10 @@ class Auth {
         }
         
         // Set session
-        $_SESSION['user_id'] = $user['id'];
-        $_SESSION['user_name'] = $user['name'];
-        $_SESSION['user_email'] = $user['email'];
-        $_SESSION['user_role'] = $user['role'];
-        $_SESSION['store_id'] = $user['store_id'] ?? null;
-        $_SESSION['logged_in'] = true;
+        $this->setUserSession($user);
+        
+        // Always enable persistent login for 24 hours
+        $this->setRememberMe($user['id'], $user['store_id'] ?? null);
         
         return $user;
     }
@@ -102,8 +101,11 @@ class Auth {
      * Logout user
      */
     public function logout() {
+        $this->deleteRememberMe();
         $_SESSION = [];
-        session_destroy();
+        if (session_id()) {
+            session_destroy();
+        }
     }
     
     /**
@@ -164,6 +166,85 @@ class Auth {
         ];
     }
     
+    /**
+     * Set user session variables
+     */
+    private function setUserSession($user) {
+        $_SESSION['user_id'] = $user['id'];
+        $_SESSION['user_name'] = $user['name'];
+        $_SESSION['user_email'] = $user['email'];
+        $_SESSION['user_role'] = $user['role'];
+        $_SESSION['store_id'] = $user['store_id'] ?? null;
+        $_SESSION['logged_in'] = true;
+    }
+
+    /**
+     * Set Remember Me token
+     */
+    private function setRememberMe($userId, $storeId = null) {
+        try {
+            $selector = bin2hex(random_bytes(16));
+            $validator = bin2hex(random_bytes(32));
+            $token = hash('sha256', $validator);
+            $duration = 24 * 60 * 60; // 24 hours as requested
+            $expires = date('Y-m-d H:i:s', time() + $duration);
+            
+            $this->db->execute(
+                "INSERT INTO admin_sessions (user_id, selector, token, expires_at, store_id) VALUES (?, ?, ?, ?, ?)",
+                [$userId, $selector, $token, $expires, $storeId]
+            );
+            
+            setcookie('admin_remember', $selector . ':' . $validator, time() + $duration, '/', '', false, true);
+        } catch (Exception $e) {
+            error_log("Admin Remember Me Error: " . $e->getMessage());
+        }
+    }
+
+    /**
+     * Check Remember Me token and auto-login
+     */
+    private function checkRememberMe() {
+        if ($this->isLoggedIn()) return;
+        if (!isset($_COOKIE['admin_remember'])) return;
+        
+        $parts = explode(':', $_COOKIE['admin_remember']);
+        if (count($parts) !== 2) return;
+        
+        list($selector, $validator) = $parts;
+        
+        try {
+            $session = $this->db->fetchOne(
+                "SELECT * FROM admin_sessions WHERE selector = ? AND expires_at > NOW()", 
+                [$selector]
+            );
+            
+            if ($session && hash_equals($session['token'], hash('sha256', $validator))) {
+                $user = $this->db->fetchOne("SELECT * FROM users WHERE id = ?", [$session['user_id']]);
+                if ($user) {
+                    $this->setUserSession($user);
+                }
+            }
+        } catch (Exception $e) {
+            // Silently fail auto-login
+        }
+    }
+
+    /**
+     * Delete Remember Me token
+     */
+    private function deleteRememberMe() {
+        if (isset($_COOKIE['admin_remember'])) {
+            $parts = explode(':', $_COOKIE['admin_remember']);
+            if (count($parts) === 2) {
+                try {
+                    $this->db->execute("DELETE FROM admin_sessions WHERE selector = ?", [$parts[0]]);
+                } catch (Exception $e) {}
+            }
+            setcookie('admin_remember', '', time() - 3600, '/');
+            unset($_COOKIE['admin_remember']);
+        }
+    }
+
     /**
      * Require login (redirect if not logged in)
      */
