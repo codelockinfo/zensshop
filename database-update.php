@@ -412,9 +412,44 @@ if (!columnExists($db, 'orders', 'delivery_date')) {
 }
 
 // ==========================================
-// STEP 10: Seed Brands into site_settings
+// STEP 10: Ensure site_settings Table Exists
 // ==========================================
-echo "STEP 10: Seeding Brands into site_settings\n";
+echo "STEP 10: Ensuring site_settings table exists\n";
+echo "------------------------------------------\n";
+
+$sql_site_settings = "CREATE TABLE IF NOT EXISTS site_settings (
+    setting_key VARCHAR(100) NOT NULL,
+    setting_value TEXT,
+    store_id VARCHAR(50) DEFAULT NULL,
+    PRIMARY KEY (setting_key, store_id),
+    INDEX idx_store (store_id)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci";
+
+executeSql($db, $sql_site_settings, "Create site_settings table", $errors, $success, $EXECUTE);
+
+if (columnExists($db, 'site_settings', 'setting_key')) {
+    // Check if store_id exists (it might be missing in older versions)
+    if (!columnExists($db, 'site_settings', 'store_id')) {
+        executeSql($db, "ALTER TABLE site_settings ADD COLUMN store_id VARCHAR(50) DEFAULT NULL", "Add store_id to site_settings", $errors, $success, $EXECUTE);
+    }
+    
+    // Check if we need to fix the PRIMARY KEY (might have been just setting_key before)
+    try {
+        if ($EXECUTE) {
+             // We use a safe way to check if PK needs update
+             $pkCheck = $db->fetchAll("SHOW KEYS FROM site_settings WHERE Key_name = 'PRIMARY'");
+             if (count($pkCheck) < 2) { // Should have 2 columns in PK: setting_key and store_id
+                 $db->execute("ALTER TABLE site_settings DROP PRIMARY KEY, ADD PRIMARY KEY (setting_key, store_id)");
+                 echo "Status: ✅ FIXED PRIMARY KEY\n\n";
+             }
+        }
+    } catch(Exception $e) { /* Keys might already be correct */ }
+}
+
+// ==========================================
+// STEP 11: Seed Brands into site_settings
+// ==========================================
+echo "STEP 11: Seeding Brands into site_settings\n";
 echo "----------------------------------------\n";
 
 if ($EXECUTE) {
@@ -440,9 +475,9 @@ if ($EXECUTE) {
 }
 
 // ==========================================
-// STEP 11: Add OtherPlatform column to Landing Pages
+// STEP 12: Add OtherPlatform column to Landing Pages
 // ==========================================
-echo "STEP 11: Adding Other_platform column to landing_pages\n";
+echo "STEP 12: Adding Other_platform column to landing_pages\n";
 echo "--------------------------------------------------\n";
 
 if (!columnExists($db, 'landing_pages', 'Other_platform')) {
