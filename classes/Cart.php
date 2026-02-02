@@ -205,7 +205,9 @@ class Cart {
                 'image' => $productImage,
                 'slug' => $item['slug'] ?? '',
                 'variant_attributes' => $variantAttributes,
-                'sku' => $sku
+                'sku' => $sku,
+                'stock_quantity' => $variant ? ($variant['stock_quantity'] ?? 0) : ($item['stock_quantity'] ?? 0),
+                'stock_status' => $variant ? ($variant['stock_status'] ?? 'in_stock') : ($item['stock_status'] ?? 'in_stock')
             ];
         }
         
@@ -307,7 +309,9 @@ class Cart {
                 'image' => $productImage,
                 'slug' => $product['slug'] ?? '',
                 'variant_attributes' => $attributes,
-                'sku' => $sku
+                'sku' => $sku,
+                'stock_quantity' => isset($variant) ? ($variant['stock_quantity'] ?? 0) : ($product['stock_quantity'] ?? 0),
+                'stock_status' => isset($variant) ? ($variant['stock_status'] ?? 'in_stock') : ($product['stock_status'] ?? 'in_stock')
             ];
         }
         
