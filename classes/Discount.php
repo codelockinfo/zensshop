@@ -39,7 +39,7 @@ class Discount {
      * Validate discount code
      * Returns true if valid, throws Exception with reason if invalid
      */
-    public function validate($code, $cartTotal) {
+    public function validate($code, $cartTotal, $userId = null) {
         $discount = $this->getByCode($code);
         
         if (!$discount) {
@@ -80,6 +80,28 @@ class Discount {
                  throw new Exception("Discount code usage limit reached.");
             }
         }
+
+        // Check per-customer usage limit
+        if (!empty($discount['usage_limit_per_customer']) && $userId) {
+            try {
+                $userUsedCount = $this->db->fetchOne(
+                    "SELECT COUNT(*) as count FROM orders WHERE user_id = ? AND coupon_code = ? AND order_status != 'cancelled'", 
+                    [$userId, $code]
+                );
+                
+                if ($userUsedCount && $userUsedCount['count'] >= $discount['usage_limit_per_customer']) {
+                    $limit = $discount['usage_limit_per_customer'];
+                    $msg = $limit == 1 ? "You have already used this discount code." : "You have reached the usage limit for this discount code ($limit times).";
+                    throw new Exception($msg);
+                }
+            } catch (Exception $e) {
+                if ($e->getMessage() !== "Invalid discount code." && strpos($e->getMessage(), 'usage limit') !== false) {
+                    throw $e;
+                }
+                // If it's a DB error (like orders table doesn't have coupon_code yet), log and continue
+                error_log("Failed to check per-customer discount limit: " . $e->getMessage());
+            }
+        }
         
         return $discount;
     }
@@ -87,8 +109,8 @@ class Discount {
     /**
      * Calculate discount amount
      */
-    public function calculateAmount($code, $cartTotal) {
-        $discount = $this->validate($code, $cartTotal);
+    public function calculateAmount($code, $cartTotal, $userId = null) {
+        $discount = $this->validate($code, $cartTotal, $userId);
         
         $amount = 0;
         if ($discount['type'] === 'percentage') {

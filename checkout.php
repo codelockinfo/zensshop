@@ -69,9 +69,9 @@ if (isset($_POST['remove_discount'])) {
         require_once __DIR__ . '/classes/Discount.php';
         $discountManager = new Discount();
         try {
-            // Recalculate cart total to be safe
             $currentTotal = $cart->getTotal();
-            $discountAmount = $discountManager->calculateAmount($codeToValidate, $currentTotal);
+            $userId = $customer['id'] ?? null;
+            $discountAmount = $discountManager->calculateAmount($codeToValidate, $currentTotal, $userId);
             // If successful, save to session and variables
             $_SESSION['checkout_discount_code'] = $codeToValidate;
             $discountCode = $codeToValidate;

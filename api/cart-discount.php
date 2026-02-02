@@ -6,6 +6,7 @@
 require_once __DIR__ . '/../includes/functions.php';
 require_once __DIR__ . '/../classes/Cart.php';
 require_once __DIR__ . '/../classes/Discount.php';
+require_once __DIR__ . '/../classes/CustomerAuth.php';
 
 header('Content-Type: application/json');
 
@@ -31,6 +32,14 @@ if (empty($action)) {
 $cart = new Cart();
 $cartTotal = $cart->getTotal();
 
+// Get customer ID if logged in
+$auth = new CustomerAuth();
+$userId = null;
+if ($auth->isLoggedIn()) {
+    $currentCustomer = $auth->getCurrentCustomer();
+    $userId = $currentCustomer['id'] ?? null;
+}
+
 // Handle Removal
 if ($action === 'remove') {
     if (isset($_SESSION['checkout_discount_code'])) {
@@ -55,7 +64,7 @@ if ($action === 'apply') {
 
     try {
         $discountManager = new Discount();
-        $discountAmount = $discountManager->calculateAmount($code, $cartTotal);
+        $discountAmount = $discountManager->calculateAmount($code, $cartTotal, $userId);
         
         // Save to session
         $_SESSION['checkout_discount_code'] = $code;

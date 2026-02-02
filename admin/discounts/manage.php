@@ -19,6 +19,29 @@ if ($id) {
     $discount = $db->fetchOne("SELECT * FROM discounts WHERE id = ? AND store_id = ?", [$id, $storeId]);
 }
 
+// Handle deletion
+if (isset($_GET['delete_id'])) {
+    try {
+        $deleteId = (int)$_GET['delete_id'];
+        $storeId = $_SESSION['store_id'] ?? null;
+        if (!$storeId && isset($_SESSION['user_email'])) {
+             $storeUser = $db->fetchOne("SELECT store_id FROM users WHERE email = ?", [$_SESSION['user_email']]);
+             $storeId = $storeUser['store_id'] ?? null;
+        }
+
+        $db->execute("DELETE FROM discounts WHERE id = ? AND store_id = ?", [$deleteId, $storeId]);
+        $success = 'Discount deleted successfully!';
+        
+        // If we were editing this discount, clear the state
+        if ($id == $deleteId) {
+            $id = null;
+            $discount = null;
+        }
+    } catch (Exception $e) {
+        $error = $e->getMessage();
+    }
+}
+
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $code = $_POST['code'] ?? '';
     $name = $_POST['name'] ?? '';
@@ -28,6 +51,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $minPurchase = $_POST['min_purchase_amount'] ?? null;
     $maxDiscount = $_POST['max_discount_amount'] ?? null;
     $usageLimit = $_POST['usage_limit'] ?? null;
+    $usageLimitPerCustomer = $_POST['usage_limit_per_customer'] ?? null;
     $startDate = $_POST['start_date'] ?? null;
     $endDate = $_POST['end_date'] ?? null;
     $status = $_POST['status'] ?? 'active';
@@ -44,18 +68,18 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $db->execute(
                 "UPDATE discounts SET code = ?, name = ?, description = ?, type = ?, value = ?, 
                  min_purchase_amount = ?, max_discount_amount = ?, usage_limit = ?, 
-                 start_date = ?, end_date = ?, status = ? WHERE id = ?",
+                 usage_limit_per_customer = ?, start_date = ?, end_date = ?, status = ? WHERE id = ?",
                 [$code, $name, $description, $type, $value, $minPurchase, $maxDiscount, 
-                 $usageLimit, $startDate, $endDate, $status, $id]
+                 $usageLimit, $usageLimitPerCustomer, $startDate, $endDate, $status, $id]
             );
             $success = 'Discount updated successfully!';
         } else {
             $db->insert(
                 "INSERT INTO discounts (code, name, description, type, value, min_purchase_amount, 
-                 max_discount_amount, usage_limit, start_date, end_date, status, store_id) 
-                 VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+                 max_discount_amount, usage_limit, usage_limit_per_customer, start_date, end_date, status, store_id) 
+                 VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
                 [$code, $name, $description, $type, $value, $minPurchase, $maxDiscount, 
-                 $usageLimit, $startDate, $endDate, $status, $storeId]
+                 $usageLimit, $usageLimitPerCustomer, $startDate, $endDate, $status, $storeId]
             );
             $success = 'Discount created successfully!';
         }
@@ -120,7 +144,7 @@ $discounts = $db->fetchAll("SELECT * FROM discounts WHERE store_id = ? ORDER BY 
                 <div class="grid grid-cols-2 gap-4">
                     <div class="admin-form-group">
                         <label class="admin-form-label">Type *</label>
-                        <select name="type" required class="admin-form-select">
+                        <select name="type" id="discountTypeSelect" required class="admin-form-select">
                             <option value="percentage" <?php echo (!empty($discount) && ($discount['type'] ?? '') === 'percentage') ? 'selected' : ''; ?>>Percentage</option>
                             <option value="fixed" <?php echo (!empty($discount) && ($discount['type'] ?? '') === 'fixed') ? 'selected' : ''; ?>>Fixed Amount</option>
                         </select>
@@ -128,12 +152,17 @@ $discounts = $db->fetchAll("SELECT * FROM discounts WHERE store_id = ? ORDER BY 
                     
                     <div class="admin-form-group">
                         <label class="admin-form-label">Value *</label>
-                        <input type="number" 
-                               name="value" 
-                               step="0.01"
-                               required
-                               value="<?php echo $discount['value'] ?? 0; ?>"
-                               class="admin-form-input">
+                        <div class="relative">
+                            <span id="valuePrefix" class="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500 <?php echo (!empty($discount) && ($discount['type'] ?? '') === 'percentage') ? 'hidden' : ''; ?>">₹</span>
+                            <input type="number" 
+                                   name="value" 
+                                   id="discountValueInput"
+                                   step="0.01"
+                                   required
+                                   value="<?php echo $discount['value'] ?? 0; ?>"
+                                   class="admin-form-input <?php echo (!empty($discount) && ($discount['type'] ?? '') === 'percentage') ? 'pr-8' : 'pl-8'; ?>">
+                            <span id="valueSuffix" class="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 <?php echo (empty($discount) || ($discount['type'] ?? '') === 'fixed') ? 'hidden' : ''; ?>">%</span>
+                        </div>
                     </div>
                 </div>
                 
@@ -165,7 +194,18 @@ $discounts = $db->fetchAll("SELECT * FROM discounts WHERE store_id = ? ORDER BY 
                                value="<?php echo $discount['usage_limit'] ?? ''; ?>"
                                class="admin-form-input">
                     </div>
-                    
+
+                    <div class="admin-form-group">
+                        <label class="admin-form-label">Usage Limit Per Customer</label>
+                        <input type="number" 
+                               name="usage_limit_per_customer" 
+                               placeholder="e.g. 1"
+                               value="<?php echo $discount['usage_limit_per_customer'] ?? ''; ?>"
+                               class="admin-form-input">
+                    </div>
+                </div>
+                
+                <div class="grid grid-cols-2 gap-4">
                     <div class="admin-form-group">
                         <label class="admin-form-label">Status *</label>
                         <select name="status" required class="admin-form-select">
@@ -193,9 +233,19 @@ $discounts = $db->fetchAll("SELECT * FROM discounts WHERE store_id = ? ORDER BY 
                     </div>
                 </div>
                 
-                <button type="submit" class="admin-btn admin-btn-primary">
-                    <?php echo $id ? 'Update' : 'Create'; ?> Discount
-                </button>
+                <div class="flex items-center gap-3">
+                    <button type="submit" class="admin-btn admin-btn-primary">
+                        <?php echo $id ? 'Update' : 'Create'; ?> Discount
+                    </button>
+                    
+                    <?php if ($id): ?>
+                    <button type="button" 
+                            onclick="confirmDelete(<?php echo $id; ?>)" 
+                            class="bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded-lg transition font-semibold">
+                        Delete
+                    </button>
+                    <?php endif; ?>
+                </div>
             </form>
         </div>
     </div>
@@ -218,10 +268,28 @@ $discounts = $db->fetchAll("SELECT * FROM discounts WHERE store_id = ? ORDER BY 
                             </button>
                         </div>
                         <p class="text-sm text-gray-600"><?php echo htmlspecialchars($disc['name']); ?></p>
+                        <div class="flex gap-3 mt-1">
+                            <p class="text-[11px] font-medium px-2 py-0.5 rounded bg-gray-100 text-gray-600">
+                                Used: <?php echo $disc['used_count'] ?? 0; ?> / <?php echo $disc['usage_limit'] ?: '∞'; ?>
+                            </p>
+                            <?php if ($disc['usage_limit_per_customer']): ?>
+                            <p class="text-[11px] font-medium px-2 py-0.5 rounded bg-blue-50 text-blue-600" title="Limit per customer">
+                                Per Cust: <?php echo $disc['usage_limit_per_customer']; ?>
+                            </p>
+                            <?php endif; ?>
+                        </div>
                     </div>
-                    <a href="?id=<?php echo $disc['id']; ?>" class="text-blue-500 hover:text-blue-700 p-2 rounded-full hover:bg-blue-50">
-                        <i class="fas fa-edit"></i>
-                    </a>
+                    <div class="flex items-center gap-1">
+                        <a href="?id=<?php echo $disc['id']; ?>" class="text-blue-500 hover:text-blue-700 p-2 rounded-full hover:bg-blue-50" title="Edit">
+                            <i class="fas fa-edit"></i>
+                        </a>
+                        <button type="button" 
+                                onclick="confirmDelete(<?php echo $disc['id']; ?>)" 
+                                class="text-red-500 hover:text-red-700 p-2 rounded-full hover:bg-red-50" 
+                                title="Delete">
+                            <i class="fas fa-trash-alt"></i>
+                        </button>
+                    </div>
                 </div>
                 <?php endforeach; ?>
             </div>
@@ -282,6 +350,36 @@ function showCopiedFeedback(button) {
         icon.className = 'far fa-copy';
     }, 2000);
 }
+
+function confirmDelete(id) {
+    if (confirm('Are you sure you want to delete this discount code? This action cannot be undone.')) {
+        window.location.href = '?delete_id=' + id;
+    }
+}
+
+// Discount Type Toggle Logic
+document.addEventListener('DOMContentLoaded', function() {
+    const typeSelect = document.getElementById('discountTypeSelect');
+    const valueInput = document.getElementById('discountValueInput');
+    const prefix = document.getElementById('valuePrefix');
+    const suffix = document.getElementById('valueSuffix');
+
+    if (typeSelect && valueInput && prefix && suffix) {
+        typeSelect.addEventListener('change', function() {
+            if (this.value === 'percentage') {
+                prefix.classList.add('hidden');
+                suffix.classList.remove('hidden');
+                valueInput.classList.remove('pl-8');
+                valueInput.classList.add('pr-8');
+            } else {
+                prefix.classList.remove('hidden');
+                suffix.classList.add('hidden');
+                valueInput.classList.add('pl-8');
+                valueInput.classList.remove('pr-8');
+            }
+        });
+    }
+});
 </script>
 
 <?php require_once __DIR__ . '/../../includes/admin-footer.php'; ?>

@@ -44,11 +44,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $error = "Form submission failed. The data sent exceeds the server's maximum limit (" . ini_get('post_max_size') . ").";
     }
 
-    $updatedCount = 0;
     $insertedCount = 0;
-
-    // Debug
-    file_put_contents('debug_cat.txt', "POST: " . print_r($_POST, true) . "\n");
 
     // Handle Updates and Inserts
     try {
@@ -116,7 +112,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     $insertedCount++;
                 }
             }
-            file_put_contents('debug_cat.txt', $log, FILE_APPEND);
             
             $_SESSION['flash_success'] = "Categories updated successfully!";
             header("Location: " . $baseUrl . '/admin/category');

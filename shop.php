@@ -85,24 +85,24 @@ $categories = $db->fetchAll("SELECT c.*,
                                 WHERE p.status = 'active' AND (p.category_id = c.id OR pc.category_id = c.id)
                                ) as product_count 
                                FROM categories c 
-                               WHERE c.status = 'active' 
+                               WHERE c.status = 'active' AND (c.store_id = ? OR c.store_id IS NULL)
                                HAVING product_count > 0
-                               ORDER BY c.sort_order ASC, c.name ASC");
+                               ORDER BY c.sort_order ASC, c.name ASC", [CURRENT_STORE_ID]);
 
 // Get stock counts
 $inStockCount = $db->fetchOne("SELECT COUNT(DISTINCT p.id) as count 
                                 FROM products p 
                                 LEFT JOIN product_categories pc ON p.product_id = pc.product_id
                                 WHERE p.status = 'active' AND p.stock_status = 'in_stock'" . 
-                                ($categorySlug ? " AND (p.category_id = (SELECT id FROM categories WHERE slug = ?) OR EXISTS (SELECT 1 FROM product_categories pc2 INNER JOIN categories c2 ON pc2.category_id = c2.id WHERE pc2.product_id = p.product_id AND c2.slug = ?))" : ""),
-                                array_merge([], $categorySlug ? [$categorySlug, $categorySlug] : []))['count'] ?? 0;
+                                ($categorySlug ? " AND (p.category_id = (SELECT id FROM categories WHERE slug = ? AND (store_id = ? OR store_id IS NULL) LIMIT 1) OR EXISTS (SELECT 1 FROM product_categories pc2 INNER JOIN categories c2 ON pc2.category_id = c2.id WHERE pc2.product_id = p.product_id AND c2.slug = ? AND (c2.store_id = ? OR c2.store_id IS NULL)))" : ""),
+                                array_merge([], $categorySlug ? [$categorySlug, CURRENT_STORE_ID, $categorySlug, CURRENT_STORE_ID] : []))['count'] ?? 0;
 
 $outOfStockCount = $db->fetchOne("SELECT COUNT(DISTINCT p.id) as count 
                                    FROM products p 
                                    LEFT JOIN product_categories pc ON p.product_id = pc.product_id
                                    WHERE p.status = 'active' AND p.stock_status = 'out_of_stock'" . 
-                                   ($categorySlug ? " AND (p.category_id = (SELECT id FROM categories WHERE slug = ?) OR EXISTS (SELECT 1 FROM product_categories pc2 INNER JOIN categories c2 ON pc2.category_id = c2.id WHERE pc2.product_id = p.product_id AND c2.slug = ?))" : ""),
-                                   array_merge([], $categorySlug ? [$categorySlug, $categorySlug] : []))['count'] ?? 0;
+                                   ($categorySlug ? " AND (p.category_id = (SELECT id FROM categories WHERE slug = ? AND (store_id = ? OR store_id IS NULL) LIMIT 1) OR EXISTS (SELECT 1 FROM product_categories pc2 INNER JOIN categories c2 ON pc2.category_id = c2.id WHERE pc2.product_id = p.product_id AND c2.slug = ? AND (c2.store_id = ? OR c2.store_id IS NULL)))" : ""),
+                                   array_merge([], $categorySlug ? [$categorySlug, CURRENT_STORE_ID, $categorySlug, CURRENT_STORE_ID] : []))['count'] ?? 0;
 
 // Get price range
 $priceRange = $db->fetchOne("SELECT MIN(COALESCE(p.sale_price, p.price)) as min_price, 
@@ -110,8 +110,8 @@ $priceRange = $db->fetchOne("SELECT MIN(COALESCE(p.sale_price, p.price)) as min_
                               FROM products p 
                               LEFT JOIN product_categories pc ON p.product_id = pc.product_id
                               WHERE p.status = 'active'" . 
-                              ($categorySlug ? " AND (p.category_id = (SELECT id FROM categories WHERE slug = ?) OR EXISTS (SELECT 1 FROM product_categories pc2 INNER JOIN categories c2 ON pc2.category_id = c2.id WHERE pc2.product_id = p.product_id AND c2.slug = ?))" : ""),
-                              array_merge([], $categorySlug ? [$categorySlug, $categorySlug] : []));
+                              ($categorySlug ? " AND (p.category_id = (SELECT id FROM categories WHERE slug = ? AND (store_id = ? OR store_id IS NULL) LIMIT 1) OR EXISTS (SELECT 1 FROM product_categories pc2 INNER JOIN categories c2 ON pc2.category_id = c2.id WHERE pc2.product_id = p.product_id AND c2.slug = ? AND (c2.store_id = ? OR c2.store_id IS NULL)))" : ""),
+                              array_merge([], $categorySlug ? [$categorySlug, CURRENT_STORE_ID, $categorySlug, CURRENT_STORE_ID] : []));
 $minPriceRange = $priceRange['min_price'] ?? 0;
 $maxPriceRange = $priceRange['max_price'] ?? 1000;
 

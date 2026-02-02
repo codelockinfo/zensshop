@@ -1074,6 +1074,23 @@ try {
     echo "Status: ⏭️  SKIPPED (discounts table does not exist yet)\n\n";
 }
 
+// ==========================================
+// STEP 28: Add Per-Customer Limit to Discounts
+// ==========================================
+echo "STEP 28: Adding usage_limit_per_customer to discounts\n";
+echo "---------------------------------------------------\n";
+
+try {
+    $db->execute("SELECT 1 FROM discounts LIMIT 1");
+    if (!columnExists($db, 'discounts', 'usage_limit_per_customer')) {
+        executeSql($db, "ALTER TABLE discounts ADD COLUMN usage_limit_per_customer INT DEFAULT NULL AFTER usage_limit", "Add usage_limit_per_customer to discounts", $errors, $success, $EXECUTE);
+    } else {
+        echo "Status: ⏭️  SKIPPED (column already exists)\n\n";
+    }
+} catch (Exception $e) {
+    echo "Status: ⏭️  SKIPPED (discounts table does not exist yet)\n\n";
+}
+
 echo "\n========================================\n";
 echo "SUMMARY\n";
 echo "========================================\n";

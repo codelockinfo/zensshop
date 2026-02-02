@@ -27,11 +27,19 @@ $categories = $db->fetchAll(
         
         <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-6">
             <?php 
-            // Fetch from homepage_categories table (Store Specific)
-            $homeCategories = $db->fetchAll("SELECT * FROM section_categories WHERE active = 1 AND (store_id = ? OR store_id IS NULL) ORDER BY sort_order ASC LIMIT 6", [CURRENT_STORE_ID]);
+            // Total Categories count for View More logic
+            $totalCount = $db->fetchOne("SELECT COUNT(*) as count FROM section_categories WHERE active = 1 AND (store_id = ? OR store_id IS NULL)", [CURRENT_STORE_ID]);
+            $totalCategories = $totalCount['count'] ?? 0;
+
+            // Fetch from homepage_categories table (Store Specific) - fetch all to check count, but we only display 6
+            $homeCategories = $db->fetchAll("SELECT * FROM section_categories WHERE active = 1 AND (store_id = ? OR store_id IS NULL) ORDER BY sort_order ASC", [CURRENT_STORE_ID]);
             
             // Fallback for demonstration if table is empty
             if (empty($homeCategories)) {
+                // Fetch from main categories table as fallback
+                $dbCategories = $db->fetchAll("SELECT * FROM categories WHERE status = 'active' AND (store_id = ? OR store_id IS NULL) ORDER BY sort_order ASC", [CURRENT_STORE_ID]);
+                $totalCategories = count($dbCategories);
+                
                 $categoryImages = [
                     'https://images.unsplash.com/photo-1515562141207-7a88fb7ce338?w=300&h=300&fit=crop',
                     'https://images.unsplash.com/photo-1605100804763-247f67b3557e?w=300&h=300&fit=crop',
@@ -41,19 +49,20 @@ $categories = $db->fetchAll(
                     'https://images.unsplash.com/photo-1515562141207-7a88fb7ce338?w=300&h=300&fit=crop'
                 ];
                 
-                // Fetch default categories if no custom ones (Store Specific)
                 $homeCategories = [];
-                $dbCategories = $db->fetchAll("SELECT * FROM categories WHERE status = 'active' AND (store_id = ? OR store_id IS NULL) ORDER BY sort_order ASC LIMIT 6", [CURRENT_STORE_ID]);
                 foreach ($dbCategories as $index => $cat) {
                     $homeCategories[] = [
                         'title' => $cat['name'],
-                        'link' => 'category.php?slug=' . $cat['slug'],
-                        'image' => $categoryImages[$index % count($categoryImages)]
+                        'link' => 'category?slug=' . $cat['slug'],
+                        'image' => !empty($cat['image']) ? $cat['image'] : $categoryImages[$index % count($categoryImages)]
                     ];
                 }
             }
             
-            foreach ($homeCategories as $category): 
+            // Limit to 6 for display
+            $displayCategories = array_slice($homeCategories, 0, 6);
+            
+            foreach ($displayCategories as $category): 
                 $image = $category['image'];
                 if (!preg_match('/^https?:\/\//', $image)) {
                     $image = $baseUrl . '/' . ltrim($image, '/');
@@ -73,6 +82,14 @@ $categories = $db->fetchAll(
             </a>
             <?php endforeach; ?>
         </div>
+
+        <?php if ($totalCategories > 6): ?>
+        <div class="text-center mt-10">
+            <a href="<?php echo $baseUrl; ?>/collections" class="inline-block bg-black text-white px-8 py-3 rounded-full hover:bg-gray-800 hover:text-white transition font-semibold text-sm">
+                View More Collections
+            </a>
+        </div>
+        <?php endif; ?>
     </div>
 </section>
 
