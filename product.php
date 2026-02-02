@@ -172,7 +172,7 @@ $_COOKIE['recently_viewed'] = json_encode($recentIds);
 // Product Options and Variants (already fetched above)
 ?>
 
-<section class="py-8 md:py-12 bg-white">
+<section class=" md:py-12 bg-white">
     <div class="container mx-auto px-4">
         <!-- Breadcrumbs -->
         <nav class="text-sm text-gray-600 mb-6">
@@ -260,6 +260,12 @@ $_COOKIE['recently_viewed'] = json_encode($recentIds);
                     }
                     .thumbnail-slider .swiper-slide img {
                         width: 100%;
+                    }
+                    .thumbnail-slider .swiper-pagination {
+                        display: none !important;
+                    }
+                    .swiper-pagination {
+                        display: none !important;
                     }
                 </style>
 
@@ -683,7 +689,7 @@ $_COOKIE['recently_viewed'] = json_encode($recentIds);
         
         <!-- People Also Bought -->
         <?php if (!empty($relatedProducts)): ?>
-        <div class="mb-16">
+        <div class="mb-5">
             <div class="text-center mb-8">
                 <h2 class="text-2xl font-heading font-bold mb-2">People Also Bought</h2>
                 <p class="text-gray-600">Here's some of our most similar products people are buying. Click to discover trending style.</p>
