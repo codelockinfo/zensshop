@@ -27,7 +27,7 @@ $sectionHeading = $videos[0]['heading'] ?? 'Video Reels';
 $sectionSubheading = $videos[0]['subheading'] ?? 'Watch our latest stories';
 ?>
 
-<section class="bg-white py-12 relative group/section" id="uniqueVideoSection">
+<section class="bg-white py-5 relative group/section" id="uniqueVideoSection">
     <div class="container mx-auto px-4">
         <!-- Section Header -->
         <div class="text-center mb-10">

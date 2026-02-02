@@ -22,10 +22,10 @@ $sectionHeading = $offers[0]['heading'] ?? 'Special Offers';
 $sectionSubheading = $offers[0]['subheading'] ?? 'Grab limited-time deals on our best products.';
 ?>
 
-<section class="py-16 md:py-24 bg-white">
+<section class="py-5 md:py-24 bg-white">
     <div class="container mx-auto px-4">
         <!-- Section Header -->
-        <div class="text-center mb-12">
+        <div class="text-center mb-10">
             <?php if (!empty($sectionHeading)): ?>
                 <h2 class="text-3xl md:text-4xl font-bold font-heading text-gray-900 mb-3"><?php echo htmlspecialchars($sectionHeading); ?></h2>
             <?php endif; ?>

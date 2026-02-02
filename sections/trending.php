@@ -44,9 +44,9 @@ if (empty($products)) {
 }
 ?>
 
-<section id="trending-section" class="py-16 md:py-24 bg-white">
+<section id="trending-section" class="py-5 md:py-24 bg-white">
     <div class="container mx-auto px-4">
-        <div class="text-center mb-12">
+        <div class="text-center mb-10">
             <h2 class="text-2xl md:text-3xl font-heading font-bold mb-4"><?php echo htmlspecialchars($sectionHeading); ?></h2>
             <p class="text-gray-600 text-sm md:text-md max-w-2xl mx-auto"><?php echo htmlspecialchars($sectionSubheading); ?></p>
         </div>
