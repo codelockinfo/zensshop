@@ -31,38 +31,32 @@ try {
         $userId = $admin ? $admin['id'] : null;
     }
 
-    // Auto-setup: existance check
-    // We do this check here to ensure the table exists on any environment this code runs on
+    // Auto-setup: existence check
     $tables = $db->fetchAll("SHOW TABLES LIKE 'subscribers'");
     if (empty($tables)) {
         $db->execute("CREATE TABLE subscribers (
             id INT AUTO_INCREMENT PRIMARY KEY,
-            email VARCHAR(191) NOT NULL UNIQUE,
-            user_id INT DEFAULT NULL,
-            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+            email VARCHAR(191) NOT NULL,
+            user_id BIGINT DEFAULT NULL,
+            store_id VARCHAR(50) DEFAULT NULL,
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            UNIQUE KEY email_store (email, store_id)
         )");
     }
 
-    // Check if already exists
-    $existing = $db->fetchOne("SELECT id FROM subscribers WHERE email = ?", [$email]);
+    // Determine Store ID (Omni-store logic)
+    if (function_exists('getCurrentStoreId')) {
+        $storeId = getCurrentStoreId();
+    } else {
+        $storeId = $_SESSION['store_id'] ?? null;
+    }
+
+    // Check if already exists in this store
+    $existing = $db->fetchOne("SELECT id FROM subscribers WHERE email = ? AND (store_id = ? OR store_id IS NULL)", [$email, $storeId]);
 
     if ($existing) {
-        // Already subscribed
         echo json_encode(['success' => true, 'message' => 'You are already subscribed!']);
         exit;
-    }
-
-    // Determine Store ID
-    $storeId = $_SESSION['store_id'] ?? null;
-    if (!$storeId && isset($_SESSION['user_email'])) {
-         $storeUser = $db->fetchOne("SELECT store_id FROM users WHERE email = ?", [$_SESSION['user_email']]);
-         $storeId = $storeUser['store_id'] ?? null;
-    }
-    if (!$storeId) {
-         try {
-            $storeUser = $db->fetchOne("SELECT store_id FROM users WHERE store_id IS NOT NULL LIMIT 1");
-            $storeId = $storeUser['store_id'] ?? null;
-         } catch(Exception $ex) {}
     }
 
     $db->insert("INSERT INTO subscribers (email, user_id, store_id) VALUES (?, ?, ?)", [$email, $userId, $storeId]);

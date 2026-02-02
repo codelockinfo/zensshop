@@ -53,8 +53,14 @@ class Auth {
         // Hash password
         $hashedPassword = password_hash($password, PASSWORD_DEFAULT);
         
-        // Generate unique Store ID
-        $storeId = 'STORE-' . strtoupper(substr(md5(uniqid(mt_rand(), true)), 0, 8));
+        // Generate unique Store ID (10 chars upper)
+        // D2EA2917 is 8 chars. User asked for "like this for 10 digit D2EA2917". 
+        // D2EA2917 is actually 8 chars. 
+        // If user wants 10 chars: strtoupper(substr(bin2hex(random_bytes(5)), 0, 10))
+        // If user wants 8 chars like D2EA2917: strtoupper(substr(md5(uniqid(mt_rand(), true)), 0, 8))
+        // The user said "10 digit D2EA2917" but D2EA2917 is 8. I will assume they want 10 characters now.
+        // Let's generate 10 characters.
+        $storeId = strtoupper(substr(md5(uniqid(mt_rand(), true)), 0, 10));
         
         // Insert user
         $userId = $this->db->insert(
@@ -132,7 +138,7 @@ class Auth {
         
         // Fetch from database to get latest data including profile_image
         $user = $this->db->fetchOne(
-            "SELECT id, name, email, role, profile_image, store_id FROM users WHERE id = ?",
+            "SELECT id, name, email, role, profile_image, store_id, store_url FROM users WHERE id = ?",
             [$_SESSION['user_id']]
         );
         
@@ -162,6 +168,7 @@ class Auth {
             'email' => $_SESSION['user_email'],
             'role' => $_SESSION['user_role'],
             'store_id' => $_SESSION['store_id'] ?? null,
+            'store_url' => $_SESSION['store_url'] ?? null,
             'profile_image' => null
         ];
     }
@@ -174,7 +181,9 @@ class Auth {
         $_SESSION['user_name'] = $user['name'];
         $_SESSION['user_email'] = $user['email'];
         $_SESSION['user_role'] = $user['role'];
-        $_SESSION['store_id'] = $user['store_id'] ?? null;
+        // Ensure clean store_id (remove legacy STORE- prefix if present)
+        $_SESSION['store_id'] = isset($user['store_id']) ? str_replace('STORE-', '', $user['store_id']) : null;
+        $_SESSION['store_url'] = $user['store_url'] ?? null;
         $_SESSION['logged_in'] = true;
     }
 

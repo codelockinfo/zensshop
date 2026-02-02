@@ -96,8 +96,13 @@ async function refreshCart() {
     renderCartSkeleton(); 
     
     try {
-        const baseUrl = typeof BASE_URL !== 'undefined' ? BASE_URL : window.location.pathname.split('/').slice(0, -1).join('/') || '';
-        const response = await fetch(baseUrl + '/api/cart.php', {
+        let baseUrl = typeof BASE_URL !== 'undefined' ? BASE_URL : window.location.pathname.split('/').slice(0, -1).join('/') || '';
+        // Ensure strictly no trailing slash
+        baseUrl = baseUrl.replace(/\/$/, '');
+        
+        console.log('[CART] Refreshing from:', baseUrl + '/api/cart.php');
+
+        const response = await fetch(baseUrl + '/api/cart.php?t=' + new Date().getTime(), {
             method: 'GET',
             headers: {
                 'Content-Type': 'application/json',
@@ -168,7 +173,11 @@ function renderCartSkeleton() {
 async function addToCart(productId, quantity = 1, btn = null, attributes = {}) {
     if (btn) setBtnLoading(btn, true);
     try {
-        const baseUrl = typeof BASE_URL !== 'undefined' ? BASE_URL : window.location.pathname.split('/').slice(0, -1).join('/') || '';
+        let baseUrl = typeof BASE_URL !== 'undefined' ? BASE_URL : window.location.pathname.split('/').slice(0, -1).join('/') || '';
+        baseUrl = baseUrl.replace(/\/$/, '');
+
+        console.log('[CART] Add URL:', baseUrl + '/api/cart.php');
+
         const requestBody = {
             product_id: productId,
             quantity: quantity,

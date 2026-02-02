@@ -18,14 +18,16 @@ $cart = new Cart();
 $cartCount = $cart->getCount();
 
 require_once __DIR__ . '/../classes/Database.php';
+require_once __DIR__ . '/../classes/Settings.php';
 $db = Database::getInstance();
+$settingsObj = new Settings();
+$storeId = getCurrentStoreId();
 
-// Store ID is only used for admin side logic. 
-// On the front side we show everything regardless of store_id as it's filtered by domain/installation.
-$landingPagesList = $db->fetchAll("SELECT name, slug FROM landing_pages ORDER BY name ASC");
+// Filter content by detected Store ID
+$landingPagesList = $db->fetchAll("SELECT name, slug FROM landing_pages WHERE store_id = ? OR store_id IS NULL ORDER BY name ASC", [$storeId]);
 
-// Fetch Header Menu
-$headerMenuIdVal = $db->fetchOne("SELECT id FROM menus WHERE location = 'header_main' LIMIT 1");
+// Fetch Header Menu (Store Specific)
+$headerMenuIdVal = $db->fetchOne("SELECT id FROM menus WHERE location = 'header_main' AND (store_id = ? OR store_id IS NULL) ORDER BY store_id DESC LIMIT 1", [$storeId]);
 $headerMenuItems = [];
 if ($headerMenuIdVal) {
     $allItems = $db->fetchAll("SELECT * FROM menu_items WHERE menu_id = ? ORDER BY sort_order ASC", [$headerMenuIdVal['id']]);
@@ -34,34 +36,33 @@ if ($headerMenuIdVal) {
     }
 }
 
-// Fetch Header Settings
-// Use fetchOne without store_id to get the first/global setting
-$siteLogoType = $db->fetchOne("SELECT setting_value FROM site_settings WHERE setting_key = 'site_logo_type'")['setting_value'] ?? 'image';
-$siteLogoText = $db->fetchOne("SELECT setting_value FROM site_settings WHERE setting_key = 'site_logo_text'")['setting_value'] ?? 'milano';
-$siteLogo = $db->fetchOne("SELECT setting_value FROM site_settings WHERE setting_key = 'site_logo'")['setting_value'] ?? 'logo.png';
-$showSearchIcon = ($db->fetchOne("SELECT setting_value FROM site_settings WHERE setting_key = 'header_icon_search'")['setting_value'] ?? '1') == '1';
-$showUserIcon = ($db->fetchOne("SELECT setting_value FROM site_settings WHERE setting_key = 'header_icon_user'")['setting_value'] ?? '1') == '1';
-$showWishlistIcon = ($db->fetchOne("SELECT setting_value FROM site_settings WHERE setting_key = 'header_icon_wishlist'")['setting_value'] ?? '1') == '1';
-$showCartIcon = ($db->fetchOne("SELECT setting_value FROM site_settings WHERE setting_key = 'header_icon_cart'")['setting_value'] ?? '1') == '1';
+// Fetch Header Settings (Automatic store filtering via Settings class)
+$siteLogoType = $settingsObj->get('site_logo_type', 'image');
+$siteLogoText = $settingsObj->get('site_logo_text', 'milano');
+$siteLogo = $settingsObj->get('site_logo', 'logo.png');
+$showSearchIcon = $settingsObj->get('header_icon_search', '1') == '1';
+$showUserIcon = $settingsObj->get('header_icon_user', '1') == '1';
+$showWishlistIcon = $settingsObj->get('header_icon_wishlist', '1') == '1';
+$showCartIcon = $settingsObj->get('header_icon_cart', '1') == '1';
 
 // Fetch SEO & Branding Settings
-$siteTitleSuffix = $db->fetchOne("SELECT setting_value FROM settings WHERE setting_key = 'site_title_suffix'")['setting_value'] ?? 'Milano - Elegant Jewelry Store';
-$faviconPng = $db->fetchOne("SELECT setting_value FROM settings WHERE setting_key = 'favicon_png'")['setting_value'] ?? '';
-$faviconIco = $db->fetchOne("SELECT setting_value FROM settings WHERE setting_key = 'favicon_ico'")['setting_value'] ?? ''; 
-$globalMetaDesc = $db->fetchOne("SELECT setting_value FROM settings WHERE setting_key = 'global_meta_description'")['setting_value'] ?? '';
-$globalSchema = $db->fetchOne("SELECT setting_value FROM settings WHERE setting_key = 'global_schema_json'")['setting_value'] ?? '';
-$headerScripts = $db->fetchOne("SELECT setting_value FROM settings WHERE setting_key = 'header_scripts'")['setting_value'] ?? '';
+$siteTitleSuffix = $settingsObj->get('site_title_suffix', 'Milano - Elegant Jewelry Store');
+$faviconPng = $settingsObj->get('favicon_png', '');
+$faviconIco = $settingsObj->get('favicon_ico', ''); 
+$globalMetaDesc = $settingsObj->get('global_meta_description', '');
+$globalSchema = $settingsObj->get('global_schema_json', '');
+$headerScripts = $settingsObj->get('header_scripts', '');
 
 // Fetch Top Bar Settings
-$topbarSlidesRow = $db->fetchOne("SELECT setting_value FROM site_settings WHERE setting_key = 'topbar_slides'");
-$topbarSlides = json_decode($topbarSlidesRow['setting_value'] ?? '[]', true) ?: [
+$topbarSlidesRaw = $settingsObj->get('topbar_slides', '[]');
+$topbarSlides = json_decode($topbarSlidesRaw, true) ?: [
     ['text' => '100% secure online payment', 'link' => '', 'link_text' => ''],
     ['text' => 'Free Shipping for all order over $99', 'link' => '', 'link_text' => ''],
     ['text' => 'Sign up for 10% off your first order.', 'link' => 'signup', 'link_text' => 'Sign up']
 ];
 
-$topbarLinksRow = $db->fetchOne("SELECT setting_value FROM site_settings WHERE setting_key = 'topbar_links'");
-$topbarLinks = json_decode($topbarLinksRow['setting_value'] ?? '[]', true) ?: [
+$topbarLinksRaw = $settingsObj->get('topbar_links', '[]');
+$topbarLinks = json_decode($topbarLinksRaw, true) ?: [
     ['label' => 'Contact Us', 'url' => 'contact'],
     ['label' => 'About Us', 'url' => 'about'],
     ['label' => 'Help Center', 'url' => 'help'],
@@ -586,7 +587,7 @@ if (!empty($headerMenuItems)) {
                     // Fetch random categories for Trending Search
                     $trendingCats = [];
                     try {
-                        $trendingCats = $db->fetchAll("SELECT name, slug FROM categories WHERE status='active' ORDER BY RAND() LIMIT 5");
+                        $trendingCats = $db->fetchAll("SELECT name, slug FROM categories WHERE status='active' AND (store_id = ? OR store_id IS NULL) ORDER BY RAND() LIMIT 5", [$storeId]);
                     } catch(PDOException $e) {}
                     
                     foreach ($trendingCats as $tc): 
@@ -617,7 +618,7 @@ if (!empty($headerMenuItems)) {
                                 // Fetch popular products (random 5 from active products)
                                 $popularProducts = [];
                                 try {
-                                    $popularProducts = $db->fetchAll("SELECT id, name, slug, price, sale_price, images, featured_image FROM products WHERE status='active' ORDER BY RAND() LIMIT 5");
+                                    $popularProducts = $db->fetchAll("SELECT id, name, slug, price, sale_price, images, featured_image FROM products WHERE status='active' AND (store_id = ? OR store_id IS NULL) ORDER BY RAND() LIMIT 5", [$storeId]);
                                 } catch(PDOException $e) {}
 
                                 foreach ($popularProducts as $pp):

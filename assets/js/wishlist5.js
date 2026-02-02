@@ -140,7 +140,13 @@ async function refreshWishlist() {
             document.cookie = `wishlist_items=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=${path}; SameSite=Lax${window.location.protocol === 'https:' ? '; Secure' : ''}`;
         });
 
-        const response = await fetch((typeof BASE_URL !== 'undefined' ? BASE_URL : '') + '/api/wishlist.php', {
+        let baseUrl = typeof BASE_URL !== 'undefined' ? BASE_URL : '';
+        if (!baseUrl) {
+             baseUrl = window.location.pathname.split('/').slice(0, -1).join('/') || '';
+        }
+        baseUrl = baseUrl.replace(/\/$/, '');
+
+        const response = await fetch(baseUrl + '/api/wishlist.php?t=' + new Date().getTime(), {
             method: 'GET',
             headers: {
                 'Content-Type': 'application/json',
@@ -180,7 +186,15 @@ async function toggleWishlist(productId, button) {
         const isInWishlist = wishlistData.some(item => item.product_id == productId);
 
         const method = isInWishlist ? 'DELETE' : 'POST';
-        const response = await fetch((typeof BASE_URL !== 'undefined' ? BASE_URL : '') + '/api/wishlist.php', {
+        
+        let baseUrl = typeof BASE_URL !== 'undefined' ? BASE_URL : '';
+        if (!baseUrl) {
+             // Fallback
+             baseUrl = window.location.pathname.split('/').slice(0, -1).join('/') || '';
+        }
+        baseUrl = baseUrl.replace(/\/$/, '');
+
+        const response = await fetch(baseUrl + '/api/wishlist.php', {
             method: method,
             headers: {
                 'Content-Type': 'application/json',

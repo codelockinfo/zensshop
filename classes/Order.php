@@ -157,33 +157,24 @@ class Order {
         $taxAmount = $data['tax_amount'] ?? 0;
         $totalAmount = $subtotal - $discountAmount + $shippingAmount + $taxAmount;
         
-        // Automatic Customer Matching
+        // Determine Store ID (Omni-store logic)
+        if (function_exists('getCurrentStoreId')) {
+            $storeId = getCurrentStoreId();
+        } else {
+            $storeId = $_SESSION['store_id'] ?? null;
+        }
+
+        // Automatic Customer Matching (Store Specific)
         if ((empty($data['user_id']) || $data['user_id'] < 1000000000) && !empty($data['customer_email'])) {
             try {
                 $existingCustomer = $this->db->fetchOne(
-                    "SELECT customer_id FROM customers WHERE email = ?", 
-                    [$data['customer_email']]
+                    "SELECT customer_id FROM customers WHERE email = ? AND (store_id = ? OR store_id IS NULL)", 
+                    [$data['customer_email'], $storeId]
                 );
                 if ($existingCustomer) {
                     $data['user_id'] = $existingCustomer['customer_id'];
                 }
             } catch (Exception $e) {}
-        }
-        
-        // Determine Store ID
-        $storeId = $_SESSION['store_id'] ?? null;
-        if (!$storeId) {
-            if (isset($_SESSION['user_email'])) {
-                $storeUser = $this->db->fetchOne("SELECT store_id FROM users WHERE email = ?", [$_SESSION['user_email']]);
-                $storeId = $storeUser['store_id'] ?? null;
-            } elseif (isset($_SESSION['customer_email'])) {
-                $storeCustomer = $this->db->fetchOne("SELECT store_id FROM customers WHERE email = ?", [$_SESSION['customer_email']]);
-                $storeId = $storeCustomer['store_id'] ?? null;
-            }
-        }
-        if (!$storeId) {
-            $storeUser = $this->db->fetchOne("SELECT store_id FROM users WHERE store_id IS NOT NULL LIMIT 1");
-            $storeId = $storeUser['store_id'] ?? null;
         }
 
         // Insert order

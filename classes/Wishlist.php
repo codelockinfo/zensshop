@@ -28,6 +28,16 @@ class Wishlist {
     public function getWishlist() {
         $wishlistItems = [];
         
+        // Get current store ID
+        $currentStoreId = null;
+        if (defined('CURRENT_STORE_ID')) {
+            $currentStoreId = CURRENT_STORE_ID;
+        } elseif (function_exists('getCurrentStoreId')) {
+            $currentStoreId = getCurrentStoreId();
+        } else {
+            $currentStoreId = $_SESSION['store_id'] ?? null;
+        }
+        
         // Try to get from cookie first
         if (isset($_COOKIE[WISHLIST_COOKIE_NAME])) {
             $json = $_COOKIE[WISHLIST_COOKIE_NAME];
@@ -51,42 +61,58 @@ class Wishlist {
         // If user is logged in, strictly use database
         $loggedId = $_SESSION['customer_id'] ?? null;
         if ($loggedId) {
-            $wishlistItems = $this->getWishlistFromDB($loggedId);
+            $wishlistItems = $this->getWishlistFromDB($loggedId, $currentStoreId);
             // Sync cookie with DB so that local count remains accurate
             $this->saveWishlistToCookie($wishlistItems);
         }
         
         // Ensure all items have required fields and proper image URLs
-        foreach ($wishlistItems as &$item) {
-            // If user is not logged in, we still want fresh stock data from the database
-            $productId = $item['product_id'];
-            if ($productId) {
-                $product = $this->product->getByProductId($productId);
-                if (!$product && is_numeric($productId) && $productId < 1000000000) {
-                    $product = $this->product->getById($productId);
-                }
+        $validItems = [];
+        foreach ($wishlistItems as $item) {
+            // Ensure product_id exists
+            if (empty($item['product_id'])) {
+                continue;
+            }
 
+            $productId = $item['product_id'];
+            $product = $this->product->getByProductId($productId, $currentStoreId);
+            
+            // Fallback for old auto-increment IDs
+            if (!$product && is_numeric($productId) && $productId < 1000000000) {
+                $product = $this->product->getById($productId, $currentStoreId);
                 if ($product) {
-                    // Update fresh data from product table
-                    $item['name'] = $product['name'];
-                    $item['slug'] = $product['slug'];
-                    $item['sale_price'] = $product['sale_price'];
-                    $item['price'] = $product['price'];
-                    $item['currency'] = $product['currency'] ?? 'USD';
-                    $item['stock_status'] = $product['stock_status'] ?? 'in_stock';
-                    $item['stock_quantity'] = $product['stock_quantity'] ?? 0;
-                    $item['rating'] = $product['rating'] ?? 5;
-                    $item['review_count'] = $product['review_count'] ?? 0;
-                    
-                    if (empty($item['image']) || $item['image'] === 'null' || $item['image'] === 'undefined') {
-                        if (!empty($product['featured_image'])) {
-                            $item['image'] = $product['featured_image'];
-                        } else {
-                            $images = json_decode($product['images'] ?? '[]', true);
-                            if (!empty($images[0])) {
-                                $item['image'] = $images[0];
-                            }
-                        }
+                    $item['product_id'] = $product['product_id']; // Use 10-digit ID
+                }
+            }
+
+            // STRICT FILTER: If product doesn't exist or belongs to another store, skip it
+            if (!$product) {
+                continue;
+            }
+            
+            // Additional store check - ensure product belongs to current store
+            if ($currentStoreId && !empty($product['store_id']) && $product['store_id'] !== $currentStoreId) {
+                continue;
+            }
+
+            // Update fresh data from product table
+            $item['name'] = $product['name'];
+            $item['slug'] = $product['slug'];
+            $item['sale_price'] = $product['sale_price'];
+            $item['price'] = $product['price'];
+            $item['currency'] = $product['currency'] ?? 'USD';
+            $item['stock_status'] = $product['stock_status'] ?? 'in_stock';
+            $item['stock_quantity'] = $product['stock_quantity'] ?? 0;
+            $item['rating'] = $product['rating'] ?? 5;
+            $item['review_count'] = $product['review_count'] ?? 0;
+            
+            if (empty($item['image']) || $item['image'] === 'null' || $item['image'] === 'undefined' || !empty($product['featured_image'])) {
+                if (!empty($product['featured_image'])) {
+                    $item['image'] = $product['featured_image'];
+                } else {
+                    $images = json_decode($product['images'] ?? '[]', true);
+                    if (!empty($images[0])) {
+                        $item['image'] = $images[0];
                     }
                 }
             }
@@ -101,29 +127,33 @@ class Wishlist {
                     $item['image'] = $baseUrl . '/assets/images/uploads/' . $item['image'];
                 }
             }
+
+            $validItems[] = $item;
         }
-        unset($item);
         
-        // Remove invalid items
-        $wishlistItems = array_filter($wishlistItems, function($item) {
-            return !empty($item['product_id']) && !empty($item['name']);
-        });
-        $wishlistItems = array_values($wishlistItems); // Re-index
-        
-        return $wishlistItems;
+        return array_values($validItems);
     }
     
     /**
      * Get wishlist from database
      */
-    private function getWishlistFromDB($userId) {
-        $items = $this->db->fetchAll(
-            "SELECT w.*, p.name, p.price, p.sale_price, p.featured_image, p.slug, p.rating, p.review_count, p.sku, p.stock_status, p.stock_quantity, p.currency
-             FROM wishlist w
-             LEFT JOIN products p ON (w.product_id = p.product_id OR (w.product_id = p.id AND w.product_id < 1000000000))
-             WHERE w.user_id = ?",
-            [$userId]
-        );
+    private function getWishlistFromDB($userId, $storeId = null) {
+        if (!$storeId && function_exists('getCurrentStoreId')) {
+            $storeId = getCurrentStoreId();
+        }
+
+        $sql = "SELECT w.*, p.name, p.price, p.sale_price, p.featured_image, p.slug, p.rating, p.review_count, p.sku, p.stock_status, p.stock_quantity, p.currency
+              FROM wishlist w
+              LEFT JOIN products p ON (w.product_id = p.product_id OR (w.product_id = p.id AND w.product_id < 1000000000))
+              WHERE w.user_id = ?";
+        $params = [$userId];
+
+        if ($storeId) {
+            $sql .= " AND (w.store_id = ? OR w.store_id IS NULL)";
+            $params[] = $storeId;
+        }
+
+        $items = $this->db->fetchAll($sql, $params);
         
         $wishlistItems = [];
         foreach ($items as $item) {
@@ -176,11 +206,23 @@ class Wishlist {
      * Add item to wishlist
      */
     public function addItem($productId) {
-        // Get product by 10-digit ID
+        // Get product and ensure it's normalized to 10-digit product_id
+        // PASS NULL store_id implicitly to allow shared products to be found!
+        // The Product::getByProductId has already been updated to handle (store_id = ? OR store_id IS NULL).
         $product = $this->product->getByProductId($productId);
-        if (!$product) {
-            throw new Exception("Product not found");
+        
+        if (!$product && is_numeric($productId)) {
+            $product = $this->product->getById($productId);
         }
+        
+        if (!$product) {
+            // Last ditch effort: Try without store restriction logic internal to Product class by manually querying?
+            // Actually, let's trust the updated Product class logic primarily.
+            throw new Exception("Product not found (ID: $productId)");
+        }
+        
+        // Use normalized ID from here on
+        $productId = $product['product_id'];
         
         // Get current wishlist
         $wishlistItems = $this->getWishlist();
@@ -244,17 +286,23 @@ class Wishlist {
         return $wishlistItems;
     }
 
-    /**
-     * Get items for a specific user
-     */
-    public function getItems($userId) {
-        return $this->getWishlistFromDB($userId);
+    public function getItems($userId, $storeId = null) {
+        return $this->getWishlistFromDB($userId, $storeId);
     }
     
     /**
      * Remove item from wishlist
      */
     public function removeItem($productId) {
+        // Normalize productId to 10-digit ID
+        $product = $this->product->getByProductId($productId);
+        if (!$product && is_numeric($productId)) {
+            $product = $this->product->getById($productId);
+        }
+        if ($product) {
+            $productId = $product['product_id'];
+        }
+
         $wishlistItems = $this->getWishlist();
         
         $wishlistItems = array_filter($wishlistItems, function($item) use ($productId) {
@@ -267,6 +315,14 @@ class Wishlist {
         
         $loggedId = $_SESSION['customer_id'] ?? null;
         if ($loggedId) {
+            $storeId = function_exists('getCurrentStoreId') ? getCurrentStoreId() : ($_SESSION['store_id'] ?? null);
+            // Explicitly delete from DB to ensure immediate removal
+            // RELAXED store check: delete regardless of store if user+product matches to fix "stuck" items
+            $this->db->execute(
+                "DELETE FROM wishlist WHERE user_id = ? AND product_id = ?",
+                [$loggedId, $productId]
+            );
+            // Then sync full list just in case to be safe
             $this->saveWishlistToDB($loggedId, $wishlistItems);
         }
         
@@ -326,19 +382,21 @@ class Wishlist {
      * Save wishlist to database
      */
     private function saveWishlistToDB($userId, $wishlistItems) {
-        // Clear existing wishlist
+        // Clear existing wishlist (Store Specific)
+        $storeId = function_exists('getCurrentStoreId') ? getCurrentStoreId() : ($_SESSION['store_id'] ?? null);
         $this->db->execute(
-            "DELETE FROM wishlist WHERE user_id = ?",
-            [$userId]
+            "DELETE FROM wishlist WHERE user_id = ? AND (store_id = ? OR store_id IS NULL)",
+            [$userId, $storeId]
         );
 
         // Insert new items
         foreach ($wishlistItems as $item) {
             try {
+                $storeId = function_exists('getCurrentStoreId') ? getCurrentStoreId() : ($_SESSION['store_id'] ?? null);
                 $this->db->insert(
-                    "INSERT INTO wishlist (user_id, product_id) VALUES (?, ?)
+                    "INSERT INTO wishlist (user_id, product_id, store_id) VALUES (?, ?, ?)
                      ON DUPLICATE KEY UPDATE created_at = CURRENT_TIMESTAMP",
-                    [$userId, $item['product_id']]
+                    [$userId, $item['product_id'], $storeId]
                 );
             } catch (Exception $e) {
                 error_log("Error saving wishlist item to DB: " . $e->getMessage());
@@ -353,18 +411,22 @@ class Wishlist {
         if (isset($_COOKIE[WISHLIST_COOKIE_NAME])) {
             $cookieItems = json_decode($_COOKIE[WISHLIST_COOKIE_NAME], true);
             if (is_array($cookieItems) && !empty($cookieItems)) {
+                $storeId = function_exists('getCurrentStoreId') ? getCurrentStoreId() : ($_SESSION['store_id'] ?? null);
                 // Add each item to the database
                 foreach ($cookieItems as $item) {
                     if (!empty($item['product_id'])) {
                         $this->db->insert(
-                            "INSERT INTO wishlist (user_id, product_id) VALUES (?, ?)
+                            "INSERT INTO wishlist (user_id, product_id, store_id) VALUES (?, ?, ?)
                              ON DUPLICATE KEY UPDATE created_at = CURRENT_TIMESTAMP",
-                            [$userId, $item['product_id']]
+                            [$userId, $item['product_id'], $storeId]
                         );
                     }
                 }
             }
         }
+        
+        // Clear guest wishlist cookie after sync
+        $this->saveWishlistToCookie([]);
     }
 }
 

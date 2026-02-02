@@ -16,8 +16,11 @@ $products = $db->fetchAll(
     "SELECT p.*, h.heading, h.subheading
      FROM products p 
      JOIN section_best_selling_products h ON p.product_id = h.product_id 
-     WHERE p.status != 'archived'
-     ORDER BY h.sort_order ASC"
+     WHERE p.status != 'archived' 
+     AND (h.store_id = ? OR h.store_id IS NULL)
+     AND p.store_id = ?
+     ORDER BY h.sort_order ASC",
+    [CURRENT_STORE_ID, CURRENT_STORE_ID]
 );
 
 // Fetch dynamic headers if available from any row
@@ -37,7 +40,7 @@ if (!empty($products)) {
 
 // Fallback if no specific products selected
 if (empty($products)) {
-    $products = $product->getBestSelling(12, $storeId);
+    $products = $product->getBestSelling(12, CURRENT_STORE_ID);
 }
 ?>
 
@@ -107,7 +110,7 @@ if (empty($products)) {
                                         <span class="product-tooltip">Compare</span>
                                     </button> -->
                                     <button class="product-action-btn w-10 h-10 bg-white rounded-full flex items-center justify-center hover:bg-black hover:text-white transition shadow-lg add-to-cart-hover-btn relative group <?php echo ($item['stock_status'] === 'out_of_stock' || $item['stock_quantity'] <= 0) ? 'opacity-50 cursor-not-allowed' : ''; ?>" 
-                                            data-product-id="<?php echo $item['product_id']; ?>"
+                                            data-product-id="<?php echo $currentId; ?>"
                                             data-attributes='<?php echo htmlspecialchars($attributesJson, ENT_QUOTES, 'UTF-8'); ?>'
                                             <?php echo ($item['stock_status'] === 'out_of_stock' || $item['stock_quantity'] <= 0) ? 'disabled' : ''; ?>>
                                         <i class="fas fa-shopping-cart"></i>

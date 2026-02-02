@@ -7,8 +7,8 @@ require_once __DIR__ . '/../includes/functions.php';
 $baseUrl = getBaseUrl();
 $db = Database::getInstance();
 
-// Fetch videos from database
-$videos = $db->fetchAll("SELECT * FROM section_videos ORDER BY sort_order ASC");
+// Fetch videos from database (Store Specific)
+$videos = $db->fetchAll("SELECT * FROM section_videos WHERE (store_id = ? OR store_id IS NULL) ORDER BY sort_order ASC", [CURRENT_STORE_ID]);
 
 // Fallback if empty
 if (empty($videos)) {

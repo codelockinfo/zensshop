@@ -30,6 +30,16 @@ class Cart {
     public function getCart() {
         $cartItems = [];
         
+        // Get current store ID
+        $currentStoreId = null;
+        if (defined('CURRENT_STORE_ID')) {
+            $currentStoreId = CURRENT_STORE_ID;
+        } elseif (function_exists('getCurrentStoreId')) {
+            $currentStoreId = getCurrentStoreId();
+        } else {
+            $currentStoreId = $_SESSION['store_id'] ?? null;
+        }
+        
         // Try to get from cookie first
         if (isset($_COOKIE[CART_COOKIE_NAME])) {
             $json = $_COOKIE[CART_COOKIE_NAME];
@@ -53,53 +63,56 @@ class Cart {
         // If user is logged in, strictly use database
         $loggedId = $_SESSION['customer_id'] ?? null;
         if ($loggedId) {
-            $dbCart = $this->getCartFromDB($loggedId);
+            $dbCart = $this->getCartFromDB($loggedId, $currentStoreId);
             $cartItems = $dbCart;
             // Sync cookie with DB
             $this->saveCartToCookie($cartItems);
         }
         
         // Ensure all items have required fields and proper image URLs
-        foreach ($cartItems as &$item) {
+        $validItems = [];
+        foreach ($cartItems as $item) {
             // Ensure product_id exists
             if (empty($item['product_id'])) {
                 continue;
             }
             
-            if (empty($item['image']) || $item['image'] === 'null' || $item['image'] === 'undefined' || empty($item['slug'])) {
-                $productId = $item['product_id'];
-                $product = $this->product->getByProductId($productId);
-                
-                // Fallback for old auto-increment IDs
-                if (!$product && is_numeric($productId) && $productId < 1000000000) {
-                    $product = $this->product->getById($productId);
-                    if ($product) {
-                        $item['product_id'] = $product['product_id']; // Use 10-digit ID from now on
-                    }
-                }
-
+            $productId = $item['product_id'];
+            $product = $this->product->getByProductId($productId, $currentStoreId);
+            
+            // Fallback for old auto-increment IDs
+            if (!$product && is_numeric($productId) && $productId < 1000000000) {
+                $product = $this->product->getById($productId, $currentStoreId);
                 if ($product) {
-                    if (!empty($product['featured_image'])) {
-                        $item['image'] = $product['featured_image'];
-                    } else {
-                        $images = json_decode($product['images'] ?? '[]', true);
-                        if (!empty($images[0])) {
-                            $item['image'] = $images[0];
-                        }
-                    }
-                    
-                    // Ensure name, price, and slug are set
-                    if (empty($item['name'])) {
-                        $item['name'] = $product['name'];
-                    }
-                    if (empty($item['price'])) {
-                        $item['price'] = $product['sale_price'] ?? $product['price'];
-                    }
-                    if (empty($item['slug'])) {
-                        $item['slug'] = $product['slug'] ?? '';
-                    }
-                    if (empty($item['currency'])) {
-                        $item['currency'] = $product['currency'] ?? 'USD';
+                    $item['product_id'] = $product['product_id']; // Use 10-digit ID
+                }
+            }
+
+            // STRICT FILTER: If product doesn't exist or belongs to another store, skip it
+            if (!$product) {
+                continue;
+            }
+            
+            // Additional store check - ensure product belongs to current store
+            if ($currentStoreId && !empty($product['store_id']) && $product['store_id'] !== $currentStoreId) {
+                continue;
+            }
+
+            // Update fresh data from product table
+            $item['name'] = $product['name'];
+            $item['price'] = $product['sale_price'] ?? $product['price'];
+            $item['slug'] = $product['slug'] ?? '';
+            $item['currency'] = $product['currency'] ?? 'USD';
+            $item['stock_status'] = $product['stock_status'] ?? 'in_stock';
+            $item['stock_quantity'] = $product['stock_quantity'] ?? 0;
+
+            if (empty($item['image']) || $item['image'] === 'null' || $item['image'] === 'undefined' || !empty($product['featured_image'])) {
+                if (!empty($product['featured_image'])) {
+                    $item['image'] = $product['featured_image'];
+                } else {
+                    $images = json_decode($product['images'] ?? '[]', true);
+                    if (!empty($images[0])) {
+                        $item['image'] = $images[0];
                     }
                 }
             }
@@ -114,29 +127,33 @@ class Cart {
                     $item['image'] = $baseUrl . '/assets/images/uploads/' . $item['image'];
                 }
             }
+
+            $validItems[] = $item;
         }
-        unset($item);
         
-        // Remove invalid items
-        $cartItems = array_filter($cartItems, function($item) {
-            return !empty($item['product_id']) && !empty($item['name']);
-        });
-        $cartItems = array_values($cartItems); // Re-index
-        
-        return $cartItems;
+        return array_values($validItems);
     }
     
     /**
      * Get cart from database
      */
-    private function getCartFromDB($userId) {
-        $items = $this->db->fetchAll(
-            "SELECT c.*, p.name, p.price, p.currency, p.sale_price, p.featured_image, p.stock_quantity, p.stock_status, p.slug
-             FROM cart c
-             LEFT JOIN products p ON (c.product_id = p.product_id OR (c.product_id = p.id AND c.product_id < 1000000000))
-             WHERE c.user_id = ?",
-            [$userId]
-        );
+    private function getCartFromDB($userId, $storeId = null) {
+        if (!$storeId && function_exists('getCurrentStoreId')) {
+            $storeId = getCurrentStoreId();
+        }
+
+        $sql = "SELECT c.*, p.name, p.price, p.currency, p.sale_price, p.featured_image, p.stock_quantity, p.stock_status, p.slug
+              FROM cart c
+              LEFT JOIN products p ON (c.product_id = p.product_id OR (c.product_id = p.id AND c.product_id < 1000000000))
+              WHERE c.user_id = ?";
+        $params = [$userId];
+
+        if ($storeId) {
+            $sql .= " AND (c.store_id = ? OR c.store_id IS NULL)";
+            $params[] = $storeId;
+        }
+
+        $items = $this->db->fetchAll($sql, $params);
         
         $cartItems = [];
         foreach ($items as $item) {
@@ -198,6 +215,31 @@ class Cart {
     /**
      * Add item to cart
      */
+    /**
+     * Helper to compare variant attributes robustly
+     */
+    private function attributesMatch($attr1, $attr2) {
+        // Normalize
+        if (is_string($attr1)) $attr1 = json_decode($attr1, true);
+        if (!is_array($attr1)) $attr1 = [];
+        
+        if (is_string($attr2)) $attr2 = json_decode($attr2, true);
+        if (!is_array($attr2)) $attr2 = [];
+        
+        // Handle empty cases matches
+        if (empty($attr1) && empty($attr2)) return true;
+        
+        // Sort by key to ensure order doesn't matter
+        ksort($attr1);
+        ksort($attr2);
+        
+        // Strict comparison after sorting
+        return $attr1 === $attr2;
+    }
+
+    /**
+     * Add item to cart
+     */
     public function addItem($productId, $quantity = 1, $attributes = []) {
         // Get product by 10-digit ID first
         $product = $this->product->getByProductId($productId);
@@ -220,9 +262,9 @@ class Cart {
         $found = false;
         foreach ($cartItems as &$item) {
             $itemAttrs = $item['variant_attributes'] ?? [];
-            // Compare against both arg and proper ID to be safe, or just proper ID if we are sure items are normalized
-            // Best to compare against the ID we intend to store
-            if ($item['product_id'] == $product['product_id'] && $itemAttrs == $attributes) {
+            
+            // Use robust helper
+            if ($item['product_id'] == $product['product_id'] && $this->attributesMatch($itemAttrs, $attributes)) {
                 $item['quantity'] += $quantity;
                 $found = true;
                 break;
@@ -289,11 +331,20 @@ class Cart {
             return $this->removeItem($productId, $attributes);
         }
         
+        // Normalize productId to 10-digit ID
+        $product = $this->product->getByProductId($productId);
+        if (!$product && is_numeric($productId)) {
+            $product = $this->product->getById($productId);
+        }
+        if ($product) {
+            $productId = $product['product_id'];
+        }
+
         $cartItems = $this->getCart();
         
         foreach ($cartItems as &$item) {
             $itemAttrs = $item['variant_attributes'] ?? [];
-            if ($item['product_id'] == $productId && $itemAttrs == $attributes) {
+            if ($item['product_id'] == $productId && $this->attributesMatch($itemAttrs, $attributes)) {
                 $item['quantity'] = $quantity;
                 break;
             }
@@ -313,11 +364,23 @@ class Cart {
      * Remove item from cart
      */
     public function removeItem($productId, $attributes = []) {
+        // Normalize productId to 10-digit ID
+        $product = $this->product->getByProductId($productId);
+        if (!$product && is_numeric($productId)) {
+            $product = $this->product->getById($productId);
+        }
+        if ($product) {
+            $productId = $product['product_id'];
+        }
+
         $cartItems = $this->getCart();
         
         $cartItems = array_filter($cartItems, function($item) use ($productId, $attributes) {
             $itemAttrs = $item['variant_attributes'] ?? [];
-            return !($item['product_id'] == $productId && $itemAttrs == $attributes);
+            // Match both ID and Attributes using robust helper
+            // We return FALSE to remove it
+            $isMatch = ($item['product_id'] == $productId && $this->attributesMatch($itemAttrs, $attributes));
+            return !$isMatch;
         });
         
         $cartItems = array_values($cartItems); // Re-index array
@@ -420,18 +483,19 @@ class Cart {
     private function saveCartToDB($userId, $cartItems) {
         $this->dbError = '';
         try {
-            // Clear existing cart
+            // Clear existing cart (Store Specific)
+            $storeId = function_exists('getCurrentStoreId') ? getCurrentStoreId() : ($_SESSION['store_id'] ?? null);
             $this->db->execute(
-                "DELETE FROM cart WHERE user_id = ?",
-                [$userId]
+                "DELETE FROM cart WHERE user_id = ? AND (store_id = ? OR store_id IS NULL)",
+                [$userId, $storeId]
             );
 
             // Insert new items
             foreach ($cartItems as $item) {
                 try {
                     $this->db->insert(
-                        "INSERT INTO cart (user_id, product_id, quantity, variant_attributes) VALUES (?, ?, ?, ?)",
-                        [$userId, $item['product_id'], $item['quantity'], json_encode($item['variant_attributes'] ?? [])]
+                        "INSERT INTO cart (user_id, product_id, quantity, variant_attributes, store_id) VALUES (?, ?, ?, ?, ?)",
+                        [$userId, $item['product_id'], $item['quantity'], json_encode($item['variant_attributes'] ?? []), $storeId]
                     );
                 } catch (Exception $e) {
                     $this->dbError .= "Item " . $item['product_id'] . " Error: " . $e->getMessage() . "; ";

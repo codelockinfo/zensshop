@@ -16,8 +16,11 @@ $products = $db->fetchAll(
     "SELECT p.*, h.heading, h.subheading
      FROM products p 
      JOIN section_trending_products h ON p.product_id = h.product_id 
-     WHERE p.status != 'archived'
-     ORDER BY h.sort_order ASC"
+     WHERE p.status != 'archived' 
+     AND (h.store_id = ? OR h.store_id IS NULL)
+     AND p.store_id = ?
+     ORDER BY h.sort_order ASC",
+    [CURRENT_STORE_ID, CURRENT_STORE_ID]
 );
 
 // Fetch dynamic headers if available from any row
@@ -37,7 +40,7 @@ if (!empty($products)) {
 
 // Fallback if no specific products selected
 if (empty($products)) {
-    $products = $product->getTrending(6, $storeId);
+    $products = $product->getTrending(6, CURRENT_STORE_ID);
 }
 ?>
 

@@ -11,6 +11,12 @@ if (!$auth->isLoggedIn()) {
 }
 
 $customer = $auth->getCurrentCustomer();
+if (!$customer) {
+    // Session is valid but customer record not found for this store
+    $auth->logout();
+    header('Location: ' . url('login'));
+    exit;
+}
 $orderModel = new Order();
 $wishlistModel = new Wishlist();
 
@@ -55,7 +61,10 @@ $tab = $_GET['tab'] ?? 'all'; // For orders: current, unpaid, all
 // Fetch data based on section
 $orders = [];
 if ($section === 'orders') {
-    $filters = ['user_id' => $customer['customer_id']];
+    $filters = [
+        'user_id' => $customer['customer_id'],
+        'store_id' => CURRENT_STORE_ID
+    ];
     if ($tab === 'unpaid') {
         $filters['payment_status'] = 'pending';
     } elseif ($tab === 'current') {
@@ -72,8 +81,11 @@ if ($section === 'orders') {
 
 $addresses = [];
 if ($section === 'addresses') {
-    // 1. Get unique shipping addresses from past orders
-    $pastOrders = $orderModel->getAll(['user_id' => $customer['customer_id']]);
+    // 1. Get unique shipping addresses from past orders (Store Specific)
+    $pastOrders = $orderModel->getAll([
+        'user_id' => $customer['customer_id'],
+        'store_id' => CURRENT_STORE_ID
+    ]);
     $uniqueAddresses = [];
     foreach ($pastOrders as $po) {
         $addr = $po['shipping_address'];
@@ -92,18 +104,24 @@ if ($section === 'addresses') {
 
 $wishlistItems = [];
 if ($section === 'wishlist') {
-    $wishlistItems = $wishlistModel->getItems($customer['customer_id']);
+    $wishlistItems = $wishlistModel->getItems($customer['customer_id'], CURRENT_STORE_ID);
 }
 
 $paymentOrders = [];
 if ($section === 'payments') {
-    $paymentOrders = $orderModel->getAll(['user_id' => $customer['customer_id']]);
+    $paymentOrders = $orderModel->getAll([
+        'user_id' => $customer['customer_id'],
+        'store_id' => CURRENT_STORE_ID
+    ]);
 }
 
 $totalSpend = 0;
 if ($section === 'details') {
-    // Calculate total spend
-    $allOrders = $orderModel->getAll(['user_id' => $customer['customer_id']]);
+    // Calculate total spend (Store Specific)
+    $allOrders = $orderModel->getAll([
+        'user_id' => $customer['customer_id'],
+        'store_id' => CURRENT_STORE_ID
+    ]);
     foreach ($allOrders as $ord) {
         if ($ord['payment_status'] === 'paid' && $ord['order_status'] !== 'cancelled') {
             $totalSpend += $ord['total_amount'];
@@ -112,7 +130,11 @@ if ($section === 'details') {
     
     // If phone is missing, try to get from last order to pre-fill
     if (empty($customer['phone'])) {
-        $lastOrder = $orderModel->getAll(['user_id' => $customer['customer_id'], 'limit' => 1]);
+        $lastOrder = $orderModel->getAll([
+            'user_id' => $customer['customer_id'], 
+            'store_id' => CURRENT_STORE_ID,
+            'limit' => 1
+        ]);
         if (!empty($lastOrder[0]['customer_phone'])) {
             $customer['phone'] = $lastOrder[0]['customer_phone'];
         }
@@ -128,7 +150,7 @@ require_once __DIR__ . '/includes/header.php';
         <!-- Header -->
         <div class="mb-10">
             <h1 class="text-4xl font-bold text-gray-900">Your Account</h1>
-            <p class="text-gray-600 mt-2"><?php echo htmlspecialchars($customer['name']); ?></p>
+            <p class="text-gray-600 mt-2"><?php echo htmlspecialchars($customer['name'] ?? ''); ?></p>
         </div>
 
         <div class="flex flex-col lg:flex-row gap-8">
@@ -492,14 +514,14 @@ require_once __DIR__ . '/includes/header.php';
                                 <div>
                                     <label class="block text-sm font-semibold mb-2 text-gray-700">Full Name</label>
                                     <input type="text" name="name" required
-                                           value="<?php echo htmlspecialchars($customer['name']); ?>"
+                                           value="<?php echo htmlspecialchars($customer['name'] ?? ''); ?>"
                                            class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-black focus:border-transparent">
                                 </div>
 
                                 <div>
                                     <label class="block text-sm font-semibold mb-2 text-gray-700">Email Address</label>
                                     <input type="email" name="email" required
-                                           value="<?php echo htmlspecialchars($customer['email']); ?>"
+                                           value="<?php echo htmlspecialchars($customer['email'] ?? ''); ?>"
                                            class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-black focus:border-transparent bg-gray-50" 
                                            <?php echo !empty($customer['google_id']) ? 'readonly title="Signed in with Google"' : ''; ?>>
                                     <?php if (!empty($customer['google_id'])): ?>
@@ -689,8 +711,8 @@ require_once __DIR__ . '/includes/header.php';
                         messageDiv.classList.add('hidden');
                         
                         const formData = {
-                            name: '<?php echo htmlspecialchars($customer['name']); ?>',
-                            email: '<?php echo htmlspecialchars($customer['email']); ?>',
+                            name: '<?php echo htmlspecialchars($customer['name'] ?? ''); ?>',
+                            email: '<?php echo htmlspecialchars($customer['email'] ?? ''); ?>',
                             subject: document.getElementById('supportSubject').value,
                             message: document.getElementById('supportMessage').value
                         };

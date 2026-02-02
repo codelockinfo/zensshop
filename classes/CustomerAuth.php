@@ -16,18 +16,12 @@ class CustomerAuth {
         $hashedPassword = password_hash($password, PASSWORD_DEFAULT);
         // Generate unique 10-digit customer ID
         $customCustomerId = mt_rand(1000000000, 9999999999);
-        // Determine Store ID
-        $storeId = $_SESSION['store_id'] ?? null;
-        try {
-            if (!$storeId && isset($_SESSION['user_email'])) {
-                 $storeUser = $this->db->fetchOne("SELECT store_id FROM users WHERE email = ?", [$_SESSION['user_email']]);
-                 $storeId = $storeUser['store_id'] ?? null;
-            }
-            if (!$storeId) {
-                 $storeUser = $this->db->fetchOne("SELECT store_id FROM users WHERE store_id IS NOT NULL LIMIT 1");
-                 $storeId = $storeUser['store_id'] ?? null;
-            }
-        } catch(Exception $ex) {}
+        // Determine Store ID (Priority: current domain/constant)
+        if (function_exists('getCurrentStoreId')) {
+            $storeId = getCurrentStoreId();
+        } else {
+            $storeId = $_SESSION['store_id'] ?? null;
+        }
 
         try {
             $insertedId = $this->db->insert(
@@ -61,7 +55,12 @@ class CustomerAuth {
     }
     
     public function login($email, $password) {
-        $customer = $this->db->fetchOne("SELECT * FROM customers WHERE email = ?", [$email]);
+        $storeId = function_exists('getCurrentStoreId') ? getCurrentStoreId() : ($_SESSION['store_id'] ?? null);
+        
+        $customer = $this->db->fetchOne(
+            "SELECT * FROM customers WHERE email = ? AND (store_id = ? OR store_id IS NULL)", 
+            [$email, $storeId]
+        );
         if (!$customer || !password_verify($password, $customer['password'])) {
             throw new Exception("Invalid email or password");
         }
@@ -74,7 +73,12 @@ class CustomerAuth {
     }
     
     public function loginWithGoogle($googleId, $email, $name) {
-        $customer = $this->db->fetchOne("SELECT * FROM customers WHERE email = ? OR google_id = ?", [$email, $googleId]);
+        $storeId = function_exists('getCurrentStoreId') ? getCurrentStoreId() : ($_SESSION['store_id'] ?? null);
+        
+        $customer = $this->db->fetchOne(
+            "SELECT * FROM customers WHERE (email = ? OR google_id = ?) AND (store_id = ? OR store_id IS NULL)", 
+            [$email, $googleId, $storeId]
+        );
         
         if ($customer) {
             if (!$customer['google_id']) {
@@ -85,17 +89,11 @@ class CustomerAuth {
             $customCustomerId = mt_rand(1000000000, 9999999999);
 
             // Determine Store ID
-            $storeId = $_SESSION['store_id'] ?? null;
-            try {
-                if (!$storeId && isset($_SESSION['user_email'])) {
-                     $storeUser = $this->db->fetchOne("SELECT store_id FROM users WHERE email = ?", [$_SESSION['user_email']]);
-                     $storeId = $storeUser['store_id'] ?? null;
-                }
-                if (!$storeId) {
-                     $storeUser = $this->db->fetchOne("SELECT store_id FROM users WHERE store_id IS NOT NULL LIMIT 1");
-                     $storeId = $storeUser['store_id'] ?? null;
-                }
-            } catch(Exception $ex) {}
+            if (function_exists('getCurrentStoreId')) {
+                $storeId = getCurrentStoreId();
+            } else {
+                $storeId = $_SESSION['store_id'] ?? null;
+            }
 
             $id = $this->db->insert(
                 "INSERT INTO customers (customer_id, name, email, google_id, store_id) VALUES (?, ?, ?, ?, ?)",
@@ -129,6 +127,21 @@ class CustomerAuth {
         $_SESSION['customer_email'] = $customer['email'];
         $_SESSION['store_id'] = $customer['store_id'] ?? null;
         $_SESSION['customer_logged_in'] = true;
+
+        // Sync Cart and Wishlist from cookies
+        try {
+            require_once __DIR__ . '/Cart.php';
+            $cart = new Cart();
+            // syncCartAfterLogin will merge cookie items into DB and clear cookie
+            $cart->syncCartAfterLogin($customer['customer_id']);
+
+            require_once __DIR__ . '/Wishlist.php';
+            $wishlist = new Wishlist();
+            // syncWishlistAfterLogin will merge cookie items into DB and clear cookie
+            $wishlist->syncWishlistAfterLogin($customer['customer_id']);
+        } catch (Exception $e) {
+            error_log("Error syncing cart/wishlist after login: " . $e->getMessage());
+        }
     }
     
     public function isLoggedIn() {
@@ -155,8 +168,11 @@ class CustomerAuth {
         
         if (empty($fields)) return false;
         
+        $storeId = function_exists('getCurrentStoreId') ? getCurrentStoreId() : ($_SESSION['store_id'] ?? null);
         $params[] = $_SESSION['customer_id'];
-        $sql = "UPDATE customers SET " . implode(', ', $fields) . " WHERE customer_id = ?";
+        $params[] = $storeId;
+        
+        $sql = "UPDATE customers SET " . implode(', ', $fields) . " WHERE customer_id = ? AND (store_id = ? OR store_id IS NULL)";
         return $this->db->execute($sql, $params);
     }
 
@@ -195,10 +211,16 @@ class CustomerAuth {
         list($selector, $validator) = $parts;
         
         try {
-            $session = $this->db->fetchOne(
-                "SELECT * FROM customer_sessions WHERE selector = ? AND expires_at > NOW()", 
-                [$selector]
-            );
+            $storeId = function_exists('getCurrentStoreId') ? getCurrentStoreId() : null;
+            $sql = "SELECT * FROM customer_sessions WHERE selector = ? AND expires_at > NOW()";
+            $params = [$selector];
+            
+            if ($storeId) {
+                $sql .= " AND (store_id = ? OR store_id IS NULL)";
+                $params[] = $storeId;
+            }
+
+            $session = $this->db->fetchOne($sql, $params);
             
             if ($session && hash_equals($session['token'], hash('sha256', $validator))) {
                 $customer = $this->db->fetchOne("SELECT * FROM customers WHERE customer_id = ?", [$session['customer_id']]);
@@ -226,6 +248,11 @@ class CustomerAuth {
 
     public function getCurrentCustomer() {
         if (!$this->isLoggedIn()) return null;
-        return $this->db->fetchOne("SELECT * FROM customers WHERE customer_id = ?", [$_SESSION['customer_id']]);
+        $storeId = function_exists('getCurrentStoreId') ? getCurrentStoreId() : ($_SESSION['store_id'] ?? null);
+        
+        return $this->db->fetchOne(
+            "SELECT * FROM customers WHERE customer_id = ? AND (store_id = ? OR store_id IS NULL)", 
+            [$_SESSION['customer_id'], $storeId]
+        );
     }
 }

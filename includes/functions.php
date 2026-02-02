@@ -9,6 +9,18 @@ if (!defined('SITE_URL')) {
 }
 
 /**
+ * Get the current Store ID based on domain or session
+ */
+function getCurrentStoreId() {
+    if (defined('CURRENT_STORE_ID')) {
+        return CURRENT_STORE_ID;
+    }
+    
+    // Fallback if constant not defined
+    return $_SESSION['store_id'] ?? 'DEFAULT';
+}
+
+/**
  * Get base URL for the site
  * Uses SITE_URL constant which automatically detects environment (local vs production)
  */

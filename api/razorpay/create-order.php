@@ -86,10 +86,11 @@ if ($difference > 0.01) {
     ob_clean();
     echo json_encode([
         'success' => false, 
-        'message' => 'Something went wrong',
+        'message' => 'Cart verification failed: Amount mismatch. Please refresh cart.',
         'debug' => [
             'received_amount' => $amount,
-            'expected_total' => $expectedTotal
+            'expected_total' => $expectedTotal,
+            'cart_total' => $cartTotal
         ]
     ]);
     exit;
@@ -112,12 +113,16 @@ try {
     
     // Validate Razorpay keys
     if (empty($razorpayKeyId) || strpos($razorpayKeyId, 'YOUR_KEY') !== false) {
-        echo json_encode(['success' => false, 'message' => 'Something went wrong']);
+        $msg = "Razorpay Key ID is not configured.";
+        error_log($msg);
+        echo json_encode(['success' => false, 'message' => $msg]);
         exit;
     }
     
     if (empty($razorpayKeySecret) || strpos($razorpayKeySecret, 'YOUR_KEY') !== false) {
-        echo json_encode(['success' => false, 'message' => 'Something went wrong']);
+        $msg = "Razorpay Key Secret is not configured.";
+        error_log($msg);
+        echo json_encode(['success' => false, 'message' => $msg]);
         exit;
     }
     
@@ -169,7 +174,7 @@ try {
         error_log("Razorpay cURL Error: " . $curlError);
         echo json_encode([
             'success' => false, 
-            'message' => 'Something went wrong'
+            'message' => 'Connection Error: ' . $curlError
         ]);
         exit;
     }
@@ -177,9 +182,13 @@ try {
     // Check HTTP status code
     if ($httpCode !== 200) {
         error_log("Razorpay API Error (HTTP $httpCode): " . $response);
+        $respData = json_decode($response, true);
+        $msg = $respData['error']['description'] ?? 'Razorpay API Error';
         echo json_encode([
             'success' => false, 
-            'message' => 'Something went wrong'
+            'message' => 'Payment Gateway Error: ' . $msg,
+            'http_code' => $httpCode,
+            'response' => $respData
         ]);
         exit;
     }
@@ -190,7 +199,8 @@ try {
         error_log("Invalid Razorpay response: " . $response);
         echo json_encode([
             'success' => false, 
-            'message' => 'Something went wrong'
+            'message' => 'Invalid Gateway Response',
+            'debug_response' => $orderResponse
         ]);
         exit;
     }
@@ -207,7 +217,11 @@ try {
 } catch (Exception $e) {
     error_log("Razorpay order creation error: " . $e->getMessage());
     ob_clean();
-    echo json_encode(['success' => false, 'message' => 'Something went wrong']);
+    echo json_encode([
+        'success' => false, 
+        'message' => 'Something went wrong: ' . $e->getMessage(),
+        'debug_error' => $e->getMessage()
+    ]);
     exit;
 }
 

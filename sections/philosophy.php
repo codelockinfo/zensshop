@@ -5,8 +5,8 @@ require_once __DIR__ . '/../classes/Database.php';
 $baseUrl = getBaseUrl();
 $db = Database::getInstance();
 
-// Fetch settings
-$philosophy = $db->fetchOne("SELECT * FROM philosophy_section LIMIT 1");
+// Fetch settings (Store Specific)
+$philosophy = $db->fetchOne("SELECT * FROM philosophy_section WHERE (store_id = ? OR store_id IS NULL) ORDER BY store_id DESC LIMIT 1", [CURRENT_STORE_ID]);
 
 // If not active or no data, return empty (hide section)
 if (!$philosophy || (isset($philosophy['active']) && $philosophy['active'] == 0)) {

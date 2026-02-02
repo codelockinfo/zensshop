@@ -45,17 +45,11 @@ try {
     $customer = $customerAuth->getCurrentCustomer();
     $customerId = $customer ? $customer['id'] : null;
 
-    // Determine Store ID
-    $storeId = $_SESSION['store_id'] ?? null;
-    if (!$storeId && isset($_SESSION['user_email'])) {
-         $storeUser = $db->fetchOne("SELECT store_id FROM users WHERE email = ?", [$_SESSION['user_email']]);
-         $storeId = $storeUser['store_id'] ?? null;
-    }
-    if (!$storeId) {
-         try {
-            $storeUser = $db->fetchOne("SELECT store_id FROM users WHERE store_id IS NOT NULL LIMIT 1");
-            $storeId = $storeUser['store_id'] ?? null;
-         } catch(Exception $ex) {}
+    // Determine Store ID (Omni-store logic)
+    if (function_exists('getCurrentStoreId')) {
+        $storeId = getCurrentStoreId();
+    } else {
+        $storeId = $_SESSION['store_id'] ?? null;
     }
 
     // Insert support message

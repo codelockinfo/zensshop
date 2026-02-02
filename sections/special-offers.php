@@ -7,7 +7,7 @@ $db = Database::getInstance();
 
 // Fetch offers from DB
 try {
-    $offers = $db->fetchAll("SELECT * FROM special_offers WHERE active = 1 ORDER BY display_order ASC");
+    $offers = $db->fetchAll("SELECT * FROM special_offers WHERE active = 1 AND (store_id = ? OR store_id IS NULL) ORDER BY display_order ASC", [CURRENT_STORE_ID]);
 } catch (Exception $e) {
     $offers = [];
 }

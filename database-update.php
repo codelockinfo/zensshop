@@ -134,12 +134,23 @@ if ($EXECUTE) {
         if (!empty($usersWithoutStoreId)) {
             echo "Generating Store IDs for " . count($usersWithoutStoreId) . " users...\n";
             foreach ($usersWithoutStoreId as $user) {
-                // Generate unique Store ID
-                $genStoreId = 'STORE-' . strtoupper(substr(md5(uniqid(mt_rand(), true)), 0, 8));
+                // Generate unique Store ID (10 chars upper)
+                $genStoreId = strtoupper(substr(md5(uniqid(mt_rand(), true)), 0, 10));
                 $db->execute("UPDATE users SET store_id = ? WHERE id = ?", [$genStoreId, $user['id']]);
                 echo "  - Generated Store ID for User #{$user['id']}: $genStoreId\n";
             }
             $success[] = "Populated Store IDs for existing users";
+        }
+
+        // 1.5. Add store_url to users if not exists (for domain mapping)
+        if (!columnExists($db, 'users', 'store_url')) {
+             executeSql($db, "ALTER TABLE users ADD COLUMN store_url VARCHAR(255) DEFAULT NULL AFTER store_id", "Add store_url to users", $errors, $success, $EXECUTE);
+             
+             // Update main admin (ID 1)
+             $db->execute("UPDATE users SET store_url = 'zensshop.kartoai.com' WHERE id = 1");
+             // Update local dev users
+             $db->execute("UPDATE users SET store_url = 'localhost' WHERE store_url IS NULL OR store_url = ''");
+             echo "Initialized store_url for existing users.\n";
         }
         
         // 2. Get Master Store ID (use first valid one)
@@ -149,7 +160,7 @@ if ($EXECUTE) {
             echo "✅ MASTER STORE ID: $masterStoreId\n\n";
         } else {
              // Fallback if no users exist?
-             $masterStoreId = 'STORE-DEFAULT'; 
+             $masterStoreId = 'DEFAULT'; 
              echo "⚠️ No users found. Using fallback Master Store ID: $masterStoreId\n\n";
         }
         
@@ -412,10 +423,45 @@ if (!columnExists($db, 'orders', 'delivery_date')) {
 }
 
 // ==========================================
-// STEP 10: Ensure site_settings Table Exists
+// STEP 10: Ensuring settings table correctness
 // ==========================================
-echo "STEP 10: Ensuring site_settings table exists\n";
+echo "STEP 10: Ensuring settings table constraints\n";
 echo "------------------------------------------\n";
+
+if (columnExists($db, 'settings', 'setting_key')) {
+    // We need to fix the UNIQUE KEY `setting_key` because it prevents multiple stores from having the same key.
+    // We want UNIQUE KEY (setting_key, store_id) instead.
+    
+    if ($EXECUTE) {
+        try {
+            // Check if indexes exist
+            $indexes = $db->fetchAll("SHOW INDEX FROM settings WHERE Key_name = 'setting_key'");
+            if (!empty($indexes)) {
+                 $nonUnique = $indexes[0]['Non_unique'];
+                 if ($nonUnique == 0) { // It is a UNIQUE index
+                     // Drop it
+                     executeSql($db, "ALTER TABLE settings DROP INDEX setting_key", "Drop old UNIQUE index on settings.setting_key", $errors, $success, $EXECUTE);
+                 }
+            }
+            
+            // Now add the correct composite unique index
+            // We use 'IF NOT EXISTS' logic via try-catch or explicit check usually, but executeSql handles errors nicely
+            executeSql(
+                $db, 
+                "ALTER TABLE settings ADD UNIQUE INDEX idx_unique_setting_store (setting_key, store_id)", 
+                "Add composite UNIQUE index (setting_key, store_id) to settings", 
+                $errors, 
+                $success, 
+                $EXECUTE
+            );
+            
+        } catch (Exception $e) {
+            $errors[] = "Settings constraint fix error: " . $e->getMessage();
+        }
+    }
+}
+
+// Ensure site_settings table exists
 
 $sql_site_settings = "CREATE TABLE IF NOT EXISTS site_settings (
     setting_key VARCHAR(100) NOT NULL,
@@ -459,7 +505,7 @@ if ($EXECUTE) {
             $initialBrands = json_encode(['Milano', 'Luxury', 'Premium']);
             $db->execute(
                 "INSERT INTO site_settings (setting_key, setting_value, store_id) VALUES ('Brands', ?, ?)", 
-                [$initialBrands, $masterStoreId ?: 'STORE-DEFAULT']
+                [$initialBrands, $masterStoreId ?: 'DEFAULT']
             );
             $success[] = "Seeded Brands into site_settings";
             echo "Status: ✅ SEEDED\n\n";
@@ -837,6 +883,113 @@ if (!$tableExists) {
     if (columnExists($db, 'pages', 'banner_image')) {
          echo "Detected old schema columns. Use a drop/recreate manually if needed.\n";
     }
+}
+
+// ==========================================
+// STEP 23: Create Reset Password Table
+// ==========================================
+echo "STEP 23: Creating Reset Password Table\n";
+echo "---------------------------------------------------\n";
+
+$sql_reset_password = "CREATE TABLE IF NOT EXISTS `customer_reset_password` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `store_id` varchar(50) DEFAULT NULL,
+  `email` varchar(255) NOT NULL,
+  `otp` varchar(10) NOT NULL,
+  `created_at` timestamp NULL DEFAULT current_timestamp(),
+  PRIMARY KEY (`id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci";
+
+
+executeSql($db, $sql_reset_password, "Create customer_reset_password table", $errors, $success, $EXECUTE);
+
+// ==========================================
+// STEP 24: Fix Multi-Store Unique Constraints
+// ==========================================
+echo "STEP 24: Fixing Multi-Store Unique Constraints\n";
+echo "---------------------------------------------------\n";
+
+// Fix menus table - location should be unique per store
+if ($EXECUTE) {
+    try {
+        // Check if old unique constraint exists
+        $indexes = $db->fetchAll("SHOW INDEX FROM menus WHERE Key_name = 'location' AND Non_unique = 0");
+        if (!empty($indexes)) {
+            executeSql($db, "ALTER TABLE menus DROP INDEX location", "Drop old UNIQUE constraint on menus.location", $errors, $success, $EXECUTE);
+        }
+    } catch (Exception $e) {
+        echo "Note: " . $e->getMessage() . "\n";
+    }
+    
+    try {
+        executeSql($db, "ALTER TABLE menus ADD UNIQUE KEY unique_location_store (location, store_id)", "Add composite UNIQUE constraint on menus(location, store_id)", $errors, $success, $EXECUTE);
+    } catch (Exception $e) {
+        if (strpos($e->getMessage(), 'Duplicate key name') === false) {
+            $errors[] = "Menus constraint error: " . $e->getMessage();
+        }
+    }
+}
+
+// Fix categories table - slug should be unique per store
+if ($EXECUTE) {
+    try {
+        $indexes = $db->fetchAll("SHOW INDEX FROM categories WHERE Key_name = 'slug' AND Non_unique = 0");
+        if (!empty($indexes)) {
+            executeSql($db, "ALTER TABLE categories DROP INDEX slug", "Drop old UNIQUE constraint on categories.slug", $errors, $success, $EXECUTE);
+        }
+    } catch (Exception $e) {
+        echo "Note: " . $e->getMessage() . "\n";
+    }
+    
+    try {
+        executeSql($db, "ALTER TABLE categories ADD UNIQUE KEY unique_slug_store (slug, store_id)", "Add composite UNIQUE constraint on categories(slug, store_id)", $errors, $success, $EXECUTE);
+    } catch (Exception $e) {
+        if (strpos($e->getMessage(), 'Duplicate key name') === false) {
+            $errors[] = "Categories constraint error: " . $e->getMessage();
+        }
+    }
+}
+
+// Fix products table - slug and sku should be unique per store
+if ($EXECUTE) {
+    // Fix slug
+    try {
+        $indexes = $db->fetchAll("SHOW INDEX FROM products WHERE Key_name = 'slug' AND Non_unique = 0");
+        if (!empty($indexes)) {
+            executeSql($db, "ALTER TABLE products DROP INDEX slug", "Drop old UNIQUE constraint on products.slug", $errors, $success, $EXECUTE);
+        }
+    } catch (Exception $e) {
+        echo "Note: " . $e->getMessage() . "\n";
+    }
+    
+    try {
+        executeSql($db, "ALTER TABLE products ADD UNIQUE KEY unique_slug_store (slug, store_id)", "Add composite UNIQUE constraint on products(slug, store_id)", $errors, $success, $EXECUTE);
+    } catch (Exception $e) {
+        if (strpos($e->getMessage(), 'Duplicate key name') === false) {
+            $errors[] = "Products slug constraint error: " . $e->getMessage();
+        }
+    }
+    
+    // Fix SKU
+    try {
+        $indexes = $db->fetchAll("SHOW INDEX FROM products WHERE Key_name = 'sku' AND Non_unique = 0");
+        if (!empty($indexes)) {
+            executeSql($db, "ALTER TABLE products DROP INDEX sku", "Drop old UNIQUE constraint on products.sku", $errors, $success, $EXECUTE);
+        }
+    } catch (Exception $e) {
+        echo "Note: " . $e->getMessage() . "\n";
+    }
+    
+    try {
+        executeSql($db, "ALTER TABLE products ADD UNIQUE KEY unique_sku_store (sku, store_id)", "Add composite UNIQUE constraint on products(sku, store_id)", $errors, $success, $EXECUTE);
+    } catch (Exception $e) {
+        if (strpos($e->getMessage(), 'Duplicate key name') === false) {
+            $errors[] = "Products SKU constraint error: " . $e->getMessage();
+        }
+    }
+    
+    echo "Note: product_id remains globally unique as intended\n\n";
+    $success[] = "Multi-store constraints fixed";
 }
 
 echo "\n========================================\n";

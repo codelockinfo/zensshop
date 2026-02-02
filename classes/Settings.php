@@ -17,17 +17,22 @@ class Settings {
      * Get a setting value
      */
     public function get($key, $default = null, $storeId = null) {
-        if (!$storeId && strpos($_SERVER['PHP_SELF'] ?? '', '/admin/') !== false) {
-            $storeId = $_SESSION['store_id'] ?? null;
-            if (!$storeId) {
-                if (isset($_SESSION['user_email'])) {
+        if (!$storeId) {
+            if (function_exists('getCurrentStoreId')) {
+                $storeId = getCurrentStoreId();
+            } else {
+                // Fallback session logic
+                $storeId = $_SESSION['store_id'] ?? null;
+                if (!$storeId && isset($_SESSION['user_email'])) {
                     $storeUser = $this->db->fetchOne("SELECT store_id FROM users WHERE email = ?", [$_SESSION['user_email']]);
                     $storeId = $storeUser['store_id'] ?? null;
-                } elseif (isset($_SESSION['customer_email'])) {
-                    $storeCustomer = $this->db->fetchOne("SELECT store_id FROM customers WHERE email = ?", [$_SESSION['customer_email']]);
-                    $storeId = $storeCustomer['store_id'] ?? null;
                 }
             }
+        }
+        
+        // Ensure clean store_id (remove legacy STORE- prefix if present)
+        if ($storeId) {
+            $storeId = str_replace('STORE-', '', $storeId);
         }
         
         // Use a store-specific cache key
@@ -83,6 +88,11 @@ class Settings {
                  $storeUser = $this->db->fetchOne("SELECT store_id FROM users WHERE email = ?", [$_SESSION['user_email']]);
                  $storeId = $storeUser['store_id'] ?? null;
             }
+            
+            // Ensure clean store_id (remove legacy STORE- prefix if present)
+            if ($storeId) {
+                $storeId = str_replace('STORE-', '', $storeId);
+            }
 
             $this->db->insert(
                 "INSERT INTO settings (setting_key, setting_value, setting_group, store_id) VALUES (?, ?, ?, ?)
@@ -114,6 +124,11 @@ class Settings {
                 }
             }
         }
+        
+        // Ensure clean store_id (remove legacy STORE- prefix if present)
+        if ($storeId) {
+            $storeId = str_replace('STORE-', '', $storeId);
+        }
 
         $sql = "SELECT setting_key, setting_value FROM settings WHERE setting_group = ?";
         $params = [$group];
@@ -138,6 +153,11 @@ class Settings {
                     $storeId = $storeUser['store_id'] ?? null;
                 }
             }
+        }
+
+        // Ensure clean store_id (remove legacy STORE- prefix if present)
+        if ($storeId) {
+            $storeId = str_replace('STORE-', '', $storeId);
         }
 
         $sql = "SELECT * FROM settings WHERE 1=1";

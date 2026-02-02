@@ -88,15 +88,21 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && !isset($_POST['upload_profile'])) {
     try {
         $name = $_POST['name'] ?? '';
         $email = $_POST['email'] ?? '';
+        $storeUrl = $_POST['store_url'] ?? '';
         $currentPassword = $_POST['current_password'] ?? '';
         $newPassword = $_POST['new_password'] ?? '';
         $confirmPassword = $_POST['confirm_password'] ?? '';
         
-        // Update name and email
+        // Clean store URL
+        $storeUrl = trim($storeUrl);
+        $storeUrl = str_replace(['http://', 'https://'], '', $storeUrl);
+        $storeUrl = rtrim($storeUrl, '/');
+
+        // Update name, email, and store_url
         if ($name && $email) {
             $db->execute(
-                "UPDATE users SET name = ?, email = ? WHERE id = ?",
-                [$name, $email, $currentUser['id']]
+                "UPDATE users SET name = ?, email = ?, store_url = ? WHERE id = ?",
+                [$name, $email, $storeUrl, $currentUser['id']]
             );
             $success = 'Account updated successfully!';
             // Reload user data
@@ -249,6 +255,20 @@ require_once __DIR__ . '/../includes/admin-header.php';
                        value="Admin" 
                        disabled
                        class="admin-form-input bg-gray-100">
+            </div>
+
+            <div class="admin-form-group">
+                <label class="admin-form-label">Store URL / Domain</label>
+                <div class="flex flex-col space-y-1">
+                    <input type="text" 
+                           name="store_url" 
+                           value="<?php echo htmlspecialchars($currentUser['store_url'] ?? ''); ?>"
+                           placeholder="e.g. zensshop.kartoai.com or localhost/zensshop"
+                           class="admin-form-input">
+                    <p class="text-xs text-gray-500">
+                        <i class="fas fa-info-circle mr-1"></i>Enter your domain (e.g., myshop.com) or localhost path. Do not include http:// or https://.
+                    </p>
+                </div>
             </div>
             
             <button type="submit" class="admin-btn admin-btn-primary">

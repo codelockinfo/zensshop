@@ -19,6 +19,11 @@ try {
         $storeUser = $db->fetchOne("SELECT store_id FROM users WHERE email = ?", [$_SESSION['user_email']]);
         $storeId = $storeUser['store_id'] ?? null;
     }
+    
+    // Ensure clean store_id (remove legacy STORE- prefix if present)
+    if ($storeId) {
+        $storeId = str_replace('STORE-', '', $storeId);
+    }
 
     header('Content-Type: application/json');
 

@@ -42,10 +42,19 @@ try {
                 exit;
             }
             
-            // Check if product exists
-            $product = $db->fetchOne("SELECT id, store_id FROM products WHERE id = ? AND status = 'active'", [$productId]);
+            // Check if product exists in CURRENT store (Strict domain check)
+            $currentStoreId = function_exists('getCurrentStoreId') ? getCurrentStoreId() : null;
+            $sql = "SELECT id, store_id FROM products WHERE id = ? AND status = 'active'";
+            $params = [$productId];
+            
+            if ($currentStoreId) {
+                $sql .= " AND (store_id = ? OR store_id IS NULL)";
+                $params[] = $currentStoreId;
+            }
+
+            $product = $db->fetchOne($sql, $params);
             if (!$product) {
-                echo json_encode(['success' => false, 'message' => 'Product not found']);
+                echo json_encode(['success' => false, 'message' => 'Product not found in this store']);
                 exit;
             }
             

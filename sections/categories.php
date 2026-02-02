@@ -6,7 +6,8 @@ require_once __DIR__ . '/../includes/functions.php';
 $baseUrl = getBaseUrl();
 $db = Database::getInstance();
 $categories = $db->fetchAll(
-    "SELECT * FROM categories WHERE status = 'active' ORDER BY sort_order ASC LIMIT 6"
+    "SELECT * FROM categories WHERE status = 'active' AND (store_id = ? OR store_id IS NULL) ORDER BY sort_order ASC LIMIT 6",
+    [CURRENT_STORE_ID]
 );
 ?>
 
@@ -15,7 +16,8 @@ $categories = $db->fetchAll(
         <div class="text-center mb-12">
             <?php 
                 // Fetch section headers from first row
-                $sectionData = $db->fetchOne("SELECT heading, subheading FROM section_categories LIMIT 1");
+                // Fetch section headers for this store
+                $sectionData = $db->fetchOne("SELECT heading, subheading FROM section_categories WHERE (store_id = ? OR store_id IS NULL) ORDER BY store_id DESC LIMIT 1", [CURRENT_STORE_ID]);
                 $heading = !empty($sectionData['heading']) ? $sectionData['heading'] : 'Shop By Category';
                 $subheading = !empty($sectionData['subheading']) ? $sectionData['subheading'] : 'Express your style with our standout collection—fashion meets sophistication.';
             ?>
@@ -25,8 +27,8 @@ $categories = $db->fetchAll(
         
         <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-6">
             <?php 
-            // Fetch from homepage_categories table
-            $homeCategories = $db->fetchAll("SELECT * FROM section_categories WHERE active = 1 ORDER BY sort_order ASC LIMIT 6");
+            // Fetch from homepage_categories table (Store Specific)
+            $homeCategories = $db->fetchAll("SELECT * FROM section_categories WHERE active = 1 AND (store_id = ? OR store_id IS NULL) ORDER BY sort_order ASC LIMIT 6", [CURRENT_STORE_ID]);
             
             // Fallback for demonstration if table is empty
             if (empty($homeCategories)) {
@@ -39,9 +41,9 @@ $categories = $db->fetchAll(
                     'https://images.unsplash.com/photo-1515562141207-7a88fb7ce338?w=300&h=300&fit=crop'
                 ];
                 
-                // Fetch default categories if no custom ones
+                // Fetch default categories if no custom ones (Store Specific)
                 $homeCategories = [];
-                $dbCategories = $db->fetchAll("SELECT * FROM categories WHERE status = 'active' ORDER BY sort_order ASC LIMIT 6");
+                $dbCategories = $db->fetchAll("SELECT * FROM categories WHERE status = 'active' AND (store_id = ? OR store_id IS NULL) ORDER BY sort_order ASC LIMIT 6", [CURRENT_STORE_ID]);
                 foreach ($dbCategories as $index => $cat) {
                     $homeCategories[] = [
                         'title' => $cat['name'],

@@ -33,15 +33,13 @@ $db = Database::getInstance();
 // Or we just try to find ANY active page with this slug.
 // If multiple stores use the same slug, this is ambiguous without domain parsing.
 // Let's assume the session has store_id if visited before, or we pick the first one.
-$storeId = $_SESSION['store_id'] ?? null;
+// Use dynamic store detection
+$storeId = getCurrentStoreId();
 
-if (!$storeId) {
-    // Try to find the page and infer the store? Risky but common for simple setups.
-    // Or just look for a public page with this slug.
-    $page = $db->fetchOne("SELECT * FROM pages WHERE slug = ? AND status = 'active' LIMIT 1", [$slug]);
-} else {
-    $page = $db->fetchOne("SELECT * FROM pages WHERE slug = ? AND store_id = ? AND status = 'active'", [$slug, $storeId]);
-}
+$page = $db->fetchOne(
+    "SELECT * FROM pages WHERE slug = ? AND (store_id = ? OR store_id IS NULL) AND status = 'active' ORDER BY store_id DESC LIMIT 1",
+    [$slug, $storeId]
+);
 
 if (!$page) {
      http_response_code(404);

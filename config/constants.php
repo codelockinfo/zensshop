@@ -7,18 +7,38 @@ if (session_status() === PHP_SESSION_NONE) {
     session_start();
 }
 
-// Site Configuration - SITE_NAME is now managed in database settings (see admin/system-settings.php)
-// Detect environment and set SITE_URL accordingly
+// 1. Detect environment and set CURRENT_URL (host + path without protocol)
 $protocol = (isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] === 'on') ? 'https://' : 'http://';
-$host = $_SERVER['HTTP_HOST'] ?? 'localhost';
+$rawHost = $_SERVER['HTTP_HOST'] ?? 'localhost';
+$cleanHost = explode(':', $rawHost)[0]; // Remove port (e.g. localhost:8080 -> localhost)
+$projectDir = basename(dirname(__DIR__));
 
-if (strpos($host, 'localhost') !== false || strpos($host, '127.0.0.1') !== false) {
-    // Local development environment
-    $projectDir = basename(dirname(__DIR__));
-    define('SITE_URL', $protocol . $host . '/' . $projectDir);
+if (strpos($cleanHost, 'localhost') !== false || strpos($cleanHost, '127.0.0.1') !== false) {
+    // Local dev: match localhost/project-folder
+    $currentUrl = $cleanHost . '/' . $projectDir;
+    define('SITE_URL', $protocol . $rawHost . '/' . $projectDir);
 } else {
-    // Production / Remote environment - Automatically detect
-    define('SITE_URL', $protocol . $host);
+    // Production: match just domain
+    $currentUrl = $cleanHost;
+    define('SITE_URL', $protocol . $cleanHost);
+}
+
+// 2. Detect Store ID from database using the CURRENT_URL
+require_once __DIR__ . '/../classes/Database.php';
+try {
+    $db = Database::getInstance();
+    $storeResult = $db->fetchOne("SELECT store_id FROM users WHERE store_url = ? LIMIT 1", [$currentUrl]);
+    
+    // Fallback: if not found, try without path (backward compatibility)
+    if (!$storeResult) {
+        $storeResult = $db->fetchOne("SELECT store_id FROM users WHERE store_url = ? LIMIT 1", [$cleanHost]);
+    }
+    
+    define('CURRENT_STORE_ID', $storeResult['store_id'] ?? 'DEFAULT');
+    error_log("Store Detected: " . CURRENT_STORE_ID . " for URL: " . $currentUrl);
+} catch (Exception $e) {
+    define('CURRENT_STORE_ID', 'DEFAULT');
+    error_log("Store detection ERROR: " . $e->getMessage());
 }
 
 define('BASE_PATH', dirname(__DIR__));

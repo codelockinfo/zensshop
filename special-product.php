@@ -14,13 +14,13 @@ $baseUrl = getBaseUrl();
 // 1. Determine Page (by slug or ID)
 $pageSlug = $_GET['page'] ?? 'default';
 
-// 2. Fetch Landing Page Config
-$landingPage = $db->fetchOne("SELECT * FROM landing_pages WHERE slug = ?", [$pageSlug]);
+// 2. Fetch Landing Page Config (Store Specific)
+$storeId = getCurrentStoreId();
+$landingPage = $db->fetchOne("SELECT * FROM landing_pages WHERE slug = ? AND (store_id = ? OR store_id IS NULL)", [$pageSlug, $storeId]);
 
 if (!$landingPage) {
-    // Check if it matches a CUSTOM PAGE (e.g. About Us)
-    // We treat 'page' param as 'slug' for the custom page system
-    $customPage = $db->fetchOne("SELECT id FROM pages WHERE slug = ? AND status = 'active'", [$pageSlug]);
+    // We treat 'page' param as 'slug' for the custom page system (Store Specific)
+    $customPage = $db->fetchOne("SELECT id FROM pages WHERE slug = ? AND status = 'active' AND (store_id = ? OR store_id IS NULL)", [$pageSlug, $storeId]);
     
     if ($customPage) {
         // It's a custom page, handover to page.php
@@ -36,7 +36,7 @@ if (!$landingPage) {
         exit;
     }
 
-    $landingPage = $db->fetchOne("SELECT * FROM landing_pages ORDER BY id ASC LIMIT 1");
+    $landingPage = $db->fetchOne("SELECT * FROM landing_pages WHERE (store_id = ? OR store_id IS NULL) ORDER BY store_id DESC, id ASC LIMIT 1", [$storeId]);
     if (!$landingPage) die("Landing page not found.");
 }
 

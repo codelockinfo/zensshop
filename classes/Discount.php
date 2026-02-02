@@ -16,8 +16,12 @@ class Discount {
      * Get discount by code
      */
     public function getByCode($code, $storeId = null) {
-        if (!$storeId && strpos($_SERVER['PHP_SELF'] ?? '', '/admin/') !== false) {
-            $storeId = $_SESSION['store_id'] ?? null;
+        if (!$storeId) {
+            if (function_exists('getCurrentStoreId')) {
+                $storeId = getCurrentStoreId();
+            } else {
+                $storeId = $_SESSION['store_id'] ?? null;
+            }
         }
 
         $sql = "SELECT * FROM discounts WHERE code = ? AND status = 'active'";

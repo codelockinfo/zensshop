@@ -29,10 +29,10 @@ if (empty($categorySlug)) {
     exit;
 }
 
-// Get category info
+// Get category info (Store Specific)
 $category = $db->fetchOne(
-    "SELECT * FROM categories WHERE slug = ? AND status = 'active'",
-    [$categorySlug]
+    "SELECT * FROM categories WHERE slug = ? AND status = 'active' AND (store_id = ? OR store_id IS NULL)",
+    [$categorySlug, CURRENT_STORE_ID]
 );
 
 if (!$category) {

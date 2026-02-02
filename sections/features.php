@@ -3,8 +3,8 @@ require_once __DIR__ . '/../classes/Database.php';
 
 $db = Database::getInstance();
 
-// Fetch active features
-$features = $db->fetchAll("SELECT * FROM section_features ORDER BY sort_order ASC LIMIT 3");
+// Fetch active features (Store Specific)
+$features = $db->fetchAll("SELECT * FROM section_features WHERE (store_id = ? OR store_id IS NULL) ORDER BY sort_order ASC LIMIT 3", [CURRENT_STORE_ID]);
 
 if (empty($features)) return;
 ?>

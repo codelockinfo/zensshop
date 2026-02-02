@@ -6,9 +6,10 @@ require_once __DIR__ . '/includes/functions.php';
 
 $baseUrl = getBaseUrl();
 $db = Database::getInstance();
-// Get all active categories
+// Get all active categories (Store Specific)
 $categories = $db->fetchAll(
-    "SELECT * FROM categories WHERE status = 'active' ORDER BY sort_order ASC, name ASC"
+    "SELECT * FROM categories WHERE status = 'active' AND (store_id = ? OR store_id IS NULL) ORDER BY sort_order ASC, name ASC",
+    [CURRENT_STORE_ID]
 );
 ?>
 

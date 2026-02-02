@@ -26,10 +26,16 @@ class Product {
                 WHERE 1=1";
         $params = [];
 
-        // Store ID filtering only for admin side
+        // Store ID filtering
         $storeId = $filters['store_id'] ?? null;
-        if (!$storeId && strpos($_SERVER['PHP_SELF'] ?? '', '/admin/') !== false) {
-            $storeId = $_SESSION['store_id'] ?? null;
+        if (!$storeId) {
+            if (defined('CURRENT_STORE_ID')) {
+                $storeId = CURRENT_STORE_ID;
+            } elseif (function_exists('getCurrentStoreId')) {
+                $storeId = getCurrentStoreId();
+            } else {
+                $storeId = $_SESSION['store_id'] ?? null;
+            }
         }
 
         if ($storeId) {
@@ -138,8 +144,14 @@ class Product {
      * Get product by ID
      */
     public function getById($id, $storeId = null) {
-        if (!$storeId && strpos($_SERVER['PHP_SELF'] ?? '', '/admin/') !== false) {
-            $storeId = $_SESSION['store_id'] ?? null;
+        if (!$storeId) {
+            if (defined('CURRENT_STORE_ID')) {
+                $storeId = CURRENT_STORE_ID;
+            } elseif (function_exists('getCurrentStoreId')) {
+                $storeId = getCurrentStoreId();
+            } else {
+                $storeId = $_SESSION['store_id'] ?? null;
+            }
         }
         $sql = "SELECT p.*, c.name as category_name 
                  FROM products p 
@@ -147,7 +159,7 @@ class Product {
                  WHERE p.id = ?";
         $params = [$id];
         if ($storeId) {
-            $sql .= " AND p.store_id = ?";
+            $sql .= " AND (p.store_id = ? OR p.store_id IS NULL)";
             $params[] = $storeId;
         }
         return $this->db->fetchOne($sql, $params);
@@ -157,8 +169,14 @@ class Product {
      * Get product by 10-digit product_id
      */
     public function getByProductId($productId, $storeId = null) {
-        if (!$storeId && strpos($_SERVER['PHP_SELF'] ?? '', '/admin/') !== false) {
-            $storeId = $_SESSION['store_id'] ?? null;
+        if (!$storeId) {
+            if (defined('CURRENT_STORE_ID')) {
+                $storeId = CURRENT_STORE_ID;
+            } elseif (function_exists('getCurrentStoreId')) {
+                $storeId = getCurrentStoreId();
+            } else {
+                $storeId = $_SESSION['store_id'] ?? null;
+            }
         }
         $sql = "SELECT p.*, c.name as category_name 
                  FROM products p 
@@ -166,18 +184,35 @@ class Product {
                  WHERE p.product_id = ?";
         $params = [$productId];
         if ($storeId) {
-            $sql .= " AND p.store_id = ?";
+            $sql .= " AND (p.store_id = ? OR p.store_id IS NULL)";
             $params[] = $storeId;
         }
-        return $this->db->fetchOne($sql, $params);
+        $result = $this->db->fetchOne($sql, $params);
+        
+        // If not found in current store, try globally (for removal operations mostly)
+        if (!$result) {
+             $globalSql = "SELECT p.*, c.name as category_name 
+                 FROM products p 
+                 LEFT JOIN categories c ON p.category_id = c.id 
+                 WHERE p.product_id = ?";
+             $result = $this->db->fetchOne($globalSql, [$productId]);
+        }
+        
+        return $result;
     }
     
     /**
      * Get product by slug
      */
     public function getBySlug($slug, $storeId = null) {
-        if (!$storeId && strpos($_SERVER['PHP_SELF'] ?? '', '/admin/') !== false) {
-            $storeId = $_SESSION['store_id'] ?? null;
+        if (!$storeId) {
+            if (defined('CURRENT_STORE_ID')) {
+                $storeId = CURRENT_STORE_ID;
+            } elseif (function_exists('getCurrentStoreId')) {
+                $storeId = getCurrentStoreId();
+            } else {
+                $storeId = $_SESSION['store_id'] ?? null;
+            }
         }
 
         $sql = "SELECT DISTINCT p.*, GROUP_CONCAT(DISTINCT c.name SEPARATOR ', ') as category_names
@@ -188,7 +223,7 @@ class Product {
         $params = [$slug];
 
         if ($storeId) {
-            $sql .= " AND p.store_id = ?";
+            $sql .= " AND (p.store_id = ? OR p.store_id IS NULL)";
             $params[] = $storeId;
         }
 
@@ -534,8 +569,14 @@ class Product {
      * Get best selling products
      */
     public function getBestSelling($limit = 6, $storeId = null) {
-        if (!$storeId && strpos($_SERVER['PHP_SELF'] ?? '', '/admin/') !== false) {
-            $storeId = $_SESSION['store_id'] ?? null;
+        if (!$storeId) {
+            if (defined('CURRENT_STORE_ID')) {
+                $storeId = CURRENT_STORE_ID;
+            } elseif (function_exists('getCurrentStoreId')) {
+                $storeId = getCurrentStoreId();
+            } else {
+                $storeId = $_SESSION['store_id'] ?? null;
+            }
         }
         
         $sql = "SELECT p.*, c.name as category_name 
@@ -559,8 +600,14 @@ class Product {
      * Get trending products
      */
     public function getTrending($limit = 6, $storeId = null) {
-        if (!$storeId && strpos($_SERVER['PHP_SELF'] ?? '', '/admin/') !== false) {
-            $storeId = $_SESSION['store_id'] ?? null;
+        if (!$storeId) {
+            if (defined('CURRENT_STORE_ID')) {
+                $storeId = CURRENT_STORE_ID;
+            } elseif (function_exists('getCurrentStoreId')) {
+                $storeId = getCurrentStoreId();
+            } else {
+                $storeId = $_SESSION['store_id'] ?? null;
+            }
         }
 
         $sql = "SELECT p.*, c.name as category_name 
@@ -652,8 +699,14 @@ class Product {
      * @param int|string $productId - Can be auto-increment id or 10-digit product_id
      */
     public function getVariants($productId, $storeId = null) {
-        if (!$storeId && strpos($_SERVER['PHP_SELF'] ?? '', '/admin/') !== false) {
-            $storeId = $_SESSION['store_id'] ?? null;
+        if (!$storeId) {
+            if (defined('CURRENT_STORE_ID')) {
+                $storeId = CURRENT_STORE_ID;
+            } elseif (function_exists('getCurrentStoreId')) {
+                $storeId = getCurrentStoreId();
+            } else {
+                $storeId = $_SESSION['store_id'] ?? null;
+            }
         }
         // Convert auto-increment id to 10-digit product_id if needed
         $productIdValue = $this->getProductIdValue($productId, $storeId);
@@ -741,8 +794,14 @@ class Product {
      * @return string|int - Returns the 10-digit product_id
      */
     private function getProductIdValue($productId, $storeId = null) {
-        if (!$storeId && strpos($_SERVER['PHP_SELF'] ?? '', '/admin/') !== false) {
-            $storeId = $_SESSION['store_id'] ?? null;
+        if (!$storeId) {
+            if (defined('CURRENT_STORE_ID')) {
+                $storeId = CURRENT_STORE_ID;
+            } elseif (function_exists('getCurrentStoreId')) {
+                $storeId = getCurrentStoreId();
+            } else {
+                $storeId = $_SESSION['store_id'] ?? null;
+            }
         }
         // If it's already a 10-digit number (between 1000000000 and 9999999999), return as is
         if (is_numeric($productId) && $productId >= 1000000000 && $productId <= 9999999999) {
@@ -754,13 +813,23 @@ class Product {
         $params = [$productId, $productId];
 
         if ($storeId) {
-            $sql .= " AND store_id = ?";
+            $sql .= " AND (store_id = ? OR store_id IS NULL)";
             $params[] = $storeId;
         }
 
         $product = $this->db->fetchOne($sql, $params);
         if ($product && !empty($product['product_id'])) {
             return $product['product_id'];
+        }
+
+        // If not found in current store, try searching globally (ignoring store_id) - fallback for wishlist deletions
+        // This is safe because product_id is unique enough (10-digits) or ID is auto-increment PK
+        $globalSql = "SELECT product_id FROM products WHERE (id = ? OR product_id = ?)";
+        $globalParams = [$productId, $productId];
+        $globalProduct = $this->db->fetchOne($globalSql, $globalParams);
+        
+        if ($globalProduct && !empty($globalProduct['product_id'])) {
+            return $globalProduct['product_id'];
         }
         
         // Fallback: return as is (in case it's already the product_id)
@@ -775,8 +844,12 @@ class Product {
             return [];
         }
         
-        if (!$storeId && strpos($_SERVER['PHP_SELF'] ?? '', '/admin/') !== false) {
-            $storeId = $_SESSION['store_id'] ?? null;
+        if (!$storeId) {
+            if (function_exists('getCurrentStoreId')) {
+                $storeId = getCurrentStoreId();
+            } else {
+                $storeId = $_SESSION['store_id'] ?? null;
+            }
         }
         
         // Ensure IDs are integers
