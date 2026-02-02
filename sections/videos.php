@@ -85,7 +85,7 @@ $sectionSubheading = $videos[0]['subheading'] ?? 'Watch our latest stories';
                     ?>
                     
                     <!-- Slide Item -->
-                    <div class="video-slide flex-shrink-0 w-[280px] md:w-[23.5%] h-[400px] md:h-[600px] video-card">
+                    <div class="video-slide flex-shrink-0 w-[calc(50%-12px)] md:w-[calc(33.333%-16px)] lg:w-[calc(25%-18px)] h-[400px] md:h-[600px] video-card">
                         <div class="relative w-full h-full rounded-lg overflow-hidden border border-gray-100 shadow-sm hover:shadow-md bg-black transition-all duration-300">
                         
                             <?php if (!empty($embed)): ?>
