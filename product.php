@@ -336,9 +336,16 @@ $_COOKIE['recently_viewed'] = json_encode($recentIds);
                 
                 <!-- Description with Read More -->
                 <div class="mb-6">
-                    <div id="product-description-text" class="text-gray-700 leading-relaxed relative overflow-hidden transition-all duration-300 prose prose-sm max-w-none" style="max-height: 200px;">
+                    <style>
+                        .line-clamp-5 {
+                            display: -webkit-box;
+                            -webkit-line-clamp: 5;
+                            -webkit-box-orient: vertical;
+                            overflow: hidden;
+                        }
+                    </style>
+                    <div id="product-description-text" class="text-gray-700 leading-relaxed transition-all duration-300 prose prose-sm max-w-none line-clamp-5">
                         <?php echo htmlspecialchars_decode($productData['description'] ?? $productData['short_description'] ?? 'No description available.'); ?>
-                        <div id="description-fade" class="absolute bottom-0 left-0 w-full h-12 bg-gradient-to-t from-white to-transparent pointer-events-none"></div>
                     </div>
                     <button id="toggle-description-btn" 
                             onclick="toggleProductDescription()" 
@@ -350,16 +357,15 @@ $_COOKIE['recently_viewed'] = json_encode($recentIds);
                     function toggleProductDescription() {
                         const container = document.getElementById('product-description-text');
                         const btn = document.getElementById('toggle-description-btn');
-                        const fade = document.getElementById('description-fade');
                         
-                        if (container.style.maxHeight && container.style.maxHeight !== 'none') {
-                            container.style.maxHeight = 'none';
+                        if (container.classList.contains('line-clamp-5')) {
+                            // Expand
+                            container.classList.remove('line-clamp-5');
                             btn.textContent = 'Read Less';
-                            fade.classList.add('hidden');
                         } else {
-                            container.style.maxHeight = '200px';
+                            // Collapse
+                            container.classList.add('line-clamp-5');
                             btn.textContent = 'Read More';
-                            fade.classList.remove('hidden');
                         }
                     }
 
@@ -367,14 +373,11 @@ $_COOKIE['recently_viewed'] = json_encode($recentIds);
                     document.addEventListener('DOMContentLoaded', function() {
                         const container = document.getElementById('product-description-text');
                         const btn = document.getElementById('toggle-description-btn');
-                        const fade = document.getElementById('description-fade');
                         
-                        // Check if content is taler than max-height (200px)
-                        if (container.scrollHeight > 200) {
+                        // Check if content exceeds the clamp limit
+                        // When clamped, scrollHeight (full content) will be greater than clientHeight (visible area)
+                        if (container.scrollHeight > container.clientHeight) {
                             btn.classList.remove('hidden');
-                        } else {
-                            fade.classList.add('hidden');
-                            container.style.maxHeight = 'none'; // Unset max-height for short content
                         }
                     });
                     </script>
