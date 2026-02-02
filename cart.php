@@ -42,7 +42,7 @@ $cartTotal = $cart->getTotal();
                 <div class="cart-item-wrapper" data-product-id="<?php echo $item['product_id']; ?>" data-attributes='<?php echo $attributesEscaped; ?>'>
                     <div class="bg-white rounded-lg p-6 flex flex-col md:flex-row items-start md:items-center space-y-4 md:space-y-0 md:space-x-6 cart-item" data-product-id="<?php echo $item['product_id']; ?>">
                         <a href="<?php echo $productUrl; ?>">
-                            <img src="<?php echo htmlspecialchars($item['image'] ?? 'https://via.placeholder.com/150'); ?>" 
+                            <img src="<?php echo htmlspecialchars($item['image'] ?? 'https://placehold.co/150'); ?>" 
                                  alt="<?php echo htmlspecialchars($item['name']); ?>" 
                                  class="w-32 h-32 object-cover rounded">
                         </a>
@@ -80,7 +80,7 @@ $cartTotal = $cart->getTotal();
                     </div>
                     <!-- Inline Remove Confirmation -->
                     <div class="remove-confirm-inline bg-white rounded-lg p-6 flex items-center space-x-4 shadow-md border border-gray-300 hidden" data-product-id="<?php echo $item['product_id']; ?>" data-attributes='<?php echo $attributesEscaped; ?>'>
-                        <img src="<?php echo htmlspecialchars($item['image'] ?? 'https://via.placeholder.com/150'); ?>" 
+                        <img src="<?php echo htmlspecialchars($item['image'] ?? 'https://placehold.co/150'); ?>" 
                              alt="<?php echo htmlspecialchars($item['name']); ?>" 
                              class="w-20 h-20 object-cover rounded border border-gray-200">
                         <div class="flex-1">

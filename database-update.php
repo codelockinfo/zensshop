@@ -1044,6 +1044,36 @@ if ($EXECUTE) {
     echo "Status: SKIPPED (dry-run)\n";
 }
 
+// ==========================================
+// STEP 26: Add Discount Coupon Code to Orders
+// ==========================================
+echo "STEP 26: Adding coupon_code to orders\n";
+echo "---------------------------------------------------\n";
+
+if (!columnExists($db, 'orders', 'coupon_code')) {
+    executeSql($db, "ALTER TABLE orders ADD COLUMN coupon_code VARCHAR(50) DEFAULT NULL AFTER discount_amount", "Add coupon_code to orders", $errors, $success, $EXECUTE);
+} else {
+    echo "Status: ⏭️  SKIPPED (column already exists)\n\n";
+}
+
+// ==========================================
+// STEP 27: Ensure used_count in Discounts Table
+// ==========================================
+echo "STEP 27: Ensuring used_count in discounts\n";
+echo "---------------------------------------------------\n";
+
+// First check if table exists
+try {
+    $db->execute("SELECT 1 FROM discounts LIMIT 1");
+    if (!columnExists($db, 'discounts', 'used_count')) {
+        executeSql($db, "ALTER TABLE discounts ADD COLUMN used_count INT DEFAULT 0 AFTER usage_limit", "Add used_count to discounts", $errors, $success, $EXECUTE);
+    } else {
+        echo "Status: ⏭️  SKIPPED (column already exists)\n\n";
+    }
+} catch (Exception $e) {
+    echo "Status: ⏭️  SKIPPED (discounts table does not exist yet)\n\n";
+}
+
 echo "\n========================================\n";
 echo "SUMMARY\n";
 echo "========================================\n";

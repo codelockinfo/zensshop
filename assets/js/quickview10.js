@@ -404,6 +404,9 @@ function renderQuickView(product) {
                     <button class="hover:text-black flex items-center gap-1 transition" onclick="sharePage('${product.name.replace(/'/g, "\\'")}', 'Check out this product!', '${productUrl}')">
                         <i class="fas fa-share-alt"></i> Share
                     </button>
+                    <button class="hover:text-black flex items-center gap-1 transition" onclick="toggleAskQuestionModal(true, '${product.name.replace(/'/g, "\\'")}')">
+                        <i class="fas fa-question-circle"></i> Ask a question
+                    </button>
                 </div>
 
                 <div class="border-t border-gray-100 pt-4 space-y-2 text-sm text-gray-600 bg-gray-50 p-4 rounded-lg">

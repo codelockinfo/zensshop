@@ -72,7 +72,7 @@ function url($path = '') {
  */
 function getImageUrl($path) {
     if (empty($path)) {
-        return 'https://via.placeholder.com/300x300?text=No+Image';
+        return 'https://placehold.co/300x300?text=No+Image';
     }
     
     // If it's a full URL or data URI, return as is

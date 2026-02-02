@@ -3,11 +3,14 @@
 ob_start();
 
 // Process redirects BEFORE any output
+require_once __DIR__ . '/classes/CustomerAuth.php';
 require_once __DIR__ . '/classes/Product.php';
 require_once __DIR__ . '/classes/Database.php';
 require_once __DIR__ . '/classes/Wishlist.php'; // Add Wishlist class
 require_once __DIR__ . '/includes/functions.php';
 
+$customerAuth = new CustomerAuth();
+$customer = $customerAuth->getCurrentCustomer();
 $product = new Product();
 $db = Database::getInstance();
 $wishlistObj = new Wishlist(); // Instantiate Wishlist
@@ -194,7 +197,7 @@ $_COOKIE['recently_viewed'] = json_encode($recentIds);
                          src="<?php echo htmlspecialchars($mainImage); ?>" 
                          alt="<?php echo htmlspecialchars($productData['name'] ?? 'Product'); ?>" 
                          class="w-full h-auto rounded-lg"
-                         onerror="this.src='https://via.placeholder.com/600x600?text=Product+Image'">
+                         onerror="this.src='https://placehold.co/600x600?text=Product+Image'">
                 </div>
                 
                 <!-- Thumbnail Images (Extended with Variants) -->
@@ -279,7 +282,7 @@ $_COOKIE['recently_viewed'] = json_encode($recentIds);
                                      alt="Thumbnail <?php echo $index + 1; ?>"
                                      class="thumbnail-img object-cover rounded cursor-pointer border-2 transition hover:border-primary <?php echo $index === 0 ? 'border-primary' : 'border-transparent'; ?>"
                                      onclick="changeMainImage('<?php echo htmlspecialchars($item['url']); ?>', this, <?php echo $item['variant'] ? htmlspecialchars(json_encode($item['variant'])) : 'null'; ?>)"
-                                     onerror="this.src='https://via.placeholder.com/150x150?text=No+Image'">
+                                     onerror="this.src='https://placehold.co/150x150?text=No+Image'">
                             </div>
                             <?php endforeach; ?>
                         </div>
@@ -522,7 +525,7 @@ $_COOKIE['recently_viewed'] = json_encode($recentIds);
                         <i class="far fa-heart mr-1"></i> Add to Wishlist
                     </button>
                     <!-- <a href="#" class="text-gray-600 hover:text-primary transition"><i class="fas fa-exchange-alt mr-1"></i>Compare colors</a> -->
-                    <a href="#" class="text-gray-600 hover:text-primary transition"><i class="fas fa-question-circle mr-1"></i>Ask a question</a>
+                    <a href="javascript:void(0)" onclick="toggleAskQuestionModal(true, '<?php echo addslashes($productData['name']); ?>')" class="text-gray-600 hover:text-primary transition flex items-center font-medium"><i class="fas fa-question-circle mr-1 text-primary"></i>Ask a question</a>
                     <button onclick="sharePage('<?php echo addslashes($productData['name']); ?>', 'Check out this product!', window.location.href)" class="text-gray-600 hover:text-primary transition flex items-center">
                         <i class="fas fa-share-alt mr-1"></i>Share
                     </button>
@@ -1757,7 +1760,7 @@ async function toggleProductWishlist(productId, btn) {
             <img src="<?php echo htmlspecialchars($mainImage); ?>" 
                  alt="Sticky Bar Product" 
                  class="w-10 h-10 md:w-12 md:h-12 object-contain rounded border border-gray-100 flex-shrink-0"
-                 onerror="this.src='https://via.placeholder.com/100x100?text=Product'">
+                 onerror="this.src='https://placehold.co/100x100?text=Product'">
             <div class="min-w-0">
                 <h3 class="font-bold text-gray-900 leading-tight text-sm md:text-base truncate"><?php echo htmlspecialchars($productData['name']); ?></h3>
                 <div class="hidden md:flex text-xs text-yellow-500 items-center mt-1">
@@ -1928,7 +1931,6 @@ function stickyAddToCart() {
     }
 }
 </script>
-
 
 <?php require_once __DIR__ . '/includes/footer.php'; ?>
 

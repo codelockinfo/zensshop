@@ -121,12 +121,12 @@ require_once __DIR__ . '/../../includes/admin-header.php';
                     <?php 
                     $imageUrl = !empty($item['product_image']) 
                         ? getImageUrl($item['product_image'])
-                        : 'https://via.placeholder.com/100';
+                        : 'https://placehold.co/100';
                     ?>
                     <img src="<?php echo htmlspecialchars($imageUrl); ?>" 
                          alt="<?php echo htmlspecialchars($item['product_name']); ?>"
                          class="w-20 h-20 object-cover rounded"
-                         onerror="this.src='https://via.placeholder.com/100'">
+                         onerror="this.src='https://placehold.co/100'">
                     <div class="flex-1 min-w-0">
                         <h3 class="font-semibold text-gray-900">
                             <?php echo htmlspecialchars($item['product_name']); ?>

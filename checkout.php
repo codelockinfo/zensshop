@@ -185,6 +185,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['place_order']) && emp
             ],
             'items' => [],
             'discount_amount' => $discountAmount,
+            'coupon_code' => $discountCode,
             'shipping_amount' => ($_POST['delivery_type'] ?? '') === 'pickup' ? 0 : $shippingAmount,
             'tax_amount' => 0,
             'payment_method' => $paymentMethod
@@ -245,9 +246,19 @@ nav.bg-white.sticky.top-0 {
 
 <section class="py-8 md:py-12 bg-gray-50 min-h-screen">
     <div class="container mx-auto px-4">
-        <!-- Progress Indicator -->
-        <div class="flex justify-center items-center mb-8 overflow-x-auto">
-            <div class="flex items-center space-x-2 md:space-x-4 min-w-max">
+        <!-- Header: Logo & Progress -->
+        <div class="max-w-6xl mx-auto mb-8 flex flex-col md:flex-row items-center justify-start gap-8 md:gap-12">
+            <!-- Logo -->
+            <a href="<?php echo $baseUrl; ?>/" class="flex items-center">
+                <?php if ($siteLogoType == 'image'): ?>
+                    <img src="<?php echo getImageUrl($siteLogo); ?>" alt="<?php echo htmlspecialchars($siteLogoText); ?>" class="h-10 md:h-12 w-auto object-contain">
+                <?php else: ?>
+                    <span class="text-2xl md:text-3xl font-heading font-bold text-black"><?php echo htmlspecialchars($siteLogoText); ?></span>
+                <?php endif; ?>
+            </a>
+
+            <!-- Progress Indicator -->
+            <div class="flex items-center space-x-2 md:space-x-4 overflow-x-auto min-w-max">
                 <!-- Cart Step -->
                 <div class="flex items-center">
                     <div class="w-6 h-6 md:w-8 md:h-8 rounded-full bg-primary text-white flex items-center justify-center font-semibold text-xs md:text-sm">
@@ -505,7 +516,7 @@ nav.bg-white.sticky.top-0 {
                         <div class="space-y-4 mb-6">
                             <?php foreach ($cartItems as $item): ?>
                             <div class="flex items-center space-x-3">
-                                <img src="<?php echo htmlspecialchars($item['image'] ?? 'https://via.placeholder.com/80'); ?>" 
+                                <img src="<?php echo htmlspecialchars($item['image'] ?? 'https://placehold.co/80'); ?>" 
                                      alt="<?php echo htmlspecialchars($item['name']); ?>" 
                                      class="w-16 h-16 object-cover rounded">
                                 <div class="flex-1">
@@ -645,6 +656,7 @@ document.querySelectorAll('.delivery-option').forEach(radio => {
 // Global state for calculations
 window.cartTotal = <?php echo $cartTotal; ?>;
 window.currentDiscountAmount = <?php echo $discountAmount; ?>;
+window.currentDiscountCode = '<?php echo $discountCode; ?>';
 window.defaultShipping = <?php echo $shippingAmount; ?>;
 
 function updateShipping() {
@@ -854,6 +866,7 @@ document.getElementById('razorpayPayButton').addEventListener('click', async fun
                 country: country
             },
             discount_amount: window.currentDiscountAmount,
+            coupon_code: window.currentDiscountCode,
             shipping_amount: finalShipping,
             tax_amount: 0
         };
@@ -938,16 +951,23 @@ document.getElementById('btnRemoveDiscount').addEventListener('click', function(
     handleDiscount('remove');
 });
 
+let discountTimeout = null;
 function handleDiscount(action) {
     const btn = action === 'apply' ? document.getElementById('btnApplyDiscount') : document.getElementById('btnRemoveDiscount');
     const input = document.getElementById('discountInput');
     const errorMsg = document.getElementById('discountErrorMsg');
+
+    if (discountTimeout) clearTimeout(discountTimeout);
     
     // Validate apply
     if (action === 'apply' && !input.value.trim()) {
         if(errorMsg) {
             errorMsg.textContent = 'Please enter a discount code';
             errorMsg.classList.remove('hidden');
+            // Auto hide after 5 seconds
+            discountTimeout = setTimeout(() => {
+                errorMsg.classList.add('hidden');
+            }, 5000);
         } else {
             showErrorMessage('Please enter a discount code');
         }
@@ -981,12 +1001,14 @@ function handleDiscount(action) {
                 document.getElementById('inputState').classList.add('hidden');
                 document.getElementById('appliedCodeText').textContent = res.code;
                 document.getElementById('hiddenDiscountCode').value = res.code;
+                window.currentDiscountCode = res.code; // Update JS global
                 showSuccessMessage(res.message);
             } else {
                 document.getElementById('appliedState').classList.add('hidden');
                 document.getElementById('inputState').classList.remove('hidden');
                 input.value = ''; // Clear input
                 document.getElementById('hiddenDiscountCode').value = '';
+                window.currentDiscountCode = ''; // Update JS global
                 showSuccessMessage('Discount removed');
             }
             
@@ -1013,6 +1035,10 @@ function handleDiscount(action) {
                  if (errorMsg) {
                      errorMsg.textContent = res.message;
                      errorMsg.classList.remove('hidden');
+                     // Auto hide after 5 seconds
+                     discountTimeout = setTimeout(() => {
+                         errorMsg.classList.add('hidden');
+                     }, 5000);
                  } else {
                      showErrorMessage(res.message);
                  }

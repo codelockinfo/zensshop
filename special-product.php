@@ -763,7 +763,7 @@ require_once __DIR__ . '/includes/header.php';
             <img src="<?php echo htmlspecialchars($mainImage); ?>" 
                  alt="Sticky Bar Product" 
                  class="w-10 h-10 md:w-12 md:h-12 object-contain rounded border border-gray-100 flex-shrink-0"
-                 onerror="this.src='https://via.placeholder.com/100x100?text=Product'">
+                 onerror="this.src='https://placehold.co/100x100?text=Product'">
             <div class="min-w-0">
                 <h3 class="font-bold text-gray-900 leading-tight text-sm md:text-base truncate"><?php echo htmlspecialchars($heroTitle); ?></h3>
                 <div class="hidden md:flex text-xs text-yellow-500 items-center mt-1">

@@ -180,11 +180,11 @@ class Order {
         // Insert order
         $orderId = $this->db->insert(
             "INSERT INTO orders 
-            (order_number, user_id, customer_name, customer_email, customer_phone,
-             billing_address, shipping_address, subtotal, discount_amount, 
+             (order_number, user_id, customer_name, customer_email, customer_phone,
+             billing_address, shipping_address, subtotal, discount_amount, coupon_code,
              shipping_amount, tax_amount, total_amount, payment_method, 
              payment_status, order_status, razorpay_payment_id, razorpay_order_id, delivery_date, store_id) 
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
             [
                 $orderNumber,
                 $data['user_id'] ?? null,
@@ -195,6 +195,7 @@ class Order {
                 json_encode($data['shipping_address']),
                 $subtotal,
                 $discountAmount,
+                $data['coupon_code'] ?? null,
                 $shippingAmount,
                 $taxAmount,
                 $totalAmount,
@@ -207,6 +208,18 @@ class Order {
                 $storeId
             ]
         );
+
+        // Update discount usage count
+        if (!empty($data['coupon_code'])) {
+            try {
+                $this->db->execute(
+                    "UPDATE discounts SET used_count = used_count + 1 WHERE code = ? AND (store_id = ? OR store_id IS NULL)", 
+                    [$data['coupon_code'], $storeId]
+                );
+            } catch (Exception $e) {
+                error_log("Failed to update discount count: " . $e->getMessage());
+            }
+        }
         
         // Insert order items - USING ORDER NUMBER NOW
         foreach ($data['items'] as $item) {

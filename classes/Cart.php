@@ -165,6 +165,7 @@ class Cart {
             $sku = $item['sku'] ?? '';
             
             // If variant attributes exist, try to get specific variant data
+            $variant = null;
             if (!empty($variantAttributes)) {
                 $productId = $item['product_id'];
                 $variant = $this->db->fetchOne(

@@ -56,7 +56,7 @@ class Discount {
         }
         
         // Check minimum purchase
-        if (!empty($discount['min_purchase_amount']) && $cartTotal < $discount['min_purchase_amount']) {
+        if ((float)($discount['min_purchase_amount'] ?? 0) > 0 && $cartTotal < $discount['min_purchase_amount']) {
             require_once __DIR__ . '/../includes/functions.php';
             $formattedMin = format_currency($discount['min_purchase_amount']);
             throw new Exception("Minimum purchase of $formattedMin required.");
@@ -95,7 +95,7 @@ class Discount {
             $amount = ($cartTotal * $discount['value']) / 100;
             
             // Cap at max discount if set
-            if (!empty($discount['max_discount_amount']) && $amount > $discount['max_discount_amount']) {
+            if ((float)($discount['max_discount_amount'] ?? 0) > 0 && $amount > $discount['max_discount_amount']) {
                 $amount = $discount['max_discount_amount'];
             }
         } else {

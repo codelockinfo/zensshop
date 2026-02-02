@@ -10,8 +10,11 @@ if (!isset($baseUrl) && function_exists('getBaseUrl')) {
 // Fetch Footer Data
 require_once __DIR__ . '/../classes/Database.php';
 require_once __DIR__ . '/../classes/Settings.php';
+require_once __DIR__ . '/../classes/CustomerAuth.php';
 $db = Database::getInstance();
 $settingsObj = new Settings();
+$customerAuth = new CustomerAuth();
+$customer = $customerAuth->getCurrentCustomer();
 $storeId = getCurrentStoreId();
 
 // Fetch Footer Menus (Store Specific)
@@ -73,7 +76,7 @@ function renderFooterLinkRecursive($item, $baseUrl) {
                         ?>
                     </div>
                 
-                    <p class="text-gray-700 text-sm leading-relaxed mb-4"><?php echo htmlspecialchars($getFooterSetting('footer_description')); ?></p>
+                    <div class="text-gray-700 text-sm leading-relaxed mb-4"><?php echo $getFooterSetting('footer_description'); ?></div>
                     
                     <?php if(!empty($getFooterSetting('footer_learn_more_url'))): ?>
                     <a href="<?php echo htmlspecialchars($getFooterSetting('footer_learn_more_url')); ?>" class="text-black underline hover:no-underline transition text-sm mb-4 inline-block font-semibold">Learn more</a>
@@ -221,7 +224,7 @@ function renderFooterLinkRecursive($item, $baseUrl) {
                         <ul class="list-unstyled flex flex-wrap gap-2 justify-center md:justify-end items-center">
                             <?php if ($getFooterSetting('footer_show_visa', '1') == '1'): ?>
                             <li class="inline-flex items-center">
-                                <svg class="icon icon--full-color" viewBox="0 0 38 24" xmlns="http://www.w3.org/2000/svg" role="img" width="38" height="24" aria-labelledby="pi-visa"><title id="pi-visa">Visa</title><path opacity=".07" d="M35 0H3C1.3 0 0 1.3 0 3v18c0 1.7 1.4 3 3 3h32c1.7 0 3-1.3 3-3V3c0-1.7-1.4-3-3-3z"></path><path fill="#fff" d="M35 1c1.1 0 2 .9 2 2v18c0 1.1-.9 2-2 2H3c-1.1 0-2-.9-2-2V3c0-1.1.9-2 2-2h32"></path><path d="M28.3 10.1H28c-.4 1-.7 1.5-1 3h1.9c-.3-1.5-.3-2.2-.6-3zm2.9 5.9h-1.7c-.1 0-.1 0-.2-.1l-.2-.9-.1-.2h-2.4c-.1 0-.2 0-.2.2l-.3.9c0 .1-.1.1-.1.1h-2.1l.2-.5L27 8.7c0-.5.3-.7.8-.7h1.5c.1 0 .2 0 .2.2l1.4 6.5c.1.4.2.7.2 1.1.1.1.1.1.2zm-13.4-.3l.4-1.8c.1 0 .2.1.2.1.7.3 1.4.5 2.1.4.2 0 .5-.1.7-.2.5-.2.5-.7.1-1.1-.2-.2-.5-.3-.8-.5-.4-.2-.8-.4-1.1-.7-1.2-1-.8-2.4-.1-3.1.6-.4.9-.8 1.7-.8 1.2 0 2.5 0 3.1.2h.1c-.1.6-.2 1.1-.4 1.7-.5-.2-1-.4-1.5-.4-.3 0-.6 0-.9.1-.2 0-.3.1-.4.2-.2.2-.2.5 0 .7l.5.4c.4.2.8.4 1.1.6.5.3 1 .8 1.1 1.4.2.9-.1 1.7-.9 2.3-.5.4-.7.6-1.4.6-1.4 0-2.5.1-3.4-.2-.1.2-.1.2-.1zm-3.5.3c.1-.7.1-.7.2-1 .5-2.2 1-4.5 1.4-6.7.1-.2.1-.3.3-.3H18c-.2 1.2-.4 2.1-.7 3.2-.3 1.5-.6 3-1 4.5 0 .2-.1.2-.3.2M5 8.2c0-.1.2-.2.3-.2h3.4c.5 0 .9.3 1 .8l.9 4.4c0 .1 0 .1.1.2 0-.1.1-.1.1-.1l2.1-5.1c-.1-.1 0-.2.1-.2h2.1c0 .1 0 .1-.1.2l-3.1 7.3c-.1.2-.1.3-.2.4-.1.1-.3 0-.5 0H9.7c-.1 0-.2 0-.2-.2L7.9 9.5c-.2-.5-.5-.5-.9-.6-.6-.3-1.7-.5-1.9-.5L5 8.2z" fill="#142688"></path></svg>
+                                <svg class="icon icon--full-color" viewBox="0 0 38 24" xmlns="http://www.w3.org/2000/svg" role="img" width="38" height="24" aria-labelledby="pi-visa"><title id="pi-visa">Visa</title><path opacity=".07" d="M35 0H3C1.3 0 0 1.3 0 3v18c0 1.7 1.4 3 3 3h32c1.7 0 3-1.3 3-3V3c0-1.7-1.4-3-3-3z"></path><path fill="#fff" d="M35 1c1.1 0 2 .9 2 2v18c0 1.1-.9 2-2 2H3c-1.1 0-2-.9-2-2V3c0-1.1.9-2 2-2h32"></path><path d="M28.3 10.1H28c-.4 1-.7 1.5-1 3h1.9c-.3-1.5-.3-2.2-.6-3zm2.9 5.9h-1.7c-.1 0-.1 0-.2-.1l-.2-.9-.1-.2h-2.4c-.1 0-.2 0-.2.2l-.3.9c0 .1-.1.1-.1.1h-2.1l.2-.5L27 8.7c0-.5.3-.7.8-.7h1.5c.1 0 .2 0 .2.2l1.4 6.5c.1 .4 .2 .7 .2 1.1 .1 .1 .1 .1 .2zm-13.4-.3l.4-1.8c.1 0 .2.1.2.1.7.3 1.4.5 2.1.4.2 0 .5-.1.7-.2.5-.2.5-.7.1-1.1-.2-.2-.5-.3-.8-.5-.4-.2-.8-.4-1.1-.7-1.2-1-.8-2.4-.1-3.1.6-.4.9-.8 1.7-.8 1.2 0 2.5 0 3.1.2h.1c-.1 .6 -.2 1.1 -.4 1.7-.5 -.2 -1 -.4 -1.5 -.4-.3 0 -.6 0 -.9.1-.2 0 -.3.1 -.4.2-.2 .2 -.2 .5 0 .7l.5.4c.4 .2 .8 .4 1.1 .6.5 .3 1 .8 1.1 1.4.2 .9 -.1 1.7 -.9 2.3-.5 .4 -.7 .6 -1.4 .6-1.4 0-2.5.1-3.4-.2-.1.2-.1.2-.1zm-3.5.3c.1-.7.1-.7.2-1 .5-2.2 1-4.5 1.4-6.7.1-.2 .1 -.3 .3 -.3H18c-.2 1.2-.4 2.1-.7 3.2-.3 1.5-.6 3-1 4.5 0 .2-.1.2-.3.2M5 8.2c0-.1.2-.2.3-.2h3.4c.5 0 .9.3 1 .8l.9 4.4c.1 .4 .1 .7 .2 1.1l2.1-5.1c-.1 .1 0 .2 .1 .2h2.1l-3.1 7.3c-.1 .2-.1 .3-.2 .4-.1 .1-.3 0-.5 0H9.7c-.1 0-.2 0-.2-.2L7.9 9.5c-.2-.5-.5-.5-.9-.6-.6-.3-1.7-.5-1.9-.5L5 8.2z" fill="#142688"></path></svg>
                             </li>
                             <?php endif; ?>
                             <?php if ($getFooterSetting('footer_show_mastercard', '1') == '1'): ?>
@@ -350,7 +353,7 @@ function renderFooterLinkRecursive($item, $baseUrl) {
     <script src="<?php echo $baseUrl; ?>/assets/js/product-cards4.js?v=2"></script>
     <script src="<?php echo $baseUrl; ?>/assets/js/wishlist5.js?v=3"></script>
     <script src="<?php echo $baseUrl; ?>/assets/js/notification.js?v=2"></script>
-    <script src="<?php echo $baseUrl; ?>/assets/js/9.js?v=2"></script>
+    <script src="<?php echo $baseUrl; ?>/assets/js/quickview10.js?v=2"></script>
     <script src="<?php echo $baseUrl; ?>/assets/js/add-to-cart2.js?v=2"></script>
     
     <!-- Remove from Cart Confirmation Script -->
@@ -479,6 +482,142 @@ function renderFooterLinkRecursive($item, $baseUrl) {
         }
     }
     </script>
+<!-- Ask a Question Modal (Shared) -->
+<div id="askQuestionModal" class="fixed inset-0 z-[100] hidden overflow-y-auto" aria-labelledby="modal-title" role="dialog" aria-modal="true">
+    <div class="flex items-center justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0">
+        <div class="fixed inset-0 bg-black bg-opacity-50 transition-opacity backdrop-blur-sm" aria-hidden="true" onclick="toggleAskQuestionModal(false)"></div>
+        <span class="hidden sm:inline-block sm:align-middle sm:h-screen" aria-hidden="true">&#8203;</span>
+        <div class="inline-block align-bottom bg-white rounded-2xl text-left overflow-hidden shadow-2xl transform transition-all sm:my-8 sm:align-middle sm:max-w-md sm:w-full border border-gray-100">
+            <div class="bg-white px-6 py-8 sm:p-8">
+                <div class="flex justify-between items-center mb-6">
+                    <h3 class="text-2xl font-bold text-gray-900" id="modal-title">Ask a Question</h3>
+                    <button onclick="toggleAskQuestionModal(false)" class="w-10 h-10 flex items-center justify-center rounded-full bg-gray-50 text-gray-400 hover:text-gray-600 hover:bg-gray-100 transition duration-200">
+                        <i class="fas fa-times text-xl"></i>
+                    </button>
+                </div>
+                <div class="bg-blue-50 border-l-4 border-blue-500 p-4 mb-6 rounded-r-lg" id="aq_product_info">
+                    <div class="flex">
+                        <div class="flex-shrink-0">
+                            <i class="fas fa-info-circle text-blue-500"></i>
+                        </div>
+                        <div class="ml-3">
+                            <p class="text-sm text-blue-700">
+                                Question about: <span class="font-bold underline" id="aq_product_name_display">Product Name</span>
+                            </p>
+                        </div>
+                    </div>
+                </div>
+                <form id="askQuestionForm" class="space-y-5">
+                    <input type="hidden" id="aq_subject" name="subject" value="">
+                    <div>
+                        <label for="aq_name" class="block text-sm font-bold text-gray-700 mb-1.5 uppercase tracking-wide">Your Name</label>
+                        <input type="text" id="aq_name" name="name" value="<?php echo $customer ? htmlspecialchars($customer['name']) : ''; ?>" required 
+                               class="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-primary/20 focus:border-primary border-transparent transition-all outline-none" placeholder="Enter your name">
+                    </div>
+                    <div>
+                        <label for="aq_email" class="block text-sm font-bold text-gray-700 mb-1.5 uppercase tracking-wide">Email Address</label>
+                        <input type="email" id="aq_email" name="email" value="<?php echo $customer ? htmlspecialchars($customer['email']) : ''; ?>" required 
+                               class="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-primary/20 focus:border-primary border-transparent transition-all outline-none" placeholder="Enter your email">
+                    </div>
+                    <div>
+                        <label for="aq_message" class="block text-sm font-bold text-gray-700 mb-1.5 uppercase tracking-wide">Your Question</label>
+                        <textarea id="aq_message" name="message" rows="4" required 
+                                  class="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-primary/20 focus:border-primary border-transparent transition-all outline-none" placeholder="Tell us what you'd like to know..."></textarea>
+                    </div>
+                    <div id="aq_status" class="hidden text-sm p-4 rounded-xl border font-medium"></div>
+                    <div class="pt-4">
+                        <button type="submit" id="aq_submit" class="w-full bg-black text-white py-4 rounded-xl font-bold uppercase tracking-widest hover:bg-gray-800 active:scale-[0.98] transition-all flex items-center justify-center gap-3 shadow-lg shadow-black/10">
+                            <i class="fas fa-paper-plane"></i>
+                            <span>Send Message</span>
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+function toggleAskQuestionModal(show, productName = '') {
+    const modal = document.getElementById('askQuestionModal');
+    if (show) {
+        modal.classList.remove('hidden');
+        document.body.style.overflow = 'hidden';
+        
+        // Update product name in modal
+        const nameDisplay = document.getElementById('aq_product_name_display');
+        const subjectInput = document.getElementById('aq_subject');
+        const productInfo = document.getElementById('aq_product_info');
+        
+        if (productName) {
+            nameDisplay.textContent = productName;
+            subjectInput.value = "To know about this product: " + productName;
+            productInfo.classList.remove('hidden');
+        } else {
+            subjectInput.value = "General Inquiry";
+            productInfo.classList.add('hidden');
+        }
+
+        // Reset status
+        const statusDiv = document.getElementById('aq_status');
+        statusDiv.classList.add('hidden');
+    } else {
+        modal.classList.add('hidden');
+        document.body.style.overflow = '';
+    }
+}
+
+document.getElementById('askQuestionForm').addEventListener('submit', async function(e) {
+    e.preventDefault();
+    
+    const submitBtn = document.getElementById('aq_submit');
+    const statusDiv = document.getElementById('aq_status');
+    const origBtnContent = submitBtn.innerHTML;
+    
+    // UI Loading State
+    submitBtn.disabled = true;
+    submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> <span>Sending...</span>';
+    statusDiv.classList.add('hidden');
+    
+    const formData = {
+        name: document.getElementById('aq_name').value,
+        email: document.getElementById('aq_email').value,
+        subject: document.getElementById('aq_subject').value,
+        message: document.getElementById('aq_message').value
+    };
+    
+    try {
+        const response = await fetch('<?php echo $baseUrl; ?>/api/support.php', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(formData)
+        });
+        
+        const data = await response.json();
+        
+        if (data.success) {
+            statusDiv.textContent = data.message;
+            statusDiv.className = 'text-sm p-4 rounded-xl border font-medium bg-green-50 border-green-200 text-green-700';
+            statusDiv.classList.remove('hidden');
+            this.reset();
+            
+            // Auto close after success
+            setTimeout(() => {
+                toggleAskQuestionModal(false);
+            }, 3000);
+        } else {
+            throw new Error(data.message || 'Failed to send message');
+        }
+    } catch (error) {
+        statusDiv.textContent = error.message;
+        statusDiv.className = 'text-sm p-4 rounded-xl border font-medium bg-red-50 border-red-200 text-red-700';
+        statusDiv.classList.remove('hidden');
+    } finally {
+        submitBtn.disabled = false;
+        submitBtn.innerHTML = origBtnContent;
+    }
+});
+</script>
 </body>
 </html>
 <style>

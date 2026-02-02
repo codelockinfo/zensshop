@@ -84,14 +84,14 @@ $orders = $order->getAll($filters);
         <tbody>
             <?php foreach ($orders as $item): 
                 // Get product image with fallback using helper function
-                $productImage = !empty($item['product_image']) ? getImageUrl($item['product_image']) : 'https://via.placeholder.com/50';
+                $productImage = !empty($item['product_image']) ? getImageUrl($item['product_image']) : 'https://placehold.co/50';
             ?>
             <tr>
                 <td>
                     <img src="<?php echo htmlspecialchars($productImage); ?>" 
                          alt="Product" 
                          class="w-12 h-12 object-cover rounded"
-                         onerror="this.src='https://via.placeholder.com/50'">
+                         onerror="this.src='https://placehold.co/50'">
                 </td>
                 <td>
                     <span class="font-medium"><?php echo htmlspecialchars($item['customer_name']); ?></span>
