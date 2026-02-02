@@ -89,7 +89,7 @@ $action = $segments[count($segments) - 1] ?? '';  // add, list
     <!-- Admin Header -->
     <header class="admin-header flex items-center justify-between">
         <div class="flex items-center space-x-4">
-            <button class="text-gray-600 hover:text-gray-800" id="sidebarToggle">
+            <button class="text-gray-600 hover:text-gray-800" id="sidebarToggle" style="display: none !important;">
                 <i class="fas fa-bars text-xl"></i>
             </button>
             <a href="javascript:history.back()" class="flex items-center space-x-2 text-gray-600 hover:text-gray-800">

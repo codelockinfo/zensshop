@@ -328,7 +328,6 @@ function renderQuickView(product) {
 
     // View Counts
     const soldCount = Math.floor(Math.random() * 20) + 5;
-    const viewingCount = Math.floor(Math.random() * 30) + 10;
 
     content.innerHTML = `
         <div class="h-full grid grid-cols-1 md:grid-cols-2 bg-white">
@@ -362,22 +361,14 @@ function renderQuickView(product) {
                 </p>
 
                 <div class="space-y-2 mb-6 text-sm text-gray-700">
-                    ${product.highlights && product.highlights.length > 0 ? 
+                    ${(product.highlights && product.highlights.length > 0) ? 
                         product.highlights.map(h => `
                             <div class="flex items-start gap-2">
-                                <i class="${h.icon || 'fas fa-check'} text-green-600 mt-0.5"></i>
+                                <i class="${h.icon || 'fas fa-check'} text-primary mt-0.5"></i>
                                 <span>${h.text}</span>
                             </div>
-                        `).join('') : `
-                        <div class="flex items-start gap-2">
-                            <i class="fas fa-truck text-green-600 mt-0.5"></i>
-                            <span>Estimate delivery times: <strong>3-5 days International</strong></span>
-                        </div>
-                        <div class="flex items-start gap-2 animate-pulse">
-                            <i class="fas fa-eye text-green-600 mt-0.5"></i>
-                            <span><strong>${viewingCount} people</strong> are viewing this right now</span>
-                        </div>
-                    `}
+                        `).join('') : ''
+                    }
                 </div>
 
                 <div id="qvVariants" class="mb-6 border-t border-gray-100 pt-4">

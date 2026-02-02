@@ -189,7 +189,12 @@ $variants = $variantsData['variants'] ?? [];
     <div class="space-y-6">
         <!-- Basic Information -->
         <div class="admin-card">
-            <h2 class="text-xl font-bold mb-4">Product Information</h2>
+            <div class="flex items-center justify-between mb-4">
+                <h2 class="text-xl font-bold">Product Information</h2>
+                <a href="<?php echo $baseUrl; ?>/product?slug=<?php echo urlencode($productData['slug']); ?>" target="_blank" class="text-primary hover:underline text-sm font-bold flex items-center">
+                    <i class="fas fa-eye mr-1"></i> Live Preview
+                </a>
+            </div>
             
             <div class="space-y-4">
                 <div>
