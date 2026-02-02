@@ -951,6 +951,7 @@ const currencySymbols = <?php
 ?>;
 const defaultMainImage = "<?php echo htmlspecialchars($mainImage); ?>";
 let selectedOptions = <?php echo !empty($firstVariant['variant_attributes']) ? json_encode($firstVariant['variant_attributes']) : '{}'; ?>;
+let currentMaxStock = <?php echo (int)($productData['stock_quantity'] ?? 0); ?>;
 
 // Quantity Helper Functions
 function updateProductQuantity(change) {
@@ -960,6 +961,14 @@ function updateProductQuantity(change) {
     const stickyQtyDisplay = document.getElementById('sticky-qty-display');
     
     let val = parseInt(input.value) + change;
+    
+    if (val > currentMaxStock) {
+        if (typeof showNotification === 'function') {
+            showNotification(`Only ${currentMaxStock} items available in stock`, 'info');
+        }
+        val = currentMaxStock;
+    }
+    
     if (val < 1) val = 1;
     
     // Update main
@@ -1102,6 +1111,7 @@ function updateVariantDisplay() {
         
         if (stockElement) {
             const stock = parseInt(matchingVariant.stock_quantity);
+            currentMaxStock = stock; // Update global stock limit
             const stockCountDisplay = document.getElementById('stock-count-display');
             
             if (matchingVariant.stock_status !== 'out_of_stock' && stock > 0) {
@@ -1112,6 +1122,12 @@ function updateVariantDisplay() {
                     stockCountDisplay.className = 'text-sm font-bold text-green-600';
                 }
                 updateButtons(false);
+                
+                // Cap current quantity if it exceeds variant stock
+                const qtyInput = document.getElementById('productQuantity');
+                if (qtyInput && parseInt(qtyInput.value) > stock) {
+                    updateProductQuantity(stock - parseInt(qtyInput.value));
+                }
             } else {
                 if (matchingVariant.stock_status === 'out_of_stock') {
                     stockElement.textContent = 'Out of Stock';
@@ -1838,6 +1854,14 @@ function updateStickyQty(change) {
     const mainQtyDisplay = document.getElementById('productQuantityDisplay');
     
     let val = parseInt(input.value) + change;
+    
+    if (val > currentMaxStock) {
+        if (typeof showNotification === 'function') {
+            showNotification(`Only ${currentMaxStock} items available in stock`, 'info');
+        }
+        val = currentMaxStock;
+    }
+    
     if (val < 1) val = 1;
     
     // Update sticky

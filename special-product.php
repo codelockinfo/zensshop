@@ -212,6 +212,7 @@ require_once __DIR__ . '/includes/header.php';
 
 <script>
     const LANDING_BASE_URL = '<?php echo $baseUrl; ?>';
+    let currentMaxStock = <?php echo (int)($productData['stock_quantity'] ?? 0); ?>;
     
     // Custom Add To Cart for Landing Page
     function spAddToCart(productId, btn, attributes = {}) {
@@ -226,7 +227,7 @@ require_once __DIR__ . '/includes/header.php';
             if(data.success) {
                 // Update cart count if element exists (handled by header usually, but we force update)
                 const countEls = document.querySelectorAll('.cart-count');
-                countEls.forEach(el => el.textContent = data.cartCount);
+                countEls.forEach(el => el.textContent = data.count || data.cartCount);
                 
                 // Show site's cart drawer if available
                 if (typeof openSideCart === 'function') {
@@ -836,6 +837,14 @@ function updateStickyQty(change) {
     const input = document.getElementById('sticky-qty');
     const display = document.getElementById('sticky-qty-display');
     let val = parseInt(input.value) + change;
+    
+    if (val > currentMaxStock) {
+        if (typeof showNotification === 'function') {
+            showNotification(`Only ${currentMaxStock} items available in stock`, 'info');
+        }
+        val = currentMaxStock;
+    }
+    
     if (val < 1) val = 1;
     input.value = val;
     if (display) display.textContent = val;
@@ -863,7 +872,7 @@ function stickyAddToCart() {
             .then(data => {
                 if(data.success) {
                     const countEls = document.querySelectorAll('.cart-count');
-                    countEls.forEach(el => el.textContent = data.cartCount);
+                    countEls.forEach(el => el.textContent = data.count || data.cartCount);
                     if (typeof openSideCart === 'function') {
                         openSideCart(data.cart);
                     } else {

@@ -106,8 +106,8 @@ class Product {
         $sql .= " GROUP BY p.product_id";
         // Sorting
         $allowedSorts = [
-            'price ASC' => 'p.price ASC',
-            'price DESC' => 'p.price DESC',
+            'price ASC' => 'COALESCE(NULLIF(p.sale_price, 0), p.price) ASC',
+            'price DESC' => 'COALESCE(NULLIF(p.sale_price, 0), p.price) DESC',
             'name ASC' => 'p.name ASC',
             'name DESC' => 'p.name DESC',
             'rating DESC' => 'p.rating DESC',
