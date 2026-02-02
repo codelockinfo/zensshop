@@ -41,17 +41,7 @@ $pages = $db->fetchAll("SELECT * FROM pages WHERE store_id = ? ORDER BY created_
     </a>
 </div>
 
-<?php if (isset($_SESSION['flash_success'])): ?>
-    <div class="bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded relative mb-4" role="alert">
-        <span class="block sm:inline"><?php echo $_SESSION['flash_success']; unset($_SESSION['flash_success']); ?></span>
-    </div>
-<?php endif; ?>
 
-<?php if (isset($_SESSION['flash_error'])): ?>
-    <div class="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative mb-4" role="alert">
-        <span class="block sm:inline"><?php echo $_SESSION['flash_error']; unset($_SESSION['flash_error']); ?></span>
-    </div>
-<?php endif; ?>
 
 <div class="bg-white rounded-lg shadow overflow-hidden">
     <table class="min-w-full leading-normal">
@@ -114,7 +104,7 @@ $pages = $db->fetchAll("SELECT * FROM pages WHERE store_id = ? ORDER BY created_
                     </td>
                     <td class="px-5 py-5 border-b border-gray-200 bg-white text-sm text-right">
                         <a href="page-edit.php?id=<?php echo $page['id']; ?>" class="text-blue-600 hover:text-blue-900 mr-4">Edit</a>
-                        <form method="POST" class="inline-block" onsubmit="return confirm('Are you sure you want to delete this page?');">
+                        <form method="POST" class="inline-block">
                             <input type="hidden" name="action" value="delete">
                             <input type="hidden" name="id" value="<?php echo $page['id']; ?>">
                             <button type="submit" class="text-red-600 hover:text-red-900">Delete</button>

@@ -99,17 +99,6 @@ $discounts = $db->fetchAll("SELECT * FROM discounts WHERE store_id = ? ORDER BY 
     </p>
 </div>
 
-<?php if ($error): ?>
-<div class="admin-alert admin-alert-error mb-4">
-    <?php echo htmlspecialchars($error); ?>
-</div>
-<?php endif; ?>
-
-<?php if ($success): ?>
-<div class="admin-alert admin-alert-success mb-4">
-    <?php echo htmlspecialchars($success); ?>
-</div>
-<?php endif; ?>
 
 <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
     <!-- Form -->
@@ -352,9 +341,7 @@ function showCopiedFeedback(button) {
 }
 
 function confirmDelete(id) {
-    if (confirm('Are you sure you want to delete this discount code? This action cannot be undone.')) {
-        window.location.href = '?delete_id=' + id;
-    }
+    window.location.href = '?delete_id=' + id;
 }
 
 // Discount Type Toggle Logic
