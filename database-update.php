@@ -992,6 +992,58 @@ if ($EXECUTE) {
     $success[] = "Multi-store constraints fixed";
 }
 
+// ==========================================
+// STEP 25: Clean STORE- Prefix from Existing Data
+// ==========================================
+echo "STEP 25: Cleaning STORE- Prefix from Existing Data\n";
+echo "---------------------------------------------------\n";
+
+if ($EXECUTE) {
+    try {
+        // Get all tables
+        $tables = $db->fetchAll("SHOW TABLES");
+        $totalCleaned = 0;
+        
+        foreach ($tables as $row) {
+            $tableName = current($row);
+            
+            // Check if table has store_id column
+            $columns = $db->fetchAll("SHOW COLUMNS FROM `$tableName` LIKE 'store_id'");
+            
+            if (empty($columns)) {
+                continue; // Skip tables without store_id
+            }
+            
+            // Count records with STORE- prefix
+            $count = $db->fetchOne("SELECT COUNT(*) as count FROM `$tableName` WHERE store_id LIKE 'STORE-%'");
+            
+            if ($count['count'] > 0) {
+                echo "  Cleaning $tableName: {$count['count']} records\n";
+                
+                // Update: Remove STORE- prefix
+                $sql = "UPDATE `$tableName` SET store_id = REPLACE(store_id, 'STORE-', '') WHERE store_id LIKE 'STORE-%'";
+                $db->execute($sql);
+                
+                $totalCleaned += $count['count'];
+            }
+        }
+        
+        if ($totalCleaned > 0) {
+            echo "✓ Cleaned $totalCleaned total records\n";
+            $success[] = "Cleaned STORE- prefix from $totalCleaned records";
+        } else {
+            echo "✓ No records with STORE- prefix found\n";
+            $success[] = "No STORE- prefix cleanup needed";
+        }
+        
+    } catch (Exception $e) {
+        $errors[] = "STORE- prefix cleanup error: " . $e->getMessage();
+        echo "Status: ❌ ERROR - " . $e->getMessage() . "\n";
+    }
+} else {
+    echo "Status: SKIPPED (dry-run)\n";
+}
+
 echo "\n========================================\n";
 echo "SUMMARY\n";
 echo "========================================\n";
