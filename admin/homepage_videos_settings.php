@@ -258,6 +258,7 @@ require_once __DIR__ . '/../includes/admin-header.php';
         </div>
     <?php endif; ?>
 
+    <?php
     // Fetch Section Settings from the first row of section_videos for this store
     $storeId = $_SESSION['store_id'] ?? null;
     if (!$storeId && isset($_SESSION['user_email'])) {

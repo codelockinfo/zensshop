@@ -77,7 +77,7 @@ $filters['limit'] = $perPage;
 $filters['offset'] = ($page - 1) * $perPage;
 $products = $product->getAll($filters);
 
-// Get all categories for sidebar
+// Get all categories for sidebar (only show categories with products)
 $categories = $db->fetchAll("SELECT c.*, 
                                (SELECT COUNT(DISTINCT p.id) 
                                 FROM products p 
@@ -86,6 +86,7 @@ $categories = $db->fetchAll("SELECT c.*,
                                ) as product_count 
                                FROM categories c 
                                WHERE c.status = 'active' 
+                               HAVING product_count > 0
                                ORDER BY c.sort_order ASC, c.name ASC");
 
 // Get stock counts

@@ -159,6 +159,29 @@ function getStockStatusText(status, quantity, totalSold = 0) {
     return 'In Stock';
 }
 
+function renderStockCountHTML(status, quantity, totalSold = 0) {
+    const label = getStockStatusText(status, quantity, totalSold);
+    let html = '';
+    let colorClass = 'text-red-600';
+    
+    if (label === 'Out of Stock') {
+        html = '<i class="fas fa-times-circle mr-1"></i> Out of Stock';
+    } else if (label === 'Sold Out') {
+        html = '<i class="fas fa-times-circle mr-1"></i> Sold Out';
+    } else if (quantity > 0) {
+        html = `<i class="fas fa-check-circle mr-1"></i> ${quantity} items available`;
+        colorClass = 'text-green-600';
+    } else if (quantity < 0) {
+        html = `<i class="fas fa-exclamation-circle mr-1"></i> Backorder (${Math.abs(quantity)} pending)`;
+        colorClass = 'text-orange-600';
+    } else {
+        html = `<i class="fas fa-check-circle mr-1"></i> ${label}`;
+        colorClass = 'text-green-600';
+    }
+    
+    return `<span class="text-sm font-bold ${colorClass}">${html}</span>`;
+}
+
 // Quick View Render Logic
 function renderQuickView(product) {
     const content = document.getElementById('quickViewContent');
@@ -376,6 +399,11 @@ function renderQuickView(product) {
                         Buy It Now
                     </button>
                 </div>
+
+                <!-- Availability Status (Dynamic Quantity Display) -->
+                <div class="mb-6 flex items-center space-x-2" id="qvStockCountContainer">
+                    ${renderStockCountHTML(product.stock_status, product.stock_quantity, product.total_sales)}
+                </div>
                 
                 <div class="flex gap-4 text-xs text-gray-500 mb-6 font-medium">
                     <button class="hover:text-black flex items-center gap-1 transition wishlist-btn" 
@@ -503,12 +531,28 @@ window.selectQVVariant = function(btn, option, value) {
 
             // Update Availability
             const availEl = document.getElementById('qvAvailability');
+            const stockCountContainer = document.getElementById('qvStockCountContainer');
+            
             if (availEl) {
                 const statusLabel = getStockStatusText(variant.stock_status, variant.stock_quantity, currentQVProduct.total_sales);
                 const isOutOfStock = (variant.stock_status === 'out_of_stock' || variant.stock_quantity <= 0);
                 availEl.innerHTML = statusLabel;
                 availEl.className = !isOutOfStock ? 'text-green-600 font-bold' : 'text-red-500 font-bold';
                 updateQVButtons(isOutOfStock, statusLabel);
+
+                // Update the new dynamic stock count display
+                if (stockCountContainer) {
+                    stockCountContainer.innerHTML = renderStockCountHTML(variant.stock_status, variant.stock_quantity, currentQVProduct.total_sales);
+                }
+
+                // Cap quantity if current value exceeds variant stock
+                const qtyInput = document.getElementById('qvQuantity');
+                if (qtyInput && variant.stock_quantity !== undefined && variant.stock_quantity !== null) {
+                    const currentQty = parseInt(qtyInput.value);
+                    if (currentQty > variant.stock_quantity) {
+                        qtyInput.value = Math.max(1, variant.stock_quantity);
+                    }
+                }
             }
         }
     }
@@ -524,8 +568,31 @@ function findMatchingQVVariant() {
 
 window.updateQVQuantity = function(change) {
     const input = document.getElementById('qvQuantity');
+    if (!input) return;
+
     let val = parseInt(input.value) + change;
     if (val < 1) val = 1;
+
+    // Determine Stock Limit
+    let maxStock = 9999;
+    if (currentQVProduct) {
+        if (currentQVProduct.variants && currentQVProduct.variants.length > 0) {
+            const variant = findMatchingQVVariant();
+            if (variant && variant.stock_quantity !== undefined && variant.stock_quantity !== null) {
+                maxStock = parseInt(variant.stock_quantity);
+            }
+        } else if (currentQVProduct.stock_quantity !== undefined && currentQVProduct.stock_quantity !== null) {
+            maxStock = parseInt(currentQVProduct.stock_quantity);
+        }
+    }
+
+    if (val > maxStock) {
+        val = maxStock;
+        if (typeof showNotification === 'function' && change > 0) {
+            showNotification(`Only ${maxStock} items available in stock.`);
+        }
+    }
+
     input.value = val;
 };
 

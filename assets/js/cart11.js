@@ -274,6 +274,28 @@ async function addToCart(productId, quantity = 1, btn = null, attributes = {}) {
 // Update cart item quantity
 async function updateCartItem(productId, quantity, btn = null, attributes = {}) {
     if (btn) setBtnLoading(btn, true);
+
+    // Find item to check stock limit
+    const item = cartData.find(i => {
+        const iAttrs = i.variant_attributes || {};
+        const matchAttrs = attributes || {};
+        return i.product_id == productId && JSON.stringify(iAttrs) === JSON.stringify(matchAttrs);
+    });
+
+    if (item && item.stock_quantity !== undefined && quantity > item.stock_quantity) {
+        if (typeof showNotification === 'function') {
+            showNotification(`Only ${item.stock_quantity} items available in stock`, 'info');
+        }
+        quantity = item.stock_quantity;
+        
+        // If quantity was already at max and they tried to increase, just stop
+        const currentQty = parseInt(item.quantity) || 0;
+        if (currentQty >= item.stock_quantity && quantity >= currentQty) {
+            if (btn) setBtnLoading(btn, false);
+            return;
+        }
+    }
+
     if (quantity < 1) {
         quantity = 1;
     }
