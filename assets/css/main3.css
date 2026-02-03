@@ -824,7 +824,9 @@ footer .localization-flags img {
   #mainProductImage {
     max-height: 400px;
   }
-
+#categories-section .grid {
+  gap: 45px !important;
+}
   .size-btn {
     min-width: 50px;
     padding: 0.5rem 1rem;
