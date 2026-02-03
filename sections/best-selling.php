@@ -96,7 +96,7 @@ if (empty($products)) {
                                 </button>
                                 
                                 <!-- Hover Action Buttons -->
-                                <div class="product-actions absolute right-2 top-12 flex flex-col gap-2 mt-2 opacity-0 group-hover:opacity-100 transition-opacity duration-300 z-30">
+                                <div class="product-actions absolute right-2 top-12 flex flex-col gap-2 mt-2 pr-[10px] md:pr-0 opacity-100 md:opacity-0 md:group-hover:opacity-100 transition-opacity duration-300 z-30">
                                     <a href="<?php echo $baseUrl; ?>/product?slug=<?php echo urlencode($item['slug'] ?? ''); ?>" 
                                        class="product-action-btn w-10 h-10 bg-white rounded-full flex items-center justify-center hover:bg-black hover:text-white transition shadow-lg quick-view-btn relative group" 
                                        data-product-id="<?php echo $item['product_id']; ?>"
