@@ -92,7 +92,7 @@ $blogHeadingColor = $settingsObj->get('blog_heading_color', '#111827');
                             </div>
                             
                             <h2 class="text-xl font-bold mb-3 line-clamp-2">
-                                <a href="<?php echo $baseUrl; ?>/blog?slug=<?php echo htmlspecialchars($blog['slug']); ?>" class="text-gray-900 group-hover:text-blue-600 transition">
+                                <a href="<?php echo $baseUrl; ?>/blog?slug=<?php echo htmlspecialchars($blog['slug']); ?>" class="text-gray-900 group-hover:text-primary transition">
                                     <?php echo htmlspecialchars($blog['title']); ?>
                                 </a>
                             </h2>
@@ -104,7 +104,7 @@ $blogHeadingColor = $settingsObj->get('blog_heading_color', '#111827');
                                 ?>
                             </div>
                             
-                            <a href="<?php echo $baseUrl; ?>/blog?slug=<?php echo htmlspecialchars($blog['slug']); ?>" class="inline-flex items-center text-blue-600 font-semibold text-sm hover:underline mt-auto">
+                            <a href="<?php echo $baseUrl; ?>/blog?slug=<?php echo htmlspecialchars($blog['slug']); ?>" class="inline-flex items-center text-primary font-semibold text-sm hover:underline mt-auto">
                                 Read Article <i class="fas fa-arrow-right ml-2 text-xs transition-transform group-hover:translate-x-1"></i>
                             </a>
                         </div>

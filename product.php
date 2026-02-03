@@ -191,7 +191,7 @@ $_COOKIE['recently_viewed'] = json_encode($recentIds);
         </nav>
         
         <!-- Product Skeleton -->
-        <div id="productSkeleton" class="hidden grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-12 mb-16 animate-pulse">
+        <div id="productSkeleton" class="grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-12 mb-16 animate-pulse">
             <!-- Image Skeleton -->
             <div class="rounded-lg overflow-hidden">
                 <div class="w-full h-[500px] bg-gray-200 mb-4 rounded-lg"></div>
@@ -251,7 +251,7 @@ $_COOKIE['recently_viewed'] = json_encode($recentIds);
             </div>
         </div>
 
-        <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-12 mb-16" id="mainProductContainer">
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-12 mb-16 hidden" id="mainProductContainer">
             <!-- Product Images -->
             <div>
                 <!-- Main Image -->
@@ -327,14 +327,7 @@ $_COOKIE['recently_viewed'] = json_encode($recentIds);
                     .thumbnail-slider .swiper-slide img {
                         width: 100%;
                     }
-                    .thumbnail-slider .swiper-pagination {
-                        display: none !important;
-                    }
-                    .swiper-pagination {
-                        display: none !important;
-                    }
-                </style>
-
+                    </style>
                 <?php if (count($galleryItems) > 1): ?>
                 <div class="relative">
                     <div class="swiper thumbnail-slider mt-4">
@@ -354,27 +347,6 @@ $_COOKIE['recently_viewed'] = json_encode($recentIds);
                         <div class="swiper-button-prev"></div>
                     </div>
                 </div>
-
-                <!-- Swiper JS -->
-                <script src="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.js"></script>
-                
-                <script>
-                document.addEventListener('DOMContentLoaded', function() {
-                    new Swiper('.thumbnail-slider', {
-                        slidesPerView: 4,
-                        spaceBetween: 10,
-                        navigation: {
-                            nextEl: '.swiper-button-next',
-                            prevEl: '.swiper-button-prev',
-                        },
-                        breakpoints: {
-                            640: {
-                                slidesPerView: 5,
-                            },
-                        }
-                    });
-                });
-                </script>
                 <?php endif; ?>
             </div>
             
@@ -420,7 +392,7 @@ $_COOKIE['recently_viewed'] = json_encode($recentIds);
                     </div>
                     <button id="toggle-description-btn" 
                             onclick="toggleProductDescription()" 
-                            class="text-green-600 hover:text-green-800 font-medium text-sm mt-2 hidden focus:outline-none">
+                            class="text-primary hover:text-green-800 font-medium text-sm mt-2 hidden focus:outline-none">
                         Read More
                     </button>
                     
@@ -648,6 +620,18 @@ $_COOKIE['recently_viewed'] = json_encode($recentIds);
                 </div>
             </div>
         </div>
+        
+        <script>
+            // Immediate Skeleton Removal
+            (function() {
+                const skeleton = document.getElementById('productSkeleton');
+                const content = document.getElementById('mainProductContainer');
+                if (skeleton && content) {
+                    skeleton.classList.add('hidden');
+                    content.classList.remove('hidden');
+                }
+            })();
+        </script>
         
         <!-- Collapsible Sections -->
         <div class="max-w-4xl mx-auto mb-16">
@@ -2000,6 +1984,27 @@ function stickyAddToCart() {
     }
 }
 </script>
+
+<?php if (count($galleryItems ?? []) > 1): ?>
+<script src="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.js"></script>
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    new Swiper('.thumbnail-slider', {
+        slidesPerView: 4,
+        spaceBetween: 10,
+        navigation: {
+            nextEl: '.swiper-button-next',
+            prevEl: '.swiper-button-prev',
+        },
+        breakpoints: {
+            640: {
+                slidesPerView: 5,
+            },
+        }
+    });
+});
+</script>
+<?php endif; ?>
 
 <?php require_once __DIR__ . '/includes/footer.php'; ?>
 
