@@ -105,6 +105,8 @@ class Product {
         
         $sql .= " GROUP BY p.product_id";
         // Sorting
+        $sortKey = trim($filters['sort'] ?? '');
+        
         $allowedSorts = [
             'price ASC' => 'COALESCE(NULLIF(p.sale_price, 0), p.price) ASC',
             'price DESC' => 'COALESCE(NULLIF(p.sale_price, 0), p.price) DESC',
@@ -116,8 +118,8 @@ class Product {
             'created_at DESC' => 'p.created_at DESC'
         ];
         
-        if (!empty($filters['sort']) && array_key_exists($filters['sort'], $allowedSorts)) {
-            $sql .= " ORDER BY " . $allowedSorts[$filters['sort']];
+        if (!empty($sortKey) && array_key_exists($sortKey, $allowedSorts)) {
+            $sql .= " ORDER BY " . $allowedSorts[$sortKey];
         } else {
             $sql .= " ORDER BY p.created_at DESC";
         }
