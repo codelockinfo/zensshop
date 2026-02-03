@@ -54,8 +54,8 @@ try {
 
     // Insert support message
     $messageId = $db->insert(
-        "INSERT INTO support_messages (customer_id, customer_name, customer_email, subject, message, store_id) 
-         VALUES (?, ?, ?, ?, ?, ?)",
+        "INSERT INTO support_messages (customer_id, customer_name, customer_email, subject, message, store_id, created_at) 
+         VALUES (?, ?, ?, ?, ?, ?, UTC_TIMESTAMP())",
         [$customerId, $customerName, $customerEmail, $subject, $message, $storeId]
     );
 

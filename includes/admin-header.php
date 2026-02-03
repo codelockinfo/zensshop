@@ -167,7 +167,7 @@ $action = $segments[count($segments) - 1] ?? '';  // add, list
                 <!-- Support Dropdown Menu -->
                 <div class="notification-dropdown-menu hidden" id="supportDropdown">
                     <div class="flex items-center justify-between p-4 border-b">
-                        <h3 class="font-semibold text-gray-800">Support Messages</h3>
+                        <h3 class="font-semibold text-gray-800">Customer Messages</h3>
                         <a href="<?php echo url('admin/support.php'); ?>" class="text-xs text-blue-600 hover:text-blue-800">View all</a>
                     </div>
                     <div id="supportList" class="max-h-96 overflow-y-auto">

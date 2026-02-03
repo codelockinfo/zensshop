@@ -282,7 +282,7 @@ function renderFooterLinkRecursive($item, $baseUrl) {
             </div>
             
             <!-- Cart Footer -->
-            <div class="border-t p-6">
+            <div class="border-t p-6" id="sideCartFooter">
                 <div class="flex justify-between items-center mb-4">
                     <span class="text-lg font-semibold">Total:</span>
                     <span class="text-xl font-bold" id="cartTotal">₹0.00</span>
@@ -349,7 +349,7 @@ function renderFooterLinkRecursive($item, $baseUrl) {
     
     <!-- Scripts -->
     <script src="<?php echo $baseUrl; ?>/assets/js/main5.js?v=2"></script>
-    <script src="<?php echo $baseUrl; ?>/assets/js/cart11.js?v=3"></script>
+    <script src="<?php echo $baseUrl; ?>/assets/js/cart12.js?v=3"></script>
     <script src="<?php echo $baseUrl; ?>/assets/js/product-cards4.js?v=2"></script>
     <script src="<?php echo $baseUrl; ?>/assets/js/wishlist5.js?v=3"></script>
     <script src="<?php echo $baseUrl; ?>/assets/js/notification.js?v=2"></script>

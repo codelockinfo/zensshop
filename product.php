@@ -1181,13 +1181,13 @@ function updateVariantDisplay() {
             if (stockCountDisplay) {
                 if (defaultStock > 0 && defaultStatus !== 'out_of_stock') {
                     stockCountDisplay.innerHTML = `<i class="fas fa-check-circle mr-1"></i> ${defaultStock} items available`;
-                    stockCountDisplay.className = 'text-sm font-bold text-green-600';
+                    stockCountDisplay.className = 'text-sm font-bold text-primary';
                 } else if (defaultStock < 0) {
                     stockCountDisplay.innerHTML = `<i class="fas fa-exclamation-circle mr-1"></i> Backorder (${Math.abs(defaultStock)} pending)`;
                     stockCountDisplay.className = 'text-sm font-bold text-orange-600';
                 } else {
                     stockCountDisplay.innerHTML = `<i class="fas fa-times-circle mr-1"></i> Out of Stock`;
-                    stockCountDisplay.className = 'text-sm font-bold text-red-600';
+                    stockCountDisplay.className = 'text-sm font-bold text-primary';
                 }
             }
 

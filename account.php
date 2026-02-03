@@ -142,9 +142,14 @@ if ($section === 'details') {
 }
 
 $pageTitle = 'Your Account';
-require_once __DIR__ . '/includes/header.php';
+$isAjax = isset($_GET['ajax']) && $_GET['ajax'] === '1';
+
+if (!$isAjax) {
+    require_once __DIR__ . '/includes/header.php';
+}
 ?>
 
+<?php if (!$isAjax): ?>
 <div class="min-h-screen pt-32 pb-20 bg-gray-50">
     <div class="container mx-auto px-4 max-w-6xl">
         <!-- Header -->
@@ -159,49 +164,49 @@ require_once __DIR__ . '/includes/header.php';
                 <nav class="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
                     <div class="p-2 space-y-1">
                         <a href="?section=orders" 
-                           class="flex items-center gap-3 px-4 py-3 rounded-xl transition <?php echo $section === 'orders' ? 'bg-blue-50 text-blue-600' : 'text-gray-600 hover:bg-gray-50'; ?>">
+                           class="account-sidebar-link flex items-center gap-3 px-4 py-3 rounded-xl transition <?php echo $section === 'orders' ? 'bg-blue-50 text-blue-600' : 'text-gray-600 hover:bg-gray-50'; ?>">
                             <div class="w-8 h-8 rounded-lg bg-blue-100 flex items-center justify-center">
                                 <i class="fas fa-truck text-sm"></i>
                             </div>
                             <span class="font-semibold">My orders</span>
                         </a>
                         <a href="?section=details" 
-                           class="flex items-center gap-3 px-4 py-3 rounded-xl transition <?php echo $section === 'details' ? 'bg-blue-50 text-blue-600' : 'text-gray-600 hover:bg-gray-50'; ?>">
+                           class="account-sidebar-link flex items-center gap-3 px-4 py-3 rounded-xl transition <?php echo $section === 'details' ? 'bg-blue-50 text-blue-600' : 'text-gray-600 hover:bg-gray-50'; ?>">
                             <div class="w-8 h-8 rounded-lg bg-blue-100 flex items-center justify-center">
                                 <i class="fas fa-user text-sm"></i>
                             </div>
                             <span class="font-semibold">My Details</span>
                         </a>
                         <a href="?section=addresses" 
-                           class="flex items-center gap-3 px-4 py-3 rounded-xl transition <?php echo $section === 'addresses' ? 'bg-blue-50 text-blue-600' : 'text-gray-600 hover:bg-gray-50'; ?>">
+                           class="account-sidebar-link flex items-center gap-3 px-4 py-3 rounded-xl transition <?php echo $section === 'addresses' ? 'bg-blue-50 text-blue-600' : 'text-gray-600 hover:bg-gray-50'; ?>">
                             <div class="w-8 h-8 rounded-lg bg-blue-100 flex items-center justify-center">
                                 <i class="fas fa-map-marker-alt text-sm"></i>
                             </div>
                             <span class="font-semibold">Your addresses</span>
                         </a>
                         <!-- <a href="?section=security" 
-                           class="flex items-center gap-3 px-4 py-3 rounded-xl transition <?php echo $section === 'security' ? 'bg-blue-50 text-blue-600' : 'text-gray-600 hover:bg-gray-50'; ?>">
+                           class="account-sidebar-link flex items-center gap-3 px-4 py-3 rounded-xl transition <?php echo $section === 'security' ? 'bg-blue-50 text-blue-600' : 'text-gray-600 hover:bg-gray-50'; ?>">
                             <div class="w-8 h-8 rounded-lg bg-blue-100 flex items-center justify-center">
                                 <i class="fas fa-lock text-sm"></i>
                             </div>
                             <span class="font-semibold">Login & security</span>
                         </a> -->
                         <a href="?section=payments" 
-                           class="flex items-center gap-3 px-4 py-3 rounded-xl transition <?php echo $section === 'payments' ? 'bg-blue-50 text-blue-600' : 'text-gray-600 hover:bg-gray-50'; ?>">
+                           class="account-sidebar-link flex items-center gap-3 px-4 py-3 rounded-xl transition <?php echo $section === 'payments' ? 'bg-blue-50 text-blue-600' : 'text-gray-600 hover:bg-gray-50'; ?>">
                             <div class="w-8 h-8 rounded-lg bg-blue-100 flex items-center justify-center">
                                 <i class="fas fa-credit-card text-sm"></i>
                             </div>
                             <span class="font-semibold">Payments</span>
                         </a>
                         <a href="?section=wishlist" 
-                           class="flex items-center gap-3 px-4 py-3 rounded-xl transition <?php echo $section === 'wishlist' ? 'bg-blue-50 text-blue-600' : 'text-gray-600 hover:bg-gray-50'; ?>">
+                           class="account-sidebar-link flex items-center gap-3 px-4 py-3 rounded-xl transition <?php echo $section === 'wishlist' ? 'bg-blue-50 text-blue-600' : 'text-gray-600 hover:bg-gray-50'; ?>">
                             <div class="w-8 h-8 rounded-lg bg-blue-100 flex items-center justify-center">
                                 <i class="fas fa-heart text-sm"></i>
                             </div>
                             <span class="font-semibold">Saved items</span>
                         </a>
                         <a href="?section=support" 
-                           class="flex items-center gap-3 px-4 py-3 rounded-xl transition <?php echo $section === 'support' ? 'bg-blue-50 text-blue-600' : 'text-gray-600 hover:bg-gray-50'; ?>">
+                           class="account-sidebar-link flex items-center gap-3 px-4 py-3 rounded-xl transition <?php echo $section === 'support' ? 'bg-blue-50 text-blue-600' : 'text-gray-600 hover:bg-gray-50'; ?>">
                             <div class="w-8 h-8 rounded-lg bg-blue-100 flex items-center justify-center">
                                 <i class="fas fa-comment-dots text-sm"></i>
                             </div>
@@ -220,7 +225,8 @@ require_once __DIR__ . '/includes/header.php';
             </div>
 
             <!-- Content Area -->
-            <div class="flex-1">
+             <div class="flex-1" id="accountContent">
+<?php endif; ?>
                 <?php if ($section === 'orders'): ?>
                     <!-- Orders Section -->
                     <div class="mb-8 p-1 bg-gray-200 rounded-xl flex flex-wrap md:inline-flex w-full md:w-auto">
@@ -752,9 +758,103 @@ require_once __DIR__ . '/includes/header.php';
                     </script>
 
                 <?php endif; ?>
-            </div>
+            
+<?php if (!$isAjax): ?>
+            </div> <!-- End accountContent -->
         </div>
     </div>
 </div>
 
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+    const contentDiv = document.getElementById('accountContent');
+    
+    // Function to handle navigation
+    async function loadAccountSection(url) {
+        // Show Loader
+        contentDiv.innerHTML = `
+            <div class="flex flex-col items-center justify-center py-20 min-h-[400px]">
+                <i class="fas fa-spinner fa-spin text-4xl text-gray-300 mb-4"></i>
+                <p class="text-gray-500">Loading...</p>
+            </div>
+        `;
+        
+        // Update URL
+        if(url !== window.location.href) {
+            window.history.pushState(null, '', url);
+        }
+
+        const fetchUrl = url + (url.includes('?') ? '&' : '?') + 'ajax=1';
+        
+        try {
+            const res = await fetch(fetchUrl);
+            const html = await res.text();
+            contentDiv.innerHTML = html;
+            
+            // Re-initialize any specific plugins if needed (like sliders)
+            
+        } catch(e) {
+            console.error(e);
+            contentDiv.innerHTML = '<p class="text-center text-red-500 py-10">Error loading content. Please refresh.</p>';
+        }
+    }
+
+    // Sidebar clicking
+    document.querySelectorAll('.account-sidebar-link').forEach(link => {
+        link.addEventListener('click', (e) => {
+            e.preventDefault();
+            const href = e.currentTarget.href;
+            
+            // Update Sidebar UI
+            document.querySelectorAll('.account-sidebar-link').forEach(l => {
+                // Remove active classes
+                l.classList.remove('bg-blue-50', 'text-blue-600');
+                l.classList.add('text-gray-600', 'hover:bg-gray-50');
+                
+                // Reset icon background
+                const iconDiv = l.querySelector('div');
+                if(iconDiv) {
+                    iconDiv.classList.remove('bg-blue-100');
+                    iconDiv.classList.add('bg-gray-100'); // Assuming default is gray-100 if not blue-100?
+                    // Actually, looking at code: 
+                    // Active: div bg-blue-100
+                    // Inactive: div bg-blue-100 (Wait, they are all bg-blue-100 in the HTML?)
+                    // Let's re-check the HTML.
+                    /* 
+                       Line 163: <div class="w-8 h-8 rounded-lg bg-blue-100 ...">
+                       They seem to ALWAYS be bg-blue-100 regardless of active state in the original code?
+                       Line 162: active ? 'bg-blue-50 text-blue-600' : 'text-gray-600 hover:bg-gray-50'
+                       So only the link background changes.
+                    */
+                }
+            });
+            
+            // Add active classes to clicked
+            e.currentTarget.classList.remove('text-gray-600', 'hover:bg-gray-50');
+            e.currentTarget.classList.add('bg-blue-50', 'text-blue-600');
+            
+            loadAccountSection(href);
+        });
+    });
+    
+    // Delegation for inner tabs (Orders tabs, pagination if any)
+    contentDiv.addEventListener('click', (e) => {
+        const link = e.target.closest('a');
+        if(link && link.href && link.href.includes('?section=')) {
+             // Avoid actions like "remove address" forms which are buttons/forms, but if they are links:
+             if (!link.classList.contains('no-ajax') && !link.target) {
+                 e.preventDefault();
+                 loadAccountSection(link.href);
+             }
+        }
+    });
+
+    // Handle Back/Forward
+    window.addEventListener('popstate', () => {
+        loadAccountSection(window.location.href);
+    });
+});
+</script>
+
 <?php require_once __DIR__ . '/includes/footer.php'; ?>
+<?php endif; ?>

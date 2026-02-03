@@ -170,13 +170,13 @@ function renderStockCountHTML(status, quantity, totalSold = 0) {
         html = '<i class="fas fa-times-circle mr-1"></i> Sold Out';
     } else if (quantity > 0) {
         html = `<i class="fas fa-check-circle mr-1"></i> ${quantity} items available`;
-        colorClass = 'text-green-600';
+        colorClass = 'text-primary';
     } else if (quantity < 0) {
         html = `<i class="fas fa-exclamation-circle mr-1"></i> Backorder (${Math.abs(quantity)} pending)`;
         colorClass = 'text-orange-600';
     } else {
         html = `<i class="fas fa-check-circle mr-1"></i> ${label}`;
-        colorClass = 'text-green-600';
+        colorClass = 'text-primary';
     }
     
     return `<span class="text-sm font-bold ${colorClass}">${html}</span>`;
@@ -410,13 +410,13 @@ function renderQuickView(product) {
                 </div>
 
                 <div class="border-t border-gray-100 pt-4 space-y-2 text-sm text-gray-600 bg-gray-50 p-4 rounded-lg">
-                    <div class="flex items-center gap-2 text-green-700">
+                    <div class="flex items-center gap-2 text-primary">
                          <i class="fas fa-box"></i>
                          <span class="font-medium">Pickup available at Shop location. Usually ready in 24 hours</span>
                     </div>
                     <div class="mt-2 pt-2 border-t border-gray-200">
                         <p><span class="font-bold text-gray-900">Sku:</span> <span id="qvSku">${product.sku || 'N/A'}</span></p>
-                        <p><span class="font-bold text-gray-900">Available:</span> <span id="qvAvailability" class="${(product.stock_status === 'in_stock' && (product.stock_quantity === undefined || product.stock_quantity > 0)) ? 'text-green-600' : 'text-red-500'} font-bold">${getStockStatusText(product.stock_status, product.stock_quantity, product.total_sales)}</span></p>
+                        <p><span class="font-bold text-gray-900">Available:</span> <span id="qvAvailability" class="${(product.stock_status === 'in_stock' && (product.stock_quantity === undefined || product.stock_quantity > 0)) ? 'text-primary' : 'text-red-500'} font-bold">${getStockStatusText(product.stock_status, product.stock_quantity, product.total_sales)}</span></p>
                     </div>
                     <div class="mt-2 text-right">
                         <a href="${productUrl}" class="text-primary hover:text-black underline font-bold text-xs uppercase tracking-wide">View full details <i class="fas fa-arrow-right ml-1"></i></a>
@@ -531,7 +531,7 @@ window.selectQVVariant = function(btn, option, value) {
                 const statusLabel = getStockStatusText(variant.stock_status, variant.stock_quantity, currentQVProduct.total_sales);
                 const isOutOfStock = (variant.stock_status === 'out_of_stock' || variant.stock_quantity <= 0);
                 availEl.innerHTML = statusLabel;
-                availEl.className = !isOutOfStock ? 'text-green-600 font-bold' : 'text-red-500 font-bold';
+                availEl.className = !isOutOfStock ? 'text-primary font-bold' : 'text-red-500 font-bold';
                 updateQVButtons(isOutOfStock, statusLabel);
 
                 // Update the new dynamic stock count display
