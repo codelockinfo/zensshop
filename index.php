@@ -9,7 +9,20 @@ require_once __DIR__ . '/includes/header.php';
 ?>
 
 <!-- Hero Section (Loaded First) -->
-<section id="hero-section" class="relative overflow-hidden">
+<!-- Skeleton Loader for Banner -->
+<div id="hero-skeleton" class="relative h-[600px] md:h-[700px] bg-gradient-to-r from-gray-200 via-gray-300 to-gray-200 animate-pulse">
+    <div class="absolute inset-0 bg-gradient-to-r from-transparent via-white to-transparent opacity-50 animate-shimmer"></div>
+    <div class="container mx-auto px-4 h-full flex items-center">
+        <div class="max-w-md space-y-4">
+            <div class="h-4 bg-gray-400 rounded w-32 animate-pulse"></div>
+            <div class="h-12 bg-gray-400 rounded w-64 animate-pulse"></div>
+            <div class="h-12 bg-gray-400 rounded w-48 animate-pulse"></div>
+            <div class="h-10 bg-gray-400 rounded w-40 animate-pulse mt-6"></div>
+        </div>
+    </div>
+</div>
+
+<section id="hero-section" class="relative overflow-hidden" style="display: none;">
 <?php
 // Fetch banners from database (Store Specific)
 $banners = $db->fetchAll("SELECT * FROM banners WHERE active = 1 AND (store_id = ? OR store_id IS NULL) ORDER BY display_order ASC", [CURRENT_STORE_ID]);
@@ -140,7 +153,31 @@ if (empty($banners)) {
     </div>
 </section>
 
+<style>
+@keyframes shimmer {
+    0% { transform: translateX(-100%); }
+    100% { transform: translateX(100%); }
+}
+.animate-shimmer {
+    animation: shimmer 2s infinite;
+}
+</style>
+
 <script>
+// Hide skeleton and show hero when DOM is ready
+document.addEventListener('DOMContentLoaded', function() {
+    const heroSkeleton = document.getElementById('hero-skeleton');
+    const heroSection = document.getElementById('hero-section');
+    
+    if (heroSkeleton && heroSection) {
+        // Show hero after a short delay to allow initial render
+        setTimeout(function() {
+            heroSkeleton.style.display = 'none';
+            heroSection.style.display = 'block';
+        }, 300);
+    }
+});
+
 // Hero Banner Slider
 document.addEventListener('DOMContentLoaded', function() {
     const slides = document.querySelectorAll('.hero-slide');

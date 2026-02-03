@@ -281,6 +281,15 @@ require_once __DIR__ . '/includes/header.php';
         };
 
         setupReadMore('hero-description-container', 'hero-read-more-btn', 'hero-description-fade', 200);
+
+        // Skeleton Loader for all images
+        document.querySelectorAll('img').forEach(img => {
+            if (!img.complete) {
+                img.classList.add('skeleton-loading');
+                img.onload = function() { this.classList.remove('skeleton-loading'); };
+                img.onerror = function() { this.classList.remove('skeleton-loading'); };
+            }
+        });
     });
 </script>
 
@@ -345,6 +354,24 @@ require_once __DIR__ . '/includes/header.php';
     }
     .product-image-animate {
         animation: float 6s ease-in-out infinite;
+    }
+
+    /* Skeleton Loader */
+    .skeleton-loading {
+        background-color: #f3f4f6;
+        background-image: linear-gradient(90deg, #f3f4f6 0px, #e5e7eb 40px, #f3f4f6 80px);
+        background-size: 300px 100%; 
+        animation: skeleton-shimmer 1.5s infinite linear;
+    }
+    .skeleton-loading.w-full {
+        min-height: 250px;
+    }
+    @media (max-width: 768px) {
+        .skeleton-loading.w-full { min-height: 200px; }
+    }
+    @keyframes skeleton-shimmer {
+        0% { background-position: -300px 0; }
+        100% { background-position: 300px 0; }
     }
 </style>
 

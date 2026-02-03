@@ -1,19 +1,18 @@
 <?php
 require_once __DIR__ . '/../classes/Auth.php';
 require_once __DIR__ . '/../classes/Database.php';
+require_once __DIR__ . '/../includes/functions.php';
 
 $auth = new Auth();
 $auth->requireLogin();
 
 $db = Database::getInstance();
+$baseUrl = getBaseUrl();
 $storeId = $_SESSION['store_id'] ?? null;
 if (!$storeId && isset($_SESSION['user_email'])) {
      $storeUser = $db->fetchOne("SELECT store_id FROM users WHERE email = ?", [$_SESSION['user_email']]);
      $storeId = $storeUser['store_id'] ?? null;
 }
-
-$pageTitle = 'Manage Custom Pages';
-require_once __DIR__ . '/../includes/admin-header.php';
 
 // Handle deletion
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['action'] === 'delete') {
@@ -27,6 +26,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
     header("Location: " . $_SERVER['PHP_SELF']);
     exit;
 }
+
+$pageTitle = 'Manage Custom Pages';
+require_once __DIR__ . '/../includes/admin-header.php';
 
 $pages = $db->fetchAll("SELECT * FROM pages WHERE store_id = ? ORDER BY created_at DESC", [$storeId]);
 ?>
@@ -103,7 +105,8 @@ $pages = $db->fetchAll("SELECT * FROM pages WHERE store_id = ? ORDER BY created_
                         </p>
                     </td>
                     <td class="px-5 py-5 border-b border-gray-200 bg-white text-sm text-right">
-                        <a href="page-edit.php?id=<?php echo $page['id']; ?>" class="text-blue-600 hover:text-blue-900 mr-4">Edit</a>
+                        <a href="<?php echo $baseUrl; ?>/<?php echo $page['slug']; ?>" target="_blank" class="text-gray-600 hover:text-gray-900 mr-4">View Page</a>
+                        <a href="page-edit.php?page_id=<?php echo $page['page_id']; ?>" class="text-blue-600 hover:text-blue-900 mr-4">Edit</a>
                         <form method="POST" class="inline-block">
                             <input type="hidden" name="action" value="delete">
                             <input type="hidden" name="id" value="<?php echo $page['id']; ?>">

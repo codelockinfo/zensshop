@@ -93,16 +93,16 @@ $categories = $db->fetchAll("SELECT c.*,
 $inStockCount = $db->fetchOne("SELECT COUNT(DISTINCT p.id) as count 
                                 FROM products p 
                                 LEFT JOIN product_categories pc ON p.product_id = pc.product_id
-                                WHERE p.status = 'active' AND p.stock_status = 'in_stock'" . 
+                                WHERE p.status = 'active' AND p.stock_status = 'in_stock' AND p.store_id = ?" . 
                                 ($categorySlug ? " AND (p.category_id = (SELECT id FROM categories WHERE slug = ? AND (store_id = ? OR store_id IS NULL) LIMIT 1) OR EXISTS (SELECT 1 FROM product_categories pc2 INNER JOIN categories c2 ON pc2.category_id = c2.id WHERE pc2.product_id = p.product_id AND c2.slug = ? AND (c2.store_id = ? OR c2.store_id IS NULL)))" : ""),
-                                array_merge([], $categorySlug ? [$categorySlug, CURRENT_STORE_ID, $categorySlug, CURRENT_STORE_ID] : []))['count'] ?? 0;
+                                array_merge([CURRENT_STORE_ID], $categorySlug ? [$categorySlug, CURRENT_STORE_ID, $categorySlug, CURRENT_STORE_ID] : []))['count'] ?? 0;
 
 $outOfStockCount = $db->fetchOne("SELECT COUNT(DISTINCT p.id) as count 
                                    FROM products p 
                                    LEFT JOIN product_categories pc ON p.product_id = pc.product_id
-                                   WHERE p.status = 'active' AND p.stock_status = 'out_of_stock'" . 
+                                   WHERE p.status = 'active' AND p.stock_status = 'out_of_stock' AND p.store_id = ?" . 
                                    ($categorySlug ? " AND (p.category_id = (SELECT id FROM categories WHERE slug = ? AND (store_id = ? OR store_id IS NULL) LIMIT 1) OR EXISTS (SELECT 1 FROM product_categories pc2 INNER JOIN categories c2 ON pc2.category_id = c2.id WHERE pc2.product_id = p.product_id AND c2.slug = ? AND (c2.store_id = ? OR c2.store_id IS NULL)))" : ""),
-                                   array_merge([], $categorySlug ? [$categorySlug, CURRENT_STORE_ID, $categorySlug, CURRENT_STORE_ID] : []))['count'] ?? 0;
+                                   array_merge([CURRENT_STORE_ID], $categorySlug ? [$categorySlug, CURRENT_STORE_ID, $categorySlug, CURRENT_STORE_ID] : []))['count'] ?? 0;
 
 // Get price range
 $priceRange = $db->fetchOne("SELECT MIN(COALESCE(p.sale_price, p.price)) as min_price, 
@@ -262,13 +262,26 @@ require_once __DIR__ . '/includes/header.php';
     $allCatBanner = $settingsObjShop->get('all_category_banner');
 ?>
 
+<div id="shop-header-wrapper">
 <?php if ($category && (!empty($category['banner']) || !empty($category['image']))): ?>
     <?php
     $bannerPath = !empty($category['banner']) ? $category['banner'] : $category['image'];
     $bannerUrl = $baseUrl . '/' . $bannerPath;
     ?>
-    <section class="relative bg-cover bg-center py-20 md:py-32" 
-             style="background-image: url('<?php echo htmlspecialchars($bannerUrl); ?>');">
+    <!-- Skeleton Loader for Banner -->
+    <div id="shop-banner-skeleton" class="relative h-[300px] md:h-[400px] bg-gradient-to-r from-gray-200 via-gray-300 to-gray-200 animate-pulse">
+        <div class="absolute inset-0 bg-gradient-to-r from-transparent via-white to-transparent opacity-50 animate-shimmer"></div>
+        <div class="container mx-auto px-4 h-full flex items-center justify-center">
+            <div class="text-center space-y-4">
+                <div class="h-3 bg-gray-400 rounded w-32 mx-auto animate-pulse"></div>
+                <div class="h-10 bg-gray-400 rounded w-64 mx-auto animate-pulse"></div>
+                <div class="h-4 bg-gray-400 rounded w-96 mx-auto animate-pulse"></div>
+            </div>
+        </div>
+    </div>
+    
+    <section id="shop-banner" class="relative bg-cover bg-center py-20 md:py-32" 
+             style="background-image: url('<?php echo htmlspecialchars($bannerUrl); ?>'); display: none;">
         
         <div class="absolute inset-0 bg-black bg-opacity-40"></div>
 
@@ -286,9 +299,11 @@ require_once __DIR__ . '/includes/header.php';
         </div>
     </section>
 
-<?php elseif (!$category && $allCatBanner): ?>
+<?php elseif ($allCatBanner): ?>
     <?php 
         $bannerUrl = $baseUrl . '/assets/images/' . $allCatBanner;
+        $displayTitle = $category['name'] ?? 'Shop';
+        $displayDesc = $category['description'] ?? 'Discover our curated collection of products';
     ?>
     <section class="relative bg-cover bg-center py-20 md:py-32" 
              style="background-image: url('<?php echo htmlspecialchars($bannerUrl); ?>');">
@@ -299,12 +314,14 @@ require_once __DIR__ . '/includes/header.php';
             <div class="text-center">
                 <nav class="text-sm text-gray-200 mb-4">
                     <a href="<?php echo $baseUrl; ?>/" class="hover:text-white">Home</a> > 
-                    <span class="text-white">Shop</span>
+                    <span class="text-white"><?php echo htmlspecialchars($displayTitle); ?></span>
                 </nav>
-                <h1 class="text-2xl md:text-4xl font-heading font-bold mb-4 text-white">Shop</h1>
+                <h1 class="text-2xl md:text-4xl font-heading font-bold mb-4 text-white"><?php echo htmlspecialchars($displayTitle); ?></h1>
+                <?php if (!empty($displayDesc)): ?>
                 <p class="text-sm text-gray-100 max-w-2xl mx-auto">
-                    Discover our curated collection of products
+                    <?php echo htmlspecialchars($displayDesc); ?>
                 </p>
+                <?php endif; ?>
             </div>
         </div>
     </section>
@@ -325,6 +342,7 @@ require_once __DIR__ . '/includes/header.php';
         </div>
     </section>
 <?php endif; ?>
+</div>
 
 <!-- List View Styles -->
 <style>
@@ -510,7 +528,7 @@ button.active {
             <div class="lg:w-3/4">
                 <!-- Results and Sorting -->
                 <div class="flex flex-col-reverse md:flex-row justify-between items-center mb-6 gap-4">
-                    <p class="text-gray-600 text-sm mb-0 w-full md:w-auto text-center md:text-left">
+                    <p class="text-gray-600 text-sm mb-0 w-full md:w-auto text-center md:text-left" style="min-width: 180px;">
                         There are <?php echo $totalProducts; ?> results in total
                     </p>
                     <div class="flex w-full md:w-auto justify-between md:justify-end items-center gap-4">
@@ -543,7 +561,24 @@ button.active {
                 </div>
                 
                 <!-- Products Grid -->
-                <div id="productsGrid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+                <!-- Skeleton Loaders for Product Cards -->
+                <div id="products-skeleton" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+                    <?php for ($i = 0; $i < 9; $i++): ?>
+                    <div class="bg-white rounded-lg overflow-hidden shadow-md animate-pulse">
+                        <div class="aspect-square bg-gradient-to-r from-gray-200 via-gray-300 to-gray-200 relative overflow-hidden">
+                            <div class="absolute inset-0 bg-gradient-to-r from-transparent via-white to-transparent opacity-50 animate-shimmer"></div>
+                        </div>
+                        <div class="p-4 space-y-3">
+                            <div class="h-4 bg-gray-300 rounded w-3/4"></div>
+                            <div class="h-6 bg-gray-300 rounded w-1/2"></div>
+                            <div class="h-10 bg-gray-300 rounded w-full mt-4"></div>
+                        </div>
+                    </div>
+                    <?php endfor; ?>
+                </div>
+                
+                <!-- Actual Products Grid -->
+                <div id="productsGrid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6" style="display: none;">
                     <?php if (empty($products)): ?>
                     <div class="col-span-full text-center py-12">
                         <i class="fas fa-box-open text-6xl text-gray-300 mb-4"></i>
@@ -786,13 +821,26 @@ function applyFilters(page = 1) {
      
     // Re-read inputs to ensure everything is synced
     const stockCheckboxes = document.querySelectorAll('input[name="stock"]:checked');
-    if (stockCheckboxes.length > 0) params.set('stock', stockCheckboxes[0].value);
+    if (stockCheckboxes.length > 0) {
+        params.set('stock', stockCheckboxes[0].value);
+    } else {
+        // If no stock filter is checked, remove the stock parameter to show all products
+        params.delete('stock');
+    }
     
     const minPrice = document.getElementById('minPrice').value;
-    if (minPrice) params.set('min_price', minPrice);
+    if (minPrice) {
+        params.set('min_price', minPrice);
+    } else {
+        params.delete('min_price');
+    }
     
     const maxPrice = document.getElementById('maxPrice').value;
-    if (maxPrice) params.set('max_price', maxPrice);
+    if (maxPrice) {
+        params.set('max_price', maxPrice);
+    } else {
+        params.delete('max_price');
+    }
     
     const sort = document.getElementById('sortSelect').value;
     params.set('sort', sort);
@@ -807,40 +855,18 @@ function applyFilters(page = 1) {
     const newUrl = '<?php echo $baseUrl; ?>/shop?' + queryString;
     history.pushState({}, '', newUrl); // Update URL again just in case
     
-    // Perform AJAX request
-    fetch('<?php echo $baseUrl; ?>/shop?ajax=1&' + queryString)
-        .then(response => response.text())
-        .then(html => {
-            const tempDiv = document.createElement('div');
-            tempDiv.innerHTML = html;
-            
-            // 1. Update Products Grid
-            const grid = document.getElementById('productsGrid');
-            const newGrid = tempDiv.querySelector('.grid'); // It returns full grid HTML from ajax
-            // wait, our AJAX response is CURRENTLY just returning product cards + hidden pagination div.
-            // It is NOT returning the full page structure.
-            // We need the AJAX response to include the HERO section too if we want to replace it.
-            
-            // To fix "Banner not updating": We need to reload page OR change AJAX behavior.
-            // User requested AJAX. So we must request the full page or a specific partial that includes header.
-            // But currently `shop.php` checks `if (isset($_GET['ajax']))` and ONLY echoes products.
-            
-            // FIX: We will do a full page fetch (without `ajax=1` special minimal mode) 
-            // OR modify the php to return JSON with {hero: ..., grid: ...}
-            // EASIEST ROBUST WAY: Fetch full page HTML via AJAX, parse it, replace Hero + Grid.
-        
-            return fetch(newUrl); // Fetch FULL PAGE HTML
-        })
+    // Perform AJAX request - Fetch FULL PAGE to update Banner and Grid correctly
+    fetch(newUrl)
         .then(response => response.text())
         .then(fullHtml => {
             const parser = new DOMParser();
             const doc = parser.parseFromString(fullHtml, 'text/html');
             
-            // Update Hero Section
-            const currentHero = document.querySelector('section.relative');
-            const newHero = doc.querySelector('section.relative');
-            if(currentHero && newHero) {
-                currentHero.replaceWith(newHero);
+            // Update Hero/Banner Section
+            const currentWrapper = document.getElementById('shop-header-wrapper');
+            const newWrapper = doc.getElementById('shop-header-wrapper');
+            if(currentWrapper && newWrapper) {
+                currentWrapper.innerHTML = newWrapper.innerHTML;
             }
             
             // Update Grid
@@ -862,6 +888,16 @@ function applyFilters(page = 1) {
              const newCount = doc.querySelector('.text-gray-600.text-sm.mb-0');
              if(currentCount && newCount) {
                  currentCount.innerText = newCount.innerText;
+             }
+             
+             // Re-initialize Shop Elements (Skeleton etc)
+             if (typeof initShopUI === 'function') {
+                 initShopUI();
+             }
+             
+             // Close drawer after apply
+             if(typeof closeFilterDrawer === 'function') {
+                 closeFilterDrawer();
              }
         })
         .catch(error => console.error('Error fetching products:', error));
@@ -1071,6 +1107,81 @@ function applyFiltersFromDrawer() {
         </div>
     </div>
 </div>
+
+<style>
+@keyframes shimmer {
+    0% { transform: translateX(-100%); }
+    100% { transform: translateX(100%); }
+}
+.animate-shimmer {
+    animation: shimmer 2s infinite;
+}
+</style>
+
+<script>
+// Preload banner background image and hide skeleton
+// Preload banner background image and hide skeleton
+function initShopUI() {
+    const skeleton = document.getElementById('shop-banner-skeleton');
+    const banner = document.getElementById('shop-banner');
+    
+    if (skeleton && banner) {
+        // Get the background image URL from the banner's style
+        const bgStyle = banner.style.backgroundImage;
+        const urlMatch = bgStyle.match(/url\(['"]?([^'"]+)['"]?\)/);
+        
+        if (urlMatch && urlMatch[1]) {
+            // Preload the image
+            const img = new Image();
+            img.onload = function() {
+                skeleton.style.display = 'none';
+                banner.style.display = 'block';
+            };
+            img.onerror = function() {
+                // Even if image fails, show the banner
+                skeleton.style.display = 'none';
+                banner.style.display = 'block';
+            };
+            img.src = urlMatch[1];
+            
+            // Fallback: Show banner after 500ms even if image hasn't loaded
+            setTimeout(function() {
+                if (skeleton.style.display !== 'none') {
+                    skeleton.style.display = 'none';
+                    banner.style.display = 'block';
+                }
+            }, 500);
+        } else {
+            // No background image, just show the banner
+            skeleton.style.display = 'none';
+            banner.style.display = 'block';
+        }
+    }
+    
+    // Hide product skeleton and show actual products
+    const productsSkeleton = document.getElementById('products-skeleton');
+    const productsGrid = document.getElementById('productsGrid');
+    
+    if (productsSkeleton && productsGrid) {
+        setTimeout(function() {
+            productsSkeleton.style.display = 'none';
+            productsGrid.style.display = 'grid';
+        }, 400);
+    }
+}
+
+document.addEventListener('DOMContentLoaded', initShopUI);
+
+function hideBannerSkeleton(skeletonId, bannerId) {
+    const skeleton = document.getElementById(skeletonId);
+    const banner = document.getElementById(bannerId);
+    
+    if (skeleton && banner) {
+        skeleton.style.display = 'none';
+        banner.style.display = 'block';
+    }
+}
+</script>
 
 <?php require_once __DIR__ . '/includes/footer.php'; ?>
 

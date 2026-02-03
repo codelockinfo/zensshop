@@ -1092,9 +1092,9 @@ try {
 }
 
 // ==========================================
-// STEP 20: Blogs Table Setup
+// STEP 29: Blogs Table Setup
 // ==========================================
-echo "STEP 20: Setting up Blogs Table\n";
+echo "STEP 29: Setting up Blogs Table\n";
 echo "-------------------------------\n";
 
 // 1. Create table if not exists (with store_id as VARCHAR)
@@ -1145,19 +1145,30 @@ if (!columnExists($db, 'blogs', 'layout')) {
     executeSql($db, "ALTER TABLE blogs ADD COLUMN layout VARCHAR(20) DEFAULT 'standard' AFTER status", "Add layout column to blogs", $errors, $success, $EXECUTE);
 }
 
-    // Check for banner column in categories table
-    // Ensure we have a valid PDO connection
-    if ($db) {
-        try {
-            $bannerColumnCheck = $db->query("SHOW COLUMNS FROM categories LIKE 'banner'");
-            if ($bannerColumnCheck && $bannerColumnCheck->rowCount() == 0) {
-                $db->exec("ALTER TABLE categories ADD COLUMN banner VARCHAR(255) DEFAULT NULL AFTER image");
-                echo "Added banner column to categories table.\n";
-            }
-        } catch (PDOException $e) {
-            echo "Error adding banner column: " . $e->getMessage() . "\n";
-        }
-    }
+// ==========================================
+// STEP 30: Category Banner
+// ==========================================
+echo "STEP 30: Adding banner to categories\n";
+echo "---------------------------------\n";
+
+if (!columnExists($db, 'categories', 'banner')) {
+    executeSql($db, "ALTER TABLE categories ADD COLUMN banner VARCHAR(255) DEFAULT NULL AFTER image", "Add banner to categories", $errors, $success, $EXECUTE);
+}
+
+// ==========================================
+// STEP 31: Landing Pages Slug Safety
+// ==========================================
+echo "STEP 31: Ensuring landing_pages slug\n";
+echo "---------------------------------\n";
+
+if (!columnExists($db, 'landing_pages', 'slug')) {
+    // Determine position. If name exists, after name. Else after product_id.
+    // We assume standard usage.
+    executeSql($db, "ALTER TABLE landing_pages ADD COLUMN slug VARCHAR(255) NOT NULL AFTER name", "Add slug to landing_pages", $errors, $success, $EXECUTE);
+    try {
+        executeSql($db, "ALTER TABLE landing_pages ADD UNIQUE INDEX idx_slug_store (slug, store_id)", "Add unique index on landing_pages slug", $errors, $success, $EXECUTE);
+    } catch (Exception $e) {}
+}
 
 echo "\n========================================\n";
 echo "SUMMARY\n";

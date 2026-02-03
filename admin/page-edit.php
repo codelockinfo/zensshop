@@ -14,12 +14,12 @@ if (!$storeId && isset($_SESSION['user_email'])) {
 }
 
 $baseUrl = getBaseUrl();
-$pageId = $_GET['id'] ?? null;
+$pageId = $_GET['page_id'] ?? null;
 $page = null;
 $contentData = ['html' => '', 'banner' => [], 'seo' => []];
 
 if ($pageId) {
-    $page = $db->fetchOne("SELECT * FROM pages WHERE id = ? AND store_id = ?", [$pageId, $storeId]);
+    $page = $db->fetchOne("SELECT * FROM pages WHERE page_id = ? AND store_id = ?", [$pageId, $storeId]);
     if (!$page) {
         die("Page not found or access denied.");
     }
@@ -73,7 +73,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             'meta_description' => $_POST['meta_description'] ?? ''
         ],
         'settings' => [
-            'content_alignment' => $_POST['content_alignment'] ?? 'left'
+            'content_alignment' => $_POST['content_alignment'] ?? 'left',
+            'layout' => $_POST['content_layout'] ?? 'standard'
         ]
     ];
     
@@ -82,10 +83,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     try {
         if ($pageId) {
             $db->execute(
-                "UPDATE pages SET title=?, slug=?, content=?, status=? WHERE id=? AND store_id=?", 
+                "UPDATE pages SET title=?, slug=?, content=?, status=? WHERE page_id=? AND store_id=?", 
                 [$title, $slug, $jsonContent, $status, $pageId, $storeId]
             );
             $_SESSION['flash_success'] = "Page updated successfully!";
+            // Redirect to same page with page_id
+            header("Location: page-edit.php?page_id=" . $pageId);
+            exit;
         } else {
             // Check slug uniqueness
             $exists = $db->fetchOne("SELECT id FROM pages WHERE slug = ? AND store_id = ?", [$slug, $storeId]);
@@ -93,14 +97,22 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $slug .= '-' . time(); // Append timestamp to make unique
             }
             
+            // Generate unique 10-digit Page ID
+            $page_uid = rand(1000000000, 9999999999);
+            while ($db->fetchOne("SELECT id FROM pages WHERE page_id = ?", [$page_uid])) {
+                $page_uid = rand(1000000000, 9999999999);
+            }
+
             $db->execute(
-                "INSERT INTO pages (store_id, title, slug, content, status) VALUES (?, ?, ?, ?, ?)", 
-                [$storeId, $title, $slug, $jsonContent, $status]
+                "INSERT INTO pages (store_id, title, slug, content, status, page_id) VALUES (?, ?, ?, ?, ?, ?)", 
+                [$storeId, $title, $slug, $jsonContent, $status, $page_uid]
             );
             $_SESSION['flash_success'] = "Page created successfully!";
+            
+            // Redirect to edit page with new page_id
+            header("Location: page-edit.php?page_id=" . $page_uid);
+            exit;
         }
-        header("Location: pages.php");
-        exit;
     } catch (Exception $e) {
         $error = "Error saving page: " . $e->getMessage();
     }
@@ -166,6 +178,18 @@ require_once __DIR__ . '/../includes/admin-header.php';
                 <select name="status" class="w-full border p-2 rounded bg-white">
                     <option value="active" <?php echo ($page['status'] ?? '') === 'active' ? 'selected' : ''; ?>>Active</option>
                     <option value="inactive" <?php echo ($page['status'] ?? '') === 'inactive' ? 'selected' : ''; ?>>Inactive</option>
+                </select>
+                </select>
+            </div>
+
+            <!-- Content Layout Setting -->
+            <div class="bg-gray-50 p-4 rounded border">
+                <label class="block text-sm font-bold mb-2">Content Layout</label>
+                <select name="content_layout" class="w-full border p-2 rounded bg-white">
+                    <?php $currentLayout = $contentData['settings']['layout'] ?? 'standard'; ?>
+                    <option value="standard" <?php echo $currentLayout === 'standard' ? 'selected' : ''; ?>>Standard (Centered)</option>
+                    <option value="wide" <?php echo $currentLayout === 'wide' ? 'selected' : ''; ?>>Wide Content</option>
+                    <option value="full_width" <?php echo $currentLayout === 'full_width' ? 'selected' : ''; ?>>Full Width</option>
                 </select>
             </div>
 
@@ -274,44 +298,163 @@ require_once __DIR__ . '/../includes/admin-header.php';
     </div>
 </form>
 
-<!-- TinyMCE 6 -->
-<script src="https://cdnjs.cloudflare.com/ajax/libs/tinymce/6.8.2/tinymce.min.js" referrerpolicy="origin"></script>
+</form>
+
+
+<!-- CKEditor 5 -->
+<script src="https://cdn.ckeditor.com/ckeditor5/41.1.0/classic/ckeditor.js"></script>
 
 <script>
-    if(document.getElementById('editor')) {
-        tinymce.init({
-            selector: '#editor',
-            height: 500,
-            plugins: 'preview importcss searchreplace autolink autosave save directionality code visualblocks visualchars fullscreen image link media template codesample table charmap pagebreak nonbreaking anchor insertdatetime advlist lists wordcount help charmap quickbars emoticons',
-            menubar: false,
-            toolbar: 'undo redo | bold italic underline strikethrough | fontfamily fontsize blocks | alignleft aligncenter alignright alignjustify | outdent indent |  numlist bullist | forecolor backcolor removeformat | pagebreak | charmap emoticons | fullscreen  preview save print | insertfile image media template link anchor codesample | ltr rtl',
-            toolbar_sticky: true,
-            autosave_ask_before_unload: false,
-            autosave_interval: '30s',
-            autosave_prefix: '{path}{query}-{id}-',
-            autosave_restore_when_empty: false,
-            autosave_retention: '2m',
-            image_advtab: true,
-            content_style: 'body { font-family:Helvetica,Arial,sans-serif; font-size:14px }',
-            promotion: false, // Hide "Upgrade" button
-            branding: false   // Hide "Powered by Tiny"
-        });
+// Image Upload Adapter for CKEditor
+function MyCustomUploadAdapterPlugin(editor) {
+    editor.plugins.get('FileRepository').createUploadAdapter = (loader) => {
+        return new MyUploadAdapter(loader);
+    };
+}
+
+class MyUploadAdapter {
+    constructor(loader) {
+        this.loader = loader;
     }
 
-    // Auto-slug generation
-    const titleInput = document.getElementById('pageTitle');
-    const slugInput = document.getElementById('pageSlug');
-    
-    if(titleInput && slugInput){
-        titleInput.addEventListener('input', function() {
-            if (!slugInput.value) { 
-                 const slug = this.value
-                    .toLowerCase()
-                    .replace(/[^a-z0-9]+/g, '-')
-                    .replace(/(^-|-$)+/g, '');
-            }
-        });
+    upload() {
+        return this.loader.file.then(file => new Promise((resolve, reject) => {
+            const data = new FormData();
+            data.append('upload', file);
+
+            fetch('<?php echo $baseUrl; ?>/admin/blogs/upload_image.php', {
+                method: 'POST',
+                body: data
+            })
+            .then(response => response.json())
+            .then(result => {
+                if (result.error) {
+                    reject(result.error.message);
+                } else {
+                    resolve({
+                        default: result.url
+                    });
+                }
+            })
+            .catch(error => {
+                reject('Upload failed');
+            });
+        }));
     }
+}
+
+// Initialize CKEditor
+let editorInstance;
+ClassicEditor
+    .create(document.querySelector('#editor'), {
+        extraPlugins: [MyCustomUploadAdapterPlugin],
+        toolbar: {
+            items: [
+                'heading', '|',
+                'bold', 'italic', 'underline', 'strikethrough', 'link', '|',
+                'bulletedList', 'numberedList', 'indent', 'outdent', '|',
+                'blockQuote', 'insertTable', 'undo', 'redo', '|',
+                'imageUpload', 'sourceEditing'
+            ]
+        },
+        language: 'en',
+        image: {
+            toolbar: [
+                'imageTextAlternative',
+                'toggleImageCaption',
+                'imageStyle:inline',
+                'imageStyle:block',
+                'imageStyle:side'
+            ]
+        },
+        table: {
+            contentToolbar: [
+                'tableColumn',
+                'tableRow',
+                'mergeTableCells'
+            ]
+        }
+    })
+    .then(editor => {
+        editorInstance = editor;
+        console.log('CKEditor initialized');
+    })
+    .catch(error => {
+        console.error(error);
+    });
+
+
+// Auto-slug generation
+const titleInput = document.getElementById('pageTitle');
+const slugInput = document.getElementById('pageSlug');
+
+if (titleInput && slugInput) {
+    // Track manual edits
+    slugInput.addEventListener('input', function() {
+        this.setAttribute('data-manual', 'true');
+    });
+
+    titleInput.addEventListener('input', function() {
+        // Only update if not manually edited
+        if (slugInput.getAttribute('data-manual') !== 'true') {
+            const slug = this.value
+                .toLowerCase()
+                .trim()
+                .replace(/[^a-z0-9]+/g, '-')
+                .replace(/(^-|-$)+/g, '');
+            slugInput.value = slug;
+        }
+    });
+}
 </script>
+
+<style>
+/* CKEditor Styling */
+.ck-editor__editable {
+    min-height: 500px;
+}
+
+.ck-content {
+    font-size: 16px;
+    line-height: 1.6;
+}
+
+/* Tailwind reset fix for CKEditor lists */
+.ck-content ol, .ck-content ul { list-style: revert; margin: revert; padding: revert; }
+
+.ck-content h2 {
+    font-size: 1.75em;
+    margin-top: 1em;
+    margin-bottom: 0.5em;
+}
+
+.ck-content blockquote { 
+    border-left: 4px solid #ccc; 
+    padding-left: 1em; 
+    color: #666; 
+    font-style: italic; 
+}
+
+.ck-content p {
+    margin-bottom: 1em;
+}
+
+.ck-content img {
+    max-width: 100%;
+    height: auto;
+}
+
+.ck-content table {
+    border-collapse: collapse;
+    width: 100%;
+    margin: 1em 0;
+}
+
+.ck-content table td,
+.ck-content table th {
+    border: 1px solid #ddd;
+    padding: 8px;
+}
+</style>
 
 <?php require_once __DIR__ . '/../includes/admin-footer.php'; ?>

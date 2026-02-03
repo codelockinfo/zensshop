@@ -10,6 +10,12 @@ $baseUrl = getBaseUrl();
 // Store ID Logic
 $storeId = getCurrentStoreId();
 
+// Handle direct access via ?slug=
+if (!empty($_GET['slug'])) {
+    require __DIR__ . '/blog-post.php';
+    exit;
+}
+
 // Check if Blog is Enabled
 if ($settingsObj->get('enable_blog', '1') != '1') {
     header("Location: " . $baseUrl);
@@ -44,14 +50,34 @@ $blogHeadingColor = $settingsObj->get('blog_heading_color', '#111827');
                 <p class="text-xl">No blog posts available at the moment. Check back later!</p>
             </div>
         <?php else: ?>
-            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+            <!-- Skeleton Loaders for Blog Cards -->
+            <div id="blog-skeleton" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+                <?php for ($i = 0; $i < min(6, count($blogs)); $i++): ?>
+                <div class="bg-white rounded-xl shadow-sm overflow-hidden animate-pulse">
+                    <div class="aspect-video bg-gradient-to-r from-gray-200 via-gray-300 to-gray-200 relative overflow-hidden">
+                        <div class="absolute inset-0 bg-gradient-to-r from-transparent via-white to-transparent opacity-50 animate-shimmer"></div>
+                    </div>
+                    <div class="p-6 space-y-3">
+                        <div class="h-3 bg-gray-300 rounded w-24"></div>
+                        <div class="h-6 bg-gray-300 rounded w-full"></div>
+                        <div class="h-4 bg-gray-300 rounded w-full"></div>
+                        <div class="h-4 bg-gray-300 rounded w-3/4"></div>
+                        <div class="h-4 bg-gray-300 rounded w-20 mt-4"></div>
+                    </div>
+                </div>
+                <?php endfor; ?>
+            </div>
+            
+            <!-- Actual Blog Cards -->
+            <div id="blog-cards" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8" style="display: none;">
                 <?php foreach ($blogs as $blog): ?>
                     <article class="bg-white rounded-xl shadow-sm hover:shadow-md transition-shadow overflow-hidden group flex flex-col h-full">
-                        <a href="<?php echo $baseUrl; ?>/blog/<?php echo htmlspecialchars($blog['slug']); ?>" class="block relative overflow-hidden aspect-video">
+                        <a href="<?php echo $baseUrl; ?>/blog?slug=<?php echo htmlspecialchars($blog['slug']); ?>" class="block relative overflow-hidden aspect-video">
                             <?php if ($blog['image']): ?>
                                 <img src="<?php echo $baseUrl . '/' . $blog['image']; ?>" 
                                      alt="<?php echo htmlspecialchars($blog['title']); ?>" 
-                                     class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500">
+                                     class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                                     loading="lazy">
                             <?php else: ?>
                                 <div class="w-full h-full bg-gray-100 flex items-center justify-center text-gray-300">
                                     <i class="fas fa-image text-3xl"></i>
@@ -66,7 +92,7 @@ $blogHeadingColor = $settingsObj->get('blog_heading_color', '#111827');
                             </div>
                             
                             <h2 class="text-xl font-bold mb-3 line-clamp-2">
-                                <a href="<?php echo $baseUrl; ?>/blog/<?php echo htmlspecialchars($blog['slug']); ?>" class="text-gray-900 group-hover:text-blue-600 transition">
+                                <a href="<?php echo $baseUrl; ?>/blog?slug=<?php echo htmlspecialchars($blog['slug']); ?>" class="text-gray-900 group-hover:text-blue-600 transition">
                                     <?php echo htmlspecialchars($blog['title']); ?>
                                 </a>
                             </h2>
@@ -78,7 +104,7 @@ $blogHeadingColor = $settingsObj->get('blog_heading_color', '#111827');
                                 ?>
                             </div>
                             
-                            <a href="<?php echo $baseUrl; ?>/blog/<?php echo htmlspecialchars($blog['slug']); ?>" class="inline-flex items-center text-blue-600 font-semibold text-sm hover:underline mt-auto">
+                            <a href="<?php echo $baseUrl; ?>/blog?slug=<?php echo htmlspecialchars($blog['slug']); ?>" class="inline-flex items-center text-blue-600 font-semibold text-sm hover:underline mt-auto">
                                 Read Article <i class="fas fa-arrow-right ml-2 text-xs transition-transform group-hover:translate-x-1"></i>
                             </a>
                         </div>
@@ -88,5 +114,28 @@ $blogHeadingColor = $settingsObj->get('blog_heading_color', '#111827');
         <?php endif; ?>
     </div>
 </div>
+
+<style>
+@keyframes shimmer {
+    0% { transform: translateX(-100%); }
+    100% { transform: translateX(100%); }
+}
+.animate-shimmer {
+    animation: shimmer 2s infinite;
+}
+</style>
+
+<script>
+// Hide skeleton and show blog cards when page loads
+window.addEventListener('load', function() {
+    const skeleton = document.getElementById('blog-skeleton');
+    const cards = document.getElementById('blog-cards');
+    
+    if (skeleton && cards) {
+        skeleton.style.display = 'none';
+        cards.style.display = 'grid';
+    }
+});
+</script>
 
 <?php require_once __DIR__ . '/includes/footer.php'; ?>

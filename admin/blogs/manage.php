@@ -91,7 +91,7 @@ require_once __DIR__ . '/../../includes/admin-header.php';
                         <?php echo date('M j, Y', strtotime($blog['created_at'])); ?>
                     </td>
                     <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                        <a href="<?php echo $baseUrl; ?>/blog/<?php echo $blog['slug']; ?>" target="_blank" class="text-gray-600 hover:text-gray-900 mr-4" title="View Live"><i class="fas fa-eye"></i></a>
+                        <a href="<?php echo $baseUrl; ?>/blog?slug=<?php echo $blog['slug']; ?>" target="_blank" class="text-gray-600 hover:text-gray-900 mr-4" title="View Live"><i class="fas fa-eye"></i></a>
                         <a href="<?php echo $baseUrl; ?>/admin/blogs/edit?blog_id=<?php echo $blog['blog_id']; ?>" class="text-blue-600 hover:text-blue-900 mr-4" title="Edit"><i class="fas fa-edit"></i></a>
                         <form method="POST" class="inline-block">
                             <input type="hidden" name="delete_id" value="<?php echo $blog['id']; ?>">

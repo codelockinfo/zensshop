@@ -384,24 +384,43 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         ]);
 
         try {
-            $db->execute(
-                "UPDATE landing_pages SET 
-                    product_id=?, name=?, slug=?,
-                    header_data=?, hero_data=?, banner_data=?, stats_data=?, why_data=?, about_data=?, 
-                    testimonials_data=?, newsletter_data=?, platforms_data=?, footer_data=?,
-                    page_config=?, seo_data=?
-                WHERE id=? AND store_id=?",
-                [
-                    $productId, $pageName, $selectedSlug,
-                    $headerGrouped, $heroGrouped, $bannerGrouped, $statsGrouped, $whyGrouped, $aboutGrouped,
-                    $testiGrouped, $newsGrouped, $platformsGrouped, $footerGrouped,
-                    $pageConfigGrouped, $seoGrouped,
-                    $id, $storeId
-                ]
-            );
+            if (!empty($id)) {
+                $db->execute(
+                    "UPDATE landing_pages SET 
+                        product_id=?, name=?, slug=?,
+                        header_data=?, hero_data=?, banner_data=?, stats_data=?, why_data=?, about_data=?, 
+                        testimonials_data=?, newsletter_data=?, platforms_data=?, footer_data=?,
+                        page_config=?, seo_data=?
+                    WHERE id=? AND store_id=?",
+                    [
+                        $productId, $pageName, $selectedSlug,
+                        $headerGrouped, $heroGrouped, $bannerGrouped, $statsGrouped, $whyGrouped, $aboutGrouped,
+                        $testiGrouped, $newsGrouped, $platformsGrouped, $footerGrouped,
+                        $pageConfigGrouped, $seoGrouped,
+                        $id, $storeId
+                    ]
+                );
+            } else {
+                // Insert new Default Page if ID is missing (fallback scenario)
+                $db->insert(
+                    "INSERT INTO landing_pages (
+                        product_id, name, slug, 
+                        header_data, hero_data, banner_data, stats_data, why_data, about_data, 
+                        testimonials_data, newsletter_data, platforms_data, footer_data, 
+                        page_config, seo_data, store_id
+                    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+                    [
+                        $productId, $pageName, $selectedSlug ?: 'default',
+                        $headerGrouped, $heroGrouped, $bannerGrouped, $statsGrouped, $whyGrouped, $aboutGrouped,
+                        $testiGrouped, $newsGrouped, $platformsGrouped, $footerGrouped,
+                        $pageConfigGrouped, $seoGrouped, $storeId
+                    ]
+                );
+            }
+
             $_SESSION['flash_success'] = "Page settings saved successfully!";
             session_write_close(); // Ensure session is saved before redirect
-            header("Location: " . $baseUrl . '/admin/special-page?page=' . urlencode($selectedSlug));
+            header("Location: " . $baseUrl . '/admin/special-page?page=' . urlencode($selectedSlug ?: 'default'));
             exit;
         } catch (Exception $e) {
             $error = "Error saving settings: " . $e->getMessage();
@@ -455,14 +474,18 @@ require_once __DIR__ . '/../includes/admin-header.php';
 </script>
 <?php
 
-$allPages = $db->fetchAll("SELECT id, name, slug FROM landing_pages WHERE store_id = ? ORDER BY name ASC", [$storeId]);
+$allPages = $db->fetchAll("SELECT id, name, slug FROM landing_pages WHERE store_id = ? AND slug != 'default' ORDER BY name ASC", [$storeId]);
 
 // Determine which page to edit
 $selectedSlug = $_GET['page'] ?? '';
 
 // If no slug provided, or if provided slug is invalid, fallback to the first available page
-if (empty($selectedSlug) && !empty($allPages)) {
-    $selectedSlug = $allPages[0]['slug'];
+if (empty($selectedSlug)) {
+    if (!empty($allPages)) {
+        $selectedSlug = $allPages[0]['slug'];
+    } else {
+        $selectedSlug = 'default';
+    }
 }
 
 // Fetch active products for dropdown
@@ -567,18 +590,20 @@ if ($lp) {
 }
 ?>
 
-<div class="mb-6 flex justify-between items-center sticky top-0 bg-[#f7f8fc] pb-5 z-50">
+<div class="mb-6 flex justify-between items-end sticky top-0 bg-[#f7f8fc] py-4 z-50 border-b border-gray-200 px-1">
     <div>
-        <h1 class="text-3xl font-bold">Landing Page Manager</h1>
-        <p class="text-gray-600">Dashboard > Settings > Landing Pages</p>
+        <h1 class="text-2xl font-bold text-gray-800">Landing Page Manager</h1>
+        <p class="text-sm text-gray-500 mt-1">Dashboard > Settings > Landing Pages</p>
     </div>
-    <div class="mt-8 pt-4 border-t flex justify-end gap-4">
-    <button type="submit" form="landingPageForm" class="bg-blue-600 text-white font-bold py-3 px-8 rounded shadow-lg transition transform hover:-translate-y-0.5">
-        Save All Settings
-    </button>
-    <a href="<?php echo $baseUrl; ?>/<?php echo $selectedSlug; ?>" target="_blank" class="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700">
-        <i class="fas fa-external-link-alt mr-2"></i> View Live Page
-    </a>
+    <div class="flex items-center gap-3">
+        <?php if (!empty($selectedSlug) && $selectedSlug !== 'default'): ?>
+        <a href="<?php echo $baseUrl; ?>/<?php echo $selectedSlug; ?>" target="_blank" class="bg-white text-gray-700 border border-gray-300 px-4 py-2.5 rounded shadow-sm hover:bg-gray-50 flex items-center font-bold text-sm transition">
+            <i class="fas fa-external-link-alt mr-2 text-gray-400"></i> View Live Page
+        </a>
+        <?php endif; ?>
+        <button type="submit" form="landingPageForm" class="bg-blue-600 text-white px-6 py-2.5 rounded shadow hover:bg-blue-700 transition transform hover:-translate-y-0.5 font-bold text-sm flex items-center">
+            <i class="fas fa-save mr-2"></i> Save All Settings
+        </button>
     </div>
 </div>
 
@@ -700,15 +725,24 @@ if ($lp) {
                 <div class="flex items-center gap-6">
                      <div class="flex items-center gap-2">
                          <label class="text-sm font-bold">Theme Color:</label>
-                         <input type="color" name="theme_color" value="<?php echo htmlspecialchars(($lp['theme_color'] ?? '') ?: '#5F8D76'); ?>" class="h-8 w-12 p-0 border-0">
+                         <div class="flex items-center gap-1">
+                            <input type="color" name="theme_color" id="theme_color" value="<?php echo htmlspecialchars(($lp['theme_color'] ?? '') ?: '#5F8D76'); ?>" class="h-8 w-8 p-0 border border-gray-300 rounded cursor-pointer" oninput="document.getElementById('theme_color_text').value = this.value">
+                            <input type="text" id="theme_color_text" value="<?php echo htmlspecialchars(($lp['theme_color'] ?? '') ?: '#5F8D76'); ?>" class="w-24 border p-1 rounded text-sm uppercase" oninput="document.getElementById('theme_color').value = this.value">
+                         </div>
                      </div>
                      <div class="flex items-center gap-2">
-                         <label class="text-sm font-bold">Body Bg:</label>
-                         <input type="color" name="body_bg_color" value="<?php echo htmlspecialchars(($lp['body_bg_color'] ?? '') ?: '#ffffff'); ?>" class="h-8 w-12 p-0 border-0">
+                         <label class="text-sm font-bold">Body Background Color:</label>
+                         <div class="flex items-center gap-1">
+                            <input type="color" name="body_bg_color" id="body_bg_color" value="<?php echo htmlspecialchars(($lp['body_bg_color'] ?? '') ?: '#ffffff'); ?>" class="h-8 w-8 p-0 border border-gray-300 rounded cursor-pointer" oninput="document.getElementById('body_bg_color_text').value = this.value">
+                            <input type="text" id="body_bg_color_text" value="<?php echo htmlspecialchars(($lp['body_bg_color'] ?? '') ?: '#ffffff'); ?>" class="w-24 border p-1 rounded text-sm uppercase" oninput="document.getElementById('body_bg_color').value = this.value">
+                         </div>
                      </div>
                      <div class="flex items-center gap-2">
-                         <label class="text-sm font-bold">Body Text:</label>
-                         <input type="color" name="body_text_color" value="<?php echo htmlspecialchars(($lp['body_text_color'] ?? '') ?: '#000000'); ?>" class="h-8 w-12 p-0 border-0">
+                         <label class="text-sm font-bold">Body Text Color:</label>
+                         <div class="flex items-center gap-1">
+                            <input type="color" name="body_text_color" id="body_text_color" value="<?php echo htmlspecialchars(($lp['body_text_color'] ?? '') ?: '#000000'); ?>" class="h-8 w-8 p-0 border border-gray-300 rounded cursor-pointer" oninput="document.getElementById('body_text_color_text').value = this.value">
+                            <input type="text" id="body_text_color_text" value="<?php echo htmlspecialchars(($lp['body_text_color'] ?? '') ?: '#000000'); ?>" class="w-24 border p-1 rounded text-sm uppercase" oninput="document.getElementById('body_text_color').value = this.value">
+                         </div>
                      </div>
                 </div>
             </div>
@@ -750,12 +784,18 @@ if ($lp) {
                      <!-- Added Hero Colors -->
                      <div class="grid grid-cols-2 gap-4 mt-4 border-t pt-4">
                          <div>
-                            <label class="block text-xs font-bold mb-1">Hero Bg Color</label>
-                            <input type="color" name="hero_bg_color" value="<?php echo htmlspecialchars(($lp['hero_bg_color'] ?? '') ?: '#ffffff'); ?>" class="w-full h-8">
+                            <label class="block text-xs font-bold mb-1">Hero Background Color</label>
+                            <div class="flex items-center gap-2">
+                                <input type="color" name="hero_bg_color" id="hero_bg_color" value="<?php echo htmlspecialchars(($lp['hero_bg_color'] ?? '') ?: '#ffffff'); ?>" class="h-8 w-8 p-0 border border-gray-300 rounded cursor-pointer" oninput="document.getElementById('hero_bg_color_text').value = this.value">
+                                <input type="text" id="hero_bg_color_text" value="<?php echo htmlspecialchars(($lp['hero_bg_color'] ?? '') ?: '#ffffff'); ?>" class="w-full border p-1 rounded text-sm uppercase" oninput="document.getElementById('hero_bg_color').value = this.value">
+                            </div>
                         </div>
                         <div>
                             <label class="block text-xs font-bold mb-1">Hero Text Color</label>
-                            <input type="color" name="hero_text_color" value="<?php echo htmlspecialchars(($lp['hero_text_color'] ?? '') ?: '#000000'); ?>" class="w-full h-8">
+                            <div class="flex items-center gap-2">
+                                <input type="color" name="hero_text_color" id="hero_text_color" value="<?php echo htmlspecialchars(($lp['hero_text_color'] ?? '') ?: '#000000'); ?>" class="h-8 w-8 p-0 border border-gray-300 rounded cursor-pointer" oninput="document.getElementById('hero_text_color_text').value = this.value">
+                                <input type="text" id="hero_text_color_text" value="<?php echo htmlspecialchars(($lp['hero_text_color'] ?? '') ?: '#000000'); ?>" class="w-full border p-1 rounded text-sm uppercase" oninput="document.getElementById('hero_text_color').value = this.value">
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -807,8 +847,20 @@ if ($lp) {
                     </div>
                     <div id="secBanner" class="p-4 hidden bg-white">
                         <div class="grid grid-cols-2 gap-4 mb-4">
-                             <div><label class="block text-xs font-bold mb-1">Bg Color</label><input type="color" name="banner_bg_color" value="<?php echo htmlspecialchars(($lp['banner_bg_color'] ?? '') ?: '#ffffff'); ?>" class="w-full h-8"></div>
-                             <div><label class="block text-xs font-bold mb-1">Text Color</label><input type="color" name="banner_text_color" value="<?php echo htmlspecialchars(($lp['banner_text_color'] ?? '') ?: '#000000'); ?>" class="w-full h-8"></div>
+                             <div>
+                                <label class="block text-xs font-bold mb-1">Background Color</label>
+                                <div class="flex items-center gap-2">
+                                    <input type="color" name="banner_bg_color" id="banner_bg_color" value="<?php echo htmlspecialchars(($lp['banner_bg_color'] ?? '') ?: '#ffffff'); ?>" class="h-8 w-8 p-0 border border-gray-300 rounded cursor-pointer" oninput="document.getElementById('banner_bg_color_text').value = this.value">
+                                    <input type="text" id="banner_bg_color_text" value="<?php echo htmlspecialchars(($lp['banner_bg_color'] ?? '') ?: '#ffffff'); ?>" class="w-full border p-1 rounded text-sm uppercase" oninput="document.getElementById('banner_bg_color').value = this.value">
+                                </div>
+                            </div>
+                             <div>
+                                <label class="block text-xs font-bold mb-1">Text Color</label>
+                                <div class="flex items-center gap-2">
+                                    <input type="color" name="banner_text_color" id="banner_text_color" value="<?php echo htmlspecialchars(($lp['banner_text_color'] ?? '') ?: '#000000'); ?>" class="h-8 w-8 p-0 border border-gray-300 rounded cursor-pointer" oninput="document.getElementById('banner_text_color_text').value = this.value">
+                                    <input type="text" id="banner_text_color_text" value="<?php echo htmlspecialchars(($lp['banner_text_color'] ?? '') ?: '#000000'); ?>" class="w-full border p-1 rounded text-sm uppercase" oninput="document.getElementById('banner_text_color').value = this.value">
+                                </div>
+                            </div>
                         </div>
                         <div id="bannerSectionsContainer" class="space-y-6"></div>
                         <button type="button" onclick="addBannerSection()" class="mt-4 text-blue-600 font-bold hover:underline text-sm">+ Add Another Banner Section</button>
@@ -834,8 +886,20 @@ if ($lp) {
                     </div>
                     <div id="secStats" class="p-4 hidden bg-white">
                         <div class="grid grid-cols-2 gap-4 mb-4">
-                             <div><label class="block text-xs font-bold mb-1">Bg Color</label><input type="color" name="stats_bg_color" value="<?php echo htmlspecialchars(($lp['stats_bg_color'] ?? '') ?: '#ffffff'); ?>" class="w-full h-8"></div>
-                             <div><label class="block text-xs font-bold mb-1">Text Color</label><input type="color" name="stats_text_color" value="<?php echo htmlspecialchars(($lp['stats_text_color'] ?? '') ?: '#000000'); ?>" class="w-full h-8"></div>
+                             <div>
+                                <label class="block text-xs font-bold mb-1">Background Color</label>
+                                <div class="flex items-center gap-2">
+                                    <input type="color" name="stats_bg_color" id="stats_bg_color" value="<?php echo htmlspecialchars(($lp['stats_bg_color'] ?? '') ?: '#ffffff'); ?>" class="h-8 w-8 p-0 border border-gray-300 rounded cursor-pointer" oninput="document.getElementById('stats_bg_color_text').value = this.value">
+                                    <input type="text" id="stats_bg_color_text" value="<?php echo htmlspecialchars(($lp['stats_bg_color'] ?? '') ?: '#ffffff'); ?>" class="w-full border p-1 rounded text-sm uppercase" oninput="document.getElementById('stats_bg_color').value = this.value">
+                                </div>
+                            </div>
+                             <div>
+                                <label class="block text-xs font-bold mb-1">Text Color</label>
+                                <div class="flex items-center gap-2">
+                                    <input type="color" name="stats_text_color" id="stats_text_color" value="<?php echo htmlspecialchars(($lp['stats_text_color'] ?? '') ?: '#000000'); ?>" class="h-8 w-8 p-0 border border-gray-300 rounded cursor-pointer" oninput="document.getElementById('stats_text_color_text').value = this.value">
+                                    <input type="text" id="stats_text_color_text" value="<?php echo htmlspecialchars(($lp['stats_text_color'] ?? '') ?: '#000000'); ?>" class="w-full border p-1 rounded text-sm uppercase" oninput="document.getElementById('stats_text_color').value = this.value">
+                                </div>
+                            </div>
                         </div>
                         
                         <div id="statsItemsContainer" class="space-y-3"></div>
@@ -863,8 +927,20 @@ if ($lp) {
                     <div id="secWhy" class="p-4 hidden bg-white">
                          <div class="mb-4"><label class="block text-sm font-bold mb-1">Section Title</label><input type="text" name="why_title" value="<?php echo htmlspecialchars($lp['why_title'] ?? ''); ?>" class="w-full border p-2 rounded"></div>
                         <div class="grid grid-cols-2 gap-4 mb-4">
-                             <div><label class="block text-xs font-bold mb-1">Bg Color</label><input type="color" name="why_bg_color" value="<?php echo htmlspecialchars(($lp['why_bg_color'] ?? '') ?: '#ffffff'); ?>" class="w-full h-8"></div>
-                            <div><label class="block text-xs font-bold mb-1">Text Color</label><input type="color" name="why_text_color" value="<?php echo htmlspecialchars(($lp['why_text_color'] ?? '') ?: '#000000'); ?>" class="w-full h-8"></div>
+                             <div>
+                                <label class="block text-xs font-bold mb-1">Background Color</label>
+                                <div class="flex items-center gap-2">
+                                    <input type="color" name="why_bg_color" id="why_bg_color" value="<?php echo htmlspecialchars(($lp['why_bg_color'] ?? '') ?: '#ffffff'); ?>" class="h-8 w-8 p-0 border border-gray-300 rounded cursor-pointer" oninput="document.getElementById('why_bg_color_text').value = this.value">
+                                    <input type="text" id="why_bg_color_text" value="<?php echo htmlspecialchars(($lp['why_bg_color'] ?? '') ?: '#ffffff'); ?>" class="w-full border p-1 rounded text-sm uppercase" oninput="document.getElementById('why_bg_color').value = this.value">
+                                </div>
+                            </div>
+                            <div>
+                                <label class="block text-xs font-bold mb-1">Text Color</label>
+                                <div class="flex items-center gap-2">
+                                    <input type="color" name="why_text_color" id="why_text_color" value="<?php echo htmlspecialchars(($lp['why_text_color'] ?? '') ?: '#000000'); ?>" class="h-8 w-8 p-0 border border-gray-300 rounded cursor-pointer" oninput="document.getElementById('why_text_color_text').value = this.value">
+                                    <input type="text" id="why_text_color_text" value="<?php echo htmlspecialchars(($lp['why_text_color'] ?? '') ?: '#000000'); ?>" class="w-full border p-1 rounded text-sm uppercase" oninput="document.getElementById('why_text_color').value = this.value">
+                                </div>
+                            </div>
                         </div>
                         
                         <div id="whyItemsContainer" class="space-y-4"></div>
@@ -920,8 +996,20 @@ if ($lp) {
                             </div>
                         </div>
                         <div class="grid grid-cols-2 gap-4">
-                             <div><label class="block text-xs font-bold mb-1">Bg Color</label><input type="color" name="about_bg_color" value="<?php echo htmlspecialchars(($lp['about_bg_color'] ?? '') ?: '#ffffff'); ?>" class="w-full h-8"></div>
-                            <div><label class="block text-xs font-bold mb-1">Text Color</label><input type="color" name="about_text_color" value="<?php echo htmlspecialchars(($lp['about_text_color'] ?? '') ?: '#000000'); ?>" class="w-full h-8"></div>
+                             <div>
+                                <label class="block text-xs font-bold mb-1">Background Color</label>
+                                <div class="flex items-center gap-2">
+                                    <input type="color" name="about_bg_color" id="about_bg_color" value="<?php echo htmlspecialchars(($lp['about_bg_color'] ?? '') ?: '#ffffff'); ?>" class="h-8 w-8 p-0 border border-gray-300 rounded cursor-pointer" oninput="document.getElementById('about_bg_color_text').value = this.value">
+                                    <input type="text" id="about_bg_color_text" value="<?php echo htmlspecialchars(($lp['about_bg_color'] ?? '') ?: '#ffffff'); ?>" class="w-full border p-1 rounded text-sm uppercase" oninput="document.getElementById('about_bg_color').value = this.value">
+                                </div>
+                            </div>
+                            <div>
+                                <label class="block text-xs font-bold mb-1">Text Color</label>
+                                <div class="flex items-center gap-2">
+                                    <input type="color" name="about_text_color" id="about_text_color" value="<?php echo htmlspecialchars(($lp['about_text_color'] ?? '') ?: '#000000'); ?>" class="h-8 w-8 p-0 border border-gray-300 rounded cursor-pointer" oninput="document.getElementById('about_text_color_text').value = this.value">
+                                    <input type="text" id="about_text_color_text" value="<?php echo htmlspecialchars(($lp['about_text_color'] ?? '') ?: '#000000'); ?>" class="w-full border p-1 rounded text-sm uppercase" oninput="document.getElementById('about_text_color').value = this.value">
+                                </div>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -945,8 +1033,20 @@ if ($lp) {
                      <div id="secTesti" class="p-4 hidden bg-white">
                          <div class="mb-4"><label class="block text-sm font-bold mb-1">Section Title</label><input type="text" name="testimonials_title" value="<?php echo htmlspecialchars($lp['testimonials_title'] ?? ''); ?>" class="w-full border p-2 rounded"></div>
                         <div class="grid grid-cols-2 gap-4 mb-4">
-                             <div><label class="block text-xs font-bold mb-1">Bg Color</label><input type="color" name="testimonials_bg_color" value="<?php echo htmlspecialchars(($lp['testimonials_bg_color'] ?? '') ?: '#ffffff'); ?>" class="w-full h-8"></div>
-                            <div><label class="block text-xs font-bold mb-1">Text Color</label><input type="color" name="testimonials_text_color" value="<?php echo htmlspecialchars(($lp['testimonials_text_color'] ?? '') ?: '#000000'); ?>" class="w-full h-8"></div>
+                             <div>
+                                <label class="block text-xs font-bold mb-1">Background Color</label>
+                                <div class="flex items-center gap-2">
+                                    <input type="color" name="testimonials_bg_color" id="testimonials_bg_color" value="<?php echo htmlspecialchars(($lp['testimonials_bg_color'] ?? '') ?: '#ffffff'); ?>" class="h-8 w-8 p-0 border border-gray-300 rounded cursor-pointer" oninput="document.getElementById('testimonials_bg_color_text').value = this.value">
+                                    <input type="text" id="testimonials_bg_color_text" value="<?php echo htmlspecialchars(($lp['testimonials_bg_color'] ?? '') ?: '#ffffff'); ?>" class="w-full border p-1 rounded text-sm uppercase" oninput="document.getElementById('testimonials_bg_color').value = this.value">
+                                </div>
+                            </div>
+                            <div>
+                                <label class="block text-xs font-bold mb-1">Text Color</label>
+                                <div class="flex items-center gap-2">
+                                    <input type="color" name="testimonials_text_color" id="testimonials_text_color" value="<?php echo htmlspecialchars(($lp['testimonials_text_color'] ?? '') ?: '#000000'); ?>" class="h-8 w-8 p-0 border border-gray-300 rounded cursor-pointer" oninput="document.getElementById('testimonials_text_color_text').value = this.value">
+                                    <input type="text" id="testimonials_text_color_text" value="<?php echo htmlspecialchars(($lp['testimonials_text_color'] ?? '') ?: '#000000'); ?>" class="w-full border p-1 rounded text-sm uppercase" oninput="document.getElementById('testimonials_text_color').value = this.value">
+                                </div>
+                            </div>
                         </div>
                         
                         <div id="testimonialsItemsContainer" class="space-y-6"></div>
@@ -975,8 +1075,20 @@ if ($lp) {
                          <div class="mb-4"><label class="block text-sm font-bold mb-1">Section Title</label><input type="text" name="newsletter_title" value="<?php echo htmlspecialchars($lp['newsletter_title'] ?? ''); ?>" class="w-full border p-2 rounded"></div>
                         <div class="mb-4"><label class="block text-sm font-bold mb-1">Text Content</label><input type="text" name="newsletter_text" value="<?php echo htmlspecialchars($lp['newsletter_text'] ?? ''); ?>" class="w-full border p-2 rounded"></div>
                         <div class="grid grid-cols-2 gap-4">
-                             <div><label class="block text-xs font-bold mb-1">Bg Color</label><input type="color" name="newsletter_bg_color" value="<?php echo htmlspecialchars(($lp['newsletter_bg_color'] ?? '') ?: '#ffffff'); ?>" class="w-full h-8"></div>
-                            <div><label class="block text-xs font-bold mb-1">Text Color</label><input type="color" name="newsletter_text_color" value="<?php echo htmlspecialchars(($lp['newsletter_text_color'] ?? '') ?: '#000000'); ?>" class="w-full h-8"></div>
+                             <div>
+                                <label class="block text-xs font-bold mb-1">Background Color</label>
+                                <div class="flex items-center gap-2">
+                                    <input type="color" name="newsletter_bg_color" id="newsletter_bg_color" value="<?php echo htmlspecialchars(($lp['newsletter_bg_color'] ?? '') ?: '#ffffff'); ?>" class="h-8 w-8 p-0 border border-gray-300 rounded cursor-pointer" oninput="document.getElementById('newsletter_bg_color_text').value = this.value">
+                                    <input type="text" id="newsletter_bg_color_text" value="<?php echo htmlspecialchars(($lp['newsletter_bg_color'] ?? '') ?: '#ffffff'); ?>" class="w-full border p-1 rounded text-sm uppercase" oninput="document.getElementById('newsletter_bg_color').value = this.value">
+                                </div>
+                            </div>
+                            <div>
+                                <label class="block text-xs font-bold mb-1">Text Color</label>
+                                <div class="flex items-center gap-2">
+                                    <input type="color" name="newsletter_text_color" id="newsletter_text_color" value="<?php echo htmlspecialchars(($lp['newsletter_text_color'] ?? '') ?: '#000000'); ?>" class="h-8 w-8 p-0 border border-gray-300 rounded cursor-pointer" oninput="document.getElementById('newsletter_text_color_text').value = this.value">
+                                    <input type="text" id="newsletter_text_color_text" value="<?php echo htmlspecialchars(($lp['newsletter_text_color'] ?? '') ?: '#000000'); ?>" class="w-full border p-1 rounded text-sm uppercase" oninput="document.getElementById('newsletter_text_color').value = this.value">
+                                </div>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -1092,8 +1204,20 @@ if ($lp) {
                     </div>
 
                     <div class="grid grid-cols-2 gap-4 mb-4">
-                         <div><label class="block text-xs font-bold mb-1">Bg Color</label><input type="color" name="footer_extra_bg" value="<?php echo htmlspecialchars($lp['footer_extra_bg'] ?? '#f8f9fa'); ?>" class="w-full h-8 cursor-pointer"></div>
-                        <div><label class="block text-xs font-bold mb-1">Text Color</label><input type="color" name="footer_extra_text" value="<?php echo htmlspecialchars($lp['footer_extra_text'] ?? '#333333'); ?>" class="w-full h-8 cursor-pointer"></div>
+                         <div>
+                            <label class="block text-xs font-bold mb-1">Background Color</label>
+                            <div class="flex items-center gap-2">
+                                <input type="color" name="footer_extra_bg" id="footer_extra_bg" value="<?php echo htmlspecialchars($lp['footer_extra_bg'] ?? '#f8f9fa'); ?>" class="h-8 w-8 p-0 border border-gray-300 rounded cursor-pointer" oninput="document.getElementById('footer_extra_bg_text').value = this.value">
+                                <input type="text" id="footer_extra_bg_text" value="<?php echo htmlspecialchars($lp['footer_extra_bg'] ?? '#f8f9fa'); ?>" class="w-full border p-1 rounded text-sm uppercase" oninput="document.getElementById('footer_extra_bg').value = this.value">
+                             </div>
+                        </div>
+                        <div>
+                            <label class="block text-xs font-bold mb-1">Text Color</label>
+                            <div class="flex items-center gap-2">
+                                <input type="color" name="footer_extra_text" id="footer_extra_text" value="<?php echo htmlspecialchars($lp['footer_extra_text'] ?? '#333333'); ?>" class="h-8 w-8 p-0 border border-gray-300 rounded cursor-pointer" oninput="document.getElementById('footer_extra_text_text').value = this.value">
+                                <input type="text" id="footer_extra_text_text" value="<?php echo htmlspecialchars($lp['footer_extra_text'] ?? '#333333'); ?>" class="w-full border p-1 rounded text-sm uppercase" oninput="document.getElementById('footer_extra_text').value = this.value">
+                            </div>
+                        </div>
                     </div>
                     
                     <div class="mb-4">
@@ -1454,12 +1578,18 @@ function addPlatformItem(data = {}) {
                     </div>
                     <div class="grid grid-cols-2 gap-2">
                         <div>
-                             <label class="block text-xs font-bold mb-1">Bg Color</label>
-                             <input type="color" name="platform_items[${index}][bg]" value="${data.bg || '#ffffff'}" class="w-full h-9 border border-gray-200 rounded cursor-pointer">
+                             <label class="block text-xs font-bold mb-1">Background Color</label>
+                             <div class="flex items-center gap-2">
+                                <input type="color" id="platform_bg_${index}" name="platform_items[${index}][bg]" value="${data.bg || '#ffffff'}" class="h-8 w-8 p-0 border border-gray-300 rounded cursor-pointer" oninput="document.getElementById('platform_bg_text_${index}').value = this.value">
+                                <input type="text" id="platform_bg_text_${index}" value="${data.bg || '#ffffff'}" class="w-full border p-1 rounded text-sm uppercase" oninput="document.getElementById('platform_bg_${index}').value = this.value">
+                             </div>
                         </div>
                         <div>
                              <label class="block text-xs font-bold mb-1">Text Color</label>
-                             <input type="color" name="platform_items[${index}][text]" value="${data.text || '#111827'}" class="w-full h-9 border border-gray-200 rounded cursor-pointer">
+                             <div class="flex items-center gap-2">
+                                <input type="color" id="platform_text_${index}" name="platform_items[${index}][text]" value="${data.text || '#111827'}" class="h-8 w-8 p-0 border border-gray-300 rounded cursor-pointer" oninput="document.getElementById('platform_text_text_${index}').value = this.value">
+                                <input type="text" id="platform_text_text_${index}" value="${data.text || '#111827'}" class="w-full border p-1 rounded text-sm uppercase" oninput="document.getElementById('platform_text_${index}').value = this.value">
+                             </div>
                         </div>
                     </div>
                 </div>

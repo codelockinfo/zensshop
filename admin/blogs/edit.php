@@ -167,7 +167,7 @@ require_once __DIR__ . '/../../includes/admin-header.php';
                     </button>
                     
                     <?php if($id && ($blog['status']??'') === 'published'): ?>
-                        <a href="<?php echo $baseUrl; ?>/blog/<?php echo $blog['slug']; ?>" target="_blank" class="block text-center mt-4 text-sm font-semibold text-blue-600 hover:text-blue-800 flex items-center justify-center gap-2 border border-blue-200 py-2 rounded bg-blue-50 hover:bg-blue-100 transition">
+                        <a href="<?php echo $baseUrl; ?>/blog?slug=<?php echo $blog['slug']; ?>" target="_blank" class="block text-center mt-4 text-sm font-semibold text-blue-600 hover:text-blue-800 flex items-center justify-center gap-2 border border-blue-200 py-2 rounded bg-blue-50 hover:bg-blue-100 transition">
                             <i class="fas fa-external-link-alt"></i> View Live Post
                         </a>
                     <?php endif; ?>
@@ -212,7 +212,6 @@ require_once __DIR__ . '/../../includes/admin-header.php';
 <style>
 /* CKEditor Custom Height */
 .ck-editor__editable { min-height: 400px; }
-/* Tailwind reset fix for CKEditor lists */
 .ck-content ol, .ck-content ul { list-style: revert; margin: revert; padding: revert; }
 .ck-content h2 { font-size: 1.5em; font-weight: bold; margin-top: 1em; margin-bottom: 0.5em; }
 .ck-content h3 { font-size: 1.17em; font-weight: bold; margin-top: 1em; margin-bottom: 0.5em; }
@@ -262,10 +261,26 @@ require_once __DIR__ . '/../../includes/admin-header.php';
                     'bold', 'italic', 'underline', 'strikethrough', 'link', '|',
                     'bulletedList', 'numberedList', 'indent', 'outdent', '|',
                     'blockQuote', 'insertTable', 'undo', 'redo', '|',
-                    'imageUpload' 
+                    'imageUpload', 'sourceEditing'
                 ]
             },
-            language: 'en'
+            language: 'en',
+            image: {
+                toolbar: [
+                    'imageTextAlternative',
+                    'toggleImageCaption',
+                    'imageStyle:inline',
+                    'imageStyle:block',
+                    'imageStyle:side'
+                ]
+            },
+            table: {
+                contentToolbar: [
+                    'tableColumn',
+                    'tableRow',
+                    'mergeTableCells'
+                ]
+            }
         } )
         .then( editor => {
             console.log( 'Editor initialized', editor );
@@ -273,6 +288,7 @@ require_once __DIR__ . '/../../includes/admin-header.php';
         .catch( error => {
             console.error( error );
         } );
+
 
     function generateSlug() {
         const title = document.getElementById('title').value;
