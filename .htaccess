@@ -29,6 +29,9 @@ php_value max_input_time 300
     RewriteRule ^admin/offers$ admin/special_offers_settings.php [L,QSA]
     RewriteRule ^admin/special-page$ admin/settings.php [L,QSA]
     RewriteRule ^admin/settings$ admin/system-settings.php [L,QSA]
+    
+    # Blog Detail Page
+    RewriteRule ^blog/([a-zA-Z0-9-_]+)$ blog-post.php?slug=$1 [QSA,L]
 
     # 1. Externally redirect /file.php to /file (Client Request -> Browser URL change)
     # This ensures that even if code links to 'contact.php', the user sees 'contact'

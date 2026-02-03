@@ -121,7 +121,7 @@ if (empty($products)) {
                 </div>
                 
                 <div class="p-4">
-                    <h3 class="font-semibold text-sm md:text-base text-gray-800 mb-2 overflow-hidden  h-10 md:h-12 md:w-[250px] leading-tight" style="display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical;" title="<?php echo htmlspecialchars($item['name']); ?>">
+                    <h3 class="font-semibold text-sm md:text-base text-gray-800 md:max-w-[250px] max-w-[250px] mb-2 overflow-hidden h-10 md:h-12 leading-tight" style="display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical;" title="<?php echo htmlspecialchars($item['name']); ?>">
                         <a href="<?php echo $baseUrl; ?>/product?slug=<?php echo urlencode($item['slug'] ?? ''); ?>" class="hover:text-primary transition block">
                             <?php echo htmlspecialchars($item['name']); ?>
                         </a>

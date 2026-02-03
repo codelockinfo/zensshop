@@ -363,7 +363,8 @@ $isSettingsPage = strpos($_SERVER['PHP_SELF'], 'settings') !== false
                || strpos($_SERVER['PHP_SELF'], 'homepage_products_settings') !== false
                || strpos($_SERVER['PHP_SELF'], 'homepage_videos_settings') !== false
                || strpos($_SERVER['PHP_SELF'], 'pages') !== false
-               || strpos($_SERVER['PHP_SELF'], 'page-edit') !== false;
+               || strpos($_SERVER['PHP_SELF'], 'page-edit') !== false
+               || strpos($_SERVER['REQUEST_URI'], 'admin/blogs') !== false;
 
 $currentPage = basename($_SERVER['PHP_SELF']);
 ?>
@@ -480,6 +481,19 @@ $currentPage = basename($_SERVER['PHP_SELF']);
             <i class="fas fa-file-alt text-xs"></i>
             <span>Custom Pages</span>
         </a>
+
+        <?php 
+        require_once __DIR__ . '/../classes/Settings.php';
+        $settingsObjHeader = new Settings();
+        if ($settingsObjHeader->get('enable_blog', '1') == '1'): 
+        ?>
+        <a href="<?php echo url('admin/blogs/manage'); ?>"
+           class="flex items-center space-x-2 py-1 px-4 text-sm <?php echo (strpos($_SERVER['REQUEST_URI'], 'admin/blogs') !== false) ? 'bg-gray-700' : ''; ?>"
+           title="Manage Blogs">
+            <i class="fas fa-blog text-xs"></i>
+            <span>Blogs</span>
+        </a>
+        <?php endif; ?>
 
     </div>
 </div>

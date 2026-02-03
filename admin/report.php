@@ -35,12 +35,13 @@ $recentOrders = $db->fetchAll("SELECT * FROM orders WHERE store_id = ? ORDER BY 
 
 // Get top products
 $topProducts = $db->fetchAll("
-    SELECT p.id, p.name, COUNT(oi.id) as order_count, SUM(oi.quantity) as total_sold, SUM(oi.subtotal) as total_revenue
+    SELECT p.id, p.name, COUNT(oi.id) as order_count, COALESCE(SUM(oi.quantity), 0) as total_sold, COALESCE(SUM(oi.subtotal), 0) as total_revenue
     FROM products p
     LEFT JOIN order_items oi ON p.id = oi.product_id
     LEFT JOIN orders o ON oi.order_num = o.order_number
     WHERE p.store_id = ? AND (o.created_at >= ? OR o.created_at IS NULL)
     GROUP BY p.id
+    HAVING total_sold > 0
     ORDER BY total_sold DESC
     LIMIT 10
 ", [$storeId, $startDate]);
@@ -268,7 +269,7 @@ document.addEventListener('DOMContentLoaded', function() {
         <table class="admin-table">
             <thead>
                 <tr>
-                    <th>Order ID</th>
+                    <th>Order Number</th>
                     <th>Customer</th>
                     <th>Date</th>
                     <th>Status</th>
@@ -284,7 +285,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 <?php else: ?>
                 <?php foreach ($recentOrders as $orderItem): ?>
                 <tr>
-                    <td>#<?php echo htmlspecialchars($orderItem['id']); ?></td>
+                    <td><?php echo htmlspecialchars($orderItem['order_number'] ?: ('#' . $orderItem['id'])); ?></td>
                     <td><?php echo htmlspecialchars($orderItem['customer_name'] ?? 'N/A'); ?></td>
                     <td><?php echo date('M d, Y', strtotime($orderItem['created_at'])); ?></td>
                     <td>

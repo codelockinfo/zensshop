@@ -110,6 +110,8 @@ class Product {
             'price DESC' => 'COALESCE(NULLIF(p.sale_price, 0), p.price) DESC',
             'name ASC' => 'p.name ASC',
             'name DESC' => 'p.name DESC',
+            'name_ASC' => 'p.name ASC',
+            'name_DESC' => 'p.name DESC',
             'rating DESC' => 'p.rating DESC',
             'created_at DESC' => 'p.created_at DESC'
         ];

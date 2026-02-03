@@ -35,25 +35,34 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     // Handle Image Upload
     $imagePath = ($id && $category) ? $category['image'] : ''; // Default to existing
     
-    if (isset($_FILES['image']) && $_FILES['image']['error'] === UPLOAD_ERR_OK) {
-        $fileTmpPath = $_FILES['image']['tmp_name'];
-        $fileName = $_FILES['image']['name'];
-        $fileNameCmps = explode(".", $fileName);
-        $fileExtension = strtolower(end($fileNameCmps));
-        
-        $allowedfileExtensions = array('jpg', 'gif', 'png', 'jpeg', 'webp');
-        if (in_array($fileExtension, $allowedfileExtensions)) {
-            $uploadFileDir = __DIR__ . '/../../assets/images/categories/';
-            if (!is_dir($uploadFileDir)) {
-                mkdir($uploadFileDir, 0777, true);
-            }
+    if (isset($_FILES['image'])) {
+        if ($_FILES['image']['error'] === UPLOAD_ERR_OK) {
+            $fileTmpPath = $_FILES['image']['tmp_name'];
+            $fileName = $_FILES['image']['name'];
+            $fileNameCmps = explode(".", $fileName);
+            $fileExtension = strtolower(end($fileNameCmps));
             
-            $newFileName = md5(time() . $fileName) . '.' . $fileExtension;
-            $dest_path = $uploadFileDir . $newFileName;
-            
-            if(move_uploaded_file($fileTmpPath, $dest_path)) {
-                $imagePath = 'assets/images/categories/' . $newFileName;
+            $allowedfileExtensions = array('jpg', 'gif', 'png', 'jpeg', 'webp');
+            if (in_array($fileExtension, $allowedfileExtensions)) {
+                $uploadFileDir = __DIR__ . '/../../assets/images/categories/';
+                if (!is_dir($uploadFileDir)) {
+                    mkdir($uploadFileDir, 0777, true);
+                }
+                
+                $cleanFileName = preg_replace('/[^a-zA-Z0-9._-]/', '', $fileName);
+                $newFileName = time() . '_' . $cleanFileName;
+                $dest_path = $uploadFileDir . $newFileName;
+                
+                if(move_uploaded_file($fileTmpPath, $dest_path)) {
+                    $imagePath = 'assets/images/categories/' . $newFileName;
+                } else {
+                     $error = "Failed to move uploaded image file.";
+                }
+            } else {
+                $error = "Invalid image file type. Allowed: jpg, png, webp.";
             }
+        } elseif ($_FILES['image']['error'] !== UPLOAD_ERR_NO_FILE) {
+             $error = "Image upload failed with error code: " . $_FILES['image']['error'];
         }
     } else if (isset($_POST['remove_image']) && $_POST['remove_image'] == '1') {
         $imagePath = ''; // User removed image
@@ -62,28 +71,48 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     // Handle Banner Upload
     $bannerPath = ($id && $category) ? ($category['banner'] ?? '') : ''; // Default to existing
 
-    if (isset($_FILES['banner']) && $_FILES['banner']['error'] === UPLOAD_ERR_OK) {
-        $fileTmpPath = $_FILES['banner']['tmp_name'];
-        $fileName = $_FILES['banner']['name'];
-        $fileNameCmps = explode(".", $fileName);
-        $fileExtension = strtolower(end($fileNameCmps));
-        
-        $allowedfileExtensions = array('jpg', 'gif', 'png', 'jpeg', 'webp');
-        if (in_array($fileExtension, $allowedfileExtensions)) {
-            $uploadFileDir = __DIR__ . '/../../assets/images/categories/';
-            if (!is_dir($uploadFileDir)) {
-                mkdir($uploadFileDir, 0777, true);
-            }
+    if (isset($_FILES['banner'])) {
+        if ($_FILES['banner']['error'] === UPLOAD_ERR_OK) {
+            $fileTmpPath = $_FILES['banner']['tmp_name'];
+            $fileName = $_FILES['banner']['name'];
+            $fileNameCmps = explode(".", $fileName);
+            $fileExtension = strtolower(end($fileNameCmps));
             
-            $newFileName = 'banner_' . md5(time() . $fileName) . '.' . $fileExtension;
-            $dest_path = $uploadFileDir . $newFileName;
-            
-            if(move_uploaded_file($fileTmpPath, $dest_path)) {
-                $bannerPath = 'assets/images/categories/' . $newFileName;
+            $allowedfileExtensions = array('jpg', 'gif', 'png', 'jpeg', 'webp');
+            if (in_array($fileExtension, $allowedfileExtensions)) {
+                $uploadFileDir = __DIR__ . '/../../assets/images/categories/';
+                if (!is_dir($uploadFileDir)) {
+                    mkdir($uploadFileDir, 0777, true);
+                }
+                
+                $cleanFileName = preg_replace('/[^a-zA-Z0-9._-]/', '', $fileName);
+                $newFileName = 'banner_' . time() . '_' . $cleanFileName;
+                $dest_path = $uploadFileDir . $newFileName;
+                
+                if(move_uploaded_file($fileTmpPath, $dest_path)) {
+                    $bannerPath = 'assets/images/categories/' . $newFileName;
+                } else {
+                    $error = "Failed to move uploaded banner file. Check directory permissions.";
+                }
+            } else {
+                $error = "Invalid banner file type. Allowed: jpg, png, webp.";
             }
+        } elseif ($_FILES['banner']['error'] !== UPLOAD_ERR_NO_FILE) {
+             // Handle generic upload errors (size, etc)
+             switch ($_FILES['banner']['error']) {
+                 case UPLOAD_ERR_INI_SIZE:
+                 case UPLOAD_ERR_FORM_SIZE:
+                     $error = "Banner file is too large.";
+                     break;
+                 default:
+                     $error = "Banner upload failed with error code: " . $_FILES['banner']['error'];
+             }
         }
-    } else if (isset($_POST['remove_banner']) && $_POST['remove_banner'] == '1') {
-        $bannerPath = ''; // User removed banner
+    }
+    
+    // Proper check for removal flag
+    if (isset($_POST['remove_banner']) && $_POST['remove_banner'] == '1') {
+        $bannerPath = ''; 
     }
 
     $icon = $_POST['icon'] ?? '';

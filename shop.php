@@ -256,43 +256,74 @@ require_once __DIR__ . '/includes/header.php';
 ?>
 
 <!-- Hero Section -->
-<?php if ($category && !empty($category['banner'])): ?>
-    <?php
-    $bannerUrl = $baseUrl . '/' . $category['banner'];
-    ?>
-<section class="relative bg-cover bg-center py-20 md:py-32" 
-         style="background-image: url('<?php echo htmlspecialchars($bannerUrl); ?>');">
-    
-    <div class="absolute inset-0 bg-black bg-opacity-40"></div>
+<!-- Hero Section -->
+<?php 
+    $settingsObjShop = new Settings();
+    $allCatBanner = $settingsObjShop->get('all_category_banner');
+?>
 
-    <div class="container mx-auto px-4 relative z-10">
-        <div class="text-center">
-            <nav class="text-sm text-gray-200 mb-4">
-                <a href="<?php echo $baseUrl; ?>/" class="hover:text-white">Home</a> > 
-                <span class="text-white"><?php echo htmlspecialchars($category['name'] ?? ''); ?></span>
-            </nav>
-            <h1 class="text-2xl md:text-4xl font-heading font-bold mb-4 text-white"><?php echo htmlspecialchars($category['name'] ?? ''); ?></h1>
-            <?php if (!empty($category['description'])): ?>
-            <p class="text-sm text-gray-100 max-w-2xl mx-auto"><?php echo htmlspecialchars($category['description'] ?? ''); ?></p>
-            <?php endif; ?>
+<?php if ($category && (!empty($category['banner']) || !empty($category['image']))): ?>
+    <?php
+    $bannerPath = !empty($category['banner']) ? $category['banner'] : $category['image'];
+    $bannerUrl = $baseUrl . '/' . $bannerPath;
+    ?>
+    <section class="relative bg-cover bg-center py-20 md:py-32" 
+             style="background-image: url('<?php echo htmlspecialchars($bannerUrl); ?>');">
+        
+        <div class="absolute inset-0 bg-black bg-opacity-40"></div>
+
+        <div class="container mx-auto px-4 relative z-10">
+            <div class="text-center">
+                <nav class="text-sm text-gray-200 mb-4">
+                    <a href="<?php echo $baseUrl; ?>/" class="hover:text-white">Home</a> > 
+                    <span class="text-white"><?php echo htmlspecialchars($category['name'] ?? ''); ?></span>
+                </nav>
+                <h1 class="text-2xl md:text-4xl font-heading font-bold mb-4 text-white"><?php echo htmlspecialchars($category['name'] ?? ''); ?></h1>
+                <?php if (!empty($category['description'])): ?>
+                <p class="text-sm text-gray-100 max-w-2xl mx-auto"><?php echo htmlspecialchars($category['description'] ?? ''); ?></p>
+                <?php endif; ?>
+            </div>
         </div>
-    </div>
-</section>
+    </section>
+
+<?php elseif (!$category && $allCatBanner): ?>
+    <?php 
+        $bannerUrl = $baseUrl . '/assets/images/' . $allCatBanner;
+    ?>
+    <section class="relative bg-cover bg-center py-20 md:py-32" 
+             style="background-image: url('<?php echo htmlspecialchars($bannerUrl); ?>');">
+        
+        <div class="absolute inset-0 bg-black bg-opacity-40"></div>
+
+        <div class="container mx-auto px-4 relative z-10">
+            <div class="text-center">
+                <nav class="text-sm text-gray-200 mb-4">
+                    <a href="<?php echo $baseUrl; ?>/" class="hover:text-white">Home</a> > 
+                    <span class="text-white">Shop</span>
+                </nav>
+                <h1 class="text-2xl md:text-4xl font-heading font-bold mb-4 text-white">Shop</h1>
+                <p class="text-sm text-gray-100 max-w-2xl mx-auto">
+                    Discover our curated collection of products
+                </p>
+            </div>
+        </div>
+    </section>
+
 <?php else: ?>
-<section class="relative bg-gray-200 py-20 md:py-32">
-    <div class="container mx-auto px-4">
-        <div class="text-center">
-            <nav class="text-sm text-gray-600 mb-4">
-                <a href="<?php echo $baseUrl; ?>/" class="hover:text-primary">Home</a> > 
-                <span class="text-gray-900"><?php echo htmlspecialchars($category['name'] ?? 'Shop'); ?></span>
-            </nav>
-            <h1 class="text-2xl md:text-4xl font-heading font-bold mb-4"><?php echo htmlspecialchars($category['name'] ?? 'Shop'); ?></h1>
-            <p class="text-sm text-gray-600 max-w-2xl mx-auto">
-                <?php echo htmlspecialchars($category['description'] ?? 'Discover our curated collection of products'); ?>
-            </p>
+    <section class="relative bg-gray-200 py-20 md:py-32">
+        <div class="container mx-auto px-4">
+            <div class="text-center">
+                <nav class="text-sm text-gray-600 mb-4">
+                    <a href="<?php echo $baseUrl; ?>/" class="hover:text-primary">Home</a> > 
+                    <span class="text-gray-900"><?php echo htmlspecialchars($category['name'] ?? 'Shop'); ?></span>
+                </nav>
+                <h1 class="text-2xl md:text-4xl font-heading font-bold mb-4"><?php echo htmlspecialchars($category['name'] ?? 'Shop'); ?></h1>
+                <p class="text-sm text-gray-600 max-w-2xl mx-auto">
+                    <?php echo htmlspecialchars($category['description'] ?? 'Discover our curated collection of products'); ?>
+                </p>
+            </div>
         </div>
-    </div>
-</section>
+    </section>
 <?php endif; ?>
 
 <!-- List View Styles -->
@@ -414,12 +445,15 @@ button.active {
                             <i class="fas fa-chevron-down text-sm" id="category-arrow"></i>
                         </h3>
                         <div id="category-filter" class="space-y-2">
-                            <a href="<?php echo $baseUrl; ?>/shop" class="block text-gray-600 hover:text-primary transition <?php echo !$categorySlug ? 'font-semibold text-primary' : ''; ?>">
+                            <a href="<?php echo $baseUrl; ?>/shop" 
+                               class="block text-gray-600 hover:text-primary transition <?php echo !$categorySlug ? 'font-semibold text-primary' : ''; ?>"
+                               onclick="event.preventDefault(); selectCategory('');">
                                 All Categories
                             </a>
                             <?php foreach ($categories as $cat): ?>
                             <a href="<?php echo $baseUrl; ?>/shop?category=<?php echo urlencode($cat['slug'] ?? ''); ?>" 
-                               class="block text-gray-600 hover:text-primary transition <?php echo $categorySlug === ($cat['slug'] ?? '') ? 'font-semibold text-primary' : ''; ?>">
+                               class="block text-gray-600 hover:text-primary transition <?php echo $categorySlug === ($cat['slug'] ?? '') ? 'font-semibold text-primary' : ''; ?>"
+                               onclick="event.preventDefault(); selectCategory('<?php echo htmlspecialchars($cat['slug']); ?>');">
                                 <?php echo htmlspecialchars($cat['name'] ?? ''); ?> (<?php echo $cat['product_count'] ?? 0; ?>)
                             </a>
                             <?php endforeach; ?>
@@ -500,8 +534,8 @@ button.active {
                                 <option value="created_at DESC" <?php echo $sort === 'created_at DESC' ? 'selected' : ''; ?>>Sort by: Featured</option>
                                 <option value="price ASC" <?php echo $sort === 'price ASC' ? 'selected' : ''; ?>>Price: Low to High</option>
                                 <option value="price DESC" <?php echo $sort === 'price DESC' ? 'selected' : ''; ?>>Price: High to Low</option>
-                                <option value="name ASC" <?php echo $sort === 'name ASC' ? 'selected' : ''; ?>>Name: A to Z</option>
-                                <option value="name DESC" <?php echo $sort === 'name DESC' ? 'selected' : ''; ?>>Name: Z to A</option>
+                                <option value="name_ASC" <?php echo ($sort === 'name_ASC' || $sort === 'name ASC') ? 'selected' : ''; ?>>Name: A to Z</option>
+                                <option value="name_DESC" <?php echo ($sort === 'name_DESC' || $sort === 'name DESC') ? 'selected' : ''; ?>>Name: Z to A</option>
                                 <option value="rating DESC" <?php echo $sort === 'rating DESC' ? 'selected' : ''; ?>>Rating: High to Low</option>
                             </select>
                         </div>
@@ -720,42 +754,49 @@ document.addEventListener('DOMContentLoaded', function() {
     });
 });
 
+// function to handle category clicks without reload and update banner
+function selectCategory(slug) {
+    const params = new URLSearchParams(window.location.search);
+    if (slug) {
+        params.set('category', slug);
+    } else {
+        params.delete('category');
+    }
+    params.delete('page'); // Reset page
+    
+    const newUrl = '<?php echo $baseUrl; ?>/shop?' + params.toString();
+    history.pushState({}, '', newUrl);
+    
+    // Update active class on links
+    document.querySelectorAll('#category-filter a').forEach(a => {
+        a.classList.remove('font-semibold', 'text-primary');
+        if ((slug === '' && a.href.endsWith('/shop')) || a.href.includes('category=' + slug)) {
+             a.classList.add('font-semibold', 'text-primary');
+        }
+    });
+
+    applyFilters(1);
+}
+
 function applyFilters(page = 1) {
     const params = new URLSearchParams(window.location.search);
     
-    // Category (keep existing)
-    if (params.has('category')) {
-        // Keep category
-    }
-    
-    // Stock status (Handle mutually exclusive check)
+     // ... (Params logic is handled by selectCategory URL update or inputs)
+     // BUT wait, applyFilters reads from INPUTS. The URL is the source of truth for category now.
+     
+    // Re-read inputs to ensure everything is synced
     const stockCheckboxes = document.querySelectorAll('input[name="stock"]:checked');
-    if (stockCheckboxes.length > 0) {
-        // Since we enforce one checkbox in the event listener, we just take the first one
-        params.set('stock', stockCheckboxes[0].value);
-    } else {
-        params.delete('stock');
-    }
+    if (stockCheckboxes.length > 0) params.set('stock', stockCheckboxes[0].value);
     
-    // Price
     const minPrice = document.getElementById('minPrice').value;
-    const maxPrice = document.getElementById('maxPrice').value;
-    if (minPrice) {
-        params.set('min_price', minPrice);
-    } else {
-        params.delete('min_price');
-    }
-    if (maxPrice) {
-        params.set('max_price', maxPrice);
-    } else {
-        params.delete('max_price');
-    }
+    if (minPrice) params.set('min_price', minPrice);
     
-    // Sort
+    const maxPrice = document.getElementById('maxPrice').value;
+    if (maxPrice) params.set('max_price', maxPrice);
+    
     const sort = document.getElementById('sortSelect').value;
     params.set('sort', sort);
-    
-    // Page
+
     if (page > 1) {
         params.set('page', page);
     } else {
@@ -764,39 +805,64 @@ function applyFilters(page = 1) {
     
     const queryString = params.toString();
     const newUrl = '<?php echo $baseUrl; ?>/shop?' + queryString;
-    
-    // Update browser URL
-    history.pushState({}, '', newUrl);
+    history.pushState({}, '', newUrl); // Update URL again just in case
     
     // Perform AJAX request
     fetch('<?php echo $baseUrl; ?>/shop?ajax=1&' + queryString)
         .then(response => response.text())
         .then(html => {
-            // Create a temporary container to parse the HTML
             const tempDiv = document.createElement('div');
             tempDiv.innerHTML = html;
             
-            const paginationContent = tempDiv.querySelector('#ajax-pagination');
+            // 1. Update Products Grid
+            const grid = document.getElementById('productsGrid');
+            const newGrid = tempDiv.querySelector('.grid'); // It returns full grid HTML from ajax
+            // wait, our AJAX response is CURRENTLY just returning product cards + hidden pagination div.
+            // It is NOT returning the full page structure.
+            // We need the AJAX response to include the HERO section too if we want to replace it.
             
-            if (paginationContent) {
-                // Update pagination
-                const paginationContainer = document.getElementById('pagination-container');
-                if(paginationContainer) {
-                    paginationContainer.innerHTML = paginationContent.innerHTML;
-                }
-                // Remove pagination from tempDiv to get just products
-                paginationContent.remove();
-            } else {
-                // No result or single page
-                const paginationContainer = document.getElementById('pagination-container');
-                if(paginationContainer) paginationContainer.innerHTML = '';
+            // To fix "Banner not updating": We need to reload page OR change AJAX behavior.
+            // User requested AJAX. So we must request the full page or a specific partial that includes header.
+            // But currently `shop.php` checks `if (isset($_GET['ajax']))` and ONLY echoes products.
+            
+            // FIX: We will do a full page fetch (without `ajax=1` special minimal mode) 
+            // OR modify the php to return JSON with {hero: ..., grid: ...}
+            // EASIEST ROBUST WAY: Fetch full page HTML via AJAX, parse it, replace Hero + Grid.
+        
+            return fetch(newUrl); // Fetch FULL PAGE HTML
+        })
+        .then(response => response.text())
+        .then(fullHtml => {
+            const parser = new DOMParser();
+            const doc = parser.parseFromString(fullHtml, 'text/html');
+            
+            // Update Hero Section
+            const currentHero = document.querySelector('section.relative');
+            const newHero = doc.querySelector('section.relative');
+            if(currentHero && newHero) {
+                currentHero.replaceWith(newHero);
             }
             
             // Update Grid
-            const grid = document.getElementById('productsGrid');
-            if(grid) {
-                grid.innerHTML = tempDiv.innerHTML;
+            const currentGrid = document.getElementById('productsGrid');
+            const newGrid = doc.getElementById('productsGrid');
+            if(currentGrid && newGrid) {
+                currentGrid.innerHTML = newGrid.innerHTML;
             }
+            
+            // Update Pagination
+            const currentPag = document.getElementById('pagination-container');
+            const newPag = doc.getElementById('pagination-container');
+            if(currentPag && newPag) {
+                currentPag.innerHTML = newPag.innerHTML;
+            }
+            
+            // Update Result Count text
+             const currentCount = document.querySelector('.text-gray-600.text-sm.mb-0');
+             const newCount = doc.querySelector('.text-gray-600.text-sm.mb-0');
+             if(currentCount && newCount) {
+                 currentCount.innerText = newCount.innerText;
+             }
         })
         .catch(error => console.error('Error fetching products:', error));
 }

@@ -14,17 +14,17 @@ $baseUrl = getBaseUrl();
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['action'] === 'update_settings') {
     
     // Handle File Uploads
-    $uploadFiles = ['setting_favicon_png', 'setting_favicon_ico'];
+    $uploadFiles = ['setting_favicon_png', 'setting_favicon_ico', 'setting_all_category_banner'];
     foreach ($uploadFiles as $fileKey) {
         if (!empty($_FILES[$fileKey]['name'])) {
             $uploadDir = __DIR__ . '/../assets/images/';
             $ext = pathinfo($_FILES[$fileKey]['name'], PATHINFO_EXTENSION);
-            $prefix = ($fileKey === 'setting_favicon_ico') ? 'favicon' : 'favicon_browser';
+            $prefix = ($fileKey === 'setting_favicon_ico') ? 'favicon' : (($fileKey === 'setting_all_category_banner') ? 'banner_all_cat' : 'favicon_browser');
             $fileName = $prefix . '_' . time() . '.' . $ext;
             
             if (move_uploaded_file($_FILES[$fileKey]['tmp_name'], $uploadDir . $fileName)) {
                 $_POST[$fileKey] = $fileName;
-                $_POST['group_' . str_replace('setting_', '', $fileKey)] = 'seo';
+                $_POST['group_' . str_replace('setting_', '', $fileKey)] = ($fileKey === 'setting_all_category_banner') ? 'general' : 'seo';
             }
         }
     }
@@ -272,6 +272,114 @@ unset($_SESSION['success']);
                                placeholder="<?php echo $field['placeholder']; ?>">
                     </div>
                 <?php endforeach; ?>
+                
+                <!-- All Category Banner -->
+                <div class="md:col-span-2 border-t pt-4 mt-4">
+                    <label class="block text-sm font-medium text-gray-700 mb-2">All Category Banner</label>
+                    <p class="text-xs text-gray-500 mb-2">This banner will appear on the "All Categories" shop page.</p>
+                    
+                    <?php $allCatBanner = $settings->get('all_category_banner'); ?>
+                    <div class="flex items-center space-x-4">
+                        <div class="relative group cursor-pointer w-full h-32 border-2 <?php echo !empty($allCatBanner) ? 'border-gray-200' : 'border-dashed border-gray-300'; ?> rounded-lg overflow-hidden flex items-center justify-center bg-gray-50 hover:bg-gray-100 transition" onclick="document.getElementById('allCatBannerInput').click()">
+                            
+                            <input type="file" id="allCatBannerInput" name="setting_all_category_banner" class="hidden" onchange="previewBanner(this, 'previewAllCatBanner')">
+                            <input type="hidden" name="group_all_category_banner" value="general">
+                            
+                            <div id="previewAllCatBanner" class="w-full h-full flex items-center justify-center">
+                                <?php if($allCatBanner): ?>
+                                    <img src="<?php echo getBaseUrl() . '/assets/images/' . $allCatBanner; ?>" class="w-full h-full object-cover">
+                                    <div class="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-40 transition flex items-center justify-center">
+                                         <i class="fas fa-camera text-white text-3xl opacity-0 group-hover:opacity-100 transition"></i>
+                                    </div>
+                                <?php else: ?>
+                                    <div class="text-center text-gray-400">
+                                        <i class="fas fa-image text-4xl mb-2"></i>
+                                        <p class="text-sm">Click to upload banner</p>
+                                    </div>
+                                <?php endif; ?>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <script>
+                function previewBanner(input, containerId) {
+                    if (input.files && input.files[0]) {
+                        var reader = new FileReader();
+                        reader.onload = function(e) {
+                            const container = document.getElementById(containerId);
+                            container.innerHTML = `
+                                <img src="${e.target.result}" class="w-full h-full object-cover">
+                                <div class="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-40 transition flex items-center justify-center">
+                                     <i class="fas fa-camera text-white text-3xl opacity-0 group-hover:opacity-100 transition"></i>
+                                </div>
+                            `;
+                            container.parentElement.classList.remove('border-dashed', 'border-gray-300');
+                            container.parentElement.classList.add('border-gray-200');
+                        }
+                        reader.readAsDataURL(input.files[0]);
+                    }
+                }
+                </script>
+
+                <!-- Blog Feature Toggle -->
+                <div class="md:col-span-2">
+                    <label class="flex items-center space-x-3 cursor-pointer">
+                        <input type="hidden" name="setting_enable_blog" value="0">
+                        <input type="checkbox" name="setting_enable_blog" value="1" 
+                               <?php echo $settings->get('enable_blog', '1') == '1' ? 'checked' : ''; ?> 
+                               class="w-5 h-5 text-blue-600 rounded focus:ring-blue-500">
+                        <span class="text-sm font-medium text-gray-700">Enable Blog Feature</span>
+                    </label>
+                    <p class="text-xs text-gray-500 mt-1 ml-8">If disabled, blog pages will be hidden from the frontend and sidebar.</p>
+                </div>
+                
+                <!-- Blog Configuration -->
+                <div class="md:col-span-2 grid grid-cols-1 md:grid-cols-2 gap-6 pt-4 border-t">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Blog Heading</label>
+                        <input type="hidden" name="group_blog_heading" value="general">
+                        <input type="text" name="setting_blog_heading" 
+                               value="<?php echo htmlspecialchars($settings->get('blog_heading', 'Our Blog')); ?>" 
+                               class="w-full px-4 py-2 border rounded focus:ring-2 focus:ring-blue-500">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Blog Description</label>
+                        <input type="hidden" name="group_blog_description" value="general">
+                        <textarea name="setting_blog_description" rows="1"
+                                  class="w-full px-4 py-2 border rounded focus:ring-2 focus:ring-blue-500"><?php echo htmlspecialchars($settings->get('blog_description', 'Latest news, updates, and stories from our team.')); ?></textarea>
+                    </div>
+                </div>
+
+                <!-- Blog Colors -->
+                <div class="md:col-span-2 pt-4 border-t mt-4">
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Blog Section Colors</label>
+                    <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+                        <?php 
+                        $blogColors = [
+                            'blog_bg_color' => ['label' => 'Background', 'default' => '#f9fafb'],
+                            'blog_heading_color' => ['label' => 'Heading', 'default' => '#111827'],
+                            'blog_text_color' => ['label' => 'Text', 'default' => '#1f2937'],
+                            'blog_accent_color' => ['label' => 'Accent', 'default' => '#2563eb']
+                        ];
+                        foreach ($blogColors as $key => $color): 
+                        ?>
+                        <div>
+                            <span class="text-xs text-gray-500 block mb-1"><?php echo $color['label']; ?></span>
+                            <input type="hidden" name="group_<?php echo $key; ?>" value="blog">
+                            <div class="flex items-center">
+                                <input type="color" name="setting_<?php echo $key; ?>" 
+                                       value="<?php echo htmlspecialchars($settings->get($key, $color['default'])); ?>" 
+                                       class="h-8 w-8 p-0 border-0 rounded mr-2 cursor-pointer">
+                                <input type="text" name="setting_<?php echo $key; ?>_text" 
+                                       value="<?php echo htmlspecialchars($settings->get($key, $color['default'])); ?>" 
+                                       onchange="this.previousElementSibling.value = this.value"
+                                       class="w-full border border-gray-300 px-2 py-1 rounded text-xs text-gray-600 bg-gray-50 uppercase">
+                            </div>
+                        </div>
+                        <?php endforeach; ?>
+                    </div>
+                </div>
             </div>
         </div>
 

@@ -1091,6 +1091,74 @@ try {
     echo "Status: ⏭️  SKIPPED (discounts table does not exist yet)\n\n";
 }
 
+// ==========================================
+// STEP 20: Blogs Table Setup
+// ==========================================
+echo "STEP 20: Setting up Blogs Table\n";
+echo "-------------------------------\n";
+
+// 1. Create table if not exists (with store_id as VARCHAR)
+$sql_blogs = "CREATE TABLE IF NOT EXISTS blogs (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    store_id VARCHAR(50) DEFAULT NULL,
+    blog_id BIGINT(15) DEFAULT NULL,
+    title VARCHAR(255) NOT NULL,
+    slug VARCHAR(255) NOT NULL,
+    content LONGTEXT,
+    image VARCHAR(255),
+    status ENUM('published', 'draft') DEFAULT 'draft',
+    layout VARCHAR(20) DEFAULT 'standard',
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    INDEX idx_store_id (store_id),
+    INDEX idx_blog_id (blog_id),
+    INDEX idx_slug (slug)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci";
+
+executeSql($db, $sql_blogs, "Create blogs table", $errors, $success, $EXECUTE);
+
+// 2. Add blog_id if missing (for existing tables)
+if (!columnExists($db, 'blogs', 'blog_id')) {
+    executeSql($db, "ALTER TABLE blogs ADD COLUMN blog_id BIGINT(15) DEFAULT NULL AFTER store_id", "Add blog_id to blogs", $errors, $success, $EXECUTE);
+    executeSql($db, "CREATE INDEX idx_blog_id ON blogs (blog_id)", "Add index idx_blog_id", $errors, $success, $EXECUTE);
+}
+
+// 3. Fix store_id type if it's INT (legacy)
+// Check column type
+try {
+    $colType = $db->fetchOne("
+        SELECT COLUMN_TYPE 
+        FROM information_schema.COLUMNS 
+        WHERE TABLE_SCHEMA = DATABASE() 
+        AND TABLE_NAME = 'blogs' 
+        AND COLUMN_NAME = 'store_id'
+    ");
+    
+    if ($colType && stripos($colType['COLUMN_TYPE'], 'int') !== false) {
+        executeSql($db, "ALTER TABLE blogs MODIFY COLUMN store_id VARCHAR(50) DEFAULT NULL", "Change blogs.store_id to VARCHAR(50)", $errors, $success, $EXECUTE);
+    }
+} catch (Exception $e) {}
+
+
+// 4. Add layout column if missing
+if (!columnExists($db, 'blogs', 'layout')) {
+    executeSql($db, "ALTER TABLE blogs ADD COLUMN layout VARCHAR(20) DEFAULT 'standard' AFTER status", "Add layout column to blogs", $errors, $success, $EXECUTE);
+}
+
+    // Check for banner column in categories table
+    // Ensure we have a valid PDO connection
+    if ($db) {
+        try {
+            $bannerColumnCheck = $db->query("SHOW COLUMNS FROM categories LIKE 'banner'");
+            if ($bannerColumnCheck && $bannerColumnCheck->rowCount() == 0) {
+                $db->exec("ALTER TABLE categories ADD COLUMN banner VARCHAR(255) DEFAULT NULL AFTER image");
+                echo "Added banner column to categories table.\n";
+            }
+        } catch (PDOException $e) {
+            echo "Error adding banner column: " . $e->getMessage() . "\n";
+        }
+    }
+
 echo "\n========================================\n";
 echo "SUMMARY\n";
 echo "========================================\n";

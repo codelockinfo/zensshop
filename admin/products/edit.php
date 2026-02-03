@@ -184,7 +184,7 @@ $categories = $db->fetchAll("SELECT * FROM categories WHERE status = 'active' AN
 // Get existing product categories
 $existingCategoryIds = $db->fetchAll(
     "SELECT category_id FROM product_categories WHERE product_id = ?",
-    [$productId]
+    [$productData['product_id']]
 );
 $existingCategoryIds = array_column($existingCategoryIds, 'category_id');
 
@@ -252,20 +252,15 @@ $existingVariants = $product->getVariants($productId);
                 </div>
                 
                 <div class="admin-form-group">
-                    <label class="admin-form-label">Categories * (Select multiple)</label>
-                    <div class="border rounded p-3 max-h-48 overflow-y-auto">
+                    <label class="admin-form-label">Category *</label>
+                    <select name="category_ids[]" class="admin-form-select" required>
+                        <option value="">Choose category</option>
                         <?php foreach ($categories as $cat): ?>
-                        <label class="flex items-center py-2">
-                            <input type="checkbox" 
-                                   name="category_ids[]" 
-                                   value="<?php echo $cat['id']; ?>"
-                                   <?php echo in_array($cat['id'], $existingCategoryIds) ? 'checked' : ''; ?>
-                                   class="mr-2">
-                            <span><?php echo htmlspecialchars($cat['name']); ?></span>
-                        </label>
+                        <option value="<?php echo $cat['id']; ?>" <?php echo in_array($cat['id'], $existingCategoryIds) ? 'selected' : ''; ?>>
+                            <?php echo htmlspecialchars($cat['name']); ?>
+                        </option>
                         <?php endforeach; ?>
-                    </div>
-                    <p class="text-sm text-gray-500 mt-1">Select one or more categories/collections for this product</p>
+                    </select>
                 </div>
                 
                 
