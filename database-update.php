@@ -866,6 +866,7 @@ if (!$tableExists) {
     $sql = "CREATE TABLE IF NOT EXISTS pages (
         id INT AUTO_INCREMENT PRIMARY KEY,
         store_id VARCHAR(50) NOT NULL,
+        page_id BIGINT DEFAULT NULL,
         title VARCHAR(255) NOT NULL,
         slug VARCHAR(255) NOT NULL,
         content JSON DEFAULT NULL COMMENT 'Stores HTML body, banner settings, SEO, etc. as JSON',
@@ -873,7 +874,8 @@ if (!$tableExists) {
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
         updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
         INDEX idx_store (store_id),
-        UNIQUE KEY idx_slug_store (slug, store_id)
+        UNIQUE KEY idx_slug_store (slug, store_id),
+        UNIQUE KEY idx_page_id (page_id)
     ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci";
     
     executeSql($db, $sql, "Create pages table", $errors, $success, $EXECUTE);
@@ -1168,6 +1170,35 @@ if (!columnExists($db, 'landing_pages', 'slug')) {
     try {
         executeSql($db, "ALTER TABLE landing_pages ADD UNIQUE INDEX idx_slug_store (slug, store_id)", "Add unique index on landing_pages slug", $errors, $success, $EXECUTE);
     } catch (Exception $e) {}
+}
+
+
+// ==========================================
+// STEP 32: Page ID Modernization
+// ==========================================
+echo "STEP 32: Adding page_id to pages table\n";
+echo "---------------------------------\n";
+
+if (!columnExists($db, 'pages', 'page_id')) {
+    executeSql($db, "ALTER TABLE pages ADD COLUMN page_id BIGINT DEFAULT NULL AFTER id", "Add page_id to pages", $errors, $success, $EXECUTE);
+    try {
+        executeSql($db, "ALTER TABLE pages ADD UNIQUE INDEX idx_unique_page_id (page_id)", "Add unique index to page_id", $errors, $success, $EXECUTE);
+    } catch(Exception $e) {}
+}
+
+if ($EXECUTE) {
+    // Backfill random IDs
+    if (columnExists($db, 'pages', 'page_id')) {
+        $pagesWithoutId = $db->fetchAll("SELECT id FROM pages WHERE page_id IS NULL OR page_id = 0");
+        if (!empty($pagesWithoutId)) {
+            echo "Generating Page IDs for " . count($pagesWithoutId) . " pages...\n";
+            foreach ($pagesWithoutId as $p) {
+                $randomId = mt_rand(1000000000, 9999999999);
+                $db->execute("UPDATE pages SET page_id = ? WHERE id = ?", [$randomId, $p['id']]);
+            }
+            $success[] = "Backfilled page_id for pages";
+        }
+    }
 }
 
 echo "\n========================================\n";
