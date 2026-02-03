@@ -397,14 +397,14 @@ function renderQuickView(product) {
                 </div>
                 
                 <div class="flex gap-4 text-gray-500 mb-6 font-medium">
-                    <button class="hover:text-black flex items-center gap-1 transition wishlist-btn quick-view text-sm" 
+                    <button class="hover:text-black flex items-center gap-1 transition wishlist-btn quick-view text-xs md:text-sm" 
                             data-product-id="${product.product_id || product.id}">
                         <i class="${wishlistIconClass} fa-heart"></i> ${wishlistText}
                     </button>
-                    <button class="hover:text-black flex items-center gap-1 transition text-sm" onclick="sharePage('${product.name.replace(/'/g, "\\'")}', 'Check out this product!', '${productUrl}')">
+                    <button class="hover:text-black flex items-center gap-1 transition text-xs md:text-sm" onclick="sharePage('${product.name.replace(/'/g, "\\'")}', 'Check out this product!', '${productUrl}')">
                         <i class="fas fa-share-alt"></i> Share
                     </button>
-                    <button class="hover:text-black flex items-center gap-1 transition text-sm" onclick="toggleAskQuestionModal(true, '${product.name.replace(/'/g, "\\'")}')">
+                    <button class="hover:text-black flex items-center gap-1 transition text-xs md:text-sm" onclick="toggleAskQuestionModal(true, '${product.name.replace(/'/g, "\\'")}')">
                         <i class="fas fa-question-circle"></i> Ask a question
                     </button>
                 </div>
