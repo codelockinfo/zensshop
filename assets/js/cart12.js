@@ -557,7 +557,7 @@ function updateCartUI() {
         // Update footer to "Continue Shopping"
         if (sideCartFooter) {
             sideCartFooter.innerHTML = `
-                <a href="${baseUrl}/shop" class="inline-block bg-primary text-white px-6 py-3 rounded-lg hover:bg-primary-light hover:text-white transition w-full text-center">
+                <a href="${baseUrl}/shop" class="inline-block bg-primary text-white px-6 py-3 rounded-lg hover:bg-primary-light hover:text-white transition w-full text-center hover:font-bold">
                     Continue Shopping
                 </a>
             `;
@@ -611,9 +611,9 @@ function updateCartUI() {
                         ${variantLabel}
                         <p class="text-gray-600 text-sm mt-1">${formatCurrency(itemPrice, item.currency)}</p>
                         <div class="flex items-center space-x-2 mt-2">
-                            <button onclick="updateCartItem(${item.product_id}, ${itemQuantity - 1}, null, ${attributesJson})" class="w-8 h-8 border rounded flex items-center justify-center hover:bg-gray-100 text-sm">-</button>
+                            <button onclick="updateCartItem(${item.product_id}, ${itemQuantity - 1}, this, ${attributesJson})" class="w-8 h-8 border rounded flex items-center justify-center hover:bg-gray-100 text-sm">-</button>
                             <span class="w-8 text-center text-sm font-semibold">${itemQuantity}</span>
-                            <button onclick="updateCartItem(${item.product_id}, ${itemQuantity + 1}, null, ${attributesJson})" class="w-8 h-8 border rounded flex items-center justify-center hover:bg-gray-100 text-sm">+</button>
+                            <button onclick="updateCartItem(${item.product_id}, ${itemQuantity + 1}, this, ${attributesJson})" class="w-8 h-8 border rounded flex items-center justify-center hover:bg-gray-100 text-sm">+</button>
                         </div>
                     </div>
                     <div class="text-right">
