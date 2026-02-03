@@ -21,7 +21,7 @@ $wishlistIds = array_column($wishlistItems, 'product_id');
 
 // Get category slug from URL
 $categorySlug = $_GET['slug'] ?? '';
-$sort = $_GET['sort'] ?? 'created_at DESC';
+$sort = trim($_GET['sort'] ?? 'created_at DESC');
 
 if (empty($categorySlug)) {
     ob_end_clean(); // Clear any buffered output
@@ -209,8 +209,8 @@ if (empty($catImageRaw)) {
                     <option value="created_at DESC" <?php echo $sort === 'created_at DESC' ? 'selected' : ''; ?>>Newest First</option>
                     <option value="price ASC" <?php echo $sort === 'price ASC' ? 'selected' : ''; ?>>Price: Low to High</option>
                     <option value="price DESC" <?php echo $sort === 'price DESC' ? 'selected' : ''; ?>>Price: High to Low</option>
-                    <option value="name ASC" <?php echo $sort === 'name ASC' ? 'selected' : ''; ?>>Name: A-Z</option>
-                    <option value="name DESC" <?php echo $sort === 'name DESC' ? 'selected' : ''; ?>>Name: Z-A</option>
+                    <option value="name_ASC" <?php echo ($sort === 'name_ASC' || $sort === 'name ASC') ? 'selected' : ''; ?>>Name: A-Z</option>
+                    <option value="name_DESC" <?php echo ($sort === 'name_DESC' || $sort === 'name DESC') ? 'selected' : ''; ?>>Name: Z-A</option>
                     <option value="rating DESC" <?php echo $sort === 'rating DESC' ? 'selected' : ''; ?>>Rating: High to Low</option>
                 </select>
             </div>

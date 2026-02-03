@@ -30,7 +30,7 @@ $search = $_GET['search'] ?? '';
 $minPrice = $_GET['min_price'] ?? '';
 $maxPrice = $_GET['max_price'] ?? '';
 $stockStatus = $_GET['stock'] ?? '';
-$sort = $_GET['sort'] ?? 'created_at DESC';
+$sort = trim($_GET['sort'] ?? 'created_at DESC'); // Trim whitespace
 $page = max(1, intval($_GET['page'] ?? 1));
 $perPage = 12;
 
