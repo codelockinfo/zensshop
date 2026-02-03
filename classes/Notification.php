@@ -26,7 +26,7 @@ class Notification {
             }
 
             $this->db->insert(
-                "INSERT INTO admin_notifications (type, title, message, link, store_id) VALUES (?, ?, ?, ?, ?)",
+                "INSERT INTO admin_notifications (type, title, message, link, store_id, created_at) VALUES (?, ?, ?, ?, ?, UTC_TIMESTAMP())",
                 [$type, $title, $message, $link, $storeId]
             );
             return true;

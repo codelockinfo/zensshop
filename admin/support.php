@@ -6,6 +6,7 @@ require_once __DIR__ . '/../includes/functions.php';
 
 $auth = new Auth();
 $auth->requireLogin();
+date_default_timezone_set('Asia/Kolkata');
 
 $db = Database::getInstance();
 
@@ -134,7 +135,7 @@ unset($_SESSION['success'], $_SESSION['error']);
 <div class="p-6">
     <div class="flex justify-between items-center mb-6">
         <div>
-            <h1 class="text-2xl font-bold">Support Messages</h1>
+            <h1 class="text-2xl font-bold">Customer Messages</h1>
             <p class="text-gray-600 text-sm mt-1"><?php echo $openCount; ?> open message<?php echo $openCount !== 1 ? 's' : ''; ?></p>
         </div>
     </div>
@@ -214,7 +215,7 @@ unset($_SESSION['success'], $_SESSION['error']);
                                     <span class="mx-2">•</span>
                                     <i class="fas fa-envelope mr-1"></i> <?php echo htmlspecialchars($msg['customer_email']); ?>
                                     <span class="mx-2">•</span>
-                                    <i class="far fa-clock mr-1"></i> <?php echo date('M d, Y H:i', strtotime($msg['created_at'])); ?>
+                                    <i class="far fa-clock mr-1"></i> <?php echo date('M d, Y H:i', strtotime($msg['created_at'] . ' UTC')); ?>
                                 </div>
                             </div>
                         </div>
@@ -229,7 +230,7 @@ unset($_SESSION['success'], $_SESSION['error']);
                                     <i class="fas fa-reply mr-1"></i> Your Reply 
                                     <?php if ($msg['replied_at']): ?>
                                         <span class="mx-2">•</span>
-                                        <?php echo date('M d, Y H:i', strtotime($msg['replied_at'])); ?>
+                                        <?php echo date('M d, Y H:i', strtotime($msg['replied_at'] . ' UTC')); ?>
                                     <?php endif; ?>
                                 </div>
                                 <p class="text-gray-700 whitespace-pre-line"><?php echo htmlspecialchars($msg['admin_reply']); ?></p>

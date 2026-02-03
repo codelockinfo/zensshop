@@ -135,7 +135,7 @@ $cartTotal = $cart->getTotal();
                         Proceed to Checkout
                     </a>
                     <a href="<?php echo $baseUrl; ?>/" 
-                       class="block w-full text-center py-3 border border-gray-300 rounded-lg hover:bg-gray-50 transition">
+                       class="block w-full text-center py-3 border border-gray-300 rounded-lg hover:bg-gray-50 transition bg-primary text-white hover:font-bold">
                         Continue Shopping
                     </a>
                 </div>

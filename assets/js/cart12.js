@@ -540,7 +540,10 @@ async function removeFromCart(productId, btn = null, attributes = {}) {
 // Update cart UI
 function updateCartUI() {
     const cartItemsContainer = document.getElementById('cartItems');
-    const cartTotal = document.getElementById('cartTotal');
+    const sideCartFooter = document.getElementById('sideCartFooter'); 
+    
+    // Determine Base URL
+    const baseUrl = typeof BASE_URL !== 'undefined' ? BASE_URL : window.location.pathname.split('/').slice(0, -1).join('/') || '';
 
     if (!cartItemsContainer) return;
 
@@ -551,7 +554,14 @@ function updateCartUI() {
                 <p>Your cart is empty</p>
             </div>
         `;
-        if (cartTotal) cartTotal.textContent = formatCurrency(0, 'USD');
+        // Update footer to "Continue Shopping"
+        if (sideCartFooter) {
+            sideCartFooter.innerHTML = `
+                <a href="${baseUrl}/shop" class="inline-block bg-primary text-white px-6 py-3 rounded-lg hover:bg-primary-light hover:text-white transition w-full text-center">
+                    Continue Shopping
+                </a>
+            `;
+        }
         return;
     }
 
@@ -576,10 +586,8 @@ function updateCartUI() {
             // Use placeholder SVG
             imageUrl = 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iODAiIGhlaWdodD0iODAiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+PHJlY3Qgd2lkdGg9IjgwIiBoZWlnaHQ9IjgwIiBmaWxsPSIjRjNGNEY2Ii8+PGNpcmNsZSBjeD0iNDAiIGN5PSI0MCIgcj0iMjAiIGZpbGw9IiM5QjdBOEEiLz48L3N2Zz4=';
         } else if (imageUrl.indexOf('http') !== 0 && imageUrl.indexOf('/') !== 0 && imageUrl.indexOf('data:') !== 0) {
-            const baseUrl = typeof BASE_URL !== 'undefined' ? BASE_URL : window.location.pathname.split('/').slice(0, -1).join('/') || '';
             imageUrl = baseUrl + '/assets/images/uploads/' + imageUrl;
         } else if (imageUrl.indexOf('/') !== 0 && imageUrl.indexOf('http') !== 0 && imageUrl.indexOf('data:') !== 0) {
-            const baseUrl = typeof BASE_URL !== 'undefined' ? BASE_URL : window.location.pathname.split('/').slice(0, -1).join('/') || '';
             imageUrl = baseUrl + imageUrl;
         }
 
@@ -639,8 +647,28 @@ function updateCartUI() {
     });
 
     cartItemsContainer.innerHTML = html;
+    
     const cartCurrency = cartData.length > 0 ? (cartData[0].currency || 'USD') : 'USD';
-    if (cartTotal) cartTotal.textContent = formatCurrency(total, cartCurrency);
+    
+    // RESTORE footer for populated cart
+    if (sideCartFooter) {
+         sideCartFooter.innerHTML = `
+            <div class="flex justify-between items-center mb-4">
+                <span class="text-lg font-semibold">Total:</span>
+                <span class="text-xl font-bold" id="cartTotal">${formatCurrency(total, cartCurrency)}</span>
+            </div>
+            <a href="${baseUrl}/cart" class="block w-full bg-primary text-white text-center py-3 rounded-lg hover:bg-primary-light hover:text-white transition mb-2">
+                View Cart
+            </a>
+            <a href="${baseUrl}/checkout" class="block w-full bg-black text-white text-center py-3 rounded-lg hover:text-white hover:bg-gray-800 transition">
+                Checkout
+            </a>
+         `;
+    } else {
+        // Fallback
+        const cartTotal = document.getElementById('cartTotal');
+        if (cartTotal) cartTotal.textContent = formatCurrency(total, cartCurrency);
+    }
 }
 
 // Update cart count badge

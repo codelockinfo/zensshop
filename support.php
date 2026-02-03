@@ -154,6 +154,11 @@ document.getElementById('supportForm').addEventListener('submit', async function
             
             // Scroll to message
             messageDiv.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+
+             // Hide after 5 seconds
+            setTimeout(() => {
+                messageDiv.classList.add('hidden');
+            }, 5000);
         } else {
             messageDiv.textContent = data.message || 'Something went wrong. Please try again.';
             messageDiv.className = 'p-4 bg-red-50 text-red-700 rounded-lg border border-red-200';

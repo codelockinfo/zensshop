@@ -240,7 +240,7 @@ if (!function_exists('url')) {
 </head>
 <body class="font-body">
     <!-- Top Bar -->
-    <div class="hidden xl:block bg-black text-white text-sm py-2" style="padding: 12px 0;">
+    <div class="block bg-black text-white text-sm py-2" style="padding: 12px 0;">
         <div class="container mx-auto px-4 flex justify-between items-center">
             <!-- Left side spacer (to balance the right links) -->
             <div class="flex-1 hidden xl:block"></div>
@@ -286,7 +286,7 @@ if (!function_exists('url')) {
             </div>
 
             <!-- Right side links -->
-            <div class="flex-1 flex items-center justify-end space-x-4">
+            <div class="hidden xl:flex flex-1 items-center justify-end space-x-4">
                 <?php foreach ($topbarLinks as $link): ?>
                 <a href="<?php echo url($link['url']); ?>" class="hover:text-gray-300 transition whitespace-nowrap"><?php echo htmlspecialchars($link['label']); ?></a>
                 <?php endforeach; ?>
@@ -949,7 +949,7 @@ if (!empty($headerMenuItems)) {
                                 // View All Link
                                 html += `
                                     <div class="text-center mt-8">
-                                        <a href="${baseUrl}/shop.php?search=${encodeURIComponent(query)}" class="inline-block px-8 py-3 bg-black text-white hover:bg-gray-800 transition rounded-full text-sm font-medium">
+                                        <a href="${baseUrl}/shop.php?search=${encodeURIComponent(query)}" class="inline-block px-8 py-3 bg-black text-white hover:bg-gray-800 transition rounded-full text-sm font-medium hover:font-bold hover:text-white">
                                             View All Results
                                         </a>
                                     </div>

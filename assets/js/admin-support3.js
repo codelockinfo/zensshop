@@ -105,7 +105,10 @@
 
     // Get time ago
     function getTimeAgo(dateString) {
-        const date = new Date(dateString);
+        // Assume dateString from server is UTC if not specified, 
+        // but typically PHP sends 'YYYY-MM-DD HH:MM:SS'.
+        // If we treat it as UTC:
+        const date = new Date(dateString + (dateString.includes('Z') ? '' : ' UTC'));
         const now = new Date();
         const seconds = Math.floor((now - date) / 1000);
 
@@ -113,7 +116,15 @@
         if (seconds < 3600) return Math.floor(seconds / 60) + ' minutes ago';
         if (seconds < 86400) return Math.floor(seconds / 3600) + ' hours ago';
         if (seconds < 604800) return Math.floor(seconds / 86400) + ' days ago';
-        return date.toLocaleDateString();
+        
+        return date.toLocaleString('en-IN', { 
+            timeZone: 'Asia/Kolkata',
+            day: 'numeric',
+            month: 'short',
+            year: 'numeric',
+            hour: '2-digit',
+            minute: '2-digit'
+        });
     }
 
     // Load count on page load
