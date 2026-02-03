@@ -41,10 +41,10 @@ $sectionSubheading = $videos[0]['subheading'] ?? 'Watch our latest stories';
         
         <div class="relative">
             <!-- Navigation Buttons -->
-            <button id="videoSectionPrev" type="button"style="z-index: 11 !important;" class="absolute left-6 top-1/2 -translate-y-1/2 z-50 bg-white shadow-lg rounded-full w-12 h-12 flex items-center justify-center text-gray-800 hover:text-primary hover:bg-gray-50 transition focus:outline-none backdrop-blur-sm cursor-pointer border border-gray-100 hidden md:flex">
+            <button id="videoSectionPrev" type="button"style="z-index: 11 !important;" class="absolute left-4 top-1/2 -translate-y-1/2 z-50 bg-white shadow-lg rounded-full w-12 h-12 flex items-center justify-center text-gray-800 hover:text-primary hover:bg-gray-50 transition focus:outline-none backdrop-blur-sm cursor-pointer border border-gray-100 hidden md:flex">
                 <i class="fas fa-chevron-left"></i>
             </button>
-            <button id="videoSectionNext" style="z-index: 11 !important;" type="button" class="absolute right-6 top-1/2 -translate-y-1/2 z-50 bg-white shadow-lg rounded-full w-12 h-12 flex items-center justify-center text-gray-800 hover:text-primary hover:bg-gray-50 transition focus:outline-none backdrop-blur-sm cursor-pointer border border-gray-100 hidden md:flex">
+            <button id="videoSectionNext" style="z-index: 11 !important;" type="button" class="absolute right-4 top-1/2 -translate-y-1/2 z-50 bg-white shadow-lg rounded-full w-12 h-12 flex items-center justify-center text-gray-800 hover:text-primary hover:bg-gray-50 transition focus:outline-none backdrop-blur-sm cursor-pointer border border-gray-100 hidden md:flex">
                 <i class="fas fa-chevron-right"></i>
             </button>
 
@@ -85,7 +85,7 @@ $sectionSubheading = $videos[0]['subheading'] ?? 'Watch our latest stories';
                     ?>
                     
                     <!-- Slide Item -->
-                    <div class="video-slide flex-shrink-0 w-[calc(50%-12px)] md:w-[calc(33.333%-16px)] lg:w-[calc(25%-18px)] h-[400px] md:h-[600px] video-card">
+                    <div class="video-slide flex-shrink-0 w-full md:w-[calc(33.333%-16px)] lg:w-[calc(25%-18px)] h-[400px] md:h-[600px] video-card">
                         <div class="relative w-full h-full rounded-lg overflow-hidden border border-gray-100 shadow-sm hover:shadow-md bg-black transition-all duration-300">
                         
                             <?php if (!empty($embed)): ?>
