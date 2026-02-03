@@ -616,15 +616,15 @@ button.active {
                             $currentId = !empty($item['product_id']) ? $item['product_id'] : $itemId;
                             $inWishlist = in_array($currentId, $wishlistIds);
                             ?>
-                            <button type="button" class="absolute top-2 right-2 w-10 h-10 rounded-full flex items-center justify-center <?php echo $inWishlist ? 'bg-black text-white' : 'bg-white text-black'; ?> hover:bg-black hover:text-white transition z-20 wishlist-btn" 
-                                    data-product-id="<?php echo $currentId; ?>"
-                                    title="<?php echo $inWishlist ? 'Remove from Wishlist' : 'Add to Wishlist'; ?>">
-                                <i class="<?php echo $inWishlist ? 'fas' : 'far'; ?> fa-heart"></i>
-                                <span class="product-tooltip"><?php echo $inWishlist ? 'Remove from Wishlist' : 'Add to Wishlist'; ?></span>
-                            </button>
-                            
-                            <!-- Hover Action Buttons -->
-                            <div class="product-actions absolute right-2 top-12 flex flex-col gap-2 mt-2 pr-[10px] md:pr-0 opacity-100 md:opacity-0 md:group-hover:opacity-100 transition-opacity duration-300 z-30">
+                            <div class="absolute top-2 right-2 z-30 flex flex-col items-center gap-2">
+                                <button type="button" class="w-10 h-10 rounded-full flex items-center justify-center relative group <?php echo $inWishlist ? 'bg-black text-white' : 'bg-white text-black'; ?> hover:bg-black hover:text-white transition wishlist-btn" 
+                                        data-product-id="<?php echo $currentId; ?>"
+                                        title="<?php echo $inWishlist ? 'Remove from Wishlist' : 'Add to Wishlist'; ?>">
+                                    <i class="<?php echo $inWishlist ? 'fas' : 'far'; ?> fa-heart"></i>
+                                    <span class="product-tooltip"><?php echo $inWishlist ? 'Remove from Wishlist' : 'Add to Wishlist'; ?></span>
+                                </button>
+                                
+                                <div class="flex flex-col gap-2 opacity-100 md:opacity-0 md:group-hover:opacity-100 transition-opacity duration-300">
                                 <button type="button" class="product-action-btn w-10 h-10 bg-white rounded-full flex items-center justify-center hover:bg-black hover:text-white transition shadow-lg quick-view-btn relative group" 
                                        data-product-id="<?php echo $currentId; ?>"
                                        data-product-slug="<?php echo htmlspecialchars($itemSlug); ?>">
@@ -649,13 +649,14 @@ button.active {
                                 $attributesJson = json_encode($defaultAttributes);
                                 $isOutOfStock = ($item['stock_status'] === 'out_of_stock' || (isset($item['stock_quantity']) && $item['stock_quantity'] <= 0));
                                 ?>
-                                <button type="button" class="product-action-btn w-10 h-10 bg-white rounded-full flex items-center justify-center hover:bg-black hover:text-white transition shadow-lg add-to-cart-hover-btn relative group <?php echo $isOutOfStock ? 'opacity-50 cursor-not-allowed' : ''; ?>" 
+                                <button type="button" class="product-action-btn w-10 h-10 bg-white rounded-full flex items-center justify-center lg:hidden hover:bg-black hover:text-white transition shadow-lg add-to-cart-hover-btn relative group <?php echo $isOutOfStock ? 'opacity-50 cursor-not-allowed' : ''; ?>" 
                                         data-product-id="<?php echo $currentId; ?>"
                                         data-attributes='<?php echo htmlspecialchars($attributesJson, ENT_QUOTES, 'UTF-8'); ?>'
                                         <?php echo $isOutOfStock ? 'disabled' : ''; ?>>
                                     <i class="fas fa-shopping-cart"></i>
                                     <span class="product-tooltip"><?php echo $isOutOfStock ? get_stock_status_text($item['stock_status'], $item['stock_quantity']) : 'Add to Cart'; ?></span>
                                 </button>
+                                </div>
                             </div>
                         </div>
                         

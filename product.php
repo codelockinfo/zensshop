@@ -7,12 +7,14 @@ require_once __DIR__ . '/classes/CustomerAuth.php';
 require_once __DIR__ . '/classes/Product.php';
 require_once __DIR__ . '/classes/Database.php';
 require_once __DIR__ . '/classes/Wishlist.php'; // Add Wishlist class
+require_once __DIR__ . '/classes/Settings.php'; // Add Settings class
 require_once __DIR__ . '/includes/functions.php';
 
 $customerAuth = new CustomerAuth();
 $customer = $customerAuth->getCurrentCustomer();
 $product = new Product();
 $db = Database::getInstance();
+$settings = new Settings(); // Instantiate Settings
 $wishlistObj = new Wishlist(); // Instantiate Wishlist
 $wishlistItems = $wishlistObj->getWishlist(); // Get items
 $wishlistIds = array_column($wishlistItems, 'product_id'); // Extract IDs
@@ -188,7 +190,68 @@ $_COOKIE['recently_viewed'] = json_encode($recentIds);
             <span class="text-gray-900"><?php echo htmlspecialchars($productData['name'] ?? 'Product'); ?></span>
         </nav>
         
-        <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-12 mb-16">
+        <!-- Product Skeleton -->
+        <div id="productSkeleton" class="hidden grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-12 mb-16 animate-pulse">
+            <!-- Image Skeleton -->
+            <div class="rounded-lg overflow-hidden">
+                <div class="w-full h-[500px] bg-gray-200 mb-4 rounded-lg"></div>
+                <div class="flex gap-2 justify-center">
+                    <div class="w-20 h-20 bg-gray-200 rounded"></div>
+                    <div class="w-20 h-20 bg-gray-200 rounded"></div>
+                    <div class="w-20 h-20 bg-gray-200 rounded"></div>
+                    <div class="w-20 h-20 bg-gray-200 rounded"></div>
+                </div>
+            </div>
+            
+            <!-- Info Skeleton -->
+            <div class="space-y-6">
+                <div class="space-y-2">
+                    <div class="h-10 bg-gray-200 rounded w-3/4"></div> <!-- Title -->
+                    <div class="flex items-center space-x-4">
+                         <div class="h-5 bg-gray-200 rounded w-32"></div> <!-- Rating -->
+                         <div class="h-5 bg-gray-200 rounded w-24"></div> <!-- Sold count -->
+                    </div>
+                </div>
+                
+                <div class="h-10 bg-gray-200 rounded w-1/3"></div> <!-- Price -->
+                
+                <div class="space-y-3">
+                    <div class="h-4 bg-gray-200 rounded w-full"></div>
+                    <div class="h-4 bg-gray-200 rounded w-full"></div>
+                    <div class="h-4 bg-gray-200 rounded w-2/3"></div>
+                </div>
+                
+                <!-- Options Skeleton -->
+                <div class="space-y-4 pt-4">
+                    <div>
+                        <div class="h-6 bg-gray-200 rounded w-24 mb-2"></div>
+                        <div class="flex gap-2">
+                            <div class="w-16 h-10 bg-gray-200 rounded"></div>
+                            <div class="w-16 h-10 bg-gray-200 rounded"></div>
+                            <div class="w-16 h-10 bg-gray-200 rounded"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Quantity Skeleton -->
+                 <div class="flex items-center gap-4">
+                    <div class="h-6 bg-gray-200 rounded w-24"></div>
+                    <div class="w-28 h-10 bg-gray-200 rounded"></div>
+                </div>
+                
+                <div class="flex flex-col sm:flex-row gap-4 pt-4">
+                    <div class="h-14 bg-gray-200 rounded flex-1"></div> <!-- Add to Cart -->
+                    <div class="h-14 bg-gray-200 rounded flex-1"></div> <!-- Buy Now -->
+                </div>
+                
+                <div class="flex gap-4 pt-2">
+                     <div class="h-6 bg-gray-200 rounded w-32"></div>
+                     <div class="h-6 bg-gray-200 rounded w-32"></div>
+                </div>
+            </div>
+        </div>
+
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-12 mb-16" id="mainProductContainer">
             <!-- Product Images -->
             <div>
                 <!-- Main Image -->
@@ -503,7 +566,7 @@ $_COOKIE['recently_viewed'] = json_encode($recentIds);
                 
                 <!-- Availability Status (Dynamic) -->
                 <div class="mb-6 flex items-center space-x-2">
-                    <span id="stock-count-display" class="text-sm font-bold <?php echo ($currentStatus === 'in_stock' && $currentStock > 0) ? 'text-green-600' : (($currentStatus === 'in_stock' && $currentStock < 0) ? 'text-orange-600' : 'text-red-600'); ?>">
+                    <span id="stock-count-display" class="text-sm font-bold <?php echo ($currentStatus === 'in_stock' && $currentStock > 0) ? 'text-primary' : (($currentStatus === 'in_stock' && $currentStock < 0) ? 'text-orange-600' : 'text-red-600'); ?>">
                         <?php 
                         $currentLabel = get_stock_status_text($currentStatus, $currentStock, $totalSold);
                         if ($currentLabel === 'Out of Stock') {
@@ -532,13 +595,19 @@ $_COOKIE['recently_viewed'] = json_encode($recentIds);
                 </div>
                 
                 <!-- Pickup Information -->
+                <?php if ($settings->get('pickup_enable', '1') == '1'): ?>
                 <div class="bg-gray-50 p-4 rounded-lg mb-6">
-                    <p class="text-sm text-gray-700">
-                        <i class="fas fa-store mr-2 text-primary"></i>
-                        Pickup available at Shop location. Usually ready in 24 hours
-                    </p>
-                    <a href="#" class="text-sm text-primary hover:underline mt-1 inline-block">View store information</a>
+                    <div class="text-sm text-gray-700 flex items-start">
+                        <i class="<?php echo htmlspecialchars($settings->get('pickup_icon', 'fas fa-store')); ?> mr-2 text-primary mt-1 flex-shrink-0"></i>
+                        <div class="prose prose-sm max-w-none">
+                            <?php echo $settings->get('pickup_message', 'Pickup available at Shop location. Usually ready in 24 hours'); ?>
+                        </div>
+                    </div>
+                    <a href="<?php echo htmlspecialchars($settings->get('pickup_link_url', '#')); ?>" class="text-sm text-primary hover:underline mt-1 inline-block">
+                        <?php echo htmlspecialchars($settings->get('pickup_link_text', 'View store information')); ?>
+                    </a>
                 </div>
+                <?php endif; ?>
                 
                 <!-- Product Details -->
                 <div class="border-t pt-6 space-y-2 text-sm">
@@ -1119,10 +1188,10 @@ function updateVariantDisplay() {
             
             if (matchingVariant.stock_status !== 'out_of_stock' && stock > 0) {
                 stockElement.textContent = 'In Stock';
-                stockElement.className = 'text-green-600 capitalize';
+                stockElement.className = 'text-primary capitalize';
                 if (stockCountDisplay) {
                     stockCountDisplay.innerHTML = `<i class="fas fa-check-circle mr-1"></i> ${stock} items available`;
-                    stockCountDisplay.className = 'text-sm font-bold text-green-600';
+                    stockCountDisplay.className = 'text-sm font-bold text-primary';
                 }
                 updateButtons(false);
                 

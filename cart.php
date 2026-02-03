@@ -30,6 +30,34 @@ $cartTotal = $cart->getTotal();
         <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
             <!-- Cart Items -->
             <div class="lg:col-span-2 space-y-4" id="cartItemsContainer">
+                <div id="cartSkeleton" class="hidden space-y-4">
+                    <div class="bg-white rounded-lg p-6 flex flex-col md:flex-row items-start md:items-center space-y-4 md:space-y-0 md:space-x-6 animate-pulse">
+                        <div class="w-32 h-32 bg-gray-200 rounded"></div>
+                        <div class="flex-1 space-y-3">
+                             <div class="h-6 bg-gray-200 rounded w-1/2"></div>
+                             <div class="h-4 bg-gray-200 rounded w-1/4"></div>
+                             <div class="h-4 bg-gray-200 rounded w-1/6"></div>
+                        </div>
+                        <div class="flex items-center space-x-4">
+                            <div class="w-32 h-10 bg-gray-200 rounded"></div>
+                            <div class="w-24 h-6 bg-gray-200 rounded"></div>
+                            <div class="w-6 h-6 bg-gray-200 rounded"></div>
+                        </div>
+                    </div>
+                    <div class="bg-white rounded-lg p-6 flex flex-col md:flex-row items-start md:items-center space-y-4 md:space-y-0 md:space-x-6 animate-pulse">
+                        <div class="w-32 h-32 bg-gray-200 rounded"></div>
+                        <div class="flex-1 space-y-3">
+                             <div class="h-6 bg-gray-200 rounded w-2/3"></div>
+                             <div class="h-4 bg-gray-200 rounded w-1/4"></div>
+                             <div class="h-4 bg-gray-200 rounded w-1/6"></div>
+                        </div>
+                        <div class="flex items-center space-x-4">
+                            <div class="w-32 h-10 bg-gray-200 rounded"></div>
+                            <div class="w-24 h-6 bg-gray-200 rounded"></div>
+                            <div class="w-6 h-6 bg-gray-200 rounded"></div>
+                        </div>
+                    </div>
+                </div>
                 <?php foreach ($cartItems as $item): 
                     $productSlug = $item['slug'] ?? '';
                     $productUrl = !empty($productSlug) ? url('product?slug=' . urlencode($productSlug)) : '#';

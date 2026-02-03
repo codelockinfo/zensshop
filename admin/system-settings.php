@@ -54,9 +54,14 @@ unset($_SESSION['success']);
 ?>
 
 <div class="p-6">
-    <div class="mb-6">
-        <h1 class="text-2xl font-bold">System Settings</h1>
-        <p class="text-gray-600 text-sm mt-1">Manage your application configuration</p>
+    <div class="sticky top-0 z-20 bg-[#f7f8fc] -mx-6 -mt-6 px-6 py-4 mb-6 flex justify-between items-center">
+        <div>
+            <h1 class="text-2xl font-bold text-gray-800">System Settings</h1>
+            <p class="text-gray-600 text-sm mt-1">Manage your application configuration</p>
+        </div>
+        <button type="submit" form="settingsForm" class="bg-blue-600 text-white px-6 py-2 rounded font-semibold hover:bg-blue-700 transition shadow-lg flex items-center">
+             <i class="fas fa-save mr-2"></i> Save Changes
+        </button>
     </div>
 
     <?php if ($success): ?>
@@ -65,7 +70,7 @@ unset($_SESSION['success']);
         </div>
     <?php endif; ?>
 
-    <form method="POST" enctype="multipart/form-data" class="space-y-6">
+    <form id="settingsForm" method="POST" enctype="multipart/form-data" class="space-y-6">
         <input type="hidden" name="action" value="update_settings">
 
         <!-- SEO & Branding Settings -->
@@ -383,6 +388,66 @@ unset($_SESSION['success']);
             </div>
         </div>
 
+        <!-- Product & Pickup Settings -->
+        <div class="bg-white rounded shadow p-6">
+            <h2 class="text-xl font-bold mb-4 flex items-center">
+                <i class="fas fa-store mr-2 text-indigo-600"></i>
+                Product & Pickup Information
+            </h2>
+            <p class="text-sm text-gray-600 mb-6">Manage pickup availability messages on product pages</p>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <!-- Enable Pickup Info -->
+                <div class="md:col-span-2">
+                    <label class="flex items-center space-x-3 cursor-pointer">
+                        <input type="hidden" name="setting_pickup_enable" value="0">
+                        <input type="hidden" name="group_pickup_enable" value="product">
+                        <input type="checkbox" name="setting_pickup_enable" value="1" 
+                               <?php echo $settings->get('pickup_enable', '1') == '1' ? 'checked' : ''; ?> 
+                               class="w-5 h-5 text-indigo-600 rounded focus:ring-indigo-500">
+                        <span class="text-sm font-medium text-gray-700">Show Pickup Availability</span>
+                    </label>
+                </div>
+                
+                <!-- Pickup Message -->
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Pickup Message (HTML/Rich Text)</label>
+                    <input type="hidden" name="group_pickup_message" value="product">
+                    <textarea name="setting_pickup_message" rows="4"
+                           class="w-full px-4 py-2 border rounded focus:ring-2 focus:ring-indigo-500 richtext"><?php echo htmlspecialchars($settings->get('pickup_message', 'Pickup available at Shop location. Usually ready in 24 hours')); ?></textarea>
+                </div>
+
+                <!-- Pickup Icon -->
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Pickup Icon (FontAwesome Class)</label>
+                    <input type="hidden" name="group_pickup_icon" value="product">
+                    <input type="text" name="setting_pickup_icon" 
+                           value="<?php echo htmlspecialchars($settings->get('pickup_icon', 'fas fa-store')); ?>" 
+                           class="w-full px-4 py-2 border rounded focus:ring-2 focus:ring-indigo-500"
+                           placeholder="e.g. fas fa-store">
+                    <p class="text-xs text-gray-500 mt-1">Enter any FontAwesome icon class (e.g., <code class="bg-gray-100 px-1 rounded">fas fa-store</code>)</p>
+                </div>
+
+                <!-- Link Text -->
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Link Text</label>
+                    <input type="hidden" name="group_pickup_link_text" value="product">
+                    <input type="text" name="setting_pickup_link_text" 
+                           value="<?php echo htmlspecialchars($settings->get('pickup_link_text', 'View store information')); ?>" 
+                           class="w-full px-4 py-2 border rounded focus:ring-2 focus:ring-indigo-500">
+                </div>
+
+                <!-- Link URL -->
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Link URL</label>
+                    <input type="hidden" name="group_pickup_link_url" value="product">
+                    <input type="text" name="setting_pickup_link_url" 
+                           value="<?php echo htmlspecialchars($settings->get('pickup_link_url', '#')); ?>" 
+                           class="w-full px-4 py-2 border rounded focus:ring-2 focus:ring-indigo-500">
+                </div>
+            </div>
+        </div>
+
         <!-- API Settings -->
         <div class="bg-white rounded shadow p-6">
             <h2 class="text-xl font-bold mb-4 flex items-center">
@@ -457,12 +522,7 @@ unset($_SESSION['success']);
             </div>
         </div>
 
-        <!-- Save Button -->
-        <div class="flex justify-end">
-            <button type="submit" class="bg-blue-600 text-white px-8 py-3 rounded font-semibold hover:bg-blue-700 transition shadow-lg">
-                <i class="fas fa-save mr-2"></i>Save Settings
-            </button>
-        </div>
+        <!-- Save Button Removed (Moved to Header) -->
     </form>
 </div>
 

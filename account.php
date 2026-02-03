@@ -704,58 +704,7 @@ if (!$isAjax) {
                         </div>
                     </div>
 
-                    <script>
-                    document.getElementById('accountSupportForm').addEventListener('submit', async function(e) {
-                        e.preventDefault();
-                        
-                        const btn = this.querySelector('button[type="submit"]');
-                        const origText = btn.innerHTML;
-                        const messageDiv = document.getElementById('accountSupportMessage');
-                        
-                        btn.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>Sending...';
-                        btn.disabled = true;
-                        messageDiv.classList.add('hidden');
-                        
-                        const formData = {
-                            name: '<?php echo htmlspecialchars($customer['name'] ?? ''); ?>',
-                            email: '<?php echo htmlspecialchars($customer['email'] ?? ''); ?>',
-                            subject: document.getElementById('supportSubject').value,
-                            message: document.getElementById('supportMessage').value
-                        };
-                        
-                        try {
-                            const response = await fetch('<?php echo $baseUrl; ?>/api/support.php', {
-                                method: 'POST',
-                                headers: { 'Content-Type': 'application/json' },
-                                body: JSON.stringify(formData)
-                            });
-                            
-                            const data = await response.json();
-                            
-                            if (data.success) {
-                                this.reset();
-                                messageDiv.textContent = data.message;
-                                messageDiv.className = 'p-4 bg-green-50 text-green-700 rounded-lg border border-green-200';
-                                messageDiv.classList.remove('hidden');
-                                
-                                // Scroll to message
-                                messageDiv.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
-                            } else {
-                                messageDiv.textContent = data.message || 'Something went wrong. Please try again.';
-                                messageDiv.className = 'p-4 bg-red-50 text-red-700 rounded-lg border border-red-200';
-                                messageDiv.classList.remove('hidden');
-                            }
-                        } catch (error) {
-                            console.error('Support form error:', error);
-                            messageDiv.textContent = 'An error occurred: ' + (error.message || 'Please try again.');
-                            messageDiv.className = 'p-4 bg-red-50 text-red-700 rounded-lg border border-red-200';
-                            messageDiv.classList.remove('hidden');
-                        } finally {
-                            btn.innerHTML = origText;
-                            btn.disabled = false;
-                        }
-                    });
-                    </script>
+
 
                 <?php endif; ?>
             
@@ -852,6 +801,63 @@ document.addEventListener('DOMContentLoaded', () => {
     // Handle Back/Forward
     window.addEventListener('popstate', () => {
         loadAccountSection(window.location.href);
+    });
+
+    // Support Form Handling (Event Delegation)
+    document.addEventListener('submit', async (e) => {
+        if (e.target && e.target.id === 'accountSupportForm') {
+            e.preventDefault();
+            const form = e.target;
+            
+            const btn = form.querySelector('button[type="submit"]');
+            const origText = btn.innerHTML;
+            const messageDiv = document.getElementById('accountSupportMessage');
+            
+            btn.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>Sending...';
+            btn.disabled = true;
+            if(messageDiv) messageDiv.classList.add('hidden');
+            
+            const formData = {
+                name: '<?php echo htmlspecialchars($customer['name'] ?? '', ENT_QUOTES); ?>',
+                email: '<?php echo htmlspecialchars($customer['email'] ?? '', ENT_QUOTES); ?>',
+                subject: document.getElementById('supportSubject').value,
+                message: document.getElementById('supportMessage').value
+            };
+            
+            try {
+                const response = await fetch('<?php echo $baseUrl; ?>/api/support.php', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(formData)
+                });
+                
+                const data = await response.json();
+                
+                if (messageDiv) {
+                    if (data.success) {
+                        form.reset();
+                        messageDiv.textContent = data.message;
+                        messageDiv.className = 'p-4 bg-green-50 text-green-700 rounded-lg border border-green-200';
+                        messageDiv.classList.remove('hidden');
+                        messageDiv.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+                    } else {
+                        messageDiv.textContent = data.message || 'Something went wrong. Please try again.';
+                        messageDiv.className = 'p-4 bg-red-50 text-red-700 rounded-lg border border-red-200';
+                        messageDiv.classList.remove('hidden');
+                    }
+                }
+            } catch (error) {
+                console.error('Support form error:', error);
+                if (messageDiv) {
+                    messageDiv.textContent = 'An error occurred: ' + (error.message || 'Please try again.');
+                    messageDiv.className = 'p-4 bg-red-50 text-red-700 rounded-lg border border-red-200';
+                    messageDiv.classList.remove('hidden');
+                }
+            } finally {
+                btn.innerHTML = origText;
+                btn.disabled = false;
+            }
+        }
     });
 });
 </script>

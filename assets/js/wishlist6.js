@@ -32,7 +32,7 @@ function initializeWishlistButtons() {
             const icon = btn.querySelector('i');
             const tooltip = btn.querySelector('.product-tooltip');
             
-            const isCardButton = btn.classList.contains('absolute');
+            const isCardButton = btn.classList.contains('absolute') || btn.classList.contains('rounded-full');
             
             if (productId && isInWishlist(productId)) {
                 if (isCardButton) {
@@ -246,7 +246,7 @@ async function toggleWishlist(productId, button) {
             document.querySelectorAll(`.wishlist-btn[data-product-id="${productId}"]`).forEach(btn => {
                 const icon = btn.querySelector('i');
                 const tooltip = btn.querySelector('.product-tooltip');
-                const isCardButton = btn.classList.contains('absolute');
+                const isCardButton = btn.classList.contains('absolute') || btn.classList.contains('rounded-full');
                 
                 // Add labels for text update
                 const addText = 'Add to Wishlist';

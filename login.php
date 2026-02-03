@@ -169,7 +169,7 @@ require_once __DIR__ . '/includes/header.php';
                 <div class="mt-10 text-center">
                     <p class="text-gray-500 text-sm">
                         Don't have an account? 
-                        <a href="<?php echo url('register'); ?>" class="text-black font-bold hover:underline">Create One</a>
+                        <a href="<?php echo url('register'); ?>" class="text-black font-bold hover:underline">Sign Up</a>
                     </p>
                 </div>
             </div>

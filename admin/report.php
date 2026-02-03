@@ -16,8 +16,12 @@ $order = new Order();
 
 // Get date range (default: last 30 days)
 $dateRange = $_GET['range'] ?? '30';
-$daysAgo = $dateRange === '7' ? 7 : ($dateRange === '365' ? 365 : 30);
-$startDate = date('Y-m-d', strtotime("-{$daysAgo} days"));
+if ($dateRange === 'all') {
+    $startDate = '1970-01-01'; // All time
+} else {
+    $daysAgo = $dateRange === '7' ? 7 : ($dateRange === '365' ? 365 : 30);
+    $startDate = date('Y-m-d', strtotime("-{$daysAgo} days"));
+}
 
 // Get statistics
 $storeId = $_SESSION['store_id'] ?? null;
@@ -28,7 +32,7 @@ if (!$storeId && isset($_SESSION['user_email'])) {
 $totalProducts = $db->fetchOne("SELECT COUNT(*) as count FROM products WHERE store_id = ?", [$storeId])['count'];
 $totalOrders = $db->fetchOne("SELECT COUNT(*) as count FROM orders WHERE store_id = ? AND created_at >= ?", [$storeId, $startDate])['count'];
 $totalRevenue = $db->fetchOne("SELECT SUM(total_amount) as total FROM orders WHERE store_id = ? AND payment_status = 'paid' AND created_at >= ?", [$storeId, $startDate])['total'] ?? 0;
-$totalCustomers = $db->fetchOne("SELECT COUNT(DISTINCT customer_email) as count FROM orders WHERE store_id = ? AND created_at >= ?", [$storeId, $startDate])['count'];
+$totalCustomers = $db->fetchOne("SELECT COUNT(*) as count FROM customers WHERE store_id = ?", [$storeId])['count'];
 
 // Get recent orders
 $recentOrders = $db->fetchAll("SELECT * FROM orders WHERE store_id = ? ORDER BY created_at DESC LIMIT 10", [$storeId]);
@@ -43,7 +47,6 @@ $topProducts = $db->fetchAll("
     GROUP BY p.id
     HAVING total_sold > 0
     ORDER BY total_sold DESC
-    LIMIT 10
 ", [$storeId, $startDate]);
 
 // Get sales by status
@@ -72,6 +75,7 @@ $salesByStatus = $db->fetchAll("
             <option value="7" <?php echo $dateRange === '7' ? 'selected' : ''; ?>>Last 7 days</option>
             <option value="30" <?php echo $dateRange === '30' ? 'selected' : ''; ?>>Last 30 days</option>
             <option value="365" <?php echo $dateRange === '365' ? 'selected' : ''; ?>>Last year</option>
+            <option value="all" <?php echo $dateRange === 'all' ? 'selected' : ''; ?>>All Time</option>
         </select>
     </div>
 </div>
@@ -224,13 +228,16 @@ document.addEventListener('DOMContentLoaded', function() {
     const productsData = <?php echo json_encode($topProducts); ?>;
     
     if (productsData.length > 0) {
+        // Limit chart to top 20 for readability
+        const chartData = productsData.slice(0, 20);
+        
         new Chart(productsCtx, {
             type: 'bar',
             data: {
-                labels: productsData.map(item => item.name.length > 15 ? item.name.substring(0, 15) + '...' : item.name),
+                labels: chartData.map(item => item.name.length > 15 ? item.name.substring(0, 15) + '...' : item.name),
                 datasets: [{
                     label: 'Units Sold',
-                    data: productsData.map(item => item.total_sold),
+                    data: chartData.map(item => item.total_sold),
                     backgroundColor: '#3B82F6', // blue-500
                     borderRadius: 4
                 }]
