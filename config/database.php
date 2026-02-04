@@ -5,7 +5,10 @@
  */
 
 // Detect environment based on hostname
-$isProduction = (isset($_SERVER['HTTP_HOST']) && strpos($_SERVER['HTTP_HOST'], 'kartoai.com') !== false);
+// If it's not localhost, it's production (handles temporary domains automatically)
+$isProduction = (isset($_SERVER['HTTP_HOST']) && 
+    $_SERVER['HTTP_HOST'] !== 'localhost' && 
+    $_SERVER['HTTP_HOST'] !== '127.0.0.1');
 
 if ($isProduction) {
     // Production environment (zensshop.kartoai.com)
