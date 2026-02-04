@@ -37,37 +37,61 @@ async function loadSection(sectionId, endpoint) {
     const sectionElement = document.getElementById(sectionId);
     if (!sectionElement) return;
 
+    const consent = localStorage.getItem('cookieConsent');
+    const cacheKey = `cached_section_${endpoint}`;
+    
+    // 1. Try to load from Cache first if allowed
+    if (consent === 'allowed') {
+        const cachedHtml = localStorage.getItem(cacheKey);
+        if (cachedHtml) {
+            sectionElement.innerHTML = cachedHtml;
+            sectionElement.classList.remove('section-loading');
+            sectionElement.classList.add('fade-in');
+            initializeSection(sectionElement);
+            // Move to next section but also fetch fresh in background
+            setTimeout(() => { loadNextSection(); }, 100);
+            
+            // Perform background fetch to keep cache fresh for next time
+            fetchFreshSection(endpoint, cacheKey, false); 
+            return;
+        }
+    }
+
+    // 2. Standard Fetch (Cache Miss or No Consent)
+    await fetchFreshSection(endpoint, cacheKey, true, sectionElement);
+}
+
+async function fetchFreshSection(endpoint, cacheKey, isPrimary, sectionElement = null) {
     try {
         const baseUrl = typeof BASE_URL !== 'undefined' ? BASE_URL : window.location.pathname.split('/').slice(0, -1).join('/') || '';
         const response = await fetch(`${baseUrl}/api/sections.php?section=${endpoint}`);
         const html = await response.text();
 
         if (html) {
-            sectionElement.innerHTML = html;
-            sectionElement.classList.remove('section-loading');
-            sectionElement.classList.add('fade-in');
+            // Save to cache if allowed
+            if (localStorage.getItem('cookieConsent') === 'allowed') {
+                localStorage.setItem(cacheKey, html);
+            }
 
-            // Initialize any interactive elements in the loaded section
-            initializeSection(sectionElement);
-
-            // Load next section after a delay
-            setTimeout(() => {
-                loadNextSection();
-            }, 300);
-        } else {
-            // Section is empty/inactive - hide it completely
+            if (isPrimary && sectionElement) {
+                sectionElement.innerHTML = html;
+                sectionElement.classList.remove('section-loading');
+                sectionElement.classList.add('fade-in');
+                initializeSection(sectionElement);
+                setTimeout(() => { loadNextSection(); }, 300);
+            }
+        } else if (isPrimary && sectionElement) {
             sectionElement.style.display = 'none';
             sectionElement.classList.remove('section-loading');
+            setTimeout(() => { loadNextSection(); }, 100);
         }
     } catch (error) {
         console.error(`Error loading section ${endpoint}:`, error);
-        sectionElement.innerHTML = '<div class="text-center py-8 text-red-500">Error loading section</div>';
-        sectionElement.classList.remove('section-loading');
-
-        // Continue loading next section even on error
-        setTimeout(() => {
-            loadNextSection();
-        }, 300);
+        if (isPrimary && sectionElement) {
+            sectionElement.innerHTML = '<div class="text-center py-8 text-red-500">Error loading section</div>';
+            sectionElement.classList.remove('section-loading');
+            setTimeout(() => { loadNextSection(); }, 300);
+        }
     }
 }
 

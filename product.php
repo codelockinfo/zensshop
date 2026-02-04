@@ -338,7 +338,8 @@ $_COOKIE['recently_viewed'] = json_encode($recentIds);
                                      alt="Thumbnail <?php echo $index + 1; ?>"
                                      class="thumbnail-img object-cover rounded cursor-pointer border-2 transition hover:border-primary <?php echo $index === 0 ? 'border-primary' : 'border-transparent'; ?>"
                                      onclick="changeMainImage('<?php echo htmlspecialchars($item['url']); ?>', this, <?php echo $item['variant'] ? htmlspecialchars(json_encode($item['variant'])) : 'null'; ?>)"
-                                     onerror="this.src='https://placehold.co/150x150?text=No+Image'">
+                                     onerror="this.src='https://placehold.co/150x150?text=No+Image'"
+                                     loading="lazy">
                             </div>
                             <?php endforeach; ?>
                         </div>
@@ -768,7 +769,8 @@ $_COOKIE['recently_viewed'] = json_encode($recentIds);
                                 <a href="<?php echo $baseUrl; ?>/product?slug=<?php echo urlencode($item['slug'] ?? ''); ?>" class="block">
                                     <img src="<?php echo htmlspecialchars($itemImage); ?>" 
                                             alt="<?php echo htmlspecialchars($item['name'] ?? 'Product'); ?>"
-                                            class="w-full h-64 object-contain group-hover:scale-110 transition-transform duration-500">
+                                            class="w-full h-64 object-contain group-hover:scale-110 transition-transform duration-500"
+                                            loading="lazy">
                                 </a>
                                 <?php if ($itemDiscount > 0): ?>
                                 <span class="absolute top-3 left-3 bg-red-500 text-white px-2 py-1 rounded text-xs font-semibold z-10">

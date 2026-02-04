@@ -378,6 +378,6 @@ document.addEventListener('DOMContentLoaded', function() {
 <section id="newsletter-section">
 </section>
 
-<script src="<?php echo $baseUrl; ?>/assets/js/lazy-load3.js"></script>
+<script src="<?php echo $baseUrl; ?>/assets/js/lazy-load4.js"></script>
 
 <?php require_once __DIR__ . '/includes/footer.php'; ?>
