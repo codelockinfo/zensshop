@@ -125,36 +125,111 @@ function setupCustomSlider(sliderId, prevBtnId, nextBtnId) {
     const wrapper = slider.parentElement;
     const prevBtn = document.getElementById(prevBtnId);
     const nextBtn = document.getElementById(nextBtnId);
+    
+    let isDragging = false;
+    let startX;
+    let scrollLeft;
     let currentIndex = 0;
 
-    const updatePosition = () => {
-        if (!slider.children.length) return;
+    const getMetrics = () => {
+        if (!slider.children.length) return { itemWidth: 0, gap: 0, visibleCount: 1, maxIndex: 0 };
         const itemWidth = slider.children[0].offsetWidth;
         const gap = parseInt(window.getComputedStyle(slider).gap) || 24;
-        const visibleWidth = wrapper.offsetWidth;
-        const maxScroll = slider.scrollWidth - visibleWidth;
-        let targetX = -currentIndex * (itemWidth + gap);
-        if (targetX < -maxScroll) targetX = -maxScroll;
-        if (targetX > 0) targetX = 0;
-        slider.style.transition = 'transform 0.5s ease';
-        slider.style.transform = `translateX(${targetX}px)`;
+        const visibleCount = Math.floor((wrapper.offsetWidth + gap) / (itemWidth + gap)) || 1;
+        const maxIndex = Math.max(0, slider.children.length - visibleCount);
+        return { itemWidth, gap, visibleCount, maxIndex };
     };
 
-    if (prevBtn && nextBtn) {
-        // Clear old listeners if any (though unlikely here)
-        prevBtn.onclick = null;
-        nextBtn.onclick = null;
+    const updatePosition = (smooth = true) => {
+        const { itemWidth, gap, maxIndex } = getMetrics();
+        if (currentIndex > maxIndex) currentIndex = maxIndex;
+        if (currentIndex < 0) currentIndex = 0;
         
-        prevBtn.addEventListener('click', () => { if (currentIndex > 0) { currentIndex--; updatePosition(); } });
-        nextBtn.addEventListener('click', () => { 
-            const itemWidth = slider.children[0].offsetWidth;
-            const gap = parseInt(window.getComputedStyle(slider).gap) || 24;
-            const visibleCount = Math.floor((wrapper.offsetWidth + gap) / (itemWidth + gap));
-            if (currentIndex < slider.children.length - visibleCount) { currentIndex++; updatePosition(); } 
-        });
+        const visibleWidth = wrapper.offsetWidth;
+        const maxScroll = Math.max(0, slider.scrollWidth - visibleWidth);
+        let targetX = -currentIndex * (itemWidth + gap);
+        
+        if (targetX < -maxScroll) targetX = -maxScroll;
+        if (targetX > 0) targetX = 0;
+        
+        slider.style.transition = smooth ? 'transform 0.5s cubic-bezier(0.25, 0.46, 0.45, 0.94)' : 'none';
+        slider.style.transform = `translateX(${targetX}px)`;
+        
+        // Update button states
+        if (prevBtn) prevBtn.style.opacity = currentIndex === 0 ? '0.5' : '1';
+        if (nextBtn) nextBtn.style.opacity = currentIndex >= maxIndex ? '0.5' : '1';
+    };
+
+    // --- Mouse Drag Logic ---
+    wrapper.style.cursor = 'grab';
+    wrapper.style.userSelect = 'none';
+
+    const startDragging = (e) => {
+        isDragging = true;
+        wrapper.style.cursor = 'grabbing';
+        startX = (e.pageX || e.touches[0].pageX) - slider.offsetLeft;
+        slider.style.transition = 'none';
+    };
+
+    const stopDragging = (e) => {
+        if (!isDragging) return;
+        isDragging = false;
+        wrapper.style.cursor = 'grab';
+        
+        const { itemWidth, gap } = getMetrics();
+        const movedX = (e.pageX || (e.changedTouches ? e.changedTouches[0].pageX : 0)) - startX;
+        
+        // Horizontal snap logic
+        const threshold = (itemWidth + gap) / 4;
+        const diff = Math.round(movedX / (itemWidth + gap));
+        
+        if (Math.abs(movedX) > threshold) {
+            currentIndex -= diff;
+        }
+        updatePosition();
+    };
+
+    const moveDragging = (e) => {
+        if (!isDragging) return;
+        e.preventDefault();
+        const x = e.pageX || e.touches[0].pageX;
+        const walk = (x - startX);
+        const { itemWidth, gap } = getMetrics();
+        const currentX = -currentIndex * (itemWidth + gap);
+        slider.style.transform = `translateX(${currentX + walk}px)`;
+    };
+
+    // Events
+    wrapper.addEventListener('mousedown', startDragging);
+    window.addEventListener('mousemove', moveDragging);
+    window.addEventListener('mouseup', stopDragging);
+    
+    wrapper.addEventListener('touchstart', startDragging, { passive: false });
+    wrapper.addEventListener('touchmove', moveDragging, { passive: false });
+    wrapper.addEventListener('touchend', stopDragging);
+
+    if (prevBtn && nextBtn) {
+        prevBtn.onclick = (e) => { e.preventDefault(); if (currentIndex > 0) { currentIndex--; updatePosition(); } };
+        nextBtn.onclick = (e) => { 
+            e.preventDefault();
+            const { maxIndex } = getMetrics();
+            if (currentIndex < maxIndex) { currentIndex++; updatePosition(); } 
+        };
     }
-    window.addEventListener('resize', updatePosition);
+
+    window.addEventListener('resize', debounce(() => updatePosition(false), 150));
     updatePosition();
+}
+
+// Global debounce if not exists in main6.js
+if (typeof window.debounce !== 'function') {
+    window.debounce = function(func, wait) {
+        let timeout;
+        return function(...args) {
+            clearTimeout(timeout);
+            timeout = setTimeout(() => func.apply(this, args), wait);
+        };
+    };
 }
 
 document.addEventListener("DOMContentLoaded", initLazyLoading);
