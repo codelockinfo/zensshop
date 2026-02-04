@@ -85,7 +85,7 @@ unset($_SESSION['success']);
                 <!-- Site Name / Title Suffix -->
                 <div class="md:col-span-2">
                      <label class="block text-sm font-medium text-gray-700 mb-2">Site Title (Suffix)</label>
-                     <input type="text" name="setting_site_title_suffix" value="<?php echo htmlspecialchars($settings->get('site_title_suffix', 'Milano - Elegant Jewelry Store')); ?>" class="w-full px-4 py-2 border rounded focus:ring-2 focus:ring-green-500" placeholder="e.g. My Awesome Shop">
+                     <input type="text" name="setting_site_title_suffix" value="<?php echo htmlspecialchars($settings->get('site_title_suffix', 'CookPro - Elegant Jewelry Store')); ?>" class="w-full px-4 py-2 border rounded focus:ring-2 focus:ring-green-500" placeholder="e.g. My Awesome Shop">
                      <p class="text-xs text-gray-500 mt-1">Appended to page titles (e.g., "Home - My Awesome Shop")</p>
                      <input type="hidden" name="group_site_title_suffix" value="seo">
                 </div>
@@ -205,7 +205,7 @@ unset($_SESSION['success']);
                     'smtp_username' => ['label' => 'SMTP Username', 'placeholder' => 'your-email@gmail.com', 'type' => 'text'],
                     'smtp_password' => ['label' => 'SMTP Password', 'placeholder' => 'Enter SMTP password', 'type' => 'password'],
                     'smtp_from_email' => ['label' => 'From Email', 'placeholder' => 'noreply@yourstore.com', 'type' => 'text'],
-                    'smtp_from_name' => ['label' => 'From Name', 'placeholder' => 'Milano Store', 'type' => 'text'],
+                    'smtp_from_name' => ['label' => 'From Name', 'placeholder' => 'CookPro Store', 'type' => 'text'],
                 ];
                 foreach ($emailFields as $key => $field): 
                     $val = $settings->get($key, '');
@@ -259,7 +259,7 @@ unset($_SESSION['success']);
             <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <?php 
                 $genFields = [
-                    'site_name' => ['label' => 'Site Name', 'placeholder' => 'Milano'],
+                    'site_name' => ['label' => 'Site Name', 'placeholder' => 'CookProo'],
                     'otp_expiry_minutes' => ['label' => 'OTP Expiry (Minutes)', 'placeholder' => '5', 'type' => 'number'],
                 ];
                 foreach ($genFields as $key => $field): 

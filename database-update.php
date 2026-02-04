@@ -502,7 +502,7 @@ if ($EXECUTE) {
     try {
         $brandsExist = $db->fetchOne("SELECT setting_key FROM site_settings WHERE setting_key = 'Brands'");
         if (!$brandsExist) {
-            $initialBrands = json_encode(['Milano', 'Luxury', 'Premium']);
+            $initialBrands = json_encode(['CookPro', 'Luxury', 'Premium']);
             $db->execute(
                 "INSERT INTO site_settings (setting_key, setting_value, store_id) VALUES ('Brands', ?, ?)", 
                 [$initialBrands, $masterStoreId ?: 'DEFAULT']

@@ -1,6 +1,6 @@
 {
-    "name": "milano/ecommerce",
-    "description": "Milano E-commerce Website",
+    "name": "CookPro/ecommerce",
+    "description": "CookPro E-commerce Website",
     "type": "project",
     "require": {
         "php": ">=7.4",
@@ -8,7 +8,7 @@
     },
     "autoload": {
         "psr-4": {
-            "Milano\\": "classes/"
+            "CookPro\\": "classes/"
         }
     }
 }

@@ -394,6 +394,6 @@ document.addEventListener('DOMContentLoaded', function() {
 <section id="newsletter-section">
 </section>
 
-<script src="<?php echo $baseUrl; ?>/assets/js/lazy-load5.js" defer></script>
+<script src="<?php echo $baseUrl; ?>/assets/js/lazy-load6.js" defer></script>
 
 <?php require_once __DIR__ . '/includes/footer.php'; ?>

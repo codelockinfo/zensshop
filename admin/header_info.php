@@ -139,7 +139,7 @@ if (!$storeId && isset($_SESSION['user_email'])) {
 
 // Fetch Current Settings
 $logoType = $db->fetchOne("SELECT setting_value FROM site_settings WHERE setting_key = 'site_logo_type' AND store_id = ?", [$storeId])['setting_value'] ?? 'image';
-$logoText = $db->fetchOne("SELECT setting_value FROM site_settings WHERE setting_key = 'site_logo_text' AND store_id = ?", [$storeId])['setting_value'] ?? 'milano';
+$logoText = $db->fetchOne("SELECT setting_value FROM site_settings WHERE setting_key = 'site_logo_text' AND store_id = ?", [$storeId])['setting_value'] ?? 'CookPro';
 $logoPath = $db->fetchOne("SELECT setting_value FROM site_settings WHERE setting_key = 'site_logo' AND store_id = ?", [$storeId])['setting_value'] ?? 'logo.png';
 $iconSearch = $db->fetchOne("SELECT setting_value FROM site_settings WHERE setting_key = 'header_icon_search' AND store_id = ?", [$storeId])['setting_value'] ?? '1';
 $iconUser = $db->fetchOne("SELECT setting_value FROM site_settings WHERE setting_key = 'header_icon_user' AND store_id = ?", [$storeId])['setting_value'] ?? '1';
@@ -206,7 +206,7 @@ require_once __DIR__ . '/../includes/admin-header.php';
                            name="logo_text" 
                            value="<?php echo htmlspecialchars($logoText); ?>" 
                            class="w-full border p-2 rounded"
-                           placeholder="milano">
+                           placeholder="CookPro">
                 </div>
                 
                 <!-- Image Logo Field -->

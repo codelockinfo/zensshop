@@ -519,7 +519,14 @@ class Cart {
     public function syncCartAfterLogin($userId) {
         $guestCart = [];
         if (isset($_COOKIE[CART_COOKIE_NAME])) {
-            $cartData = json_decode($_COOKIE[CART_COOKIE_NAME], true);
+            $json = $_COOKIE[CART_COOKIE_NAME];
+            $cartData = json_decode($json, true);
+            if (!is_array($cartData)) {
+                $cartData = json_decode(stripslashes($json), true);
+            }
+            if (!is_array($cartData)) {
+                $cartData = json_decode(urldecode($json), true);
+            }
             if (is_array($cartData)) {
                 $guestCart = $cartData;
             }
@@ -527,7 +534,9 @@ class Cart {
         
         if (empty($guestCart)) return;
         
-        $dbCart = $this->getCartFromDB($userId);
+        // Get existing database cart
+        $storeId = function_exists('getCurrentStoreId') ? getCurrentStoreId() : ($_SESSION['store_id'] ?? null);
+        $dbCart = $this->getCartFromDB($userId, $storeId);
         
         // Merge guest cart into db cart
         foreach ($guestCart as $guestItem) {
@@ -535,7 +544,10 @@ class Cart {
             $found = false;
             foreach ($dbCart as &$dbItem) {
                 $dbAttrs = $dbItem['variant_attributes'] ?? [];
-                if ($dbItem['product_id'] == $guestItem['product_id'] && $dbAttrs == $guestAttrs) {
+                if ($dbItem['product_id'] == $guestItem['product_id'] && $this->attributesMatch($dbAttrs, $guestAttrs)) {
+                    // Update quantity instead of adding
+                    // If db has 7 and guest has 1, total should be 8.
+                    // But we must ensure getCartFromDB actually returned the items correctly.
                     $dbItem['quantity'] += $guestItem['quantity'];
                     $found = true;
                     break;
@@ -547,7 +559,8 @@ class Cart {
         }
         
         $this->saveCartToDB($userId, $dbCart);
-        $this->saveCartToCookie($dbCart);
+        // Clear guest cart cookie after sync to prevent double-merging if called again
+        $this->saveCartToCookie([]);
     }
 }
 

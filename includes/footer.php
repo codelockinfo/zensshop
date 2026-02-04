@@ -63,7 +63,7 @@ function renderFooterLinkRecursive($item, $baseUrl) {
                     <div class="mb-4">
                         <?php 
                         $logoType = $getFooterSetting('footer_logo_type', 'text');
-                        $logoText = $getFooterSetting('footer_logo_text', 'Milano');
+                        $logoText = $getFooterSetting('footer_logo_text', 'CookPro');
                         $logoImage = $getFooterSetting('footer_logo_image', '');
                         
                         if ($logoType === 'image' && !empty($logoImage)) {
@@ -215,7 +215,7 @@ function renderFooterLinkRecursive($item, $baseUrl) {
                         
                         <!-- Copyright -->
                         <div class="text-gray-700 text-sm">
-                            <?php echo htmlspecialchars($getFooterSetting('footer_copyright', '© ' . date('Y') . ' Milano store. All rights reserved.')); ?>
+                            <?php echo htmlspecialchars($getFooterSetting('footer_copyright', '© ' . date('Y') . ' CookPro store. All rights reserved.')); ?>
                         </div>
                     </div>
                     
@@ -348,13 +348,13 @@ function renderFooterLinkRecursive($item, $baseUrl) {
     
     
     <!-- Scripts -->
-    <script src="<?php echo $baseUrl; ?>/assets/js/main5.js?v=2" defer></script>
-    <script src="<?php echo $baseUrl; ?>/assets/js/cart13.js?v=3" defer></script>
-    <script src="<?php echo $baseUrl; ?>/assets/js/product-cards4.js?v=2" defer></script>
+    <script src="<?php echo $baseUrl; ?>/assets/js/main6.js?v=2" defer></script>
+    <script src="<?php echo $baseUrl; ?>/assets/js/cart14.js?v=3" defer></script>
+    <script src="<?php echo $baseUrl; ?>/assets/js/product-cards5.js?v=2" defer></script>
     <script src="<?php echo $baseUrl; ?>/assets/js/wishlist6.js?v=3" defer></script>
     <script src="<?php echo $baseUrl; ?>/assets/js/notification.js?v=2" defer></script>
-    <script src="<?php echo $baseUrl; ?>/assets/js/quickview13.js?v=2" defer></script>
-    <script src="<?php echo $baseUrl; ?>/assets/js/add-to-cart2.js?v=2" defer></script>
+    <script src="<?php echo $baseUrl; ?>/assets/js/quickview14.js?v=2" defer></script>
+    <script src="<?php echo $baseUrl; ?>/assets/js/add-to-cart3.js?v=2" defer></script>
     
     <!-- Remove from Cart Confirmation Script -->
     <script>
@@ -608,10 +608,13 @@ function handleCookieConsent(choice) {
 }
 
 function registerServiceWorker() {
+    // Service Worker removed for stability to prevent caching issues with cart and styles
     if ('serviceWorker' in navigator) {
-        navigator.serviceWorker.register('<?php echo $baseUrl; ?>/sw1.js')
-            .then(reg => console.log('Speed Boost Active'))
-            .catch(err => {});
+        navigator.serviceWorker.getRegistrations().then(function(registrations) {
+            for(let registration of registrations) {
+                registration.unregister();
+            }
+        });
     }
 }
 

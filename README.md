@@ -1,4 +1,4 @@
-# Milano E-commerce Website
+# CookPro E-commerce Website
 
 A complete e-commerce solution built with PHP, AJAX, and Tailwind CSS, featuring a beautiful jewelry store frontend and comprehensive admin dashboard.
 
@@ -6,7 +6,7 @@ A complete e-commerce solution built with PHP, AJAX, and Tailwind CSS, featuring
 
 ### Frontend
 
-- **Responsive Landing Page** - Modern, elegant design inspired by Milano jewelry store
+- **Responsive Landing Page** - Modern, elegant design inspired by CookPro jewelry store
 - **Progressive Section Loading** - Sections load one by one via AJAX for better performance
 - **Shopping Cart** - Side cart panel with AJAX functionality and cookie storage
 - **Product Display** - Best selling, trending, and category-based product listings
@@ -90,7 +90,7 @@ A complete e-commerce solution built with PHP, AJAX, and Tailwind CSS, featuring
    - Frontend: `http://localhost/oecom/`
    - Admin: `http://localhost/oecom/admin/`
    - Default admin credentials:
-     - Email: `admin@milano.com`
+     - Email: `admin@CookPro.com`
      - Password: `admin123`
 
 ## Project Structure
@@ -162,7 +162,7 @@ Edit `assets/css/main1.css` to modify CSS variables:
 Edit `config/constants.php`:
 
 ```php
-define('SITE_NAME', 'Milano');
+define('SITE_NAME', 'CookPro');
 define('SITE_URL', 'http://localhost/oecom');
 ```
 

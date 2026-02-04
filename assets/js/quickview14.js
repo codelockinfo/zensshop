@@ -32,7 +32,25 @@ function createQuickViewModal(){if(document.getElementById("quickViewModal"))ret
             <i class="fas fa-spinner fa-spin text-4xl text-gray-300 mb-4"></i>
             <p class="text-gray-500">Loading...</p>
         </div>
-    `;try{let s="undefined"!=typeof BASE_URL?BASE_URL:window.location.pathname.split("/").slice(0,-1).join("/")||"",n=await fetch(`${s}/api/quickview.php?slug=${encodeURIComponent(t)}`);if(!n.ok)throw Error("Network response was not ok");let l=await n.json();l.success?renderQuickView(l.product):a.innerHTML=`<div class="flex items-center justify-center h-full text-red-500">${l.message||"Product not found"}</div>`}catch(r){console.error("Error fetching quick view:",r),a.innerHTML='<div class="flex items-center justify-center h-full text-red-500">Failed to load product details.</div>'}}function closeQuickView(){let t=document.getElementById("quickViewModal"),e=document.getElementById("quickViewPanel");e.classList.remove("opacity-100","scale-100"),e.classList.add("opacity-0","scale-95"),setTimeout(()=>{t.classList.add("hidden"),document.body.style.overflow=""},300)}!function(){window.quickViewInitialized||(window.quickViewInitialized=!0,"loading"===document.readyState?document.addEventListener("DOMContentLoaded",t):t());function t(){document.body.addEventListener("click",function(t){let e=t.target.closest(".quick-view-btn");if(e){t.preventDefault(),t.stopPropagation();let i=e.getAttribute("data-product-slug");i&&openQuickView(i)}}),createQuickViewModal()}}();let qvSelectedOptions={},currentQVProduct=null;function formatQVPrice(t){let e="undefined"!=typeof CURRENCY_SYMBOL?CURRENCY_SYMBOL:"₹";return!isNaN(parseInt(e))&&String(e).length>2&&(e="₹"),e+parseFloat(t).toFixed(2)}function getStockStatusText(t,e,i=0){return"out_of_stock"===t?"Out of Stock":e<=0?i>0?"Sold Out":"Out of Stock":"on_backorder"===t?"On Backorder":"In Stock"}function renderStockCountHTML(t,e,i=0){let a=getStockStatusText(t,e,i),s="",n="text-red-600";return"Out of Stock"===a?s='<i class="fas fa-times-circle mr-1"></i> Out of Stock':"Sold Out"===a?s='<i class="fas fa-times-circle mr-1"></i> Sold Out':e>0?(s=`<i class="fas fa-check-circle mr-1"></i> ${e} items available`,n="text-primary"):e<0?(s=`<i class="fas fa-exclamation-circle mr-1"></i> Backorder (${Math.abs(e)} pending)`,n="text-orange-600"):(s=`<i class="fas fa-check-circle mr-1"></i> ${a}`,n="text-primary"),`<span class="text-sm font-bold ${n}">${s}</span>`}function renderQuickView(t){let e=document.getElementById("quickViewContent");currentQVProduct=t;let i=parseFloat(t.sale_price||t.price),a=t.sale_price?parseFloat(t.price):null,s="";a&&a>i&&(s=`<span class="bg-red-500 text-white px-2 py-1 text-xs font-bold rounded">-${Math.round((a-i)/a*100)}%</span>`);let n=[],l=new Set;t.images&&t.images.length>0?t.images.forEach(t=>{t&&!l.has(t)&&(n.push(t),l.add(t))}):t.image&&!l.has(t.image)&&(n.push(t.image),l.add(t.image)),t.variants&&t.variants.length>0&&t.variants.forEach(t=>{t.image&&!l.has(t.image)&&(n.push(t.image),l.add(t.image))});let r="",o="",c="undefined"!=typeof BASE_URL?BASE_URL:window.location.pathname.split("/").slice(0,-1).join("/")||"",d=`${c}/product.php?slug=${t.slug}`;n.length>0&&(r=`
+    `;try{let s="undefined"!=typeof BASE_URL?BASE_URL:window.location.pathname.split("/").slice(0,-1).join("/")||"",n=await fetch(`${s}/api/quickview.php?slug=${encodeURIComponent(t)}`);if(!n.ok)throw Error("Network response was not ok");let l=await n.json();l.success?renderQuickView(l.product):a.innerHTML=`<div class="flex items-center justify-center h-full text-red-500">${l.message||"Product not found"}</div>`}catch(r){console.error("Error fetching quick view:",r),a.innerHTML='<div class="flex items-center justify-center h-full text-red-500">Failed to load product details.</div>'}}function closeQuickView(){let t=document.getElementById("quickViewModal"),e=document.getElementById("quickViewPanel");e.classList.remove("opacity-100","scale-100"),e.classList.add("opacity-0","scale-95"),setTimeout(()=>{t.classList.add("hidden"),document.body.style.overflow=""},300)}!function(){
+    window.quickViewInitialized||(
+        window.quickViewInitialized=!0,
+        document.body.addEventListener("click",function(t){
+            let e=t.target.closest(".quick-view-btn");
+            if(e){
+                t.preventDefault();
+                t.stopPropagation();
+                let i=e.getAttribute("data-product-slug");
+                if(i) {
+                    createQuickViewModal(); // Create on demand
+                    openQuickView(i);
+                }
+            }
+        }),
+        // Also create on idle
+        'requestIdleCallback' in window ? requestIdleCallback(createQuickViewModal) : setTimeout(createQuickViewModal, 2000)
+    )
+}();let qvSelectedOptions={},currentQVProduct=null;function formatQVPrice(t){let e="undefined"!=typeof CURRENCY_SYMBOL?CURRENCY_SYMBOL:"₹";return!isNaN(parseInt(e))&&String(e).length>2&&(e="₹"),e+parseFloat(t).toFixed(2)}function getStockStatusText(t,e,i=0){return"out_of_stock"===t?"Out of Stock":e<=0?i>0?"Sold Out":"Out of Stock":"on_backorder"===t?"On Backorder":"In Stock"}function renderStockCountHTML(t,e,i=0){let a=getStockStatusText(t,e,i),s="",n="text-red-600";return"Out of Stock"===a?s='<i class="fas fa-times-circle mr-1"></i> Out of Stock':"Sold Out"===a?s='<i class="fas fa-times-circle mr-1"></i> Sold Out':e>0?(s=`<i class="fas fa-check-circle mr-1"></i> ${e} items available`,n="text-primary"):e<0?(s=`<i class="fas fa-exclamation-circle mr-1"></i> Backorder (${Math.abs(e)} pending)`,n="text-orange-600"):(s=`<i class="fas fa-check-circle mr-1"></i> ${a}`,n="text-primary"),`<span class="text-sm font-bold ${n}">${s}</span>`}function renderQuickView(t){let e=document.getElementById("quickViewContent");currentQVProduct=t;let i=parseFloat(t.sale_price||t.price),a=t.sale_price?parseFloat(t.price):null,s="";a&&a>i&&(s=`<span class="bg-red-500 text-white px-2 py-1 text-xs font-bold rounded">-${Math.round((a-i)/a*100)}%</span>`);let n=[],l=new Set;t.images&&t.images.length>0?t.images.forEach(t=>{t&&!l.has(t)&&(n.push(t),l.add(t))}):t.image&&!l.has(t.image)&&(n.push(t.image),l.add(t.image)),t.variants&&t.variants.length>0&&t.variants.forEach(t=>{t.image&&!l.has(t.image)&&(n.push(t.image),l.add(t.image))});let r="",o="",c="undefined"!=typeof BASE_URL?BASE_URL:window.location.pathname.split("/").slice(0,-1).join("/")||"",d=`${c}/product.php?slug=${t.slug}`;n.length>0&&(r=`
         <div class="relative block group overflow-hidden rounded-lg h-full flex items-center justify-center w-full min-h-0 bg-gray-50">
             ${s?`<div class="absolute top-2 left-2 z-10 shadow-sm" id="qvDiscountBadge">${s}</div>`:'<div id="qvDiscountBadge"></div>'}
             <a href="${d}" class="h-full w-full flex items-center justify-center">
@@ -81,17 +99,17 @@ function createQuickViewModal(){if(document.getElementById("quickViewModal"))ret
                     <div class="swiper-button-next"></div>
                     <div class="swiper-button-prev"></div>
                 </div>
-            </div>`));let u="",p=Math.floor(t.rating||5);for(let f=0;f<5;f++)u+=`<i class="fas fa-star text-xs ${f<p?"text-yellow-400":"text-gray-300"}"></i>`;let v="";qvSelectedOptions={},t.options&&t.options.length>0&&t.options.forEach(t=>{let e=t.values[0]||"";qvSelectedOptions[t.name]=e,v+=`
+            </div>`));let u="",p=Math.floor(t.rating||5);for(let f=0;f<5;f++)u+=`<i class="fas fa-star text-xs ${f<p?"text-yellow-400":"text-gray-300"}"></i>`;let v="";qvSelectedOptions={},t.options&&t.options.length>0&&t.options.forEach(opt=>{let val=opt.values[0]||"";qvSelectedOptions[opt.name]=val,v+=`
              <div class="mb-5">
                  <div class="flex items-center gap-2 mb-2">
-                     <span class="text-sm font-bold text-gray-900">${t.name}:</span>
-                     <span class="text-sm font-medium text-teal-700 qv-option-val-display" data-option="${t.name}">${e}</span>
+                     <span class="text-sm font-bold text-gray-900">${opt.name}:</span>
+                     <span class="text-sm font-medium text-teal-700 qv-option-val-display" data-option="${opt.name}">${val}</span>
                  </div>
                  <div class="flex flex-wrap gap-2">
-                     ${t.values.map((e,i)=>`
+                     ${opt.values.map((e,i)=>`
                          <button type="button" class="px-5 py-2 border rounded-md text-sm font-medium transition qv-variant-btn min-w-[3rem] ${0===i?"bg-[#154D35] text-white border-[#154D35]":"bg-white text-gray-700 border-gray-300 hover:border-gray-400"}" 
-                                 onclick="selectQVVariant(this, '${t.name.replace(/'/g,"\\'")}', '${e.replace(/'/g,"\\'")}')"
-                                 data-option="${t.name}" data-value="${e}">${e}</button>
+                                 onclick="selectQVVariant(this, '${opt.name.replace(/'/g,"\\'")}', '${e.replace(/'/g,"\\'")}')"
+                                 data-option="${opt.name}" data-value="${e}">${e}</button>
                      `).join("")}
                  </div>
              </div>`});let m=t.in_wishlist?"fas":"far",g=t.in_wishlist?"Remove from Wishlist":"Add to Wishlist";if(e.innerHTML=`
@@ -122,7 +140,7 @@ function createQuickViewModal(){if(document.getElementById("quickViewModal"))ret
                 </div>
 
                 <p class="text-gray-600 text-sm mb-6 leading-relaxed">
-                    ${t.short_description||t.description?.substring(0,150)+"..."}
+                    ${t.short_description || (t.description ? (t.description.length > 150 ? t.description.substring(0,150) + "..." : t.description) : "No description available.")}
                 </p>
 
                 <div class="space-y-2 mb-6 text-sm text-gray-700">

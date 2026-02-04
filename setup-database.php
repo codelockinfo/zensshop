@@ -233,7 +233,7 @@ try {
     echo "\nInserting default admin user...\n";
     $hashedPassword = password_hash('admin123', PASSWORD_DEFAULT);
     $stmt = $pdo->prepare("INSERT IGNORE INTO `users` (`name`, `email`, `password`, `role`, `status`) VALUES (?, ?, ?, 'admin', 'active')");
-    $stmt->execute(['Admin User', 'admin@milano.com', $hashedPassword]);
+    $stmt->execute(['Admin User', 'admin@CookPro.com', $hashedPassword]);
     echo "✓ Default admin user created\n";
     
     // Insert sample categories
@@ -261,7 +261,7 @@ try {
     echo "Tables created: 8\n";
     echo "\n";
     echo "Default admin credentials:\n";
-    echo "Email: admin@milano.com\n";
+    echo "Email: admin@CookPro.com\n";
     echo "Password: admin123\n";
     echo "\n";
     echo "You can now access:\n";

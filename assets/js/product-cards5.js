@@ -65,31 +65,13 @@ function initializeProductCards() {
         });
     });
     
-    // Add to cart hover buttons
+    // Add to cart hover buttons (Handled by add-to-cart3.js delegation)
+    // No direct listeners needed here to prevent double-firing
     document.querySelectorAll('.add-to-cart-hover-btn').forEach(btn => {
+        // We still clone to clear any old inline or previous listeners if necessary,
+        // but we don't add a new listener.
         const newBtn = btn.cloneNode(true);
         btn.parentNode.replaceChild(newBtn, btn);
-        
-        newBtn.addEventListener('click', function(e) {
-            e.preventDefault();
-            e.stopPropagation();
-            const productId = this.getAttribute('data-product-id');
-            
-            // Get attributes if present
-            let attributes = {};
-            try {
-                const attrData = this.getAttribute('data-attributes');
-                if (attrData) {
-                    attributes = JSON.parse(attrData);
-                }
-            } catch (err) {
-                console.error("Error parsing product attributes:", err);
-            }
-
-            if (typeof addToCart === 'function') {
-                addToCart(productId, 1, this, attributes);
-            }
-        });
     });
     
     // Initialize countdown timers

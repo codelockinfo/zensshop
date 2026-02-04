@@ -17,7 +17,7 @@ if (empty($videos)) {
             'title' => 'Limited Time Deals',
             'subtitle' => 'SPECIAL 50% OFF',
             'link_url' => 'shop.php?filter=deals',
-            'poster_url' => 'https://demo-milano.myshopify.com/cdn/shop/files/jew2_1.webp?v=1739185331&width=480'
+            'poster_url' => 'https://demo-CookPro.myshopify.com/cdn/shop/files/jew2_1.webp?v=1739185331&width=480'
         ]
         // ...
     ];

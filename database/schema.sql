@@ -1,4 +1,4 @@
--- Milano E-commerce Database Schema
+-- CookPro E-commerce Database Schema
 -- MySQL/MariaDB
 
 SET SQL_MODE = "NO_AUTO_VALUE_ON_ZERO";
@@ -175,7 +175,7 @@ CREATE TABLE IF NOT EXISTS `password_resets` (
 
 -- Insert Default Admin User (password: admin123)
 INSERT INTO `users` (`name`, `email`, `password`, `role`, `status`) VALUES
-('Admin User', 'admin@milano.com', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', 'admin', 'active');
+('Admin User', 'admin@CookPro.com', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', 'admin', 'active');
 
 -- Insert Sample Categories
 INSERT INTO `categories` (`name`, `slug`, `description`, `sort_order`, `status`) VALUES

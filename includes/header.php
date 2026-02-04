@@ -38,7 +38,7 @@ if ($headerMenuIdVal) {
 
 // Fetch Header Settings (Automatic store filtering via Settings class)
 $siteLogoType = $settingsObj->get('site_logo_type', 'image');
-$siteLogoText = $settingsObj->get('site_logo_text', 'milano');
+$siteLogoText = $settingsObj->get('site_logo_text', 'CookPro');
 $siteLogo = $settingsObj->get('site_logo', 'logo.png');
 $showSearchIcon = $settingsObj->get('header_icon_search', '1') == '1';
 $showUserIcon = $settingsObj->get('header_icon_user', '1') == '1';
@@ -46,7 +46,7 @@ $showWishlistIcon = $settingsObj->get('header_icon_wishlist', '1') == '1';
 $showCartIcon = $settingsObj->get('header_icon_cart', '1') == '1';
 
 // Fetch SEO & Branding Settings
-$siteTitleSuffix = $settingsObj->get('site_title_suffix', 'Milano - Elegant Jewelry Store');
+$siteTitleSuffix = $settingsObj->get('site_title_suffix', 'CookPro - Elegant Jewelry Store');
 $faviconPng = $settingsObj->get('favicon_png', '');
 $faviconIco = $settingsObj->get('favicon_ico', ''); 
 $globalMetaDesc = $settingsObj->get('global_meta_description', '');
@@ -133,39 +133,34 @@ if (!function_exists('url')) {
     <?php endif; ?>
     
     <!-- Tailwind CSS with Typography Plugin -->
-    <script src="https://cdn.tailwindcss.com?plugins=typography"></script>
+    <script src="https://cdn.tailwindcss.com?plugins=typography" fetchpriority="high"></script>
     
     <!-- Resource Hints for faster loading -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link rel="preconnect" href="https://cdnjs.cloudflare.com">
+    <link rel="preconnect" href="https://cdn.tailwindcss.com">
     <link rel="dns-prefetch" href="https://fonts.googleapis.com">
     <link rel="dns-prefetch" href="https://cdnjs.cloudflare.com">
     <link rel="dns-prefetch" href="https://cdn.tailwindcss.com">
+    
+    <!-- Preload critical fonts to satisfy Font Display requirements -->
+    <link rel="preload" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/webfonts/fa-solid-900.woff2" as="font" type="font/woff2" crossorigin>
+    <link rel="preload" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/webfonts/fa-brands-400.woff2" as="font" type="font/woff2" crossorigin>
 
     <!-- Google Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link rel="preload" as="style" href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700&family=Inter:wght@300;400;500;600;700&family=DM+Sans:wght@400;500;700&display=swap">
-    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700&family=Inter:wght@300;400;500;600;700&family=DM+Sans:wght@400;500;700&display=swap" media="print" onload="this.media='all'">
-    <noscript>
-        <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700&family=Inter:wght@300;400;500;600;700&family=DM+Sans:wght@400;500;700&display=swap">
-    </noscript>
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700&family=Inter:wght@300;400;500;600;700&family=DM+Sans:wght@400;500;700&display=swap" rel="stylesheet" media="print" onload="this.media='all'">
+    <noscript><link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700&family=Inter:wght@300;400;500;600;700&family=DM+Sans:wght@400;500;700&display=swap" rel="stylesheet"></noscript>
     
     <!-- Custom CSS -->
-<link 
-  rel="preload" 
-  href="<?php echo $baseUrl; ?>/assets/css/main5.css" 
-  as="style"
-  onload="this.onload=null;this.rel='stylesheet'"
->
-<noscript>
-  <link rel="stylesheet" href="<?php echo $baseUrl; ?>/assets/css/main5.css">
-</noscript>
+    <link rel="stylesheet" href="<?php echo $baseUrl; ?>/assets/css/main6.css">
 
     
     <!-- Font Awesome for Icons -->
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" media="print" onload="this.media='all'">
+    <noscript><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"></noscript>
     <script>
     // Make BASE_URL available globally for all frontend pages
     const BASE_URL = '<?php echo $baseUrl; ?>';
@@ -367,7 +362,7 @@ if (!function_exists('url')) {
                             <img src="<?php echo $baseUrl; ?>/assets/images/<?php echo htmlspecialchars($siteLogo); ?>" 
                                  alt="Site Logo" 
                                  class="h-8 object-contain"
-                                 onerror="this.parentElement.innerHTML='<span class=\'text-3xl font-heading font-bold text-black xl:lowercase lowercase\'>milano</span>'">
+                                 onerror="this.parentElement.innerHTML='<span class=\'text-3xl font-heading font-bold text-black xl:lowercase lowercase\'>CookProo</span>'">
                         <?php endif; ?>
                     </a>
                 </div>

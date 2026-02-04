@@ -41,7 +41,7 @@ $action = $segments[count($segments) - 1] ?? '';  // add, list
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title><?php echo isset($pageTitle) ? $pageTitle . ' - ' : ''; ?>Admin Dashboard - Milano</title>
+    <title><?php echo isset($pageTitle) ? $pageTitle . ' - ' : ''; ?>Admin Dashboard - CookPro</title>
     <link rel="icon" type="image/png" href="<?php echo $baseUrl; ?>/admin/Images/admin-logo.png">
     
     <!-- Tailwind CSS with Typography Plugin -->

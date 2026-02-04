@@ -75,7 +75,7 @@ if (!defined('OTP_LENGTH')) {
 define('SESSION_LIFETIME', 3600); // 1 hour
 
 // Admin Email (for error notifications)
-define('ADMIN_EMAIL', 'admin@milano.com'); // Change this to your admin email
+define('ADMIN_EMAIL', 'admin@CookPro.com'); // Change this to your admin email
 
 // API Configuration - Now managed in database settings (see admin/system-settings.php)
 // Load Razorpay and Google API keys from database
