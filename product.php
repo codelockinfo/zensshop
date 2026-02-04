@@ -43,15 +43,16 @@ if (!$productData || $productData['status'] !== 'active') {
 // Clear output buffer before including header
 ob_end_clean();
 
-// Now include header after all redirects are handled
-$pageTitle = 'Product Details';
-require_once __DIR__ . '/includes/header.php';
-
 // Parse images
 $images = json_decode($productData['images'] ?? '[]', true);
 $mainImage = !empty($images[0]) ? getImageUrl($images[0]) : getProductImage($productData);
-if (empty($images)) {
-    $images = [$mainImage];
+$schemaImages = [];
+if (!empty($images)) {
+    foreach($images as $img) {
+        $schemaImages[] = getImageUrl($img);
+    }
+} else {
+    $schemaImages = [$mainImage];
 }
 
 // Get product categories
@@ -65,15 +66,9 @@ try {
         [$productData['id']]
     );
 } catch (Exception $e) {
-    // If product_categories table doesn't exist, try old category_id
     if (!empty($productData['category_id'])) {
-        $oldCategory = $db->fetchOne(
-            "SELECT id, name, slug FROM categories WHERE id = ? AND status = 'active'",
-            [$productData['category_id']]
-        );
-        if ($oldCategory) {
-            $productCategories = [$oldCategory];
-        }
+        $oldCategory = $db->fetchOne("SELECT id, name, slug FROM categories WHERE id = ? AND status = 'active'", [$productData['category_id']]);
+        if ($oldCategory) $productCategories = [$oldCategory];
     }
 }
 
@@ -88,16 +83,14 @@ $originalPrice = !empty($productData['sale_price']) ? $productData['price'] : nu
 $variantsData = $product->getVariants($productData['id']);
 $productOptions = $variantsData['options'] ?? [];
 $productVariants = $variantsData['variants'] ?? [];
-
-// Auto-select first variant if available
 $firstVariant = !empty($productVariants) ? $productVariants[0] : null;
 
 if ($firstVariant) {
-    if ($firstVariant['price'] > 0) {
-        $originalPrice = $firstVariant['price'];
-    }
     if ($firstVariant['sale_price'] > 0) {
         $price = $firstVariant['sale_price'];
+        if ($firstVariant['price'] > 0) {
+            $originalPrice = $firstVariant['price'];
+        }
     } else {
         $price = $firstVariant['price'] ?: $price;
         $originalPrice = null; // No sale on variant
@@ -108,6 +101,33 @@ if ($firstVariant) {
         $mainImage = getImageUrl($firstVariant['image']);
     }
 }
+
+// Generate Product Schema
+$productSchema = [
+    "@context" => "https://schema.org/",
+    "@type" => "Product",
+    "name" => $productData['name'],
+    "image" => $schemaImages,
+    "description" => trim(strip_tags($productData['description'])),
+    "sku" => $productData['sku'] ?? '',
+    "brand" => [
+        "@type" => "Brand",
+        "name" => $productData['brand'] ?? $settings->get('site_name', 'Zensshop')
+    ],
+    "offers" => [
+        "@type" => "Offer",
+        "url" => $baseUrl . '/product/' . $productData['slug'],
+        "priceCurrency" => "INR",
+        "price" => $price,
+        "availability" => ($productData['stock_status'] === 'instock' || ($productData['stock'] ?? 0) > 0) ? "https://schema.org/InStock" : "https://schema.org/OutOfStock",
+        "itemCondition" => "https://schema.org/NewCondition"
+    ]
+];
+$customSchema = json_encode($productSchema, JSON_UNESCAPED_SLASHES | JSON_PRETTY_PRINT);
+
+// Now include header
+$pageTitle = $productData['name'];
+require_once __DIR__ . '/includes/header.php';
 
 $discount = $originalPrice && $originalPrice > 0 ? round((($originalPrice - $price) / $originalPrice) * 100) : 0;
 

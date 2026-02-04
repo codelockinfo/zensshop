@@ -112,12 +112,70 @@ if (!function_exists('url')) {
     <meta name="description" content="<?php echo htmlspecialchars($finalMetaDesc); ?>">
     <?php endif; ?>
 
-    <?php if (!empty($globalSchema)): 
+    <?php 
+    if (!empty($globalSchema)): 
         // Automatically fix placeholder domain in schema
         $globalSchema = str_replace(['https://yourdomain.com', 'http://yourdomain.com'], $baseUrl, $globalSchema);
     ?>
     <script type="application/ld+json">
         <?php echo $globalSchema; ?>
+    </script>
+    <?php else: 
+        // Fallback: Generate Dynamic Organization Schema from settings
+        $orgName = $settingsObj->get('footer_logo_text', $settingsObj->get('site_logo_text', 'Zensshop'));
+        $orgLogo = $settingsObj->get('footer_logo_image', '');
+        if ($orgLogo) {
+            $orgLogo = $baseUrl . '/' . ltrim($orgLogo, '/');
+        } else {
+            $orgLogo = $baseUrl . '/assets/images/logo.png'; // Fallback
+        }
+        $orgDesc = $settingsObj->get('footer_description', 'Premium products store.');
+        $orgAddress = $settingsObj->get('footer_address', '');
+        $orgPhone = $settingsObj->get('footer_phone', '');
+        $orgEmail = $settingsObj->get('footer_email', '');
+        
+        // Social links
+        $socialJson = $settingsObj->get('footer_social_json', '[]');
+        if (empty($socialJson) || $socialJson == '[]') {
+            // Try individual social fields as fallback
+            $socials = [];
+            $fb = $settingsObj->get('footer_facebook'); if($fb) $socials[] = $fb;
+            $ig = $settingsObj->get('footer_instagram'); if($ig) $socials[] = $ig;
+            $tk = $settingsObj->get('footer_tiktok'); if($tk) $socials[] = $tk;
+            $yt = $settingsObj->get('footer_youtube'); if($yt) $socials[] = $yt;
+        } else {
+            $socialLinks = json_decode($socialJson, true) ?: [];
+            $socials = array_column($socialLinks, 'url');
+        }
+
+        $orgSchema = [
+            "@context" => "https://schema.org",
+            "@type" => "Organization",
+            "name" => $orgName,
+            "url" => $baseUrl . '/',
+            "logo" => $orgLogo,
+            "description" => strip_tags($orgDesc),
+            "sameAs" => $socials
+        ];
+
+        if ($orgAddress) {
+            $orgSchema["address"] = [
+                "@type" => "PostalAddress",
+                "streetAddress" => $orgAddress
+            ];
+        }
+
+        if ($orgPhone || $orgEmail) {
+            $orgSchema["contactPoint"] = [
+                "@type" => "ContactPoint",
+                "telephone" => $orgPhone,
+                "email" => $orgEmail,
+                "contactType" => "customer service"
+            ];
+        }
+    ?>
+    <script type="application/ld+json">
+        <?php echo json_encode($orgSchema, JSON_UNESCAPED_SLASHES | JSON_PRETTY_PRINT); ?>
     </script>
     <?php endif; ?>
 
