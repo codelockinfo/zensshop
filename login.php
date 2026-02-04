@@ -69,7 +69,7 @@ require_once __DIR__ . '/includes/header.php';
 }
 </style>
 
-<div class="min-h-screen pt-32 pb-20 bg-gray-50 flex items-center justify-center px-4 relative overflow-hidden">
+<div class="py-12 bg-gray-50 flex justify-center px-4 relative overflow-hidden">
     <!-- Background Decor -->
     <div class="floating-element bg-purple-400 w-96 h-96 -top-20 -left-20 animate-pulse"></div>
     <div class="floating-element bg-blue-400 w-96 h-96 -bottom-20 -right-20 animate-pulse" style="animation-delay: 1s;"></div>
@@ -77,7 +77,7 @@ require_once __DIR__ . '/includes/header.php';
     <div class="max-w-md w-full login-3d-card">
         <div class="bg-white rounded-3xl login-inner-card p-1">
             <div class="bg-white rounded-[22px] p-8 md:p-10">
-                <div class="text-center mb-10">
+                <div class="text-center mb-5">
                     <h1 class="text-3xl font-bold text-gray-900">Welcome Back</h1>
                     <p class="text-gray-500 mt-2">Sign in to your account</p>
                 </div>
@@ -109,7 +109,7 @@ require_once __DIR__ . '/includes/header.php';
                 </div>
 
                 <!-- Custom styled wrapper for Google Button -->
-                <div class="mb-8 flex justify-center">
+                <div class="mb-4 flex justify-center">
                     <div class="g_id_signin"
                          data-type="standard"
                          data-shape="rectangular"
@@ -121,7 +121,7 @@ require_once __DIR__ . '/includes/header.php';
                     </div>
                 </div>
 
-                <div class="relative flex items-center gap-4 mb-8">
+                <div class="relative flex items-center gap-4 mb-4">
                     <div class="flex-1 h-px bg-gray-200"></div>
                     <span class="text-gray-400 text-xs font-bold uppercase tracking-widest">Or with email</span>
                     <div class="flex-1 h-px bg-gray-200"></div>
@@ -167,7 +167,7 @@ require_once __DIR__ . '/includes/header.php';
                 });
                 </script>
 
-                <div class="mt-10 text-center">
+                <div class="mt-4 text-center">
                     <p class="text-gray-500 text-sm">
                         Don't have an account? 
                         <a href="<?php echo url('register'); ?>" class="text-black font-bold hover:underline">Sign Up</a>

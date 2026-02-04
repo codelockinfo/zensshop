@@ -49,11 +49,11 @@ $pageTitle = 'Register';
 require_once __DIR__ . '/includes/header.php';
 ?>
 
-<div class="min-h-screen pt-32 pb-20 bg-gray-50 flex items-center justify-center px-4">
+<div class="py-12 bg-gray-50 flex justify-center px-4 relative overflow-hidden">
     <div class="max-w-md w-full">
         <div class="bg-white rounded-2xl shadow-xl overflow-hidden transform transition-all hover:scale-[1.01]">
             <div class="p-8">
-                <div class="text-center mb-10">
+                <div class="text-center mb-5">
                     <h1 class="text-3xl font-bold text-gray-900">Create Account</h1>
                     <p class="text-gray-500 mt-2">Join us for a better experience</p>
                 </div>
@@ -104,7 +104,7 @@ require_once __DIR__ . '/includes/header.php';
                 });
                 </script>
 
-                <div class="mt-8 text-center">
+                <div class="mt-4 text-center">
                     <p class="text-gray-600 text-sm">
                         Already have an account? 
                         <a href="<?php echo url('login'); ?>" class="text-black font-bold hover:underline">Sign In</a>

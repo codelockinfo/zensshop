@@ -3,7 +3,6 @@ require_once __DIR__ . '/includes/functions.php';
 require_once __DIR__ . '/classes/Database.php';
 require_once __DIR__ . '/classes/Email.php';
 
-session_start();
 
 $pageTitle = 'Forgot Password';
 // Only include header if NOT an ajax request
@@ -172,7 +171,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     <div class="text-gray-800 font-medium" id="loaderText">Processing...</div>
 </div>
 
-<div class="min-h-screen pt-20 pb-12 bg-gray-50 flex items-center justify-center px-4 relative overflow-hidden">
+<div class="py-12 bg-gray-50 flex justify-center px-4 relative overflow-hidden">
     <!-- Background Decor -->
     <div class="floating-element bg-purple-400 w-96 h-96 -top-20 -left-20 animate-pulse"></div>
     <div class="floating-element bg-blue-400 w-96 h-96 -bottom-20 -right-20 animate-pulse" style="animation-delay: 1s;"></div>

@@ -60,7 +60,16 @@ async function loadSection(id, endpoint) {
     if (!container || container.dataset.loaded === "true") return;
     
     // Check if caching is allowed
-    const isCachingAllowed = () => localStorage.getItem('cookieConsent') === 'allowed';
+    const isCachingAllowed = () => {
+        const consentRaw = localStorage.getItem('cookieConsent');
+        if (!consentRaw) return false;
+        try {
+            const data = JSON.parse(consentRaw);
+            return data && data.value === 'allowed' && data.expires > new Date().getTime();
+        } catch (e) {
+            return consentRaw === 'allowed';
+        }
+    };
 
     // 1. Try to load from Cache first
     if (isCachingAllowed()) {

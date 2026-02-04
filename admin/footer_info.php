@@ -40,6 +40,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             'footer_show_amex' => isset($_POST['footer_show_amex']) ? '1' : '0',
             'footer_show_paypal' => isset($_POST['footer_show_paypal']) ? '1' : '0',
             'footer_show_discover' => isset($_POST['footer_show_discover']) ? '1' : '0',
+            'footer_payment_icons_json' => '[]', // Default, will be updated below
         ];
 
         // 2. Handle Image Upload
@@ -137,9 +138,11 @@ $defaults = [
     'footer_show_amex' => '1',
     'footer_show_paypal' => '1',
     'footer_show_discover' => '1',
+    'footer_payment_icons_json' => '[]',
 ];
 $settings = array_merge($defaults, $currentSettings);
 $socialLinks = json_decode($settings['footer_social_json'], true) ?: [];
+$paymentIcons = json_decode($settings['footer_payment_icons_json'], true) ?: [];
 
 $pageTitle = 'Footer Information';
 require_once __DIR__ . '/../includes/admin-header.php';
@@ -270,38 +273,51 @@ require_once __DIR__ . '/../includes/admin-header.php';
             </template>
         </div>
 
-        <!-- Bottom Footer Settings -->
+        <!-- Bottom Footer (Copyright) -->
         <div class="bg-gray-50 p-4 rounded border border-gray-200">
-            <h3 class="font-bold text-lg mb-4 border-b pb-2">Bottom Footer (Copyright & Payments)</h3>
-            
+            <h3 class="font-bold text-lg mb-4 border-b pb-2">Bottom Footer (Copyright)</h3>
             <div class="mb-4">
                 <label class="block text-sm font-semibold mb-2">Copyright Text</label>
                 <input type="text" name="footer_copyright" value="<?php echo htmlspecialchars($settings['footer_copyright']); ?>" class="w-full border p-2 rounded">
             </div>
-            
-            <label class="block text-sm font-semibold mb-2">Visible Payment Methods</label>
-            <div class="grid grid-cols-2 md:grid-cols-5 gap-4 bg-white p-4 rounded border border-gray-100">
-                <div class="flex items-center gap-2">
-                    <input type="checkbox" name="footer_show_visa" value="1" id="visa" <?php echo $settings['footer_show_visa'] == '1' ? 'checked' : ''; ?>>
-                    <label for="visa" class="text-sm">Visa</label>
-                </div>
-                <div class="flex items-center gap-2">
-                    <input type="checkbox" name="footer_show_mastercard" value="1" id="master" <?php echo $settings['footer_show_mastercard'] == '1' ? 'checked' : ''; ?>>
-                    <label for="master" class="text-sm">Mastercard</label>
-                </div>
-                <div class="flex items-center gap-2">
-                    <input type="checkbox" name="footer_show_amex" value="1" id="amex" <?php echo $settings['footer_show_amex'] == '1' ? 'checked' : ''; ?>>
-                    <label for="amex" class="text-sm">Amex</label>
-                </div>
-                <div class="flex items-center gap-2">
-                    <input type="checkbox" name="footer_show_paypal" value="1" id="paypal" <?php echo $settings['footer_show_paypal'] == '1' ? 'checked' : ''; ?>>
-                    <label for="paypal" class="text-sm">PayPal</label>
-                </div>
-                <div class="flex items-center gap-2">
-                    <input type="checkbox" name="footer_show_discover" value="1" id="discover" <?php echo $settings['footer_show_discover'] == '1' ? 'checked' : ''; ?>>
-                    <label for="discover" class="text-sm">Discover</label>
-                </div>
+        </div>
+
+        <!-- Payment Icons Section (Dynamic SVG) -->
+        <div class="bg-gray-50 p-4 rounded border border-gray-200">
+            <div class="flex justify-between items-center border-b pb-2 mb-4">
+                <h3 class="font-bold text-lg">Payment Method SVGs</h3>
+                <button type="button" onclick="addPaymentRow()" class="text-white bg-green-600 hover:bg-green-700 text-sm px-3 py-1 rounded">
+                    <i class="fas fa-plus"></i> Add New
+                </button>
             </div>
+            
+            <div id="paymentIconsContainer" class="space-y-4">
+                <!-- Rows will be added here by JS -->
+            </div>
+            
+            <!-- Template for JS -->
+            <template id="paymentRowTemplate">
+                <div class="bg-white border border-gray-200 rounded p-4 payment-row relative group">
+                    <button type="button" onclick="removeRow(this)" class="absolute top-2 right-2 text-red-500 hover:text-red-700 p-2">
+                        <i class="fas fa-trash"></i>
+                    </button>
+                    <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+                        <div class="md:col-span-1">
+                            <label class="block text-xs font-bold text-gray-400 uppercase mb-1">Name</label>
+                            <input type="text" name="payment_names[]" class="w-full border p-2 rounded text-sm" placeholder="e.g. Visa">
+                        </div>
+                        <div class="md:col-span-2">
+                            <label class="block text-xs font-bold text-gray-400 uppercase mb-1">SVG Code</label>
+                            <textarea name="payment_svgs[]" rows="2" class="w-full border p-2 rounded text-sm font-mono" placeholder="<svg ...>...</svg>"></textarea>
+                        </div>
+                        <div class="md:col-span-1 flex items-end justify-center pb-2">
+                            <div class="p-2 border rounded bg-gray-50 w-full text-center svg-preview">
+                                <span class="text-xs text-gray-400">Preview</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </template>
         </div>
 
         <button type="submit" class="bg-blue-600 text-white px-6 py-2 rounded font-bold hover:bg-blue-700 transition">Save Changes</button>
@@ -368,15 +384,47 @@ function addSocialRow(data = null) {
     container.appendChild(clone);
 }
 
-function removeRow(btn) {
-    btn.closest('.social-row').remove();
+// Payment Icons Dynamic Rows
+const paymentData = <?php echo $settings['footer_payment_icons_json']; ?>;
+
+function addPaymentRow(data = null) {
+    const container = document.getElementById('paymentIconsContainer');
+    const template = document.getElementById('paymentRowTemplate');
+    const clone = template.content.cloneNode(true);
+    
+    if (data) {
+        clone.querySelector('input').value = data.name;
+        clone.querySelector('textarea').value = data.svg;
+        clone.querySelector('.svg-preview').innerHTML = data.svg;
+    }
+    
+    // Add real-time preview listener to the newly added textarea
+    const textarea = clone.querySelector('textarea');
+    textarea.addEventListener('input', function() {
+        const previewDiv = this.closest('.payment-row').querySelector('.svg-preview');
+        previewDiv.innerHTML = this.value || '<span class="text-xs text-gray-400">Preview</span>';
+    });
+    
+    container.appendChild(clone);
 }
 
-// Init existing data
+function removeRow(btn) {
+    btn.closest('.social-row, .payment-row').remove();
+}
+
+// Init social links
 if (socialData && socialData.length > 0) {
     socialData.forEach(item => addSocialRow(item));
 } else {
-    addSocialRow(); // Add one empty row by default
+    addSocialRow();
+}
+
+// Init payment icons
+if (paymentData && paymentData.length > 0) {
+    paymentData.forEach(item => addPaymentRow(item));
+} else {
+    // If no dynamic icons saved, we'll keep it empty for now.
+    // The user will add them.
 }
 
 // Initialize CKEditor
