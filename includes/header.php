@@ -132,30 +132,36 @@ if (!function_exists('url')) {
     <?php echo $headerScripts; ?>
     <?php endif; ?>
     
-    <!-- Tailwind CSS with Typography Plugin -->
-    <script src="https://cdn.tailwindcss.com?plugins=typography" fetchpriority="high"></script>
-    
-    <!-- Resource Hints for faster loading -->
+    <!-- Resource Hints -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link rel="preconnect" href="https://cdnjs.cloudflare.com">
     <link rel="preconnect" href="https://cdn.tailwindcss.com">
-    <link rel="dns-prefetch" href="https://fonts.googleapis.com">
-    <link rel="dns-prefetch" href="https://cdnjs.cloudflare.com">
-    <link rel="dns-prefetch" href="https://cdn.tailwindcss.com">
     
-    <!-- Preload critical fonts to satisfy Font Display requirements -->
+    <!-- Critical Fonts Preload -->
     <link rel="preload" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/webfonts/fa-solid-900.woff2" as="font" type="font/woff2" crossorigin>
-    <link rel="preload" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/webfonts/fa-brands-400.woff2" as="font" type="font/woff2" crossorigin>
 
-    <!-- Google Fonts -->
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <!-- Google Fonts Optimized -->
     <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700&family=Inter:wght@300;400;500;600;700&family=DM+Sans:wght@400;500;700&display=swap" rel="stylesheet" media="print" onload="this.media='all'">
-    <noscript><link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700&family=Inter:wght@300;400;500;600;700&family=DM+Sans:wght@400;500;700&display=swap" rel="stylesheet"></noscript>
+    
+    <!-- Tailwind CSS - Deferred for PageSpeed (Render Blocking Fix) -->
+    <script src="https://cdn.tailwindcss.com?plugins=typography" defer fetchpriority="high"></script>
+    
+    <!-- Critical FOUC Prevention -->
+    <style>
+        body { opacity: 0; transition: opacity 0.2s ease-in; }
+        body.styled { opacity: 1; }
+    </style>
+    <script>
+        // Once tailwind is ready, it will trigger an event or we can just wait for DOMContentLoaded
+        document.addEventListener('DOMContentLoaded', () => {
+            // Give tailwind a tiny bit of time to process
+            setTimeout(() => document.body.classList.add('styled'), 50);
+        });
+    </script>
     
     <!-- Custom CSS -->
-    <link rel="stylesheet" href="<?php echo $baseUrl; ?>/assets/css/main6.css">
+    <link rel="stylesheet" href="<?php echo $baseUrl; ?>/assets/css/main6.css" fetchpriority="high">
 
     
     <!-- Font Awesome for Icons -->

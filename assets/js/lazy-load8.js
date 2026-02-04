@@ -1,6 +1,6 @@
 /**
  * Optimized Lazy Loading for Sections
- * Version 5.1 - IntersectionObserver + Idle Initialization
+ * Version 7.0 - IntersectionObserver + Improved Slider Lifecycle
  */
 const sections = [
     { id: "categories-section", endpoint: "categories" },
@@ -13,9 +13,11 @@ const sections = [
     { id: "newsletter-section", endpoint: "newsletter" }
 ];
 
+// Global registry for slider instances to handle shared events like resize
+const activeSliders = new Map();
+
 function initLazyLoading() {
     if (!('IntersectionObserver' in window)) {
-        // Fallback for very old browsers: load all immediately
         sections.forEach(s => loadSection(s.id, s.endpoint));
         return;
     }
@@ -35,7 +37,6 @@ function initLazyLoading() {
     sections.forEach(s => {
         const el = document.getElementById(s.id);
         if (el) {
-            // Load the first section immediately to avoid empty space
             if (s.id === "categories-section") {
                 loadSection(s.id, s.endpoint);
             } else {
@@ -43,6 +44,15 @@ function initLazyLoading() {
             }
         }
     });
+
+    // Single global resize listener for all sliders
+    window.addEventListener('resize', debounce(() => {
+        activeSliders.forEach(slider => {
+            if (typeof slider.updatePosition === 'function') {
+                slider.updatePosition(false);
+            }
+        });
+    }, 150));
 }
 
 async function loadSection(id, endpoint) {
@@ -52,13 +62,12 @@ async function loadSection(id, endpoint) {
     // Check if caching is allowed
     const isCachingAllowed = () => localStorage.getItem('cookieConsent') === 'allowed';
 
-    // 1. Try to load from Cache first (Instant Load)
+    // 1. Try to load from Cache first
     if (isCachingAllowed()) {
         const cachedHtml = localStorage.getItem('cache_' + endpoint);
         if (cachedHtml) {
             container.innerHTML = cachedHtml;
             container.classList.remove("section-loading");
-            // Background initialization for cached content
             if ('requestIdleCallback' in window) {
                 requestIdleCallback(() => initializeSectionContent(container));
             } else {
@@ -75,20 +84,15 @@ async function loadSection(id, endpoint) {
         const html = await response.text();
 
         if (html) {
-            // Only update DOM if it's different from cache to prevent flicker
             if (container.innerHTML !== html) {
                 container.innerHTML = html;
                 container.classList.remove("section-loading");
-                
-                // Background initialization to keep main thread free
                 if ('requestIdleCallback' in window) {
                     requestIdleCallback(() => initializeSectionContent(container));
                 } else {
                     setTimeout(() => initializeSectionContent(container), 50);
                 }
             }
-
-            // 2. Save to Cache for next time
             if (isCachingAllowed()) {
                 localStorage.setItem('cache_' + endpoint, html);
             }
@@ -100,44 +104,44 @@ async function loadSection(id, endpoint) {
 }
 
 function initializeSectionContent(container) {
-    // 1. Sliders - only initialize if they exist in this container
-    if (container.querySelector("#bestSellingSlider")) {
-        setupCustomSlider("bestSellingSlider", "bestSellingPrev", "bestSellingNext");
-    }
-    if (container.querySelector("#trendingSlider")) {
-        setupCustomSlider("trendingSlider", "trendingPrev", "trendingNext");
-    }
-    if (container.querySelector("#videoSectionSlider")) {
-        const videos = container.querySelectorAll("video");
-        videos.forEach(v => { v.muted = true; v.playsInline = true; v.play().catch(() => {}); });
-        setupCustomSlider("videoSectionSlider", "videoSectionPrev", "videoSectionNext");
+    // 1. Sliders - check for existence and initialize precisely
+    const bestSelling = container.querySelector("#bestSellingSlider");
+    if (bestSelling) setupCustomSlider(bestSelling, "bestSellingPrev", "bestSellingNext");
+
+    const trending = container.querySelector("#trendingSlider");
+    if (trending) setupCustomSlider(trending, "trendingPrev", "trendingNext");
+
+    const videoSlider = container.querySelector("#videoSectionSlider");
+    if (videoSlider) {
+        container.querySelectorAll("video").forEach(v => { v.muted = true; v.playsInline = true; v.play().catch(() => {}); });
+        setupCustomSlider(videoSlider, "videoSectionPrev", "videoSectionNext");
     }
 
-    // 2. Product Cards (Wishlist/Quickview wiring)
+    // 2. Wiring for product cards
     if (typeof initializeProductCards === 'function') {
         initializeProductCards();
     }
 }
 
-function setupCustomSlider(sliderId, prevBtnId, nextBtnId) {
-    const slider = document.getElementById(sliderId);
-    if (!slider) return;
-    const wrapper = slider.parentElement;
+function setupCustomSlider(sliderElement, prevBtnId, nextBtnId) {
+    if (!sliderElement || sliderElement.dataset.sliderInit === "true") return;
+    sliderElement.dataset.sliderInit = "true";
+
+    const wrapper = sliderElement.parentElement;
     const prevBtn = document.getElementById(prevBtnId);
     const nextBtn = document.getElementById(nextBtnId);
     
     let isDragging = false;
     let startX;
-    let scrollLeft;
     let currentIndex = 0;
 
     const getMetrics = () => {
-        if (!slider.children.length) return { itemWidth: 0, gap: 0, visibleCount: 1, maxIndex: 0 };
-        const itemWidth = slider.children[0].offsetWidth;
-        const gap = parseInt(window.getComputedStyle(slider).gap) || 24;
+        if (!sliderElement.children.length) return { itemWidth: 0, gap: 0, maxIndex: 0 };
+        const itemWidth = sliderElement.children[0].offsetWidth;
+        const gap = parseInt(window.getComputedStyle(sliderElement).gap) || 24;
         const visibleCount = Math.floor((wrapper.offsetWidth + gap) / (itemWidth + gap)) || 1;
-        const maxIndex = Math.max(0, slider.children.length - visibleCount);
-        return { itemWidth, gap, visibleCount, maxIndex };
+        const maxIndex = Math.max(0, sliderElement.children.length - visibleCount);
+        return { itemWidth, gap, maxIndex };
     };
 
     const updatePosition = (smooth = true) => {
@@ -145,30 +149,33 @@ function setupCustomSlider(sliderId, prevBtnId, nextBtnId) {
         if (currentIndex > maxIndex) currentIndex = maxIndex;
         if (currentIndex < 0) currentIndex = 0;
         
-        const visibleWidth = wrapper.offsetWidth;
-        const maxScroll = Math.max(0, slider.scrollWidth - visibleWidth);
+        const maxScroll = Math.max(0, sliderElement.scrollWidth - wrapper.offsetWidth);
         let targetX = -currentIndex * (itemWidth + gap);
         
         if (targetX < -maxScroll) targetX = -maxScroll;
         if (targetX > 0) targetX = 0;
         
-        slider.style.transition = smooth ? 'transform 0.5s cubic-bezier(0.25, 0.46, 0.45, 0.94)' : 'none';
-        slider.style.transform = `translateX(${targetX}px)`;
+        sliderElement.style.transition = smooth ? 'transform 0.5s cubic-bezier(0.2, 0.8, 0.2, 1)' : 'none';
+        sliderElement.style.transform = `translateX(${targetX}px)`;
         
-        // Update button states
-        if (prevBtn) prevBtn.style.opacity = currentIndex === 0 ? '0.5' : '1';
-        if (nextBtn) nextBtn.style.opacity = currentIndex >= maxIndex ? '0.5' : '1';
+        if (prevBtn) prevBtn.style.opacity = currentIndex === 0 ? '0.3' : '1';
+        if (nextBtn) nextBtn.style.opacity = currentIndex >= maxIndex ? '0.3' : '1';
     };
 
-    // --- Mouse Drag Logic ---
+    // Events for Dragging
     wrapper.style.cursor = 'grab';
     wrapper.style.userSelect = 'none';
+    wrapper.style.webkitUserSelect = 'none';
+    
+    // Prevent default browser image dragging
+    sliderElement.querySelectorAll('img').forEach(img => img.setAttribute('draggable', 'false'));
+    sliderElement.querySelectorAll('a').forEach(a => a.setAttribute('draggable', 'false'));
 
     const startDragging = (e) => {
         isDragging = true;
         wrapper.style.cursor = 'grabbing';
-        startX = (e.pageX || e.touches[0].pageX) - slider.offsetLeft;
-        slider.style.transition = 'none';
+        startX = (e.pageX || e.touches[0].pageX);
+        sliderElement.style.transition = 'none';
     };
 
     const stopDragging = (e) => {
@@ -176,52 +183,57 @@ function setupCustomSlider(sliderId, prevBtnId, nextBtnId) {
         isDragging = false;
         wrapper.style.cursor = 'grab';
         
+        const endX = (e.pageX || (e.changedTouches ? e.changedTouches[0].pageX : 0));
+        const movedX = endX - startX;
+        
+        // If movement was significant, prevent the next click event from firing on children
+        if (Math.abs(movedX) > 10) {
+            const preventClick = (e) => {
+                e.stopImmediatePropagation();
+                e.preventDefault();
+                window.removeEventListener('click', preventClick, true);
+            };
+            window.addEventListener('click', preventClick, true);
+        }
+
         const { itemWidth, gap } = getMetrics();
-        const movedX = (e.pageX || (e.changedTouches ? e.changedTouches[0].pageX : 0)) - startX;
-        
-        // Horizontal snap logic
-        const threshold = (itemWidth + gap) / 4;
-        const diff = Math.round(movedX / (itemWidth + gap));
-        
-        if (Math.abs(movedX) > threshold) {
-            currentIndex -= diff;
+        if (Math.abs(movedX) > 50) {
+            const shift = Math.round(movedX / (itemWidth + gap));
+            currentIndex -= shift;
         }
         updatePosition();
     };
 
     const moveDragging = (e) => {
         if (!isDragging) return;
-        e.preventDefault();
+        // Prevent scrolling while dragging horizontally
+        if (e.cancelable) e.preventDefault();
+        
         const x = e.pageX || e.touches[0].pageX;
         const walk = (x - startX);
         const { itemWidth, gap } = getMetrics();
         const currentX = -currentIndex * (itemWidth + gap);
-        slider.style.transform = `translateX(${currentX + walk}px)`;
+        sliderElement.style.transform = `translateX(${currentX + walk}px)`;
     };
 
-    // Events
     wrapper.addEventListener('mousedown', startDragging);
-    window.addEventListener('mousemove', moveDragging);
+    window.addEventListener('mousemove', moveDragging, { passive: false });
     window.addEventListener('mouseup', stopDragging);
     
-    wrapper.addEventListener('touchstart', startDragging, { passive: false });
+    wrapper.addEventListener('touchstart', startDragging, { passive: true });
     wrapper.addEventListener('touchmove', moveDragging, { passive: false });
     wrapper.addEventListener('touchend', stopDragging);
 
     if (prevBtn && nextBtn) {
         prevBtn.onclick = (e) => { e.preventDefault(); if (currentIndex > 0) { currentIndex--; updatePosition(); } };
-        nextBtn.onclick = (e) => { 
-            e.preventDefault();
-            const { maxIndex } = getMetrics();
-            if (currentIndex < maxIndex) { currentIndex++; updatePosition(); } 
-        };
+        nextBtn.onclick = (e) => { e.preventDefault(); const { maxIndex } = getMetrics(); if (currentIndex < maxIndex) { currentIndex++; updatePosition(); } };
     }
 
-    window.addEventListener('resize', debounce(() => updatePosition(false), 150));
+    // Register instance for global events
+    activeSliders.set(sliderElement.id || Math.random(), { updatePosition });
     updatePosition();
 }
 
-// Global debounce if not exists in main6.js
 if (typeof window.debounce !== 'function') {
     window.debounce = function(func, wait) {
         let timeout;

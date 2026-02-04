@@ -10,8 +10,8 @@ $isProduction = (isset($_SERVER['HTTP_HOST']) && strpos($_SERVER['HTTP_HOST'], '
 if ($isProduction) {
     // Production environment (zensshop.kartoai.com)
     define('DB_HOST', 'localhost');
-    define('DB_NAME', 'u402017191_zensshop');
-    define('DB_USER', 'u402017191_zensshop');
+    define('DB_NAME', 'u402017191_cookpro');
+    define('DB_USER', 'u402017191_cookpro');
     define('DB_PASS', 'Codelock@63');
 } else {
     // Local development environment
