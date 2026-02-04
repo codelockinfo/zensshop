@@ -114,8 +114,33 @@ if (!function_exists('url')) {
 
     <?php 
     if (!empty($globalSchema)): 
-        // Automatically fix placeholder domain in schema
-        $globalSchema = str_replace(['https://yourdomain.com', 'http://yourdomain.com'], $baseUrl, $globalSchema);
+        // 1. Prepare Dynamic Values
+        $siteNameVal = $settingsObj->get('site_name', $settingsObj->get('site_logo_text', 'Zensshop'));
+        $siteLogoVal = $settingsObj->get('footer_logo_image', '');
+        if ($siteLogoVal) {
+            $siteLogoVal = $baseUrl . '/' . ltrim($siteLogoVal, '/');
+        } else {
+            $siteLogoVal = $baseUrl . '/assets/images/logo.png';
+        }
+        $siteDescVal = $settingsObj->get('footer_description', $globalMetaDesc);
+        $sitePhoneVal = $settingsObj->get('footer_phone', '');
+        $siteEmailVal = $settingsObj->get('footer_email', '');
+
+        // 2. Perform Replacements
+        $replacements = [
+            '{{SITE_NAME}}' => $siteNameVal,
+            '{{SITE_URL}}' => $baseUrl . '/',
+            '{{SITE_LOGO}}' => $siteLogoVal,
+            '{{SITE_DESCRIPTION}}' => strip_tags($siteDescVal),
+            '{{SITE_PHONE}}' => $sitePhoneVal,
+            '{{SITE_EMAIL}}' => $siteEmailVal,
+            'https://yourdomain.com' => $baseUrl,
+            'http://yourdomain.com' => $baseUrl
+        ];
+
+        foreach ($replacements as $tag => $val) {
+            $globalSchema = str_replace($tag, $val, $globalSchema);
+        }
     ?>
     <script type="application/ld+json">
         <?php echo $globalSchema; ?>

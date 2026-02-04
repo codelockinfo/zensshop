@@ -59,32 +59,44 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         }
 
         // 3. Handle Social Links (JSON)
-        // If data comes as individual arrays from repeater
         if (isset($_POST['social_icons'])) {
-            $icons = $_POST['social_icons'];
-            $urls = $_POST['social_urls'] ?? []; // Fallback if urls missing for some reason
+            $social_icons = $_POST['social_icons'];
+            $social_urls = $_POST['social_urls'] ?? [];
             $socialLinks = [];
             
-            for ($i = 0; $i < count($icons); $i++) {
-                // Save if we at least have an icon. URL can be empty (user might fill later).
-                // We'll filter empty URLs on display if needed, or render as #.
-                if (!empty($icons[$i])) {
-                     $socialLinks[] = [
-                        'icon' => $icons[$i],
-                        'url' => $urls[$i] ?? '',
+            for ($i = 0; $i < count($social_icons); $i++) {
+                if (!empty($social_icons[$i]) && !empty($social_urls[$i])) {
+                    $socialLinks[] = [
+                        'icon' => $social_icons[$i],
+                        'url' => $social_urls[$i],
                     ];
                 }
             }
-            // Force array values to ensure JSON is an array, not an object (if indices gap for some reason)
             $settings['footer_social_json'] = json_encode(array_values($socialLinks), JSON_UNESCAPED_SLASHES);
         } else {
-            // If post request but no social_icons, it means user deleted all rows OR it's a fresh save with none.
-            // We only want to overwrite if we are sure it's a form submission of this section.
-            // Since this is a specialized form, yes, we interpret absence as "empty list".
             $settings['footer_social_json'] = '[]';
         }
 
-        // 4. Save to Database (Key-Value Store)
+        // 4. Handle Payment Icons (JSON)
+        if (isset($_POST['payment_names'])) {
+            $payment_names = $_POST['payment_names'];
+            $payment_svgs = $_POST['payment_svgs'] ?? [];
+            $paymentIcons = [];
+            
+            for ($i = 0; $i < count($payment_names); $i++) {
+                if (!empty($payment_names[$i]) && !empty($payment_svgs[$i])) {
+                    $paymentIcons[] = [
+                        'name' => $payment_names[$i],
+                        'svg' => $payment_svgs[$i],
+                    ];
+                }
+            }
+            $settings['footer_payment_icons_json'] = json_encode(array_values($paymentIcons), JSON_UNESCAPED_SLASHES);
+        } else {
+            $settings['footer_payment_icons_json'] = '[]';
+        }
+
+        // 5. Save to Database (Key-Value Store)
         foreach ($settings as $key => $value) {
             $db->execute(
                 "INSERT INTO site_settings (setting_key, setting_value, store_id) VALUES (?, ?, ?) 

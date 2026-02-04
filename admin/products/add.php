@@ -120,7 +120,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             header('Location: ' . $baseUrl . '/admin/products/list');
             exit;
         } catch (Exception $e) {
-            $error = $e->getMessage();
+            $msg = $e->getMessage();
+            if (strpos($msg, 'Duplicate entry') !== false) {
+                // Extract the duplicate value if needed, or just generic message
+                $error = "Duplicate: A product with this SKU already exists.";
+            } else {
+                $error = $msg;
+            }
         }
     }
 }
@@ -200,7 +206,9 @@ $brands = $brandsResult ? json_decode($brandsResult['setting_value'], true) : []
                     <select name="category_id" required class="admin-form-select">
                         <option value="">Choose category</option>
                         <?php foreach ($categories as $cat): ?>
-                        <option value="<?php echo $cat['id']; ?>"><?php echo htmlspecialchars($cat['name']); ?></option>
+                        <option value="<?php echo $cat['id']; ?>" <?php echo (isset($_POST['category_id']) && $_POST['category_id'] == $cat['id']) ? 'selected' : ''; ?>>
+                            <?php echo htmlspecialchars($cat['name']); ?>
+                        </option>
                         <?php endforeach; ?>
                     </select>
                 </div>
@@ -216,7 +224,9 @@ $brands = $brandsResult ? json_decode($brandsResult['setting_value'], true) : []
                     <select name="brand" id="brandSelect" class="admin-form-select">
                         <option value="">Choose brand</option>
                         <?php foreach ($brands as $brand): ?>
-                        <option value="<?php echo htmlspecialchars($brand); ?>"><?php echo htmlspecialchars($brand); ?></option>
+                        <option value="<?php echo htmlspecialchars($brand); ?>" <?php echo (isset($_POST['brand']) && $_POST['brand'] === $brand) ? 'selected' : ''; ?>>
+                            <?php echo htmlspecialchars($brand); ?>
+                        </option>
                         <?php endforeach; ?>
                     </select>
                 </div>

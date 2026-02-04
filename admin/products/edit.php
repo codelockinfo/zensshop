@@ -14,19 +14,20 @@ $product = new Product();
 $error = '';
 $success = '';
 
-// Fetch brands from site_settings
+// Determine Store ID
 $storeId = $_SESSION['store_id'] ?? null;
+if (!$storeId && isset($_SESSION['user_email'])) {
+     $storeUser = $db->fetchOne("SELECT store_id FROM users WHERE email = ?", [$_SESSION['user_email']]);
+     $storeId = $storeUser['store_id'] ?? null;
+}
+
+// Fetch brands from site_settings (after storeId detection)
 $brandsResult = $db->fetchOne("SELECT setting_value FROM site_settings WHERE setting_key = 'Brands' AND store_id = ?", [$storeId]);
 $brands = $brandsResult ? json_decode($brandsResult['setting_value'], true) : [];
 
 // Get product ID or 10-digit product_id
 $id = $_GET['id'] ?? null;
 $productIdParam = $_GET['product_id'] ?? null;
-$storeId = $_SESSION['store_id'] ?? null;
-if (!$storeId && isset($_SESSION['user_email'])) {
-     $storeUser = $db->fetchOne("SELECT store_id FROM users WHERE email = ?", [$_SESSION['user_email']]);
-     $storeId = $storeUser['store_id'] ?? null;
-}
 
 if ($productIdParam) {
     $productData = $product->getByProductId($productIdParam, $storeId);
@@ -188,6 +189,11 @@ $existingCategoryIds = $db->fetchAll(
 );
 $existingCategoryIds = array_column($existingCategoryIds, 'category_id');
 
+// Fallback to product table category_id if mapping table is empty
+if (empty($existingCategoryIds) && !empty($productData['category_id'])) {
+    $existingCategoryIds = [$productData['category_id']];
+}
+
 // Parse existing images
 $existingImages = json_decode($productData['images'] ?? '[]', true);
 
@@ -274,7 +280,7 @@ $existingVariants = $product->getVariants($productId);
                     <select name="brand" id="brandSelect" class="admin-form-select">
                         <option value="">Choose brand</option>
                         <?php foreach ($brands as $brand): ?>
-                        <option value="<?php echo htmlspecialchars($brand); ?>" <?php echo $productData['brand'] === $brand ? 'selected' : ''; ?>>
+                        <option value="<?php echo htmlspecialchars($brand); ?>" <?php echo (trim($productData['brand'] ?? '') === trim($brand)) ? 'selected' : ''; ?>>
                             <?php echo htmlspecialchars($brand); ?>
                         </option>
                         <?php endforeach; ?>
