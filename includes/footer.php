@@ -71,7 +71,7 @@ function renderFooterLinkRecursive($item, $baseUrl) {
                             echo '<a href="'.$baseUrl.'"><img src="'.getImageUrl($logoImage).'" alt="'.htmlspecialchars($logoText).'" class="h-10 object-contain"></a>';
                         } else {
                             // Display Logo Text
-                            echo '<a href="'.$baseUrl.'" class="text-xl font-bold font-sans text-black nav-link uppercase">'.htmlspecialchars($logoText).'</a>';
+                            echo '<a href="'.$baseUrl.'" class="text-xl font-bold font-sans text-black nav-link">'.htmlspecialchars($logoText).'</a>';
                         }
                         ?>
                     </div>

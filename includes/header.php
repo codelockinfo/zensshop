@@ -363,12 +363,12 @@ if (!function_exists('url')) {
                 <div class="flex-shrink-0 xl:flex-shrink-0 absolute xl:relative left-1/2 xl:left-auto transform xl:transform-none -translate-x-1/2 xl:translate-x-0">
                     <a href="<?php echo $baseUrl; ?>/" class="flex items-center">
                         <?php if ($siteLogoType === 'text'): ?>
-                            <span class="text-3xl font-heading font-bold text-black xl:lowercase lowercase"><?php echo htmlspecialchars($siteLogoText); ?></span>
+                            <span class="text-3xl font-heading font-bold text-black"><?php echo htmlspecialchars($siteLogoText); ?></span>
                         <?php else: ?>
                             <img src="<?php echo $baseUrl; ?>/assets/images/<?php echo htmlspecialchars($siteLogo); ?>" 
                                  alt="Site Logo" 
                                  class="h-8 object-contain"
-                                 onerror="this.parentElement.innerHTML='<span class=\'text-3xl font-heading font-bold text-black xl:lowercase lowercase\'>CookProo</span>'">
+                                 onerror="this.parentElement.innerHTML='<span class=\'text-3xl font-heading font-bold text-black\'>CookProo</span>'">
                         <?php endif; ?>
                     </a>
                 </div>
