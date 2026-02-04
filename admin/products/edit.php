@@ -170,7 +170,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         header('Location: ' . $baseUrl . '/admin/products/list?success=updated');
         exit;
         } catch (Exception $e) {
-            $error = $e->getMessage();
+            $msg = $e->getMessage();
+            if (strpos($msg, 'Duplicate entry') !== false) {
+                // Extract the duplicate value if needed, or just generic message
+                $error = "Duplicate: A product with this SKU already exists.";
+            } else {
+                $error = $msg;
+            }
         }
     }
 }
@@ -236,7 +242,7 @@ $existingVariants = $product->getVariants($productId);
                            name="name" 
                            required
                            placeholder="Enter product name"
-                           value="<?php echo htmlspecialchars($productData['name']); ?>"
+                           value="<?php echo htmlspecialchars($_POST['name'] ?? $productData['name']); ?>"
                            class="admin-form-input">
                 </div>
 
@@ -245,7 +251,7 @@ $existingVariants = $product->getVariants($productId);
                     <textarea name="description" 
                               id="description_editor"
                               placeholder="Description"
-                              class="admin-form-input admin-form-textarea"><?php echo htmlspecialchars($productData['description'] ?? ''); ?></textarea>
+                              class="admin-form-input admin-form-textarea"><?php echo htmlspecialchars($_POST['description'] ?? $productData['description'] ?? ''); ?></textarea>
                 </div>
 
                 <div class="admin-form-group">
@@ -253,7 +259,7 @@ $existingVariants = $product->getVariants($productId);
                     <input type="text" 
                            name="sku" 
                            placeholder="Enter product SKU"
-                           value="<?php echo htmlspecialchars($productData['sku'] ?? ''); ?>"
+                           value="<?php echo htmlspecialchars($_POST['sku'] ?? $productData['sku'] ?? ''); ?>"
                            class="admin-form-input">
                 </div>
                 
@@ -261,8 +267,10 @@ $existingVariants = $product->getVariants($productId);
                     <label class="admin-form-label">Category *</label>
                     <select name="category_ids[]" class="admin-form-select" required>
                         <option value="">Choose category</option>
-                        <?php foreach ($categories as $cat): ?>
-                        <option value="<?php echo $cat['id']; ?>" <?php echo in_array($cat['id'], $existingCategoryIds) ? 'selected' : ''; ?>>
+                        <?php 
+                        $selectedCats = isset($_POST['category_ids']) ? $_POST['category_ids'] : $existingCategoryIds;
+                        foreach ($categories as $cat): ?>
+                        <option value="<?php echo $cat['id']; ?>" <?php echo in_array($cat['id'], $selectedCats) ? 'selected' : ''; ?>>
                             <?php echo htmlspecialchars($cat['name']); ?>
                         </option>
                         <?php endforeach; ?>
@@ -280,7 +288,7 @@ $existingVariants = $product->getVariants($productId);
                     <select name="brand" id="brandSelect" class="admin-form-select">
                         <option value="">Choose brand</option>
                         <?php foreach ($brands as $brand): ?>
-                        <option value="<?php echo htmlspecialchars($brand); ?>" <?php echo (trim($productData['brand'] ?? '') === trim($brand)) ? 'selected' : ''; ?>>
+                        <option value="<?php echo htmlspecialchars($brand); ?>" <?php echo (trim($_POST['brand'] ?? $productData['brand'] ?? '') === trim($brand)) ? 'selected' : ''; ?>>
                             <?php echo htmlspecialchars($brand); ?>
                         </option>
                         <?php endforeach; ?>
@@ -298,8 +306,13 @@ $existingVariants = $product->getVariants($productId);
                     </label>
                     <div id="highlights-container" class="space-y-3">
                         <?php 
-                        $highlights = json_decode($productData['highlights'] ?? '[]', true);
-                        if(empty($highlights)) $highlights = [['icon' => '', 'text' => '']];
+                        // Prioritize POST data for highlights
+                        if (isset($_POST['highlights']) && !empty($_POST['highlights'])) {
+                            $highlights = json_decode($_POST['highlights'], true);
+                        } else {
+                            $highlights = json_decode($productData['highlights'] ?? '[]', true);
+                        }
+                        if(empty($highlights) || !is_array($highlights)) $highlights = [['icon' => '', 'text' => '']];
                         $hCount = 0;
                         foreach($highlights as $h): 
                             $hCount++;
@@ -324,12 +337,12 @@ $existingVariants = $product->getVariants($productId);
 
                 <div class="admin-form-group">
                     <label class="admin-form-label">Shipping Policy</label>
-                    <textarea name="shipping_policy" id="shipping_policy_editor" class="admin-form-input admin-form-textarea"><?php echo htmlspecialchars($productData['shipping_policy'] ?? ''); ?></textarea>
+                    <textarea name="shipping_policy" id="shipping_policy_editor" class="admin-form-input admin-form-textarea"><?php echo htmlspecialchars($_POST['shipping_policy'] ?? $productData['shipping_policy'] ?? ''); ?></textarea>
                 </div>
 
                 <div class="admin-form-group">
                     <label class="admin-form-label">Return Policy</label>
-                    <textarea name="return_policy" id="return_policy_editor" class="admin-form-input admin-form-textarea"><?php echo htmlspecialchars($productData['return_policy'] ?? ''); ?></textarea>
+                    <textarea name="return_policy" id="return_policy_editor" class="admin-form-input admin-form-textarea"><?php echo htmlspecialchars($_POST['return_policy'] ?? $productData['return_policy'] ?? ''); ?></textarea>
                 </div>
         </div>
     </div>
@@ -445,12 +458,13 @@ $existingVariants = $product->getVariants($productId);
             <div class="admin-form-group">
                 <label class="admin-form-label">Currency *</label>
                 <select name="currency" required class="admin-form-select">
-                    <option value="USD" <?php echo ($productData['currency'] ?? 'INR') === 'USD' ? 'selected' : ''; ?>>USD ($)</option>
-                    <option value="EUR" <?php echo ($productData['currency'] ?? '') === 'EUR' ? 'selected' : ''; ?>>EUR (€)</option>
-                    <option value="GBP" <?php echo ($productData['currency'] ?? '') === 'GBP' ? 'selected' : ''; ?>>GBP (£)</option>
-                    <option value="INR" <?php echo ($productData['currency'] ?? 'INR') === 'INR' ? 'selected' : ''; ?>>INR (₹)</option>
-                    <option value="CAD" <?php echo ($productData['currency'] ?? '') === 'CAD' ? 'selected' : ''; ?>>CAD ($)</option>
-                    <option value="AUD" <?php echo ($productData['currency'] ?? '') === 'AUD' ? 'selected' : ''; ?>>AUD ($)</option>
+                    <?php $curr = $_POST['currency'] ?? $productData['currency'] ?? 'INR'; ?>
+                    <option value="USD" <?php echo $curr === 'USD' ? 'selected' : ''; ?>>USD ($)</option>
+                    <option value="EUR" <?php echo $curr === 'EUR' ? 'selected' : ''; ?>>EUR (€)</option>
+                    <option value="GBP" <?php echo $curr === 'GBP' ? 'selected' : ''; ?>>GBP (£)</option>
+                    <option value="INR" <?php echo $curr === 'INR' ? 'selected' : ''; ?>>INR (₹)</option>
+                    <option value="CAD" <?php echo $curr === 'CAD' ? 'selected' : ''; ?>>CAD ($)</option>
+                    <option value="AUD" <?php echo $curr === 'AUD' ? 'selected' : ''; ?>>AUD ($)</option>
                 </select>
             </div>
             
@@ -460,7 +474,7 @@ $existingVariants = $product->getVariants($productId);
                        name="price" 
                        step="0.01"
                        required
-                       value="<?php echo htmlspecialchars($productData['price']); ?>"
+                       value="<?php echo htmlspecialchars($_POST['price'] ?? $productData['price']); ?>"
                        class="admin-form-input">
             </div>
             
@@ -469,7 +483,7 @@ $existingVariants = $product->getVariants($productId);
                 <input type="number" 
                        name="sale_price" 
                        step="0.01"
-                       value="<?php echo htmlspecialchars($productData['sale_price'] ?? ''); ?>"
+                       value="<?php echo htmlspecialchars($_POST['sale_price'] ?? $productData['sale_price'] ?? ''); ?>"
                        class="admin-form-input">
             </div>
 
@@ -479,7 +493,7 @@ $existingVariants = $product->getVariants($productId);
                     <input type="number" 
                            name="cost_per_item" 
                            step="0.01"
-                           value="<?php echo htmlspecialchars($productData['cost_per_item'] ?? ''); ?>"
+                           value="<?php echo htmlspecialchars($_POST['cost_per_item'] ?? $productData['cost_per_item'] ?? ''); ?>"
                            class="admin-form-input">
                 </div>
                 <div class="admin-form-group">
@@ -487,7 +501,7 @@ $existingVariants = $product->getVariants($productId);
                     <input type="number" 
                            name="total_expense" 
                            step="0.01"
-                           value="<?php echo htmlspecialchars($productData['total_expense'] ?? ''); ?>"
+                           value="<?php echo htmlspecialchars($_POST['total_expense'] ?? $productData['total_expense'] ?? ''); ?>"
                            class="admin-form-input">
                 </div>
             </div>
@@ -497,31 +511,36 @@ $existingVariants = $product->getVariants($productId);
                 <input type="number" 
                        name="stock_quantity" 
                        required
-                       value="<?php echo htmlspecialchars($productData['stock_quantity']); ?>"
+                       value="<?php echo htmlspecialchars($_POST['stock_quantity'] ?? $productData['stock_quantity']); ?>"
                        class="admin-form-input">
             </div>
             
             <div class="admin-form-group">
                 <label class="admin-form-label">Stock Status *</label>
                 <select name="stock_status" required class="admin-form-select">
-                    <option value="in_stock" <?php echo $productData['stock_status'] === 'in_stock' ? 'selected' : ''; ?>>In Stock</option>
-                    <option value="out_of_stock" <?php echo $productData['stock_status'] === 'out_of_stock' ? 'selected' : ''; ?>>Out of Stock</option>
-                    <option value="on_backorder" <?php echo $productData['stock_status'] === 'on_backorder' ? 'selected' : ''; ?>>On Backorder</option>
+                    <?php $ss = $_POST['stock_status'] ?? $productData['stock_status'] ?? 'in_stock'; ?>
+                    <option value="in_stock" <?php echo $ss === 'in_stock' ? 'selected' : ''; ?>>In Stock</option>
+                    <option value="out_of_stock" <?php echo $ss === 'out_of_stock' ? 'selected' : ''; ?>>Out of Stock</option>
+                    <option value="on_backorder" <?php echo $ss === 'on_backorder' ? 'selected' : ''; ?>>On Backorder</option>
                 </select>
             </div>
             
             <div class="admin-form-group">
                 <label class="admin-form-label">Status *</label>
                 <select name="status" required class="admin-form-select">
-                    <option value="draft" <?php echo $productData['status'] === 'draft' ? 'selected' : ''; ?>>Draft</option>
-                    <option value="active" <?php echo $productData['status'] === 'active' ? 'selected' : ''; ?>>Active</option>
-                    <option value="inactive" <?php echo $productData['status'] === 'inactive' ? 'selected' : ''; ?>>Inactive</option>
+                    <?php $st = $_POST['status'] ?? $productData['status'] ?? 'draft'; ?>
+                    <option value="draft" <?php echo $st === 'draft' ? 'selected' : ''; ?>>Draft</option>
+                    <option value="active" <?php echo $st === 'active' ? 'selected' : ''; ?>>Active</option>
+                    <option value="inactive" <?php echo $st === 'inactive' ? 'selected' : ''; ?>>Inactive</option>
                 </select>
             </div>
             
             <div class="admin-form-group">
                 <label class="flex items-center">
-                    <input type="checkbox" name="featured" class="mr-2" <?php echo $productData['featured'] ? 'checked' : ''; ?>>
+                    <?php 
+                        $isFeatured = isset($_POST['featured']) ? true : (isset($_POST) && count($_POST) > 0 ? false : $productData['featured']);
+                    ?>
+                    <input type="checkbox" name="featured" class="mr-2" <?php echo $isFeatured ? 'checked' : ''; ?>>
                     <span>Featured Product</span>
                 </label>
             </div>

@@ -182,6 +182,7 @@ $brands = $brandsResult ? json_decode($brandsResult['setting_value'], true) : []
                            name="name" 
                            required
                            placeholder="Enter product name"
+                           value="<?php echo htmlspecialchars($_POST['name'] ?? ''); ?>"
                            class="admin-form-input">
                 </div>
 
@@ -190,7 +191,7 @@ $brands = $brandsResult ? json_decode($brandsResult['setting_value'], true) : []
                     <textarea name="description" 
                               id="description_editor"
                               placeholder="Description"
-                              class="admin-form-input admin-form-textarea"></textarea>
+                              class="admin-form-input admin-form-textarea"><?php echo htmlspecialchars($_POST['description'] ?? ''); ?></textarea>
                 </div>
 
                 <div class="admin-form-group">
@@ -198,6 +199,7 @@ $brands = $brandsResult ? json_decode($brandsResult['setting_value'], true) : []
                     <input type="text" 
                            name="sku" 
                            placeholder="Enter product SKU"
+                           value="<?php echo htmlspecialchars($_POST['sku'] ?? ''); ?>"
                            class="admin-form-input">
                 </div>
                 
@@ -259,12 +261,12 @@ $brands = $brandsResult ? json_decode($brandsResult['setting_value'], true) : []
 
                 <div class="admin-form-group">
                     <label class="admin-form-label">Shipping Policy</label>
-                    <textarea name="shipping_policy" id="shipping_policy_editor" class="admin-form-input admin-form-textarea"></textarea>
+                    <textarea name="shipping_policy" id="shipping_policy_editor" class="admin-form-input admin-form-textarea"><?php echo htmlspecialchars($_POST['shipping_policy'] ?? ''); ?></textarea>
                 </div>
 
                 <div class="admin-form-group">
                     <label class="admin-form-label">Return Policy</label>
-                    <textarea name="return_policy" id="return_policy_editor" class="admin-form-input admin-form-textarea"></textarea>
+                    <textarea name="return_policy" id="return_policy_editor" class="admin-form-input admin-form-textarea"><?php echo htmlspecialchars($_POST['return_policy'] ?? ''); ?></textarea>
                 </div>
         </div>
     </div>
@@ -359,12 +361,12 @@ $brands = $brandsResult ? json_decode($brandsResult['setting_value'], true) : []
             <div class="admin-form-group">
                 <label class="admin-form-label">Currency *</label>
                 <select name="currency" required class="admin-form-select">
-                    <option value="INR" selected>INR (₹)</option>
-                    <option value="USD">USD ($)</option>
-                    <option value="EUR">EUR (€)</option>
-                    <option value="GBP">GBP (£)</option>
-                    <option value="CAD">CAD ($)</option>
-                    <option value="AUD">AUD ($)</option>
+                    <option value="INR" <?php echo (($_POST['currency'] ?? 'INR') === 'INR') ? 'selected' : ''; ?>>INR (₹)</option>
+                    <option value="USD" <?php echo (($_POST['currency'] ?? '') === 'USD') ? 'selected' : ''; ?>>USD ($)</option>
+                    <option value="EUR" <?php echo (($_POST['currency'] ?? '') === 'EUR') ? 'selected' : ''; ?>>EUR (€)</option>
+                    <option value="GBP" <?php echo (($_POST['currency'] ?? '') === 'GBP') ? 'selected' : ''; ?>>GBP (£)</option>
+                    <option value="CAD" <?php echo (($_POST['currency'] ?? '') === 'CAD') ? 'selected' : ''; ?>>CAD ($)</option>
+                    <option value="AUD" <?php echo (($_POST['currency'] ?? '') === 'AUD') ? 'selected' : ''; ?>>AUD ($)</option>
                 </select>
             </div>
 
@@ -374,6 +376,7 @@ $brands = $brandsResult ? json_decode($brandsResult['setting_value'], true) : []
                        name="price" 
                        step="0.01"
                        required
+                       value="<?php echo htmlspecialchars($_POST['price'] ?? ''); ?>"
                        class="admin-form-input">
             </div>
             
@@ -382,6 +385,7 @@ $brands = $brandsResult ? json_decode($brandsResult['setting_value'], true) : []
                 <input type="number" 
                        name="sale_price" 
                        step="0.01"
+                       value="<?php echo htmlspecialchars($_POST['sale_price'] ?? ''); ?>"
                        class="admin-form-input">
             </div>
 
@@ -391,6 +395,7 @@ $brands = $brandsResult ? json_decode($brandsResult['setting_value'], true) : []
                     <input type="number" 
                            name="cost_per_item" 
                            step="0.01"
+                           value="<?php echo htmlspecialchars($_POST['cost_per_item'] ?? ''); ?>"
                            class="admin-form-input">
                 </div>
                 <div class="admin-form-group">
@@ -398,6 +403,7 @@ $brands = $brandsResult ? json_decode($brandsResult['setting_value'], true) : []
                     <input type="number" 
                            name="total_expense" 
                            step="0.01"
+                           value="<?php echo htmlspecialchars($_POST['total_expense'] ?? ''); ?>"
                            class="admin-form-input">
                 </div>
             </div>
@@ -407,30 +413,31 @@ $brands = $brandsResult ? json_decode($brandsResult['setting_value'], true) : []
                 <input type="number" 
                        name="stock_quantity" 
                        required
+                       value="<?php echo htmlspecialchars($_POST['stock_quantity'] ?? ''); ?>"
                        class="admin-form-input">
             </div>
             
             <div class="admin-form-group">
                 <label class="admin-form-label">Stock Status *</label>
                 <select name="stock_status" required class="admin-form-select">
-                    <option value="in_stock">In Stock</option>
-                    <option value="out_of_stock">Out of Stock</option>
-                    <option value="on_backorder">On Backorder</option>
+                    <option value="in_stock" <?php echo (($_POST['stock_status'] ?? 'in_stock') === 'in_stock') ? 'selected' : ''; ?>>In Stock</option>
+                    <option value="out_of_stock" <?php echo (($_POST['stock_status'] ?? '') === 'out_of_stock') ? 'selected' : ''; ?>>Out of Stock</option>
+                    <option value="on_backorder" <?php echo (($_POST['stock_status'] ?? '') === 'on_backorder') ? 'selected' : ''; ?>>On Backorder</option>
                 </select>
             </div>
             
             <div class="admin-form-group">
                 <label class="admin-form-label">Status *</label>
                 <select name="status" required class="admin-form-select">
-                    <option value="draft">Draft</option>
-                    <option value="active">Active</option>
-                    <option value="inactive">Inactive</option>
+                    <option value="draft" <?php echo (($_POST['status'] ?? 'draft') === 'draft') ? 'selected' : ''; ?>>Draft</option>
+                    <option value="active" <?php echo (($_POST['status'] ?? '') === 'active') ? 'selected' : ''; ?>>Active</option>
+                    <option value="inactive" <?php echo (($_POST['status'] ?? '') === 'inactive') ? 'selected' : ''; ?>>Inactive</option>
                 </select>
             </div>
             
             <div class="admin-form-group">
                 <label class="flex items-center">
-                    <input type="checkbox" name="featured" class="mr-2">
+                    <input type="checkbox" name="featured" class="mr-2" <?php echo isset($_POST['featured']) ? 'checked' : ''; ?>>
                     <span>Featured Product</span>
                 </label>
             </div>
