@@ -548,7 +548,7 @@ document.getElementById('productForm').addEventListener('submit', function(e) {
 });
 </script>
 <script src="<?php echo $baseUrl; ?>/assets/js/admin-image-upload3.js"></script>
-<script src="<?php echo $baseUrl; ?>/assets/js/product-variants4.js"></script>
+<script src="<?php echo $baseUrl; ?>/assets/js/product-variants5.js"></script>
 
 <!-- Brand Management Modal -->
 <div id="brandModal" class="hidden fixed inset-0 bg-black/50 z-[100] flex items-center justify-center p-4">

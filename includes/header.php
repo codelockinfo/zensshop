@@ -144,10 +144,25 @@ if (!function_exists('url')) {
     <link rel="dns-prefetch" href="https://cdn.tailwindcss.com">
 
     <!-- Google Fonts -->
-    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link rel="preload" as="style" href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700&family=Inter:wght@300;400;500;600;700&family=DM+Sans:wght@400;500;700&display=swap">
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700&family=Inter:wght@300;400;500;600;700&family=DM+Sans:wght@400;500;700&display=swap" media="print" onload="this.media='all'">
+    <noscript>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700&family=Inter:wght@300;400;500;600;700&family=DM+Sans:wght@400;500;700&display=swap">
+    </noscript>
     
     <!-- Custom CSS -->
-    <link rel="stylesheet" href="<?php echo $baseUrl; ?>/assets/css/main5.css">
+<link 
+  rel="preload" 
+  href="<?php echo $baseUrl; ?>/assets/css/main5.css" 
+  as="style"
+  onload="this.onload=null;this.rel='stylesheet'"
+>
+<noscript>
+  <link rel="stylesheet" href="<?php echo $baseUrl; ?>/assets/css/main5.css">
+</noscript>
+
     
     <!-- Font Awesome for Icons -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">

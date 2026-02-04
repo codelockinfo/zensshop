@@ -90,19 +90,35 @@ if (empty($banners)) {
                 <!-- Desktop Image -->
                 <?php if($desktopLink): ?>
                 <a href="<?php echo htmlspecialchars($desktopLink); ?>" class="hidden md:block absolute inset-0 z-0">
-                    <div class="w-full h-full bg-cover bg-center" style="background-image: url('<?php echo htmlspecialchars($bgImage); ?>');"></div>
+                    <img src="<?php echo htmlspecialchars($bgImage); ?>" 
+                         class="w-full h-full object-cover" 
+                         <?php echo $index === 0 ? 'fetchpriority="high" loading="eager"' : 'loading="lazy"'; ?> 
+                         alt="<?php echo htmlspecialchars($banner['heading'] ?? 'Banner Image'); ?>">
                 </a>
                 <?php else: ?>
-                <div class="absolute inset-0 bg-cover bg-center hidden md:block" style="background-image: url('<?php echo htmlspecialchars($bgImage); ?>');"></div>
+                <div class="absolute inset-0 hidden md:block z-0 h-full w-full">
+                    <img src="<?php echo htmlspecialchars($bgImage); ?>" 
+                         class="w-full h-full object-cover" 
+                         <?php echo $index === 0 ? 'fetchpriority="high" loading="eager"' : 'loading="lazy"'; ?> 
+                         alt="<?php echo htmlspecialchars($banner['heading'] ?? 'Banner Image'); ?>">
+                </div>
                 <?php endif; ?>
                 
                 <!-- Mobile Image (Fallback to desktop if empty) -->
                 <?php if($mobileLink): ?>
                 <a href="<?php echo htmlspecialchars($mobileLink); ?>" class="md:hidden absolute inset-0 z-0">
-                    <div class="w-full h-full bg-cover bg-center" style="background-image: url('<?php echo htmlspecialchars($bgImageMobile ?: $bgImage); ?>');"></div>
+                    <img src="<?php echo htmlspecialchars($bgImageMobile ?: $bgImage); ?>" 
+                         class="w-full h-full object-cover" 
+                         <?php echo $index === 0 ? 'fetchpriority="high" loading="eager"' : 'loading="lazy"'; ?> 
+                         alt="<?php echo htmlspecialchars($banner['heading'] ?? 'Banner Image'); ?>">
                 </a>
                 <?php else: ?>
-                <div class="absolute inset-0 bg-cover bg-center md:hidden" style="background-image: url('<?php echo htmlspecialchars($bgImageMobile ?: $bgImage); ?>');"></div>
+                <div class="absolute inset-0 md:hidden z-0 h-full w-full">
+                    <img src="<?php echo htmlspecialchars($bgImageMobile ?: $bgImage); ?>" 
+                         class="w-full h-full object-cover" 
+                         <?php echo $index === 0 ? 'fetchpriority="high" loading="eager"' : 'loading="lazy"'; ?> 
+                         alt="<?php echo htmlspecialchars($banner['heading'] ?? 'Banner Image'); ?>">
+                </div>
                 <?php endif; ?>
                 
                 <div class="absolute inset-0 bg-black bg-opacity-30"></div>
@@ -378,6 +394,6 @@ document.addEventListener('DOMContentLoaded', function() {
 <section id="newsletter-section">
 </section>
 
-<script src="<?php echo $baseUrl; ?>/assets/js/lazy-load4.js"></script>
+<script src="<?php echo $baseUrl; ?>/assets/js/lazy-load5.js" defer></script>
 
 <?php require_once __DIR__ . '/includes/footer.php'; ?>

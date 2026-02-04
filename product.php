@@ -260,6 +260,8 @@ $_COOKIE['recently_viewed'] = json_encode($recentIds);
                          src="<?php echo htmlspecialchars($mainImage); ?>" 
                          alt="<?php echo htmlspecialchars($productData['name'] ?? 'Product'); ?>" 
                          class="w-full h-auto rounded-lg"
+                         fetchpriority="high"
+                         loading="eager"
                          onerror="this.src='https://placehold.co/600x600?text=Product+Image'">
                 </div>
                 

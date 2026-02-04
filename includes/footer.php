@@ -349,11 +349,11 @@ function renderFooterLinkRecursive($item, $baseUrl) {
     
     <!-- Scripts -->
     <script src="<?php echo $baseUrl; ?>/assets/js/main5.js?v=2" defer></script>
-    <script src="<?php echo $baseUrl; ?>/assets/js/cart12.js?v=3" defer></script>
+    <script src="<?php echo $baseUrl; ?>/assets/js/cart13.js?v=3" defer></script>
     <script src="<?php echo $baseUrl; ?>/assets/js/product-cards4.js?v=2" defer></script>
     <script src="<?php echo $baseUrl; ?>/assets/js/wishlist6.js?v=3" defer></script>
     <script src="<?php echo $baseUrl; ?>/assets/js/notification.js?v=2" defer></script>
-    <script src="<?php echo $baseUrl; ?>/assets/js/quickview12.js?v=2" defer></script>
+    <script src="<?php echo $baseUrl; ?>/assets/js/quickview13.js?v=2" defer></script>
     <script src="<?php echo $baseUrl; ?>/assets/js/add-to-cart2.js?v=2" defer></script>
     
     <!-- Remove from Cart Confirmation Script -->
@@ -609,7 +609,7 @@ function handleCookieConsent(choice) {
 
 function registerServiceWorker() {
     if ('serviceWorker' in navigator) {
-        navigator.serviceWorker.register('<?php echo $baseUrl; ?>/sw.js')
+        navigator.serviceWorker.register('<?php echo $baseUrl; ?>/sw1.js')
             .then(reg => console.log('Speed Boost Active'))
             .catch(err => {});
     }

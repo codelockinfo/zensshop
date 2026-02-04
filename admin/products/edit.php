@@ -635,7 +635,7 @@ document.getElementById('productForm').addEventListener('submit', function(e) {
 });
 </script>
 <script src="<?php echo $baseUrl; ?>/assets/js/admin-image-upload3.js"></script>
-<script src="<?php echo $baseUrl; ?>/assets/js/product-variants4.js"></script>
+<script src="<?php echo $baseUrl; ?>/assets/js/product-variants5.js"></script>
 <script>
 // Initialize with existing images
 document.addEventListener('DOMContentLoaded', function() {

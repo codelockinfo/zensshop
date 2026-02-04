@@ -7,29 +7,6 @@ document.addEventListener('DOMContentLoaded', function () {
     const sidebarToggle = document.getElementById('sidebarToggle');
     const sidebar = document.getElementById('sidebar');
     const contentWrapper = document.querySelector('.admin-content-wrapper');
-
-    // Function to check screen size and adjust sidebar
-    // function checkScreenSize() {
-    //     if (!sidebar) return;
-    //     const isDesktop = window.innerWidth > 1024;
-
-    //     if (isDesktop) {
-    //         sidebar.classList.add('expanded');
-    //         sidebar.classList.remove('collapsed');
-
-    //         if (contentWrapper) {
-    //             contentWrapper.style.marginLeft = '220px';
-    //         }
-    //     } else {
-    //         sidebar.classList.add('collapsed');
-    //         sidebar.classList.remove('expanded');
-    //         if (contentWrapper) {
-    //             contentWrapper.style.marginLeft = '80px';
-    //         }
-    //     }
-    // }
-
-    // window.addEventListener('load', checkScreenSize);
     window.addEventListener('resize', checkScreenSize);
 
     // Create overlay backdrop for sidebar (works on all screen sizes)
@@ -52,11 +29,8 @@ document.addEventListener('DOMContentLoaded', function () {
 
     if (sidebarToggle && sidebar) {
         sidebarToggle.addEventListener('click', function () {
-            // On all screen sizes, toggle between collapsed and expanded
             sidebar.classList.toggle('collapsed');
             sidebar.classList.toggle('expanded');
-
-            // If collapsing, hide all submenus
             if (sidebar.classList.contains('collapsed')) {
                 const submenus = document.querySelectorAll('.sidebar-submenu');
                 submenus.forEach(sub => {
@@ -73,7 +47,6 @@ document.addEventListener('DOMContentLoaded', function () {
                 });
             }
 
-            // Adjust content margin based on sidebar state
             if (sidebar.classList.contains('expanded')) {
                 if (contentWrapper) {
                     contentWrapper.style.marginLeft = '220px';
@@ -172,9 +145,6 @@ document.addEventListener('DOMContentLoaded', function () {
             }
         }
     });
-
-    // Submenu items just navigate
-    // No need to expand sidebar
 });
 
 // Button Loading State Utility

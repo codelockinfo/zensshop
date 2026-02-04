@@ -207,7 +207,13 @@ require_once __DIR__ . '/includes/header.php';
 ?>
 
 <!-- Custom Styles for Landing Page (Injected after body start) -->
-<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="preload" as="style" href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&family=Playfair+Display:wght@400;700&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&family=Playfair+Display:wght@400;700&display=swap" media="print" onload="this.media='all'">
+<noscript>
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&family=Playfair+Display:wght@400;700&display=swap">
+</noscript>
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.css" />
 
 <script>
@@ -440,7 +446,11 @@ require_once __DIR__ . '/includes/header.php';
             
             <div class="z-10 order-1 lg:order-2 flex justify-center relative">
                 <div class="absolute inset-0 bg-white opacity-20 rounded-full blur-3xl transform scale-75"></div>
-                <img src="<?php echo htmlspecialchars($mainImage); ?>" alt="<?php echo htmlspecialchars($heroTitle); ?>" class="relative w-full max-w-lg lg:max-w-2xl object-contain drop-shadow-2xl product-image-animate">
+                <img src="<?php echo htmlspecialchars($mainImage); ?>" 
+                     alt="<?php echo htmlspecialchars($heroTitle); ?>" 
+                     class="relative w-full max-w-lg lg:max-w-2xl object-contain drop-shadow-2xl product-image-animate"
+                     fetchpriority="high"
+                     loading="eager">
             </div>
         </div>
     </section>
