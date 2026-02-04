@@ -1,6 +1,6 @@
 const CACHE_NAME = 'zensshop-v1';
 const ASSETS_TO_CACHE = [
-  './assets/css/main4.css',
+  './assets/css/main5.css',
   './assets/js/main5.js',
   './assets/js/cart12.js',
   './assets/js/lazy-load4.js',

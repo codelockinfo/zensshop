@@ -51,7 +51,7 @@ $action = $segments[count($segments) - 1] ?? '';  // add, list
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     
     <!-- Custom CSS -->
-    <link rel="stylesheet" href="<?php echo $baseUrl; ?>/assets/css/admin.css">
+    <link rel="stylesheet" href="<?php echo $baseUrl; ?>/assets/css/admin1.css">
     <script>
     // Make BASE_URL available globally for all admin pages
     const BASE_URL = '<?php echo $baseUrl; ?>';
