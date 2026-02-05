@@ -375,7 +375,7 @@ $_COOKIE['recently_viewed'] = json_encode($recentIds);
                         height: 80px;
                         object-fit: contain;
                         background-color: #f9fafb;
-                        margin: 0;
+                        margin: 5px;
                     }
                     </style>
                 <?php if (count($galleryItems) > 1): ?>

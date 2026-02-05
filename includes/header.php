@@ -603,7 +603,7 @@ if (!empty($headerMenuItems)) {
 
                 <!-- Standard Extra Links -->
                 <a href="<?php echo url('wishlist'); ?>" onclick="closeAllMobileMenus()" class="flex items-center px-6 py-4 text-gray-800 border-b border-gray-100 hover:bg-gray-50 transition group">
-                    <i class="fas fa-heart text-gray-400 mr-3 group-hover:text-red-500 transition"></i>
+                    <i class="fas fa-heart text-gray-400 mr-3 group-hover:text-black transition"></i>
                     <span class="font-medium group-hover:text-black">Wishlist</span>
                 </a>
                 
