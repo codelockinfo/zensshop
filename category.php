@@ -120,11 +120,11 @@ if (isset($_GET['ajax'])) {
                                 <i class="fas fa-shopping-cart" aria-hidden="true"></i>
                                 <span class="product-tooltip">' . ($isOutOfStock ? get_stock_status_text($item['stock_status'], $item['stock_quantity']) : 'Add to Cart') . '</span>
                             </button>
-                        </div>';
-                    </div>
-                    
-                    <div class="p-4">
-                        <h3 class="font-semibold text-gray-800 mb-2 h-10 overflow-hidden line-clamp-2" style="display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical;" title="' . htmlspecialchars($item['name'] ?? 'Product') . '">
+                        </div>
+                    </div>';
+            
+            echo '  <div class="p-4">
+                        <h3 class="font-semibold text-gray-800 mb-2 h-12 overflow-hidden line-clamp-2" style="display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical;" title="' . htmlspecialchars($item['name'] ?? 'Product') . '">
                             <a href="' . $baseUrl . '/product.php?slug=' . urlencode($item['slug'] ?? '') . '" class="hover:text-primary transition">
                                 ' . htmlspecialchars($item['name']) . '
                             </a>

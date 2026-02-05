@@ -251,7 +251,7 @@ function renderFooterLinkRecursive($item, $baseUrl) {
             <!-- Cart Header -->
             <div class="flex items-center justify-between p-6 border-b">
                 <h2 class="text-xl font-heading font-bold">Shopping Cart</h2>
-                <button class="text-gray-500 hover:text-gray-800" id="closeCart">
+                <button class="text-gray-500 hover:text-gray-800" id="closeCart" data-aria-label="Close cart">
                     <i class="fas fa-times text-2xl"></i>
                 </button>
             </div>
@@ -333,7 +333,7 @@ function renderFooterLinkRecursive($item, $baseUrl) {
     <!-- Scripts -->
     <script src="<?php echo $baseUrl; ?>/assets/js/main6.js?v=2" defer></script>
     <script src="<?php echo $baseUrl; ?>/assets/js/cart15.js?v=3" defer></script>
-    <script src="<?php echo $baseUrl; ?>/assets/js/product-cards6.js?v=2" defer></script>
+    <script src="<?php echo $baseUrl; ?>/assets/js/product-cards7.js?v=2" defer></script>
     <script src="<?php echo $baseUrl; ?>/assets/js/wishlist6.js?v=3" defer></script>
     <script src="<?php echo $baseUrl; ?>/assets/js/notification.js?v=2" defer></script>
     <script src="<?php echo $baseUrl; ?>/assets/js/quickview15.js?v=2" defer></script>

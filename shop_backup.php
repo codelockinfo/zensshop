@@ -641,7 +641,8 @@ function applyFiltersFromDrawer() {
         <!-- Drawer Header -->
         <div class="flex items-center justify-between mb-6 pb-4 border-b">
             <h2 class="text-xl font-bold">Filters</h2>
-            <button onclick="closeFilterDrawer()" class="text-gray-500 hover:text-gray-800">
+            <button onclick="closeFilterDrawer()" class="text-gray-500 hover:text-gray-800" 
+              data-aria-label="Close filter drawer">
                 <i class="fas fa-times text-xl"></i>
             </button>
         </div>

@@ -1,6 +1,6 @@
 /**
  * Optimized Lazy Loading for Sections
- * Version 7.0 - IntersectionObserver + Improved Slider Lifecycle
+ * Version 8.0 - Performance Optimized (Cached Metrics + Dynamic Listeners)
  */
 const sections = [
     { id: "categories-section", endpoint: "categories" },
@@ -15,6 +15,7 @@ const sections = [
 
 // Global registry for slider instances to handle shared events like resize
 const activeSliders = new Map();
+let isCachePolicyAllowed = null;
 
 function initLazyLoading() {
     if (!('IntersectionObserver' in window)) {
@@ -32,7 +33,7 @@ function initLazyLoading() {
                 }
             }
         });
-    }, { rootMargin: '400px' });
+    }, { rootMargin: '200px' }); // Reduced margin from 400px to 200px for better initial performance
 
     sections.forEach(s => {
         const el = document.getElementById(s.id);
@@ -48,27 +49,29 @@ function initLazyLoading() {
     // Single global resize listener for all sliders
     window.addEventListener('resize', debounce(() => {
         activeSliders.forEach(slider => {
-            if (typeof slider.updatePosition === 'function') {
-                slider.updatePosition(false);
+            if (typeof slider.refresh === 'function') {
+                slider.refresh();
             }
         });
-    }, 150));
+    }, 200));
 }
 
 async function loadSection(id, endpoint) {
     const container = document.getElementById(id);
     if (!container || container.dataset.loaded === "true") return;
     
-    // Check if caching is allowed
+    // Caching check (highly optimized)
     const isCachingAllowed = () => {
+        if (isCachePolicyAllowed !== null) return isCachePolicyAllowed;
         const consentRaw = localStorage.getItem('cookieConsent');
-        if (!consentRaw) return false;
+        if (!consentRaw) return (isCachePolicyAllowed = false);
         try {
             const data = JSON.parse(consentRaw);
-            return data && data.value === 'allowed' && data.expires > new Date().getTime();
+            isCachePolicyAllowed = data && data.value === 'allowed' && data.expires > Date.now();
         } catch (e) {
-            return consentRaw === 'allowed';
+            isCachePolicyAllowed = consentRaw === 'allowed';
         }
+        return isCachePolicyAllowed;
     };
 
     // 1. Try to load from Cache first
@@ -77,11 +80,7 @@ async function loadSection(id, endpoint) {
         if (cachedHtml) {
             container.innerHTML = cachedHtml;
             container.classList.remove("section-loading");
-            if ('requestIdleCallback' in window) {
-                requestIdleCallback(() => initializeSectionContent(container));
-            } else {
-                setTimeout(() => initializeSectionContent(container), 0);
-            }
+            scheduleInitialization(container);
         }
     }
 
@@ -93,14 +92,11 @@ async function loadSection(id, endpoint) {
         const html = await response.text();
 
         if (html) {
-            if (container.innerHTML !== html) {
+            // Only update if content actually changed to avoid redundant reflows
+            if (container.innerHTML.trim() !== html.trim()) {
                 container.innerHTML = html;
                 container.classList.remove("section-loading");
-                if ('requestIdleCallback' in window) {
-                    requestIdleCallback(() => initializeSectionContent(container));
-                } else {
-                    setTimeout(() => initializeSectionContent(container), 50);
-                }
+                scheduleInitialization(container);
             }
             if (isCachingAllowed()) {
                 localStorage.setItem('cache_' + endpoint, html);
@@ -109,6 +105,14 @@ async function loadSection(id, endpoint) {
     } catch (error) {
         console.error(`Error loading section ${endpoint}:`, error);
         container.dataset.loaded = "false";
+    }
+}
+
+function scheduleInitialization(container) {
+    if ('requestIdleCallback' in window) {
+        requestIdleCallback(() => initializeSectionContent(container));
+    } else {
+        setTimeout(() => initializeSectionContent(container), 0);
     }
 }
 
@@ -122,13 +126,18 @@ function initializeSectionContent(container) {
 
     const videoSlider = container.querySelector("#videoSectionSlider");
     if (videoSlider) {
-        container.querySelectorAll("video").forEach(v => { v.muted = true; v.playsInline = true; v.play().catch(() => {}); });
+        container.querySelectorAll("video").forEach(v => { 
+            v.muted = true; 
+            v.playsInline = true; 
+            v.setAttribute('autoplay', '');
+            v.play().catch(() => {}); 
+        });
         setupCustomSlider(videoSlider, "videoSectionPrev", "videoSectionNext");
     }
 
-    // 2. Wiring for product cards
+    // 2. Wiring for product cards - optimize by only scanning the current container if possible
     if (typeof initializeProductCards === 'function') {
-        initializeProductCards();
+        initializeProductCards(container);
     }
 }
 
@@ -143,14 +152,20 @@ function setupCustomSlider(sliderElement, prevBtnId, nextBtnId) {
     let isDragging = false;
     let startX;
     let currentIndex = 0;
+    let metrics = null;
 
-    const getMetrics = () => {
+    const getMetrics = (force = false) => {
+        if (metrics && !force) return metrics;
         if (!sliderElement.children.length) return { itemWidth: 0, gap: 0, maxIndex: 0 };
-        const itemWidth = sliderElement.children[0].offsetWidth;
+        
+        const item = sliderElement.children[0];
+        const itemWidth = item.offsetWidth;
         const gap = parseInt(window.getComputedStyle(sliderElement).gap) || 24;
         const visibleCount = Math.floor((wrapper.offsetWidth + gap) / (itemWidth + gap)) || 1;
         const maxIndex = Math.max(0, sliderElement.children.length - visibleCount);
-        return { itemWidth, gap, maxIndex };
+        
+        metrics = { itemWidth, gap, maxIndex };
+        return metrics;
     };
 
     const updatePosition = (smooth = true) => {
@@ -158,11 +173,7 @@ function setupCustomSlider(sliderElement, prevBtnId, nextBtnId) {
         if (currentIndex > maxIndex) currentIndex = maxIndex;
         if (currentIndex < 0) currentIndex = 0;
         
-        const maxScroll = Math.max(0, sliderElement.scrollWidth - wrapper.offsetWidth);
-        let targetX = -currentIndex * (itemWidth + gap);
-        
-        if (targetX < -maxScroll) targetX = -maxScroll;
-        if (targetX > 0) targetX = 0;
+        const targetX = -currentIndex * (itemWidth + gap);
         
         sliderElement.style.transition = smooth ? 'transform 0.5s cubic-bezier(0.2, 0.8, 0.2, 1)' : 'none';
         sliderElement.style.transform = `translateX(${targetX}px)`;
@@ -171,20 +182,17 @@ function setupCustomSlider(sliderElement, prevBtnId, nextBtnId) {
         if (nextBtn) nextBtn.style.opacity = currentIndex >= maxIndex ? '0.3' : '1';
     };
 
-    // Events for Dragging
-    wrapper.style.cursor = 'grab';
-    wrapper.style.userSelect = 'none';
-    wrapper.style.webkitUserSelect = 'none';
-    
-    // Prevent default browser image dragging
-    sliderElement.querySelectorAll('img').forEach(img => img.setAttribute('draggable', 'false'));
-    sliderElement.querySelectorAll('a').forEach(a => a.setAttribute('draggable', 'false'));
-
     const startDragging = (e) => {
         isDragging = true;
         wrapper.style.cursor = 'grabbing';
-        startX = (e.pageX || e.touches[0].pageX);
+        startX = (e.pageX || (e.touches ? e.touches[0].pageX : 0));
         sliderElement.style.transition = 'none';
+        
+        // Attach dynamic listeners to window only while dragging
+        window.addEventListener('mousemove', moveDragging, { passive: false });
+        window.addEventListener('mouseup', stopDragging);
+        window.addEventListener('touchmove', moveDragging, { passive: false });
+        window.addEventListener('touchend', stopDragging);
     };
 
     const stopDragging = (e) => {
@@ -192,10 +200,15 @@ function setupCustomSlider(sliderElement, prevBtnId, nextBtnId) {
         isDragging = false;
         wrapper.style.cursor = 'grab';
         
+        // Remove dynamic listeners
+        window.removeEventListener('mousemove', moveDragging);
+        window.removeEventListener('mouseup', stopDragging);
+        window.removeEventListener('touchmove', moveDragging);
+        window.removeEventListener('touchend', stopDragging);
+        
         const endX = (e.pageX || (e.changedTouches ? e.changedTouches[0].pageX : 0));
         const movedX = endX - startX;
         
-        // If movement was significant, prevent the next click event from firing on children
         if (Math.abs(movedX) > 10) {
             const preventClick = (e) => {
                 e.stopImmediatePropagation();
@@ -215,31 +228,32 @@ function setupCustomSlider(sliderElement, prevBtnId, nextBtnId) {
 
     const moveDragging = (e) => {
         if (!isDragging) return;
-        // Prevent scrolling while dragging horizontally
         if (e.cancelable) e.preventDefault();
         
-        const x = e.pageX || e.touches[0].pageX;
+        const x = e.pageX || (e.touches ? e.touches[0].pageX : 0);
         const walk = (x - startX);
         const { itemWidth, gap } = getMetrics();
         const currentX = -currentIndex * (itemWidth + gap);
         sliderElement.style.transform = `translateX(${currentX + walk}px)`;
     };
 
+    // Static event listeners for initiation
     wrapper.addEventListener('mousedown', startDragging);
-    window.addEventListener('mousemove', moveDragging, { passive: false });
-    window.addEventListener('mouseup', stopDragging);
-    
     wrapper.addEventListener('touchstart', startDragging, { passive: true });
-    wrapper.addEventListener('touchmove', moveDragging, { passive: false });
-    wrapper.addEventListener('touchend', stopDragging);
+    
+    // Disable native dragging
+    sliderElement.querySelectorAll('img, a').forEach(el => el.setAttribute('draggable', 'false'));
 
     if (prevBtn && nextBtn) {
         prevBtn.onclick = (e) => { e.preventDefault(); if (currentIndex > 0) { currentIndex--; updatePosition(); } };
         nextBtn.onclick = (e) => { e.preventDefault(); const { maxIndex } = getMetrics(); if (currentIndex < maxIndex) { currentIndex++; updatePosition(); } };
     }
 
-    // Register instance for global events
-    activeSliders.set(sliderElement.id || Math.random(), { updatePosition });
+    // Register instance for global resize
+    activeSliders.set(sliderElement.id || Math.random(), { 
+        refresh: () => { metrics = null; updatePosition(false); } 
+    });
+    
     updatePosition();
 }
 
@@ -252,5 +266,6 @@ if (typeof window.debounce !== 'function') {
         };
     };
 }
+
 
 document.addEventListener("DOMContentLoaded", initLazyLoading);

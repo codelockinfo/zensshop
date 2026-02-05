@@ -3,11 +3,13 @@
  * Handles wishlist, quick view, compare, and hover effects
  */
 
-// Initialize product card interactions
-// Initialize product card interactions
-function initializeProductCards() {
-    // 1. Quick view buttons (Legacy support if not using delegating listener)
-    document.querySelectorAll('.quick-view-btn').forEach(btn => {
+/**
+ * Initialize product card interactions
+ * @param {HTMLElement|Document} container - Optional scoping container
+ */
+function initializeProductCards(container = document) {
+    // 1. Quick view buttons
+    container.querySelectorAll('.quick-view-btn').forEach(btn => {
         if (btn.dataset.qvInit === "true") return;
         btn.dataset.qvInit = "true";
         
@@ -26,7 +28,7 @@ function initializeProductCards() {
     });
     
     // 2. Compare buttons
-    document.querySelectorAll('.compare-btn').forEach(btn => {
+    container.querySelectorAll('.compare-btn').forEach(btn => {
         if (btn.dataset.compareInit === "true") return;
         btn.dataset.compareInit = "true";
         
@@ -38,23 +40,17 @@ function initializeProductCards() {
         });
     });
     
-    // 3. Wishlist State Sync (since delegation handles clicks, we just sync visual state)
+    // 3. Wishlist State Sync (scoping doesn't apply to global state sync but we trigger it)
     if (typeof window.initializeWishlistButtons === 'function') {
         window.initializeWishlistButtons();
-    } else {
-        // Retry if wishlist.js isn't fully ready
-        setTimeout(() => {
-            if (typeof window.initializeWishlistButtons === 'function') window.initializeWishlistButtons();
-        }, 500);
     }
     
     // 4. Initialize countdown timers
-    initializeCountdownTimers();
+    initializeCountdownTimers(container);
 }
 
 /**
  * Global Fallback for Wishlist Toggle
- * (If wishlist.js delegation ever fails or isn't present)
  */
 function toggleWishlist(productId, button) {
     if (typeof window.toggleWishlist === 'function' && window.toggleWishlist !== toggleWishlist) {
@@ -76,29 +72,28 @@ function addToCompare(productId) {
     }
 }
 
-function initializeCountdownTimers() {
-    const timers = document.querySelectorAll('.countdown-timer');
-    timers.forEach(timer => {
+function initializeCountdownTimers(container = document) {
+    container.querySelectorAll('.countdown-timer').forEach(timer => {
         if (timer.dataset.initialized === 'true') return;
         timer.dataset.initialized = 'true';
         
         const h = Math.floor(Math.random() * 24);
         const m = Math.floor(Math.random() * 60);
         const s = Math.floor(Math.random() * 60);
-        const endTime = new Date().getTime() + (h * 3600 + m * 60 + s) * 1000;
+        const endTime = Date.now() + (h * 3600 + m * 60 + s) * 1000;
+        
+        const hEl = timer.querySelector('.countdown-hours');
+        const mEl = timer.querySelector('.countdown-minutes');
+        const sEl = timer.querySelector('.countdown-seconds');
         
         function updateTimer() {
-            const now = new Date().getTime();
+            const now = Date.now();
             const d = endTime - now;
             if (d < 0) return;
             
             const hours = Math.floor((d % (86400000)) / 3600000);
             const minutes = Math.floor((d % (3600000)) / 60000);
             const seconds = Math.floor((d % (60000)) / 1000);
-            
-            const hEl = timer.querySelector('.countdown-hours');
-            const mEl = timer.querySelector('.countdown-minutes');
-            const sEl = timer.querySelector('.countdown-seconds');
             
             if (hEl) hEl.textContent = String(hours).padStart(2, '0');
             if (mEl) mEl.textContent = String(minutes).padStart(2, '0');
@@ -109,6 +104,6 @@ function initializeCountdownTimers() {
     });
 }
 
-document.addEventListener('DOMContentLoaded', initializeProductCards);
+document.addEventListener('DOMContentLoaded', () => initializeProductCards());
 window.initializeProductCards = initializeProductCards;
 

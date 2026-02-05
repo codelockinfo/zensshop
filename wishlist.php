@@ -150,7 +150,7 @@ require_once __DIR__ . '/includes/header.php';
                         
                         <!-- Product Info -->
                         <div class="p-4 flex flex-col flex-1">
-                            <h3 class="text-sm font-semibold text-gray-800 mb-2 h-10 overflow-hidden line-clamp-2" style="display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical;" title="<?php echo htmlspecialchars($item['name'] ?? 'Product'); ?>">
+                            <h3 class="text-sm font-semibold text-gray-800 mb-2 h-12 overflow-hidden line-clamp-2" style="display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical;" title="<?php echo htmlspecialchars($item['name'] ?? 'Product'); ?>">
                                     <a href="<?php echo $baseUrl; ?>/product?slug=<?php echo htmlspecialchars($item['slug'] ?? ''); ?>"  
                                    class="hover:text-primary transition">
                                         <?php echo htmlspecialchars($item['name'] ?? 'Product'); ?>
@@ -260,7 +260,7 @@ require_once __DIR__ . '/includes/header.php';
                             
                             <!-- Product Info -->
                             <div class="p-4 flex flex-col flex-1">
-                                <h3 class="text-sm font-semibold text-gray-800 mb-2 h-10 overflow-hidden line-clamp-2">
+                                <h3 class="text-sm font-semibold text-gray-800 mb-2 h-12 overflow-hidden line-clamp-2" style="display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical;" title="<?php echo htmlspecialchars($recentProduct['name'] ?? 'Product'); ?>">
                                     <a href="<?php echo $baseUrl; ?>/product?slug=<?php echo htmlspecialchars($recentProduct['slug'] ?? ''); ?>" 
                                        class="hover:text-primary transition">
                                         <?php echo htmlspecialchars($recentProduct['name'] ?? 'Product'); ?>
