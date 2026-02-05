@@ -274,16 +274,37 @@ $_COOKIE['recently_viewed'] = json_encode($recentIds);
         <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-12 mb-16 hidden" id="mainProductContainer">
             <!-- Product Images -->
             <div>
+
                 <!-- Main Image -->
-                <div class="mb-4">
+                <div class="mb-4 w-full max-w-[730px] mx-auto flex items-center justify-center bg-gray-50 rounded-lg overflow-hidden border border-gray-100 relative group" id="mainImageContainer" style="aspect-ratio: 1 / 1;">
                     <img id="mainProductImage" 
                          src="<?php echo htmlspecialchars($mainImage); ?>" 
                          alt="<?php echo htmlspecialchars($productData['name'] ?? 'Product'); ?>" 
-                         class="w-full h-auto rounded-lg"
+                         class="w-full h-full object-contain transition-transform duration-200 ease-out cursor-zoom-in"
                          fetchpriority="high"
                          loading="eager"
-                         onerror="this.src='https://placehold.co/600x600?text=Product+Image'">
+                         onmousemove="zoomImage(event, this)"
+                         onmouseleave="resetZoom(this)"
+                         onerror="this.src='https://placehold.co/730x730?text=Product+Image'">
                 </div>
+
+                <script>
+                function zoomImage(e, img) {
+                    const container = img.parentElement;
+                    const { left, top, width, height } = container.getBoundingClientRect();
+                    const x = (e.clientX - left) / width;
+                    const y = (e.clientY - top) / height;
+
+                    img.style.transformOrigin = `${x * 100}% ${y * 100}%`;
+                    img.style.transform = "scale(2)"; // Adjustable zoom level
+                }
+
+                function resetZoom(img) {
+                    img.style.transform = "scale(1)";
+                    img.style.transformOrigin = "center center";
+                }
+                </script>
+
                 
                 <!-- Thumbnail Images (Extended with Variants) -->
                 <?php 
@@ -345,9 +366,16 @@ $_COOKIE['recently_viewed'] = json_encode($recentIds);
                     }
                     .thumbnail-slider .swiper-slide {
                         height: auto;
+                        display: flex;
+                        justify-content: center;
+                        width: auto;
                     }
-                    .thumbnail-slider .swiper-slide img {
-                        width: 100%;
+                    .thumbnail-slider .swiper-slide .thumbnail-img {
+                        width: auto; 
+                        height: 80px;
+                        object-fit: contain;
+                        background-color: #f9fafb;
+                        margin: 0;
                     }
                     </style>
                 <?php if (count($galleryItems) > 1): ?>
@@ -358,9 +386,9 @@ $_COOKIE['recently_viewed'] = json_encode($recentIds);
                             <div class="swiper-slide">
                                 <img src="<?php echo htmlspecialchars($item['url']); ?>" 
                                      alt="Thumbnail <?php echo $index + 1; ?>"
-                                     class="thumbnail-img object-cover rounded cursor-pointer border-2 transition hover:border-primary <?php echo $index === 0 ? 'border-primary' : 'border-transparent'; ?>"
+                                     class="thumbnail-img object-contain rounded cursor-pointer border-2 transition hover:border-primary <?php echo $index === 0 ? 'border-primary' : 'border-transparent'; ?>"
                                      onclick="changeMainImage('<?php echo htmlspecialchars($item['url']); ?>', this, <?php echo $item['variant'] ? htmlspecialchars(json_encode($item['variant'])) : 'null'; ?>)"
-                                     onerror="this.src='https://placehold.co/150x150?text=No+Image'"
+                                     onerror="this.src='https://placehold.co/150x150?text=Product+Image'"
                                      loading="lazy">
                             </div>
                             <?php endforeach; ?>
@@ -378,7 +406,7 @@ $_COOKIE['recently_viewed'] = json_encode($recentIds);
                 <h1 class="text-3xl font-heading font-bold mb-4"><?php echo htmlspecialchars($productData['name'] ?? 'Product'); ?></h1>
                 
                 <!-- Rating and Reviews -->
-                <div class="flex items-center space-x-4 mb-4 text-sm">
+                <div class="flex items-center space-x-4 mb-4 text-sm cursor-pointer hover:opacity-80 transition" onclick="document.getElementById('customer-reviews').scrollIntoView({ behavior: 'smooth' })">
                     <div class="flex items-center">
                         <?php 
                         $rating = floatval($productData['rating'] ?? 5);
@@ -390,7 +418,7 @@ $_COOKIE['recently_viewed'] = json_encode($recentIds);
                         <i class="fas fa-star <?php echo $i < $fullStars ? 'text-yellow-400' : ($i === $fullStars && $hasHalfStar ? 'text-yellow-400' : 'text-gray-300'); ?>"></i>
                         <?php endfor; ?>
                     </div>
-                    <span class="text-gray-600"><?php echo $reviewCount; ?> review<?php echo $reviewCount != 1 ? 's' : ''; ?></span>
+                    <span class="text-gray-600 underline decoration-dotted"><?php echo $reviewCount; ?> review<?php echo $reviewCount != 1 ? 's' : ''; ?></span>
                     <span class="text-gray-600">10 sold in last 18 hours</span>
                 </div>
                 
@@ -580,7 +608,11 @@ $_COOKIE['recently_viewed'] = json_encode($recentIds);
                 <!-- Additional Links -->
                 <div class="flex flex-wrap gap-4 text-sm mb-6">
                     <button onclick="toggleProductWishlist(<?php echo $productData['product_id'] ?? $productData['id']; ?>, this)" class="text-gray-600 hover:text-primary transition flex items-center wishlist-btn" data-product-id="<?php echo $productData['product_id'] ?? $productData['id']; ?>">
-                        <i class="far fa-heart mr-1"></i> Add to Wishlist
+                        <?php if (in_array($productData['product_id'] ?? $productData['id'], $wishlistIds)): ?>
+                            <i class="fas fa-heart mr-1"></i> Remove from Wishlist
+                        <?php else: ?>
+                            <i class="far fa-heart mr-1"></i> Add to Wishlist
+                        <?php endif; ?>
                     </button>
                     <!-- <a href="#" class="text-gray-600 hover:text-primary transition"><i class="fas fa-exchange-alt mr-1"></i>Compare colors</a> -->
                     <a href="javascript:void(0)" onclick="toggleAskQuestionModal(true, '<?php echo addslashes($productData['name']); ?>')" class="text-gray-600 hover:text-primary transition flex items-center font-medium"><i class="fas fa-question-circle mr-1 text-primary"></i>Ask a question</a>
@@ -711,7 +743,7 @@ $_COOKIE['recently_viewed'] = json_encode($recentIds);
         </div>
         
         <!-- Customer Reviews -->
-        <div class="max-w-4xl mx-auto mb-16">
+        <div class="max-w-4xl mx-auto mb-16" id="customer-reviews">
             <h2 class="text-xl font-heading font-bold mb-6">Customer Reviews</h2>
             
             <div class="grid grid-cols-1 md:grid-cols-3 gap-8 mb-8">
@@ -792,7 +824,8 @@ $_COOKIE['recently_viewed'] = json_encode($recentIds);
                                     <img src="<?php echo htmlspecialchars($itemImage); ?>" 
                                             alt="<?php echo htmlspecialchars($item['name'] ?? 'Product'); ?>"
                                             class="w-full h-64 object-contain group-hover:scale-110 transition-transform duration-500"
-                                            loading="lazy">
+                                            loading="lazy"
+                                            onerror="this.src='https://placehold.co/600x600?text=Product+Image'">
                                 </a>
                                 <?php if ($itemDiscount > 0): ?>
                                 <span class="absolute top-3 left-3 bg-red-500 text-white px-2 py-1 rounded text-xs font-semibold z-10">
@@ -943,7 +976,8 @@ $_COOKIE['recently_viewed'] = json_encode($recentIds);
                         <a href="<?php echo $baseUrl; ?>/product?slug=<?php echo urlencode($item['slug'] ?? ''); ?>" class="block">
                             <img src="<?php echo htmlspecialchars($itemImage); ?>" 
                                  alt="<?php echo htmlspecialchars($item['name'] ?? 'Product'); ?>"
-                                 class="w-full h-64 object-contain group-hover:scale-110 transition-transform duration-500">
+                                 class="w-full h-64 object-contain group-hover:scale-110 transition-transform duration-500"
+                                 onerror="this.src='https://placehold.co/600x600?text=Product+Image'">
                         </a>
                         <?php if ($item['id'] == $productData['id']): ?>
                         <span class="absolute top-3 left-3 bg-[#1a3d32] text-white px-2 py-1 rounded text-[10px] font-bold z-10 uppercase tracking-tight">
@@ -1769,7 +1803,8 @@ document.addEventListener('DOMContentLoaded', function() {
 </div>
 
 <script>
-async function toggleProductWishlist(productId, btn) {
+
+    async function toggleProductWishlist(productId, btn) {
     if (!btn) return;
 
     // Determine action based on current state (text)
@@ -1803,7 +1838,7 @@ async function toggleProductWishlist(productId, btn) {
             // Update UI based on the action we just performed
             if (isAdding) {
                 // We added it
-                btn.innerHTML = '<i class="fas fa-heart mr-1 text-red-500"></i> Remove from Wishlist';
+                btn.innerHTML = '<i class="fas fa-heart mr-1"></i>  Remove from Wishlist';
                 // btn.classList.add('text-red-500'); 
             } else {
                 // We removed it
@@ -1839,7 +1874,7 @@ async function toggleProductWishlist(productId, btn) {
                  class="w-10 h-10 md:w-12 md:h-12 object-contain rounded border border-gray-100 flex-shrink-0"
                  onerror="this.src='https://placehold.co/100x100?text=Product'">
             <div class="min-w-0">
-                <h3 class="font-bold text-gray-900 leading-tight text-sm md:text-base truncate"><?php echo htmlspecialchars($productData['name']); ?></h3>
+                <h3 class="font-bold text-gray-900 leading-tight text-sm md:text-base overflow-hidden text-ellipsis" style="display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; max-width: 450px;"><?php echo htmlspecialchars($productData['name']); ?></h3>
                 <div class="hidden md:flex text-xs text-yellow-500 items-center mt-1">
                     <?php 
                     $rating = floatval($productData['rating'] ?? 5);
@@ -2014,15 +2049,15 @@ function stickyAddToCart() {
 <script>
 document.addEventListener('DOMContentLoaded', function() {
     new Swiper('.thumbnail-slider', {
-        slidesPerView: 4,
-        spaceBetween: 10,
+        slidesPerView: 'auto',
+        spaceBetween: 0,
         navigation: {
             nextEl: '.swiper-button-next',
             prevEl: '.swiper-button-prev',
         },
         breakpoints: {
             640: {
-                slidesPerView: 5,
+                slidesPerView: 'auto',
             },
         }
     });

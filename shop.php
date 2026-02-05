@@ -148,7 +148,7 @@ if (isset($_GET['ajax'])) {
                 // Image Wrapper
                 echo '<div class="relative overflow-hidden card-image-wrap">';
                     echo '<a href="' . url('product?slug=' . urlencode($itemSlug)) . '">';
-                    echo '<img src="' . htmlspecialchars($mainImage) . '" alt="' . htmlspecialchars($itemName) . '" class="w-full h-64 object-contain group-hover:scale-110 transition-transform duration-500">';
+                    echo '<img src="' . htmlspecialchars($mainImage) . '" alt="' . htmlspecialchars($itemName) . '" class="w-full h-64 object-contain group-hover:scale-110 transition-transform duration-500" onerror="this.src=\'https://placehold.co/600x600?text=Product+Image\'">';
                     echo '</a>';
                     
                     if ($discount > 0) {
@@ -192,7 +192,7 @@ if (isset($_GET['ajax'])) {
                 
                 // Content Wrapper
                 echo '<div class="p-4 card-content">';
-                    echo '<h3 class="font-semibold text-md mb-2 h-10 overflow-hidden line-clamp-2" style="display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical;" title="' . htmlspecialchars($itemName) . '">';
+                    echo '<h3 class="font-semibold text-base mb-2 card-title" title="' . htmlspecialchars($itemName) . '">';
                     echo '<a href="' . $baseUrl . '/product?slug=' . urlencode($itemSlug) . '" class="hover:text-primary transition">' . htmlspecialchars($itemName) . '</a>';
                     echo '</h3>';
                     
@@ -347,6 +347,16 @@ require_once __DIR__ . '/includes/header.php';
 <!-- List View Styles -->
 <style>
 /* List View Styles */
+#productsGrid:not(.list-view) .card-title {
+    height: 3rem;
+    overflow: hidden;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    font-size: 1rem;
+    line-height: 1.5;
+}
+
 button.active {
     background-color: #000; /* Primary color or black */
     color: white;
@@ -603,7 +613,8 @@ button.active {
                             <a href="<?php echo url('product?slug=' . urlencode($itemSlug)); ?>">
                                 <img src="<?php echo htmlspecialchars($mainImage); ?>" 
                                      alt="<?php echo htmlspecialchars($itemName); ?>" 
-                                     class="w-full h-64 object-contain  group-hover:scale-110 transition-transform duration-500">
+                                     class="w-full h-64 object-contain  group-hover:scale-110 transition-transform duration-500"
+                                     onerror="this.src='https://placehold.co/600x600?text=Product+Image'">
                             </a>
                             
                             <?php if ($discount > 0): ?>
@@ -661,7 +672,7 @@ button.active {
                         </div>
                         
                         <div class="p-4 card-content">
-                            <h3 class="font-semibold text-md mb-2 card-title">
+                            <h3 class="font-semibold text-base mb-2 card-title">
                                 <a href="<?php echo $baseUrl; ?>/product?slug=<?php echo urlencode($itemSlug); ?>" class="hover:text-primary transition">
                                     <?php echo htmlspecialchars($itemName); ?>
                                 </a>

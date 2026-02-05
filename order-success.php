@@ -259,7 +259,8 @@ nav.bg-white.sticky.top-0 {
                                 ?>
                                 <img src="<?php echo htmlspecialchars($imageUrl); ?>" 
                                      alt="<?php echo htmlspecialchars($item['product_name']); ?>"
-                                     class="w-16 h-16 object-cover rounded">
+                                     class="w-16 h-16 object-cover rounded"
+                                     onerror="this.src='https://placehold.co/150x150?text=Product+Image'">
                                 <div class="flex-1 min-w-0">
                                     <p class="text-sm font-medium text-gray-900 line-clamp-2">
                                         <?php echo htmlspecialchars($item['product_name']); ?>

@@ -103,6 +103,7 @@ if ($firstVariant) {
 }
 
 $hasSale = $currentSalePrice > 0 && $currentSalePrice < $originalPrice;
+$isOutOfStock = ($productData['stock_status'] === 'out_of_stock' || (isset($productData['stock_quantity']) && $productData['stock_quantity'] <= 0));
 
 $galleryPool = [];
 if (!empty($mainImage)) $galleryPool[] = $mainImage;
@@ -252,41 +253,46 @@ require_once __DIR__ . '/includes/header.php';
     }
 
     document.addEventListener('DOMContentLoaded', () => {
-        // Read More Toggle for Hero Description
-        const setupReadMore = (containerId, btnId, fadeId, collapsedHeight) => {
+        // Read More Toggle for Hero Description (Line Based)
+        const setupReadMore = (containerId, btnId, fadeId) => {
             const container = document.getElementById(containerId);
             const btn = document.getElementById(btnId);
             const fade = document.getElementById(fadeId);
             
             if (container && btn) {
-                const isTall = container.scrollHeight > collapsedHeight;
+                // Check if content overflows (clamped)
+                // We assume the container starts with the line-clamp class applied.
+                const isClamped = container.scrollHeight > container.clientHeight;
                 
-                if (!isTall) {
+                if (!isClamped) {
                     btn.style.display = 'none';
                     if(fade) fade.style.display = 'none';
-                    container.style.maxHeight = 'none';
                 }
                 
                 btn.addEventListener('click', function() {
-                    const isCollapsed = !container.style.maxHeight || container.style.maxHeight !== 'none';
+                    const isExpanded = !container.classList.contains('line-clamp-5');
                     
-                    if (isCollapsed) {
-                        container.style.maxHeight = 'none';
-                        if(fade) fade.style.opacity = '0';
-                        btn.querySelector('span').textContent = 'Show Less';
-                        btn.querySelector('i').style.transform = 'rotate(180deg)';
-                    } else {
-                        container.style.maxHeight = collapsedHeight + 'px';
+                    if (isExpanded) {
+                        // Collapse
+                        container.classList.add('line-clamp-5');
                         if(fade) fade.style.opacity = '1';
                         btn.querySelector('span').textContent = 'Read More';
                         btn.querySelector('i').style.transform = 'rotate(0deg)';
-                        container.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                    } else {
+                        // Expand
+                        container.classList.remove('line-clamp-5');
+                        if(fade) fade.style.opacity = '0';
+                        btn.querySelector('span').textContent = 'Show Less';
+                        btn.querySelector('i').style.transform = 'rotate(180deg)';
                     }
                 });
             }
         };
 
-        setupReadMore('hero-description-container', 'hero-read-more-btn', 'hero-description-fade', 200);
+        // Initialize (timeout ensures styles are applied for height calc)
+        setTimeout(() => {
+            setupReadMore('hero-description-container', 'hero-read-more-btn', 'hero-description-fade');
+        }, 100);
 
         // Skeleton Loader for all images
         document.querySelectorAll('img').forEach(img => {
@@ -379,6 +385,12 @@ require_once __DIR__ . '/includes/header.php';
         0% { background-position: -300px 0; }
         100% { background-position: 300px 0; }
     }
+    .line-clamp-5 {
+        display: -webkit-box;
+        -webkit-line-clamp: 5;
+        -webkit-box-orient: vertical;
+        overflow: hidden;
+    }
 </style>
 
 <!-- Main Wrapper -->
@@ -389,14 +401,14 @@ require_once __DIR__ . '/includes/header.php';
         <div class="container mx-auto px-6 grid grid-cols-1 lg:grid-cols-2 gap-16 items-center">
             <div class="z-10 order-2 lg:order-1 text-center lg:text-left">
                 <h2 class="text-xl font-semibold tracking-widest uppercase mb-4 opacity-60"><?php echo htmlspecialchars($heroSubtitle); ?></h2>
-                <h1 class="text-6xl lg:text-8xl font-bold mb-8 tracking-tighter lowercase leading-none">
+                <h1 class="text-6xl lg:text-[70px] font-bold mb-8 tracking-tighter lowercase leading-none line-clamp-4 overflow-hidden text-ellipsis" style="display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical;">
                     <?php echo htmlspecialchars($heroTitle); ?>
                 </h1>
                 
                 <?php // Price variables already defined at top ?>
 
                 <div class="mb-6 max-w-xl mx-auto lg:mx-0">
-                    <div id="hero-description-container" class="relative overflow-hidden transition-all duration-500 prose prose-lg max-w-none" style="max-height: 200px; color: inherit;">
+                    <div id="hero-description-container" class="relative overflow-hidden transition-all duration-300 prose prose-lg max-w-none line-clamp-5" style="color: inherit;">
                         <div class="opacity-80 leading-relaxed">
                             <?php echo $heroDescription; ?>
                         </div>
@@ -419,11 +431,11 @@ require_once __DIR__ . '/includes/header.php';
                     <?php endif; ?>
                 </div>
                 
-                <div class="flex items-center gap-4 justify-center lg:justify-start flex-wrap">
-                    <button onclick="spAddToCart(<?php echo $productData['product_id']; ?>, this, <?php echo htmlspecialchars(json_encode($firstVariant['variant_attributes'] ?? (object)[])); ?>)" class="bg-[#1a3d32] btn-accent px-6 h-[58px] py-[17px] rounded text-[11px] font-bold tracking-widest uppercase transition transform flex items-center justify-center gap-3" data-loading-text="Adding...">
-                        <i class="fas fa-shopping-cart text-[13px]"></i>
-                        <span>Add to cart</span>
-                    </button>
+                    <div class="flex items-center gap-4 justify-center lg:justify-start flex-wrap">
+                        <button onclick="spAddToCart(<?php echo $productData['product_id']; ?>, this, <?php echo htmlspecialchars(json_encode($firstVariant['variant_attributes'] ?? (object)[])); ?>)" class="bg-[#1a3d32] btn-accent px-6 h-[58px] py-[17px] rounded text-[11px] font-bold tracking-widest uppercase transition transform flex items-center justify-center gap-3 <?php echo $isOutOfStock ? 'opacity-50 cursor-not-allowed' : ''; ?>" data-loading-text="Adding..." <?php echo $isOutOfStock ? 'disabled' : ''; ?>>
+                            <i class="fas fa-shopping-cart text-[13px]"></i>
+                            <span><?php echo $isOutOfStock ? 'Out of Stock' : 'Add to cart'; ?></span>
+                        </button>
 
                         <?php foreach ($platformItems as $plat): 
                             $pLink = $plat['link'] ?? '#';
@@ -450,7 +462,8 @@ require_once __DIR__ . '/includes/header.php';
                      alt="<?php echo htmlspecialchars($heroTitle); ?>" 
                      class="relative w-full max-w-lg lg:max-w-2xl object-contain drop-shadow-2xl product-image-animate"
                      fetchpriority="high"
-                     loading="eager">
+                     loading="eager"
+                     onerror="this.src='https://placehold.co/600x600?text=Product+Image'">
             </div>
         </div>
     </section>
@@ -512,13 +525,13 @@ require_once __DIR__ . '/includes/header.php';
             <?php if($isDesktopVideo): ?>
                 <video src="<?php echo htmlspecialchars($desktopAsset); ?>" autoplay muted loop playsinline class="block w-full h-auto object-cover <?php echo $mobileAsset ? 'hidden md:block' : ''; ?>"></video>
             <?php else: ?>
-                <img src="<?php echo htmlspecialchars($desktopAsset); ?>" class="block w-full h-auto <?php echo $mobileAsset ? 'hidden md:block' : ''; ?>" alt="Banner">
+                <img src="<?php echo htmlspecialchars($desktopAsset); ?>" class="block w-full h-auto <?php echo $mobileAsset ? 'hidden md:block' : ''; ?>" alt="Banner" onerror="this.src='https://placehold.co/1200x600?text=Banner+Image'">
             <?php endif; ?>
             <?php if($mobileAsset): ?>
                 <?php if($isMobileVideo): ?>
                     <video src="<?php echo htmlspecialchars($mobileAsset); ?>" autoplay muted loop playsinline class="block w-full h-auto object-cover md:hidden"></video>
                 <?php else: ?>
-                    <img src="<?php echo htmlspecialchars($mobileAsset); ?>" class="block w-full h-auto md:hidden" alt="Banner Mobile">
+                    <img src="<?php echo htmlspecialchars($mobileAsset); ?>" class="block w-full h-auto md:hidden" alt="Banner Mobile" onerror="this.src='https://placehold.co/600x600?text=Banner+Image'">
                 <?php endif; ?>
             <?php endif; ?>
             <?php if ($wrapLink): ?></a><?php endif; ?>
@@ -589,11 +602,13 @@ require_once __DIR__ . '/includes/header.php';
                             <?php echo $aboutText; ?>
                         </div>
                         <div class="mt-6">
-                             <button onclick="spAddToCart(<?php echo $productData['product_id']; ?>, this)" class="btn-accent px-10 py-4 rounded text-lg font-medium tracking-wide uppercase transition shadow-lg hover:shadow-xl" data-loading-text="Adding...">Shop Now</button>
+                             <button onclick="spAddToCart(<?php echo $productData['product_id']; ?>, this)" class="btn-accent px-10 py-4 rounded text-lg font-medium tracking-wide uppercase transition shadow-lg hover:shadow-xl <?php echo $isOutOfStock ? 'opacity-50 cursor-not-allowed' : ''; ?>" data-loading-text="Adding..." <?php echo $isOutOfStock ? 'disabled' : ''; ?>>
+                                <?php echo $isOutOfStock ? 'Out of Stock' : 'Shop Now'; ?>
+                             </button>
                         </div>
                     </div>
                     <div class="lg:w-1/2 relative">
-                         <img src="<?php echo htmlspecialchars($aboutImage); ?>" alt="About" class="w-full max-w-xl mx-auto object-cover rounded shadow-2xl bg-white p-6">
+                         <img src="<?php echo htmlspecialchars($aboutImage); ?>" alt="About" class="w-full max-w-xl mx-auto object-cover rounded shadow-2xl bg-white p-6" onerror="this.src='https://placehold.co/600x600?text=About+Image'">
                     </div>
                 </div>
             </div>
@@ -629,7 +644,7 @@ require_once __DIR__ . '/includes/header.php';
             <div class="container mx-auto px-4 md:px-6">
                 <div class="flex flex-col md:flex-row items-center justify-between max-w-6xl mx-auto bg-white p-6 md:p-12 lg:p-16 rounded-2xl shadow-lg border border-gray-100/50">
                     <div class="w-full md:w-5/12 mb-8 md:mb-0 md:pr-10 border-b md:border-b-0 md:border-r border-gray-100 flex justify-center pb-8 md:pb-0">
-                         <img src="<?php echo htmlspecialchars($newsImage); ?>" alt="Newsletter" class="w-100 md:w-100 h-auto object-contain drop-shadow-md hover:scale-105 transition duration-300">
+                         <img src="<?php echo htmlspecialchars($newsImage); ?>" alt="Newsletter" class="w-100 md:w-100 h-auto object-contain drop-shadow-md hover:scale-105 transition duration-300" onerror="this.src='https://placehold.co/600x600?text=Newsletter+Image'">
                     </div>
                     <div class="w-full md:w-7/12 md:pl-10 lg:pl-16 text-center md:text-left">
                          <h2 class="text-2xl md:text-3xl lg:text-4xl font-heading mb-4 text-gray-800 font-bold tracking-tight"><?php echo htmlspecialchars($newsTitle); ?></h2>
@@ -725,7 +740,7 @@ require_once __DIR__ . '/includes/header.php';
                             <i class="fas fa-quote-left text-gray-200 text-5xl mb-6"></i>
                             <p class="text-base text-gray-500 mb-6 italic leading-loose flex-grow">"${escapeHtml(comment)}"</p>
                             <div class="flex items-center mt-auto w-full pt-4 border-t border-gray-100">
-                                <img src="${imgSrc}" class="w-12 h-12 rounded-full mr-4 shadow-sm object-cover">
+                                <img src="${imgSrc}" class="w-12 h-12 rounded-full mr-4 shadow-sm object-cover" onerror="this.src='https://ui-avatars.com/api/?name=${encodeURIComponent(name)}&background=random'">
                                 <span class="font-bold text-lg text-gray-800">${escapeHtml(name)}</span>
                             </div>
                         </div>
@@ -798,11 +813,12 @@ require_once __DIR__ . '/includes/header.php';
     <div class="container mx-auto flex items-center justify-between gap-3">
         <div class="flex items-center gap-3 overflow-hidden">
             <img src="<?php echo htmlspecialchars($mainImage); ?>" 
-                 alt="Sticky Bar Product" 
-                 class="w-10 h-10 md:w-12 md:h-12 object-contain rounded border border-gray-100 flex-shrink-0"
-                 onerror="this.src='https://placehold.co/100x100?text=Product'">
+                 alt="Product" 
+                 class="w-12 h-12 object-contain rounded border border-gray-100"
+                 onerror="this.src='https://placehold.co/150x150?text=Product'"> 
+
             <div class="min-w-0">
-                <h3 class="font-bold text-gray-900 leading-tight text-sm md:text-base truncate"><?php echo htmlspecialchars($heroTitle); ?></h3>
+                <h3 class="font-bold text-gray-900 leading-tight text-sm md:text-base overflow-hidden text-ellipsis" style="display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; max-width: 450px;"><?php echo htmlspecialchars($heroTitle); ?></h3>
                 <div class="hidden md:flex text-xs text-yellow-500 items-center mt-1">
                     <?php 
                     $rating = floatval($avgRating ?? 5);
@@ -836,9 +852,9 @@ require_once __DIR__ . '/includes/header.php';
                 <button onclick="updateStickyQty(1)" class="w-8 h-full flex-shrink-0 flex items-center justify-center text-gray-600 hover:bg-gray-100 transition select-none">+</button>
             </div>
 
-            <button onclick="stickyAddToCart()" class="bg-[#1a3d32] text-white px-4 py-2.5 md:px-8 rounded-full font-bold hover:bg-black transition flex items-center justify-center gap-2 text-sm md:text-base whitespace-nowrap" id="sticky-atc-btn">
+            <button onclick="stickyAddToCart()" class="bg-[#1a3d32] text-white px-4 py-2.5 md:px-8 rounded-full font-bold hover:bg-black transition flex items-center justify-center gap-2 text-sm md:text-base whitespace-nowrap <?php echo $isOutOfStock ? 'opacity-50 cursor-not-allowed' : ''; ?>" id="sticky-atc-btn" <?php echo $isOutOfStock ? 'disabled' : ''; ?>>
                 <i class="fas fa-shopping-cart text-xs md:text-sm"></i>
-                <span>Add To Cart</span>
+                <span><?php echo $isOutOfStock ? 'Out of Stock' : 'Add To Cart'; ?></span>
             </button>
         </div>
     </div>

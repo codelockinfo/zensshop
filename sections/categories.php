@@ -76,7 +76,8 @@ $categories = $db->fetchAll(
             <a href="<?php echo htmlspecialchars($link); ?>" class="group text-center">
                 <div class="relative mb-4 overflow-hidden rounded-full aspect-square">
                     <img src="<?php echo htmlspecialchars($image); ?>" alt="<?php echo htmlspecialchars($category['title']); ?>" 
-                         class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-300">
+                         class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-300"
+                         onerror="this.src='https://placehold.co/600x600?text=Category+Image'">
                 </div>
                 <h3 class="text-sm md:text-md font-semibold text-gray-800 group-hover:text-primary transition"><?php echo htmlspecialchars($category['title']); ?></h3>
             </a>

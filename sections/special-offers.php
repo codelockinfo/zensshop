@@ -51,7 +51,8 @@ $sectionSubheading = $offers[0]['subheading'] ?? 'Grab limited-time deals on our
 			?>
             <div class="relative group overflow-hidden rounded-lg">
                 <img src="<?php echo htmlspecialchars($imgSrc); ?>" alt="<?php echo htmlspecialchars($offer['title']); ?>" 
-                     class="w-full h-64 object-cover group-hover:scale-110 transition-transform duration-500">
+                     class="w-full h-64 object-cover group-hover:scale-110 transition-transform duration-500"
+                     onerror="this.src='https://placehold.co/600x600?text=Offer+Image'">
                 <div class="absolute inset-0 bg-black bg-opacity-40 group-hover:bg-opacity-50 transition"></div>
                 <div class="absolute inset-0 flex flex-col items-center justify-center text-white p-6">
                     <h3 class="text-xl md:text-2xl font-heading font-bold text-white mb-4 text-center"><?php echo htmlspecialchars($offer['title']); ?></h3>

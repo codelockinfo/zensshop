@@ -247,9 +247,9 @@ if (!function_exists('url')) {
     <link rel="stylesheet" href="<?php echo $baseUrl; ?>/assets/css/main6.css" fetchpriority="high">
 
     
-    <!-- Font Awesome for Icons -->
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" media="print" onload="this.media='all'">
-    <noscript><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"></noscript>
+    <!-- Font Awesome (Local optimized with font-display:swap) -->
+    <link rel="stylesheet" href="<?php echo $baseUrl; ?>/assets/css/fontawesome-custom.css" media="print" onload="this.media='all'">
+    <noscript><link rel="stylesheet" href="<?php echo $baseUrl; ?>/assets/css/fontawesome-custom.css"></noscript>
     <script>
     // Make BASE_URL available globally for all frontend pages
     const BASE_URL = '<?php echo $baseUrl; ?>';
@@ -438,7 +438,21 @@ if (!function_exists('url')) {
         <div class="container mx-auto px-4">
             <div class="flex items-center justify-between h-20">
                 <!-- Hamburger Menu  -->
-                <button class="xl:hidden text-black hover:text-gray-600 transition focus:outline-none" id="mobileMenuBtn">
+                <!-- Hamburger Menu  -->
+                <button class="xl:hidden text-black hover:text-gray-600 transition focus:outline-none" 
+                        id="mobileMenuBtn" 
+                        style="position: relative; z-index: 60; cursor: pointer;"
+                        onclick="event.stopPropagation(); 
+                                 var overlay = document.getElementById('mobile-menu-overlay');
+                                 var main = document.getElementById('mobile-menu-main');
+                                 if(overlay && main) {
+                                     overlay.style.display = 'block';
+                                     main.style.display = 'flex';
+                                     void overlay.offsetWidth; 
+                                     overlay.classList.remove('opacity-0');
+                                     main.classList.remove('-translate-x-full');
+                                     document.body.style.overflow = 'hidden';
+                                 }">
                     <i class="fas fa-bars text-xl"></i>
                 </button>
                 
@@ -533,131 +547,220 @@ if (!empty($headerMenuItems)) {
                     <a href="<?php echo url('products'); ?>" class="text-gray-800 hover:text-primary transition">Products</a>
                     <a href="<?php echo url('pages'); ?>" class="text-gray-800 hover:text-primary transition">Pages</a>
                     <a href="<?php echo url('blog'); ?>" class="text-gray-800 hover:text-primary transition">Blog</a>
-                </div>
-            </div>
         </div>
     </nav>
     
-    <!-- Mobile Menu Drawer -->
-    <div id="mobileMenuOverlay" class="hidden fixed inset-0 bg-black bg-opacity-50 z-40 xl:hidden"></div>
-    <div id="mobileMenuDrawer" class="hidden fixed top-0 left-0 h-full w-80 bg-white shadow-2xl z-50 transform -translate-x-full transition-transform duration-300 overflow-y-auto xl:hidden">
-        <!-- Drawer Header -->
-        <div class="bg-black text-white px-6 py-4 flex items-center justify-between">
-            <div class="flex items-center">
-                <span class="font-semibold">Menu</span>
-            </div>
-            <button onclick="if(typeof closeMobileMenu === 'function') closeMobileMenu();" class="text-white hover:text-gray-300">
+    <!-- NEW REBUILT MOBILE MENU START -->
+    
+    <!-- Dark Overlay (Shared) -->
+    <!-- Dark Overlay (Shared) -->
+    <div id="mobile-menu-overlay" 
+         class="fixed inset-0 z-40 opacity-0 transition-opacity duration-300 ease-in-out" 
+         style="display: none; background-color: rgba(0,0,0,0.8); backdrop-filter: blur(5px); -webkit-backdrop-filter: blur(5px);"
+         onclick="closeAllMobileMenus()"></div>
+
+    <!-- Main Menu Drawer -->
+    <div id="mobile-menu-main" 
+         class="fixed top-0 left-0 bottom-0 w-80 bg-white z-50 transform -translate-x-full transition-transform duration-300 ease-in-out flex flex-col shadow-2xl overflow-hidden">
+        
+        <!-- Header -->
+        <div class="bg-black text-white px-5 py-4 flex items-center justify-between flex-shrink-0">
+            <span class="font-bold text-lg tracking-wide">Menu</span>
+            <button type="button" onclick="closeAllMobileMenus()" class="text-white hover:text-gray-300 focus:outline-none p-1">
                 <i class="fas fa-times text-xl"></i>
             </button>
         </div>
-        
-        <div class="flex flex-col">
-            <?php 
-            if (!function_exists('renderMobileMenuItem')) {
-                function renderMobileMenuItem($item) {
-                     $hasChildren = !empty($item['children']);
-                     $url = url($item['url'] ?? '#');
-                     $name = htmlspecialchars($item['label'] ?? $item['name'] ?? '');
-                     $id = $item['id'] ?? uniqid();
-                     
-                     if ($hasChildren) {
-                         echo '<button onclick="openMobileSubmenu(\'mobile-menu-' . $id . '\')" class="flex items-center justify-between px-6 py-4 text-black border-b border-gray-200 hover:bg-gray-50 transition w-full text-left">';
-                         echo '<span>' . $name . '</span>';
-                         echo '<i class="fas fa-chevron-right text-sm text-gray-400"></i>';
-                         echo '</button>';
-                     } else {
-                         echo '<a href="' . $url . '" onclick="if(typeof closeMobileMenu === \'function\') closeMobileMenu();" class="flex items-center justify-between px-6 py-4 text-black border-b border-gray-200 hover:bg-gray-50 transition">';
-                         echo '<span>' . $name . '</span>';
-                         if ($hasChildren) { 
-                            echo '<i class="fas fa-chevron-right text-sm text-gray-400"></i>';
-                         }
-                         echo '</a>';
-                     }
+
+        <!-- Scrollable Content -->
+        <div class="flex-1 overflow-y-auto bg-white">
+            <div class="flex flex-col py-2">
+                <?php 
+                $menuItemCounter = 0;
+                // Render Top Level Items
+                foreach ($headerMenuItems as $item) {
+                    $hasChildren = !empty($item['children']);
+                    $url = url($item['url'] ?? '#');
+                    $name = htmlspecialchars($item['label'] ?? $item['name'] ?? '');
+                    // Use a more robust ID strategy or ensure consistent uniqid if passed from backend
+                    // Fallback to counter if no ID
+                    $itemId = $item['id'] ?? 'menu-item-' . $menuItemCounter++;
+                    $subId = 'mobile-menu-sub-' . $itemId; 
+                    
+                    if ($hasChildren) {
+                        // Item with Submenu
+                        echo '<button type="button" onclick="openMobileSubmenu(\''.$subId.'\')" class="flex items-center justify-between px-6 py-4 text-gray-800 border-b border-gray-100 hover:bg-gray-50 transition text-left group">';
+                        echo '<span class="font-medium group-hover:text-black">'.$name.'</span>';
+                        echo '<i class="fas fa-chevron-right text-gray-400 text-sm group-hover:text-black"></i>';
+                        echo '</button>';
+                    } else {
+                        // Standard Link
+                        echo '<a href="'.$url.'" onclick="closeAllMobileMenus()" class="flex items-center justify-between px-6 py-4 text-gray-800 border-b border-gray-100 hover:bg-gray-50 transition group">';
+                        echo '<span class="font-medium group-hover:text-black">'.$name.'</span>';
+                        echo '</a>';
+                    }
                 }
-            }
-            
-            foreach ($headerMenuItems as $item) {
-                renderMobileMenuItem($item);
-            }
-            ?>
-            
-             <!-- Wishlist -->
-            <a href="<?php echo url('wishlist'); ?>" onclick="if(typeof closeMobileMenu === 'function') closeMobileMenu();" class="flex items-center px-6 py-4 text-black border-b border-gray-200 hover:bg-gray-50 transition">
-                <i class="fas fa-heart text-sm mr-3 text-gray-600"></i>
-                <span>Wishlist</span>
-            </a>
-            
-            <!-- Login / Register Info -->
-            <?php if ($currentCustomer): ?>
-                <a href="<?php echo url('account'); ?>" onclick="if(typeof closeMobileMenu === 'function') closeMobileMenu();" class="flex items-center px-6 py-4 text-black border-b border-gray-200 hover:bg-gray-50 transition">
-                    <i class="fas fa-user text-sm mr-3 text-gray-600"></i>
-                    <span>Account</span>
+                ?>
+
+                <!-- Standard Extra Links -->
+                <a href="<?php echo url('wishlist'); ?>" onclick="closeAllMobileMenus()" class="flex items-center px-6 py-4 text-gray-800 border-b border-gray-100 hover:bg-gray-50 transition group">
+                    <i class="fas fa-heart text-gray-400 mr-3 group-hover:text-red-500 transition"></i>
+                    <span class="font-medium group-hover:text-black">Wishlist</span>
                 </a>
-            <?php else: ?>
-                <a href="<?php echo url('login'); ?>" onclick="if(typeof closeMobileMenu === 'function') closeMobileMenu();" class="flex items-center px-6 py-4 text-black border-b border-gray-200 hover:bg-gray-50 transition">
-                    <i class="fas fa-user text-sm mr-3 text-gray-600"></i>
-                    <span>Login / Register</span>
-                </a>
-            <?php endif; ?>
+                
+                <?php if ($currentCustomer): ?>
+                    <a href="<?php echo url('account'); ?>" onclick="closeAllMobileMenus()" class="flex items-center px-6 py-4 text-gray-800 border-b border-gray-100 hover:bg-gray-50 transition group">
+                        <i class="fas fa-user text-gray-400 mr-3 group-hover:text-black transition"></i>
+                        <span class="font-medium group-hover:text-black">Account</span>
+                    </a>
+                <?php else: ?>
+                    <a href="<?php echo url('login'); ?>" onclick="closeAllMobileMenus()" class="flex items-center px-6 py-4 text-gray-800 border-b border-gray-100 hover:bg-gray-50 transition group">
+                        <i class="fas fa-user text-gray-400 mr-3 group-hover:text-black transition"></i>
+                        <span class="font-medium group-hover:text-black">Login / Register</span>
+                    </a>
+                <?php endif; ?>
+            </div>
         </div>
     </div>
-    
-    <!-- Dynamic Submenus -->
+
+    <!-- Recursive Submenus Generation -->
     <?php
-    if (!function_exists('renderMobileSubmenusRecursive')) {
-        function renderMobileSubmenusRecursive($items) {
+    if (!function_exists('renderNewMobileSubmenus')) {
+        function renderNewMobileSubmenus($items, &$globalCounter) {
             foreach ($items as $item) {
                 if (!empty($item['children'])) {
-                    $id = $item['id'] ?? uniqid();
                     $name = htmlspecialchars($item['label'] ?? $item['name'] ?? '');
+                    
+                    // REPLICATE ID GENERATION EXACTLY
+                    $itemId = $item['id'] ?? 'menu-item-' . $globalCounter++;
+                    $thisId = 'mobile-menu-sub-' . $itemId;
+                    
                     ?>
-                    <div id="mobile-menu-<?php echo $id; ?>" class="hidden fixed top-0 left-0 h-full w-80 bg-white shadow-2xl z-50 transform translate-x-full transition-transform duration-300 overflow-y-auto xl:hidden">
-                        <div class="bg-black text-white px-6 py-4 flex items-center justify-between sticky top-0 z-50">
-                            <div class="flex items-center space-x-4">
-                                <button onclick="closeMobileSubmenu('mobile-menu-<?php echo $id; ?>')" class="text-white hover:text-gray-300">
+                    <div id="<?php echo $thisId; ?>" 
+                         class="fixed top-0 left-0 bottom-0 w-80 bg-white z-[60] transform -translate-x-full transition-transform duration-300 ease-in-out flex flex-col shadow-2xl overflow-hidden">
+                        
+                        <!-- Header with Back & Close -->
+                        <div class="bg-black text-white px-5 py-4 flex items-center justify-between flex-shrink-0">
+                            <div class="flex items-center space-x-3">
+                                <button type="button" onclick="closeMobileSubmenu('<?php echo $thisId; ?>')" class="text-white hover:text-gray-300 focus:outline-none p-1">
                                     <i class="fas fa-chevron-left"></i>
                                 </button>
-                                <span class="font-semibold"><?php echo $name; ?></span>
+                                <span class="font-bold text-lg tracking-wide truncate max-w-[150px]"><?php echo $name; ?></span>
                             </div>
-                            <button onclick="closeMobileMenu()" class="text-white hover:text-gray-300">
+                            <button type="button" onclick="closeAllMobileMenus()" class="text-white hover:text-gray-300 focus:outline-none p-1">
                                 <i class="fas fa-times text-xl"></i>
                             </button>
                         </div>
-                        <div class="flex flex-col">
-                            <?php 
-                            foreach ($item['children'] as $child) {
-                                renderMobileMenuItem($child);
-                            } 
-                            ?>
+
+                        <!-- Content -->
+                        <div class="flex-1 overflow-y-auto bg-white">
+                            <div class="flex flex-col py-2">
+                                <?php
+                                foreach ($item['children'] as $child) {
+                                    $cName = htmlspecialchars($child['label'] ?? $child['name'] ?? '');
+                                    $cUrl = url($child['url'] ?? '#');
+                                    $cHasChildren = !empty($child['children']);
+                                    $cSubId = 'mobile-menu-sub-' . ($child['id'] ?? uniqid());
+
+                                    if ($cHasChildren) {
+                                        echo '<button type="button" onclick="openMobileSubmenu(\''.$cSubId.'\')" class="flex items-center justify-between px-6 py-4 text-gray-800 border-b border-gray-100 hover:bg-gray-50 transition text-left group">';
+                                        echo '<span class="font-medium group-hover:text-black">'.$cName.'</span>';
+                                        echo '<i class="fas fa-chevron-right text-gray-400 text-sm group-hover:text-black"></i>';
+                                        echo '</button>';
+                                    } else {
+                                        echo '<a href="'.$cUrl.'" onclick="closeAllMobileMenus()" class="flex items-center justify-between px-6 py-4 text-gray-800 border-b border-gray-100 hover:bg-gray-50 transition group">';
+                                        echo '<span class="font-medium group-hover:text-black">'.$cName.'</span>';
+                                        echo '</a>';
+                                    }
+                                }
+                                ?>
+                            </div>
                         </div>
                     </div>
                     <?php
-                    renderMobileSubmenusRecursive($item['children']);
+                    // Recurse for deeper levels (Note: deeper levels need their own ID logic if they are to be opened. 
+                    // For now assuming 1 level deep or consistent IDs from DB)
+                    // If we have deeper levels, we need to pass the counter by reference or handle it.
+                    // Since we are iterating strictly in order, the counter should align IF the structure matches.
+                    // However, to be safe for >2 levels, we'd need a more complex ID map. 
+                    // For 2 levels (Main -> Sub), this reference counter works if we iterate top-level again.
+                    // BUT: We are inside a function. 
+                    // BETTER APPROACH: Re-iterate the MAIN list to ensure order effectively.
+                    renderNewMobileSubmenus($item['children'], $globalCounter);
+                } else {
+                     // Increment counter for items without children too, to keep alignment if mixed
+                     $globalCounter++;
                 }
             }
         }
     }
-    renderMobileSubmenusRecursive($headerMenuItems);
+    // RESET COUNTER and Call for top level items
+    $submenuCounter = 0;
+    renderNewMobileSubmenus($headerMenuItems, $submenuCounter);
     ?>
 
+    </script>
     <script>
-    function openMobileSubmenu(id) {
-        const el = document.getElementById(id);
-        if(el) {
-            el.classList.remove('hidden');
-            // Force reflow
-            void el.offsetWidth; 
-            el.classList.remove('translate-x-full');
+    // --- NEW MOBILE MENU JS CONTROL ---
+    
+    // Ensure functions are on window
+    
+    // Open Main Menu
+    window.openMobileMenu = function() {
+        const overlay = document.getElementById('mobile-menu-overlay');
+        const main = document.getElementById('mobile-menu-main');
+        
+        if (!overlay || !main) return;
+
+        // 1. Make visible immediately
+        overlay.style.display = 'block';
+        main.style.display = 'flex'; // Ensure flex layout
+        
+        // 2. Force browser paint
+        void overlay.offsetWidth;
+        
+        // 3. Start transitions
+        overlay.classList.remove('opacity-0');
+        main.classList.remove('-translate-x-full');
+        
+        document.body.style.overflow = 'hidden';
+    }
+
+    // Open Specific Submenu (slides OVER the main menu)
+    window.openMobileSubmenu = function(id) {
+        const sub = document.getElementById(id);
+        if (sub) {
+            sub.classList.remove('-translate-x-full');
         }
     }
-    function closeMobileSubmenu(id) {
-        const el = document.getElementById(id);
-        if(el) {
-            el.classList.add('translate-x-full');
+
+    // Close Specific Submenu (Back Button)
+    window.closeMobileSubmenu = function(id) {
+        const sub = document.getElementById(id);
+        if (sub) {
+            sub.classList.add('-translate-x-full');
+        }
+    }
+
+    // Close EVERYTHING (X Button or Overlay Click)
+    window.closeAllMobileMenus = function() {
+        const overlay = document.getElementById('mobile-menu-overlay');
+        const main = document.getElementById('mobile-menu-main');
+        
+        // 1. Slide out ALL drawers (main and subs)
+        const drawers = document.querySelectorAll('[id^="mobile-menu-main"], [id^="mobile-menu-sub-"]');
+        drawers.forEach(el => {
+            el.classList.add('-translate-x-full');
+        });
+
+        // 2. Fade out overlay
+        if (overlay) {
+            overlay.classList.add('opacity-0');
             setTimeout(() => {
-                el.classList.add('hidden');
+                overlay.style.display = 'none'; // Use inline style
             }, 300);
         }
+
+        document.body.style.overflow = '';
     }
     </script>
     

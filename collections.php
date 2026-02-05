@@ -71,7 +71,7 @@ $categories = $db->fetchAll(
                         <img src="<?php echo htmlspecialchars($categoryImage); ?>" 
                              alt="<?php echo htmlspecialchars($category['name']); ?>"
                              class="w-full h-full object-contain group-hover:scale-110 transition-transform duration-500"
-                             onerror="if(!this.dataset.fallback) { this.dataset.fallback='1'; this.onerror=null; this.src='data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNDAwIiBoZWlnaHQ9IjUwMCIgdmlld0JveD0iMCAwIDQwMCA1MDAiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+PHJlY3Qgd2lkdGg9IjQwMCIgaGVpZ2h0PSI1MDAiIGZpbGw9IiNGM0Y0RjYiLz48Y2lyY2xlIGN4PSIyMDAiIGN5PSIyMDAiIHI9IjUwIiBmaWxsPSIjOUI3QThBIi8+PHBhdGggZD0iTTEwMCAzNTBDMTAwIDMwMCAxNTAgMjUwIDIwMCAyNTBDMjUwIDI1MCAzMDAgMzAwIDMwMCAzNTAiIGZpbGw9IiM5QjdBOEEiLz48L3N2Zz4='; }">
+                             onerror="this.src='https://placehold.co/600x600?text=Category+Image'">
                         <div class="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-10 transition-all duration-300"></div>
                         <!-- Collection Name Overlay Button -->
                         <div class="absolute bottom-0 left-0 right-0 p-4 flex items-center justify-center">

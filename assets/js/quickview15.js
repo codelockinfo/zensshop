@@ -54,7 +54,7 @@ function createQuickViewModal(){if(document.getElementById("quickViewModal"))ret
         <div class="relative block group overflow-hidden rounded-lg h-full flex items-center justify-center w-full min-h-0 bg-gray-50">
             ${s?`<div class="absolute top-2 left-2 z-10 shadow-sm" id="qvDiscountBadge">${s}</div>`:'<div id="qvDiscountBadge"></div>'}
             <a href="${d}" class="h-full w-full flex items-center justify-center">
-                <img id="qvMainImage" src="${n[0]}" alt="${t.name}" class="max-h-full max-w-full object-contain transition duration-500 group-hover:scale-105">
+                <img id="qvMainImage" src="${n[0]}" alt="${t.name}" class="max-h-full max-w-full object-contain transition duration-500 group-hover:scale-105" onerror="this.src='https://placehold.co/600x600?text=Product+Image'">
             </a>
         </div>`,n.length>1&&(o=`
             <div class="relative w-full">
@@ -92,7 +92,7 @@ function createQuickViewModal(){if(document.getElementById("quickViewModal"))ret
                      <button onclick="switchQVImage('${t}', this)" 
                              data-img-url="${t}"
                              class="qv-thumb w-full h-16 border-2 rounded-md overflow-hidden block transition focus:outline-none bg-white ${0===e?"border-primary":"border-transparent"}">
-                        <img src="${t}" class="w-full h-full object-cover">
+                        <img src="${t}" class="w-full h-full object-cover" onerror="this.src='https://placehold.co/150x150?text=Product+Image'">
                      </button>
                  </div>`}),o+=`
                     </div>

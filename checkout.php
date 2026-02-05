@@ -518,7 +518,8 @@ nav.bg-white.sticky.top-0 {
                             <div class="flex items-center space-x-3">
                                 <img src="<?php echo htmlspecialchars($item['image'] ?? 'https://placehold.co/80'); ?>" 
                                      alt="<?php echo htmlspecialchars($item['name']); ?>" 
-                                     class="w-16 h-16 object-cover rounded">
+                                     class="w-16 h-16 object-cover rounded"
+                                     onerror="this.src='https://placehold.co/150x150?text=Product+Image'">
                                 <div class="flex-1">
                                     <h3 class="font-semibold text-sm text-gray-800"><?php echo htmlspecialchars($item['name']); ?></h3>
                                     <p class="text-xs text-gray-500">Quantity: <?php echo $item['quantity']; ?>x</p>

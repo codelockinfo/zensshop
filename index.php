@@ -93,14 +93,16 @@ if (empty($banners)) {
                     <img src="<?php echo htmlspecialchars($bgImage); ?>" 
                          class="w-full h-full object-cover" 
                          <?php echo $index === 0 ? 'fetchpriority="high" loading="eager"' : 'loading="lazy"'; ?> 
-                         alt="<?php echo htmlspecialchars($banner['heading'] ?? 'Banner Image'); ?>">
+                         alt="<?php echo htmlspecialchars($banner['heading'] ?? 'Banner Image'); ?>"
+                         onerror="this.src='https://placehold.co/1200x600?text=Banner+Image'">
                 </a>
                 <?php else: ?>
                 <div class="absolute inset-0 hidden md:block z-0 h-full w-full">
                     <img src="<?php echo htmlspecialchars($bgImage); ?>" 
                          class="w-full h-full object-cover" 
                          <?php echo $index === 0 ? 'fetchpriority="high" loading="eager"' : 'loading="lazy"'; ?> 
-                         alt="<?php echo htmlspecialchars($banner['heading'] ?? 'Banner Image'); ?>">
+                         alt="<?php echo htmlspecialchars($banner['heading'] ?? 'Banner Image'); ?>"
+                         onerror="this.src='https://placehold.co/1200x600?text=Banner+Image'">
                 </div>
                 <?php endif; ?>
                 
@@ -110,14 +112,16 @@ if (empty($banners)) {
                     <img src="<?php echo htmlspecialchars($bgImageMobile ?: $bgImage); ?>" 
                          class="w-full h-full object-cover" 
                          <?php echo $index === 0 ? 'fetchpriority="high" loading="eager"' : 'loading="lazy"'; ?> 
-                         alt="<?php echo htmlspecialchars($banner['heading'] ?? 'Banner Image'); ?>">
+                         alt="<?php echo htmlspecialchars($banner['heading'] ?? 'Banner Image'); ?>"
+                         onerror="this.src='https://placehold.co/1200x600?text=Banner+Image'">
                 </a>
                 <?php else: ?>
                 <div class="absolute inset-0 md:hidden z-0 h-full w-full">
                     <img src="<?php echo htmlspecialchars($bgImageMobile ?: $bgImage); ?>" 
                          class="w-full h-full object-cover" 
                          <?php echo $index === 0 ? 'fetchpriority="high" loading="eager"' : 'loading="lazy"'; ?> 
-                         alt="<?php echo htmlspecialchars($banner['heading'] ?? 'Banner Image'); ?>">
+                         alt="<?php echo htmlspecialchars($banner['heading'] ?? 'Banner Image'); ?>"
+                         onerror="this.src='https://placehold.co/1200x600?text=Banner+Image'">
                 </div>
                 <?php endif; ?>
                 

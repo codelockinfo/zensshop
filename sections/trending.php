@@ -75,7 +75,8 @@ if (empty($products)) {
                     <a href="<?php echo url('product?slug=' . urlencode($item['slug'] ?? '')); ?>">
                         <img src="<?php echo htmlspecialchars($mainImage); ?>" alt="<?php echo htmlspecialchars($item['name']); ?>" 
                              class="w-full h-64 object-cover group-hover:scale-110 transition-transform duration-500"
-                             loading="lazy">
+                             loading="lazy"
+                             onerror="this.src='https://placehold.co/600x600?text=Product+Image'">
                     </a>
                     
                     <!-- Discount Badge -->

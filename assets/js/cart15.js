@@ -26,7 +26,7 @@ let cartData=[];function setupCartUI(){let t=document.getElementById("cartBtn"),
             <div class="side-cart-item-wrapper mb-4 pb-4 border-b" data-product-id="${t.product_id}" data-attributes='${d}'>
                 <div class="flex items-center space-x-4 side-cart-item" data-product-id="${t.product_id}">
                     <a href="product?slug=${t.slug}" class="shrink-0">
-                        <img src="${escapeHtml(c)}" alt="${escapeHtml(t.name)}" class="w-20 h-20 object-cover rounded" onerror="this.src='data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iODAiIGhlaWdodD0iODAiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+PHJlY3Qgd2lkdGg9IjgwIiBoZWlnaHQ9IjgwIiBmaWxsPSIjRjNGNEY2Ii8+PGNpcmNsZSBjeD0iNDAiIGN5PSI0MCIgcj0iMjAiIGZpbGw9IiM5QjdBOEEiLz48L3N2Zz4='">
+                        <img src="${escapeHtml(c)}" alt="${escapeHtml(t.name)}" class="w-20 h-20 object-cover rounded" onerror="this.src='https://placehold.co/150x150?text=Product+Image'">
                     </a>
                     <div class="flex-1">
                         <h4 class="font-semibold text-sm mb-1">
@@ -50,7 +50,7 @@ let cartData=[];function setupCartUI(){let t=document.getElementById("cartBtn"),
                 <!-- Side Cart Inline Remove Confirmation -->
                 <div class="side-cart-remove-confirm-inline flex items-center space-x-4 p-4 bg-gray-50 rounded border border-gray-300 hidden" data-product-id="${t.product_id}">
                     <a href="product?slug=${t.slug}" class="shrink-0">
-                        <img src="${escapeHtml(c)}" alt="${escapeHtml(t.name)}" class="w-16 h-16 object-cover rounded border border-gray-200" onerror="this.src='data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iODAiIGhlaWdodD0iODAiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+PHJlY3Qgd2lkdGg9IjgwIiBoZWlnaHQ9IjgwIiBmaWxsPSIjRjNGNEY2Ii8+PGNpcmNsZSBjeD0iNDAiIGN5PSI0MCIgcj0iMjAiIGZpbGw9IiM5QjdBOEEiLz48L3N2Zz4='">
+                        <img src="${escapeHtml(c)}" alt="${escapeHtml(t.name)}" class="w-16 h-16 object-cover rounded border border-gray-200" onerror="this.src='https://placehold.co/150x150?text=Product+Image'">
                     </a>
                     <div class="flex-1">
                         <h4 class="font-semibold text-sm mb-1 text-gray-800">

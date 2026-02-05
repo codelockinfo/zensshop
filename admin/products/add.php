@@ -276,14 +276,15 @@ $brands = $brandsResult ? json_decode($brandsResult['setting_value'], true) : []
         <div class="admin-card">
             <div class="flex justify-between items-center mb-4">
                 <h2 class="text-lg md:text-xl font-bold">Upload images</h2>
-                <span class="text-xs text-blue-600 bg-blue-50 px-2 py-1 rounded border border-blue-200">
-                    <i class="fas fa-arrows-alt mr-1"></i> Drag to reorder
-                </span>
             </div>
             
             <div class="grid grid-cols-2 gap-4 mb-4" id="imageUploadArea">
                 <?php for ($i = 0; $i < 4; $i++): ?>
-                <div class="image-upload-box border-2 border-dashed border-gray-300 rounded-lg p-4 text-center cursor-pointer hover:border-blue-500 transition-colors relative" data-index="<?php echo $i; ?>">
+                <div class="image-upload-box border-2 border-dashed border-gray-300 rounded-lg p-4 text-center cursor-pointer hover:border-blue-500 transition-colors relative group" data-index="<?php echo $i; ?>">
+                    <!-- Drag Handle -->
+                    <div class="absolute top-2 left-2 cursor-grab move-handle text-grey-800 w-8 h-8 flex items-center justify-center rounded shadow-md z-20 transition-colors" title="Drag to reorder">
+                        <i class="fas fa-grip-vertical"></i>
+                    </div>
                     <input type="file" accept="image/*" class="hidden image-file-input" data-index="<?php echo $i; ?>" multiple>
                     <div class="upload-placeholder">
                         <i class="fas fa-cloud-upload-alt text-4xl text-gray-400 mb-2"></i>
@@ -564,7 +565,7 @@ document.getElementById('productForm').addEventListener('submit', function(e) {
     document.getElementById('highlights_json').value = JSON.stringify(highlights);
 });
 </script>
-<script src="<?php echo $baseUrl; ?>/assets/js/admin-image-upload3.js"></script>
+<script src="<?php echo $baseUrl; ?>/assets/js/admin-image-upload4.js?v=<?php echo time(); ?>"></script>
 <script src="<?php echo $baseUrl; ?>/assets/js/product-variants5.js"></script>
 
 <!-- Brand Management Modal -->

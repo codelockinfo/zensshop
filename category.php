@@ -213,7 +213,8 @@ if (empty($catImageRaw)) {
                 <div class="relative overflow-hidden rounded-lg" style="height: 300px;">
                     <img src="<?php echo htmlspecialchars($categoryImage); ?>" 
                          alt="<?php echo htmlspecialchars($category['name']); ?>"
-                         class="w-full h-full object-cover">
+                         class="w-full h-full object-cover"
+                         onerror="this.src='https://placehold.co/1200x400?text=Category+Banner'">
                     <div class="absolute inset-0 bg-black bg-opacity-40 flex items-center justify-center">
                         <div class="text-center text-white">
                             <h1 class="text-4xl md:text-5xl font-heading font-bold mb-4 text-white">
@@ -279,7 +280,8 @@ if (empty($catImageRaw)) {
                             <a href="<?php echo url('product.php?slug=' . urlencode($item['slug'] ?? '')); ?>">
                                 <img src="<?php echo htmlspecialchars($mainImage); ?>" 
                                      alt="<?php echo htmlspecialchars($item['name']); ?>" 
-                                     class="w-full h-64 object-cover group-hover:scale-110 transition-transform duration-500">
+                                     class="w-full h-64 object-cover group-hover:scale-110 transition-transform duration-500"
+                                     onerror="this.src='https://placehold.co/600x600?text=Product+Image'">
                             </a>
                             
                             <?php if ($discount > 0): ?>
@@ -312,7 +314,7 @@ if (empty($catImageRaw)) {
                         </div>
                         
                         <div class="p-4">
-                            <h3 class="font-semibold text-gray-800 mb-2 h-10 overflow-hidden line-clamp-2" style="display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical;" title="<?php echo htmlspecialchars($item['name'] ?? 'Product'); ?>">
+                            <h3 class="font-semibold text-gray-800 mb-2 h-12 overflow-hidden line-clamp-2" style="display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical;" title="<?php echo htmlspecialchars($item['name'] ?? 'Product'); ?>">
                                 <a href="<?php echo $baseUrl; ?>/product.php?slug=<?php echo urlencode($item['slug'] ?? ''); ?>" class="hover:text-primary transition">
                                     <?php echo htmlspecialchars($item['name']); ?>
                                 </a>

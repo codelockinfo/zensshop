@@ -318,7 +318,7 @@ if (!$isAjax) {
                                                 <div class="flex items-center gap-4 bg-gray-50 p-4 rounded-2xl">
                                                     <a href="<?php echo url('product?slug=' . ($item['product_slug'] ?? '')); ?>" class="w-20 h-24 bg-gray-200 rounded-xl overflow-hidden flex-shrink-0 block">
                                                         <?php if (!empty($item['product_image'])): ?>
-                                                            <img src="<?php echo getProductImage(['featured_image'=>$item['product_image']]); ?>" alt="" class="w-full h-full object-cover">
+                                                            <img src="<?php echo getProductImage(['featured_image'=>$item['product_image']]); ?>" alt="" class="w-full h-full object-cover" onerror="this.src='https://placehold.co/150x150?text=Product+Image'">
                                                         <?php endif; ?>
                                                     </a>
                                                     <div class="flex-1 min-w-0">
@@ -620,7 +620,7 @@ if (!$isAjax) {
                                     </form>
 
                                     <a href="<?php echo url('product?slug='.($product['slug'] ?? '')); ?>" class="h-48 bg-gray-100 overflow-hidden block">
-                                        <img src="<?php echo getProductImage($product); ?>" alt="" class="w-full h-full object-cover">
+                                        <img src="<?php echo getProductImage($product); ?>" alt="" class="w-full h-full object-cover" onerror="this.src='https://placehold.co/600x600?text=Product+Image'">
                                     </a>
                                     <div class="p-4">
                                         <h3 class="font-bold truncate hover:text-blue-600">
