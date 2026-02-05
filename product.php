@@ -336,7 +336,7 @@ $_COOKIE['recently_viewed'] = json_encode($recentIds);
                 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.css" />
                 <style>
                     .thumbnail-slider {
-                        padding: 0 30px; /* Space for arrows */
+                        padding: 0 0px; /* Space for arrows */
                         position: relative;
                     }
                     .thumbnail-slider .swiper-button-next,
