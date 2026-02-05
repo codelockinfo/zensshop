@@ -244,7 +244,14 @@ if (!function_exists('url')) {
     </script>
     
     <!-- Custom CSS -->
-    <link rel="stylesheet" href="<?php echo $baseUrl; ?>/assets/css/main6.css" fetchpriority="high">
+    <link rel="preload"
+        href="<?php echo $baseUrl; ?>/assets/css/main6.css"
+        as="style"
+        onload="this.onload=null;this.rel='stylesheet'">
+
+    <noscript>
+        <link rel="stylesheet" href="<?php echo $baseUrl; ?>/assets/css/main6.css">
+    </noscript>
 
     
     <!-- Font Awesome (Local optimized with font-display:swap) -->
@@ -440,6 +447,9 @@ if (!function_exists('url')) {
                 <!-- Hamburger Menu  -->
                 <!-- Hamburger Menu  -->
                 <button class="xl:hidden text-black hover:text-gray-600 transition focus:outline-none" 
+                        aria-label="Open mobile menu"
+                        aria-controls="mobile-menu-main"
+                        aria-expanded="false"
                         id="mobileMenuBtn" 
                         style="position: relative; z-index: 60; cursor: pointer;"
                         onclick="event.stopPropagation(); 
@@ -453,7 +463,7 @@ if (!function_exists('url')) {
                                      main.classList.remove('-translate-x-full');
                                      document.body.style.overflow = 'hidden';
                                  }">
-                    <i class="fas fa-bars text-xl"></i>
+                    <i class="fas fa-bars text-xl" aria-hidden="true"></i>
                 </button>
                 
                 <!-- Logo (Left on desktop, Centered on mobile/tablet) -->
@@ -485,22 +495,22 @@ if (!empty($headerMenuItems)) {
                 <div class="flex items-center space-x-5">
                     <?php if ($showSearchIcon): ?>
                     <!-- Search -->
-                    <button class="text-black hover:text-gray-600 transition focus:outline-none header-icon" id="searchBtn">
-                        <i class="fas fa-search text-lg"></i>
+                    <button class="text-black hover:text-gray-600 transition focus:outline-none header-icon" aria-label="Open search" id="searchBtn">
+                        <i class="fas fa-search text-lg" aria-hidden="true"></i>
                     </button>
                     <?php endif; ?>
                     
                     <?php if ($showUserIcon): ?>
                     <!-- User Account - Only visible on xl screens -->
-                    <a href="<?php echo url('account'); ?>" class="hidden xl:block text-black hover:text-gray-600 transition header-icon">
-                        <i class="fas fa-user text-lg"></i>
+                    <a href="<?php echo url('account'); ?>" class="hidden xl:block text-black hover:text-gray-600 transition header-icon" aria-label="Manage Account">
+                        <i class="fas fa-user text-lg" aria-hidden="true"></i>
                     </a>
                     <?php endif; ?>
                     
                     <?php if ($showWishlistIcon): ?>
                     <!-- Wishlist - Only visible on xl screens -->
-                    <a href="<?php echo url('wishlist'); ?>" class="hidden xl:block text-gray-800 hover:text-primary transition relative">
-                        <i class="fas fa-heart text-xl"></i>
+                    <a href="<?php echo url('wishlist'); ?>" class="hidden xl:block text-gray-800 hover:text-primary transition relative" aria-label="View Wishlist">
+                        <i class="fas fa-heart text-xl" aria-hidden="true"></i>
                         <span class="wishlist-count absolute -top-1 -right-1.5 font-medium bg-red-500 text-white text-xs rounded-full w-4 h-4 flex items-center justify-center">
                             <?php 
                             if ($currentCustomer) {
@@ -525,13 +535,13 @@ if (!empty($headerMenuItems)) {
                     $isCartPage = ($currentPage === 'cart.php' || strpos($requestUri, '/cart') !== false);
                     
                     if ($isCheckoutPage || $isCartPage): ?>
-                        <a href="<?php echo url('cart'); ?>" class="text-black hover:text-gray-600 transition relative focus:outline-none header-icon inline-block">
-                            <i class="fas fa-shopping-cart text-lg"></i>
+                        <a href="<?php echo url('cart'); ?>" class="text-black hover:text-gray-600 transition relative focus:outline-none header-icon inline-block" aria-label="View Shopping Cart">
+                            <i class="fas fa-shopping-cart text-lg" aria-hidden="true"></i>
                             <span class="absolute -top-2 -right-2 bg-red-500 text-white text-[10px] rounded-full w-5 h-5 flex items-center justify-center cart-count font-bold border-2 border-white"><?php echo $cartCount; ?></span>
                         </a>
                     <?php else: ?>
-                        <button class="text-black hover:text-gray-600 transition relative focus:outline-none header-icon" id="cartBtn">
-                            <i class="fas fa-shopping-cart text-lg"></i>
+                        <button class="text-black hover:text-gray-600 transition relative focus:outline-none header-icon" aria-label="Open Shopping Cart Drawer" id="cartBtn">
+                            <i class="fas fa-shopping-cart text-lg" aria-hidden="true"></i>
                             <span class="absolute -top-2 -right-2 bg-red-500 text-white text-[10px] rounded-full w-5 h-5 flex items-center justify-center cart-count font-bold border-2 border-white"><?php echo $cartCount; ?></span>
                         </button>
                     <?php endif; ?>
@@ -566,7 +576,7 @@ if (!empty($headerMenuItems)) {
         <!-- Header -->
         <div class="bg-black text-white px-5 py-4 flex items-center justify-between flex-shrink-0">
             <span class="font-bold text-lg tracking-wide">Menu</span>
-            <button type="button" onclick="closeAllMobileMenus()" class="text-white hover:text-gray-300 focus:outline-none p-1">
+            <button type="button" aria-label="Close mobile menu" onclick="closeAllMobileMenus()" class="text-white hover:text-gray-300 focus:outline-none p-1">
                 <i class="fas fa-times text-xl"></i>
             </button>
         </div>
@@ -641,12 +651,12 @@ if (!empty($headerMenuItems)) {
                         <!-- Header with Back & Close -->
                         <div class="bg-black text-white px-5 py-4 flex items-center justify-between flex-shrink-0">
                             <div class="flex items-center space-x-3">
-                                <button type="button" onclick="closeMobileSubmenu('<?php echo $thisId; ?>')" class="text-white hover:text-gray-300 focus:outline-none p-1">
+                                <button type="button" aria-label="Close submenu" onclick="closeMobileSubmenu('<?php echo $thisId; ?>')" class="text-white hover:text-gray-300 focus:outline-none p-1">
                                     <i class="fas fa-chevron-left"></i>
                                 </button>
                                 <span class="font-bold text-lg tracking-wide truncate max-w-[150px]"><?php echo $name; ?></span>
                             </div>
-                            <button type="button" onclick="closeAllMobileMenus()" class="text-white hover:text-gray-300 focus:outline-none p-1">
+                            <button type="button" aria-label="Close mobile menu" onclick="closeAllMobileMenus()" class="text-white hover:text-gray-300 focus:outline-none p-1">
                                 <i class="fas fa-times text-xl"></i>
                             </button>
                         </div>

@@ -551,11 +551,11 @@ button.active {
                         <div class="flex items-center gap-4">
                             <!-- Grid/List Toggle - Hidden on small screens -->
                             <div class="hidden md:flex items-center space-x-2">
-                                <button id="gridView" class="p-2 border rounded active bg-primary text-white" onclick="setView('grid')">
-                                    <i class="fas fa-th"></i>
+                                <button id="gridView" class="p-2 border rounded active bg-primary text-white" aria-label="Grid view" onclick="setView('grid')">
+                                    <i class="fas fa-th" aria-hidden="true"></i>
                                 </button>
-                                <button id="listView" class="p-2 border rounded" onclick="setView('list')">
-                                    <i class="fas fa-list"></i>
+                                <button id="listView" class="p-2 border rounded" aria-label="List view" onclick="setView('list')">
+                                    <i class="fas fa-list" aria-hidden="true"></i>
                                 </button>
                             </div>
                             <select id="sortSelect" onchange="applyFilters()" class="border rounded text-sm pl-2 py-2">
@@ -630,16 +630,18 @@ button.active {
                             <div class="absolute top-2 right-2 z-30 flex flex-col items-center gap-2">
                                 <button type="button" class="w-10 h-10 rounded-full flex items-center justify-center relative group <?php echo $inWishlist ? 'bg-black text-white' : 'bg-white text-black'; ?> hover:bg-black hover:text-white transition wishlist-btn" 
                                         data-product-id="<?php echo $currentId; ?>"
+                                        aria-label="<?php echo $inWishlist ? 'Remove from Wishlist' : 'Add to Wishlist'; ?>"
                                         title="<?php echo $inWishlist ? 'Remove from Wishlist' : 'Add to Wishlist'; ?>">
-                                    <i class="<?php echo $inWishlist ? 'fas' : 'far'; ?> fa-heart"></i>
+                                    <i class="<?php echo $inWishlist ? 'fas' : 'far'; ?> fa-heart" aria-hidden="true"></i>
                                     <span class="product-tooltip"><?php echo $inWishlist ? 'Remove from Wishlist' : 'Add to Wishlist'; ?></span>
                                 </button>
                                 
                                 <div class="flex flex-col gap-2 opacity-100 md:opacity-0 md:group-hover:opacity-100 transition-opacity duration-300">
                                 <button type="button" class="product-action-btn w-10 h-10 bg-white rounded-full flex items-center justify-center hover:bg-black hover:text-white transition shadow-lg quick-view-btn relative group" 
                                        data-product-id="<?php echo $currentId; ?>"
+                                       aria-label="Quick view product"
                                        data-product-slug="<?php echo htmlspecialchars($itemSlug); ?>">
-                                    <i class="fas fa-eye"></i>
+                                    <i class="fas fa-eye" aria-hidden="true"></i>
                                     <span class="product-tooltip">Quick View</span>
                                 </button>
                                 
@@ -662,9 +664,10 @@ button.active {
                                 ?>
                                 <button type="button" class="product-action-btn w-10 h-10 bg-white rounded-full flex items-center justify-center lg:hidden hover:bg-black hover:text-white transition shadow-lg add-to-cart-hover-btn relative group <?php echo $isOutOfStock ? 'opacity-50 cursor-not-allowed' : ''; ?>" 
                                         data-product-id="<?php echo $currentId; ?>"
+                                        aria-label="Add product to cart"
                                         data-attributes='<?php echo htmlspecialchars($attributesJson, ENT_QUOTES, 'UTF-8'); ?>'
                                         <?php echo $isOutOfStock ? 'disabled' : ''; ?>>
-                                    <i class="fas fa-shopping-cart"></i>
+                                    <i class="fas fa-shopping-cart" aria-hidden="true"></i>
                                     <span class="product-tooltip"><?php echo $isOutOfStock ? get_stock_status_text($item['stock_status'], $item['stock_quantity']) : 'Add to Cart'; ?></span>
                                 </button>
                                 </div>
@@ -709,8 +712,9 @@ button.active {
                                  <?php $isOutOfStock = ($item['stock_status'] === 'out_of_stock' || (isset($item['stock_quantity']) && $item['stock_quantity'] <= 0)); ?>
                                  <button onclick='addToCart(<?php echo $currentId; ?>, 1, this, <?php echo htmlspecialchars($attributesJson, ENT_QUOTES, 'UTF-8'); ?>)' 
                                         class="bg-primary text-white px-4 py-2 rounded hover:bg-primary-light hover:text-white transition text-sm <?php echo $isOutOfStock ? 'opacity-50 cursor-not-allowed' : ''; ?>"
+                                        aria-label="Add <?php echo htmlspecialchars($itemName); ?> to cart"
                                         <?php echo $isOutOfStock ? 'disabled' : ''; ?>>
-                                    <i class="fas fa-shopping-cart mr-1"></i> <?php echo $isOutOfStock ? get_stock_status_text($item['stock_status'], $item['stock_quantity']) : 'Add to Cart'; ?>
+                                    <i class="fas fa-shopping-cart mr-1" aria-hidden="true"></i> <?php echo $isOutOfStock ? get_stock_status_text($item['stock_status'], $item['stock_quantity']) : 'Add to Cart'; ?>
                                 </button>
                             </div>
                         </div>

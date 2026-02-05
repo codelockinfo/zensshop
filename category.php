@@ -96,9 +96,10 @@ if (isset($_GET['ajax'])) {
             }
             
             echo '      <button class="absolute top-2 right-2 w-10 h-10 rounded-full flex items-center justify-center ' . ($inWishlist ? 'bg-black text-white' : 'bg-white text-black') . ' hover:bg-black hover:text-white transition z-20 wishlist-btn" 
+                                aria-label="' . ($inWishlist ? 'Remove from Wishlist' : 'Add to Wishlist') . '"
                                 data-product-id="' . $currentId . '"
                                 title="' . ($inWishlist ? 'Remove from Wishlist' : 'Add to Wishlist') . '">
-                            <i class="' . ($inWishlist ? 'fas' : 'far') . ' fa-heart"></i>
+                            <i class="' . ($inWishlist ? 'fas' : 'far') . ' fa-heart" aria-hidden="true"></i>
                             <span class="product-tooltip">' . ($inWishlist ? 'Remove from Wishlist' : 'Add to Wishlist') . '</span>
                         </button>
                         
@@ -106,18 +107,20 @@ if (isset($_GET['ajax'])) {
                             <a href="' . $baseUrl . '/product.php?slug=' . urlencode($item['slug'] ?? '') . '" 
                                class="product-action-btn w-10 h-10 bg-white rounded-full flex items-center justify-center hover:bg-black hover:text-white transition shadow-lg quick-view-btn relative group" 
                                data-product-id="' . $item['product_id'] . '"
+                               aria-label="Quick view product"
                                data-product-slug="' . htmlspecialchars($item['slug'] ?? '') . '">
-                                <i class="fas fa-eye"></i>
+                                <i class="fas fa-eye" aria-hidden="true"></i>
                                 <span class="product-tooltip">Quick View</span>
                             </a>
                             <button class="product-action-btn w-10 h-10 bg-white rounded-full flex items-center justify-center hover:bg-black hover:text-white transition shadow-lg add-to-cart-hover-btn relative group ' . ($isOutOfStock ? 'opacity-50 cursor-not-allowed' : '') . '" 
                                     data-product-id="' . $item['product_id'] . '"
+                                    aria-label="Add product to cart"
                                     data-attributes=\'' . htmlspecialchars($attributesJson, ENT_QUOTES, 'UTF-8') . '\'
                                     ' . ($isOutOfStock ? 'disabled' : '') . '>
-                                <i class="fas fa-shopping-cart"></i>
+                                <i class="fas fa-shopping-cart" aria-hidden="true"></i>
                                 <span class="product-tooltip">' . ($isOutOfStock ? get_stock_status_text($item['stock_status'], $item['stock_quantity']) : 'Add to Cart') . '</span>
                             </button>
-                        </div>
+                        </div>';
                     </div>
                     
                     <div class="p-4">
@@ -290,8 +293,9 @@ if (empty($catImageRaw)) {
                             
                             <button class="absolute top-2 right-2 w-10 h-10 rounded-full flex items-center justify-center <?php echo $inWishlist ? 'bg-black text-white' : 'bg-white text-black'; ?> hover:bg-black hover:text-white transition z-20 wishlist-btn" 
                                     data-product-id="<?php echo $currentId; ?>"
+                                    aria-label="<?php echo $inWishlist ? 'Remove from Wishlist' : 'Add to Wishlist'; ?>"
                                     title="<?php echo $inWishlist ? 'Remove from Wishlist' : 'Add to Wishlist'; ?>">
-                                <i class="<?php echo $inWishlist ? 'fas' : 'far'; ?> fa-heart"></i>
+                                <i class="<?php echo $inWishlist ? 'fas' : 'far'; ?> fa-heart" aria-hidden="true"></i>
                                 <span class="product-tooltip"><?php echo $inWishlist ? 'Remove from Wishlist' : 'Add to Wishlist'; ?></span>
                             </button>
                             
@@ -299,15 +303,17 @@ if (empty($catImageRaw)) {
                                 <a href="<?php echo $baseUrl; ?>/product.php?slug=<?php echo urlencode($item['slug'] ?? ''); ?>" 
                                    class="product-action-btn w-10 h-10 bg-white rounded-full flex items-center justify-center hover:bg-black hover:text-white transition shadow-lg quick-view-btn relative group" 
                                    data-product-id="<?php echo $item['product_id']; ?>"
+                                   aria-label="Quick view product"
                                    data-product-slug="<?php echo htmlspecialchars($item['slug'] ?? ''); ?>">
-                                    <i class="fas fa-eye"></i>
+                                    <i class="fas fa-eye" aria-hidden="true"></i>
                                     <span class="product-tooltip">Quick View</span>
                                 </a>
                                 <button class="product-action-btn w-10 h-10 bg-white rounded-full flex items-center justify-center hover:bg-black hover:text-white transition shadow-lg add-to-cart-hover-btn relative group <?php echo $isOutOfStock ? 'opacity-50 cursor-not-allowed' : ''; ?>" 
                                         data-product-id="<?php echo $item['product_id']; ?>"
+                                        aria-label="Add product to cart"
                                         data-attributes='<?php echo htmlspecialchars($attributesJson, ENT_QUOTES, 'UTF-8'); ?>'
                                         <?php echo $isOutOfStock ? 'disabled' : ''; ?>>
-                                    <i class="fas fa-shopping-cart"></i>
+                                    <i class="fas fa-shopping-cart" aria-hidden="true"></i>
                                     <span class="product-tooltip"><?php echo $isOutOfStock ? get_stock_status_text($item['stock_status'], $item['stock_quantity']) : 'Add to Cart'; ?></span>
                                 </button>
                             </div>

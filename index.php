@@ -157,17 +157,17 @@ if (empty($banners)) {
         <?php endforeach; ?>
         
         <!-- Navigation Arrows -->
-        <button class="hero-prev absolute left-4 top-1/2 transform -translate-y-1/2 bg-white bg-opacity-50 hover:bg-opacity-75 rounded-full w-12 h-12 flex items-center justify-center text-black z-20 transition">
-            <i class="fas fa-chevron-left"></i>
+        <button class="hero-prev absolute left-4 top-1/2 transform -translate-y-1/2 bg-white bg-opacity-50 hover:bg-opacity-75 rounded-full w-12 h-12 flex items-center justify-center text-black z-20 transition" aria-label="Previous slide">
+            <i class="fas fa-chevron-left" aria-hidden="true"></i>
         </button>
-        <button class="hero-next absolute right-4 top-1/2 transform -translate-y-1/2 bg-white bg-opacity-50 hover:bg-opacity-75 rounded-full w-12 h-12 flex items-center justify-center text-black z-20 transition">
-            <i class="fas fa-chevron-right"></i>
+        <button class="hero-next absolute right-4 top-1/2 transform -translate-y-1/2 bg-white bg-opacity-50 hover:bg-opacity-75 rounded-full w-12 h-12 flex items-center justify-center text-black z-20 transition" aria-label="Next slide">
+            <i class="fas fa-chevron-right" aria-hidden="true"></i>
         </button>
         
         <!-- Slide Indicators -->
         <div class="absolute bottom-4 left-1/2 transform -translate-x-1/2 z-20 flex items-center space-x-2">
             <?php foreach ($banners as $index => $banner): ?>
-                <button class="hero-indicator <?php echo $index === 0 ? 'active' : ''; ?>" data-slide="<?php echo $index; ?>"></button>
+                <button class="hero-indicator" aria-label="Go to slide <?php echo $index + 1; ?>" <?php echo $index === 0 ? 'active' : ''; ?>" data-slide="<?php echo $index; ?>"></button>
             <?php endforeach; ?>
         </div>
     </div>

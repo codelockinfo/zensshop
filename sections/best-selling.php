@@ -93,20 +93,23 @@ if (empty($products)) {
                                 <div class="absolute top-2 right-2 z-30 flex flex-col items-center gap-2">
                                 <button class="w-10 h-10 rounded-full flex items-center justify-center relative group <?php echo $inWishlist ? 'bg-black text-white' : 'bg-white text-black'; ?> hover:bg-black hover:text-white transition wishlist-btn" 
                                         data-product-id="<?php echo $currentId; ?>"
+                                        aria-label="<?php echo $inWishlist ? 'Remove from Wishlist' : 'Add to Wishlist'; ?>"
                                         title="<?php echo $inWishlist ? 'Remove from Wishlist' : 'Add to Wishlist'; ?>">
-                                    <i class="<?php echo $inWishlist ? 'fas' : 'far'; ?> fa-heart"></i>
+                                    <i class="<?php echo $inWishlist ? 'fas' : 'far'; ?> fa-heart" aria-hidden="true"></i>
                                     <span class="product-tooltip"><?php echo $inWishlist ? 'Remove from Wishlist' : 'Add to Wishlist'; ?></span>
                                 </button>
                                 
                                 <div class="flex flex-col gap-2 opacity-100 md:opacity-0 md:group-hover:opacity-100 transition-opacity duration-300">
                                     <a href="<?php echo $baseUrl; ?>/product?slug=<?php echo urlencode($item['slug'] ?? ''); ?>" 
                                        class="product-action-btn w-10 h-10 bg-white rounded-full flex items-center justify-center hover:bg-black hover:text-white transition shadow-lg quick-view-btn relative group" 
+                                       aria-label="Quick view product"
                                        data-product-id="<?php echo $item['product_id']; ?>"
                                        data-product-slug="<?php echo htmlspecialchars($item['slug'] ?? ''); ?>">
                                         <i class="fas fa-eye"></i>
                                         <span class="product-tooltip">Quick View</span>
                                     </a>
                                     <button class="product-action-btn w-10 h-10 bg-white rounded-full flex items-center justify-center hover:bg-black hover:text-white transition shadow-lg add-to-cart-hover-btn relative group <?php echo ($item['stock_status'] === 'out_of_stock' || $item['stock_quantity'] <= 0) ? 'opacity-50 cursor-not-allowed' : ''; ?>" 
+                                            aria-label="Add product to cart"
                                             data-product-id="<?php echo $currentId; ?>"
                                             data-attributes='<?php echo htmlspecialchars($attributesJson, ENT_QUOTES, 'UTF-8'); ?>'
                                             <?php echo ($item['stock_status'] === 'out_of_stock' || $item['stock_quantity'] <= 0) ? 'disabled' : ''; ?>>
@@ -153,11 +156,11 @@ if (empty($products)) {
             
             <?php if (!empty($products)): ?>
             <!-- Navigation Arrows -->
-            <button class="absolute left-3 top-1/2 -translate-y-1/2 bg-white shadow-lg rounded-full w-12 h-12 flex items-center justify-center text-gray-800 hover:text-primary hover:bg-gray-50 transition z-10 best-selling-prev" id="bestSellingPrev">
-                <i class="fas fa-chevron-left"></i>
+            <button class="absolute left-3 top-1/2 -translate-y-1/2 bg-white shadow-lg rounded-full w-12 h-12 flex items-center justify-center text-gray-800 hover:text-primary hover:bg-gray-50 transition z-10 best-selling-prev" aria-label="Previous best selling products" id="bestSellingPrev">
+                <i class="fas fa-chevron-left" aria-hidden="true"></i>
             </button>
-            <button class="absolute right-3 top-1/2 -translate-y-1/2 bg-white shadow-lg rounded-full w-12 h-12 flex items-center justify-center text-gray-800 hover:text-primary hover:bg-gray-50 transition z-10 best-selling-next" id="bestSellingNext">
-                <i class="fas fa-chevron-right"></i>
+            <button class="absolute right-3 top-1/2 -translate-y-1/2 bg-white shadow-lg rounded-full w-12 h-12 flex items-center justify-center text-gray-800 hover:text-primary hover:bg-gray-50 transition z-10 best-selling-next" aria-label="Next best selling products" id="bestSellingNext">
+                <i class="fas fa-chevron-right" aria-hidden="true"></i>
             </button>
             <?php endif; ?>
         </div>
