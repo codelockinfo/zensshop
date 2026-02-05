@@ -521,7 +521,7 @@ nav.bg-white.sticky.top-0 {
                                      class="w-16 h-16 object-cover rounded"
                                      onerror="this.src='https://placehold.co/150x150?text=Product+Image'">
                                 <div class="flex-1">
-                                    <h3 class="font-semibold text-sm text-gray-800"><?php echo htmlspecialchars($item['name']); ?></h3>
+                                    <h3 class="font-semibold text-sm text-gray-800 overflow-hidden" style="display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; min-height: 2.5rem; line-height: 1.25rem;" title="<?php echo htmlspecialchars($item['name']); ?>"><?php echo htmlspecialchars($item['name']); ?></h3>
                                     <p class="text-xs text-gray-500">Quantity: <?php echo $item['quantity']; ?>x</p>
                                     <?php if (!empty($item['variant_attributes']) && is_array($item['variant_attributes'])): ?>
                                         <div class="mt-1 flex flex-wrap gap-1">

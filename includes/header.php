@@ -228,19 +228,40 @@ if (!function_exists('url')) {
     <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700&family=Inter:wght@300;400;500;600;700&family=DM+Sans:wght@400;500;700&display=swap" rel="stylesheet" media="print" onload="this.media='all'">
     
     <!-- Tailwind CSS - Deferred for PageSpeed (Render Blocking Fix) -->
-    <script src="https://cdn.tailwindcss.com?plugins=typography" defer fetchpriority="high"></script>
-    
-    <!-- Critical FOUC Prevention -->
     <style>
-        body { opacity: 0; transition: opacity 0.2s ease-in; }
-        body.styled { opacity: 1; }
+        /* Critical CSS for FOUC Prevention */
+        html { visibility: visible; opacity: 1; } /* Ensure root is visible */
+        body { 
+            visibility: hidden; 
+            opacity: 0; 
+            transition: opacity 0.2s ease-in-out; 
+        }
+        
+        /* Keep utility classes for non-Tailwind fallback */
+        .translate-x-full { transform: translateX(100%); }
+        .-translate-x-full { transform: translateX(-100%); }
+        .-translate-y-full { transform: translateY(-100%); }
+        .hidden { display: none; }
     </style>
+    
+    <!-- Remove 'defer' to ensure Tailwind parses immediately to prevent unstyled content -->
+    <script src="https://cdn.tailwindcss.com?plugins=typography" fetchpriority="high"></script>
+    
     <script>
-        // Once tailwind is ready, it will trigger an event or we can just wait for DOMContentLoaded
-        document.addEventListener('DOMContentLoaded', () => {
-            // Give tailwind a tiny bit of time to process
-            setTimeout(() => document.body.classList.add('styled'), 50);
-        });
+        // Reveal body as soon as DOM is ready to prevent "white screen" hang
+        function revealPage() {
+            document.body.style.visibility = 'visible';
+            document.body.style.opacity = '1';
+        }
+        
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', revealPage);
+        } else {
+            revealPage();
+        }
+        
+        // Safety fallback
+        setTimeout(revealPage, 2000);
     </script>
     
     <!-- Custom CSS -->
