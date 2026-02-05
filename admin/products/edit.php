@@ -209,10 +209,14 @@ $existingVariants = $product->getVariants($productId);
 
 <div class="mb-6 flex justify-between items-center sticky top-0 bg-[#f7f8fc] pb-5 z-50">
     <div>
-        <h1 class="text-3xl font-bold">Edit Product</h1>
-        <p class="text-gray-600">Dashboard > Ecommerce > Edit product</p>
+        <h1 class="text-3xl font-bold pt-4 pl-2">Edit Product</h1>
+        <p class="text-gray-600 pl-2">
+            <a href="<?php echo url('admin/dashboard.php'); ?>" class="hover:text-blue-600">Dashboard</a> > 
+            <a href="<?php echo url('admin/products/list.php'); ?>" class="hover:text-blue-600">Ecommerce</a> > 
+            Edit product
+        </p>
     </div>
-    <button type="submit" form="productForm" id="topSubmitBtn" class="bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700 shadow-md transition-all flex items-center">
+    <button type="submit" form="productForm" id="topSubmitBtn" class="bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700 shadow-md transition-all flex items-center btn-loading">
         <i class="fas fa-save mr-2"></i> <span>Save Changes</span>
     </button>
 </div>
@@ -662,7 +666,7 @@ document.getElementById('productForm').addEventListener('submit', function(e) {
 });
 </script>
 <script src="<?php echo $baseUrl; ?>/assets/js/admin-image-upload4.js?v=<?php echo time(); ?>"></script>
-<script src="<?php echo $baseUrl; ?>/assets/js/product-variants5.js"></script>
+<script src="<?php echo $baseUrl; ?>/assets/js/product-variants6.js"></script>
 <script>
 // Initialize with existing images
 document.addEventListener('DOMContentLoaded', function() {

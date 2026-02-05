@@ -222,7 +222,7 @@ require_once __DIR__ . '/../includes/admin-header.php';
              <button type="button" onclick="addVideoRow()" class="bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 transition">
                 <i class="fas fa-plus"></i> Add Video
             </button>
-             <button type="submit" form="videoForm" class="bg-blue-600 text-white px-6 py-2 rounded-lg font-bold hover:bg-blue-700 transition">
+             <button type="submit" form="videoForm" class="bg-blue-600 text-white px-6 py-2 rounded-lg font-bold hover:bg-blue-700 transition btn-loading">
                 <i class="fas fa-save"></i> Save Changes
             </button>
         </div>
@@ -303,7 +303,7 @@ require_once __DIR__ . '/../includes/admin-header.php';
             </div>
             
             <div class="col-span-1 md:col-span-2 flex justify-end mt-2">
-                <button type="submit" class="bg-gray-800 text-white px-6 py-2.5 rounded-lg hover:bg-black transition flex items-center shadow-lg">
+                <button type="submit" class="bg-gray-800 text-white px-6 py-2.5 rounded-lg hover:bg-black transition flex items-center shadow-lg btn-loading">
                     <i class="fas fa-save mr-2"></i> Update Settings
                 </button>
             </div>

@@ -152,7 +152,7 @@ $validCategories = $db->fetchAll("SELECT id, name, slug FROM categories WHERE st
         <div class="flex justify-between items-center mb-6 bg-white p-4 rounded-lg shadow-sm border border-gray-200 sticky top-0 z-10">
             <div class="flex items-center gap-4">
                 <h1 class="text-2xl font-bold text-gray-800">Homepage Categories</h1>
-                <button type="submit" class="bg-blue-600 text-white px-6 py-2.5 rounded-lg font-bold hover:bg-blue-700 transition flex items-center shadow-sm">
+                <button type="submit" class="bg-blue-600 text-white px-6 py-2.5 rounded-lg font-bold hover:bg-blue-700 transition flex items-center shadow-sm btn-loading">
                     <i class="fas fa-save mr-2"></i> Save Changes
                 </button>
             </div>

@@ -1,6 +1,7 @@
 <?php
 require_once __DIR__ . '/../classes/Database.php';
 require_once __DIR__ . '/../classes/Auth.php';
+require_once __DIR__ . '/../includes/functions.php';
 
 $auth = new Auth();
 $auth->requireLogin();
@@ -16,7 +17,6 @@ unset($_SESSION['header_error']);
 
 // Handle Form Submission
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    $action = $_POST['action'] ?? '';
     
     // Determine Store ID
     $storeId = $_SESSION['store_id'] ?? null;
@@ -25,47 +25,33 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
          $storeId = $storeUser['store_id'] ?? null;
     }
 
-    // Update Logo
-    if ($action === 'update_logo') {
+    try {
+        // --- 1. Update Logo ---
         $logoType = $_POST['logo_type'] ?? 'image';
         $logoText = trim($_POST['logo_text'] ?? '');
         
-        // Save logo type
         $db->execute("INSERT INTO site_settings (setting_key, setting_value, store_id) VALUES ('site_logo_type', ?, ?) 
                      ON DUPLICATE KEY UPDATE setting_value = ?", [$logoType, $storeId, $logoType]);
         
-        // Save logo text if type is text
-        if ($logoType === 'text' && !empty($logoText)) {
+        if ($logoType === 'text') {
             $db->execute("INSERT INTO site_settings (setting_key, setting_value, store_id) VALUES ('site_logo_text', ?, ?) 
                          ON DUPLICATE KEY UPDATE setting_value = ?", [$logoText, $storeId, $logoText]);
-            $_SESSION['header_success'] = "Logo text updated successfully!";
         }
-        // Handle image upload if type is image
-        elseif ($logoType === 'image' && !empty($_FILES['logo']['name'])) {
+        
+        // Handle image upload
+        if (!empty($_FILES['logo']['name'])) {
             $uploadDir = __DIR__ . '/../assets/images/';
             if (!is_dir($uploadDir)) mkdir($uploadDir, 0777, true);
             
             $filename = 'logo_' . $storeId . '.' . pathinfo($_FILES['logo']['name'], PATHINFO_EXTENSION);
             
             if (move_uploaded_file($_FILES['logo']['tmp_name'], $uploadDir . $filename)) {
-                // Save logo path to database
                 $db->execute("INSERT INTO site_settings (setting_key, setting_value, store_id) VALUES ('site_logo', ?, ?) 
                              ON DUPLICATE KEY UPDATE setting_value = ?", [$filename, $storeId, $filename]);
-                
-                $_SESSION['header_success'] = "Logo image updated successfully!";
-            } else {
-                $_SESSION['header_error'] = "Failed to upload logo.";
             }
-        } else {
-            $_SESSION['header_success'] = "Logo settings updated!";
         }
         
-        header("Location: " . $_SERVER['PHP_SELF']);
-        exit;
-    }
-    
-    // Update Header Icons Visibility
-    if ($action === 'update_icons') {
+        // --- 2. Update Header Icons ---
         $iconSettings = [
             'header_icon_search' => isset($_POST['icon_search']) ? '1' : '0',
             'header_icon_user' => isset($_POST['icon_user']) ? '1' : '0',
@@ -78,25 +64,20 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                          ON DUPLICATE KEY UPDATE setting_value = ?", [$key, $value, $storeId, $value]);
         }
         
-        $_SESSION['header_success'] = "Header icons updated successfully!";
-        header("Location: " . $_SERVER['PHP_SELF']);
-        exit;
-    }
-    
-    // Update Top Bar Settings
-    if ($action === 'update_topbar') {
-        // Handle announcement slides
+        // --- 3. Update Top Bar Settings ---
+        // Slides
         $slides = [];
         if (isset($_POST['slide_texts'])) {
             $slideTexts = $_POST['slide_texts'];
             $slideLinks = $_POST['slide_links'] ?? [];
+            $slideLinkTexts = $_POST['slide_link_texts'] ?? [];
             
             for ($i = 0; $i < count($slideTexts); $i++) {
                 if (!empty(trim($slideTexts[$i]))) {
                     $slides[] = [
                         'text' => trim($slideTexts[$i]),
                         'link' => preg_replace('/\.php(\?|$)/', '$1', trim($slideLinks[$i] ?? '')),
-                        'link_text' => trim($_POST['slide_link_texts'][$i] ?? '')
+                        'link_text' => trim($slideLinkTexts[$i] ?? '')
                     ];
                 }
             }
@@ -105,7 +86,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $db->execute("INSERT INTO site_settings (setting_key, setting_value, store_id) VALUES ('topbar_slides', ?, ?) 
                      ON DUPLICATE KEY UPDATE setting_value = ?", [$slidesValue, $storeId, $slidesValue]);
         
-        // Handle top bar links
+        // Links
         $links = [];
         if (isset($_POST['link_labels'])) {
             $linkLabels = $_POST['link_labels'];
@@ -124,9 +105,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $db->execute("INSERT INTO site_settings (setting_key, setting_value, store_id) VALUES ('topbar_links', ?, ?) 
                      ON DUPLICATE KEY UPDATE setting_value = ?", [$linksValue, $storeId, $linksValue]);
         
-        $_SESSION['header_success'] = "Top bar settings updated successfully!";
-        header("Location: " . $_SERVER['PHP_SELF']);
+        $_SESSION['header_success'] = "Header information updated successfully!";
+        header("Location: " . url('admin/header'));
         exit;
+        
+    } catch (Exception $e) {
+        $error = "An error occurred: " . $e->getMessage();
     }
 }
 
@@ -159,30 +143,35 @@ $pageTitle = 'Header Information';
 require_once __DIR__ . '/../includes/admin-header.php';
 ?>
 
-<div class="container mx-auto p-6">
-    
-    <!-- Page Header -->
-    <div class="mb-6">
-        <h1 class="text-2xl font-bold text-gray-800">Header Information</h1>
+<form method="POST" enctype="multipart/form-data">
+    <!-- Sticky Header -->
+    <div class="mb-6 flex justify-between items-end sticky top-0 bg-[#f7f8fc] py-4 z-50 border-b border-gray-200 px-1">
+        <div>
+            <h1 class="text-2xl font-bold text-gray-800 pt-4 pl-2">Header Information</h1>
+            <p class="text-sm text-gray-500 mt-1 pl-2">Dashboard > Settings > Header Info</p>
+        </div>
+        <div class="flex items-center gap-3">
+            <button type="submit" class="bg-blue-600 text-white px-6 py-2 rounded font-bold hover:bg-blue-700 transition shadow-sm btn-loading">
+                Save Changes
+            </button>
+        </div>
     </div>
 
-    <!-- Messages -->
-    <?php if ($success): ?>
-        <div class="bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded relative mb-4">
-            <?php echo htmlspecialchars($success); ?>
-        </div>
-    <?php endif; ?>
+    <div class="container mx-auto p-1">
 
-    <?php if ($error): ?>
-        <div class="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative mb-4">
-            <?php echo htmlspecialchars($error); ?>
-        </div>
-    <?php endif; ?>
+        <!-- Messages -->
+        <?php if ($success): ?>
+            <div class="bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded relative mb-4">
+                <?php echo htmlspecialchars($success); ?>
+            </div>
+        <?php endif; ?>
 
-    <!-- Main Form -->
-    <form method="POST" enctype="multipart/form-data">
-        <input type="hidden" name="action" value="update_logo">
-        
+        <?php if ($error): ?>
+            <div class="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative mb-4">
+                <?php echo htmlspecialchars($error); ?>
+            </div>
+        <?php endif; ?>
+
         <!-- Site Logo Section -->
         <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-6 mb-6">
             <h2 class="text-lg font-bold text-gray-800 mb-4 border-b pb-2">Site Logo</h2>
@@ -231,21 +220,10 @@ require_once __DIR__ . '/../includes/admin-header.php';
                     <p class="text-xs text-gray-500 mt-2">Recommended: PNG or SVG format, transparent background</p>
                 </div>
             </div>
-            
-            <div class="mt-4">
-                <button type="submit" 
-                        class="bg-blue-600 text-white px-6 py-2 rounded font-bold hover:bg-blue-700 transition">
-                    Save Changes
-                </button>
-            </div>
         </div>
-    </form>
 
-    <!-- Header Icons Section -->
-    <form method="POST">
-        <input type="hidden" name="action" value="update_icons">
-        
-        <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+        <!-- Header Icons Section -->
+        <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-6 mb-6">
             <h2 class="text-lg font-bold text-gray-800 mb-4 flex items-center">
                 <i class="fas fa-icons mr-2 text-purple-600"></i>
                 Header Icons Visibility
@@ -253,7 +231,7 @@ require_once __DIR__ . '/../includes/admin-header.php';
             
             <p class="text-sm text-gray-600 mb-4">Enable or disable header icons. Disabled icons will be hidden from the frontend.</p>
             
-            <div class="space-y-3 mb-6">
+            <div class="space-y-3">
                 
                 <!-- Search Icon -->
                 <div class="flex items-center justify-between p-4 border border-gray-200 rounded-lg hover:bg-gray-50 transition">
@@ -330,21 +308,11 @@ require_once __DIR__ . '/../includes/admin-header.php';
                         <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
                     </label>
                 </div>
-                
             </div>
-            
-            <button type="submit" 
-                    class="bg-blue-600 text-white px-6 py-2.5 rounded-lg font-semibold hover:bg-blue-700 transition shadow-sm w-full md:w-auto">
-                <i class="fas fa-save mr-2"></i>Save Icon Settings
-            </button>
         </div>
-    </form>
 
-    <!-- Top Bar Settings Section -->
-    <form method="POST">
-        <input type="hidden" name="action" value="update_topbar">
-        
-        <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+        <!-- Top Bar Settings Section -->
+        <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-6 mb-6">
             <h2 class="text-lg font-bold text-gray-800 mb-4 border-b pb-2">Top Bar Settings</h2>
             
             <!-- Announcement Slides -->
@@ -374,15 +342,11 @@ require_once __DIR__ . '/../includes/admin-header.php';
                     <!-- Links will be added here by JS -->
                 </div>
             </div>
-            
-            <button type="submit" 
-                    class="bg-blue-600 text-white px-6 py-2 rounded font-bold hover:bg-blue-700 transition">
-                Save Top Bar Settings
-            </button>
         </div>
-    </form>
+        
+    </div>
+</form>
 
-</div>
 <script>
 // Toggle between text and image logo fields
 function toggleLogoFields(type) {
@@ -427,15 +391,15 @@ function addSlide(data = null) {
     
     slideDiv.innerHTML = `
         <div class="flex-1">
-            <input type="text" name="slide_texts[]" value="${data ? data.text : ''}" 
+            <input type="text" name="slide_texts[]" value="${data ? data.text.replace(/"/g, '&quot;') : ''}" 
                    class="w-full border p-2 rounded text-sm" placeholder="Text (e.g., 100% secure...)" required>
         </div>
         <div class="flex-1">
-            <input type="text" name="slide_links[]" value="${data ? data.link : ''}" 
+            <input type="text" name="slide_links[]" value="${data ? data.link.replace(/"/g, '&quot;') : ''}" 
                    class="w-full border p-2 rounded text-sm" placeholder="Link URL (optional)">
         </div>
         <div class="w-32">
-            <input type="text" name="slide_link_texts[]" value="${data ? (data.link_text || '') : ''}" 
+            <input type="text" name="slide_link_texts[]" value="${data ? (data.link_text || '').replace(/"/g, '&quot;') : ''}" 
                    class="w-full border p-2 rounded text-sm" placeholder="Link Text">
         </div>
         <button type="button" onclick="removeRow(this)" class="text-red-500 hover:text-red-700 p-2">
@@ -456,11 +420,11 @@ function addLink(data = null) {
     
     linkDiv.innerHTML = `
         <div class="flex-1">
-            <input type="text" name="link_labels[]" value="${data ? data.label : ''}" 
+            <input type="text" name="link_labels[]" value="${data ? data.label.replace(/"/g, '&quot;') : ''}" 
                    class="w-full border p-2 rounded text-sm" placeholder="Link label (e.g., Contact Us)" required>
         </div>
         <div class="flex-1">
-            <input type="text" name="link_urls[]" value="${data ? data.url : ''}" 
+            <input type="text" name="link_urls[]" value="${data ? data.url.replace(/"/g, '&quot;') : ''}" 
                    class="w-full border p-2 rounded text-sm" placeholder="Link URL (e.g., /contact)" required>
         </div>
         <button type="button" onclick="removeRow(this)" class="text-red-500 hover:text-red-700 p-2">

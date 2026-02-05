@@ -255,12 +255,23 @@ function getCurrencies() {
  */
 function time_elapsed_string($datetime, $full = false) {
     if (!$datetime) return 'N/A';
-    $now = new DateTime;
-    $ago = new DateTime($datetime);
+    try {
+        $now = new DateTime;
+        $ago = new DateTime($datetime);
+    } catch (Exception $e) {
+        return 'Invalid date';
+    }
     $diff = $now->diff($ago);
 
-    $diff->w = floor($diff->d / 7);
-    $diff->d -= $diff->w * 7;
+    $values = [
+        'y' => $diff->y,
+        'm' => $diff->m,
+        'w' => (int)floor($diff->d / 7),
+        'd' => $diff->d % 7,
+        'h' => $diff->h,
+        'i' => $diff->i,
+        's' => $diff->s,
+    ];
 
     $string = array(
         'y' => 'year',
@@ -271,9 +282,10 @@ function time_elapsed_string($datetime, $full = false) {
         'i' => 'minute',
         's' => 'second',
     );
+
     foreach ($string as $k => &$v) {
-        if ($diff->$k) {
-            $v = $diff->$k . ' ' . $v . ($diff->$k > 1 ? 's' : '');
+        if ($values[$k]) {
+            $v = $values[$k] . ' ' . $v . ($values[$k] > 1 ? 's' : '');
         } else {
             unset($string[$k]);
         }

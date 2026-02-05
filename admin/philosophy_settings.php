@@ -155,7 +155,7 @@ require_once __DIR__ . '/../includes/admin-header.php';
         </div>
 
         <div class="mt-8 pt-4 border-t text-right">
-            <button type="submit" class="bg-blue-600 text-white px-8 py-3 rounded hover:bg-blue-700 transition font-bold shadow-lg transform hover:-translate-y-0.5">
+            <button type="submit" class="bg-blue-600 text-white px-8 py-3 rounded hover:bg-blue-700 transition font-bold shadow-lg transform hover:-translate-y-0.5 btn-loading">
                 <i class="fas fa-save mr-2"></i> Save Changes
             </button>
         </div>

@@ -116,18 +116,28 @@ $pageTitle = 'Homepage Products';
 require_once __DIR__ . '/../includes/admin-header.php';
 ?>
 
-<div class="container mx-auto p-6">
-    <div class="flex justify-between items-center mb-6">
-        <h1 class="text-2xl font-bold text-gray-800">Homepage Product Sections</h1>
-        <div class="flex gap-3">
-            <button type="button" onclick="window.location.href='index.php'" class="px-5 py-2.5 border border-gray-300 rounded-lg hover:bg-gray-50 bg-white text-gray-700 font-medium transition-colors">
+<div class="container mx-auto">
+    <!-- Sticky Header -->
+    <div class="mb-6 flex justify-between items-end sticky top-0 bg-[#f7f8fc] py-4 z-50 pt-0">
+        <div>
+            <h1 class="text-2xl font-bold text-gray-800 pt-4 pl-2">Product Sections</h1>
+            <p class="text-sm text-gray-500 mt-1 pl-2">
+                <a href="<?php echo url('admin/dashboard.php'); ?>" class="hover:text-blue-600">Dashboard</a> > 
+                <a href="<?php echo url('admin/products'); ?>" class="hover:text-blue-600">Settings</a> > 
+                Homepage Products
+            </p>
+        </div>
+        <div class="flex items-center gap-3">
+            <button type="button" onclick="window.location.href='<?php echo url('admin/products'); ?>'" class="px-5 py-2.5 border border-gray-300 rounded-lg hover:bg-gray-50 bg-white text-gray-700 font-medium transition-colors">
                 Cancel
             </button>
-            <button type="submit" form="settingsForm" class="bg-blue-600 text-white px-6 py-2.5 rounded-lg font-bold hover:bg-blue-700 transition shadow-sm flex items-center gap-2">
+            <button type="submit" form="settingsForm" class="bg-blue-600 text-white px-6 py-2.5 rounded-lg font-bold hover:bg-blue-700 transition shadow-sm flex items-center gap-2 btn-loading">
                 <i class="fas fa-save"></i> Save Changes
             </button>
         </div>
     </div>
+
+    <div class="px-6">
 
     <!-- Global Message Container -->
     <div id="global_message_container">
@@ -189,13 +199,14 @@ require_once __DIR__ . '/../includes/admin-header.php';
                         <?php foreach ($bestSellingProducts as $p): ?>
                         <li class="bg-white border border-gray-200 rounded p-2 flex items-center justify-between shadow-sm" data-id="<?php echo $p['product_id']; ?>">
                             <div class="flex items-center gap-3">
+                                <i class="fas fa-grip-vertical text-gray-400 cursor-move drag-handle" title="Drag to reorder"></i>
                                 <?php $imgUrl = getImageUrl($p['featured_image']); ?>
                                 <?php if($imgUrl): ?>
                                 <img src="<?php echo htmlspecialchars($imgUrl); ?>" class="w-10 h-10 object-cover rounded">
                                 <?php else: ?>
                                 <div class="w-10 h-10 bg-gray-200 rounded flex items-center justify-center"><i class="fas fa-image text-gray-400"></i></div>
                                 <?php endif; ?>
-                                <span class="font-medium text-gray-800"><?php echo htmlspecialchars($p['name'] ?? ''); ?></span>
+                                <span class="font-medium text-gray-800" style="max-width: 450px; display: inline-block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;"><?php echo htmlspecialchars($p['name'] ?? ''); ?></span>
                                 <span class="text-xs text-gray-500">(Product ID: <?php echo $p['product_id']; ?>)</span>
                             </div>
                             <button type="button" onclick="removeItem('best_selling', <?php echo $p['product_id']; ?>)" class="text-red-500 hover:text-red-700 p-1">
@@ -260,13 +271,14 @@ require_once __DIR__ . '/../includes/admin-header.php';
                         <?php foreach ($trendingProducts as $p): ?>
                         <li class="bg-white border border-gray-200 rounded p-2 flex items-center justify-between shadow-sm" data-id="<?php echo $p['product_id']; ?>">
                             <div class="flex items-center gap-3">
+                                <i class="fas fa-grip-vertical text-gray-400 cursor-move drag-handle" title="Drag to reorder"></i>
                                 <?php $imgUrl = getImageUrl($p['featured_image']); ?>
                                 <?php if($imgUrl): ?>
                                 <img src="<?php echo htmlspecialchars($imgUrl); ?>" class="w-10 h-10 object-cover rounded">
                                 <?php else: ?>
                                 <div class="w-10 h-10 bg-gray-200 rounded flex items-center justify-center"><i class="fas fa-image text-gray-400"></i></div>
                                 <?php endif; ?>
-                                <span class="font-medium text-gray-800"><?php echo htmlspecialchars($p['name'] ?? ''); ?></span>
+                                <span class="font-medium text-gray-800" style="max-width: 450px; display: inline-block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;"><?php echo htmlspecialchars($p['name'] ?? ''); ?></span>
                                 <span class="text-xs text-gray-500">(Product ID: <?php echo $p['product_id']; ?>)</span>
                             </div>
                             <button type="button" onclick="removeItem('trending', <?php echo $p['product_id']; ?>)" class="text-red-500 hover:text-red-700 p-1">
@@ -284,7 +296,12 @@ require_once __DIR__ . '/../includes/admin-header.php';
 
 
     </form>
-</div>
+    </div> <!-- Close px-6 -->
+</div> <!-- Close container -->
+
+
+<!-- SortableJS Library for Drag and Drop - Load BEFORE our script -->
+<script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.0/Sortable.min.js"></script>
 
 <script>
 
@@ -406,8 +423,9 @@ function addItem(key, id, name, image) {
         
     li.innerHTML = `
         <div class="flex items-center gap-3">
+            <i class="fas fa-grip-vertical text-gray-400 cursor-move drag-handle" title="Drag to reorder"></i>
             ${imgHtml}
-            <span class="font-medium text-gray-800">${name}</span>
+            <span class="font-medium text-gray-800" style="max-width: 450px; display: inline-block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">${name}</span>
             <span class="text-xs text-gray-500">(Product ID: ${id})</span>
         </div>
         <button type="button" onclick="removeItem('${key}', ${id})" class="text-red-500 hover:text-red-700 p-1">
@@ -440,6 +458,7 @@ function updateHiddenInput(key) {
     const ids = Array.from(items).map(li => li.dataset.id);
     
     document.getElementById(key + '_ids').value = ids.join(',');
+    console.log('Hidden input updated for ' + key + ':', ids.join(','));
 }
 
 function showMessage(key, msg, type='error') {
@@ -473,9 +492,8 @@ document.getElementById('settingsForm').addEventListener('submit', function(e) {
     
     const formData = new FormData(this);
     const submitBtn = document.querySelector('button[form="settingsForm"]');
-    if (submitBtn) {
-        setBtnLoading(submitBtn, true);
-    }
+    
+    // Note: Global 'btn-loading' listener in admin-footer.php handles showing the loader.
     
     fetch(`${BASE_URL}/admin/homepage_products_settings.php`, {
         method: 'POST',
@@ -499,15 +517,42 @@ document.getElementById('settingsForm').addEventListener('submit', function(e) {
         setTimeout(() => { el.innerHTML = ''; }, 5000);
     })
     .finally(() => {
+        // Restore button state using the global helper
         if (submitBtn) {
             setBtnLoading(submitBtn, false);
         }
     });
 });
 
+// Initialize Sortable for drag-and-drop
+function initSortable(key) {
+    const list = document.getElementById('list_' + key);
+    new Sortable(list, {
+        animation: 150,
+        handle: '.drag-handle',
+        ghostClass: 'bg-blue-50',
+        dragClass: 'opacity-50',
+        onEnd: function(evt) {
+            // Update the hidden input with new order
+            updateHiddenInput(key);
+            
+            // Rebuild the collections Set with new order
+            const items = list.querySelectorAll('li[data-id]');
+            collections[key].clear();
+            items.forEach(item => {
+                collections[key].add(parseInt(item.dataset.id));
+            });
+            
+            console.log('Order updated for ' + key + ':', Array.from(items).map(i => i.dataset.id).join(','));
+        }
+    });
+}
+
 // Init
 initComboBox('best_selling');
 initComboBox('trending');
+initSortable('best_selling');
+initSortable('trending');
 
 // Hide PHP message if present
 // Hide PHP message if present and clean URL

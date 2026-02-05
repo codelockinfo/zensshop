@@ -29,12 +29,47 @@ if (!$storeId && isset($_SESSION['user_email'])) {
      $storeId = $storeUser['store_id'] ?? null;
 }
 $filters['store_id'] = $storeId;
+
+// Auto-update customer status based on order activity (admin tracking only)
+// Active: ordered within last 30 days | Inactive: no orders in 30+ days
+$db = Database::getInstance();
+
+// Update status to 'inactive' for customers with no orders in the last 30 days
+$db->execute("
+    UPDATE customers c
+    LEFT JOIN (
+        SELECT customer_email, MAX(created_at) as last_order_date
+        FROM orders
+        WHERE store_id = ?
+        GROUP BY customer_email
+    ) o ON c.email = o.customer_email
+    SET c.status = 'inactive'
+    WHERE c.store_id = ?
+    AND (o.last_order_date IS NULL OR o.last_order_date < DATE_SUB(NOW(), INTERVAL 30 DAY))
+    AND c.status != 'inactive'
+", [$storeId, $storeId]);
+
+// Update status to 'active' for customers who ordered within the last 30 days
+$db->execute("
+    UPDATE customers c
+    INNER JOIN (
+        SELECT customer_email, MAX(created_at) as last_order_date
+        FROM orders
+        WHERE store_id = ?
+        GROUP BY customer_email
+    ) o ON c.email = o.customer_email
+    SET c.status = 'active'
+    WHERE c.store_id = ?
+    AND o.last_order_date >= DATE_SUB(NOW(), INTERVAL 30 DAY)
+    AND c.status != 'active'
+", [$storeId, $storeId]);
+
 $customers = $customer->getAllCustomers($filters);
 ?>
 
 <div class="mb-6">
-    <h1 class="text-2xl md:text-3xl font-bold">Customer List</h1>
-    <p class="text-gray-600 text-sm md:text-base">
+    <h1 class="text-2xl md:text-3xl font-bold pt-4 pl-2">Customer List</h1>
+    <p class="text-gray-600 text-sm md:text-base pl-2">
         <a href="<?php echo url('admin/dashboard.php'); ?>" class="hover:text-blue-600">Dashboard</a> > Customer List
     </p>
 </div>
@@ -70,12 +105,44 @@ $customers = $customer->getAllCustomers($filters);
         <thead>
             <tr>
                 <th>Customer</th>
-                <th>Customer ID</th>
+                <th class="sortable cursor-pointer hover:bg-gray-100" data-column="id">
+                    <div class="flex items-center justify-between">
+                        <span>Customer ID</span>
+                        <div class="flex flex-col ml-1">
+                            <i class="fas fa-caret-up text-gray-400 -mb-1" style="font-size: 0.75rem;"></i>
+                            <i class="fas fa-caret-down text-gray-400" style="font-size: 0.75rem;"></i>
+                        </div>
+                    </div>
+                </th>
                 <th>Email</th>
                 <th>Phone</th>
-                <th>Orders</th>
-                <th>Total Spent</th>
-                <th>Status</th>
+                <th class="sortable cursor-pointer hover:bg-gray-100" data-column="total_orders">
+                    <div class="flex items-center justify-between">
+                        <span>Orders</span>
+                        <div class="flex flex-col ml-1">
+                            <i class="fas fa-caret-up text-gray-400 -mb-1" style="font-size: 0.75rem;"></i>
+                            <i class="fas fa-caret-down text-gray-400" style="font-size: 0.75rem;"></i>
+                        </div>
+                    </div>
+                </th>
+                <th class="sortable cursor-pointer hover:bg-gray-100" data-column="total_spent">
+                    <div class="flex items-center justify-between">
+                        <span>Total Spent</span>
+                        <div class="flex flex-col ml-1">
+                            <i class="fas fa-caret-up text-gray-400 -mb-1" style="font-size: 0.75rem;"></i>
+                            <i class="fas fa-caret-down text-gray-400" style="font-size: 0.75rem;"></i>
+                        </div>
+                    </div>
+                </th>
+                <th class="sortable cursor-pointer hover:bg-gray-100" data-column="status">
+                    <div class="flex items-center justify-between">
+                        <span>Status</span>
+                        <div class="flex flex-col ml-1">
+                            <i class="fas fa-caret-up text-gray-400 -mb-1" style="font-size: 0.75rem;"></i>
+                            <i class="fas fa-caret-down text-gray-400" style="font-size: 0.75rem;"></i>
+                        </div>
+                    </div>
+                </th>
                 <th>Action</th>
             </tr>
         </thead>
@@ -143,6 +210,84 @@ $customers = $customer->getAllCustomers($filters);
         </tbody>
     </table>
 </div>
+
+<script>
+// Table sorting functionality
+document.addEventListener('DOMContentLoaded', function() {
+    const table = document.querySelector('.admin-table');
+    const headers = table.querySelectorAll('th.sortable');
+    let currentSort = { column: null, direction: 'asc' };
+    
+    headers.forEach(header => {
+        header.addEventListener('click', function() {
+            const column = this.dataset.column;
+            const tbody = table.querySelector('tbody');
+            const rows = Array.from(tbody.querySelectorAll('tr'));
+            
+            // Skip if no customers
+            if (rows.length === 1 && rows[0].querySelector('td[colspan]')) {
+                return;
+            }
+            
+            // Toggle direction
+            if (currentSort.column === column) {
+                currentSort.direction = currentSort.direction === 'asc' ? 'desc' : 'asc';
+            } else {
+                currentSort.direction = 'asc';
+                currentSort.column = column;
+            }
+            
+            // Reset all arrows
+            headers.forEach(h => {
+                const upArrow = h.querySelector('.fa-caret-up');
+                const downArrow = h.querySelector('.fa-caret-down');
+                if (upArrow) upArrow.classList.remove('text-blue-600');
+                if (upArrow) upArrow.classList.add('text-gray-400');
+                if (downArrow) downArrow.classList.remove('text-blue-600');
+                if (downArrow) downArrow.classList.add('text-gray-400');
+            });
+            
+            // Highlight active arrow
+            const upArrow = this.querySelector('.fa-caret-up');
+            const downArrow = this.querySelector('.fa-caret-down');
+            if (currentSort.direction === 'asc') {
+                upArrow.classList.remove('text-gray-400');
+                upArrow.classList.add('text-blue-600');
+            } else {
+                downArrow.classList.remove('text-gray-400');
+                downArrow.classList.add('text-blue-600');
+            }
+            
+            // Sort rows
+            rows.sort((a, b) => {
+                let aVal, bVal;
+                
+                // Get cell index
+                const cellIndex = Array.from(this.parentElement.children).indexOf(this);
+                const aCell = a.children[cellIndex];
+                const bCell = b.children[cellIndex];
+                
+                if (column === 'id' || column === 'total_orders' || column === 'total_spent') {
+                    // Numeric sort
+                    aVal = parseFloat(aCell.textContent.replace(/[^0-9.-]/g, '')) || 0;
+                    bVal = parseFloat(bCell.textContent.replace(/[^0-9.-]/g, '')) || 0;
+                } else {
+                    // Text sort
+                    aVal = aCell.textContent.trim().toLowerCase();
+                    bVal = bCell.textContent.trim().toLowerCase();
+                }
+                
+                if (aVal < bVal) return currentSort.direction === 'asc' ? -1 : 1;
+                if (aVal > bVal) return currentSort.direction === 'asc' ? 1 : -1;
+                return 0;
+            });
+            
+            // Re-append sorted rows
+            rows.forEach(row => tbody.appendChild(row));
+        });
+    });
+});
+</script>
 
 <?php require_once __DIR__ . '/../../includes/admin-footer.php'; ?>
 

@@ -537,7 +537,7 @@ require_once __DIR__ . '/../../includes/admin-header.php';
         <a href="<?php echo $baseUrl; ?>/admin/orders/detail.php?order_number=<?php echo urlencode($orderData['order_number']); ?>" class="bg-gray-500 text-white px-6 py-2 rounded hover:bg-gray-600 transition">
             Cancel
         </a>
-        <button type="submit" class="bg-blue-500 text-white px-6 py-2 rounded hover:bg-blue-600 transition">
+        <button type="submit" class="bg-blue-500 text-white px-6 py-2 rounded hover:bg-blue-600 transition btn-loading">
             <i class="fas fa-save mr-2"></i>Update Order
         </button>
     </div>

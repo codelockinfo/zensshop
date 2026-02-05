@@ -145,8 +145,8 @@ require_once __DIR__ . '/../../includes/admin-header.php';
 ?>
 
 <div class="mb-6">
-    <h1 class="text-2xl md:text-3xl font-bold">Category information</h1>
-    <p class="text-sm md:text-base text-gray-600">
+    <h1 class="text-2xl md:text-3xl font-bold pt-4 pl-2">Category information</h1>
+    <p class="text-sm md:text-base text-gray-600 pl-2">
         <a href="<?php echo url('admin/dashboard.php'); ?>" class="hover:text-blue-600">Dashboard</a> > 
         <a href="<?php echo url('admin/categories/list.php'); ?>" class="hover:text-blue-600">Category</a> > 
         <?php echo $id ? 'Edit category' : 'New category'; ?>
@@ -358,7 +358,7 @@ require_once __DIR__ . '/../../includes/admin-header.php';
         </div>
         
         <div class="flex space-x-4 mt-6">
-            <button type="submit" class="admin-btn admin-btn-primary px-6 py-2.5">
+            <button type="submit" class="admin-btn admin-btn-primary px-6 py-2.5 btn-loading">
                 Save
             </button>
             <a href="<?php echo $baseUrl; ?>/admin/categories/list.php" class="admin-btn border border-gray-300 text-gray-600 px-6 py-2.5">

@@ -92,7 +92,7 @@ $action = $segments[count($segments) - 1] ?? '';  // add, list
 <body class="bg-gray-100">
     <?php if ($currentUser): ?>
     <!-- Admin Header -->
-    <header class="admin-header flex items-center justify-between">
+    <header class="admin-header flex items-center justify-between pl-0">
         <div class="flex items-center space-x-4">
             <button class="text-gray-600 hover:text-gray-800" id="sidebarToggle" style="display: none !important;">
                 <i class="fas fa-bars text-xl"></i>

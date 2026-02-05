@@ -169,7 +169,7 @@ require_once __DIR__ . '/../includes/admin-header.php';
             
             <div class="text-right pt-2">
                 <button type="button" onclick="closeModal()" class="px-4 py-2 text-gray-600 hover:text-gray-800 mr-2">Cancel</button>
-                <button type="submit" class="bg-blue-600 text-white px-6 py-2 rounded hover:bg-blue-700 font-bold">Save</button>
+                <button type="submit" class="bg-blue-600 text-white px-6 py-2 rounded hover:bg-blue-700 font-bold btn-loading">Save</button>
             </div>
         </form>
     </div>

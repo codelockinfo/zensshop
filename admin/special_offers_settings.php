@@ -232,7 +232,7 @@ $offers = $db->fetchAll("SELECT * FROM special_offers WHERE store_id = ? ORDER B
             </div>
             
             <div class="col-span-1 md:col-span-2 flex justify-end mt-2">
-                <button type="submit" class="bg-gray-800 text-white px-6 py-2.5 rounded-lg hover:bg-black transition flex items-center shadow-lg">
+                <button type="submit" class="bg-gray-800 text-white px-6 py-2.5 rounded-lg hover:bg-black transition flex items-center shadow-lg btn-loading">
                     <i class="fas fa-save mr-2"></i> Update Settings
                 </button>
             </div>
@@ -349,7 +349,7 @@ $offers = $db->fetchAll("SELECT * FROM special_offers WHERE store_id = ? ORDER B
             
             <div class="flex justify-end gap-2 text-right">
                 <button type="button" onclick="closeModal()" class="bg-gray-300 text-gray-700 px-4 py-2 rounded hover:bg-gray-400">Cancel</button>
-                <button type="submit" class="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700">Save Offer</button>
+                <button type="submit" class="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 btn-loading">Save Offer</button>
             </div>
         </form>
     </div>

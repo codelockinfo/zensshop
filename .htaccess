@@ -15,6 +15,33 @@ php_value max_input_time 300
     ErrorDocument 404 /zensshop/not-found
 
     # Custom Clean URLs (Masking)
+    # 1. External Redirects: Force nice URLs (changes browser address bar)
+    RewriteCond %{THE_REQUEST} \s/admin/homepage_categories_settings [NC]
+    RewriteRule ^ /admin/category [R=301,L]
+    RewriteCond %{THE_REQUEST} \s/admin/banner_settings [NC]
+    RewriteRule ^ /admin/banner [R=301,L]
+    RewriteCond %{THE_REQUEST} \s/admin/features_settings [NC]
+    RewriteRule ^ /admin/features [R=301,L]
+    RewriteCond %{THE_REQUEST} \s/admin/footer_info [NC]
+    RewriteRule ^ /admin/footer [R=301,L]
+    RewriteCond %{THE_REQUEST} \s/admin/header_info [NC]
+    RewriteRule ^ /admin/header [R=301,L]
+    RewriteCond %{THE_REQUEST} \s/admin/homepage_products_settings [NC]
+    RewriteRule ^ /admin/products [R=301,L]
+    RewriteCond %{THE_REQUEST} \s/admin/homepage_videos_settings [NC]
+    RewriteRule ^ /admin/shorts [R=301,L]
+    RewriteCond %{THE_REQUEST} \s/admin/menu_settings [NC]
+    RewriteRule ^ /admin/menu [R=301,L]
+    RewriteCond %{THE_REQUEST} \s/admin/newsletter_settings [NC]
+    RewriteRule ^ /admin/newsletter [R=301,L]
+    RewriteCond %{THE_REQUEST} \s/admin/philosophy_settings [NC]
+    RewriteRule ^ /admin/philosophy [R=301,L]
+    RewriteCond %{THE_REQUEST} \s/admin/special_offers_settings [NC]
+    RewriteRule ^ /admin/offers [R=301,L]
+    RewriteCond %{THE_REQUEST} \s/admin/system-settings [NC]
+    RewriteRule ^ /admin/settings [R=301,L]
+
+    # 2. Internal Rewrites: Map nice URLs to PHP files
     RewriteRule ^admin/category$ admin/homepage_categories_settings.php [L,QSA]
     RewriteRule ^admin/banner$ admin/banner_settings.php [L,QSA]
     RewriteRule ^admin/features$ admin/features_settings.php [L,QSA]

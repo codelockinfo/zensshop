@@ -93,8 +93,8 @@ $discounts = $db->fetchAll("SELECT * FROM discounts WHERE store_id = ? ORDER BY 
 ?>
 
 <div class="mb-6">
-    <h1 class="text-2xl md:text-3xl font-bold">Discount Management</h1>
-    <p class="text-gray-600 text-sm md:text-base">
+    <h1 class="text-2xl md:text-3xl font-bold pt-4 pl-2">Discount Management</h1>
+    <p class="text-gray-600 text-sm md:text-base pl-2">
         <a href="<?php echo url('admin/dashboard.php'); ?>" class="hover:text-blue-600">Dashboard</a> > Discounts
     </p>
 </div>
@@ -223,7 +223,7 @@ $discounts = $db->fetchAll("SELECT * FROM discounts WHERE store_id = ? ORDER BY 
                 </div>
                 
                 <div class="flex items-center gap-3">
-                    <button type="submit" class="admin-btn admin-btn-primary">
+                    <button type="submit" class="admin-btn admin-btn-primary btn-loading">
                         <?php echo $id ? 'Update' : 'Create'; ?> Discount
                     </button>
                     

@@ -145,14 +145,14 @@ $brands = $brandsResult ? json_decode($brandsResult['setting_value'], true) : []
 
 <div class="mb-6 flex justify-between items-center sticky top-0 bg-[#f7f8fc] pb-5 z-50">
     <div>
-        <h1 class="text-2xl md:text-3xl font-bold">Add Product</h1>
-        <p class="text-gray-600 text-sm md:text-base">
+        <h1 class="text-2xl md:text-3xl font-bold pt-4 pl-2">Add Product</h1>
+        <p class="text-gray-600 text-sm md:text-base pl-2">
             <a href="<?php echo url('admin/dashboard.php'); ?>" class="hover:text-blue-600">Dashboard</a> > 
             <a href="<?php echo url('admin/products/list.php'); ?>" class="hover:text-blue-600">Ecommerce</a> > 
             Add Product
         </p>
     </div>
-    <button type="submit" form="productForm" id="topSubmitBtn" class="bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700 shadow-md transition-all flex items-center">
+    <button type="submit" form="productForm" id="topSubmitBtn"  class="bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700 shadow-md transition-all flex items-center btn-loading">
         <i class="fas fa-save mr-2"></i> <span>Save Product</span>
     </button>
 </div>
@@ -566,7 +566,7 @@ document.getElementById('productForm').addEventListener('submit', function(e) {
 });
 </script>
 <script src="<?php echo $baseUrl; ?>/assets/js/admin-image-upload4.js?v=<?php echo time(); ?>"></script>
-<script src="<?php echo $baseUrl; ?>/assets/js/product-variants5.js"></script>
+<script src="<?php echo $baseUrl; ?>/assets/js/product-variants6.js"></script>
 
 <!-- Brand Management Modal -->
 <div id="brandModal" class="hidden fixed inset-0 bg-black/50 z-[100] flex items-center justify-center p-4">

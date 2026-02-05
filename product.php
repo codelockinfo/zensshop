@@ -200,7 +200,7 @@ $_COOKIE['recently_viewed'] = json_encode($recentIds);
 <section class=" md:py-12 bg-white">
     <div class="container mx-auto px-4">
         <!-- Breadcrumbs -->
-        <nav class="text-sm text-gray-600 mb-6">
+        <nav class="text-sm text-gray-600 mb-6 pt-3 mt-5">
             <a href="<?php echo $baseUrl; ?>/" class="hover:text-primary">Home</a> > 
             <?php if ($primaryCategory): ?>
             <a href="<?php echo $baseUrl; ?>/shop?category=<?php echo urlencode($primaryCategory['slug']); ?>" class="hover:text-primary">

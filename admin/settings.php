@@ -21,8 +21,13 @@ if (!$storeId && isset($_SESSION['user_email'])) {
 // Determine which page to edit (defaults to 'default')
 $selectedSlug = $_GET['page'] ?? 'default';
 
-// Initialize landing page variable
-$lp = null;
+// 1. Fetch the Landing Page record FIRST
+// We need this data available during POST processing for backward compatibility and image preservation.
+$lp = $db->fetchOne("SELECT * FROM landing_pages WHERE slug = ? AND store_id = ?", [$selectedSlug, $storeId]);
+
+// 2. Fetch all pages & products for the sidebar and dropdowns
+$allPages = $db->fetchAll("SELECT id, name, slug FROM landing_pages WHERE store_id = ? ORDER BY id ASC", [$storeId]);
+$products = $db->fetchAll("SELECT id, product_id, name, price, currency FROM products WHERE store_id = ? AND status = 'active' ORDER BY name ASC", [$storeId]);
 
 // Handle Form Submission
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
@@ -473,33 +478,6 @@ require_once __DIR__ . '/../includes/admin-header.php';
   });
 </script>
 <?php
-
-$allPages = $db->fetchAll("SELECT id, name, slug FROM landing_pages WHERE store_id = ? AND slug != 'default' ORDER BY name ASC", [$storeId]);
-
-// Determine which page to edit
-$selectedSlug = $_GET['page'] ?? '';
-
-// If no slug provided, or if provided slug is invalid, fallback to the first available page
-if (empty($selectedSlug)) {
-    if (!empty($allPages)) {
-        $selectedSlug = $allPages[0]['slug'];
-    } else {
-        $selectedSlug = 'default';
-    }
-}
-
-// Fetch active products for dropdown
-$products = $db->fetchAll("SELECT id, product_id, name, price, currency FROM products WHERE status = 'active' AND store_id = ? ORDER BY name ASC", [$storeId]);
-
-// Fetch Current Page Data
-$lp = $db->fetchOne("SELECT * FROM landing_pages WHERE slug = ? AND store_id = ?", [$selectedSlug, $storeId]);
-
-// If still no page found (e.g. invalid slug provided and not caught above), try first page again
-if (!$lp && !empty($allPages)) {
-    $selectedSlug = $allPages[0]['slug'];
-    $lp = $db->fetchOne("SELECT * FROM landing_pages WHERE slug = ? AND store_id = ?", [$selectedSlug, $storeId]);
-}
-
 // --- DATA RECONCILIATION & BACKWARD COMPATIBILITY ---
 // Map JSON grouped data back to individual keys for the form UI to avoid undefined index warnings.
 if ($lp) {
@@ -592,8 +570,8 @@ if ($lp) {
 
 <div class="mb-6 flex justify-between items-end sticky top-0 bg-[#f7f8fc] py-4 z-50 border-b border-gray-200 px-1">
     <div>
-        <h1 class="text-2xl font-bold text-gray-800">Landing Page Manager</h1>
-        <p class="text-sm text-gray-500 mt-1">Dashboard > Settings > Landing Pages</p>
+        <h1 class="text-2xl font-bold text-gray-800 pt-4 pl-2">Landing Page Manager</h1>
+        <p class="text-sm text-gray-500 mt-1 pl-2">Dashboard > Settings > Landing Pages</p>
     </div>
     <div class="flex items-center gap-3">
         <?php if (!empty($selectedSlug) && $selectedSlug !== 'default'): ?>
@@ -601,7 +579,7 @@ if ($lp) {
             <i class="fas fa-external-link-alt mr-2 text-gray-400"></i> View Live Page
         </a>
         <?php endif; ?>
-        <button type="submit" form="landingPageForm" class="bg-blue-600 text-white px-6 py-2.5 rounded shadow hover:bg-blue-700 transition transform hover:-translate-y-0.5 font-bold text-sm flex items-center">
+        <button type="submit" form="landingPageForm" class="bg-blue-600 text-white px-6 py-2.5 rounded shadow hover:bg-blue-700 transition transform hover:-translate-y-0.5 font-bold text-sm flex items-center btn-loading">
             <i class="fas fa-save mr-2"></i> Save All Settings
         </button>
     </div>
@@ -1178,11 +1156,6 @@ if ($lp) {
                             <p class="text-xs text-gray-500 mb-2">Paste your custom schema script here. It will be injected as <code>&lt;script type="application/ld+json"&gt;...&lt;/script&gt;</code>.</p>
                             <textarea name="custom_schema" class="w-full border p-2 rounded font-mono text-xs h-40 bg-gray-900 text-green-400" placeholder='{ "@context": "https://schema.org", ... }'><?php echo htmlspecialchars($lp['custom_schema'] ?? ''); ?></textarea>
                         </div>
-                        <div class="pt-2 text-right">
-                             <button type="submit" class="bg-blue-600 text-white px-6 py-2 rounded shadow hover:bg-blue-700 transition font-bold text-sm">
-                                <i class="fas fa-save mr-2"></i>Save SEO Settings
-                             </button>
-                        </div>
                     </div>
                 </div>
             </div>
@@ -1226,11 +1199,6 @@ if ($lp) {
                         <p class="text-xs text-gray-500 mt-1">Use this editor to add text, links, images, tables, and style them as needed. This content appears after the footer.</p>
                     </div>
 
-                    <div class="pt-2 text-right">
-                        <button type="submit" class="bg-blue-600 text-white px-6 py-2 rounded shadow hover:bg-blue-700 transition font-bold text-sm">
-                        <i class="fas fa-save mr-2"></i>Save Footer Content
-                        </button>
-                    </div>
                 </div>
             </div>
             
@@ -1927,6 +1895,7 @@ function updateSectionOrder() {
     const order = Array.from(currentItems).map(item => item.getAttribute('data-section-id'));
     orderInput.value = JSON.stringify(order);
 }
+
 </script>
 
 <?php require_once __DIR__ . '/../includes/admin-footer.php'; ?>

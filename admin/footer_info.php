@@ -2,6 +2,7 @@
 session_start();
 require_once __DIR__ . '/../classes/Database.php';
 require_once __DIR__ . '/../classes/Auth.php';
+require_once __DIR__ . '/../includes/functions.php';
 
 $auth = new Auth();
 $auth->requireLogin();
@@ -106,7 +107,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         }
         
         $_SESSION['flash_success'] = "Footer information updated successfully!";
-        header("Location: " . $_SERVER['PHP_SELF']);
+        header("Location: " . url('admin/footer'));
         exit;
 
     } catch (Exception $e) {
@@ -160,19 +161,32 @@ $pageTitle = 'Footer Information';
 require_once __DIR__ . '/../includes/admin-header.php';
 ?>
 
-<div class="p-6 bg-white rounded-lg shadow-md m-6">
-    <div class="flex justify-between items-center mb-6">
-        <h1 class="text-2xl font-bold text-gray-800">Footer Information</h1>
+
+<form method="POST" enctype="multipart/form-data">
+    <!-- Sticky Header -->
+    <div class="mb-6 flex justify-between items-end sticky top-0 bg-[#f7f8fc] py-4 z-50 border-b border-gray-200 px-1">
+        <div>
+            <h1 class="text-2xl font-bold text-gray-800 pt-4 pl-2">Footer Information</h1>
+            <p class="text-sm text-gray-500 mt-1 pl-2">Dashboard > Settings > Footer Info</p>
+        </div>
+        <div class="flex items-center gap-3">
+            <button type="submit" class="bg-blue-600 text-white px-6 py-2 rounded font-bold hover:bg-blue-700 transition shadow-sm btn-loading">
+                Save Changes
+            </button>
+        </div>
     </div>
 
-    <?php if ($success): ?>
-        <div class="bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded mb-4"><?php echo htmlspecialchars($success); ?></div>
-    <?php endif; ?>
-    <?php if ($error): ?>
-        <div class="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4"><?php echo htmlspecialchars($error); ?></div>
-    <?php endif; ?>
+    <div class="p-6 bg-white rounded-lg shadow-md m-6">
+        
+        <!-- Messages -->
+        <?php if ($success): ?>
+            <div class="bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded mb-4"><?php echo htmlspecialchars($success); ?></div>
+        <?php endif; ?>
+        <?php if ($error): ?>
+            <div class="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4"><?php echo htmlspecialchars($error); ?></div>
+        <?php endif; ?>
 
-    <form method="POST" enctype="multipart/form-data" class="space-y-6">
+        <div class="space-y-6">
         
         <!-- Logo Section -->
         <div class="bg-gray-50 p-4 rounded border border-gray-200">
@@ -331,10 +345,10 @@ require_once __DIR__ . '/../includes/admin-header.php';
                 </div>
             </template>
         </div>
-
-        <button type="submit" class="bg-blue-600 text-white px-6 py-2 rounded font-bold hover:bg-blue-700 transition">Save Changes</button>
-    </form>
-</div>
+        
+        </div>
+    </div>
+</form>
 
 <!-- CKEditor 5 -->
 <script src="https://cdn.ckeditor.com/ckeditor5/41.1.0/classic/ckeditor.js"></script>

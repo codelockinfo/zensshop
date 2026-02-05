@@ -1,6 +1,7 @@
 <?php
 require_once __DIR__ . '/../classes/Database.php';
 require_once __DIR__ . '/../classes/Auth.php';
+require_once __DIR__ . '/../includes/functions.php';
 
 $auth = new Auth();
 $auth->requireLogin();
@@ -22,7 +23,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         }
         $db->execute("DELETE FROM banners WHERE id = ? AND store_id = ?", [$id, $storeId]);
         $_SESSION['flash_success'] = "Banner deleted successfully!";
-        header("Location: " . $_SERVER['PHP_SELF']);
+        header("Location: " . url('admin/banner'));
         exit;
     }
     elseif ($action === 'save') {
@@ -105,7 +106,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             }
             
             if (empty($error)) {
-                header("Location: " . $_SERVER['PHP_SELF']);
+                header("Location: " . url('admin/banner'));
                 exit;
             }
         }
@@ -285,7 +286,7 @@ $banners = $db->fetchAll("SELECT * FROM banners WHERE store_id = ? ORDER BY disp
             
             <div class="flex justify-end gap-2 text-right">
                 <button type="button" onclick="closeModal()" class="bg-gray-300 text-gray-700 px-4 py-2 rounded hover:bg-gray-400">Cancel</button>
-                <button type="submit" class="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700">Save Banner</button>
+                <button type="submit" class="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 btn-loading">Save Banner</button>
             </div>
         </form>
     </div>
@@ -359,6 +360,7 @@ function previewBannerImage(input, imgId, placeholderId) {
         reader.readAsDataURL(input.files[0]);
     }
 }
+
 </script>
 
 <?php require_once __DIR__ . '/../includes/admin-footer.php'; ?>

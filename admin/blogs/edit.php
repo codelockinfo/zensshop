@@ -162,7 +162,7 @@ require_once __DIR__ . '/../../includes/admin-header.php';
                         <p>Last Saved: <span class="font-medium"><?php echo date('M j, Y H:i', strtotime($blog['updated_at'])); ?></span></p>
                     </div>
                     <?php endif; ?>
-                    <button type="submit" class="w-full bg-blue-600 text-white font-bold py-2.5 rounded-lg hover:bg-blue-700 transition shadow-lg transform hover:-translate-y-0.5">
+                    <button type="submit" class="w-full bg-blue-600 text-white font-bold py-2.5 rounded-lg hover:bg-blue-700 transition shadow-lg transform hover:-translate-y-0.5 btn-loading">
                         <?php echo $id ? 'Update Post' : 'Publish Post'; ?>
                     </button>
                     

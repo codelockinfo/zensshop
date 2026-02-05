@@ -59,8 +59,8 @@ $salesByStatus = $db->fetchAll("
 ?>
 
 <div class="mb-6">
-    <h1 class="text-2xl md:text-3xl font-bold">Report</h1>
-    <p class="text-gray-600 text-sm md:text-base">
+    <h1 class="text-2xl md:text-3xl font-bold pt-4 pl-2">Report</h1>
+    <p class="text-gray-600 text-sm md:text-base pl-2">
         <a href="<?php echo url('admin/dashboard.php'); ?>" class="hover:text-blue-600">Dashboard</a> > 
         <a href="<?php echo url('admin/products/list.php'); ?>" class="hover:text-blue-600">Ecommerce</a> > 
         Report

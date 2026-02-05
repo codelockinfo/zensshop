@@ -59,7 +59,7 @@ unset($_SESSION['success']);
             <h1 class="text-2xl font-bold text-gray-800">System Settings</h1>
             <p class="text-gray-600 text-sm mt-1">Manage your application configuration</p>
         </div>
-        <button type="submit" form="settingsForm" class="bg-blue-600 text-white px-6 py-2 rounded font-semibold hover:bg-blue-700 transition shadow-lg flex items-center">
+        <button type="submit" form="settingsForm" class="bg-blue-600 text-white px-6 py-2 rounded font-semibold hover:bg-blue-700 transition shadow-lg flex items-center btn-loading">
              <i class="fas fa-save mr-2"></i> Save Changes
         </button>
     </div>

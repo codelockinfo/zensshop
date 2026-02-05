@@ -284,7 +284,7 @@ require_once __DIR__ . '/../includes/admin-header.php';
                 </div>
             </div>
 
-            <button type="submit" class="w-full bg-blue-600 text-white font-bold py-3 px-4 rounded shadow hover:bg-blue-700 transition">
+            <button type="submit" class="w-full bg-blue-600 text-white font-bold py-3 px-4 rounded shadow hover:bg-blue-700 transition btn-loading">
                 <?php echo $pageId ? 'Update Page' : 'Publish Page'; ?>
             </button>
             

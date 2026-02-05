@@ -26,8 +26,8 @@ $orders = $order->getAll($filters);
 ?>
 
 <div class="mb-6">
-    <h1 class="text-2xl md:text-3xl font-bold">Order List</h1>
-    <p class="text-gray-600 text-sm md:text-base">
+    <h1 class="text-2xl md:text-3xl font-bold pt-4 pl-2">Order List</h1>
+    <p class="text-gray-600 text-sm md:text-base pl-2">
         <a href="<?php echo url('admin/dashboard.php'); ?>" class="hover:text-blue-600">Dashboard</a> > Order List
     </p>
 </div>
@@ -72,11 +72,51 @@ $orders = $order->getAll($filters);
             <tr>
                 <th>Product</th>
                 <th>Customer</th>
-                <th>Order ID</th>
-                <th>Price</th>
-                <th>Quantity</th>
-                <th>Payment</th>
-                <th>Status</th>
+                <th class="sortable cursor-pointer hover:bg-gray-100" data-column="order_number">
+                    <div class="flex items-center justify-between">
+                        <span>Order ID</span>
+                        <div class="flex flex-col ml-1">
+                            <i class="fas fa-caret-up text-gray-400 -mb-1" style="font-size: 0.75rem;"></i>
+                            <i class="fas fa-caret-down text-gray-400" style="font-size: 0.75rem;"></i>
+                        </div>
+                    </div>
+                </th>
+                <th class="sortable cursor-pointer hover:bg-gray-100" data-column="total_amount">
+                    <div class="flex items-center justify-between">
+                        <span>Price</span>
+                        <div class="flex flex-col ml-1">
+                            <i class="fas fa-caret-up text-gray-400 -mb-1" style="font-size: 0.75rem;"></i>
+                            <i class="fas fa-caret-down text-gray-400" style="font-size: 0.75rem;"></i>
+                        </div>
+                    </div>
+                </th>
+                <th class="sortable cursor-pointer hover:bg-gray-100" data-column="total_quantity">
+                    <div class="flex items-center justify-between">
+                        <span>Quantity</span>
+                        <div class="flex flex-col ml-1">
+                            <i class="fas fa-caret-up text-gray-400 -mb-1" style="font-size: 0.75rem;"></i>
+                            <i class="fas fa-caret-down text-gray-400" style="font-size: 0.75rem;"></i>
+                        </div>
+                    </div>
+                </th>
+                <th class="sortable cursor-pointer hover:bg-gray-100" data-column="payment_status">
+                    <div class="flex items-center justify-between">
+                        <span>Payment</span>
+                        <div class="flex flex-col ml-1">
+                            <i class="fas fa-caret-up text-gray-400 -mb-1" style="font-size: 0.75rem;"></i>
+                            <i class="fas fa-caret-down text-gray-400" style="font-size: 0.75rem;"></i>
+                        </div>
+                    </div>
+                </th>
+                <th class="sortable cursor-pointer hover:bg-gray-100" data-column="order_status">
+                    <div class="flex items-center justify-between">
+                        <span>Status</span>
+                        <div class="flex flex-col ml-1">
+                            <i class="fas fa-caret-up text-gray-400 -mb-1" style="font-size: 0.75rem;"></i>
+                            <i class="fas fa-caret-down text-gray-400" style="font-size: 0.75rem;"></i>
+                        </div>
+                    </div>
+                </th>
                 <th>Tracking</th>
                 <th>Action</th>
             </tr>
@@ -249,6 +289,83 @@ function deleteOrder(id) {
             console.log('System error while updating status');
         });
     })
+
+// Table sorting functionality
+document.addEventListener('DOMContentLoaded', function() {
+    const table = document.querySelector('.admin-table');
+    const headers = table.querySelectorAll('th.sortable');
+    let currentSort = { column: null, direction: 'asc' };
+    
+    headers.forEach(header => {
+        header.addEventListener('click', function() {
+            const column = this.dataset.column;
+            const tbody = table.querySelector('tbody');
+            const rows = Array.from(tbody.querySelectorAll('tr'));
+            
+            // Toggle direction
+            if (currentSort.column === column) {
+                currentSort.direction = currentSort.direction === 'asc' ? 'desc' : 'asc';
+            } else {
+                currentSort.direction = 'asc';
+                currentSort.column = column;
+            }
+            
+            // Reset all arrows
+            headers.forEach(h => {
+                const upArrow = h.querySelector('.fa-caret-up');
+                const downArrow = h.querySelector('.fa-caret-down');
+                if (upArrow) upArrow.classList.remove('text-blue-600');
+                if (upArrow) upArrow.classList.add('text-gray-400');
+                if (downArrow) downArrow.classList.remove('text-blue-600');
+                if (downArrow) downArrow.classList.add('text-gray-400');
+            });
+            
+            // Highlight active arrow
+            const upArrow = this.querySelector('.fa-caret-up');
+            const downArrow = this.querySelector('.fa-caret-down');
+            if (currentSort.direction === 'asc') {
+                upArrow.classList.remove('text-gray-400');
+                upArrow.classList.add('text-blue-600');
+            } else {
+                downArrow.classList.remove('text-gray-400');
+                downArrow.classList.add('text-blue-600');
+            }
+            
+            // Sort rows
+            rows.sort((a, b) => {
+                let aVal, bVal;
+                
+                // Get cell index
+                const cellIndex = Array.from(this.parentElement.children).indexOf(this);
+                const aCell = a.children[cellIndex];
+                const bCell = b.children[cellIndex];
+                
+                if (column === 'total_amount' || column === 'total_quantity') {
+                    // Numeric sort
+                    aVal = parseFloat(aCell.textContent.replace(/[^0-9.-]/g, '')) || 0;
+                    bVal = parseFloat(bCell.textContent.replace(/[^0-9.-]/g, '')) || 0;
+                } else if (column === 'order_status') {
+                    // Status column - get value from select dropdown
+                    const aSelect = aCell.querySelector('select');
+                    const bSelect = bCell.querySelector('select');
+                    aVal = aSelect ? aSelect.value.toLowerCase() : '';
+                    bVal = bSelect ? bSelect.value.toLowerCase() : '';
+                } else {
+                    // Text sort
+                    aVal = aCell.textContent.trim().toLowerCase();
+                    bVal = bCell.textContent.trim().toLowerCase();
+                }
+                
+                if (aVal < bVal) return currentSort.direction === 'asc' ? -1 : 1;
+                if (aVal > bVal) return currentSort.direction === 'asc' ? 1 : -1;
+                return 0;
+            });
+            
+            // Re-append sorted rows
+            rows.forEach(row => tbody.appendChild(row));
+        });
+    });
+});
 </script>
 
 

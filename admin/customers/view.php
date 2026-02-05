@@ -53,8 +53,8 @@ require_once __DIR__ . '/../../includes/admin-header.php';
         <!-- Breadcrumbs -->
         <div class="flex justify-between items-center mb-6">
             <div>
-                <h1 class="text-2xl font-bold text-gray-800">Customer Details</h1>
-                <p class="text-gray-600 text-sm mt-1">View customer information and orders</p>
+                <h1 class="text-2xl font-bold text-gray-800 pt-4 pl-2">Customer Details</h1>
+                <p class="text-gray-600 text-sm mt-1 pl-2">View customer information and orders</p>
             </div>
             <div class="flex items-center space-x-3">
                 <a href="<?php echo $baseUrl; ?>/admin/customers/list.php" class="admin-btn bg-gray-500 text-white">

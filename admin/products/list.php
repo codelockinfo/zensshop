@@ -39,8 +39,8 @@ $products = $db->fetchAll($sql, $params);
 ?>
 
 <div class="mb-6">
-    <h1 class="text-2xl md:text-3xl font-bold">Product List</h1>
-    <p class="text-gray-600 text-sm md:text-base">
+    <h1 class="text-2xl md:text-3xl font-bold pt-4 pl-2">Product List</h1>
+    <p class="text-gray-600 text-sm md:text-base pl-2">
         <a href="<?php echo url('admin/dashboard.php'); ?>" class="hover:text-blue-600">Dashboard</a> > 
         <a href="<?php echo url('admin/products/list.php'); ?>" class="hover:text-blue-600">Ecommerce</a> > 
         Product List
@@ -107,13 +107,53 @@ document.addEventListener('DOMContentLoaded', function() {
         <thead>
             <tr>
                 <th>Product</th>
-                <th>Product ID</th>
-                <th>Price</th>
-                <th>Quantity</th>
+                <th class="sortable cursor-pointer hover:bg-gray-100" data-column="product_id">
+                    <div class="flex items-center justify-between">
+                        <span>Product ID</span>
+                        <div class="flex flex-col ml-1">
+                            <i class="fas fa-caret-up text-gray-400 -mb-1" style="font-size: 0.75rem;"></i>
+                            <i class="fas fa-caret-down text-gray-400" style="font-size: 0.75rem;"></i>
+                        </div>
+                    </div>
+                </th>
+                <th class="sortable cursor-pointer hover:bg-gray-100" data-column="price">
+                    <div class="flex items-center justify-between">
+                        <span>Price</span>
+                        <div class="flex flex-col ml-1">
+                            <i class="fas fa-caret-up text-gray-400 -mb-1" style="font-size: 0.75rem;"></i>
+                            <i class="fas fa-caret-down text-gray-400" style="font-size: 0.75rem;"></i>
+                        </div>
+                    </div>
+                </th>
+                <th class="sortable cursor-pointer hover:bg-gray-100" data-column="stock_quantity">
+                    <div class="flex items-center justify-between">
+                        <span>Quantity</span>
+                        <div class="flex flex-col ml-1">
+                            <i class="fas fa-caret-up text-gray-400 -mb-1" style="font-size: 0.75rem;"></i>
+                            <i class="fas fa-caret-down text-gray-400" style="font-size: 0.75rem;"></i>
+                        </div>
+                    </div>
+                </th>
                 <th>Sale</th>
                 <th>Stock</th>
-                <th>Status</th>
-                <th>Start date</th>
+                <th class="sortable cursor-pointer hover:bg-gray-100" data-column="status">
+                    <div class="flex items-center justify-between">
+                        <span>Status</span>
+                        <div class="flex flex-col ml-1">
+                            <i class="fas fa-caret-up text-gray-400 -mb-1" style="font-size: 0.75rem;"></i>
+                            <i class="fas fa-caret-down text-gray-400" style="font-size: 0.75rem;"></i>
+                        </div>
+                    </div>
+                </th>
+                <th class="sortable cursor-pointer hover:bg-gray-100" data-column="created_at">
+                    <div class="flex items-center justify-between">
+                        <span>Start date</span>
+                        <div class="flex flex-col ml-1">
+                            <i class="fas fa-caret-up text-gray-400 -mb-1" style="font-size: 0.75rem;"></i>
+                            <i class="fas fa-caret-down text-gray-400" style="font-size: 0.75rem;"></i>
+                        </div>
+                    </div>
+                </th>
                 <th>Action</th>
             </tr>
         </thead>
@@ -223,6 +263,81 @@ function deleteProduct(id) {
         });
     });
 }
+
+// Table sorting functionality
+document.addEventListener('DOMContentLoaded', function() {
+    const table = document.querySelector('.admin-table');
+    const headers = table.querySelectorAll('th.sortable');
+    let currentSort = { column: null, direction: 'asc' };
+    
+    headers.forEach(header => {
+        header.addEventListener('click', function() {
+            const column = this.dataset.column;
+            const tbody = table.querySelector('tbody');
+            const rows = Array.from(tbody.querySelectorAll('tr'));
+            
+            // Toggle direction
+            if (currentSort.column === column) {
+                currentSort.direction = currentSort.direction === 'asc' ? 'desc' : 'asc';
+            } else {
+                currentSort.direction = 'asc';
+                currentSort.column = column;
+            }
+            
+            // Reset all arrows
+            headers.forEach(h => {
+                const upArrow = h.querySelector('.fa-caret-up');
+                const downArrow = h.querySelector('.fa-caret-down');
+                if (upArrow) upArrow.classList.remove('text-blue-600');
+                if (upArrow) upArrow.classList.add('text-gray-400');
+                if (downArrow) downArrow.classList.remove('text-blue-600');
+                if (downArrow) downArrow.classList.add('text-gray-400');
+            });
+            
+            // Highlight active arrow
+            const upArrow = this.querySelector('.fa-caret-up');
+            const downArrow = this.querySelector('.fa-caret-down');
+            if (currentSort.direction === 'asc') {
+                upArrow.classList.remove('text-gray-400');
+                upArrow.classList.add('text-blue-600');
+            } else {
+                downArrow.classList.remove('text-gray-400');
+                downArrow.classList.add('text-blue-600');
+            }
+            
+            // Sort rows
+            rows.sort((a, b) => {
+                let aVal, bVal;
+                
+                // Get cell index
+                const cellIndex = Array.from(this.parentElement.children).indexOf(this);
+                const aCell = a.children[cellIndex];
+                const bCell = b.children[cellIndex];
+                
+                if (column === 'price' || column === 'stock_quantity') {
+                    // Numeric sort
+                    aVal = parseFloat(aCell.textContent.replace(/[^0-9.-]/g, '')) || 0;
+                    bVal = parseFloat(bCell.textContent.replace(/[^0-9.-]/g, '')) || 0;
+                } else if (column === 'created_at') {
+                    // Date sort
+                    aVal = new Date(aCell.textContent);
+                    bVal = new Date(bCell.textContent);
+                } else {
+                    // Text sort
+                    aVal = aCell.textContent.trim().toLowerCase();
+                    bVal = bCell.textContent.trim().toLowerCase();
+                }
+                
+                if (aVal < bVal) return currentSort.direction === 'asc' ? -1 : 1;
+                if (aVal > bVal) return currentSort.direction === 'asc' ? 1 : -1;
+                return 0;
+            });
+            
+            // Re-append sorted rows
+            rows.forEach(row => tbody.appendChild(row));
+        });
+    });
+});
 </script>
 
 <?php require_once __DIR__ . '/../../includes/admin-footer.php'; ?>

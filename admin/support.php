@@ -259,7 +259,7 @@ unset($_SESSION['success'], $_SESSION['error']);
                             <form method="POST" class="inline">
                                 <input type="hidden" name="action" value="delete">
                                 <input type="hidden" name="id" value="<?php echo $msg['id']; ?>">
-                                <button type="submit" class="bg-red-600 text-white px-4 py-2 rounded hover:bg-red-700 text-sm">
+                                <button type="submit" class="bg-red-600 text-white px-4 py-2 rounded hover:bg-red-700 text-sm btn-loading">
                                     <i class="fas fa-trash mr-1"></i> Delete
                                 </button>
                             </form>
@@ -275,7 +275,7 @@ unset($_SESSION['success'], $_SESSION['error']);
                                           class="w-full border rounded px-3 py-2 mb-3"
                                           placeholder="Type your response here..."></textarea>
                                 <div class="flex gap-2">
-                                    <button type="submit" class="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700">
+                                    <button type="submit" class="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 btn-loading">
                                         Send Reply
                                     </button>
                                     <button type="button" onclick="hideReplyForm(<?php echo $msg['id']; ?>)" 

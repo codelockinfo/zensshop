@@ -529,7 +529,7 @@ require_once __DIR__ . '/../includes/admin-header.php';
             </div>
             <div class="flex justify-end gap-2 mt-6">
                 <button type="button" onclick="closeModal('editItemModal')" class="px-4 py-2 text-gray-500">Cancel</button>
-                <button type="submit" class="bg-green-600 text-white px-4 py-2 rounded font-bold">Update</button>
+                <button type="submit" class="bg-green-600 text-white px-4 py-2 rounded font-bold btn-loading">Update</button>
             </div>
         </form>
     </div>
@@ -549,7 +549,7 @@ require_once __DIR__ . '/../includes/admin-header.php';
              <div class="mt-4"><button type="button" onclick="addBulkRow()" class="text-blue-600 font-semibold text-sm hover:underline flex items-center"><i class="fas fa-plus-circle mr-2"></i> Add another line</button></div>
              <div class="mt-8 flex justify-end gap-3 border-t pt-4">
                  <button type="button" onclick="closeModal('bulkAddModal')" class="px-5 py-2 text-gray-600 font-medium hover:bg-gray-100 rounded">Cancel</button>
-                 <button type="submit" class="px-6 py-2 bg-blue-600 text-white rounded font-bold hover:bg-blue-700 shadow">Save Items</button>
+                 <button type="submit" class="px-6 py-2 bg-blue-600 text-white rounded font-bold hover:bg-blue-700 shadow btn-loading">Save Items</button>
              </div>
          </form>
     </div>

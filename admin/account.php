@@ -218,7 +218,7 @@ require_once __DIR__ . '/../includes/admin-header.php';
                 </button>
                 <button type="submit" 
                         name="upload_profile"
-                        class="admin-btn bg-green-500 text-white w-full hidden"
+                        class="admin-btn bg-green-500 text-white w-full hidden btn-loading"
                         id="saveProfileBtn">
                     <i class="fas fa-save mr-2"></i>Save Image
                 </button>
@@ -271,7 +271,7 @@ require_once __DIR__ . '/../includes/admin-header.php';
                 </div>
             </div>
             
-            <button type="submit" class="admin-btn admin-btn-primary">
+            <button type="submit" class="admin-btn admin-btn-primary btn-loading">
                 Update Account
             </button>
         </form>
@@ -306,7 +306,7 @@ require_once __DIR__ . '/../includes/admin-header.php';
                        placeholder="Confirm new password">
             </div>
             
-            <button type="submit" class="admin-btn admin-btn-primary">
+            <button type="submit" class="admin-btn admin-btn-primary btn-loading">
                 Update Password
             </button>
         </form>
