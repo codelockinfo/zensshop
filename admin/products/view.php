@@ -249,13 +249,28 @@ $variants = $variantsData['variants'] ?? [];
                 
                 <div>
                     <label class="admin-form-label">Category</label>
-                    <p class="text-gray-700"><?php echo htmlspecialchars($productData['category_name'] ?? 'Uncategorized'); ?></p>
+                    <div class="flex flex-wrap gap-2 py-1">
+                    <?php 
+                    // Fetch all categories
+                    $prodCats = $db->fetchAll(
+                        "SELECT c.name, c.slug FROM product_categories pc 
+                         JOIN categories c ON c.id = pc.category_id 
+                         WHERE pc.product_id = ? ORDER BY c.name ASC",
+                        [$productData['product_id']]
+                    );
+                    
+                    if (!empty($prodCats)) {
+                        foreach ($prodCats as $pc) {
+                            echo '<span class="bg-blue-100 text-blue-800 text-xs font-semibold px-2.5 py-0.5 rounded">' . htmlspecialchars($pc['name']) . '</span>';
+                        }
+                    } else {
+                        // Fallback to legacy single category or Uncategorized
+                         echo '<p class="text-gray-700">' . htmlspecialchars($productData['category_name'] ?? 'Uncategorized') . '</p>';
+                    }
+                    ?>
+                    </div>
                 </div>
                 
-                <div>
-                    <label class="admin-form-label">Gender</label>
-                    <p class="text-gray-700 capitalize"><?php echo htmlspecialchars($productData['gender'] ?? 'Unisex'); ?></p>
-                </div>
                 
                 <div>
                     <label class="admin-form-label">Brand</label>

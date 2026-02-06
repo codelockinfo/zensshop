@@ -93,12 +93,12 @@ document.addEventListener('submit', function(e) {
 
     // Auto-dismiss alerts
     document.addEventListener('DOMContentLoaded', function() {
-        // Target .admin-alert class OR any div with role="alert" OR common alert patterns
-        const alertSelector = '.admin-alert, [role="alert"], .bg-red-100, .bg-green-100, .bg-blue-100';
+        // Only target elements that are explicitly marked as alerts
+        const alertSelector = '.admin-alert, [role="alert"]';
         const alerts = document.querySelectorAll(alertSelector);
         
         alerts.forEach(function(alert) {
-            // Only process if it looks like a message box (has text and padding)
+            // Only process if it has text
             if (alert.innerText.trim().length > 0) {
                 setTimeout(function() {
                     alert.style.transition = 'opacity 0.5s ease';

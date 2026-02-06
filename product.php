@@ -139,6 +139,35 @@ if ($firstVariant) {
 }
 
 // Generate Product Schema
+// Prepare Offer Data
+$offerSchema = [
+    "@type" => "Offer",
+    "url" => $baseUrl . '/product/' . $productData['slug'],
+    "priceCurrency" => "INR",
+    "price" => $price,
+    "availability" => ($productData['stock_status'] === 'instock' || ($productData['stock'] ?? 0) > 0) ? "https://schema.org/InStock" : "https://schema.org/OutOfStock",
+    "itemCondition" => "https://schema.org/NewCondition"
+];
+
+// Add Price Specification if On Sale
+if (!empty($originalPrice) && $originalPrice > $price) {
+    $offerSchema['priceSpecification'] = [
+        [
+            "@type" => "UnitPriceSpecification",
+            "price" => $price,
+            "priceCurrency" => "INR",
+            "priceType" => "https://schema.org/SalePrice"
+        ],
+        [
+            "@type" => "UnitPriceSpecification",
+            "price" => $originalPrice,
+            "priceCurrency" => "INR",
+            "priceType" => "https://schema.org/ListPrice"
+        ]
+    ];
+}
+
+// Generate Product Schema
 $productSchema = [
     "@context" => "https://schema.org/",
     "@type" => "Product",
@@ -150,15 +179,9 @@ $productSchema = [
         "@type" => "Brand",
         "name" => $productData['brand'] ?? $settings->get('site_name', 'Zensshop')
     ],
-    "offers" => [
-        "@type" => "Offer",
-        "url" => $baseUrl . '/product/' . $productData['slug'],
-        "priceCurrency" => "INR",
-        "price" => $price,
-        "availability" => ($productData['stock_status'] === 'instock' || ($productData['stock'] ?? 0) > 0) ? "https://schema.org/InStock" : "https://schema.org/OutOfStock",
-        "itemCondition" => "https://schema.org/NewCondition"
-    ]
+    "offers" => $offerSchema
 ];
+
 $customSchema = json_encode($productSchema, JSON_UNESCAPED_SLASHES | JSON_PRETTY_PRINT);
 
 // Now include header

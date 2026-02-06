@@ -1201,6 +1201,32 @@ if ($EXECUTE) {
     }
 }
 
+// ==========================================
+// STEP 33: Product Category Modernization
+// ==========================================
+echo "STEP 33: Modernizing product category_id column\n";
+echo "---------------------------------\n";
+
+// 1. Remove redundant category_ids column if it exists
+if (columnExists($db, 'products', 'category_ids')) {
+    executeSql($db, "ALTER TABLE products DROP COLUMN category_ids", "Remove redundant category_ids column", $errors, $success, $EXECUTE);
+}
+
+// 2. Drop Foreign Key on category_id if it exists
+// Standard constraint name products_ibfk_1
+dropForeignKeyIfExists($db, 'products', 'products_ibfk_1', $errors, $success, $EXECUTE);
+
+// 3. Drop Index on category_id if it exists
+try {
+    // If we're in DRY-RUN mode, executeSql won't actually run, so we just log the intent
+    executeSql($db, "DROP INDEX category_id ON products", "Drop index 'category_id' on products", $errors, $success, $EXECUTE);
+} catch (Exception $e) {
+    // Index might not exist
+}
+
+// 4. Modify category_id to TEXT to support multiple JSON IDs
+executeSql($db, "ALTER TABLE products MODIFY COLUMN category_id TEXT DEFAULT NULL", "Modify products.category_id to TEXT for multi-category support", $errors, $success, $EXECUTE);
+
 echo "\n========================================\n";
 echo "SUMMARY\n";
 echo "========================================\n";

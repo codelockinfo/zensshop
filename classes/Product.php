@@ -267,6 +267,12 @@ class Product {
                 } elseif (!empty($data['category_id'])) {
                     $primaryCategoryId = $data['category_id'];
                 }
+
+                // Prepare category data for storage in category_id column (as JSON if multiple)
+                $categoryData = $primaryCategoryId;
+                if (!empty($data['category_ids']) && is_array($data['category_ids'])) {
+                     $categoryData = json_encode(array_values($data['category_ids']));
+                }
                 
                 // Determine Store ID
                 $storeId = $_SESSION['store_id'] ?? ($data['store_id'] ?? null);
@@ -292,7 +298,7 @@ class Product {
                         $data['sku'] ?? null,
                         $data['description'] ?? null,
                         $data['short_description'] ?? null,
-                        $primaryCategoryId,
+                        $categoryData,
                         $data['price'] ?? 0,
                         $data['currency'] ?? 'INR',
                         $data['sale_price'] ?? null,
@@ -375,26 +381,24 @@ class Product {
                                  'sale_price', 'cost_per_item', 'total_expense', 'stock_quantity', 'stock_status', 'images', 'featured_image',
                                  'brand', 'status', 'featured', 'highlights', 'shipping_policy', 'return_policy'];
                 
-                // Handle category_id (use first category if multiple)
-                if (isset($data['category_ids']) && is_array($data['category_ids']) && !empty($data['category_ids'])) {
-                    $data['category_id'] = $data['category_ids'][0];
-                }
-                
                 foreach ($allowedFields as $field) {
                     if (array_key_exists($field, $data)) {
                         $fields[] = "{$field} = ?";
                         
                         if ($field === 'images' && is_array($data[$field])) {
-                            $params[] = json_encode($data[$field]);
+                            $params[] = json_encode(array_values($data[$field]));
+                        } elseif ($field === 'category_id') {
+                            if (!empty($data['category_ids']) && is_array($data['category_ids'])) {
+                                $params[] = json_encode(array_values($data['category_ids']));
+                            } else {
+                                $params[] = $data[$field] ?: null;
+                            }
                         } elseif ($field === 'featured') {
                             // Ensure featured is an integer (0 or 1)
                             $params[] = (int)$data[$field];
                         } elseif ($field === 'sku' && $data[$field] === '') {
                              // Handle empty SKU -> NULL for unique constraint
                              $params[] = null;
-                        } elseif ($field === 'category_id' && ($data[$field] === null || $data[$field] === '')) {
-                            // Handle NULL category_id properly
-                            $params[] = null;
                         } else {
                             $params[] = $data[$field];
                         }
