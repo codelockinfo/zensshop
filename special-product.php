@@ -447,7 +447,7 @@ require_once __DIR__ . '/includes/header.php';
                             $pBg = $plat['bg'] ?? '#ffffff';
                             $pText = $plat['text'] ?? '#111827';
                         ?>
-                        <a href="<?php echo htmlspecialchars($pLink); ?>" target="_blank" class="h-[58px] px-6 rounded flex items-center gap-3 shadow-lg hover:shadow-xl transition-all transform hover:-translate-y-1 group border border-gray-100" style="background-color: <?php echo $pBg; ?>; color: <?php echo $pText; ?>;" title="Buy on <?php echo htmlspecialchars($pName); ?>">
+                        <a href="<?php echo htmlspecialchars($pLink); ?>" target="_blank" class="h-[58px] px-6 rounded flex items-center gap-3 shadow-lg hover:shadow-xl transition-all transform hover:-translate-y-1 group border border-gray-100" style="background-color: <?php echo $pBg; ?>; color: <?php echo $pText; ?>;" title="<?php echo htmlspecialchars($pName); ?>">
                             <?php if ($pImg): ?>
                                 <img src="<?php echo htmlspecialchars($pImg); ?>" alt="" class="h-7 md:h-8 w-auto object-contain rounded-full">
                             <?php endif; ?>
