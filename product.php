@@ -55,6 +55,42 @@ if (!empty($images)) {
     $schemaImages = [$mainImage];
 }
 
+// --- RECENTLY VIEWED LOGIC (Must be before headers) ---
+// Get recently viewed (from cookie)
+$recentlyViewed = [];
+$recentIds = isset($_COOKIE['recently_viewed']) ? json_decode($_COOKIE['recently_viewed'], true) : [];
+if (!is_array($recentIds)) { $recentIds = []; }
+
+// Add current product to top of list
+// Use 10-digit product_id if available, otherwise fallback to id
+$currentId = $productData['product_id'] ?? $productData['id'];
+array_unshift($recentIds, $currentId);
+$recentIds = array_unique($recentIds);
+$recentIds = array_slice($recentIds, 0, 10); // Keep last 10
+
+// Set cookie (valid for 30 days)
+setcookie('recently_viewed', json_encode($recentIds), time() + (30 * 24 * 60 * 60), '/'); // Allow accross entire domain
+$_COOKIE['recently_viewed'] = json_encode($recentIds); // Update current runtime global
+
+// Fetch the actual product data for these IDs (excluding current)
+$displayRecentIds = array_filter($recentIds, function($id) use ($currentId) {
+    return $id != $currentId;
+});
+$displayRecentIds = array_slice($displayRecentIds, 0, 4);
+
+if (!empty($displayRecentIds)) {
+    $placeholders = implode(',', array_fill(0, count($displayRecentIds), '?'));
+    // Query by product_id primarily, but fallback to id for legacy cookies could be added if needed.
+    // Given user request, we stick to product_id column for these lookups if permissible, 
+    // but typically `products` table primary key is `id`. 
+    // If the cookie stores `product_id` (the 10-digit one), we must query `product_id` column.
+    $recentlyViewed = $db->fetchAll(
+        "SELECT * FROM products WHERE product_id IN ($placeholders) AND status = 'active'",
+        $displayRecentIds
+    );
+}
+// -------------------------------------------------------
+
 // Get product categories
 $productCategories = [];
 try {
@@ -161,38 +197,6 @@ if (!empty($productCategories)) {
         $relatedProducts = array_slice($relatedProducts, 0, 4);
     }
 }
-
-// Get recently viewed (from cookie or session)
-$recentlyViewed = [];
-if (isset($_COOKIE['recently_viewed'])) {
-    $recentIds = json_decode($_COOKIE['recently_viewed'], true);
-    if (is_array($recentIds) && !empty($recentIds)) {
-        $recentIds = array_filter($recentIds, function($id) use ($productData) {
-            return $id != $productData['id'];
-        });
-        $recentIds = array_slice($recentIds, 0, 4);
-        if (!empty($recentIds)) {
-            $placeholders = implode(',', array_fill(0, count($recentIds), '?'));
-            $recentlyViewed = $db->fetchAll(
-                "SELECT * FROM products WHERE id IN ($placeholders) AND status = 'active'",
-                $recentIds
-            );
-        }
-    }
-}
-
-// Add current product to recently viewed
-$recentIds = isset($_COOKIE['recently_viewed']) ? json_decode($_COOKIE['recently_viewed'], true) : [];
-if (!is_array($recentIds)) {
-    $recentIds = [];
-}
-array_unshift($recentIds, $productData['id']);
-$recentIds = array_unique($recentIds);
-$recentIds = array_slice($recentIds, 0, 10);
-if (!headers_sent()) {
-    setcookie('recently_viewed', json_encode($recentIds), time() + (30 * 24 * 60 * 60), '/');
-}
-$_COOKIE['recently_viewed'] = json_encode($recentIds);
 
 // Product Options and Variants (already fetched above)
 ?>
@@ -846,7 +850,7 @@ $_COOKIE['recently_viewed'] = json_encode($recentIds);
                                 <a href="<?php echo $baseUrl; ?>/product?slug=<?php echo urlencode($item['slug'] ?? ''); ?>" class="block">
                                     <img src="<?php echo htmlspecialchars($itemImage); ?>" 
                                             alt="<?php echo htmlspecialchars($item['name'] ?? 'Product'); ?>"
-                                            class="w-full h-64 object-contain group-hover:scale-110 transition-transform duration-500"
+                                            class="w-full h-64 object-cover group-hover:scale-110 transition-transform duration-500"
                                             loading="lazy"
                                             onerror="this.src='https://placehold.co/600x600?text=Product+Image'">
                                 </a>
@@ -1001,7 +1005,7 @@ $_COOKIE['recently_viewed'] = json_encode($recentIds);
                         <a href="<?php echo $baseUrl; ?>/product?slug=<?php echo urlencode($item['slug'] ?? ''); ?>" class="block">
                             <img src="<?php echo htmlspecialchars($itemImage); ?>" 
                                  alt="<?php echo htmlspecialchars($item['name'] ?? 'Product'); ?>"
-                                 class="w-full h-64 object-contain group-hover:scale-110 transition-transform duration-500"
+                                 class="w-full h-64 object-cover group-hover:scale-110 transition-transform duration-500"
                                  onerror="this.src='https://placehold.co/600x600?text=Product+Image'">
                         </a>
                         <?php if ($item['id'] == $productData['id']): ?>

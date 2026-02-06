@@ -148,7 +148,7 @@ if (isset($_GET['ajax'])) {
                 // Image Wrapper
                 echo '<div class="relative overflow-hidden card-image-wrap">';
                     echo '<a href="' . url('product?slug=' . urlencode($itemSlug)) . '">';
-                    echo '<img src="' . htmlspecialchars($mainImage) . '" alt="' . htmlspecialchars($itemName) . '" class="w-full h-64 object-contain group-hover:scale-110 transition-transform duration-500" onerror="this.src=\'https://placehold.co/600x600?text=Product+Image\'">';
+                    echo '<img src="' . htmlspecialchars($mainImage) . '" alt="' . htmlspecialchars($itemName) . '" class="w-full h-64 object-cover group-hover:scale-110 transition-transform duration-500" onerror="this.src=\'https://placehold.co/600x600?text=Product+Image\'">';
                     echo '</a>';
                     
                     if ($discount > 0) {
