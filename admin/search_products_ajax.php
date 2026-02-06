@@ -42,10 +42,11 @@ if (empty($products)) {
     exit;
 }
 
-foreach ($products as $item): 
+foreach ($products as $index => $item): 
     $mainImage = getProductImage($item);
 ?>
-<tr>
+<tr data-row-number="<?php echo $index + 1; ?>">
+    <td><?php echo $index + 1; ?></td>
     <td>
         <div class="flex items-center space-x-3">
             <img src="<?php echo htmlspecialchars($mainImage); ?>" alt="<?php echo htmlspecialchars($item['name']); ?>" class="w-16 h-16 object-cover rounded flex-shrink-0">

@@ -28,30 +28,70 @@ if (!$storeId && isset($_SESSION['user_email'])) {
 }
 $activeCategories = $db->fetchAll("SELECT name, slug FROM categories WHERE status='active' AND store_id = ? ORDER BY name ASC", [$storeId]);
 
-// Helper for Quick Links dropdown
-function renderQuickLinkOptions($categories) {
-    echo '<option value="">-- Choose Page --</option>';
-    echo '<optgroup label="System Pages">';
-    echo '<option value="/" data-label="Home">Home</option>';
-    echo '<option value="shop" data-label="Shop">Shop All</option>';
-    echo '<option value="account" data-label="My Account">My Account</option>';
-    echo '<option value="account?section=orders" data-label="My Orders">My Orders</option>';
-    echo '<option value="wishlist" data-label="Wishlist">Wishlist</option>';
-    echo '<option value="cart" data-label="Shopping Cart">Shopping Cart</option>';
-    echo '<option value="checkout" data-label="Checkout">Checkout</option>';
-    echo '<option value="about" data-label="About Us">About Us</option>';
-    echo '<option value="contact" data-label="Contact">Contact Us</option>';
-    echo '</optgroup>';
-    
-    if (!empty($categories)) {
-        echo '<optgroup label="Categories">';
-        foreach ($categories as $cat) {
-            $catUrl = 'category/' . $cat['slug'];
-            echo '<option value="' . htmlspecialchars($catUrl) . '" data-label="' . htmlspecialchars($cat['name']) . '">' . htmlspecialchars($cat['name']) . '</option>';
+// Fetch Linkable Resources for the Picker
+$linkResources = [
+    'system' => [
+        ['label' => 'Home', 'url' => '/'],
+        ['label' => 'Shop All', 'url' => 'shop'],
+        ['label' => 'My Account', 'url' => 'account'],
+        ['label' => 'Wishlist', 'url' => 'wishlist'],
+        ['label' => 'Shopping Cart', 'url' => 'cart'],
+        ['label' => 'Checkout', 'url' => 'checkout'],
+        ['label' => 'About Us', 'url' => 'about'], // Keeping here if not in DB
+        ['label' => 'Contact Us', 'url' => 'support']
+    ],
+    'pages' => [],
+    'products' => [],
+    'categories' => [],
+    'blogs' => [],
+    'landing_pages' => []
+];
+
+// 1. Fetch CMS Pages (DB Only)
+try {
+    $dbPages = $db->fetchAll("SELECT title as label, slug FROM pages WHERE status='active' OR status='published'"); 
+    if ($dbPages) {
+        foreach($dbPages as $p) {
+             $p['url'] = 'page?slug=' . $p['slug']; 
+             $linkResources['pages'][] = $p;
         }
-        echo '</optgroup>';
+    }
+} catch(Exception $e) {}
+
+// 2. Products
+try {
+    $linkResources['products'] = $db->fetchAll("SELECT id, name as label, slug FROM products WHERE status='active' OR status IS NULL ORDER BY name ASC");
+} catch(Exception $e) {}
+
+// 3. Categories
+try {
+    $linkResources['categories'] = $db->fetchAll("SELECT id, name as label, slug FROM categories WHERE status='active' AND store_id = ? ORDER BY name ASC", [$storeId]);
+} catch(Exception $e) {}
+
+// 4. Blogs
+try {
+    $linkResources['blogs'] = $db->fetchAll("SELECT id, title as label, slug FROM blogs WHERE status='published' AND store_id = ? ORDER BY title ASC", [$storeId]);
+} catch(Exception $e) {}
+
+// 5. Landing Pages
+try {
+     // Table uses 'name' and has no 'status'/'store_id' columns by default
+    $linkResources['landing_pages'] = $db->fetchAll("SELECT id, name as label, slug FROM landing_pages ORDER BY name ASC");
+} catch(Exception $e) {}
+
+foreach ($linkResources as $type => &$items) {
+    foreach ($items as &$item) {
+        $item['full_label'] = $item['label']; // Store full label for input filling
+        if (isset($item['label']) && strlen($item['label']) > 45) { // Truncate for UI dropdown
+            $item['label'] = substr($item['label'], 0, 45) . '...';
+        }
     }
 }
+unset($items); // Break reference
+
+// Helper to pass data to JS
+$linkResourcesJson = json_encode($linkResources);
+
 
 // Handle Actions
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
@@ -472,18 +512,37 @@ require_once __DIR__ . '/../includes/admin-header.php';
 
 <!-- Edit Modal -->
 <div id="editItemModal" class="hidden fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center">
-    <div class="bg-white rounded-lg p-6 w-full max-w-lg">
+    <div class="bg-white rounded-lg p-6 w-full max-w-4xl">
         <h3 class="font-bold text-lg mb-4">Edit Item</h3>
         <form method="POST" enctype="multipart/form-data">
             <input type="hidden" name="action" value="update_menu_item">
             <input type="hidden" name="item_id" id="edit_item_id">
             <input type="hidden" name="menu_id" value="<?php echo $selectedMenuId; ?>">
             <div class="grid grid-cols-2 gap-4">
-                <div class="col-span-2">
-                    <label class="block text-xs font-bold mb-1">Quick Link (Auto-fill)</label>
-                    <select onchange="autoFillEdit(this)" class="w-full border p-2 rounded text-sm bg-blue-50">
-                        <?php renderQuickLinkOptions($activeCategories); ?>
-                    </select>
+                <div class="col-span-2 bg-gray-50 p-3 rounded border border-gray-200">
+                    <label class="block text-xs font-bold mb-2 text-gray-500 uppercase">Link Destination</label>
+                    <div class="flex flex-col gap-3">
+                        <div>
+                            <label class="block text-[10px] font-bold text-gray-400 mb-1">Resource Type</label>
+                            <select id="edit_link_type" onchange="updateLinkPicker(this, 'edit_link_item', 'edit_url', 'edit_label')" class="w-full border p-2 rounded text-sm outline-none focus:ring-1 focus:ring-blue-500">
+                                <option value="">-- Select Type --</option>
+                                <option value="system">System Link</option>
+                                <option value="pages">Store Page</option>
+                                <option value="products">Product</option>
+                                <option value="categories">Category</option>
+                                <option value="blogs">Blog Post</option>
+                                <option value="landing_pages">Special Page </option>
+                                <option value="custom">Custom URL</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block text-[10px] font-bold text-gray-400 mb-1">Select Item</label>
+                            <select id="edit_link_item" onchange="applyLinkSelection(this, 'edit_url', 'edit_label')" class="w-full border p-2 rounded text-sm outline-none focus:ring-1 focus:ring-blue-500 disabled:bg-gray-100 disabled:text-gray-400" disabled>
+                                <option value="">-- Select Reference --</option>
+                            </select>
+                        </div>
+                    </div>
+                    <p class="text-[10px] text-gray-400 mt-1 ml-1">Select a resource type, then choose the specific item to auto-fill the URL.</p>
                 </div>
                 <div class="col-span-2"><label class="block text-xs font-bold mb-1">Label</label><input type="text" name="label" id="edit_label" class="w-full border p-2 rounded" required></div>
                 <div class="col-span-2"><label class="block text-xs font-bold mb-1">URL</label><input type="text" name="url" id="edit_url" class="w-full border p-2 rounded"></div>
@@ -562,44 +621,115 @@ require_once __DIR__ . '/../includes/admin-header.php';
 // ... (Keep existing JS for UI)
 // Re-inserting required JS functions from previous file to ensure functionality
 
-function addBulkRow() {
-    const container = document.getElementById('bulk_rows_container');
-    const index = container.children.length;
-    const row = document.createElement('div');
-    row.className = "flex gap-3 items-start bg-gray-50 p-3 rounded border border-gray-100 group relative";
-    row.innerHTML = `
-        <div class="flex-none w-48">
-            <label class="block text-xs font-bold text-gray-400 mb-1">Quick Link</label>
-            <select onchange="autoFillBulk(this, ${index})" class="w-full border p-2 rounded text-sm bg-blue-50 focus:ring-1 focus:ring-blue-500 outline-none">
-                <?php 
-                   ob_start();
-                   renderQuickLinkOptions($activeCategories); 
-                   echo addslashes(ob_get_clean());
-                ?>
-            </select>
-        </div>
-        <div class="flex-1">
-            <label class="block text-xs font-bold text-gray-400 mb-1">Label</label>
-            <input type="text" name="items[${index}][label]" id="bulk_label_${index}" placeholder="Name" class="w-full border p-2 rounded text-sm focus:ring-1 focus:ring-blue-500 outline-none" required>
-        </div>
-        <div class="flex-1">
-            <label class="block text-xs font-bold text-gray-400 mb-1">Link</label>
-            <input type="text" name="items[${index}][url]" id="bulk_url_${index}" placeholder="#" class="w-full border p-2 rounded text-sm focus:ring-1 focus:ring-blue-500 outline-none">
-        </div>
-        <div class="w-20">
-             <label class="block text-xs font-bold text-gray-400 mb-1">Badge</label>
-             <input type="text" name="items[${index}][badge]" placeholder="HOT" class="w-full border p-2 rounded text-sm">
-        </div>
-        <div class="flex-none pt-6">
-             <label class="cursor-pointer text-gray-400 hover:text-blue-600 tooltip" title="Upload Icon/Image">
-                 <i class="fas fa-image text-lg"></i>
-                 <input type="file" name="items[${index}][image]" class="hidden">
-             </label>
-        </div>
-        <button type="button" onclick="this.parentElement.remove()" class="absolute -top-2 -right-2 bg-white rounded-full p-1 shadow text-gray-300 hover:text-red-500 hover:shadow-md transition"><i class="fas fa-times-circle"></i></button>
-    `;
-    container.appendChild(row);
-}
+// JS Resources
+    const LINK_RESOURCES = <?php echo $linkResourcesJson; ?>;
+
+    function getResourceUrl(type, item) {
+        if (!item) return '';
+        if (type === 'system') return item.url;
+        if (type === 'pages') return item.url;
+        if (type === 'products') return 'product?slug=' + item.slug;
+        if (type === 'categories') return 'shop?category=' + item.slug;
+        if (type === 'blogs') return 'blog?slug=' + item.slug;
+        if (type === 'landing_pages') return 'landing?slug=' + item.slug;
+        return '';
+    }
+
+    function updateLinkPicker(typeSelect, itemSelectId, urlInputId, labelInputId) {
+        const type = typeSelect.value;
+        const itemSelect = document.getElementById(itemSelectId);
+        const urlInput = document.getElementById(urlInputId);
+        
+        // Clear item select
+        itemSelect.innerHTML = '<option value="">-- Select Item --</option>';
+        itemSelect.disabled = true;
+        
+        if (type === 'custom') {
+            // Enable URL input usage manually
+            return;
+        }
+
+        if (LINK_RESOURCES[type] && LINK_RESOURCES[type].length > 0) {
+            LINK_RESOURCES[type].forEach(item => {
+                const opt = document.createElement('option');
+                opt.value = JSON.stringify(item); // Store full item object
+                opt.textContent = item.label;
+                itemSelect.appendChild(opt);
+            });
+            itemSelect.disabled = false;
+        } else if (type) {
+            itemSelect.innerHTML = '<option value="">No items found</option>';
+        }
+    }
+
+    function applyLinkSelection(itemSelect, urlInputId, labelInputId) {
+        if (!itemSelect.value) return;
+        
+        // Robustly find the Type select using ID pattern (works for edit_link_item -> edit_link_type AND bulk_item_X -> bulk_type_X)
+        const typeSelectId = itemSelect.id.replace('item', 'type'); // e.g. bulk_item_0 -> bulk_type_0
+        const typeSelect = document.getElementById(typeSelectId);
+        const type = typeSelect ? typeSelect.value : '';
+        
+        try {
+            const item = JSON.parse(itemSelect.value);
+            const url = getResourceUrl(type, item);
+            
+            if (url) document.getElementById(urlInputId).value = url;
+            // Always update label to match selected item (use full untruncated label)
+            if (labelInputId) {
+                 document.getElementById(labelInputId).value = item.full_label || item.label;
+            }
+        } catch(e) { console.error("Error parsing selection", e); }
+    }
+
+    function addBulkRow() {
+        const container = document.getElementById('bulk_rows_container');
+        const index = container.children.length;
+        const row = document.createElement('div');
+        row.className = "flex gap-3 items-start bg-gray-50 p-3 rounded border border-gray-100 group relative";
+        
+        // Dynamic Quick Link UI for Bulk Row
+        row.innerHTML = `
+            <div class="flex-none w-64">
+                <label class="block text-xs font-bold text-gray-400 mb-1">Quick Link</label>
+                <div class="grid grid-cols-2 gap-1">
+                    <select id="bulk_type_${index}" onchange="updateLinkPicker(this, 'bulk_item_${index}', 'bulk_url_${index}', 'bulk_label_${index}')" class="w-full border p-1 rounded text-xs outline-none focus:ring-1 focus:ring-blue-500">
+                        <option value="">Type</option>
+                        <option value="system">System Link</option>
+                        <option value="pages">Store Page</option>
+                        <option value="products">Product</option>
+                        <option value="categories">Category</option>
+                        <option value="blogs">Blog</option>
+                        <option value="landing_pages">Landing Page</option>
+                        <option value="custom">URL</option>
+                    </select>
+                    <select id="bulk_item_${index}" onchange="applyLinkSelection(this, 'bulk_url_${index}', 'bulk_label_${index}')" class="w-full border p-1 rounded text-xs outline-none focus:ring-1 focus:ring-blue-500 disabled:bg-gray-100" disabled>
+                        <option value="">Item</option>
+                    </select>
+                </div>
+            </div>
+            <div class="flex-1">
+                <label class="block text-xs font-bold text-gray-400 mb-1">Label</label>
+                <input type="text" name="items[${index}][label]" id="bulk_label_${index}" placeholder="Name" class="w-full border p-2 rounded text-sm focus:ring-1 focus:ring-blue-500 outline-none" required>
+            </div>
+            <div class="flex-1">
+                <label class="block text-xs font-bold text-gray-400 mb-1">Link</label>
+                <input type="text" name="items[${index}][url]" id="bulk_url_${index}" placeholder="#" class="w-full border p-2 rounded text-sm focus:ring-1 focus:ring-blue-500 outline-none">
+            </div>
+            <div class="w-20">
+                 <label class="block text-xs font-bold text-gray-400 mb-1">Badge</label>
+                 <input type="text" name="items[${index}][badge]" placeholder="HOT" class="w-full border p-2 rounded text-sm">
+            </div>
+            <div class="flex-none pt-6">
+                 <label class="cursor-pointer text-gray-400 hover:text-blue-600 tooltip" title="Upload Icon/Image">
+                     <i class="fas fa-image text-lg"></i>
+                     <input type="file" name="items[${index}][image]" class="hidden">
+                 </label>
+            </div>
+            <button type="button" onclick="this.parentElement.remove()" class="absolute -top-2 -right-2 bg-white rounded-full p-1 shadow text-gray-300 hover:text-red-500 hover:shadow-md transition"><i class="fas fa-times-circle"></i></button>
+        `;
+        container.appendChild(row);
+    }
 function openAddModal(parentId, parentName) {
     document.getElementById('bulk_parent_id').value = parentId || '';
     document.getElementById('bulk_parent_name').innerText = parentName || 'Top Level';

@@ -348,6 +348,13 @@ function updateLink(select) {
         if (linkInput) {
             linkInput.value = 'category?slug=' + slug;
         }
+        
+        // Also update the Title input with the selected category name
+        const titleInput = row.querySelector('input[name="title[]"]');
+        const selectedText = select.options[select.selectedIndex].text;
+        if (titleInput) {
+            titleInput.value = selectedText.trim();
+        }
     }
 }
 

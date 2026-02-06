@@ -269,16 +269,163 @@ $existingVariants = $product->getVariants($productId);
                 
                 <div class="admin-form-group">
                     <label class="admin-form-label">Category *</label>
-                    <select name="category_ids[]" class="admin-form-select" required>
-                        <option value="">Choose category</option>
-                        <?php 
-                        $selectedCats = isset($_POST['category_ids']) ? $_POST['category_ids'] : $existingCategoryIds;
-                        foreach ($categories as $cat): ?>
-                        <option value="<?php echo $cat['id']; ?>" <?php echo in_array($cat['id'], $selectedCats) ? 'selected' : ''; ?>>
-                            <?php echo htmlspecialchars($cat['name']); ?>
-                        </option>
-                        <?php endforeach; ?>
-                    </select>
+                    
+                    <!-- Custom Multi-Select UI -->
+                    <div id="category-multiselect-container" class="relative">
+                        <!-- Hidden Select for Form Submission -->
+                        <select name="category_ids[]" id="real-category-select" multiple class="hidden" required>
+                            <?php 
+                            // Ensure clean array of selected IDs
+                            $selectedCats = isset($_POST['category_ids']) ? $_POST['category_ids'] : $existingCategoryIds;
+                            $selectedCats = array_map('strval', $selectedCats); // Standardize to string for JS comparison
+                            
+                            // Re-render options for fallback
+                            foreach ($categories as $cat) {
+                                $isSelected = in_array((string)$cat['id'], $selectedCats);
+                                echo '<option value="' . htmlspecialchars($cat['id']) . '" ' . ($isSelected ? 'selected' : '') . '>' . htmlspecialchars($cat['name']) . '</option>';
+                            }
+                            ?>
+                        </select>
+
+                        <!-- Visual Input -->
+                        <div class="admin-form-input min-h-[42px] flex flex-wrap gap-2 p-2 focus-within:ring-2 focus-within:ring-blue-500 cursor-text bg-white" 
+                             onclick="document.getElementById('category-search').focus()">
+                             
+                            <!-- Selected Tags Container - Removed 'contents' class for stability -->
+                            <div id="category-tags" class="flex flex-wrap gap-2 items-center"></div>
+                            
+                            <!-- Search Input -->
+                            <input type="text" id="category-search" placeholder="Select category..." 
+                                   class="flex-1 min-w-[120px] outline-none bg-transparent text-sm p-1" autocomplete="off">
+                        </div>
+                        
+                        <!-- Dropdown List -->
+                        <div id="category-dropdown" class="absolute left-0 right-0 top-full mt-1 bg-white border border-gray-200 rounded-lg shadow-lg z-50 max-h-60 overflow-y-auto hidden">
+                            <!-- Items injected by JS -->
+                        </div>
+                    </div>
+
+                    <script>
+                    document.addEventListener('DOMContentLoaded', function() {
+                        const realSelect = document.getElementById('real-category-select');
+                        const tagsContainer = document.getElementById('category-tags');
+                        const searchInput = document.getElementById('category-search');
+                        const dropdown = document.getElementById('category-dropdown');
+                        const container = document.getElementById('category-multiselect-container');
+                        
+                        // Pass PHP data directly to JS to avoid DOM parsing issues
+                        const categoriesData = <?php echo json_encode($categories); ?>;
+                        const selectedIds = <?php echo json_encode(array_values($selectedCats)); ?>.map(String);
+                        
+                        // Initialize options state
+                        let allOptions = categoriesData.map(cat => ({
+                            value: String(cat.id),
+                            text: cat.name,
+                            selected: selectedIds.includes(String(cat.id))
+                        }));
+                        
+                        function escapeHtml(text) {
+                            if (!text) return text;
+                            return text.toString()
+                                .replace(/&/g, "&amp;")
+                                .replace(/</g, "&lt;")
+                                .replace(/>/g, "&gt;")
+                                .replace(/"/g, "&quot;")
+                                .replace(/'/g, "&#039;");
+                        }
+
+                        function renderTags() {
+                            tagsContainer.innerHTML = '';
+                            const selected = allOptions.filter(o => o.selected);
+                            
+                            selected.forEach(opt => {
+                                const tag = document.createElement('span');
+                                // Use inline styles for colors to avoid generic class conflicts (like .alert auto-hide)
+                                tag.className = 'text-xs font-semibold px-2 py-1 rounded flex items-center gap-1 select-none border border-blue-200';
+                                tag.style.backgroundColor = '#e0f2fe'; // Safe Sky Blue
+                                tag.style.color = '#0369a1';
+                                
+                                tag.innerHTML = `
+                                    ${escapeHtml(opt.text)}
+                                    <button type="button" style="color: #0369a1;" class="hover:text-blue-900 focus:outline-none" onclick="toggleCategory('${escapeHtml(opt.value)}'); event.stopPropagation();">
+                                        <i class="fas fa-times"></i>
+                                    </button>
+                                `;
+                                tagsContainer.appendChild(tag);
+                            });
+                            
+                            // Adjust placeholder
+                            searchInput.placeholder = selected.length > 0 ? '' : 'Select category...';
+                        }
+
+                        function renderDropdown(filter = '') {
+                            dropdown.innerHTML = '';
+                            // Filter OUT selected options
+                            const filtered = allOptions.filter(o => !o.selected && o.text.toLowerCase().includes(filter.toLowerCase()));
+                            
+                            if (filtered.length === 0) {
+                                dropdown.innerHTML = '<div class="p-2 text-gray-500 text-sm">No available categories</div>';
+                            } else {
+                                filtered.forEach(opt => {
+                                    const item = document.createElement('div');
+                                    item.className = 'p-2 hover:bg-gray-50 cursor-pointer text-sm text-gray-700 flex justify-between items-center';
+                                    item.innerHTML = `<span>${escapeHtml(opt.text)}</span>`;
+                                    
+                                    item.onclick = (e) => {
+                                        e.preventDefault();
+                                        e.stopPropagation();
+                                        toggleCategory(opt.value);
+                                        searchInput.value = '';
+                                        searchInput.focus();
+                                        renderDropdown(''); // Refresh list
+                                    };
+                                    dropdown.appendChild(item);
+                                });
+                            }
+                        }
+
+                        // Attach to window so onclick attribute works
+                        window.toggleCategory = function(val) {
+                            // Find in our JS state
+                            const opt = allOptions.find(o => o.value === val);
+                            if (opt) {
+                                opt.selected = !opt.selected;
+                                
+                                // Sync with real hidden select for form submission
+                                // We iterate options to match value
+                                for (let i = 0; i < realSelect.options.length; i++) {
+                                    if (realSelect.options[i].value === val) {
+                                        realSelect.options[i].selected = opt.selected;
+                                        break;
+                                    }
+                                }
+                                
+                                renderTags();
+                                renderDropdown(searchInput.value);
+                            }
+                        }
+
+                        // Event Listeners
+                        searchInput.addEventListener('focus', () => {
+                            dropdown.classList.remove('hidden');
+                            renderDropdown(searchInput.value);
+                        });
+                        
+                        document.addEventListener('click', (e) => {
+                            if (!container.contains(e.target)) {
+                                dropdown.classList.add('hidden');
+                            }
+                        });
+
+                        searchInput.addEventListener('input', (e) => {
+                            dropdown.classList.remove('hidden');
+                            renderDropdown(e.target.value);
+                        });
+
+                        // Initial Render
+                        renderTags();
+                    });
+                    </script>
                 </div>
                 
                 
