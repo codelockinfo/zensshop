@@ -99,9 +99,14 @@ $catIds = [];
 if (!empty($rawCatId)) {
     $decoded = json_decode($rawCatId, true);
     if (json_last_error() === JSON_ERROR_NONE && is_array($decoded)) {
-        $catIds = $decoded;
+        $catIds = array_map('strval', $decoded);
     } else {
-        $catIds = [$rawCatId];
+        // Regex fallback: extract all numbers
+        if (preg_match_all('/\d+/', $rawCatId, $matches)) {
+            $catIds = $matches[0];
+        } else {
+            $catIds = [(string)$rawCatId];
+        }
     }
 }
 

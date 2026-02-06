@@ -251,35 +251,44 @@ $variants = $variantsData['variants'] ?? [];
                     <label class="admin-form-label">Category</label>
                     <div class="flex flex-wrap gap-2 py-1">
                     <?php 
-                    // 1. Get IDs from products table (Source of Truth)
+                    // 1. Get IDs from Source of Truth (products table)
                     $rawCatId = trim($productData['category_id'] ?? '');
                     $targetIds = [];
                     
                     if (!empty($rawCatId)) {
                         $decoded = json_decode($rawCatId, true);
                         if (json_last_error() === JSON_ERROR_NONE && is_array($decoded)) {
-                            $targetIds = $decoded;
+                            $targetIds = array_map('strval', $decoded);
                         } else {
-                            $targetIds = [$rawCatId];
+                            // Extract numeric IDs even if JSON is malformed
+                            if (preg_match_all('/\d+/', $rawCatId, $matches)) {
+                                $targetIds = $matches[0];
+                            } else {
+                                $targetIds = [(string)$rawCatId];
+                            }
                         }
                     }
 
-                    // 2. If products table is empty, try mapping table
+                    // 2. Fallback to mapping table if still empty
                     if (empty($targetIds)) {
                         $mappingIds = $db->fetchAll("SELECT category_id FROM product_categories WHERE product_id = ?", [$productData['product_id']]);
                         $targetIds = array_column($mappingIds, 'category_id');
                     }
 
-                    // 3. Fetch names for all IDs
+                    // 3. Fetch names for all IDs (Global check, no status/store filter here to see everything)
                     if (!empty($targetIds)) {
                         $placeholders = implode(',', array_fill(0, count($targetIds), '?'));
-                        $categoriesFound = $db->fetchAll("SELECT name FROM categories WHERE id IN ($placeholders) ORDER BY name ASC", $targetIds);
+                        $categoriesFound = $db->fetchAll("SELECT name FROM categories WHERE id IN ($placeholders)", $targetIds);
                         
-                        foreach ($categoriesFound as $cat) {
-                            echo '<span class="bg-blue-100 text-blue-800 text-xs font-semibold px-2.5 py-0.5 rounded">' . htmlspecialchars($cat['name']) . '</span>';
+                        if (!empty($categoriesFound)) {
+                            foreach ($categoriesFound as $cat) {
+                                echo '<span class="bg-blue-100 text-blue-800 text-xs font-semibold px-2.5 py-0.5 rounded shadow-sm">' . htmlspecialchars($cat['name']) . '</span>';
+                            }
+                        } else {
+                            echo '<p class="text-xs text-gray-500 italic">Categories found in record (' . implode(',', $targetIds) . ') but names not found in database.</p>';
                         }
                     } else {
-                        echo '<p class="text-gray-700">Uncategorized</p>';
+                        echo '<p class="text-gray-700 italic">Uncategorized</p>';
                     }
                     ?>
                     </div>

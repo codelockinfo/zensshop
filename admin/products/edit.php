@@ -186,7 +186,7 @@ $pageTitle = 'Edit Product';
 require_once __DIR__ . '/../../includes/functions.php';
 require_once __DIR__ . '/../../includes/admin-header.php';
 
-$categories = $db->fetchAll("SELECT * FROM categories WHERE status = 'active' AND store_id = ? ORDER BY name", [$storeId]);
+$categories = $db->fetchAll("SELECT * FROM categories WHERE (store_id = ? OR store_id IS NULL) AND (status = 'active' OR id IN (SELECT category_id FROM product_categories WHERE product_id = ?)) ORDER BY name", [$storeId, $productData['product_id']]);
 
 // Get existing product categories
 $existingCategoryIds = $db->fetchAll(
@@ -204,8 +204,12 @@ if (empty($existingCategoryIds) && !empty($productData['category_id'])) {
     if (json_last_error() === JSON_ERROR_NONE && is_array($decoded)) {
         $existingCategoryIds = array_map('strval', $decoded);
     } else {
-        // Fallback to single ID
-        $existingCategoryIds = [(string)$catId];
+        // More robust: Extract numeric IDs via regex even if JSON is slightly malformed
+        if (preg_match_all('/\d+/', $catId, $matches)) {
+            $existingCategoryIds = $matches[0];
+        } else {
+            $existingCategoryIds = [(string)$catId];
+        }
     }
 }
 
