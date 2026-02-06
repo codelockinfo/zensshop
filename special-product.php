@@ -3,9 +3,11 @@
 
 require_once __DIR__ . '/classes/Product.php';
 require_once __DIR__ . '/classes/Database.php';
+require_once __DIR__ . '/classes/Settings.php';
 require_once __DIR__ . '/includes/functions.php';
 
 $db = Database::getInstance();
+$settingsObj = new Settings();
 $productObj = new Product();
 
 // Get base URL
@@ -165,7 +167,7 @@ if (!empty($customSchema)) {
         '{{url}}' => $baseUrl . '/special-product.php?page=' . $pageSlug,
         '{{image}}' => $mainImage,
         '{{currency}}' => $productData['currency'] ?? 'USD',
-        '{{brand}}' => "ZensShop",
+        '{{brand}}' => $settingsObj->get('site_name', 'CookPro'),
         '{{price_valid_until}}' => date('Y-m-d', strtotime('+1 year'))
     ];
     foreach ($productData as $key => $value) {
@@ -397,12 +399,13 @@ require_once __DIR__ . '/includes/header.php';
 <div class="landing-page-wrapper">
 
     <!-- Hero Section -->
-    <section class="hero-section min-h-screen relative flex items-center pt-10 pb-20 md:py-24">
+    <section class="hero-section min-h-screen relative flex items-center pt-8 pb-10 md:py-12">
         <div class="container mx-auto px-6 grid grid-cols-1 lg:grid-cols-2 gap-16 items-center">
             <div class="z-10 order-2 lg:order-1 text-center lg:text-left">
                 <h2 class="text-xl font-semibold tracking-widest uppercase mb-4 opacity-60"><?php echo htmlspecialchars($heroSubtitle); ?></h2>
                 <h1 class="text-6xl lg:text-[70px] font-bold mb-8 tracking-tighter lowercase leading-none line-clamp-4 overflow-hidden text-ellipsis" style="display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical;">
                     <?php echo htmlspecialchars($heroTitle); ?>
+
                 </h1>
                 
                 <?php // Price variables already defined at top ?>
@@ -477,7 +480,7 @@ require_once __DIR__ . '/includes/header.php';
     if ($showStats) {
         $statsItems = $statsGrp['items'] ?? [];
         ob_start(); ?>
-        <section class="pt-10 pb-20 md:py-24 stats-section">
+        <section class="py-8 stats-section">
             <div class="container mx-auto px-6">
                 <div class="grid grid-cols-2 md:grid-cols-4 gap-12 text-center divide-x divide-gray-200">
                     <?php foreach($statsItems as $stat): ?>
@@ -520,7 +523,7 @@ require_once __DIR__ . '/includes/header.php';
             if (!$desktopAsset && !$mobileAsset) continue; 
             $wrapLink = !empty($banLink) && empty($banBtn);
         ?>
-        <section class="banner-section w-full relative my-10 px-20 md:px-40 py-10">
+        <section class="banner-section w-full relative my-4 px-4 md:px-20 py-4">
             <?php if ($wrapLink): ?><a href="<?php echo htmlspecialchars($banLink); ?>" class="block"><?php endif; ?>
             <?php if($isDesktopVideo): ?>
                 <video src="<?php echo htmlspecialchars($desktopAsset); ?>" autoplay muted loop playsinline class="block w-full h-auto object-cover <?php echo $mobileAsset ? 'hidden md:block' : ''; ?>"></video>
@@ -562,7 +565,7 @@ require_once __DIR__ . '/includes/header.php';
             ];
         }
         ob_start(); ?>
-        <section class="pt-10 pb-20 md:py-24 why-section">
+        <section class="py-10 md:py-16 why-section">
             <div class="container mx-auto px-6 text-center">
                 <h2 class="text-5xl font-heading uppercase tracking-widest mb-6"><?php echo htmlspecialchars($whyTitle); ?></h2>
                 <div class="grid grid-cols-1 md:grid-cols-3 gap-16 max-w-6xl mx-auto mt-20">
@@ -593,7 +596,7 @@ require_once __DIR__ . '/includes/header.php';
             $currentImgIdx++;
         }
         ob_start(); ?>
-        <section class="pt-10 pb-20 md:py-24 about-section overflow-hidden">
+        <section class="py-10 md:py-16 about-section overflow-hidden">
             <div class="container mx-auto px-6">
                 <div class="flex flex-col lg:flex-row items-center gap-20">
                     <div class="lg:w-1/2">
@@ -621,7 +624,7 @@ require_once __DIR__ . '/includes/header.php';
     if ($showTesti) {
         $testiTitle = $testiGrp['title'] ?? 'Testimonials';
         ob_start(); ?>
-        <section class="pt-10 pb-20 md:py-24 testi-section border-t border-gray-100">
+        <section class="py-10 md:py-16 testi-section border-t border-gray-100">
              <div class="container mx-auto px-6 text-center">
                 <h2 class="text-5xl font-heading font-thin mb-20 uppercase tracking-widest"><?php echo htmlspecialchars($testiTitle); ?></h2>
                 <div id="testimonialsList" class="mx-auto">
@@ -640,7 +643,7 @@ require_once __DIR__ . '/includes/header.php';
         $newsImage = $galleryPool[$currentImgIdx % $galleryCount];
         $currentImgIdx++;
         ob_start(); ?>
-        <section class="pt-10 pb-20 md:py-24 news-section">
+        <section class="py-10 md:py-16 news-section">
             <div class="container mx-auto px-4 md:px-6">
                 <div class="flex flex-col md:flex-row items-center justify-between max-w-6xl mx-auto bg-white p-6 md:p-12 lg:p-16 rounded-2xl shadow-lg border border-gray-100/50">
                     <div class="w-full md:w-5/12 mb-8 md:mb-0 md:pr-10 border-b md:border-b-0 md:border-r border-gray-100 flex justify-center pb-8 md:pb-0">
