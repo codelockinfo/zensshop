@@ -20,16 +20,7 @@ try {
     // Ignore errors if column already modified or valid
 }
 
-// Debug usage: Detect if POST was stripped to GET (common in redirects)
-if (isset($_GET['ajax']) && $_SERVER['REQUEST_METHOD'] !== 'POST') {
-    ob_end_clean();
-    header('Content-Type: application/json');
-    echo json_encode([
-        'success' => false, 
-        'message' => 'Error: Request was converted to GET. Possible caused by URL redirect (http/https or trailing slash). Current Method: ' . $_SERVER['REQUEST_METHOD']
-    ]);
-    exit;
-}
+
 
 // Handle Form Submission
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
@@ -545,7 +536,7 @@ document.getElementById('settingsForm').addEventListener('submit', function(e) {
                 return JSON.parse(text); 
             } catch (e) { 
                 console.error('Server response:', text);
-                throw new Error('Server returned invalid JSON. Check console for details.'); 
+                throw new Error('Something went wrong. Please try again.'); 
             }
         });
     })
