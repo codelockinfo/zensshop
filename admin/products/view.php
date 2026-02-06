@@ -251,21 +251,35 @@ $variants = $variantsData['variants'] ?? [];
                     <label class="admin-form-label">Category</label>
                     <div class="flex flex-wrap gap-2 py-1">
                     <?php 
-                    // Fetch all categories
-                    $prodCats = $db->fetchAll(
-                        "SELECT c.name, c.slug FROM product_categories pc 
-                         JOIN categories c ON c.id = pc.category_id 
-                         WHERE pc.product_id = ? ORDER BY c.name ASC",
-                        [$productData['product_id']]
-                    );
+                    // 1. Get IDs from products table (Source of Truth)
+                    $rawCatId = $productData['category_id'] ?? '';
+                    $targetIds = [];
                     
-                    if (!empty($prodCats)) {
-                        foreach ($prodCats as $pc) {
-                            echo '<span class="bg-blue-100 text-blue-800 text-xs font-semibold px-2.5 py-0.5 rounded">' . htmlspecialchars($pc['name']) . '</span>';
+                    if (!empty($rawCatId)) {
+                        if (strpos($rawCatId, '[') === 0) {
+                            $decoded = json_decode($rawCatId, true);
+                            if (is_array($decoded)) $targetIds = $decoded;
+                        } else {
+                            $targetIds = [$rawCatId];
+                        }
+                    }
+
+                    // 2. If products table is empty, try mapping table
+                    if (empty($targetIds)) {
+                        $mappingIds = $db->fetchAll("SELECT category_id FROM product_categories WHERE product_id = ?", [$productData['product_id']]);
+                        $targetIds = array_column($mappingIds, 'category_id');
+                    }
+
+                    // 3. Fetch names for all IDs
+                    if (!empty($targetIds)) {
+                        $placeholders = implode(',', array_fill(0, count($targetIds), '?'));
+                        $categoriesFound = $db->fetchAll("SELECT name FROM categories WHERE id IN ($placeholders) ORDER BY name ASC", $targetIds);
+                        
+                        foreach ($categoriesFound as $cat) {
+                            echo '<span class="bg-blue-100 text-blue-800 text-xs font-semibold px-2.5 py-0.5 rounded">' . htmlspecialchars($cat['name']) . '</span>';
                         }
                     } else {
-                        // Fallback to legacy single category or Uncategorized
-                         echo '<p class="text-gray-700">' . htmlspecialchars($productData['category_name'] ?? 'Uncategorized') . '</p>';
+                        echo '<p class="text-gray-700">Uncategorized</p>';
                     }
                     ?>
                     </div>

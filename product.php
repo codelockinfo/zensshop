@@ -91,21 +91,39 @@ if (!empty($displayRecentIds)) {
 }
 // -------------------------------------------------------
 
-// Get product categories
+// Get product categories (Source of Truth: products table category_id)
 $productCategories = [];
-try {
-    $productCategories = $db->fetchAll(
-        "SELECT c.id, c.name, c.slug 
-         FROM categories c 
-         INNER JOIN product_categories pc ON c.id = pc.category_id 
-         WHERE pc.product_id = ? AND c.status = 'active'",
-        [$productData['id']]
-    );
-} catch (Exception $e) {
-    if (!empty($productData['category_id'])) {
-        $oldCategory = $db->fetchOne("SELECT id, name, slug FROM categories WHERE id = ? AND status = 'active'", [$productData['category_id']]);
-        if ($oldCategory) $productCategories = [$oldCategory];
+$rawCatId = $productData['category_id'] ?? '';
+$catIds = [];
+
+if (!empty($rawCatId)) {
+    if (strpos($rawCatId, '[') === 0) {
+        $decoded = json_decode($rawCatId, true);
+        if (is_array($decoded)) $catIds = $decoded;
+    } else {
+        $catIds = [$rawCatId];
     }
+}
+
+if (!empty($catIds)) {
+    $placeholders = implode(',', array_fill(0, count($catIds), '?'));
+    $productCategories = $db->fetchAll(
+        "SELECT id, name, slug FROM categories WHERE id IN ($placeholders) AND status = 'active'",
+        $catIds
+    );
+}
+
+// Fallback to mapping table if products table was empty
+if (empty($productCategories)) {
+    try {
+        $productCategories = $db->fetchAll(
+            "SELECT c.id, c.name, c.slug 
+             FROM categories c 
+             INNER JOIN product_categories pc ON c.id = pc.category_id 
+             WHERE pc.product_id = ? AND c.status = 'active'",
+            [$productData['id']]
+        );
+    } catch (Exception $e) {}
 }
 
 // Get primary category for breadcrumbs

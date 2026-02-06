@@ -38,7 +38,7 @@ $sql .= " GROUP BY p.id ORDER BY p.created_at DESC";
 $products = $db->fetchAll($sql, $params);
 
 if (empty($products)) {
-    echo '<tr><td colspan="9" class="text-center py-4 text-gray-500">No products found</td></tr>';
+    echo '<tr><td colspan="10" class="text-center py-4 text-gray-500">No products found</td></tr>';
     exit;
 }
 
@@ -58,11 +58,6 @@ foreach ($products as $index => $item):
         </div>
     </td>
     <td>#<?php echo $item['product_id']; ?></td>
-    <td>
-        <div class="text-xs text-gray-600 max-w-[150px] truncate" title="<?php echo htmlspecialchars($item['category_names'] ?? ''); ?>">
-            <?php echo htmlspecialchars($item['category_names'] ?? '-'); ?>
-        </div>
-    </td>
     <td><?php echo format_price($item['price'], $item['currency'] ?? 'USD'); ?></td>
     <td class="<?php echo ($item['stock_quantity'] < 0) ? 'text-red-600 font-bold' : ''; ?>">
         <?php echo $item['stock_quantity']; ?>

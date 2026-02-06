@@ -120,7 +120,7 @@ document.addEventListener('DOMContentLoaded', function() {
                         </div>
                     </div>
                 </th>
-                <th>Category</th>
+
                 <th class="sortable cursor-pointer hover:bg-gray-100" data-column="price">
                     <div class="flex items-center justify-between">
                         <span>Price</span>
@@ -179,11 +179,7 @@ document.addEventListener('DOMContentLoaded', function() {
                     </div>
                 </td>
                 <td>#<?php echo $item['product_id']; ?></td>
-                <td>
-                    <div class="text-xs text-gray-600 max-w-[150px] truncate" title="<?php echo htmlspecialchars($item['category_names'] ?? ''); ?>">
-                        <?php echo htmlspecialchars($item['category_names'] ?? '-'); ?>
-                    </div>
-                </td>
+
                 <td><?php echo format_price($item['price'], $item['currency'] ?? 'USD'); ?></td>
                 <td class="<?php echo ($item['stock_quantity'] < 0) ? 'text-red-600 font-bold' : ''; ?>">
                     <?php echo $item['stock_quantity']; ?>

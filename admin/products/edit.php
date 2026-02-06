@@ -197,7 +197,19 @@ $existingCategoryIds = array_column($existingCategoryIds, 'category_id');
 
 // Fallback to product table category_id if mapping table is empty
 if (empty($existingCategoryIds) && !empty($productData['category_id'])) {
-    $existingCategoryIds = [$productData['category_id']];
+    $catId = $productData['category_id'];
+    
+    // Check if it's a JSON string (multiple IDs)
+    if (strpos($catId, '[') === 0) {
+        $decoded = json_decode($catId, true);
+        if (is_array($decoded)) {
+            $existingCategoryIds = array_map('strval', $decoded);
+        } else {
+            $existingCategoryIds = [(string)$catId];
+        }
+    } else {
+        $existingCategoryIds = [(string)$catId];
+    }
 }
 
 // Parse existing images

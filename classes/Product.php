@@ -51,22 +51,41 @@ class Product {
         }
         
         if (!empty($filters['category_id'])) {
-            $sql .= " AND (p.category_id = ? OR EXISTS (
-                SELECT 1 FROM product_categories pc2 
-                WHERE pc2.product_id = p.product_id AND pc2.category_id = ?
-            ))";
-            $params[] = $filters['category_id'];
-            $params[] = $filters['category_id'];
+            $catId = $filters['category_id'];
+            $sql .= " AND (
+                p.category_id = ? 
+                OR (JSON_VALID(p.category_id) AND JSON_CONTAINS(p.category_id, CAST(? AS JSON), '$'))
+                OR p.category_id REGEXP ?
+                OR EXISTS (
+                    SELECT 1 FROM product_categories pc2 
+                    WHERE pc2.product_id = p.product_id AND pc2.category_id = ?
+                )
+            )";
+            $params[] = $catId;
+            $params[] = '"' . $catId . '"';
+            $params[] = '[[:<:]]' . $catId . '[[:>:]]';
+            $params[] = $catId;
         }
         
         if (!empty($filters['category_slug'])) {
-            $sql .= " AND (EXISTS (
-                SELECT 1 FROM categories c3 WHERE c3.id = p.category_id AND c3.slug = ?
-            ) OR EXISTS (
-                SELECT 1 FROM product_categories pc3 
-                INNER JOIN categories c2 ON pc3.category_id = c2.id
-                WHERE pc3.product_id = p.product_id AND c2.slug = ?
-            ))";
+            $sql .= " AND (
+                EXISTS (
+                    SELECT 1 FROM categories c3 WHERE c3.id = p.category_id AND c3.slug = ?
+                ) 
+                OR EXISTS (
+                    SELECT 1 FROM categories c4 
+                    WHERE c4.slug = ? AND (
+                        (JSON_VALID(p.category_id) AND JSON_CONTAINS(p.category_id, CAST(c4.id AS JSON), '$'))
+                        OR p.category_id REGEXP CONCAT('[[:<:]]', c4.id, '[[:>:]]')
+                    )
+                )
+                OR EXISTS (
+                    SELECT 1 FROM product_categories pc3 
+                    INNER JOIN categories c2 ON pc3.category_id = c2.id
+                    WHERE pc3.product_id = p.product_id AND c2.slug = ?
+                )
+            )";
+            $params[] = $filters['category_slug'];
             $params[] = $filters['category_slug'];
             $params[] = $filters['category_slug'];
         }
