@@ -214,6 +214,102 @@ if (!function_exists('url')) {
     <!-- Global Header Scripts (Analytics, Pixels, etc.) -->
     <?php echo $headerScripts; ?>
     <?php endif; ?>
+
+    <?php
+    $bcItems = [];
+    // 1. Home
+    $bcItems[] = [
+        "@type" => "ListItem",
+        "position" => 1,
+        "name" => "Home",
+        "item" => $baseUrl . '/'
+    ];
+    $pos = 2;
+
+    $currentPageFile = basename($_SERVER['PHP_SELF']);
+    
+    // Shop / Category / Product contexts
+    if ($currentPageFile === 'shop.php' || (isset($productData) && $currentPageFile === 'product.php')) {
+        $bcItems[] = [
+            "@type" => "ListItem",
+            "position" => $pos++,
+            "name" => "Shop",
+            "item" => $baseUrl . '/shop'
+        ];
+    }
+    
+    // Context: Product Page
+    if (isset($productData) && !empty($productData['name'])) {
+         // Try to find category (Check if $productCategories is available in global scope)
+         if (isset($productCategories) && !empty($productCategories)) {
+             $cat = $productCategories[0];
+             $bcItems[] = [
+                "@type" => "ListItem",
+                "position" => $pos++,
+                "name" => $cat['name'],
+                "item" => $baseUrl . '/shop?category=' . $cat['slug']
+            ];
+         }
+         
+         $bcItems[] = [
+            "@type" => "ListItem",
+            "position" => $pos++,
+            "name" => $productData['name'],
+            "item" => $baseUrl . '/product/' . $productData['slug']
+        ];
+    }
+    // Context: Category Page (shop.php?category=...)
+    elseif ($currentPageFile === 'shop.php' && !empty($_GET['category'])) {
+        $cSlug = $_GET['category'];
+        $cName = ucfirst(str_replace('-', ' ', $cSlug)); // Fallback
+        if (isset($db)) {
+            $cRow = $db->fetchOne("SELECT name FROM categories WHERE slug = ?", [$cSlug]);
+            if ($cRow) $cName = $cRow['name'];
+        }
+        $bcItems[] = [
+            "@type" => "ListItem",
+            "position" => $pos++,
+            "name" => $cName,
+            "item" => $baseUrl . '/shop?category=' . $cSlug
+        ];
+    }
+    // Context: Special Page / Landing Page (Generic or Special Product)
+    elseif ((isset($lp) && !empty($lp['name'])) || (isset($landingPage) && !empty($landingPage))) {
+        // Handle $lp (from settings/page.php) or $landingPage (from special-product.php)
+        $pName = isset($lp) ? $lp['name'] : ($landingPage['name'] ?? $pageTitle ?? 'Page');
+        $pSlug = isset($lp) ? $lp['slug'] : ($landingPage['slug'] ?? $_GET['page'] ?? '');
+        $pUrl = $baseUrl . '/special-product.php?page=' . $pSlug; // Or typically just /page/slug if routed
+        
+        // If routed URL is cleaner, use that. But special-product.php seems to use query param.
+        
+        $bcItems[] = [
+            "@type" => "ListItem",
+            "position" => $pos++,
+            "name" => $pName,
+            "item" => $pUrl
+        ];
+    }
+    // Context: Standard Pages
+    elseif ($currentPageFile === 'cart.php') {
+        $bcItems[] = ["@type" => "ListItem", "position" => $pos++, "name" => "Shopping Cart", "item" => $baseUrl . '/cart'];
+    }
+    elseif ($currentPageFile === 'checkout.php') {
+        $bcItems[] = ["@type" => "ListItem", "position" => $pos++, "name" => "Checkout", "item" => $baseUrl . '/checkout'];
+    }
+    elseif ($currentPageFile === 'contact.php') {
+        $bcItems[] = ["@type" => "ListItem", "position" => $pos++, "name" => "Contact Us", "item" => $baseUrl . '/contact'];
+    }
+    
+    if (count($bcItems) > 1):
+    ?>
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "BreadcrumbList",
+      "itemListElement": <?php echo json_encode($bcItems, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES); ?>
+    }
+    </script>
+    <?php endif; ?>
     
     <!-- Resource Hints -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
