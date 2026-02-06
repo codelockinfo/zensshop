@@ -252,13 +252,13 @@ $variants = $variantsData['variants'] ?? [];
                     <div class="flex flex-wrap gap-2 py-1">
                     <?php 
                     // 1. Get IDs from products table (Source of Truth)
-                    $rawCatId = $productData['category_id'] ?? '';
+                    $rawCatId = trim($productData['category_id'] ?? '');
                     $targetIds = [];
                     
                     if (!empty($rawCatId)) {
-                        if (strpos($rawCatId, '[') === 0) {
-                            $decoded = json_decode($rawCatId, true);
-                            if (is_array($decoded)) $targetIds = $decoded;
+                        $decoded = json_decode($rawCatId, true);
+                        if (json_last_error() === JSON_ERROR_NONE && is_array($decoded)) {
+                            $targetIds = $decoded;
                         } else {
                             $targetIds = [$rawCatId];
                         }

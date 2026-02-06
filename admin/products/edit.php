@@ -197,17 +197,14 @@ $existingCategoryIds = array_column($existingCategoryIds, 'category_id');
 
 // Fallback to product table category_id if mapping table is empty
 if (empty($existingCategoryIds) && !empty($productData['category_id'])) {
-    $catId = $productData['category_id'];
+    $catId = trim($productData['category_id']);
     
-    // Check if it's a JSON string (multiple IDs)
-    if (strpos($catId, '[') === 0) {
-        $decoded = json_decode($catId, true);
-        if (is_array($decoded)) {
-            $existingCategoryIds = array_map('strval', $decoded);
-        } else {
-            $existingCategoryIds = [(string)$catId];
-        }
+    // Attempt to decode JSON (multiple IDs)
+    $decoded = json_decode($catId, true);
+    if (json_last_error() === JSON_ERROR_NONE && is_array($decoded)) {
+        $existingCategoryIds = array_map('strval', $decoded);
     } else {
+        // Fallback to single ID
         $existingCategoryIds = [(string)$catId];
     }
 }

@@ -93,13 +93,13 @@ if (!empty($displayRecentIds)) {
 
 // Get product categories (Source of Truth: products table category_id)
 $productCategories = [];
-$rawCatId = $productData['category_id'] ?? '';
+$rawCatId = trim($productData['category_id'] ?? '');
 $catIds = [];
 
 if (!empty($rawCatId)) {
-    if (strpos($rawCatId, '[') === 0) {
-        $decoded = json_decode($rawCatId, true);
-        if (is_array($decoded)) $catIds = $decoded;
+    $decoded = json_decode($rawCatId, true);
+    if (json_last_error() === JSON_ERROR_NONE && is_array($decoded)) {
+        $catIds = $decoded;
     } else {
         $catIds = [$rawCatId];
     }
