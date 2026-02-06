@@ -533,8 +533,7 @@ document.getElementById('settingsForm').addEventListener('submit', function(e) {
     
     // Note: Global 'btn-loading' listener in admin-footer.php handles showing the loader.
     
-    // Use relative path to avoid potential cross-protocol/domain redirects stripping POST behavior
-    fetch(`homepage_products_settings.php?ajax=1`, {
+    fetch(`${BASE_URL}/admin/products?ajax=1`, {
         method: 'POST',
         body: formData,
         headers: { 'X-Requested-With': 'XMLHttpRequest' }
