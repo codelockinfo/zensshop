@@ -19,7 +19,7 @@ $storeId = $_SESSION['store_id'] ?? null;
 // For admin, get products for their store
 $sql = "SELECT DISTINCT p.*, GROUP_CONCAT(DISTINCT c.name SEPARATOR ', ') as category_names
         FROM products p 
-        LEFT JOIN product_categories pc ON p.id = pc.product_id
+        LEFT JOIN product_categories pc ON p.product_id = pc.product_id
         LEFT JOIN categories c ON pc.category_id = c.id 
         WHERE p.status != 'archived' AND p.store_id = ?";
 $params = [$storeId];
@@ -71,33 +71,28 @@ $products = $db->fetchAll($sql, $params);
 <script>
 document.addEventListener('DOMContentLoaded', function() {
     const searchInput = document.getElementById('searchInput');
-    const tableBody = document.querySelector('tbody');
-    let debounceTimer;
+    const tableRows = document.querySelectorAll('tbody tr');
 
     searchInput.addEventListener('input', function(e) {
-        const query = e.target.value;
+        const query = e.target.value.toLowerCase();
         
-        clearTimeout(debounceTimer);
-        debounceTimer = setTimeout(() => {
-            const url = '<?php echo $baseUrl; ?>/admin/search_products_ajax?search=' + encodeURIComponent(query);
-            
-            fetch(url)
-                .then(response => response.text())
-                .then(html => {
-                    tableBody.innerHTML = html;
-                })
-                .catch(err => console.error('Search failed', err));
-            
-            // Also update URL without reload
-            const newUrl = new URL(window.location);
-            if (query) {
-                newUrl.searchParams.set('search', query);
+        tableRows.forEach(row => {
+            const text = row.innerText.toLowerCase();
+            if (text.includes(query)) {
+                row.style.display = '';
             } else {
-                newUrl.searchParams.delete('search');
+                row.style.display = 'none';
             }
-            window.history.pushState({}, '', newUrl);
-            
-        }, 300); // 300ms debounce
+        });
+        
+        // Update URL without reload for bookmarks/refresh
+        const newUrl = new URL(window.location);
+        if (query) {
+            newUrl.searchParams.set('search', query);
+        } else {
+            newUrl.searchParams.delete('search');
+        }
+        window.history.pushState({}, '', newUrl);
     });
 });
 </script>
@@ -185,7 +180,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 </td>
                 <td>#<?php echo $item['product_id']; ?></td>
                 <td>
-                    <div class="test-xs text-gray-600 max-w-[150px] truncate" title="<?php echo htmlspecialchars($item['category_names'] ?? ''); ?>">
+                    <div class="text-xs text-gray-600 max-w-[150px] truncate" title="<?php echo htmlspecialchars($item['category_names'] ?? ''); ?>">
                         <?php echo htmlspecialchars($item['category_names'] ?? '-'); ?>
                     </div>
                 </td>

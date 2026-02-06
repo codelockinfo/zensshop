@@ -18,7 +18,7 @@ if (!$storeId && isset($_SESSION['user_email'])) {
 
 $sql = "SELECT DISTINCT p.*, GROUP_CONCAT(DISTINCT c.name SEPARATOR ', ') as category_names
         FROM products p 
-        LEFT JOIN product_categories pc ON p.id = pc.product_id
+        LEFT JOIN product_categories pc ON p.product_id = pc.product_id
         LEFT JOIN categories c ON pc.category_id = c.id 
         WHERE p.status != 'archived' AND p.store_id = ?";
 $params = [$storeId];
@@ -58,18 +58,34 @@ foreach ($products as $index => $item):
         </div>
     </td>
     <td>#<?php echo $item['product_id']; ?></td>
+    <td>
+        <div class="text-xs text-gray-600 max-w-[150px] truncate" title="<?php echo htmlspecialchars($item['category_names'] ?? ''); ?>">
+            <?php echo htmlspecialchars($item['category_names'] ?? '-'); ?>
+        </div>
+    </td>
     <td><?php echo format_price($item['price'], $item['currency'] ?? 'USD'); ?></td>
-    <td><?php echo $item['stock_quantity']; ?></td>
+    <td class="<?php echo ($item['stock_quantity'] < 0) ? 'text-red-600 font-bold' : ''; ?>">
+        <?php echo $item['stock_quantity']; ?>
+    </td>
     <td><?php echo $item['sale_price'] ? round((($item['price'] - $item['sale_price']) / $item['price']) * 100) : 0; ?>%</td>
     <td>
         <?php 
+        $stockQuantity = isset($item['stock_quantity']) ? (int)$item['stock_quantity'] : 0;
+        $totalSold = isset($item['total_sales']) ? (int)$item['total_sales'] : 0;
         $stockStatus = !empty($item['stock_status']) ? $item['stock_status'] : 'in_stock';
-        $isInStock = ($stockStatus === 'in_stock');
-        $stockBg = $isInStock ? '#d1fae5' : '#ffedd5';
-        $stockText = $isInStock ? '#065f46' : '#9a3412';
+        $displayText = get_stock_status_text($stockStatus, $stockQuantity, $totalSold);
+        
+        $isAvailable = ($displayText === 'In Stock');
+        $isSoldOut = ($displayText === 'Sold Out');
+        $isOversold = ($stockQuantity < 0);
+        
+        $stockBg = $isAvailable ? '#d1fae5' : ($isOversold || $isSoldOut ? '#fee2e2' : '#ffedd5');
+        $stockText = $isAvailable ? '#065f46' : ($isOversold || $isSoldOut ? '#991b1b' : '#9a3412');
+        
+        if ($isOversold) $displayText = 'Oversold';
         ?>
         <span class="px-2 py-1 rounded shadow-sm" style="background-color: <?php echo $stockBg; ?>; color: <?php echo $stockText; ?>; font-size: 0.75rem; font-weight: 600; display: inline-block;">
-            <?php echo ucfirst(str_replace('_', ' ', $stockStatus)); ?>
+            <?php echo $displayText; ?>
         </span>
     </td>
     <td>
@@ -87,10 +103,10 @@ foreach ($products as $index => $item):
     <td><?php echo date('m/d/Y', strtotime($item['created_at'])); ?></td>
     <td>
         <div class="flex items-center space-x-2">
-            <a href="<?php echo htmlspecialchars($baseUrl); ?>/admin/products/view?product_id=<?php echo $item['product_id']; ?>" class="text-blue-500 hover:text-blue-700">
+            <a href="<?php echo url('admin/products/view.php?product_id=' . $item['product_id']); ?>" class="text-blue-500 hover:text-blue-700">
                 <i class="fas fa-eye"></i>
             </a>
-            <a href="<?php echo htmlspecialchars($baseUrl); ?>/admin/products/edit?product_id=<?php echo $item['product_id']; ?>" class="text-green-500 hover:text-green-700">
+            <a href="<?php echo url('admin/products/edit.php?product_id=' . $item['product_id']); ?>" class="text-green-500 hover:text-green-700">
                 <i class="fas fa-edit"></i>
             </a>
             <button onclick="deleteProduct(<?php echo $item['id']; ?>)" class="text-red-500 hover:text-red-700">
