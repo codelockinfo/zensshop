@@ -277,15 +277,26 @@ $_COOKIE['recently_viewed'] = json_encode($recentIds);
 
                 <!-- Main Image -->
                 <div class="mb-4 w-full max-w-[730px] mx-auto flex items-center justify-center bg-gray-50 rounded-lg overflow-hidden border border-gray-100 relative group" id="mainImageContainer" style="aspect-ratio: 1 / 1;">
+                    <?php
+                    $mainExt = strtolower(pathinfo($mainImage, PATHINFO_EXTENSION));
+                    $isMainVideo = in_array($mainExt, ['mp4', 'webm', 'ogg', 'mov', 'avi', 'mkv', 'm4v']);
+                    ?>
+
                     <img id="mainProductImage" 
                          src="<?php echo htmlspecialchars($mainImage); ?>" 
                          alt="<?php echo htmlspecialchars($productData['name'] ?? 'Product'); ?>" 
-                         class="w-full h-full object-contain transition-transform duration-200 ease-out cursor-zoom-in"
+                         class="w-full h-full object-contain transition-transform duration-200 ease-out cursor-zoom-in <?php echo $isMainVideo ? 'hidden' : ''; ?>"
                          fetchpriority="high"
                          loading="eager"
                          onmousemove="zoomImage(event, this)"
                          onmouseleave="resetZoom(this)"
                          onerror="this.src='https://placehold.co/730x730?text=Product+Image'">
+                         
+                    <video id="mainProductVideo"
+                           src="<?php echo $isMainVideo ? htmlspecialchars($mainImage) : ''; ?>"
+                           controls
+                           class="w-full h-full object-contain bg-black <?php echo $isMainVideo ? '' : 'hidden'; ?>">
+                    </video>
                 </div>
 
                 <script>
@@ -382,14 +393,26 @@ $_COOKIE['recently_viewed'] = json_encode($recentIds);
                 <div class="relative">
                     <div class="swiper thumbnail-slider mt-4">
                         <div class="swiper-wrapper">
-                            <?php foreach ($galleryItems as $index => $item): ?>
+                            <?php foreach ($galleryItems as $index => $item): 
+                                $ext = strtolower(pathinfo($item['url'], PATHINFO_EXTENSION));
+                                $isVideo = in_array($ext, ['mp4', 'webm', 'ogg', 'mov', 'avi', 'mkv', 'm4v']);
+                            ?>
                             <div class="swiper-slide">
-                                <img src="<?php echo htmlspecialchars($item['url']); ?>" 
-                                     alt="Thumbnail <?php echo $index + 1; ?>"
-                                     class="thumbnail-img object-contain rounded cursor-pointer border-2 transition hover:border-primary <?php echo $index === 0 ? 'border-primary' : 'border-transparent'; ?>"
-                                     onclick="changeMainImage('<?php echo htmlspecialchars($item['url']); ?>', this, <?php echo $item['variant'] ? htmlspecialchars(json_encode($item['variant'])) : 'null'; ?>)"
-                                     onerror="this.src='https://placehold.co/150x150?text=Product+Image'"
-                                     loading="lazy">
+                                <?php if ($isVideo): ?>
+                                    <div class="thumbnail-img w-auto h-[80px] object-cover rounded cursor-pointer border-2 transition bg-black flex items-center justify-center overflow-hidden aspect-square <?php echo ($index === 0 && $isMainVideo) ? 'border-primary' : 'border-transparent'; ?>"
+                                         style="min-width: 80px;"
+                                         onclick="changeMainImage('<?php echo htmlspecialchars($item['url']); ?>', this, <?php echo $item['variant'] ? htmlspecialchars(json_encode($item['variant'])) : 'null'; ?>, true)">
+                                        <video src="<?php echo htmlspecialchars($item['url']); ?>" class="w-full h-full object-cover opacity-60 pointer-events-none" preload="metadata"></video>
+                                        <i class="fas fa-play-circle text-white text-xl absolute pointer-events-none"></i>
+                                    </div>
+                                <?php else: ?>
+                                    <img src="<?php echo htmlspecialchars($item['url']); ?>" 
+                                         alt="Thumbnail <?php echo $index + 1; ?>"
+                                         class="thumbnail-img object-contain rounded cursor-pointer border-2 transition hover:border-primary <?php echo ($index === 0 && !$isMainVideo) ? 'border-primary' : 'border-transparent'; ?>"
+                                         onclick="changeMainImage('<?php echo htmlspecialchars($item['url']); ?>', this, <?php echo $item['variant'] ? htmlspecialchars(json_encode($item['variant'])) : 'null'; ?>, false)"
+                                         onerror="this.src='https://placehold.co/150x150?text=Product+Image'"
+                                         loading="lazy">
+                                <?php endif; ?>
                             </div>
                             <?php endforeach; ?>
                         </div>
@@ -1143,8 +1166,14 @@ function selectVariantOption(optionName, value, button) {
     updateVariantDisplay();
 }
 
-function selectVariantByImage(attributes, imageUrl) {
+function selectVariantByImage(attributes, imageUrl, isVideo = false) {
     selectedOptions = {...attributes};
+    
+    // Check if video if boolean not passed strictly
+    if (typeof isVideo !== 'boolean') {
+         const ext = imageUrl.split('.').pop().toLowerCase();
+         isVideo = ['mp4', 'webm', 'ogg', 'mov', 'avi', 'mkv', 'm4v'].includes(ext);
+    }
     
     // Update buttons UI
     Object.keys(attributes).forEach(name => {
@@ -1165,12 +1194,28 @@ function selectVariantByImage(attributes, imageUrl) {
     });
     
     const mainImg = document.getElementById('mainProductImage');
+    const mainVideo = document.getElementById('mainProductVideo');
     const stickyImg = document.querySelector('#sticky-bar img');
     
     const finalImageUrl = getImageUrlJS(imageUrl);
     
-    if (mainImg) mainImg.src = finalImageUrl;
-    if (stickyImg) stickyImg.src = finalImageUrl;
+    if (isVideo) {
+        if (mainImg) mainImg.classList.add('hidden');
+        if (mainVideo) {
+            mainVideo.src = finalImageUrl;
+            mainVideo.classList.remove('hidden');
+        }
+    } else {
+        if (mainVideo) {
+            mainVideo.pause();
+            mainVideo.classList.add('hidden');
+        }
+        if (mainImg) {
+            mainImg.src = finalImageUrl;
+            mainImg.classList.remove('hidden');
+        }
+        if (stickyImg) stickyImg.src = finalImageUrl;
+    }
     
     updateVariantDisplay();
 }
@@ -1188,6 +1233,7 @@ function updateVariantDisplay() {
     const stockElement = document.getElementById('variant-stock-status');
     const stickyPriceElement = document.getElementById('sticky-price');
     const mainImg = document.getElementById('mainProductImage');
+    const mainVideo = document.getElementById('mainProductVideo');
     const stickyImg = document.querySelector('#sticky-bar img');
     
     if (matchingVariant) {
@@ -1270,17 +1316,35 @@ function updateVariantDisplay() {
             }
         }
         
-        // Update image if variant has one, otherwise revert to default
-        const variantImg = getImageUrlJS(matchingVariant.image);
-        if (mainImg) mainImg.src = variantImg;
-        if (stickyImg) stickyImg.src = variantImg;
+        // Update image/video if variant has one, otherwise revert to default
+        const variantImg = matchingVariant.image ? getImageUrlJS(matchingVariant.image) : defaultMainImage;
+        const ext = variantImg.split('.').pop().toLowerCase();
+        const isVideo = ['mp4', 'webm', 'ogg', 'mov', 'avi', 'mkv', 'm4v'].includes(ext);
+
+        if (isVideo) {
+            if (mainImg) mainImg.classList.add('hidden');
+            if (mainVideo) {
+                mainVideo.src = variantImg;
+                mainVideo.classList.remove('hidden');
+            }
+        } else {
+            if (mainVideo) {
+                mainVideo.pause();
+                mainVideo.classList.add('hidden');
+            }
+            if (mainImg) {
+                mainImg.src = variantImg;
+                mainImg.classList.remove('hidden');
+            }
+            if (stickyImg) stickyImg.src = variantImg;
+        }
         
     } else {
         // Reset to default
         if (skuElement) skuElement.textContent = productMainSku;
         if (priceElement) priceElement.textContent = formatPriceJS(productMainPrice, productCurrency);
         if (stickyPriceElement) stickyPriceElement.textContent = formatPriceJS(productMainPrice, productCurrency);
-        if (originalPriceElement) originalPriceElement.classList.add('hidden'); // Or reset to initial if applicable
+        if (originalPriceElement) originalPriceElement.classList.add('hidden'); 
         if (stickyOriginalPriceElement) stickyOriginalPriceElement.classList.add('hidden');
         
         if (stockElement) {
@@ -1307,28 +1371,55 @@ function updateVariantDisplay() {
             updateButtons(defaultStatus === 'out_of_stock' || defaultStock <= 0);
         }
         
-        if (mainImg) mainImg.src = defaultMainImage;
-        if (stickyImg) stickyImg.src = defaultMainImage;
+        const ext = defaultMainImage.split('.').pop().toLowerCase();
+        const isVideo = ['mp4', 'webm', 'ogg', 'mov', 'avi', 'mkv', 'm4v'].includes(ext);
+
+        if (isVideo) {
+            if (mainImg) mainImg.classList.add('hidden');
+            if (mainVideo) {
+                mainVideo.src = defaultMainImage;
+                mainVideo.classList.remove('hidden');
+            }
+        } else {
+            if (mainVideo) {
+                mainVideo.pause();
+                mainVideo.classList.add('hidden');
+            }
+            if (mainImg) {
+                mainImg.src = defaultMainImage;
+                mainImg.classList.remove('hidden');
+            }
+            if (stickyImg) stickyImg.src = defaultMainImage;
+        }
     }
 
     // --- Sync Thumbnail Borders ---
-    const currentSrc = mainImg ? mainImg.src : null;
+    const currentSrc = (mainImg && !mainImg.classList.contains('hidden')) ? mainImg.src : (mainVideo ? mainVideo.src : null);
     if (currentSrc) {
         let matchedAny = false;
+        // Normalize for comparison (remove domain/protocol if needed or just use JS endsWith logic)
+        // Simple exact match check first
         document.querySelectorAll('.thumbnail-img').forEach(el => {
-            // Compare normalized URLs
-            if (el.src === currentSrc) {
-                el.classList.remove('border-transparent');
-                el.classList.add('border-primary');
-                matchedAny = true;
-            } else {
-                el.classList.remove('border-primary');
-                el.classList.add('border-transparent');
-            }
+             // For video thumbnails, el is the container div, but we can check if it has a video child or just rely on click setting active.
+             // But here we are syncing state when variant changes.
+             // Thumbnails in updated code are Divs for video, Imgs for image.
+             
+             let thumbSrc = "";
+             const vid = el.querySelector('video');
+             if (vid) thumbSrc = vid.src;
+             else if (el.tagName === 'IMG') thumbSrc = el.src;
+             
+             // Compare
+             if (thumbSrc === currentSrc) {
+                 el.classList.remove('border-transparent');
+                 el.classList.add('border-primary');
+                 matchedAny = true;
+             } else {
+                 el.classList.remove('border-primary');
+                 el.classList.add('border-transparent');
+             }
         });
         
-        // If the variant image doesn't match any thumbnail (unlikely but possible), 
-        // fallback to highlighting the first one if we're on default settings
         if (!matchedAny) {
              const firstThumb = document.querySelector('.thumbnail-img');
              if (firstThumb) {
@@ -1378,24 +1469,44 @@ function updateButtons(isOutOfStock, label) {
 } 
 
 
-function changeMainImage(imageUrl, button, variantData = null) {
+function changeMainImage(imageUrl, button, variantData = null, isVideo = false) {
     const mainImg = document.getElementById('mainProductImage');
+    const mainVideo = document.getElementById('mainProductVideo');
     const stickyImg = document.querySelector('#sticky-bar img');
     
-    if (mainImg) mainImg.src = imageUrl;
-    if (stickyImg) stickyImg.src = imageUrl;
+    if (isVideo) {
+        if (mainImg) mainImg.classList.add('hidden');
+        if (mainVideo) {
+            mainVideo.src = imageUrl;
+            mainVideo.classList.remove('hidden');
+            mainVideo.play().catch(e => console.log('Autoplay prevented:', e));
+        }
+    } else {
+        if (mainVideo) {
+            mainVideo.pause();
+            mainVideo.classList.add('hidden');
+        }
+        if (mainImg) {
+            mainImg.src = imageUrl;
+            mainImg.classList.remove('hidden');
+        }
+        if (stickyImg) stickyImg.src = imageUrl;
+    }
     
     // Update thumbnail borders
     document.querySelectorAll('.thumbnail-img').forEach(el => {
         el.classList.remove('border-primary');
         el.classList.add('border-transparent');
     });
-    button.classList.remove('border-transparent');
-    button.classList.add('border-primary');
+    
+    if (button) {
+        button.classList.remove('border-transparent');
+        button.classList.add('border-primary');
+    }
 
     // If it comes with variant data (image belongs to a variant), select that variant
     if (variantData && typeof selectVariantByImage === 'function') {
-        selectVariantByImage(variantData, imageUrl);
+        selectVariantByImage(variantData, imageUrl, isVideo);
     }
 }
 

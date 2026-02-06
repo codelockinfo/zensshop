@@ -613,7 +613,7 @@ button.active {
                             <a href="<?php echo url('product?slug=' . urlencode($itemSlug)); ?>">
                                 <img src="<?php echo htmlspecialchars($mainImage); ?>" 
                                      alt="<?php echo htmlspecialchars($itemName); ?>" 
-                                     class="w-full h-64 object-contain  group-hover:scale-110 transition-transform duration-500"
+                                     class="w-full h-64 object-cover group-hover:scale-110 transition-transform duration-500"
                                      onerror="this.src='https://placehold.co/600x600?text=Product+Image'">
                             </a>
                             

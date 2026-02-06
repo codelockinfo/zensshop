@@ -83,7 +83,7 @@ $action = $segments[count($segments) - 1] ?? '';  // add, list
     <link rel="stylesheet" href="<?php echo $baseUrl; ?>/assets/css/fontawesome-custom.css">
     
     <!-- Custom CSS -->
-    <link rel="stylesheet" href="<?php echo $baseUrl; ?>/assets/css/admin2.css">
+    <link rel="stylesheet" href="<?php echo $baseUrl; ?>/assets/css/admin3.css">
     <script>
     // Make BASE_URL available globally for all admin pages
     const BASE_URL = '<?php echo $baseUrl; ?>';
@@ -94,7 +94,7 @@ $action = $segments[count($segments) - 1] ?? '';  // add, list
     <!-- Admin Header -->
     <header class="admin-header flex items-center justify-between pl-0">
         <div class="flex items-center space-x-4">
-            <button class="text-gray-600 hover:text-gray-800" id="sidebarToggle" style="display: none !important;">
+            <button class="text-gray-600 hover:text-gray-800" id="sidebarToggle">
                 <i class="fas fa-bars text-xl"></i>
             </button>
             <a href="javascript:history.back()" class="flex items-center space-x-2 text-gray-600 hover:text-gray-800">
@@ -446,6 +446,20 @@ $currentPage = basename($_SERVER['PHP_SELF']);
            title="Philosophy Section">
             <i class="fas fa-quote-left text-xs"></i>
             <span>Philosophy</span>
+        </a>
+
+        <a href="<?php echo url('admin/settings'); ?>"
+           class="flex items-center space-x-2 py-1 px-4 text-sm <?php echo ($currentPage === 'settings' || strpos($_SERVER['REQUEST_URI'], 'admin/settings') !== false) ? 'bg-gray-700' : ''; ?>"
+           title="Landing Page">
+            <i class="fas fa-desktop text-xs"></i>
+            <span>Landing Page</span>
+        </a>
+
+        <a href="<?php echo url('admin/system-settings'); ?>"
+           class="flex items-center space-x-2 py-1 px-4 text-sm <?php echo ($currentPage === 'system-settings' || strpos($_SERVER['REQUEST_URI'], 'admin/system-settings') !== false) ? 'bg-gray-700' : ''; ?>"
+           title="System Settings">
+            <i class="fas fa-cogs text-xs"></i>
+            <span>System Settings</span>
         </a>
 
         <a href="<?php echo url('admin/features'); ?>"

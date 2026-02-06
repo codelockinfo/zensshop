@@ -143,7 +143,7 @@ require_once __DIR__ . '/includes/header.php';
                                 ?>
                                 <img src="<?php echo htmlspecialchars($imageUrl); ?>" 
                                      alt="<?php echo htmlspecialchars($item['name'] ?? 'Product'); ?>"
-                                     class="w-full h-full object-contain group-hover:scale-110 transition-transform duration-500"
+                                     class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
                                      onerror="this.src='data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNDAwIiBoZWlnaHQ9IjQwMCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB3aWR0aD0iNDAwIiBoZWlnaHQ9IjQwMCIgZmlsbD0iI0YzRjRGNiIvPjxjaXJjbGUgY3g9IjIwMCIgY3k9IjIwMCIgcj0iNjAiIGZpbGw9IiM5QjdBOEEiLz48L3N2Zz4='">
                             </div>
                         </a>
@@ -253,7 +253,7 @@ require_once __DIR__ . '/includes/header.php';
                                 <div class="relative overflow-hidden bg-gray-50 h-64">
                                     <img src="<?php echo htmlspecialchars($recentImage); ?>" 
                                          alt="<?php echo htmlspecialchars($recentProduct['name'] ?? 'Product'); ?>"
-                                         class="w-full h-full object-contain group-hover:scale-110 transition-transform duration-500"
+                                         class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
                                          onerror="this.src='data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNDAwIiBoZWlnaHQ9IjQwMCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB3aWR0aD0iNDAwIiBoZWlnaHQ9IjQwMCIgZmlsbD0iI0YzRjRGNiIvPjxjaXJjbGUgY3g9IjIwMCIgY3k9IjIwMCIgcj0iNjAiIGZpbGw9IiM5QjdBOEEiLz48L3N2Zz4='">
                                 </div>
                             </a>

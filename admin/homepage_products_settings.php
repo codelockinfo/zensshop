@@ -64,7 +64,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $successMsg = "Homepage product settings updated successfully!";
     
     // Handle AJAX request
-    if (!empty($_SERVER['HTTP_X_REQUESTED_WITH']) && strtolower($_SERVER['HTTP_X_REQUESTED_WITH']) == 'xmlhttprequest') {
+    if ((!empty($_SERVER['HTTP_X_REQUESTED_WITH']) && strtolower($_SERVER['HTTP_X_REQUESTED_WITH']) == 'xmlhttprequest') || isset($_GET['ajax'])) {
         ob_end_clean(); // Clean all buffered output (includes includes/headers)
         header('Content-Type: application/json');
         echo json_encode(['success' => true, 'message' => $successMsg]);
@@ -495,7 +495,7 @@ document.getElementById('settingsForm').addEventListener('submit', function(e) {
     
     // Note: Global 'btn-loading' listener in admin-footer.php handles showing the loader.
     
-    fetch(`${BASE_URL}/admin/homepage_products_settings.php`, {
+    fetch(`${BASE_URL}/admin/homepage_products_settings.php?ajax=1`, {
         method: 'POST',
         body: formData,
         headers: { 'X-Requested-With': 'XMLHttpRequest' }

@@ -42,18 +42,32 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         }
         
         // Validate file type
-        $allowedTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/gif', 'image/webp'];
+        $allowedTypes = [
+            'image/jpeg', 'image/jpg', 'image/png', 'image/gif', 'image/webp',
+            'video/mp4', 'video/webm', 'video/ogg', 'video/quicktime',
+            'video/x-m4v', 'video/mpeg', 'video/3gpp', 'video/avi', 'video/x-msvideo'
+        ];
         $finfo = finfo_open(FILEINFO_MIME_TYPE);
         $mimeType = finfo_file($finfo, $file['tmp_name']);
         finfo_close($finfo);
         
-        if (!in_array($mimeType, $allowedTypes)) {
-            throw new Exception('Invalid file type. Only JPEG, PNG, GIF, and WebP are allowed.');
+        // Fallback for generic binary types if extension is valid video
+        if ($mimeType === 'application/octet-stream') {
+             $ext = strtolower(pathinfo($file['name'], PATHINFO_EXTENSION));
+             if (in_array($ext, ['mp4', 'webm', 'ogg', 'mov', 'avi', 'm4v', 'kv'])) {
+                 $mimeType = 'video/' . $ext; // Fake it to pass validation if extension is whitelisted
+                 if ($ext === 'mov') $mimeType = 'video/quicktime';
+                 if ($ext === 'mp4') $mimeType = 'video/mp4';
+             }
         }
         
-        // Validate file size (max 5MB)
-        if ($file['size'] > 5 * 1024 * 1024) {
-            throw new Exception('File size exceeds 5MB limit.');
+        if (!in_array($mimeType, $allowedTypes) && strpos($mimeType, 'video/') !== 0 && strpos($mimeType, 'image/') !== 0) {
+            throw new Exception('Invalid file type (' . $mimeType . '). Only Images and Videos are allowed.');
+        }
+        
+        // Validate file size (max 50MB)
+        if ($file['size'] > 50 * 1024 * 1024) {
+            throw new Exception('File size exceeds 50MB limit.');
         }
         
         // Generate unique filename

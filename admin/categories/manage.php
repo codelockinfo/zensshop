@@ -185,7 +185,7 @@ require_once __DIR__ . '/../../includes/admin-header.php';
                     <div class="upload-placeholder <?php echo !empty($category['image']) ? 'hidden' : ''; ?>">
                         <i class="fas fa-cloud-upload-alt text-5xl text-blue-500 mb-3"></i>
                         <p class="text-sm text-gray-600">
-                            Drop image here
+                            Drop image here<br><span class="text-xs text-gray-400">(Recommended 3:4)</span>
                         </p>
                     </div>
                     <!-- Preview Container -->
@@ -209,7 +209,7 @@ require_once __DIR__ . '/../../includes/admin-header.php';
                     <div class="banner-placeholder <?php echo !empty($category['banner']) ? 'hidden' : ''; ?>">
                         <i class="fas fa-image text-5xl text-blue-500 mb-3"></i>
                         <p class="text-sm text-gray-600">
-                            Drop banner here
+                            Drop banner here<br><span class="text-xs text-gray-400">(Recommended 16:9)</span>
                         </p>
                     </div>
                     <!-- Preview Container -->

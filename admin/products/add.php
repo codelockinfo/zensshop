@@ -285,7 +285,7 @@ $brands = $brandsResult ? json_decode($brandsResult['setting_value'], true) : []
                     <div class="absolute top-2 left-2 cursor-grab move-handle text-grey-800 w-8 h-8 flex items-center justify-center rounded shadow-md z-20 transition-colors" title="Drag to reorder">
                         <i class="fas fa-grip-vertical"></i>
                     </div>
-                    <input type="file" accept="image/*" class="hidden image-file-input" data-index="<?php echo $i; ?>" multiple>
+                    <input type="file" accept="image/*,video/*" class="hidden image-file-input" data-index="<?php echo $i; ?>" multiple>
                     <div class="upload-placeholder">
                         <i class="fas fa-cloud-upload-alt text-4xl text-gray-400 mb-2"></i>
                         <p class="text-sm text-gray-600">Drop your images here or <span class="text-blue-500">click to browse</span>.</p>
@@ -565,7 +565,7 @@ document.getElementById('productForm').addEventListener('submit', function(e) {
     document.getElementById('highlights_json').value = JSON.stringify(highlights);
 });
 </script>
-<script src="<?php echo $baseUrl; ?>/assets/js/admin-image-upload4.js?v=<?php echo time(); ?>"></script>
+<script src="<?php echo $baseUrl; ?>/assets/js/admin-image-upload5.js?v=<?php echo time(); ?>"></script>
 <script src="<?php echo $baseUrl; ?>/assets/js/product-variants6.js"></script>
 
 <!-- Brand Management Modal -->

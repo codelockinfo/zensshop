@@ -377,19 +377,26 @@ $existingVariants = $product->getVariants($productId);
                         <i class="fas fa-grip-vertical"></i>
                     </div>
                     
-                    <input type="file" accept="image/*" class="hidden image-file-input" data-index="<?php echo $i; ?>" multiple>
+                    <input type="file" accept="image/*,video/*" class="hidden image-file-input" data-index="<?php echo $i; ?>" multiple>
                     
                     <div class="upload-placeholder <?php echo $hasImage ? 'hidden' : ''; ?>">
                         <i class="fas fa-cloud-upload-alt text-4xl text-gray-400 mb-2"></i>
-                        <p class="text-sm text-gray-600">Drop your images here or <span class="text-blue-500">click to browse</span>.</p>
+                        <p class="text-sm text-gray-600">Drop media (Images/Videos)<br><span class="text-xs text-gray-400">(Recommended 1:1)</span></p>
+                        <span class="text-blue-500 text-sm">click to browse</span>
                     </div>
                     
                     <div class="image-preview <?php echo $hasImage ? '' : 'hidden'; ?>">
                         <?php if ($hasImage): 
                             $existingImageUrl = getImageUrl($existingImages[$i]);
+                            $ext = strtolower(pathinfo($existingImageUrl, PATHINFO_EXTENSION));
+                            $isVideo = in_array($ext, ['mp4', 'webm', 'ogg', 'mov']);
                         ?>
-                        <img src="<?php echo htmlspecialchars($existingImageUrl); ?>" alt="Preview" class="w-full h-32 object-cover rounded">
-                        <p class="text-xs text-gray-600 mt-2 truncate">Existing Image</p>
+                        <?php if ($isVideo): ?>
+                            <video src="<?php echo htmlspecialchars($existingImageUrl); ?>" class="w-full h-32 object-cover rounded" controls></video>
+                        <?php else: ?>
+                            <img src="<?php echo htmlspecialchars($existingImageUrl); ?>" alt="Preview" class="w-full h-32 object-cover rounded">
+                        <?php endif; ?>
+                        <p class="text-xs text-gray-600 mt-2 truncate">Existing File</p>
                         <?php endif; ?>
                     </div>
                     
@@ -665,7 +672,7 @@ document.getElementById('productForm').addEventListener('submit', function(e) {
     document.getElementById('highlights_json').value = JSON.stringify(highlights);
 });
 </script>
-<script src="<?php echo $baseUrl; ?>/assets/js/admin-image-upload4.js?v=<?php echo time(); ?>"></script>
+<script src="<?php echo $baseUrl; ?>/assets/js/admin-image-upload5.js?v=<?php echo time(); ?>"></script>
 <script src="<?php echo $baseUrl; ?>/assets/js/product-variants6.js"></script>
 <script>
 // Initialize with existing images

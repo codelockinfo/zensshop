@@ -63,11 +63,22 @@ $mainImage = getProductImage($productData);
         <div class="admin-card">
             <h2 class="text-xl font-bold mb-4">Product Images</h2>
             
-            <!-- Main Image -->
-            <div class="mb-4">
-                <img src="<?php echo htmlspecialchars($mainImage); ?>" 
-                     alt="<?php echo htmlspecialchars($productData['name']); ?>" 
-                     class="w-full h-96 object-cover rounded-lg border border-gray-200">
+            <!-- Main Image/Video Display -->
+            <div class="mb-4" id="main-media-container">
+                <?php 
+                $mainExt = strtolower(pathinfo($mainImage, PATHINFO_EXTENSION));
+                $isMainVideo = in_array($mainExt, ['mp4', 'webm', 'ogg', 'mov', 'avi', 'mkv', 'm4v']);
+                ?>
+                
+                <?php if ($isMainVideo): ?>
+                    <video src="<?php echo htmlspecialchars($mainImage); ?>" 
+                           controls 
+                           class="w-full h-96 object-contain rounded-lg border border-gray-200 bg-black"></video>
+                <?php else: ?>
+                    <img src="<?php echo htmlspecialchars($mainImage); ?>" 
+                         alt="<?php echo htmlspecialchars($productData['name']); ?>" 
+                         class="w-full h-96 object-contain rounded-lg border border-gray-200 bg-gray-50">
+                <?php endif; ?>
             </div>
             
             <!-- Thumbnail Images -->
@@ -75,14 +86,27 @@ $mainImage = getProductImage($productData);
             <div class="grid grid-cols-4 gap-3">
                 <?php foreach ($images as $index => $image): 
                     $imageUrl = getImageUrl($image);
+                    $ext = strtolower(pathinfo($image, PATHINFO_EXTENSION));
+                    $isVideo = in_array($ext, ['mp4', 'webm', 'ogg', 'mov', 'avi', 'mkv', 'm4v']);
                 ?>
-                <div class="relative">
-                    <img src="<?php echo htmlspecialchars($imageUrl); ?>" 
-                         alt="Product Image <?php echo $index + 1; ?>" 
-                         class="w-full h-24 object-cover rounded border border-gray-200 cursor-pointer hover:border-blue-500 transition"
-                         onclick="document.querySelector('.admin-card img').src = this.src">
+                <div class="relative group">
+                    <?php if ($isVideo): ?>
+                        <div class="w-full h-24 rounded border border-gray-200 cursor-pointer hover:border-blue-500 transition bg-black relative overflow-hidden"
+                             onclick="showMainMedia('<?php echo htmlspecialchars($imageUrl); ?>', 'video')">
+                            <video src="<?php echo htmlspecialchars($imageUrl); ?>" class="w-full h-full object-cover opacity-70"></video>
+                            <div class="absolute inset-0 flex items-center justify-center">
+                                <i class="fas fa-play-circle text-white text-3xl opacity-90"></i>
+                            </div>
+                        </div>
+                    <?php else: ?>
+                        <img src="<?php echo htmlspecialchars($imageUrl); ?>" 
+                             alt="Product Image <?php echo $index + 1; ?>" 
+                             class="w-full h-24 object-cover rounded border border-gray-200 cursor-pointer hover:border-blue-500 transition bg-white"
+                             onclick="showMainMedia('<?php echo htmlspecialchars($imageUrl); ?>', 'image')">
+                    <?php endif; ?>
+                    
                     <?php if ($image === $productData['featured_image']): ?>
-                    <span class="absolute top-1 right-1 bg-blue-500 text-white text-xs px-2 py-1 rounded">Featured</span>
+                    <span class="absolute top-1 right-1 bg-blue-500 text-white text-xs px-2 py-1 rounded shadow-sm z-10">Featured</span>
                     <?php endif; ?>
                 </div>
                 <?php endforeach; ?>
@@ -90,6 +114,17 @@ $mainImage = getProductImage($productData);
             <?php else: ?>
             <p class="text-gray-500 text-center py-4">No images available</p>
             <?php endif; ?>
+
+            <script>
+            function showMainMedia(url, type) {
+                const container = document.getElementById('main-media-container');
+                if (type === 'video') {
+                    container.innerHTML = `<video src="${url}" controls autoplay class="w-full h-96 object-contain rounded-lg border border-gray-200 bg-black"></video>`;
+                } else {
+                    container.innerHTML = `<img src="${url}" class="w-full h-96 object-contain rounded-lg border border-gray-200 bg-gray-50">`;
+                }
+            }
+            </script>
         </div>
         
 <?php 

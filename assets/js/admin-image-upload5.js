@@ -5,6 +5,36 @@
 document.addEventListener('DOMContentLoaded', function() {
     initializeImageUpload();
     
+    // Inject Toast CSS
+    const style = document.createElement('style');
+    style.innerHTML = `
+        .admin-toast {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            padding: 1rem 1.5rem;
+            border-radius: 0.5rem;
+            color: white;
+            font-weight: 500;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            z-index: 9999;
+            transform: translateX(100%);
+            opacity: 0;
+            transition: all 0.3s ease-in-out;
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+        }
+        .admin-toast.show {
+            transform: translateX(0);
+            opacity: 1;
+        }
+        .admin-toast.error { background-color: #ef4444; }
+        .admin-toast.success { background-color: #10b981; }
+        .admin-toast.info { background-color: #3b82f6; }
+    `;
+    document.head.appendChild(style);
+
     // Global prevention of default file opening
     window.addEventListener('dragover', function(e) {
         e.preventDefault();
@@ -13,6 +43,34 @@ document.addEventListener('DOMContentLoaded', function() {
         e.preventDefault();
     }, false);
 });
+
+// Toast Notification Utility
+function showToast(message, type = 'info', duration = 3000) {
+    // Remove existing toasts
+    const existing = document.querySelectorAll('.admin-toast');
+    existing.forEach(t => t.remove());
+
+    const toast = document.createElement('div');
+    toast.className = `admin-toast ${type}`;
+    
+    let icon = 'fa-info-circle';
+    if (type === 'success') icon = 'fa-check-circle';
+    if (type === 'error') icon = 'fa-exclamation-circle';
+
+    toast.innerHTML = `<i class="fas ${icon}"></i> <span>${message}</span>`;
+    document.body.appendChild(toast);
+
+    // Trigger animation
+    requestAnimationFrame(() => {
+        toast.classList.add('show');
+    });
+
+    // Auto hide
+    setTimeout(() => {
+        toast.classList.remove('show');
+        setTimeout(() => toast.remove(), 300);
+    }, duration);
+}
 
 let draggedElement = null;
 
@@ -143,9 +201,6 @@ function bindBoxEvents(box) {
         
         console.log('Drop detected.');
 
-        // PRIORITY 1: EXTERNAL FILES (Desktop Drag)
-        // Check files FIRST. If files exist, it's an upload.
-        // NOTE: dt.files might be empty during 'dragover' but populated on 'drop'.
         if (dt && dt.files && dt.files.length > 0) {
             console.log('File dropped:', dt.files[0].name);
             handleFiles(dt.files, box, placeholder, preview, removeBtn);
@@ -180,9 +235,9 @@ function handleFiles(files, box, placeholder, preview, removeBtn) {
     if (files.length === 0) return;
     const file = files[0];
     
-    // Validate Image Type
-    if (!file.type.match('image.*')) {
-        alert('Please select only image files (JPG, PNG, GIF, etc).');
+    // Validate Image/Video Type
+    if (!file.type.match('image.*') && !file.type.match('video.*')) {
+        showToast('Please select only image or video files.', 'error');
         return;
     }
     
@@ -225,24 +280,36 @@ function handleFiles(files, box, placeholder, preview, removeBtn) {
         if (data.success) {
             console.log('Upload success:', data.path);
             box.setAttribute('data-image-path', data.path);
-            preview.innerHTML = `
-                <img src="${data.path}" alt="Preview" class="w-full h-32 object-cover rounded">
-                <p class="text-xs text-gray-600 mt-2 truncate">${file.name}</p>
-            `;
+            
+            // Check if it's a video based on file extension
+            const isVideo = data.path.match(/\.(mp4|webm|ogg|mov)$/i);
+            
+            if (isVideo) {
+                 preview.innerHTML = `
+                    <video src="${data.path}" class="w-full h-32 object-cover rounded" controls></video>
+                    <p class="text-xs text-gray-600 mt-2 truncate">${file.name}</p>
+                `;
+            } else {
+                preview.innerHTML = `
+                    <img src="${data.path}" alt="Preview" class="w-full h-32 object-cover rounded">
+                    <p class="text-xs text-gray-600 mt-2 truncate">${file.name}</p>
+                `;
+            }
+            
             removeBtn.classList.remove('hidden');
             updateImagesInput();
         } else {
             console.error('Upload failed:', data.message);
             preview.classList.add('hidden');
             placeholder.classList.remove('hidden');
-            alert(data.message || 'Failed to upload image. Server returned error.');
+            showToast(data.message || 'Failed to upload file. Server returned error.', 'error', 5000);
         }
     })
     .catch(error => {
         console.error('Fetch error:', error);
         preview.classList.add('hidden');
         placeholder.classList.remove('hidden');
-        alert('An error occurred while uploading. Please check your network or server logs.');
+        showToast('An error occurred while uploading. Please check your network or server logs.', 'error', 5000);
     });
 }
 
@@ -265,10 +332,16 @@ function updateImagesInput() {
         boxes.forEach(box => {
             let path = box.getAttribute('data-image-path');
             if (!path) {
-                // Check for existing image (PHP rendered)
+                // Check for existing image OR video (PHP rendered)
                 const img = box.querySelector('.image-preview img');
-                if (img && !box.querySelector('.image-preview').classList.contains('hidden')) {
-                     path = img.getAttribute('src');
+                const video = box.querySelector('.image-preview video');
+                
+                if (!box.querySelector('.image-preview').classList.contains('hidden')) {
+                    if (img) {
+                        path = img.getAttribute('src');
+                    } else if (video) {
+                        path = video.getAttribute('src');
+                    }
                 }
             }
             if (path) {
@@ -293,10 +366,11 @@ function addMoreImage() {
                 <i class="fas fa-grip-vertical"></i>
             </div>
             
-            <input type="file" accept="image/*" class="hidden image-file-input">
+            <input type="file" accept="image/*,video/*" class="hidden image-file-input">
             <div class="upload-placeholder">
                 <i class="fas fa-cloud-upload-alt text-4xl text-gray-400 mb-2"></i>
-                <p class="text-sm text-gray-600">Drop your images here or <span class="text-blue-500">click to browse</span>.</p>
+                <p class="text-sm text-gray-600">Drop media (Images/Videos)<br><span class="text-xs text-gray-400">(Recommended 1:1)</span></p>
+                <span class="text-blue-500 text-sm">click to browse</span>
             </div>
             <div class="image-preview hidden"></div>
             <button type="button" class="remove-image-btn absolute top-2 right-2 bg-red-500 text-white rounded-full w-6 h-6 flex items-center justify-center hover:bg-red-600 hidden">

@@ -7,7 +7,6 @@ document.addEventListener('DOMContentLoaded', function () {
     const sidebarToggle = document.getElementById('sidebarToggle');
     const sidebar = document.getElementById('sidebar');
     const contentWrapper = document.querySelector('.admin-content-wrapper');
-    window.addEventListener('resize', checkScreenSize);
 
     // Create overlay backdrop for sidebar (works on all screen sizes)
     let sidebarOverlay = document.querySelector('.admin-sidebar-overlay');
@@ -91,7 +90,33 @@ document.addEventListener('DOMContentLoaded', function () {
         }
     }
 
-    // Generalized menu toggle for all menus with submenus
+    // Inject CSS for floating submenu
+    const style = document.createElement('style');
+    style.innerHTML = `
+        .admin-sidebar.collapsed .sidebar-submenu.floating-menu {
+            position: fixed !important;
+            left: 80px !important;
+            width: 200px !important;
+            background: white !important;
+            box-shadow: 4px 0 24px rgba(0,0,0,0.15) !important;
+            z-index: 9999 !important;
+            padding: 0.5rem 0 !important;
+            border-radius: 0 0.5rem 0.5rem 0 !important;
+            display: block !important;
+        }
+    `;
+    document.head.appendChild(style);
+
+    // Close floating menus when clicking outside
+    document.addEventListener('click', function(e) {
+        if (!e.target.closest('.sidebar-menu-item') && !e.target.closest('.sidebar-submenu')) {
+            document.querySelectorAll('.sidebar-submenu.floating-menu').forEach(menu => {
+                menu.classList.remove('floating-menu');
+                menu.classList.add('hidden');
+            });
+        }
+    });
+
     const menuParents = document.querySelectorAll('.sidebar-menu-item');
     menuParents.forEach(function (menuItem) {
         const submenu = menuItem.nextElementSibling;
@@ -104,29 +129,54 @@ document.addEventListener('DOMContentLoaded', function () {
 
                 link.addEventListener('click', function (e) {
                     e.preventDefault(); // Always prevent navigation
+                    e.stopPropagation(); // Prevent document click closing immediately
 
-                    // Toggle submenu
-                    if (submenu.classList.contains('hidden')) {
-                        submenu.classList.remove('hidden');
-                        if (arrow) {
-                            arrow.classList.remove('fa-chevron-down');
-                            arrow.classList.add('fa-chevron-up');
+                    // Check if sidebar is collapsed
+                    if (sidebar.classList.contains('collapsed')) {
+                        // Close other floating menus
+                        document.querySelectorAll('.sidebar-submenu.floating-menu').forEach(m => {
+                            if (m !== submenu) {
+                                m.classList.remove('floating-menu');
+                                m.classList.add('hidden');
+                            }
+                        });
+
+                        // Toggle this one
+                        if (submenu.classList.contains('floating-menu')) {
+                            submenu.classList.remove('floating-menu');
+                            submenu.classList.add('hidden');
+                        } else {
+                            submenu.classList.remove('hidden');
+                            submenu.classList.add('floating-menu');
+                            
+                            // Position it
+                            const rect = menuItem.getBoundingClientRect();
+                            submenu.style.top = rect.top + 'px';
                         }
                     } else {
-                        submenu.classList.add('hidden');
-                        if (arrow) {
-                            arrow.classList.add('fa-chevron-down');
-                            arrow.classList.remove('fa-chevron-up');
+                        // Standard Accordion Behavior (Expanded)
+                        if (submenu.classList.contains('hidden')) {
+                            submenu.classList.remove('hidden');
+                            if (arrow) {
+                                arrow.classList.remove('fa-chevron-down');
+                                arrow.classList.add('fa-chevron-up');
+                            }
+                        } else {
+                            submenu.classList.add('hidden');
+                            if (arrow) {
+                                arrow.classList.add('fa-chevron-down');
+                                arrow.classList.remove('fa-chevron-up');
+                            }
                         }
                     }
                 });
 
-                // Keep submenu open if on relevant page
+                // Keep submenu open if on relevant page (only for expanded)
                 const href = link.getAttribute('href');
                 if (href) {
                     const pathParts = href.split('/');
-                    const menuName = pathParts[pathParts.length - 2]; // e.g., 'products' from /admin/products/list.php
-                    if (window.location.pathname.includes(menuName)) {
+                    const menuName = pathParts[pathParts.length - 2]; 
+                    if (window.location.pathname.includes(menuName) && !sidebar.classList.contains('collapsed')) {
                         submenu.classList.remove('hidden');
                         if (arrow) {
                             arrow.classList.remove('fa-chevron-down');
@@ -135,12 +185,9 @@ document.addEventListener('DOMContentLoaded', function () {
                     }
                 }
             } else {
-                // Menu without submenu - navigate only when sidebar is expanded
+                // Menu without submenu - allow navigation always
                 link.addEventListener('click', function (e) {
-                    if (sidebar.classList.contains('collapsed')) {
-                        e.preventDefault();
-                    }
-                    // If expanded, allow navigation
+                    // No prevention needed - allow navigation
                 });
             }
         }

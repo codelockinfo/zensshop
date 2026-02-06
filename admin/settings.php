@@ -648,7 +648,7 @@ if ($lp) {
                            </div>
                         </div>
                         <?php if($p['slug'] !== 'default'): ?>
-                        <form method="POST" class="ml-2 flex-shrink-0">
+                        <form method="POST" class="ml-2 flex-shrink-0" onsubmit="confirmDeletePage(event, this)">
                             <input type="hidden" name="action" value="delete_page">
                             <input type="hidden" name="page_id" value="<?php echo $p['id']; ?>">
                             <button type="submit" class="text-gray-400 hover:text-red-600 p-2" title="Delete Page">
