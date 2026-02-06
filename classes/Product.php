@@ -474,6 +474,12 @@ class Product {
             // Fetch the 10-digit product_id for other deletions
             $productInfo = $this->getById($id, $storeId);
             $tenDigitProductId = $productInfo['product_id'] ?? null;
+
+            // Remove from homepage sections (Best Selling / Trending)
+            if ($tenDigitProductId) {
+                $this->db->execute("DELETE FROM section_best_selling_products WHERE product_id = ? AND store_id = ?", [$tenDigitProductId, $storeId]);
+                $this->db->execute("DELETE FROM section_trending_products WHERE product_id = ? AND store_id = ?", [$tenDigitProductId, $storeId]);
+            }
             
             $this->deleteVariants($id, $storeId);
             // Categories

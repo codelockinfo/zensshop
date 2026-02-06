@@ -35,44 +35,71 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
          $storeId = $storeUser['store_id'] ?? null;
     }
 
-    // Process Best Selling
-    $db->execute("DELETE FROM section_best_selling_products WHERE store_id = ?", [$storeId]); 
-    if (!empty($bestSellingIds)) {
-        $ids = array_filter(explode(',', $bestSellingIds));
-        $order = 1;
-        foreach ($ids as $id) {
-            $id = trim($id);
-            if($id) $db->execute("INSERT INTO section_best_selling_products (product_id, sort_order, heading, subheading, store_id) VALUES (?, ?, ?, ?, ?)", [$id, $order++, $bs_heading, $bs_subheading, $storeId]);
+    try {
+        // Process Best Selling
+        $db->execute("DELETE FROM section_best_selling_products WHERE store_id = ?", [$storeId]); 
+        if (!empty($bestSellingIds)) {
+            $ids = array_filter(explode(',', $bestSellingIds));
+            $order = 1;
+            foreach ($ids as $id) {
+                $id = trim($id);
+                // Ensure IDs are valid integers to prevent DB errors
+                if ($id && is_numeric($id)) {
+                    $db->execute("INSERT INTO section_best_selling_products (product_id, sort_order, heading, subheading, store_id) VALUES (?, ?, ?, ?, ?)", [$id, $order++, $bs_heading, $bs_subheading, $storeId]);
+                }
+            }
         }
-    } else {
-        // Even if no products, update headers if something exists or just update the table?
-        // Usually we need at least one row or a separate settings table. 
-        // For now, if empty IDs, we just delete. If user wants to change heading, they must have products.
-    }
 
-    // Process Trending
-    $db->execute("DELETE FROM section_trending_products WHERE store_id = ?", [$storeId]); 
-    if (!empty($trendingIds)) {
-        $ids = array_filter(explode(',', $trendingIds));
-        $order = 1;
-        foreach ($ids as $id) {
-            $id = trim($id);
-            if($id) $db->execute("INSERT INTO section_trending_products (product_id, sort_order, heading, subheading, store_id) VALUES (?, ?, ?, ?, ?)", [$id, $order++, $tr_heading, $tr_subheading, $storeId]);
+        // Process Trending
+        $db->execute("DELETE FROM section_trending_products WHERE store_id = ?", [$storeId]); 
+        if (!empty($trendingIds)) {
+            $ids = array_filter(explode(',', $trendingIds));
+            $order = 1;
+            foreach ($ids as $id) {
+                $id = trim($id);
+                if ($id && is_numeric($id)) {
+                    $db->execute("INSERT INTO section_trending_products (product_id, sort_order, heading, subheading, store_id) VALUES (?, ?, ?, ?, ?)", [$id, $order++, $tr_heading, $tr_subheading, $storeId]);
+                }
+            }
         }
+        
+        $successMsg = "Homepage product settings updated successfully!";
+    } catch (Exception $e) {
+        $errorMsg = $e->getMessage();
     }
-    
-    $successMsg = "Homepage product settings updated successfully!";
     
     // Handle AJAX request
     if ((!empty($_SERVER['HTTP_X_REQUESTED_WITH']) && strtolower($_SERVER['HTTP_X_REQUESTED_WITH']) == 'xmlhttprequest') || isset($_GET['ajax'])) {
-        ob_end_clean(); // Clean all buffered output (includes includes/headers)
+        ob_end_clean(); // Clean all buffered output
         header('Content-Type: application/json');
-        echo json_encode(['success' => true, 'message' => $successMsg]);
+        
+        if (isset($errorMsg)) {
+            // Return 200 so the JS parses the JSON and we can show the specific error message
+            // The JS checks for data.success
+            echo json_encode(['success' => false, 'message' => $errorMsg]);
+        } else {
+            echo json_encode(['success' => true, 'message' => $successMsg]);
+        }
         exit;
     }
     
     // Standard POST - Redirect with Session Flash
-    $_SESSION['flash_success'] = $successMsg;
+    if (isset($errorMsg)) {
+        $_SESSION['flash_error'] = $errorMsg; // Assuming you have a flash_error handler, or just use error var
+        // Since we don't have a flash_error in the view code above (only success), we might just set $error
+        $error = $errorMsg; // But we are redirecting... so we need session
+        // For now, let's just stay on page if error? Or redirect with error param?
+        // Let's assume standard behavior is to redirect back or stay.
+        // Given the structure, let's just redirect back to products list with error? 
+        // Actually, better to stay on page to show error but we are doing a redirect pattern.
+        // Let's just use flash_error if it exists, or just append to URL.
+        // But for now, let's just use the success path but with error message in a way the user sees.
+        // Actually, the user JS handles the AJAX. The standard POST is fallback.
+        // Let's stick to safe redirect.
+        $_SESSION['flash_success'] = "Error: " . $errorMsg; // Fallback
+    } else {
+        $_SESSION['flash_success'] = $successMsg;
+    }
     header("Location: " . $baseUrl . '/admin/products');
     exit;
 }
@@ -508,7 +535,11 @@ document.getElementById('settingsForm').addEventListener('submit', function(e) {
         });
     })
     .then(data => {
-        if (data.success) { showGlobalMessage(data.message); }
+        if (data.success) { 
+            showGlobalMessage(data.message); 
+        } else {
+            throw new Error(data.message || 'Unknown error occurred');
+        }
     })
     .catch(err => {
         console.error(err);
