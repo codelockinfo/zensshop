@@ -530,8 +530,12 @@ document.getElementById('settingsForm').addEventListener('submit', function(e) {
     .then(response => {
         if (!response.ok) throw new Error('Network response was not ok');
         return response.text().then(text => {
-            try { return JSON.parse(text); }
-            catch (e) { throw new Error('Server Error'); }
+            try { 
+                return JSON.parse(text); 
+            } catch (e) { 
+                console.error('Server response:', text);
+                throw new Error('Server returned invalid JSON. Check console for details.'); 
+            }
         });
     })
     .then(data => {
