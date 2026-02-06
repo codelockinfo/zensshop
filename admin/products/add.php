@@ -288,7 +288,8 @@ $brands = $brandsResult ? json_decode($brandsResult['setting_value'], true) : []
                     <input type="file" accept="image/*,video/*" class="hidden image-file-input" data-index="<?php echo $i; ?>" multiple>
                     <div class="upload-placeholder">
                         <i class="fas fa-cloud-upload-alt text-4xl text-gray-400 mb-2"></i>
-                        <p class="text-sm text-gray-600">Drop your images here or <span class="text-blue-500">click to browse</span>.</p>
+                        <p class="text-sm text-gray-600">Drop media (Images/Videos)<br><span class="text-xs text-gray-400">(Recommended 1:1)</span></p>
+                        <span class="text-blue-500 text-sm">click to browse</span>
                     </div>
                     <div class="image-preview hidden"></div>
                     <button type="button" class="remove-image-btn absolute top-2 right-2 bg-red-500 text-white rounded-full w-6 h-6 flex items-center justify-center hover:bg-red-600 hidden">
