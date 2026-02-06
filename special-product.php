@@ -14,7 +14,7 @@ $productObj = new Product();
 $baseUrl = getBaseUrl();
 
 // 1. Determine Page (by slug or ID)
-$pageSlug = $_GET['page'] ?? 'default';
+$pageSlug = $_GET['page'] ?? '';
 
 // 2. Fetch Landing Page Config (Store Specific)
 $storeId = getCurrentStoreId();
@@ -32,7 +32,7 @@ if (!$landingPage) {
     }
 
     // If a specific slug was requested but not found -> 404
-    if ($pageSlug !== 'default' && !empty($pageSlug)) {
+    if (!empty($pageSlug)) {
         header("HTTP/1.0 404 Not Found");
         header("Location: " . $baseUrl . "/not-found");
         exit;
@@ -189,7 +189,7 @@ if (!empty($customSchema)) {
         "description" => $metaDescription ?: strip_tags($heroDescription),
         "url" => $baseUrl . '/special-product.php?page=' . $pageSlug,
         "image" => [$mainImage],
-        "brand" => ["@type" => "Brand", "name" => "ZensShop"],
+        "brand" => ["@type" => "Brand", "name" => "CookPro"],
         "offers" => [
             "@type" => "Offer",
             "price" => (float)$price,

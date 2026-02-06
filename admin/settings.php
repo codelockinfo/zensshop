@@ -18,16 +18,23 @@ if (!$storeId && isset($_SESSION['user_email'])) {
      $storeId = $storeUser['store_id'] ?? null;
 }
 
-// Determine which page to edit (defaults to 'default')
-$selectedSlug = $_GET['page'] ?? 'default';
-
-// 1. Fetch the Landing Page record FIRST
-// We need this data available during POST processing for backward compatibility and image preservation.
-$lp = $db->fetchOne("SELECT * FROM landing_pages WHERE slug = ? AND store_id = ?", [$selectedSlug, $storeId]);
-
-// 2. Fetch all pages & products for the sidebar and dropdowns
+// 1. Fetch all pages & products for the sidebar and dropdowns
 $allPages = $db->fetchAll("SELECT id, name, slug FROM landing_pages WHERE store_id = ? ORDER BY id ASC", [$storeId]);
 $products = $db->fetchAll("SELECT id, product_id, name, price, currency FROM products WHERE store_id = ? AND status = 'active' ORDER BY name ASC", [$storeId]);
+
+// 2. Determine which page to edit
+$selectedSlug = $_GET['page'] ?? null;
+
+// If no page selected, default to the first available page
+if (!$selectedSlug && !empty($allPages)) {
+    $selectedSlug = $allPages[0]['slug'];
+}
+
+// 3. Fetch the Landing Page record
+$lp = null;
+if ($selectedSlug) {
+    $lp = $db->fetchOne("SELECT * FROM landing_pages WHERE slug = ? AND store_id = ?", [$selectedSlug, $storeId]);
+}
 
 // Handle Form Submission
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
@@ -72,15 +79,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
              $storeUser = $db->fetchOne("SELECT store_id FROM users WHERE email = ?", [$_SESSION['user_email']]);
              $storeId = $storeUser['store_id'] ?? null;
         }
-        // Prevent deleting 'default' if you want to keep one master page
+        // Delete Page logic without default restriction
         $check = $db->fetchOne("SELECT slug FROM landing_pages WHERE id = ? AND store_id = ?", [$delId, $storeId]);
-        if ($check && $check['slug'] !== 'default') {
+        if ($check) {
             $db->execute("DELETE FROM landing_pages WHERE id = ? AND store_id = ?", [$delId, $storeId]);
             $_SESSION['flash_success'] = "Page deleted successfully.";
-            header("Location: " . $baseUrl . '/admin/special-page?page=default');
+            header("Location: " . $baseUrl . '/admin/special-page');
             exit;
         } else {
-            $error = "Cannot delete the default page.";
+            $error = "Page not found.";
         }
     } elseif ($action === 'save_settings') {
         // Update existing page
@@ -425,7 +432,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
             $_SESSION['flash_success'] = "Page settings saved successfully!";
             session_write_close(); // Ensure session is saved before redirect
-            header("Location: " . $baseUrl . '/admin/special-page?page=' . urlencode($selectedSlug ?: 'default'));
+            header("Location: " . $baseUrl . '/admin/special-page?page=' . urlencode($selectedSlug));
             exit;
         } catch (Exception $e) {
             $error = "Error saving settings: " . $e->getMessage();
@@ -574,7 +581,7 @@ if ($lp) {
         <p class="text-sm text-gray-500 mt-1 pl-2">Dashboard > Settings > Landing Pages</p>
     </div>
     <div class="flex items-center gap-3">
-        <?php if (!empty($selectedSlug) && $selectedSlug !== 'default'): ?>
+        <?php if (!empty($selectedSlug)): ?>
         <a href="<?php echo $baseUrl; ?>/<?php echo $selectedSlug; ?>" target="_blank" class="bg-white text-gray-700 border border-gray-300 px-4 py-2.5 rounded shadow-sm hover:bg-gray-50 flex items-center font-bold text-sm transition">
             <i class="fas fa-external-link-alt mr-2 text-gray-400"></i> View Live Page
         </a>
@@ -647,7 +654,6 @@ if ($lp) {
                                </button>
                            </div>
                         </div>
-                        <?php if($p['slug'] !== 'default'): ?>
                         <form method="POST" class="ml-2 flex-shrink-0" onsubmit="confirmDeletePage(event, this)">
                             <input type="hidden" name="action" value="delete_page">
                             <input type="hidden" name="page_id" value="<?php echo $p['id']; ?>">
@@ -655,7 +661,6 @@ if ($lp) {
                                 <i class="fas fa-trash"></i>
                             </button>
                         </form>
-                        <?php endif; ?>
                     </div>
                 </li>
                 <?php endforeach; ?>
