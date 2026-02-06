@@ -327,6 +327,23 @@ unset($_SESSION['success']);
                 }
                 </script>
 
+                <!-- Collections Page Settings -->
+                <div class="md:col-span-2 grid grid-cols-1 md:grid-cols-2 gap-6 pt-4 border-t mt-4">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Collections Page Heading</label>
+                        <input type="hidden" name="group_collections_heading" value="general">
+                        <input type="text" name="setting_collections_heading" 
+                               value="<?php echo htmlspecialchars($settings->get('collections_heading', 'Collections List')); ?>" 
+                               class="w-full px-4 py-2 border rounded focus:ring-2 focus:ring-blue-500">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Collections Page Description</label>
+                        <input type="hidden" name="group_collections_description" value="general">
+                        <textarea name="setting_collections_description" rows="2"
+                                  class="w-full px-4 py-2 border rounded focus:ring-2 focus:ring-blue-500"><?php echo htmlspecialchars($settings->get('collections_description', 'Explore our thoughtfully curated collections')); ?></textarea>
+                    </div>
+                </div>
+
                 <!-- Blog Feature Toggle -->
                 <div class="md:col-span-2">
                     <label class="flex items-center space-x-3 cursor-pointer">

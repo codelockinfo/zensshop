@@ -2,10 +2,12 @@
 $pageTitle = 'Collections List';
 require_once __DIR__ . '/includes/header.php';
 require_once __DIR__ . '/classes/Database.php';
+require_once __DIR__ . '/classes/Settings.php';
 require_once __DIR__ . '/includes/functions.php';
 
 $baseUrl = getBaseUrl();
 $db = Database::getInstance();
+$settings = new Settings();
 // Get all active categories (Store Specific)
 $categories = $db->fetchAll(
     "SELECT * FROM categories WHERE status = 'active' AND (store_id = ? OR store_id IS NULL) ORDER BY sort_order ASC, name ASC",
@@ -38,9 +40,9 @@ $categories = $db->fetchAll(
         <div id="mainCollectionsContent" class="hidden">
             <!-- Page Header -->
             <div class="text-center mb-12">
-                <h1 class="text-3xl md:text-4xl font-heading font-bold mb-4">Collections List</h1>
+                <h1 class="text-3xl md:text-4xl font-heading font-bold mb-4"><?php echo htmlspecialchars($settings->get('collections_heading', 'Collections List')); ?></h1>
                 <p class="text-gray-600 text-md max-w-3xl mx-auto">
-                    Explore our thoughtfully curated collections: Sweaters, Handbags, Denim, and more—each perfect for enhancing every style on every special occasion and daily wear.
+                    <?php echo htmlspecialchars($settings->get('collections_description', 'Explore our thoughtfully curated collections: Sweaters, Handbags, Denim, and more—each perfect for enhancing every style on every special occasion and daily wear.')); ?>
                 </p>
             </div>
             
