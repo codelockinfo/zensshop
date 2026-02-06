@@ -29,8 +29,26 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
         }
     }
 
+    // Handle Payment Icons (JSON)
+    $paymentIcons = [];
+    if (isset($_POST['payment_names'])) {
+        $payment_names = $_POST['payment_names'];
+        $payment_svgs = $_POST['payment_svgs'] ?? [];
+        
+        for ($i = 0; $i < count($payment_names); $i++) {
+            if (!empty($payment_names[$i]) && !empty($payment_svgs[$i])) {
+                $paymentIcons[] = [
+                    'name' => $payment_names[$i],
+                    'svg' => $payment_svgs[$i],
+                ];
+            }
+        }
+    }
+    $_POST['setting_checkout_payment_icons_json'] = json_encode(array_values($paymentIcons), JSON_UNESCAPED_SLASHES);
+    $_POST['group_checkout_payment_icons_json'] = 'checkout';
+    
     foreach ($_POST as $key => $value) {
-        if ($key !== 'action' && strpos($key, 'setting_') === 0) {
+        if ($key !== 'action' && strpos($key, 'setting_') === 0 && $key !== 'setting_enable_blog' && !is_array($value)) {
             $settingKey = str_replace('setting_', '', $key);
             $settings->set($settingKey, $value, $_POST['group_' . $settingKey] ?? 'general');
         }
@@ -45,6 +63,7 @@ $emailSettings = $settings->getByGroup('email');
 $generalSettings = $settings->getByGroup('general');
 $apiSettings = $settings->getByGroup('api');
 $seoSettings = $settings->getByGroup('seo');
+$checkoutSettings = $settings->getByGroup('checkout');
 
 $pageTitle = 'System Settings';
 require_once __DIR__ . '/../includes/admin-header.php';
@@ -405,6 +424,55 @@ unset($_SESSION['success']);
             </div>
         </div>
 
+        <!-- Checkout Payment Icons -->
+        <div class="bg-white rounded shadow p-6">
+            <h2 class="text-xl font-bold mb-4 flex items-center">
+                <i class="fas fa-credit-card mr-2 text-orange-600"></i>
+                Checkout Payment Icons
+            </h2>
+            <p class="text-sm text-gray-600 mb-6">Manage payment method icons displayed on the checkout page (SVG format)</p>
+
+            <div class="bg-gray-50 p-4 rounded border border-gray-200">
+                <div class="flex justify-between items-center border-b pb-2 mb-4">
+                    <div>
+                        <h3 class="font-bold text-base">Payment Method Icons (SVG)</h3>
+                        <p class="text-xs text-gray-500 mt-1">These icons will be displayed on the checkout page below the order summary</p>
+                    </div>
+                    <button type="button" onclick="addPaymentRow()" class="text-white bg-green-600 hover:bg-green-700 text-sm px-3 py-1 rounded">
+                        <i class="fas fa-plus"></i> Add New
+                    </button>
+                </div>
+                
+                <div id="paymentIconsContainer" class="space-y-4">
+                    <!-- Rows will be added here by JS -->
+                </div>
+                
+                <!-- Template for JS -->
+                <template id="paymentRowTemplate">
+                    <div class="bg-white border border-gray-200 rounded p-4 payment-row relative group">
+                        <button type="button" onclick="removePaymentRow(this)" class="absolute top-2 right-2 text-red-500 hover:text-red-700 p-2">
+                            <i class="fas fa-trash"></i>
+                        </button>
+                        <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+                            <div class="md:col-span-1">
+                                <label class="block text-xs font-bold text-gray-400 uppercase mb-1">Name</label>
+                                <input type="text" name="payment_names[]" class="w-full border p-2 rounded text-sm" placeholder="e.g. Visa">
+                            </div>
+                            <div class="md:col-span-2">
+                                <label class="block text-xs font-bold text-gray-400 uppercase mb-1">SVG Code</label>
+                                <textarea name="payment_svgs[]" rows="3" class="w-full border p-2 rounded text-sm font-mono" placeholder="<svg ...>...</svg>"></textarea>
+                            </div>
+                            <div class="md:col-span-1 flex items-end justify-center pb-2">
+                                <div class="p-2 border rounded bg-gray-50 w-full text-center svg-preview" style="min-height: 60px; display: flex; align-items: center; justify-content: center;">
+                                    <span class="text-xs text-gray-400">Preview</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </template>
+            </div>
+        </div>
+
         <!-- Product & Pickup Settings -->
         <div class="bg-white rounded shadow p-6">
             <h2 class="text-xl font-bold mb-4 flex items-center">
@@ -557,6 +625,45 @@ function togglePassword(fieldId) {
         icon.classList.remove('fa-eye-slash');
         icon.classList.add('fa-eye');
     }
+}
+
+// Payment Icons Dynamic Rows
+const paymentData = <?php 
+    $paymentIconsJson = $settings->get('checkout_payment_icons_json', '[]');
+    echo $paymentIconsJson ?: '[]';
+?>;
+
+function addPaymentRow(data = null) {
+    const container = document.getElementById('paymentIconsContainer');
+    const template = document.getElementById('paymentRowTemplate');
+    const clone = template.content.cloneNode(true);
+    
+    if (data) {
+        clone.querySelector('input').value = data.name;
+        clone.querySelector('textarea').value = data.svg;
+        clone.querySelector('.svg-preview').innerHTML = data.svg;
+    }
+    
+    // Add real-time preview listener to the newly added textarea
+    const textarea = clone.querySelector('textarea');
+    textarea.addEventListener('input', function() {
+        const previewDiv = this.closest('.payment-row').querySelector('.svg-preview');
+        previewDiv.innerHTML = this.value || '<span class="text-xs text-gray-400">Preview</span>';
+    });
+    
+    container.appendChild(clone);
+}
+
+function removePaymentRow(btn) {
+    btn.closest('.payment-row').remove();
+}
+
+// Init payment icons
+if (paymentData && paymentData.length > 0) {
+    paymentData.forEach(item => addPaymentRow(item));
+} else {
+    // Add one empty row by default
+    addPaymentRow();
 }
 </script>
 

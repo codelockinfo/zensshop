@@ -78,7 +78,7 @@ $cartTotal = $cart->getTotal();
                                  onerror="this.src='https://placehold.co/600x600?text=Product+Image'">
                         </a>
                         <div class="flex-1">
-                            <h3 class="text-xl font-semibold mb-1">
+                            <h3 class="text-xl font-semibold mb-1 line-clamp-2" style="display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; text-overflow: ellipsis;" title="<?php echo htmlspecialchars($item['name']); ?>">
                                 <a href="<?php echo $productUrl; ?>" class="hover:text-primary transition">
                                     <?php echo htmlspecialchars($item['name']); ?>
                                 </a>

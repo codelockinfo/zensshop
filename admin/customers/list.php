@@ -104,6 +104,15 @@ $customers = $customer->getAllCustomers($filters);
     <table class="admin-table">
         <thead>
             <tr>
+                <th class="sortable cursor-pointer hover:bg-gray-100" data-column="row_number">
+                    <div class="flex items-center justify-between">
+                        <span>NO</span>
+                        <div class="flex flex-col ml-1">
+                            <i class="fas fa-caret-up text-gray-400 -mb-1" style="font-size: 0.75rem;"></i>
+                            <i class="fas fa-caret-down text-gray-400" style="font-size: 0.75rem;"></i>
+                        </div>
+                    </div>
+                </th>
                 <th>Customer</th>
                 <th class="sortable cursor-pointer hover:bg-gray-100" data-column="id">
                     <div class="flex items-center justify-between">
@@ -154,8 +163,9 @@ $customers = $customer->getAllCustomers($filters);
                 </td>
             </tr>
             <?php else: ?>
-            <?php foreach ($customers as $item): ?>
-            <tr>
+            <?php foreach ($customers as $index => $item): ?>
+            <tr data-row-number="<?php echo $index + 1; ?>">
+                <td><?php echo $index + 1; ?></td>
                 <td>
                     <div class="flex items-center space-x-3">
                         <div class="w-16 h-16 bg-primary-light rounded-full flex items-center justify-center">
@@ -267,7 +277,11 @@ document.addEventListener('DOMContentLoaded', function() {
                 const aCell = a.children[cellIndex];
                 const bCell = b.children[cellIndex];
                 
-                if (column === 'id' || column === 'total_orders' || column === 'total_spent') {
+                if (column === 'row_number') {
+                    // Row number sort
+                    aVal = parseInt(a.dataset.rowNumber) || 0;
+                    bVal = parseInt(b.dataset.rowNumber) || 0;
+                } else if (column === 'id' || column === 'total_orders' || column === 'total_spent') {
                     // Numeric sort
                     aVal = parseFloat(aCell.textContent.replace(/[^0-9.-]/g, '')) || 0;
                     bVal = parseFloat(bCell.textContent.replace(/[^0-9.-]/g, '')) || 0;

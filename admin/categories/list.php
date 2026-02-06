@@ -59,6 +59,15 @@ document.addEventListener('DOMContentLoaded', function() {
     <table class="admin-table">
         <thead>
             <tr>
+                <th class="sortable cursor-pointer hover:bg-gray-100" data-column="row_number">
+                    <div class="flex items-center justify-between">
+                        <span>NO</span>
+                        <div class="flex flex-col ml-1">
+                            <i class="fas fa-caret-up text-gray-400 -mb-1" style="font-size: 0.75rem;"></i>
+                            <i class="fas fa-caret-down text-gray-400" style="font-size: 0.75rem;"></i>
+                        </div>
+                    </div>
+                </th>
                 <th>ID</th>
                 <th>Image</th>
                 <th>Name</th>
@@ -69,8 +78,9 @@ document.addEventListener('DOMContentLoaded', function() {
             </tr>
         </thead>
         <tbody>
-            <?php foreach ($categories as $cat): ?>
-            <tr>
+            <?php foreach ($categories as $index => $cat): ?>
+            <tr data-row-number="<?php echo $index + 1; ?>">
+                <td><?php echo $index + 1; ?></td>
                 <td><?php echo $cat['id']; ?></td>
                 <td>
                     <?php if (!empty($cat['image'])): ?>
@@ -140,6 +150,77 @@ function deleteCategory(id) {
         });
     });
 }
+
+// Table sorting functionality
+document.addEventListener('DOMContentLoaded', function() {
+    const table = document.querySelector('.admin-table');
+    const headers = table.querySelectorAll('th.sortable');
+    let currentSort = { column: null, direction: 'asc' };
+    
+    headers.forEach(header => {
+        header.addEventListener('click', function() {
+            const column = this.dataset.column;
+            const tbody = table.querySelector('tbody');
+            const rows = Array.from(tbody.querySelectorAll('tr'));
+            
+            // Toggle direction
+            if (currentSort.column === column) {
+                currentSort.direction = currentSort.direction === 'asc' ? 'desc' : 'asc';
+            } else {
+                currentSort.direction = 'asc';
+                currentSort.column = column;
+            }
+            
+            // Reset all arrows
+            headers.forEach(h => {
+                const upArrow = h.querySelector('.fa-caret-up');
+                const downArrow = h.querySelector('.fa-caret-down');
+                if (upArrow) upArrow.classList.remove('text-blue-600');
+                if (upArrow) upArrow.classList.add('text-gray-400');
+                if (downArrow) downArrow.classList.remove('text-blue-600');
+                if (downArrow) downArrow.classList.add('text-gray-400');
+            });
+            
+            // Highlight active arrow
+            const upArrow = this.querySelector('.fa-caret-up');
+            const downArrow = this.querySelector('.fa-caret-down');
+            if (currentSort.direction === 'asc') {
+                upArrow.classList.remove('text-gray-400');
+                upArrow.classList.add('text-blue-600');
+            } else {
+                downArrow.classList.remove('text-gray-400');
+                downArrow.classList.add('text-blue-600');
+            }
+            
+            // Sort rows
+            rows.sort((a, b) => {
+                let aVal, bVal;
+                
+                // Get cell index
+                const cellIndex = Array.from(this.parentElement.children).indexOf(this);
+                const aCell = a.children[cellIndex];
+                const bCell = b.children[cellIndex];
+                
+                if (column === 'row_number') {
+                    // Row number sort
+                    aVal = parseInt(a.dataset.rowNumber) || 0;
+                    bVal = parseInt(b.dataset.rowNumber) || 0;
+                } else {
+                    // Text sort
+                    aVal = aCell.textContent.trim().toLowerCase();
+                    bVal = bCell.textContent.trim().toLowerCase();
+                }
+                
+                if (aVal < bVal) return currentSort.direction === 'asc' ? -1 : 1;
+                if (aVal > bVal) return currentSort.direction === 'asc' ? 1 : -1;
+                return 0;
+            });
+            
+            // Re-append sorted rows
+            rows.forEach(row => tbody.appendChild(row));
+        });
+    });
+});
 </script>
 
 <?php require_once __DIR__ . '/../../includes/admin-footer.php'; ?>

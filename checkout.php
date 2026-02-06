@@ -10,6 +10,7 @@ require_once __DIR__ . '/includes/functions.php';
 require_once __DIR__ . '/classes/Cart.php';
 require_once __DIR__ . '/classes/Order.php';
 require_once __DIR__ . '/classes/CustomerAuth.php';
+require_once __DIR__ . '/classes/Database.php';
 
 $baseUrl = getBaseUrl();
 $cart = new Cart();
@@ -35,6 +36,13 @@ if ($auth->isLoggedIn()) {
         $_SESSION['store_id'] = $customer['store_id'];
     }
 }
+
+// Fetch checkout payment icons from database using Settings class
+require_once __DIR__ . '/classes/Settings.php';
+$settingsManager = new Settings();
+$checkoutPaymentIconsJson = $settingsManager->get('checkout_payment_icons_json', '[]');
+$checkoutPaymentIcons = json_decode($checkoutPaymentIconsJson, true) ?: [];
+
 
 // Redirect if cart is empty
 if (empty($cartItems)) {
@@ -592,12 +600,18 @@ nav.bg-white.sticky.top-0 {
                         </div>
                         
                         <!-- Payment Method Logos -->
-                        <div class="flex justify-center items-center space-x-3 mb-6">
-                            <img src="<?php echo $baseUrl; ?>/assets/images/checkout-image/Visa_Inc._logo.svg.png" alt="Visa" class="h-8 object-contain">
-                            <img src="<?php echo $baseUrl; ?>/assets/images/checkout-image/Mastercard-logo.svg.png" alt="Mastercard" class="h-8 object-contain">
-                            <img src="<?php echo $baseUrl; ?>/assets/images/checkout-image/American_Express_logo.svg.png" alt="American Express" class="h-8 object-contain">
+                        <?php if (!empty($checkoutPaymentIcons)): ?>
+                        <div class="flex justify-center items-center flex-wrap gap-1 py-4 border-t">
+                            <?php foreach ($checkoutPaymentIcons as $icon): ?>
+                                <div class="h-8 flex items-center justify-center" title="<?php echo htmlspecialchars($icon['name'] ?? ''); ?>" style="max-width: 60px;">
+                                    <div class="w-full h-full flex items-center justify-center">
+                                        <?php echo $icon['svg'] ?? ''; ?>
+                                    </div>
+                                </div>
+                            <?php endforeach; ?>
                         </div>
-                        
+                        <?php endif; ?>
+                         
                         <!-- Payment Method Selection -->
                         <input type="hidden" name="payment_method" value="credit_card">
                         

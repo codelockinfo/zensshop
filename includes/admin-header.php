@@ -448,19 +448,6 @@ $currentPage = basename($_SERVER['PHP_SELF']);
             <span>Philosophy</span>
         </a>
 
-        <a href="<?php echo url('admin/settings'); ?>"
-           class="flex items-center space-x-2 py-1 px-4 text-sm <?php echo ($currentPage === 'settings' || strpos($_SERVER['REQUEST_URI'], 'admin/settings') !== false) ? 'bg-gray-700' : ''; ?>"
-           title="Landing Page">
-            <i class="fas fa-desktop text-xs"></i>
-            <span>Landing Page</span>
-        </a>
-
-        <a href="<?php echo url('admin/system-settings'); ?>"
-           class="flex items-center space-x-2 py-1 px-4 text-sm <?php echo ($currentPage === 'system-settings' || strpos($_SERVER['REQUEST_URI'], 'admin/system-settings') !== false) ? 'bg-gray-700' : ''; ?>"
-           title="System Settings">
-            <i class="fas fa-cogs text-xs"></i>
-            <span>System Settings</span>
-        </a>
 
         <a href="<?php echo url('admin/features'); ?>"
            class="flex items-center space-x-2 py-1 px-4 text-sm <?php echo ($currentPage === 'features_settings' || strpos($_SERVER['REQUEST_URI'], 'admin/features') !== false) ? 'bg-gray-700' : ''; ?>"

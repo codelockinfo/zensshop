@@ -106,6 +106,15 @@ document.addEventListener('DOMContentLoaded', function() {
     <table class="admin-table">
         <thead>
             <tr>
+                <th class="sortable cursor-pointer hover:bg-gray-100" data-column="row_number">
+                    <div class="flex items-center justify-between">
+                        <span>NO</span>
+                        <div class="flex flex-col ml-1">
+                            <i class="fas fa-caret-up text-gray-400 -mb-1" style="font-size: 0.75rem;"></i>
+                            <i class="fas fa-caret-down text-gray-400" style="font-size: 0.75rem;"></i>
+                        </div>
+                    </div>
+                </th>
                 <th>Product</th>
                 <th class="sortable cursor-pointer hover:bg-gray-100" data-column="product_id">
                     <div class="flex items-center justify-between">
@@ -158,10 +167,11 @@ document.addEventListener('DOMContentLoaded', function() {
             </tr>
         </thead>
         <tbody>
-            <?php foreach ($products as $item): 
+            <?php foreach ($products as $index => $item): 
                 $mainImage = getProductImage($item);
             ?>
-            <tr>
+            <tr data-row-number="<?php echo $index + 1; ?>">
+                <td><?php echo $index + 1; ?></td>
                 <td>
                     <div class="flex items-center space-x-3">
                         <img src="<?php echo htmlspecialchars($mainImage); ?>" alt="<?php echo htmlspecialchars($item['name']); ?>" class="w-16 h-16 object-cover rounded flex-shrink-0">
@@ -314,7 +324,11 @@ document.addEventListener('DOMContentLoaded', function() {
                 const aCell = a.children[cellIndex];
                 const bCell = b.children[cellIndex];
                 
-                if (column === 'price' || column === 'stock_quantity') {
+                if (column === 'row_number') {
+                    // Row number sort
+                    aVal = parseInt(a.dataset.rowNumber) || 0;
+                    bVal = parseInt(b.dataset.rowNumber) || 0;
+                } else if (column === 'price' || column === 'stock_quantity') {
                     // Numeric sort
                     aVal = parseFloat(aCell.textContent.replace(/[^0-9.-]/g, '')) || 0;
                     bVal = parseFloat(bCell.textContent.replace(/[^0-9.-]/g, '')) || 0;
