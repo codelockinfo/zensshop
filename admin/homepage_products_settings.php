@@ -20,6 +20,17 @@ try {
     // Ignore errors if column already modified or valid
 }
 
+// Debug usage: Detect if POST was stripped to GET (common in redirects)
+if (isset($_GET['ajax']) && $_SERVER['REQUEST_METHOD'] !== 'POST') {
+    ob_end_clean();
+    header('Content-Type: application/json');
+    echo json_encode([
+        'success' => false, 
+        'message' => 'Error: Request was converted to GET. Possible caused by URL redirect (http/https or trailing slash). Current Method: ' . $_SERVER['REQUEST_METHOD']
+    ]);
+    exit;
+}
+
 // Handle Form Submission
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $bestSellingIds = $_POST['best_selling_ids'] ?? '';
@@ -522,7 +533,8 @@ document.getElementById('settingsForm').addEventListener('submit', function(e) {
     
     // Note: Global 'btn-loading' listener in admin-footer.php handles showing the loader.
     
-    fetch(`${BASE_URL}/admin/homepage_products_settings.php?ajax=1`, {
+    // Use relative path to avoid potential cross-protocol/domain redirects stripping POST behavior
+    fetch(`homepage_products_settings.php?ajax=1`, {
         method: 'POST',
         body: formData,
         headers: { 'X-Requested-With': 'XMLHttpRequest' }
