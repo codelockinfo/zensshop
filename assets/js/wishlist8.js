@@ -47,7 +47,7 @@ function initializeWishlistButtons() {
                     // Text Button: Black Filled Heart, No Bg Change
                     if (icon) {
                         icon.classList.remove('far');
-                        icon.classList.add('fas', 'text-black');
+                        icon.classList.add('fas', 'text-black', 'mr-1');
                     }
                 }
 
@@ -76,7 +76,7 @@ function initializeWishlistButtons() {
                      // Text Button: Outline Heart
                      if (icon) {
                         icon.classList.remove('fas', 'text-black');
-                        icon.classList.add('far');
+                        icon.classList.add('far', 'mr-1');
                     }
                 }
 
@@ -252,12 +252,12 @@ async function toggleWishlist(productId, button) {
                         btn.classList.remove('bg-black', 'text-white');
                         btn.classList.add('bg-white', 'text-black');
                         if (icon) {
-                            icon.className = 'far fa-heart'; // Reset specific classes
+                            icon.className = 'far fa-heart mr-1';
                         }
                     } else {
                         // Text Button
                         if (icon) {
-                            icon.className = 'far fa-heart';
+                            icon.className = 'far fa-heart mr-1';
                         }
                     }
 
@@ -281,12 +281,12 @@ async function toggleWishlist(productId, button) {
                         btn.classList.remove('bg-white', 'text-black');
                         btn.classList.add('bg-black', 'text-white');
                         if (icon) {
-                            icon.className = 'fas fa-heart'; // Using 'fas' for filled
+                            icon.className = 'fas fa-heart mr-1'; // Using 'fas' for filled
                         }
                     } else {
                         // Text Button
                         if (icon) {
-                            icon.className = 'fas fa-heart text-black';
+                            icon.className = 'fas fa-heart text-black mr-1';
                         }
                     }
 
