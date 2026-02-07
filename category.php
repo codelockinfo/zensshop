@@ -6,6 +6,10 @@
 // Start output buffering to prevent headers already sent errors
 ob_start();
 
+// Enable error reporting for debugging production 500 errors
+error_reporting(E_ALL);
+ini_set('display_errors', 1);
+
 // Process redirects BEFORE any output
 require_once __DIR__ . '/classes/Product.php';
 require_once __DIR__ . '/classes/Database.php';

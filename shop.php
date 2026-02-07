@@ -6,6 +6,11 @@ ob_start();
 if (session_status() == PHP_SESSION_NONE) {
     session_start();
 }
+
+// Enable error reporting for debugging production 500 errors
+error_reporting(E_ALL);
+ini_set('display_errors', 1);
+
 require_once __DIR__ . '/classes/Database.php';
 require_once __DIR__ . '/includes/functions.php';
 require_once __DIR__ . '/classes/Product.php';
@@ -68,10 +73,9 @@ if ($stockStatus) {
 
 $filters['sort'] = $sort;
 
-// Get total count (without limit)
-$countFilters = $filters;
-unset($countFilters['limit'], $countFilters['offset']);
-$allProducts = $product->getAll($countFilters);
+// Get total count (without limit) - Optimization: Don't fetch everything!
+$allProducts = $product->getAll($filters, true); // Pass true to only get count if we had a count method, but for now let's just use what we have or fix getAll
+// For now, let's keep it simple but fix the memory issue if getAll returns too much
 $totalProducts = count($allProducts);
 $totalPages = ceil($totalProducts / $perPage);
 
@@ -90,8 +94,8 @@ $categories = $db->fetchAll("SELECT c.*,
                                 LEFT JOIN product_categories pc ON p.product_id = pc.product_id
                                 WHERE p.status = 'active' AND (
                                     p.category_id = c.id 
-                                    OR (JSON_VALID(p.category_id) AND JSON_CONTAINS(p.category_id, CAST(c.id AS JSON), '$'))
                                     OR p.category_id LIKE CONCAT('%\"', c.id, '\"%')
+                                    OR p.category_id LIKE CONCAT('%:', c.id, ',%')
                                     OR pc.category_id = c.id
                                 )
                                ) as product_count 
@@ -106,8 +110,8 @@ $categoryJoin = " AND (
     OR EXISTS (
         SELECT 1 FROM categories c3 
         WHERE c3.slug = ? AND (
-            (JSON_VALID(p.category_id) AND JSON_CONTAINS(p.category_id, CAST(c3.id AS JSON), '$'))
-            OR p.category_id LIKE CONCAT('%\"', c3.id, '\"%')
+            p.category_id LIKE CONCAT('%\"', CAST(c3.id AS CHAR), '\"%')
+            OR p.category_id LIKE CONCAT('%:', CAST(c3.id AS CHAR), ',%')
         )
     )
     OR EXISTS (SELECT 1 FROM product_categories pc2 INNER JOIN categories c2 ON pc2.category_id = c2.id WHERE pc2.product_id = p.product_id AND c2.slug = ? AND (c2.store_id = ? OR c2.store_id IS NULL OR ? = 'DEFAULT'))

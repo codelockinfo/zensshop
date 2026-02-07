@@ -54,7 +54,7 @@ class Product {
             $catId = (int)$filters['category_id'];
             $sql .= " AND (
                 p.category_id = ? 
-                OR (JSON_VALID(p.category_id) AND JSON_CONTAINS(p.category_id, CAST(? AS JSON), '$'))
+                OR p.category_id LIKE ?
                 OR p.category_id LIKE ?
                 OR p.category_id LIKE ?
                 OR p.category_id LIKE ?
@@ -64,10 +64,10 @@ class Product {
                 )
             )";
             $params[] = $catId;
-            $params[] = (string)$catId;
             $params[] = (string)$catId; // Exact match
             $params[] = "%," . $catId . ",%"; // CSV style
             $params[] = "%\"" . $catId . "\"%"; // JSON string style
+            $params[] = "%:" . $catId . ",%"; // JSON-ish style
             $params[] = $catId;
         }
         
@@ -79,9 +79,9 @@ class Product {
                 OR EXISTS (
                     SELECT 1 FROM categories c4 
                     WHERE c4.slug = ? AND (
-                        (JSON_VALID(p.category_id) AND JSON_CONTAINS(p.category_id, CAST(c4.id AS JSON), '$'))
+                        p.category_id = CAST(c4.id AS CHAR)
                         OR p.category_id LIKE CONCAT('%\"', CAST(c4.id AS CHAR), '\"%')
-                        OR p.category_id = CAST(c4.id AS CHAR)
+                        OR p.category_id LIKE CONCAT('%:', CAST(c4.id AS CHAR), ',%')
                     )
                 )
                 OR EXISTS (
@@ -127,7 +127,7 @@ class Product {
             $params[] = $filters['max_price'];
         }
         
-        $sql .= " GROUP BY p.product_id";
+        $sql .= " GROUP BY p.id";
         // Sorting
         $sortKey = trim($filters['sort'] ?? '');
         
@@ -869,7 +869,7 @@ class Product {
         if ($globalProduct && !empty($globalProduct['product_id'])) {
             return $globalProduct['product_id'];
         }
-        
+
         // Fallback: return as is (in case it's already the product_id)
         return $productId;
     }
