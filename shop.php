@@ -81,7 +81,7 @@ $filters['offset'] = ($page - 1) * $perPage;
 $products = $product->getAll($filters);
 
 // Get current Store ID safely
-$currentStoreId = defined('CURRENT_STORE_ID') ? CURRENT_STORE_ID : ($_SESSION['store_id'] ?? 'DEFAULT');
+$currentStoreId = defined('CURRENT_STORE_ID') ? CURRENT_STORE_ID : ($_SESSION['store_id'] ?? null);
 
 // Get all categories for sidebar (only show categories with products)
 $categories = $db->fetchAll("SELECT c.*, 

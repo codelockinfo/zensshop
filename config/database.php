@@ -19,8 +19,8 @@ if ($isLocal) {
     define('DB_HOST', 'localhost');
     define('DB_PASS', 'Codelock@63');
 
-    if (strpos($host, 'kartoai.com') !== false || strpos($host, 'hostingersite.com') !== false) {
-        // KartoAI Subdomain or Hostinger Preview (zensshop)
+    if (strpos($host, 'kartoai.com') !== false) {
+        // KartoAI Subdomain (zensshop)
         define('DB_NAME', 'u402017191_zensshop');
         define('DB_USER', 'u402017191_zensshop');
     } else {
