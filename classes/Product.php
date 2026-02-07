@@ -51,7 +51,7 @@ class Product {
         }
         
         if (!empty($filters['category_id'])) {
-            $catId = $filters['category_id'];
+            $catId = (int)$filters['category_id'];
             $sql .= " AND (
                 p.category_id = ? 
                 OR (JSON_VALID(p.category_id) AND JSON_CONTAINS(p.category_id, CAST(? AS JSON), '$'))
@@ -64,10 +64,10 @@ class Product {
                 )
             )";
             $params[] = $catId;
-            $params[] = '"' . $catId . '"';
-            $params[] = $catId; // Exact match
-            $params[] = "[%,{$catId},%]"; // Note: This is just a safe way, though JSON is preferred
-            $params[] = "%\"{$catId}\"%"; // JSON string fallback
+            $params[] = (string)$catId;
+            $params[] = (string)$catId; // Exact match
+            $params[] = "%," . $catId . ",%"; // CSV style
+            $params[] = "%\"" . $catId . "\"%"; // JSON string style
             $params[] = $catId;
         }
         
@@ -80,7 +80,7 @@ class Product {
                     SELECT 1 FROM categories c4 
                     WHERE c4.slug = ? AND (
                         (JSON_VALID(p.category_id) AND JSON_CONTAINS(p.category_id, CAST(c4.id AS JSON), '$'))
-                        OR p.category_id LIKE CONCAT('%\"', c4.id, '\"%')
+                        OR p.category_id LIKE CONCAT('%\"', CAST(c4.id AS CHAR), '\"%')
                         OR p.category_id = CAST(c4.id AS CHAR)
                     )
                 )

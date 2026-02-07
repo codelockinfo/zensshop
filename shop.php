@@ -77,6 +77,9 @@ $filters['limit'] = $perPage;
 $filters['offset'] = ($page - 1) * $perPage;
 $products = $product->getAll($filters);
 
+// Get current Store ID safely
+$currentStoreId = defined('CURRENT_STORE_ID') ? CURRENT_STORE_ID : ($_SESSION['store_id'] ?? 'DEFAULT');
+
 // Get all categories for sidebar (only show categories with products)
 $categories = $db->fetchAll("SELECT c.*, 
                                (SELECT COUNT(DISTINCT p.id) 
@@ -92,7 +95,7 @@ $categories = $db->fetchAll("SELECT c.*,
                                FROM categories c 
                                WHERE c.status = 'active' AND (c.store_id = ? OR c.store_id IS NULL OR ? = 'DEFAULT')
                                HAVING product_count > 0
-                               ORDER BY c.sort_order ASC, c.name ASC", [CURRENT_STORE_ID, CURRENT_STORE_ID]);
+                               ORDER BY c.sort_order ASC, c.name ASC", [$currentStoreId, $currentStoreId]);
 
 // Get stock counts
 $categoryJoin = " AND (
@@ -111,13 +114,13 @@ $inStockCount = $db->fetchOne("SELECT COUNT(DISTINCT p.id) as count
                                 FROM products p 
                                 WHERE p.status = 'active' AND p.stock_status = 'in_stock' AND (p.store_id = ? OR p.store_id IS NULL OR ? = 'DEFAULT')" . 
                                 ($categorySlug ? $categoryJoin : ""),
-                                array_merge([CURRENT_STORE_ID, CURRENT_STORE_ID], $categorySlug ? [$categorySlug, CURRENT_STORE_ID, CURRENT_STORE_ID, $categorySlug, $categorySlug, CURRENT_STORE_ID, CURRENT_STORE_ID] : []))['count'] ?? 0;
+                                array_merge([$currentStoreId, $currentStoreId], $categorySlug ? [$categorySlug, $currentStoreId, $currentStoreId, $categorySlug, $categorySlug, $currentStoreId, $currentStoreId] : []))['count'] ?? 0;
 
 $outOfStockCount = $db->fetchOne("SELECT COUNT(DISTINCT p.id) as count 
                                    FROM products p 
                                    WHERE p.status = 'active' AND p.stock_status = 'out_of_stock' AND (p.store_id = ? OR p.store_id IS NULL OR ? = 'DEFAULT')" . 
                                    ($categorySlug ? $categoryJoin : ""),
-                                   array_merge([CURRENT_STORE_ID, CURRENT_STORE_ID], $categorySlug ? [$categorySlug, CURRENT_STORE_ID, CURRENT_STORE_ID, $categorySlug, $categorySlug, CURRENT_STORE_ID, CURRENT_STORE_ID] : []))['count'] ?? 0;
+                                   array_merge([$currentStoreId, $currentStoreId], $categorySlug ? [$categorySlug, $currentStoreId, $currentStoreId, $categorySlug, $categorySlug, $currentStoreId, $currentStoreId] : []))['count'] ?? 0;
 
 // Get price range
 $priceRange = $db->fetchOne("SELECT MIN(COALESCE(NULLIF(p.sale_price, 0), p.price)) as min_price, 
@@ -125,7 +128,7 @@ $priceRange = $db->fetchOne("SELECT MIN(COALESCE(NULLIF(p.sale_price, 0), p.pric
                               FROM products p 
                               WHERE p.status = 'active' AND (p.store_id = ? OR p.store_id IS NULL OR ? = 'DEFAULT')" . 
                               ($categorySlug ? $categoryJoin : ""),
-                              array_merge([CURRENT_STORE_ID, CURRENT_STORE_ID], $categorySlug ? [$categorySlug, CURRENT_STORE_ID, CURRENT_STORE_ID, $categorySlug, $categorySlug, CURRENT_STORE_ID, CURRENT_STORE_ID] : []));
+                              array_merge([$currentStoreId, $currentStoreId], $categorySlug ? [$categorySlug, $currentStoreId, $currentStoreId, $categorySlug, $categorySlug, $currentStoreId, $currentStoreId] : []));
 $minPriceRange = $priceRange['min_price'] ?? 0;
 $maxPriceRange = $priceRange['max_price'] ?? 1000;
 

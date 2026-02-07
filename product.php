@@ -231,16 +231,21 @@ $relatedProducts = [];
 if (!empty($productCategories)) {
     $categoryId = $productCategories[0]['id'] ?? null;
     if ($categoryId) {
-        $relatedProducts = $product->getAll([
-            'category_id' => $categoryId,
-            'status' => 'active',
-            'limit' => 5
-        ]);
-        // Remove current product from related
-        $relatedProducts = array_filter($relatedProducts, function($p) use ($productData) {
-            return isset($p['id']) && $p['id'] != $productData['id'];
-        });
-        $relatedProducts = array_slice($relatedProducts, 0, 4);
+        try {
+            $relatedProducts = $product->getAll([
+                'category_id' => $categoryId,
+                'status' => 'active',
+                'limit' => 5
+            ]);
+            // Remove current product from related
+            $relatedProducts = array_filter($relatedProducts, function($p) use ($productData) {
+                return isset($p['id']) && $p['id'] != $productData['id'];
+            });
+            $relatedProducts = array_slice($relatedProducts, 0, 4);
+        } catch (Exception $e) {
+            error_log("Error fetching related products: " . $e->getMessage());
+            $relatedProducts = [];
+        }
     }
 }
 
