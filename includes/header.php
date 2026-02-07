@@ -1253,15 +1253,24 @@ if (!empty($headerMenuItems)) {
                                     if (!imgSrc) imgSrc = baseUrl + '/assets/images/placeholder.png';
                                     const currencySymbol = typeof CURRENCY_SYMBOL !== 'undefined' ? CURRENCY_SYMBOL : '₹';
                                     
+                                    const rating = Math.floor(p.rating || 5);
+                                    let ratingHtml = '';
+                                    for (let i = 0; i < 5; i++) {
+                                        ratingHtml += `<i class="fas fa-star ${i < rating ? '' : 'text-gray-300'}"></i>`;
+                                    }
+
                                     html += `
                                         <div class="min-w-[200px] w-[200px] flex-shrink-0">
-                                            <a href="${baseUrl}/product?slug=${p.slug}" class="block h-full bg-white border border-gray-100 rounded-lg shadow-sm hover:shadow-md transition p-3">
+                                            <a href="${baseUrl}/product?slug=${p.slug}" class="block h-full bg-white border border-gray-100 rounded-lg shadow-sm hover:shadow-md transition p-3 group">
                                                 <div class="relative overflow-hidden rounded-lg mb-3 aspect-[3/4]">
                                                     <img src="${imgSrc}" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" onerror="this.src='${baseUrl}/assets/images/placeholder.png'">
                                                 </div>
                                                 <h4 class="font-medium text-gray-900 text-sm mb-1 truncate group-hover:text-primary transition">${p.name}</h4>
-                                                <div class="font-semibold text-gray-900 text-sm">
-                                                    ${currencySymbol}${price.toFixed(2)}
+                                                <div class="flex items-center gap-2 mb-1">
+                                                    <span class="text-gray-900 font-semibold text-sm">${formatPrice(price)}</span>
+                                                </div>
+                                                <div class="flex text-yellow-400 text-xs mt-1">
+                                                    ${ratingHtml}
                                                 </div>
                                             </a>
                                         </div>
@@ -1323,6 +1332,15 @@ if (!empty($headerMenuItems)) {
             "'": '&#039;'
           };
           return text.replace(/[&<>"']/g, function(m) { return map[m]; });
+        }
+
+        function formatPrice(val) {
+            let symbol = typeof CURRENCY_SYMBOL !== 'undefined' ? CURRENCY_SYMBOL : '₹';
+            // Safety: if symbol is numeric and long (like a bug result), fallback to Rupee
+            if (!isNaN(parseInt(symbol)) && String(symbol).length > 2) {
+                symbol = '₹';
+            }
+            return symbol + parseFloat(val).toFixed(2);
         }
     });
     </script>

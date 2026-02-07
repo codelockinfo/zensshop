@@ -724,7 +724,7 @@ if (!empty($productCategories)) {
                         <span class="font-semibold text-gray-700 w-24">Available:</span>
                         <span id="variant-stock-status" class="text-gray-600 capitalize"><?php echo $stockLabel; ?></span>
                     </div>
-                    <div class="flex">
+                    <!-- <div class="flex">
                         <span class="font-semibold text-gray-700 w-24">Collections:</span>
                         <span class="text-gray-600">
                             <?php 
@@ -736,7 +736,7 @@ if (!empty($productCategories)) {
                             ?>
                         </span>
                     </div>
-                    <div class="flex">
+                    <div class="flex"> -->
                         <span class="font-semibold text-gray-700 w-24">Brand:</span>
                         <span class="text-gray-600"><?php echo htmlspecialchars($productData['brand'] ?? 'N/A'); ?></span>
                     </div>

@@ -13,35 +13,12 @@ $wishlist = new Wishlist();
 $product = new Product();
 $db = Database::getInstance();
 
-// Clear old cookies with wrong paths (if headers not sent)
-if (!headers_sent()) {
-    // Clear existing cookies if they exist to prevent conflicts
-if (isset($_COOKIE['wishlist_items'])) {
-    $cookiePath = function_exists('getBaseUrl') ? getBaseUrl() : '/';
-    if (empty($cookiePath)) $cookiePath = '/';
-    setcookie('wishlist_items', '', time() - 3600, $cookiePath);
-}
-    setcookie('wishlist_items', '', time() - 3600, '/oecom');
-}
+
 
 // Get wishlist items
 $wishlistItems = $wishlist->getWishlist();
 
-// If wishlist is empty but cookie exists, try to read it directly and resave with correct path
-if (empty($wishlistItems) && isset($_COOKIE['wishlist_items'])) {
-    $cookieValue = $_COOKIE['wishlist_items'];
-    $decoded = json_decode($cookieValue, true);
-    if (is_array($decoded) && !empty($decoded)) {
-        // Cookie has data but wasn't read properly - resave with correct path
-        $wishlistItems = $decoded;
-        // Use reflection to access private method or create a public method
-        // For now, just update $_COOKIE directly
-        $_COOKIE['wishlist_items'] = json_encode($wishlistItems);
-        if (!headers_sent()) {
-            setcookie('wishlist_items', json_encode($wishlistItems), time() + 2592000, '/');
-        }
-    }
-}
+
 
 // Get recently viewed products from cookie
 $recentlyViewed = [];
@@ -312,13 +289,7 @@ document.addEventListener('DOMContentLoaded', function() {
 </script>
 
 <script>
-// Clear old cookies with wrong paths on page load
-(function() {
-    const oldPaths = ['/zensshop', '/oecom'];
-    oldPaths.forEach(path => {
-        document.cookie = `wishlist_items=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=${path}; SameSite=Lax`;
-    });
-})();
+
 
 // Initialize wishlist buttons state on page load
 document.addEventListener('DOMContentLoaded', function() {

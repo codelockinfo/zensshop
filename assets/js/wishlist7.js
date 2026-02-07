@@ -92,11 +92,7 @@ function initializeWishlistButtons() {
 
 // Load wishlist from cookie
 function loadWishlist() {
-    // Clear any old cookies with wrong path first
-    const oldPaths = ['/zensshop', '/oecom'];
-    oldPaths.forEach(path => {
-        document.cookie = `wishlist_items=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=${path}; SameSite=Lax${window.location.protocol === 'https:' ? '; Secure' : ''}`;
-    });
+
 
     const wishlistCookie = getCookie('wishlist_items');
     if (wishlistCookie) {
@@ -134,11 +130,7 @@ function loadWishlist() {
 // Refresh wishlist from API
 async function refreshWishlist() {
     try {
-        // Clear old cookies with wrong paths first
-        const oldPaths = ['/zensshop', '/oecom'];
-        oldPaths.forEach(path => {
-            document.cookie = `wishlist_items=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=${path}; SameSite=Lax${window.location.protocol === 'https:' ? '; Secure' : ''}`;
-        });
+
 
         let baseUrl = typeof BASE_URL !== 'undefined' ? BASE_URL : '';
         if (!baseUrl) {

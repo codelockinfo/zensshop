@@ -90,10 +90,14 @@ class Wishlist {
                 continue;
             }
             
-            // Additional store check - ensure product belongs to current store
+            // RELAXED FILTER: If product belongs to another store, we still show it in guest wishlist
+            // but we might want to log it or handle it differently if needed.
+            // For now, let's allow it as long as the product exists.
+            /*
             if ($currentStoreId && !empty($product['store_id']) && $product['store_id'] !== $currentStoreId) {
                 continue;
             }
+            */
 
             // Update fresh data from product table
             $item['name'] = $product['name'];
