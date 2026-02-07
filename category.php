@@ -30,7 +30,7 @@ if (empty($categorySlug)) {
 }
 
 // Get current Store ID
-$storeId = defined('CURRENT_STORE_ID') ? CURRENT_STORE_ID : ($_SESSION['store_id'] ?? null);
+$storeId = defined('CURRENT_STORE_ID') ? CURRENT_STORE_ID : ($_SESSION['store_id'] ?? 'DEFAULT');
 
 // Get category info (Store Specific or Global)
 $category = $db->fetchOne(

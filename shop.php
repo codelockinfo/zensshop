@@ -1,5 +1,8 @@
 <?php
 $pageTitle = 'Shop';
+// Start output buffering to prevent headers already sent errors
+ob_start();
+
 if (session_status() == PHP_SESSION_NONE) {
     session_start();
 }
