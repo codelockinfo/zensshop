@@ -38,8 +38,8 @@ class Product {
             }
         }
 
-        if ($storeId) {
-            $sql .= " AND p.store_id = ?";
+        if ($storeId && $storeId !== 'DEFAULT') {
+            $sql .= " AND (p.store_id = ? OR p.store_id IS NULL OR p.store_id = '0' OR p.store_id = '')";
             $params[] = $storeId;
         }
 
@@ -55,7 +55,9 @@ class Product {
             $sql .= " AND (
                 p.category_id = ? 
                 OR (JSON_VALID(p.category_id) AND JSON_CONTAINS(p.category_id, CAST(? AS JSON), '$'))
-                OR p.category_id REGEXP ?
+                OR p.category_id LIKE ?
+                OR p.category_id LIKE ?
+                OR p.category_id LIKE ?
                 OR EXISTS (
                     SELECT 1 FROM product_categories pc2 
                     WHERE pc2.product_id = p.product_id AND pc2.category_id = ?
@@ -63,7 +65,9 @@ class Product {
             )";
             $params[] = $catId;
             $params[] = '"' . $catId . '"';
-            $params[] = '[[:<:]]' . $catId . '[[:>:]]';
+            $params[] = $catId; // Exact match
+            $params[] = "[%,{$catId},%]"; // Note: This is just a safe way, though JSON is preferred
+            $params[] = "%\"{$catId}\"%"; // JSON string fallback
             $params[] = $catId;
         }
         
@@ -76,7 +80,8 @@ class Product {
                     SELECT 1 FROM categories c4 
                     WHERE c4.slug = ? AND (
                         (JSON_VALID(p.category_id) AND JSON_CONTAINS(p.category_id, CAST(c4.id AS JSON), '$'))
-                        OR p.category_id REGEXP CONCAT('[[:<:]]', c4.id, '[[:>:]]')
+                        OR p.category_id LIKE CONCAT('%\"', c4.id, '\"%')
+                        OR p.category_id = CAST(c4.id AS CHAR)
                     )
                 )
                 OR EXISTS (

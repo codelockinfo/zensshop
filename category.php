@@ -29,11 +29,22 @@ if (empty($categorySlug)) {
     exit;
 }
 
-// Get category info (Store Specific)
+// Get current Store ID
+$storeId = defined('CURRENT_STORE_ID') ? CURRENT_STORE_ID : ($_SESSION['store_id'] ?? null);
+
+// Get category info (Store Specific or Global)
 $category = $db->fetchOne(
-    "SELECT * FROM categories WHERE slug = ? AND status = 'active' AND (store_id = ? OR store_id IS NULL)",
-    [$categorySlug, CURRENT_STORE_ID]
+    "SELECT * FROM categories WHERE slug = ? AND status = 'active' AND (store_id = ? OR store_id IS NULL OR ? = 'DEFAULT')",
+    [$categorySlug, $storeId, $storeId]
 );
+
+// If not found with strict slug, try case-insensitive check
+if (!$category) {
+    $category = $db->fetchOne(
+        "SELECT * FROM categories WHERE LOWER(slug) = LOWER(?) AND status = 'active'",
+        [$categorySlug]
+    );
+}
 
 if (!$category) {
     ob_end_clean(); // Clear any buffered output
@@ -45,7 +56,8 @@ if (!$category) {
 $filters = [
     'category_slug' => $categorySlug,
     'sort' => $sort,
-    'status' => 'active'
+    'status' => 'active',
+    'store_id' => $storeId
 ];
 $products = $product->getAll($filters);
 
