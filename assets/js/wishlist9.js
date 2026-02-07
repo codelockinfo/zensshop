@@ -25,69 +25,66 @@ document.addEventListener('DOMContentLoaded', function () {
 
 // Initialize wishlist button states
 function initializeWishlistButtons() {
-    // Wait a bit for wishlist data to load
-    setTimeout(() => {
-        document.querySelectorAll('.wishlist-btn').forEach(btn => {
-            const productId = btn.getAttribute('data-product-id');
-            const icon = btn.querySelector('i');
-            const tooltip = btn.querySelector('.product-tooltip');
-            
-            const isCardButton = btn.classList.contains('absolute') || btn.classList.contains('rounded-full');
-            
-            if (productId && isInWishlist(productId)) {
-                if (isCardButton) {
-                    // Card Button: White Heart on Black Bg
-                    btn.classList.remove('bg-white', 'text-black');
-                    btn.classList.add('bg-black', 'text-white');
-                    if (icon) {
-                        icon.classList.remove('far');
-                        icon.classList.add('fas');
-                    }
-                } else {
-                    // Text Button: Black Filled Heart, No Bg Change
-                    if (icon) {
-                        icon.classList.remove('far');
-                        icon.classList.add('fas', 'text-black', 'mr-1');
-                    }
-                }
-
-                if (tooltip) {
-                    tooltip.textContent = 'Remove from Wishlist';
-                    btn.setAttribute('title', 'Remove from Wishlist');
-                } else if (btn.textContent.toLowerCase().includes('wishlist')) {
-                    if(icon) {
-                         btn.innerHTML = '';
-                         btn.appendChild(icon);
-                         btn.appendChild(document.createTextNode(' Remove from Wishlist'));
-                    } else {
-                         btn.textContent = 'Remove from Wishlist';
-                    }
+    document.querySelectorAll('.wishlist-btn').forEach(btn => {
+        const productId = btn.getAttribute('data-product-id');
+        const icon = btn.querySelector('i');
+        const tooltip = btn.querySelector('.product-tooltip');
+        
+        const isCardButton = btn.classList.contains('absolute') || btn.classList.contains('rounded-full');
+        
+        if (productId && isInWishlist(productId)) {
+            if (isCardButton) {
+                // Card Button: White Heart on Black Bg
+                btn.classList.remove('bg-white', 'text-black');
+                btn.classList.add('bg-black', 'text-white');
+                if (icon) {
+                    icon.classList.remove('far');
+                    icon.classList.add('fas');
                 }
             } else {
-                if (isCardButton) {
-                    // Card Button: Black Outline Heart on White Bg
-                    btn.classList.remove('bg-black', 'text-white');
-                    btn.classList.add('bg-white', 'text-black');
-                     if (icon) {
-                        icon.classList.remove('fas');
-                        icon.classList.add('far');
-                    }
-                } else {
-                     // Text Button: Outline Heart
-                     if (icon) {
-                        icon.classList.remove('fas', 'text-black');
-                        icon.classList.add('far', 'mr-1');
-                    }
-                }
-
-                // Only revert tooltip for generic cards
-                if (tooltip) {
-                    tooltip.textContent = 'Add to Wishlist';
-                    btn.setAttribute('title', 'Add to Wishlist');
+                // Text Button: Black Filled Heart, No Bg Change
+                if (icon) {
+                    icon.classList.remove('far');
+                    icon.classList.add('fas', 'text-black', 'mr-1');
                 }
             }
-        });
-    }, 100);
+
+            if (tooltip) {
+                tooltip.textContent = 'Remove from Wishlist';
+                btn.setAttribute('title', 'Remove from Wishlist');
+            } else if (btn.textContent.toLowerCase().includes('wishlist')) {
+                if(icon) {
+                     btn.innerHTML = '';
+                     btn.appendChild(icon);
+                     btn.appendChild(document.createTextNode(' Remove from Wishlist'));
+                } else {
+                     btn.textContent = 'Remove from Wishlist';
+                }
+            }
+        } else {
+            if (isCardButton) {
+                // Card Button: Black Outline Heart on White Bg
+                btn.classList.remove('bg-black', 'text-white');
+                btn.classList.add('bg-white', 'text-black');
+                 if (icon) {
+                    icon.classList.remove('fas');
+                    icon.classList.add('far');
+                }
+            } else {
+                 // Text Button: Outline Heart
+                 if (icon) {
+                    icon.classList.remove('fas', 'text-black');
+                    icon.classList.add('far', 'mr-1');
+                }
+            }
+
+            // Only revert tooltip for generic cards
+            if (tooltip) {
+                tooltip.textContent = 'Add to Wishlist';
+                btn.setAttribute('title', 'Add to Wishlist');
+            }
+        }
+    });
 }
 
 // Load wishlist from cookie
@@ -174,14 +171,69 @@ async function refreshWishlist() {
 // Toggle wishlist item
 async function toggleWishlist(productId, button) {
     try {
-        // Check if already in wishlist
-        const isInWishlist = wishlistData.some(item => item.product_id == productId);
+        const currentlyInWishlist = isInWishlist(productId);
+        const method = currentlyInWishlist ? 'DELETE' : 'POST';
 
-        const method = isInWishlist ? 'DELETE' : 'POST';
+        // OPTIMISTIC UI: Update buttons immediately
+        const updateButtons = (active) => {
+            document.querySelectorAll(`.wishlist-btn[data-product-id="${productId}"]`).forEach(btn => {
+                const icon = btn.querySelector('i');
+                const tooltip = btn.querySelector('.product-tooltip');
+                const isCardButton = btn.classList.contains('absolute') || btn.classList.contains('rounded-full');
+                const addText = 'Add to Wishlist';
+                const removeText = 'Remove from Wishlist';
+
+                if (active) {
+                    // Show "Remove" (Filled)
+                    btn.setAttribute('title', removeText);
+                    if (isCardButton) {
+                        btn.classList.remove('bg-white', 'text-black');
+                        btn.classList.add('bg-black', 'text-white');
+                        if (icon) icon.className = 'fas fa-heart';
+                    } else {
+                        if (icon) icon.className = 'fas fa-heart text-black mr-1';
+                    }
+                    if (tooltip) {
+                        tooltip.textContent = removeText;
+                    } else if (btn.textContent.trim().toLowerCase().includes('wishlist')) {
+                        if (icon) {
+                            btn.innerHTML = '';
+                            btn.appendChild(icon);
+                            btn.appendChild(document.createTextNode(' ' + removeText));
+                        } else {
+                            btn.textContent = removeText;
+                        }
+                    }
+                } else {
+                    // Show "Add" (Outline)
+                    btn.setAttribute('title', addText);
+                    if (isCardButton) {
+                        btn.classList.remove('bg-black', 'text-white');
+                        btn.classList.add('bg-white', 'text-black');
+                        if (icon) icon.className = 'far fa-heart';
+                    } else {
+                        if (icon) icon.className = 'far fa-heart mr-1';
+                    }
+                    if (tooltip) {
+                        tooltip.textContent = addText;
+                    } else if (btn.textContent.trim().toLowerCase().includes('wishlist')) {
+                        if (icon) {
+                            btn.innerHTML = '';
+                            btn.appendChild(icon);
+                            btn.appendChild(document.createTextNode(' ' + addText));
+                        } else {
+                            btn.textContent = addText;
+                        }
+                    }
+                }
+            });
+        };
+
+        // Apply optimistic change
+        updateButtons(!currentlyInWishlist);
         
         let baseUrl = typeof BASE_URL !== 'undefined' ? BASE_URL : '';
         if (!baseUrl) {
-             // Fallback
              baseUrl = window.location.pathname.split('/').slice(0, -1).join('/') || '';
         }
         baseUrl = baseUrl.replace(/\/$/, '');
@@ -199,114 +251,29 @@ async function toggleWishlist(productId, button) {
         const data = await response.json();
 
         if (data.success && Array.isArray(data.wishlist)) {
+            // Update the real data
             wishlistData = data.wishlist;
 
-            // ALWAYS set cookie via JavaScript from response data - MUST be before any return
             if (data.cookie_data) {
                 try {
                     const expiry = new Date();
-                    expiry.setTime(expiry.getTime() + (30 * 24 * 60 * 60 * 1000)); // 30 days
-                    // Always use path=/ for cookies - works for all subdirectories
+                    expiry.setTime(expiry.getTime() + (30 * 24 * 60 * 60 * 1000));
                     const cookieString = `wishlist_items=${encodeURIComponent(data.cookie_data)}; expires=${expiry.toUTCString()}; path=/; SameSite=Lax${window.location.protocol === 'https:' ? '; Secure' : ''}`;
                     document.cookie = cookieString;
                 } catch (e) {
                     console.error('[WISHLIST] Error setting cookie:', e);
                 }
-            } else if (data.wishlist && Array.isArray(data.wishlist)) {
-                try {
-                    const cookieData = JSON.stringify(data.wishlist);
-                    const expiry = new Date();
-                    expiry.setTime(expiry.getTime() + (30 * 24 * 60 * 60 * 1000));
-                    const cookieString = `wishlist_items=${encodeURIComponent(cookieData)}; expires=${expiry.toUTCString()}; path=/; SameSite=Lax${window.location.protocol === 'https:' ? '; Secure' : ''}`;
-                    document.cookie = cookieString;
-                } catch (e) {
-                    console.error('[WISHLIST] Error setting cookie (fallback):', e);
-                }
             }
 
-            // Update wishlist data
-            wishlistData = data.wishlist || [];
             updateWishlistCount();
 
-            // Reload page if on wishlist page to show updated items
             if (window.location.pathname.includes('wishlist') || window.location.pathname.includes('wishlist.php')) {
                 window.location.reload();
                 return;
             }
 
-            // Update ALL buttons for this product across the page
-            document.querySelectorAll(`.wishlist-btn[data-product-id="${productId}"]`).forEach(btn => {
-                const icon = btn.querySelector('i');
-                const tooltip = btn.querySelector('.product-tooltip');
-                const isCardButton = btn.classList.contains('absolute') || btn.classList.contains('rounded-full');
-                
-                // Add labels for text update
-                const addText = 'Add to Wishlist';
-                const removeText = 'Remove from Wishlist';
-
-                if (isInWishlist) {
-                    // It WAS in wishlist (so we are Removing) -> Show "Add" (Outline)
-                    btn.setAttribute('title', addText);
-                    
-                    if (isCardButton) {
-                        btn.classList.remove('bg-black', 'text-white');
-                        btn.classList.add('bg-white', 'text-black');
-                        if (icon) {
-                            icon.className = 'far fa-heart mr-1';
-                        }
-                    } else {
-                        // Text Button
-                        if (icon) {
-                            icon.className = 'far fa-heart mr-1';
-                        }
-                    }
-
-                    if (tooltip) {
-                        tooltip.textContent = addText;
-                    } else if (btn.textContent.trim().toLowerCase().includes('wishlist')) {
-                        // Preserve icon if it exists
-                        if (icon) {
-                            btn.innerHTML = '';
-                            btn.appendChild(icon);
-                            btn.appendChild(document.createTextNode(' ' + addText));
-                        } else {
-                            btn.textContent = addText;
-                        }
-                    }
-                } else {
-                    // It WAS NOT in wishlist (so we are Adding) -> Show "Remove" (Filled)
-                    btn.setAttribute('title', removeText);
-                    
-                    if (isCardButton) {
-                        btn.classList.remove('bg-white', 'text-black');
-                        btn.classList.add('bg-black', 'text-white');
-                        if (icon) {
-                            icon.className = 'fas fa-heart mr-1'; // Using 'fas' for filled
-                        }
-                    } else {
-                        // Text Button
-                        if (icon) {
-                            icon.className = 'fas fa-heart text-black mr-1';
-                        }
-                    }
-
-                    if (tooltip) {
-                        tooltip.textContent = removeText;
-                    } else if (btn.textContent.trim().toLowerCase().includes('wishlist')) {
-                        if (icon) {
-                            btn.innerHTML = '';
-                            btn.appendChild(icon);
-                            btn.appendChild(document.createTextNode(' ' + removeText));
-                        } else {
-                            btn.textContent = removeText;
-                        }
-                    }
-                }
-            });
-
-            // Show notification
-            const message = isInWishlist ? 'Removed from wishlist' : 'Added to wishlist';
-            const type = isInWishlist ? 'info' : 'success';
+            const message = currentlyInWishlist ? 'Removed from wishlist' : 'Added to wishlist';
+            const type = currentlyInWishlist ? 'info' : 'success';
 
             if (typeof showNotificationModal === 'function') {
                 showNotificationModal(message, type);
@@ -314,6 +281,8 @@ async function toggleWishlist(productId, button) {
                 showNotification(message, type);
             }
         } else {
+            // REVERT on failure
+            updateButtons(currentlyInWishlist);
             if (typeof showNotificationModal === 'function') {
                 showNotificationModal(data.message || 'Failed to update wishlist', 'error');
             } else if (typeof showNotification === 'function') {
@@ -322,6 +291,11 @@ async function toggleWishlist(productId, button) {
         }
     } catch (error) {
         console.error('Error toggling wishlist:', error);
+        // REVERT on error
+        // Note: we can't easily pass the original state here without refactoring, 
+        // but loadWishlist() might reset it correctly if called.
+        refreshWishlist(); 
+        
         if (typeof showNotificationModal === 'function') {
             showNotificationModal('An error occurred. Please try again.', 'error');
         } else if (typeof showNotification === 'function') {
