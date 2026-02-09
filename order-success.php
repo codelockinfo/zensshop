@@ -351,6 +351,11 @@ nav.bg-white.sticky.top-0 {
                         
                         <!-- Action Buttons -->
                         <div class="mt-6 space-y-3">
+                            <a href="<?php echo url('invoice.php?order_number=' . $orderData['order_number']); ?>" 
+                               target="_blank"
+                               class="block w-full bg-red-600 text-white text-center py-3 rounded-lg hover:bg-red-700 transition font-medium">
+                                <i class="fas fa-file-invoice mr-2"></i>Download Invoice
+                            </a>
                             <a href="<?php echo url('/shop'); ?>" 
                                style="color: #ffffff !important;"
                                class="block w-full bg-black text-white text-center py-3 rounded-lg hover:bg-gray-800 transition font-medium">

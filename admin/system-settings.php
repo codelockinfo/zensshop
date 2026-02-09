@@ -279,6 +279,7 @@ unset($_SESSION['success']);
                 <?php 
                 $genFields = [
                     'site_name' => ['label' => 'Site Name', 'placeholder' => 'CookProo'],
+                    'seller_state' => ['label' => 'Seller State (for GST)', 'placeholder' => 'Maharashtra'],
                     'otp_expiry_minutes' => ['label' => 'OTP Expiry (Minutes)', 'placeholder' => '5', 'type' => 'number'],
                 ];
                 foreach ($genFields as $key => $field): 

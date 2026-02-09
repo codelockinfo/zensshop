@@ -68,8 +68,31 @@ $cart = new Cart();
 $cartItems = $cart->getCart();
 $cartTotal = $cart->getTotal();
 
-// Calculate expected total (cart + shipping - discount)
-$expectedTotal = $cartTotal + $shippingAmount - $discountAmount;
+// Calculate Tax
+$customerState = $input['state'] ?? '';
+$sellerState = getSetting('seller_state', 'Maharashtra');
+$totalTax = 0;
+
+foreach ($cartItems as $item) {
+    $pId = $item['product_id'];
+    $db = Database::getInstance();
+    $productInfo = $db->fetchOne(
+        "SELECT is_taxable, gst_percent FROM products WHERE (product_id = ? OR id = ?)", 
+        [$pId, $pId]
+    );
+    
+    $gstPercent = 0;
+    if ($productInfo && $productInfo['is_taxable']) {
+        $gstPercent = $productInfo['gst_percent'];
+    }
+    
+    // Use effective price (sale price if available, otherwise regular price)
+    $gstResult = calculateGST($item['price'], $gstPercent, $sellerState, $customerState, $item['quantity']);
+    $totalTax += ($gstResult['cgst'] + $gstResult['sgst'] + $gstResult['igst']);
+}
+
+// Calculate expected total (cart + shipping - discount + tax)
+$expectedTotal = $cartTotal + $shippingAmount - $discountAmount + $totalTax;
 
 // Log amounts for debugging
 error_log("Razorpay Create Order - Received amount: $amount");

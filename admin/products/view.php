@@ -151,6 +151,7 @@ $variants = $variantsData['variants'] ?? [];
                         <th class="px-4 py-3 text-xs font-bold text-gray-600 uppercase">Variant</th>
                         <th class="px-4 py-3 text-xs font-bold text-gray-600 uppercase">SKU</th>
                         <th class="px-4 py-3 text-xs font-bold text-gray-600 uppercase">Price</th>
+                        <th class="px-4 py-3 text-xs font-bold text-gray-600 uppercase">Sale Price</th>
                         <th class="px-4 py-3 text-xs font-bold text-gray-600 uppercase">Stock</th>
                         <th class="px-4 py-3 text-xs font-bold text-gray-600 uppercase text-right">Action</th>
                     </tr>
@@ -187,6 +188,11 @@ $variants = $variantsData['variants'] ?? [];
                             </span>
                         </td>
                         <td class="px-4 py-3 whitespace-nowrap">
+                            <span class="text-sm font-bold text-gray-900">
+                                <?php echo format_price($variant['sale_price'] ?: $productData['sale_price'], $productData['currency'] ?? 'USD'); ?>
+                            </span>
+                        </td>
+                        <td class="px-4 py-3 whitespace-nowrap">
                             <?php 
                             $vQty = (int)$variant['stock_quantity'];
                             $vStatus = $variant['stock_status'] ?? 'in_stock';
@@ -218,6 +224,61 @@ $variants = $variantsData['variants'] ?? [];
 </div>
 <?php endif; ?>
 
+
+        <!-- Product Status -->
+        <div class="admin-card">
+            <h2 class="text-xl font-bold mb-4">Product Status</h2>
+            
+            <div class="space-y-4">
+                <div>
+                    <label class="admin-form-label">Status</label>
+                    <span class="px-3 py-1 rounded text-sm font-semibold <?php 
+                        echo $productData['status'] === 'active' ? 'bg-green-100 text-green-800' : 
+                            ($productData['status'] === 'draft' ? 'bg-gray-100 text-gray-800' : 'bg-red-100 text-red-800'); 
+                    ?>">
+                        <?php echo ucfirst($productData['status']); ?>
+                    </span>
+                </div>
+                
+                <div>
+                    <label class="admin-form-label">Featured Product</label>
+                    <p class="text-gray-700">
+                        <?php if ($productData['featured']): ?>
+                            <span class="text-green-600 font-semibold"><i class="fas fa-check-circle"></i> Yes</span>
+                        <?php else: ?>
+                            <span class="text-gray-500"><i class="fas fa-times-circle"></i> No</span>
+                        <?php endif; ?>
+                    </p>
+                </div>
+                
+                <div>
+                    <label class="admin-form-label">Rating</label>
+                    <div class="flex items-center space-x-2">
+                        <div class="flex text-yellow-400">
+                            <?php 
+                            $rating = floor($productData['rating'] ?? 0);
+                            for ($i = 0; $i < 5; $i++): 
+                            ?>
+                            <i class="fas fa-star <?php echo $i < $rating ? '' : 'text-gray-300'; ?>"></i>
+                            <?php endfor; ?>
+                        </div>
+                        <span class="text-gray-700"><?php echo number_format($productData['rating'] ?? 0, 1); ?> (<?php echo number_format($productData['review_count'] ?? 0); ?> reviews)</span>
+                    </div>
+                </div>
+                
+                <div>
+                    <label class="admin-form-label">Created Date</label>
+                    <p class="text-gray-700"><?php echo date('F d, Y h:i A', strtotime($productData['created_at'])); ?></p>
+                </div>
+                
+                <?php if ($productData['updated_at'] && $productData['updated_at'] !== $productData['created_at']): ?>
+                <div>
+                    <label class="admin-form-label">Last Updated</label>
+                    <p class="text-gray-700"><?php echo date('F d, Y h:i A', strtotime($productData['updated_at'])); ?></p>
+                </div>
+                <?php endif; ?>
+            </div>
+        </div>
     </div>
     
     <!-- Right Column - Product Information -->
@@ -388,70 +449,48 @@ $variants = $variantsData['variants'] ?? [];
                     </span>
                 </div>
 
-                <div>
                     <label class="admin-form-label">Total Sales</label>
                     <p class="text-lg font-bold text-gray-900">
                         <i class="fas fa-shopping-basket text-primary mr-1"></i>
                         <?php echo number_format($totalSold); ?> Units
                     </p>
                 </div>
+
+                <div class="pt-4 border-t border-gray-100 mt-4">
+                    <h3 class="font-bold text-gray-800 mb-2">Tax Details</h3>
+                    <div class="grid grid-cols-2 gap-4">
+                        <div>
+                            <label class="admin-form-label">Taxable</label>
+                            <span class="px-2 py-1 rounded text-xs font-bold <?php echo !empty($productData['is_taxable']) ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-800'; ?>">
+                                <?php echo !empty($productData['is_taxable']) ? 'Yes' : 'No'; ?>
+                            </span>
+                        </div>
+                        <?php if (!empty($productData['is_taxable'])): ?>
+                        <div>
+                            <label class="admin-form-label">HSN Code</label>
+                            <p class="text-gray-700 font-mono"><?php echo htmlspecialchars($productData['hsn_code'] ?? 'N/A'); ?></p>
+                        </div>
+                        <div>
+                            <label class="admin-form-label">GST Rate</label>
+                            <p class="text-gray-700"><?php echo number_format($productData['gst_percent'] ?? 0, 2); ?>%</p>
+                        </div>
+                        <div>
+                             <label class="admin-form-label">Tax Calculation</label>
+                             <p class="text-gray-500 text-sm">
+                                <?php 
+                                    $price = $productData['sale_price'] ?: $productData['price'];
+                                    $taxAmount = ($price * ($productData['gst_percent'] ?? 0)) / 100;
+                                    echo format_price($taxAmount, $productData['currency'] ?? 'USD') . ' per unit';
+                                ?>
+                             </p>
+                        </div>
+                        <?php endif; ?>
+                    </div>
+                </div>
             </div>
         </div>
         
-        <!-- Product Status -->
-        <div class="admin-card">
-            <h2 class="text-xl font-bold mb-4">Product Status</h2>
-            
-            <div class="space-y-4">
-                <div>
-                    <label class="admin-form-label">Status</label>
-                    <span class="px-3 py-1 rounded text-sm font-semibold <?php 
-                        echo $productData['status'] === 'active' ? 'bg-green-100 text-green-800' : 
-                            ($productData['status'] === 'draft' ? 'bg-gray-100 text-gray-800' : 'bg-red-100 text-red-800'); 
-                    ?>">
-                        <?php echo ucfirst($productData['status']); ?>
-                    </span>
-                </div>
-                
-                <div>
-                    <label class="admin-form-label">Featured Product</label>
-                    <p class="text-gray-700">
-                        <?php if ($productData['featured']): ?>
-                            <span class="text-green-600 font-semibold"><i class="fas fa-check-circle"></i> Yes</span>
-                        <?php else: ?>
-                            <span class="text-gray-500"><i class="fas fa-times-circle"></i> No</span>
-                        <?php endif; ?>
-                    </p>
-                </div>
-                
-                <div>
-                    <label class="admin-form-label">Rating</label>
-                    <div class="flex items-center space-x-2">
-                        <div class="flex text-yellow-400">
-                            <?php 
-                            $rating = floor($productData['rating'] ?? 0);
-                            for ($i = 0; $i < 5; $i++): 
-                            ?>
-                            <i class="fas fa-star <?php echo $i < $rating ? '' : 'text-gray-300'; ?>"></i>
-                            <?php endfor; ?>
-                        </div>
-                        <span class="text-gray-700"><?php echo number_format($productData['rating'] ?? 0, 1); ?> (<?php echo number_format($productData['review_count'] ?? 0); ?> reviews)</span>
-                    </div>
-                </div>
-                
-                <div>
-                    <label class="admin-form-label">Created Date</label>
-                    <p class="text-gray-700"><?php echo date('F d, Y h:i A', strtotime($productData['created_at'])); ?></p>
-                </div>
-                
-                <?php if ($productData['updated_at'] && $productData['updated_at'] !== $productData['created_at']): ?>
-                <div>
-                    <label class="admin-form-label">Last Updated</label>
-                    <p class="text-gray-700"><?php echo date('F d, Y h:i A', strtotime($productData['updated_at'])); ?></p>
-                </div>
-                <?php endif; ?>
-            </div>
-        </div>
+
     </div>
 </div>
 

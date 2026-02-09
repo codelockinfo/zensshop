@@ -313,8 +313,9 @@ class Product {
                 $productId = $this->db->insert(
                     "INSERT INTO products 
                     (product_id, name, slug, sku, description, short_description, category_id, price, currency, sale_price, 
-                     cost_per_item, total_expense, stock_quantity, stock_status, images, featured_image, brand, status, featured, highlights, shipping_policy, return_policy, store_id) 
-                    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+                     cost_per_item, total_expense, stock_quantity, stock_status, images, featured_image, brand, status, featured, highlights, shipping_policy, return_policy, store_id,
+                     is_taxable, hsn_code, gst_percent) 
+                    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
                     [
                         $customProductId,  // 10-digit random product ID (e.g., 5654148741)
                         $data['name'],
@@ -338,7 +339,10 @@ class Product {
                         $data['highlights'] ?? null,
                         $data['shipping_policy'] ?? null,
                         $data['return_policy'] ?? null,
-                        $storeId
+                        $storeId,
+                        $data['is_taxable'] ?? 0,
+                        $data['hsn_code'] ?? null,
+                        $data['gst_percent'] ?? 0.00
                     ]
                 );
                 
@@ -403,7 +407,8 @@ class Product {
                 
                 $allowedFields = ['name', 'sku', 'description', 'short_description', 'category_id', 'price', 'currency', 
                                  'sale_price', 'cost_per_item', 'total_expense', 'stock_quantity', 'stock_status', 'images', 'featured_image',
-                                 'brand', 'status', 'featured', 'highlights', 'shipping_policy', 'return_policy'];
+                                 'brand', 'status', 'featured', 'highlights', 'shipping_policy', 'return_policy',
+                                 'is_taxable', 'hsn_code', 'gst_percent'];
                 
                 foreach ($allowedFields as $field) {
                     if (array_key_exists($field, $data)) {

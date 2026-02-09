@@ -105,10 +105,14 @@ class Cart {
             // Update fresh data from product table
             $item['name'] = $product['name'];
             $item['price'] = $product['sale_price'] ?? $product['price'];
+            $item['base_price'] = $product['price'];
             $item['slug'] = $product['slug'] ?? '';
             $item['currency'] = $product['currency'] ?? 'USD';
             $item['stock_status'] = $product['stock_status'] ?? 'in_stock';
             $item['stock_quantity'] = $product['stock_quantity'] ?? 0;
+            $item['is_taxable'] = $product['is_taxable'] ?? 0;
+            $item['hsn_code'] = $product['hsn_code'] ?? null;
+            $item['gst_percent'] = $product['gst_percent'] ?? 0.00;
 
             if (empty($item['image']) || $item['image'] === 'null' || $item['image'] === 'undefined' || !empty($product['featured_image'])) {
                 if (!empty($product['featured_image'])) {
@@ -146,7 +150,8 @@ class Cart {
             $storeId = getCurrentStoreId();
         }
 
-        $sql = "SELECT c.*, p.name, p.price, p.currency, p.sale_price, p.featured_image, p.stock_quantity, p.stock_status, p.slug
+        $sql = "SELECT c.*, p.name, p.price, p.currency, p.sale_price, p.featured_image, p.stock_quantity, p.stock_status, p.slug,
+                       p.is_taxable, p.hsn_code, p.gst_percent
               FROM cart c
               LEFT JOIN products p ON (c.product_id = p.product_id OR (c.product_id = p.id AND c.product_id < 1000000000))
               WHERE c.user_id = ?";
@@ -166,6 +171,7 @@ class Cart {
             // Get base product data
             $productImage = $item['featured_image'];
             $price = $item['sale_price'] ?? $item['price'];
+            $basePrice = $item['price'];
             $sku = $item['sku'] ?? '';
             
             // If variant attributes exist, try to get specific variant data
@@ -190,7 +196,10 @@ class Cart {
                 
                 if ($variant) {
                     if (!empty($variant['image'])) $productImage = $variant['image'];
-                    if (!empty($variant['price'])) $price = $variant['sale_price'] ?: $variant['price'];
+                    if (!empty($variant['price'])) {
+                        $price = $variant['sale_price'] ?: $variant['price'];
+                        $basePrice = $variant['price'];
+                    }
                     if (!empty($variant['sku'])) $sku = $variant['sku'];
                 }
             }
@@ -206,13 +215,17 @@ class Cart {
                 'quantity' => $item['quantity'],
                 'name' => $item['name'],
                 'price' => $price,
+                'base_price' => $basePrice,
                 'currency' => $item['currency'] ?? 'USD',
                 'image' => $productImage,
                 'slug' => $item['slug'] ?? '',
                 'variant_attributes' => $variantAttributes,
                 'sku' => $sku,
                 'stock_quantity' => $variant ? ($variant['stock_quantity'] ?? 0) : ($item['stock_quantity'] ?? 0),
-                'stock_status' => $variant ? ($variant['stock_status'] ?? 'in_stock') : ($item['stock_status'] ?? 'in_stock')
+                'stock_status' => $variant ? ($variant['stock_status'] ?? 'in_stock') : ($item['stock_status'] ?? 'in_stock'),
+                'is_taxable' => $item['is_taxable'] ?? 0,
+                'hsn_code' => $item['hsn_code'] ?? null,
+                'gst_percent' => $item['gst_percent'] ?? 0.00
             ];
         }
         

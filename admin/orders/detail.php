@@ -57,6 +57,9 @@ require_once __DIR__ . '/../../includes/admin-header.php';
             <p class="text-gray-600">Dashboard > Order > Order Details</p>
         </div>
         <div class="flex items-center space-x-3">
+            <a href="<?php echo $baseUrl; ?>/admin/orders/invoice.php?id=<?php echo $orderData['id']; ?>" target="_blank" class="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 transition">
+                <i class="fas fa-file-invoice mr-2"></i>Invoice
+            </a>
             <a href="<?php echo $baseUrl; ?>/admin/orders/edit.php?order_number=<?php echo urlencode($orderData['order_number']); ?>" class="bg-green-500 text-white px-4 py-2 rounded hover:bg-green-600 transition">
                 <i class="fas fa-edit mr-2"></i>Edit Order
             </a>
@@ -155,10 +158,22 @@ require_once __DIR__ . '/../../includes/admin-header.php';
                             Price: <span class="font-medium"><?php echo format_currency($item['price']); ?></span>
                         </p>
                     </div>
-                    <div class="text-right">
+                    <div class="text-right flex flex-col items-end">
                         <p class="font-semibold text-gray-900">
-                            <?php echo format_currency($item['subtotal']); ?>
+                            <?php echo format_currency($item['line_total'] ?? $item['subtotal']); ?>
                         </p>
+                        <div class="text-[10px] text-gray-500 mt-1 text-right">
+                            <?php if (!empty($item['hsn_code'])): ?>
+                                <p>HSN: <?php echo htmlspecialchars($item['hsn_code']); ?></p>
+                            <?php endif; ?>
+                            <p>GST: <?php echo number_format($item['gst_percent'] ?? 0, 2); ?>%</p>
+                            <?php if (($item['cgst_amount'] ?? 0) > 0): ?>
+                                <p>CGST: <?php echo format_currency($item['cgst_amount']); ?></p>
+                                <p>SGST: <?php echo format_currency($item['sgst_amount'] ?? $item['cgst_amount']); ?></p>
+                            <?php elseif (($item['igst_amount'] ?? 0) > 0): ?>
+                                <p>IGST: <?php echo format_currency($item['igst_amount']); ?></p>
+                            <?php endif; ?>
+                        </div>
                     </div>
                 </div>
                 <?php endforeach; ?>
@@ -282,8 +297,26 @@ require_once __DIR__ . '/../../includes/admin-header.php';
                     </span>
                 </div>
                 
-                <!-- Tax -->
-                <?php if ($orderData['tax_amount'] > 0): ?>
+                <!-- Tax Breakup -->
+                <?php if (($orderData['cgst_total'] ?? 0) > 0): ?>
+                <div class="flex justify-between text-sm">
+                    <span class="text-gray-600">CGST</span>
+                    <span class="text-gray-900 font-medium"><?php echo format_currency($orderData['cgst_total']); ?></span>
+                </div>
+                <div class="flex justify-between text-sm">
+                    <span class="text-gray-600">SGST</span>
+                    <span class="text-gray-900 font-medium"><?php echo format_currency($orderData['sgst_total']); ?></span>
+                </div>
+                <?php endif; ?>
+
+                <?php if (($orderData['igst_total'] ?? 0) > 0): ?>
+                <div class="flex justify-between text-sm">
+                    <span class="text-gray-600">IGST</span>
+                    <span class="text-gray-900 font-medium"><?php echo format_currency($orderData['igst_total']); ?></span>
+                </div>
+                <?php endif; ?>
+
+                <?php if ($orderData['tax_amount'] > 0 && ($orderData['cgst_total'] ?? 0) == 0 && ($orderData['igst_total'] ?? 0) == 0): ?>
                 <div class="flex justify-between text-sm">
                     <span class="text-gray-600">Taxes</span>
                     <span class="text-gray-900 font-medium"><?php echo format_currency($orderData['tax_amount']); ?></span>

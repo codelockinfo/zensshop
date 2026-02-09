@@ -74,6 +74,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 // Fix SKU NULL handling
                 'sku' => !empty($_POST['sku']) ? trim($_POST['sku']) : null,
                 'featured' => isset($_POST['featured']) ? 1 : 0,
+                'is_taxable' => isset($_POST['is_taxable']) ? 1 : 0,
+                'hsn_code' => $_POST['hsn_code'] ?? null,
+                'gst_percent' => $_POST['gst_percent'] ?? 0.00,
                 'highlights' => $_POST['highlights'] ?? null,
                 'shipping_policy' => $_POST['shipping_policy'] ?? null,
                 'return_policy' => $_POST['return_policy'] ?? null,
@@ -645,19 +648,23 @@ $existingVariants = $product->getVariants($productId);
                 <label class="admin-form-label">Price *</label>
                 <input type="number" 
                        name="price" 
+                       id="base_price"
                        step="0.01"
                        required
                        value="<?php echo htmlspecialchars($_POST['price'] ?? $productData['price']); ?>"
-                       class="admin-form-input">
+                       class="admin-form-input"
+                       oninput="calculateTaxDetail()">
             </div>
             
             <div class="admin-form-group">
                 <label class="admin-form-label">Sale Price</label>
                 <input type="number" 
                        name="sale_price" 
+                       id="sale_price"
                        step="0.01"
                        value="<?php echo htmlspecialchars($_POST['sale_price'] ?? $productData['sale_price'] ?? ''); ?>"
-                       class="admin-form-input">
+                       class="admin-form-input"
+                       oninput="calculateTaxDetail()">
             </div>
 
             <div class="grid grid-cols-2 gap-4">
@@ -717,6 +724,79 @@ $existingVariants = $product->getVariants($productId);
                     <span>Featured Product</span>
                 </label>
             </div>
+
+            <hr class="my-4">
+            <h3 class="font-bold mb-3">GST / Tax Details</h3>
+
+            <div class="admin-form-group">
+                <label class="flex items-center">
+                    <?php 
+                        $isTaxable = isset($_POST['is_taxable']) ? true : (isset($_POST) && count($_POST) > 0 ? false : ($productData['is_taxable'] ?? false));
+                    ?>
+                    <input type="checkbox" name="is_taxable" id="is_taxable" class="mr-2" <?php echo $isTaxable ? 'checked' : ''; ?> onchange="toggleGSTFields()">
+                    <span>Taxable Product</span>
+                </label>
+            </div>
+
+            <div id="gst_fields" class="<?php echo $isTaxable ? '' : 'hidden'; ?>">
+                <div class="admin-form-group">
+                    <label class="admin-form-label">HSN Code</label>
+                    <input type="text" name="hsn_code" value="<?php echo htmlspecialchars($_POST['hsn_code'] ?? $productData['hsn_code'] ?? ''); ?>" class="admin-form-input" placeholder="e.g. 7113">
+                </div>
+                <div class="admin-form-group">
+                    <label class="admin-form-label">GST Percent (%)</label>
+                    <input type="number" name="gst_percent" id="gst_percent" step="0.01" value="<?php echo htmlspecialchars($_POST['gst_percent'] ?? $productData['gst_percent'] ?? '0.00'); ?>" class="admin-form-input" placeholder="e.g. 18.00" oninput="calculateTaxDetail()">
+                </div>
+                
+                <div class="grid grid-cols-2 gap-4 bg-gray-50 p-3 rounded border border-dashed border-gray-300">
+                    <div>
+                        <label class="text-xs font-bold text-gray-500 uppercase">Tax Amount</label>
+                        <p class="text-lg font-bold text-gray-700" id="display_tax_amount">₹0.00</p>
+                    </div>
+                    <div>
+                        <label class="text-xs font-bold text-gray-500 uppercase">Price (Inc. Tax)</label>
+                        <p class="text-lg font-bold text-green-600" id="display_total_price">₹0.00</p>
+                    </div>
+                </div>
+            </div>
+
+            <script>
+            function toggleGSTFields() {
+                const box = document.getElementById('is_taxable');
+                const fields = document.getElementById('gst_fields');
+                if (box.checked) {
+                    fields.classList.remove('hidden');
+                    calculateTaxDetail();
+                } else {
+                    fields.classList.add('hidden');
+                }
+            }
+
+            function calculateTaxDetail() {
+                const price = parseFloat(document.getElementById('base_price').value) || 0;
+                const salePrice = parseFloat(document.getElementById('sale_price').value) || 0;
+                
+                // Use sale price if available and valid, otherwise allow price
+                const effectivePrice = (salePrice > 0) ? salePrice : price;
+                
+                const gstPercent = parseFloat(document.getElementById('gst_percent').value) || 0;
+                const isTaxable = document.getElementById('is_taxable').checked;
+
+                if (isTaxable && gstPercent > 0) {
+                    const taxAmount = (effectivePrice * gstPercent) / 100;
+                    const total = effectivePrice + taxAmount;
+                    
+                    document.getElementById('display_tax_amount').innerText = '₹' + taxAmount.toFixed(2);
+                    document.getElementById('display_total_price').innerText = '₹' + total.toFixed(2);
+                } else {
+                    document.getElementById('display_tax_amount').innerText = '₹0.00';
+                    document.getElementById('display_total_price').innerText = '₹' + effectivePrice.toFixed(2);
+                }
+            }
+            
+            // Initial calculation on load
+            document.addEventListener('DOMContentLoaded', calculateTaxDetail);
+            </script>
         </div>
         
         <div class="admin-card">

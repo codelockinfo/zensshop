@@ -1227,6 +1227,81 @@ try {
 // 4. Modify category_id to TEXT to support multiple JSON IDs
 executeSql($db, "ALTER TABLE products MODIFY COLUMN category_id TEXT DEFAULT NULL", "Modify products.category_id to TEXT for multi-category support", $errors, $success, $EXECUTE);
 
+
+// ==========================================
+// STEP 34: GST and Tax Implementation
+// ==========================================
+echo "STEP 34: Implementing GST and Tax Columns\n";
+echo "---------------------------------\n";
+
+// 1. Products Table
+if (!columnExists($db, 'products', 'is_taxable')) {
+    executeSql($db, "ALTER TABLE products ADD COLUMN is_taxable TINYINT(1) DEFAULT 0 AFTER price", "Add is_taxable to products", $errors, $success, $EXECUTE);
+}
+if (!columnExists($db, 'products', 'hsn_code')) {
+    executeSql($db, "ALTER TABLE products ADD COLUMN hsn_code VARCHAR(20) AFTER is_taxable", "Add hsn_code to products", $errors, $success, $EXECUTE);
+}
+if (!columnExists($db, 'products', 'gst_percent')) {
+    executeSql($db, "ALTER TABLE products ADD COLUMN gst_percent DECIMAL(5,2) DEFAULT 0.00 AFTER hsn_code", "Add gst_percent to products", $errors, $success, $EXECUTE);
+}
+
+// 2. Orders Table
+if (!columnExists($db, 'orders', 'tax_amount')) {
+     // Ensure tax_amount exists (standard field, but good to check)
+     executeSql($db, "ALTER TABLE orders ADD COLUMN tax_amount DECIMAL(10,2) DEFAULT 0.00 AFTER discount_amount", "Add tax_amount to orders", $errors, $success, $EXECUTE);
+}
+if (!columnExists($db, 'orders', 'cgst_total')) {
+    executeSql($db, "ALTER TABLE orders ADD COLUMN cgst_total DECIMAL(10,2) DEFAULT 0.00 AFTER tax_amount", "Add cgst_total to orders", $errors, $success, $EXECUTE);
+}
+if (!columnExists($db, 'orders', 'sgst_total')) {
+    executeSql($db, "ALTER TABLE orders ADD COLUMN sgst_total DECIMAL(10,2) DEFAULT 0.00 AFTER cgst_total", "Add sgst_total to orders", $errors, $success, $EXECUTE);
+}
+if (!columnExists($db, 'orders', 'igst_total')) {
+    executeSql($db, "ALTER TABLE orders ADD COLUMN igst_total DECIMAL(10,2) DEFAULT 0.00 AFTER sgst_total", "Add igst_total to orders", $errors, $success, $EXECUTE);
+}
+if (!columnExists($db, 'orders', 'grand_total')) {
+    executeSql($db, "ALTER TABLE orders ADD COLUMN grand_total DECIMAL(10,2) DEFAULT 0.00 AFTER total_amount", "Add grand_total to orders", $errors, $success, $EXECUTE);
+}
+if (!columnExists($db, 'orders', 'customer_state')) {
+    executeSql($db, "ALTER TABLE orders ADD COLUMN customer_state VARCHAR(50) AFTER billing_address", "Add customer_state to orders", $errors, $success, $EXECUTE);
+}
+
+// 3. Order Items Table
+if (!columnExists($db, 'order_items', 'hsn_code')) {
+    executeSql($db, "ALTER TABLE order_items ADD COLUMN hsn_code VARCHAR(20) AFTER variant_attributes", "Add hsn_code to order_items", $errors, $success, $EXECUTE);
+}
+if (!columnExists($db, 'order_items', 'gst_percent')) {
+    executeSql($db, "ALTER TABLE order_items ADD COLUMN gst_percent DECIMAL(5,2) DEFAULT 0.00 AFTER hsn_code", "Add gst_percent to order_items", $errors, $success, $EXECUTE);
+}
+if (!columnExists($db, 'order_items', 'cgst_amount')) {
+    executeSql($db, "ALTER TABLE order_items ADD COLUMN cgst_amount DECIMAL(10,2) DEFAULT 0.00 AFTER gst_percent", "Add cgst_amount to order_items", $errors, $success, $EXECUTE);
+}
+if (!columnExists($db, 'order_items', 'sgst_amount')) {
+    executeSql($db, "ALTER TABLE order_items ADD COLUMN sgst_amount DECIMAL(10,2) DEFAULT 0.00 AFTER cgst_amount", "Add sgst_amount to order_items", $errors, $success, $EXECUTE);
+}
+if (!columnExists($db, 'order_items', 'igst_amount')) {
+    executeSql($db, "ALTER TABLE order_items ADD COLUMN igst_amount DECIMAL(10,2) DEFAULT 0.00 AFTER sgst_amount", "Add igst_amount to order_items", $errors, $success, $EXECUTE);
+}
+if (!columnExists($db, 'order_items', 'line_total')) {
+    executeSql($db, "ALTER TABLE order_items ADD COLUMN line_total DECIMAL(10,2) DEFAULT 0.00 AFTER igst_amount", "Add line_total to order_items", $errors, $success, $EXECUTE);
+}
+
+// 4. Site Settings (Seller State)
+if ($EXECUTE) {
+    echo "Checking for seller_state setting...\n";
+    try {
+        $res = $db->fetchOne("SELECT * FROM site_settings WHERE setting_key = 'seller_state'");
+        if (!$res) {
+            executeSql($db, "INSERT INTO site_settings (setting_key, setting_value, store_id) VALUES ('seller_state', 'Maharashtra', 'DEFAULT')", "Insert default seller_state", $errors, $success, $EXECUTE);
+        } else {
+             echo "seller_state already exists: " . $res['setting_value'] . "\n";
+        }
+    } catch (Exception $e) {
+        $errors[] = "Error checking seller_state: " . $e->getMessage();
+    }
+}
+
+
 echo "\n========================================\n";
 echo "SUMMARY\n";
 echo "========================================\n";

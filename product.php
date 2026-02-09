@@ -717,11 +717,11 @@ if (!empty($productCategories)) {
                 <!-- Product Details -->
                 <div class="border-t pt-6 space-y-2 text-sm">
                     <div class="flex">
-                        <span class="font-semibold text-gray-700 w-24">Sku:</span>
+                        <span class="font-semibold text-gray-700 w-20">Sku:</span>
                         <span id="variant-sku" class="text-gray-600"><?php echo htmlspecialchars($productData['sku'] ?? 'N/A'); ?></span>
                     </div>
                     <div class="flex">
-                        <span class="font-semibold text-gray-700 w-24">Available:</span>
+                        <span class="font-semibold text-gray-700 w-20">Available:</span>
                         <span id="variant-stock-status" class="text-gray-600 capitalize"><?php echo $stockLabel; ?></span>
                     </div>
                     <!-- <div class="flex">
@@ -735,9 +735,9 @@ if (!empty($productCategories)) {
                             }
                             ?>
                         </span>
-                    </div>
-                    <div class="flex"> -->
-                        <span class="font-semibold text-gray-700 w-24">Brand:</span>
+                    </div> -->
+                    <div class="flex">
+                        <span class="font-semibold text-gray-700 w-20">Brand:</span>
                         <span class="text-gray-600"><?php echo htmlspecialchars($productData['brand'] ?? 'N/A'); ?></span>
                     </div>
                 </div>

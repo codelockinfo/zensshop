@@ -146,16 +146,57 @@ class Order {
         // Generate order number
         $orderNumber = 'ORD-' . date('Ymd') . '-' . strtoupper(substr(uniqid(), -6));
         
-        // Calculate totals
+        // Calculate totals and GST
         $subtotal = 0;
+        $cgstTotal = 0;
+        $sgstTotal = 0;
+        $igstTotal = 0;
+        
+        $sellerState = getSetting('seller_state', 'Maharashtra'); // Default or from settings
+        $customerState = is_array($data['shipping_address']) ? ($data['shipping_address']['state'] ?? '') : '';
+        
+        $processedItems = [];
         foreach ($data['items'] as $item) {
-            $subtotal += $item['price'] * $item['quantity'];
+            $pId = $item['product_id'];
+            
+            // Fetch product GST details
+            $productInfo = $this->db->fetchOne(
+                "SELECT is_taxable, hsn_code, gst_percent FROM products WHERE (product_id = ? OR id = ?)", 
+                [$pId, $pId]
+            );
+            
+            $gstPercent = 0;
+            $hsnCode = null;
+            if ($productInfo && $productInfo['is_taxable']) {
+                $gstPercent = $productInfo['gst_percent'];
+                $hsnCode = $productInfo['hsn_code'];
+            }
+            
+            $gstResult = calculateGST($item['price'], $gstPercent, $sellerState, $customerState, $item['quantity']);
+            
+            $itemSubtotal = $gstResult['subtotal'];
+            $subtotal += $itemSubtotal;
+            $cgstTotal += $gstResult['cgst'];
+            $sgstTotal += $gstResult['sgst'];
+            $igstTotal += $gstResult['igst'];
+            
+            $item['hsn_code'] = $hsnCode;
+            $item['gst_percent'] = $gstPercent;
+            $item['cgst_amount'] = $gstResult['cgst'];
+            $item['sgst_amount'] = $gstResult['sgst'];
+            $item['igst_amount'] = $gstResult['igst'];
+            $item['line_total'] = $gstResult['total'];
+            
+            $processedItems[] = $item;
         }
+        
+        $data['items'] = $processedItems; // Use processed items for insertion
         
         $discountAmount = $data['discount_amount'] ?? 0;
         $shippingAmount = $data['shipping_amount'] ?? 0;
-        $taxAmount = $data['tax_amount'] ?? 0;
+        $taxAmount = $cgstTotal + $sgstTotal + $igstTotal;
         $totalAmount = $subtotal - $discountAmount + $shippingAmount + $taxAmount;
+        $grandTotal = $totalAmount; // This is the final payable amount
         
         // Determine Store ID (Omni-store logic)
         if (function_exists('getCurrentStoreId')) {
@@ -181,10 +222,10 @@ class Order {
         $orderId = $this->db->insert(
             "INSERT INTO orders 
              (order_number, user_id, customer_name, customer_email, customer_phone,
-             billing_address, shipping_address, subtotal, discount_amount, coupon_code,
-             shipping_amount, tax_amount, total_amount, payment_method, 
+             billing_address, shipping_address, customer_state, subtotal, discount_amount, coupon_code,
+             shipping_amount, tax_amount, cgst_total, sgst_total, igst_total, total_amount, grand_total, payment_method, 
              payment_status, order_status, razorpay_payment_id, razorpay_order_id, delivery_date, store_id) 
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
             [
                 $orderNumber,
                 $data['user_id'] ?? null,
@@ -193,12 +234,17 @@ class Order {
                 $data['customer_phone'] ?? null,
                 json_encode($data['billing_address']),
                 json_encode($data['shipping_address']),
+                $customerState,
                 $subtotal,
                 $discountAmount,
                 $data['coupon_code'] ?? null,
                 $shippingAmount,
                 $taxAmount,
+                $cgstTotal,
+                $sgstTotal,
+                $igstTotal,
                 $totalAmount,
+                $grandTotal,
                 $data['payment_method'] ?? null,
                 $data['payment_status'] ?? 'pending',
                 'pending',
@@ -233,8 +279,10 @@ class Order {
 
             $this->db->insert(
                 "INSERT INTO order_items 
-                (order_num, product_id, product_name, product_sku, quantity, oversold_quantity, price, subtotal, variant_attributes, store_id) 
-                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+                (order_num, product_id, product_name, product_sku, quantity, oversold_quantity, price, subtotal, 
+                 hsn_code, gst_percent, cgst_amount, sgst_amount, igst_amount, line_total,
+                 variant_attributes, store_id) 
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
                 [
                     $orderNumber, // Storing Order Number explicitly
                     $pId,
@@ -244,6 +292,12 @@ class Order {
                     $oversoldQty,
                     $item['price'],
                     $item['price'] * $requestedQty,
+                    $item['hsn_code'] ?? null,
+                    $item['gst_percent'] ?? 0.00,
+                    $item['cgst_amount'] ?? 0.00,
+                    $item['sgst_amount'] ?? 0.00,
+                    $item['igst_amount'] ?? 0.00,
+                    $item['line_total'] ?? ($item['price'] * $requestedQty),
                     isset($vAttrs) ? (is_array($vAttrs) ? json_encode($vAttrs) : $vAttrs) : null,
                     $storeId
                 ]

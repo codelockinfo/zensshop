@@ -310,6 +310,13 @@ if (!$isAjax) {
                                                 </p>
                                             </div>
                                             <?php endif; ?>
+
+                                            <div>
+                                                <p class="text-gray-400 font-bold uppercase tracking-widest text-[10px] mb-2">Invoice</p>
+                                                <a href="<?php echo url('invoice.php?order_number=' . $order['order_number']); ?>" target="_blank" class="inline-block bg-red-500 text-white px-4 py-1.5 rounded text-sm font-bold hover:bg-red-600 transition">
+                                                    Download
+                                                </a>
+                                            </div>
                                         </div>
 
                                         <!-- Order Items -->

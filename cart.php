@@ -6,6 +6,16 @@ require_once __DIR__ . '/classes/Cart.php';
 $cart = new Cart();
 $cartItems = $cart->getCart();
 $cartTotal = $cart->getTotal();
+
+// Calculate estimated tax (Intrastate default)
+$taxTotal = 0;
+foreach ($cartItems as $item) {
+    if (!empty($item['is_taxable']) && !empty($item['gst_percent'])) {
+        $itemTotal = $item['price'] * $item['quantity'];
+        $taxAmount = ($itemTotal * $item['gst_percent']) / 100;
+        $taxTotal += $taxAmount;
+    }
+}
 ?>
 
 <section class="py-16 md:py-24 bg-gray-50 min-h-screen">
@@ -91,6 +101,14 @@ $cartTotal = $cart->getTotal();
                                 </div>
                             <?php endif; ?>
                             <p class="text-gray-600">Price: <span class="item-price"><?php echo format_price($item['price'], $item['currency'] ?? 'USD'); ?></span></p>
+                            <?php if (!empty($item['is_taxable'])): ?>
+                                <!-- <div class="flex items-center space-x-2 mt-1">
+                                    <span class="text-[10px] bg-gray-100 text-gray-600 px-1.5 py-0.5 rounded">GST: <?php echo number_format($item['gst_percent'], 2); ?>%</span>
+                                    <?php if (!empty($item['hsn_code'])): ?>
+                                        <span class="text-[10px] text-gray-400">HSN: <?php echo htmlspecialchars($item['hsn_code']); ?></span>
+                                    <?php endif; ?>
+                                </div> -->
+                            <?php endif; ?>
                         </div>
                         <div class="flex items-center space-x-4">
                             <div class="flex items-center border rounded">
@@ -154,12 +172,12 @@ $cartTotal = $cart->getTotal();
                             <span><?php echo format_price(0, $cartCurrency); ?></span>
                         </div>
                         <div class="flex justify-between">
-                            <span>Tax</span>
-                            <span><?php echo format_price(0, $cartCurrency); ?></span>
+                            <span>Tax (Estimated)</span>
+                            <span class="text-sm font-semibold" id="cartTax"><?php echo format_price($taxTotal, $cartCurrency); ?></span>
                         </div>
                         <div class="border-t pt-4 flex justify-between text-xl font-bold">
                             <span>Total</span>
-                            <span id="cartTotal"><?php echo format_price($cartTotal, $cartCurrency); ?></span>
+                            <span id="cartTotal"><?php echo format_price($cartTotal + $taxTotal, $cartCurrency); ?></span>
                         </div>
                     </div>
                     <a href="<?php echo url('checkout'); ?>" 

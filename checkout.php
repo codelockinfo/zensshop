@@ -488,9 +488,10 @@ nav.bg-white.sticky.top-0 {
                                 </div>
                                 <div>
                                     <label class="block text-sm font-semibold mb-2 text-gray-700">State</label>
-                                    <input type="text" name="state" 
-                                           value="<?php echo htmlspecialchars($_POST['state'] ?? ''); ?>"
-                                           class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent">
+                                    <input type="text" name="state" id="customerStateInput"
+                                           value="<?php echo htmlspecialchars($_POST['state'] ?? $customer['shipping_address']['state'] ?? ''); ?>"
+                                           class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent"
+                                           onblur="recalculateTaxes()">
                                 </div>
                             </div>
                             
@@ -589,6 +590,18 @@ nav.bg-white.sticky.top-0 {
                                 <span class="text-gray-600">Shipping</span>
                                 <span id="summaryShipping" class="font-semibold"><?php echo format_currency($finalShipping); ?></span>
                             </div>
+                            
+                            <!-- Tax Section -->
+                            <div id="taxSummarySection" class="hidden space-y-2">
+                                <div class="flex justify-between text-sm">
+                                    <span class="text-gray-600">Tax</span>
+                                    <span class="font-semibold" id="taxValueTotal">₹0.00</span>
+                                </div>
+                            </div>
+                            <div class="flex justify-between text-sm hidden" id="genericTaxRow">
+                                <span class="text-gray-600">Tax</span>
+                                <span class="font-semibold" id="genericTaxValue">₹0.00</span>
+                            </div>
                             <div class="flex justify-between text-sm <?php echo $discountAmount > 0 ? '' : 'hidden'; ?>" id="summaryDiscountRow">
                                 <span class="text-gray-600">Discount</span>
                                 <span class="font-semibold text-gray-600" id="summaryDiscountAmount">-<?php echo format_currency($discountAmount); ?></span>
@@ -673,6 +686,48 @@ window.cartTotal = <?php echo $cartTotal; ?>;
 window.currentDiscountAmount = <?php echo $discountAmount; ?>;
 window.currentDiscountCode = '<?php echo $discountCode; ?>';
 window.defaultShipping = <?php echo $shippingAmount; ?>;
+window.currentTaxAmount = 0;
+
+async function recalculateTaxes() {
+    const state = document.getElementById('customerStateInput').value.trim();
+
+    // Allow calculation even if state is empty (defaults to Intrastate/Store State)
+    // if (!state) return;
+
+    try {
+        const response = await fetch('<?php echo $baseUrl; ?>/api/calculate-tax.php', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ state: state })
+        });
+        const data = await response.json();
+        
+        if (data.success) {
+            window.currentTaxAmount = data.total_tax;
+            
+
+            const taxSection = document.getElementById('taxSummarySection');
+            const genericTaxRow = document.getElementById('genericTaxRow');
+            if (data.total_tax > 0) {
+                taxSection.classList.remove('hidden');
+                document.getElementById('taxValueTotal').innerText = '₹' + data.total_tax.toFixed(2);
+                genericTaxRow.classList.add('hidden');
+            } else {
+                taxSection.classList.add('hidden');
+                genericTaxRow.classList.add('hidden');
+            }
+            
+            updateShipping();
+        }
+    } catch (e) {
+        console.error('Tax calc error:', e);
+    }
+}
+
+// Initial tax calculation
+document.addEventListener('DOMContentLoaded', () => {
+    recalculateTaxes();
+});
 
 function updateShipping() {
     const deliveryTypeInput = document.querySelector('input[name="delivery_type"]:checked');
@@ -680,7 +735,7 @@ function updateShipping() {
     
     const shipping = deliveryType === 'pickup' ? 0 : window.defaultShipping;
     // Ensure total doesn't go negative
-    const total = Math.max(0, window.cartTotal + shipping - window.currentDiscountAmount);
+    const total = Math.max(0, window.cartTotal + shipping + window.currentTaxAmount - window.currentDiscountAmount);
     
     // Update DOM
     const shippingEl = document.getElementById('summaryShipping');
@@ -828,7 +883,7 @@ document.getElementById('razorpayPayButton').addEventListener('click', async fun
     
     // Calculate final shipping and total based on delivery type USING GLOBAL VARIABLES
     const finalShipping = deliveryType === 'pickup' ? 0 : window.defaultShipping;
-    const finalTotal = Math.max(0, window.cartTotal + finalShipping - window.currentDiscountAmount);
+    const finalTotal = Math.max(0, window.cartTotal + finalShipping + window.currentTaxAmount - window.currentDiscountAmount);
     
     // Disable button to prevent double clicks
     const button = this;
@@ -840,6 +895,7 @@ document.getElementById('razorpayPayButton').addEventListener('click', async fun
             customer_name: customerName,
             customer_email: customerEmail,
             customer_phone: phoneCode + ' ' + customerPhone,
+            state: state,
             amount: finalTotal,
             shipping_amount: finalShipping,
             discount_amount: window.currentDiscountAmount

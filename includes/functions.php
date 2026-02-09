@@ -7,6 +7,7 @@
 if (!defined('SITE_URL')) {
     require_once __DIR__ . '/../config/constants.php';
 }
+require_once __DIR__ . '/../classes/Database.php';
 
 /**
  * Get the current Store ID based on domain or session
@@ -577,3 +578,73 @@ function renderFrontendMenuItem($item, $landingPagesList = [], $level = 0, $show
         }
     }
 }
+
+/**
+ * Calculate GST for a line item
+ * 
+ * @param float $price Unit price
+ * @param float $gstPercent GST percentage (e.g. 18.00)
+ * @param string $sellerState State of the seller
+ * @param string $customerState State of the customer
+ * @param int $quantity Quantity
+ * @return array Breakup of GST (cgst, sgst, igst, subtotal, total)
+ */
+function calculateGST($price, $gstPercent, $sellerState, $customerState, $quantity = 1) {
+    $lineSubtotal = round($price * $quantity, 2);
+    
+    // Normalize states (trim and lowercase)
+    $sellerStateNormalized = strtolower(trim($sellerState ?? ''));
+    $customerStateNormalized = strtolower(trim($customerState ?? ''));
+    
+    $cgstAmount = 0;
+    $sgstAmount = 0;
+    $igstAmount = 0;
+    
+    if ($gstPercent > 0) {
+        // GST is calculated on the value of supply
+        $totalTaxAmount = round($lineSubtotal * ($gstPercent / 100), 2);
+        
+        if ($sellerStateNormalized === $customerStateNormalized || empty($sellerStateNormalized) || empty($customerStateNormalized)) {
+            // Intrastate: CGST + SGST (Default if states unknown)
+            $cgstAmount = round($totalTaxAmount / 2, 2);
+            $sgstAmount = round($totalTaxAmount - $cgstAmount, 2); 
+        } else {
+            // Interstate: IGST
+            $igstAmount = $totalTaxAmount;
+        }
+    }
+    
+    $lineTotal = round($lineSubtotal + $cgstAmount + $sgstAmount + $igstAmount, 2);
+    
+    return [
+        'subtotal' => $lineSubtotal,
+        'cgst' => $cgstAmount,
+        'sgst' => $sgstAmount,
+        'igst' => $igstAmount,
+        'total' => $lineTotal,
+        'gst_percent' => $gstPercent
+    ];
+}
+
+/**
+ * Get single setting value from site_settings or settings
+ */
+function getSetting($key, $default = '') {
+    try {
+        $db = Database::getInstance();
+        $storeId = getCurrentStoreId();
+        
+        // Try site_settings first
+        $result = $db->fetchOne("SELECT setting_value FROM site_settings WHERE setting_key = ? AND (store_id = ? OR store_id IS NULL)", [$key, $storeId]);
+        if ($result) {
+            return $result['setting_value'];
+        }
+        
+        // Try settings table
+        $result = $db->fetchOne("SELECT setting_value FROM settings WHERE setting_key = ? AND (store_id = ? OR store_id IS NULL)", [$key, $storeId]);
+        return $result ? $result['setting_value'] : $default;
+    } catch (Exception $e) {
+        return $default;
+    }
+}
+
