@@ -168,9 +168,7 @@ $customerAddressStr = implode(', ', array_filter([
                         <td class="py-4 px-4 text-gray-500"><?php echo $i++; ?></td>
                         <td class="py-4 px-4">
                             <div class="flex items-center">
-                                <?php if (!empty($item['product_image'])): ?>
-                                    <img src="<?php echo getImageUrl($item['product_image']); ?>" class="w-10 h-10 object-cover rounded mr-3 border">
-                                <?php endif; ?>
+                                <img src="<?php echo getProductImage($item); ?>" class="w-10 h-10 object-cover rounded mr-3 border">
                                 <div>
                                     <p class="font-bold text-gray-800"><?php echo htmlspecialchars($item['product_name']); ?></p>
                                     <?php if (!empty($item['product_sku'])): ?>

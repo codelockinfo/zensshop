@@ -18,10 +18,26 @@ if (file_exists(__DIR__ . '/../vendor/autoload.php')) {
 class Email {
     private $fromEmail;
     private $fromName;
+    private $smtpHost;
+    private $smtpPort;
+    private $smtpUsername;
+    private $smtpPassword;
+    private $smtpEncryption;
+    private $storeId;
     
-    public function __construct() {
-        $this->fromEmail = SMTP_FROM_EMAIL;
-        $this->fromName = SMTP_FROM_NAME;
+    public function __construct($storeId = null) {
+        $this->storeId = $storeId;
+        require_once __DIR__ . '/Settings.php';
+        $settings = new Settings();
+        
+        // Use provided storeId or fallback to current context
+        $this->fromEmail = $settings->get('smtp_from_email', defined('SMTP_FROM_EMAIL') ? SMTP_FROM_EMAIL : '', $storeId);
+        $this->fromName = $settings->get('smtp_from_name', defined('SMTP_FROM_NAME') ? SMTP_FROM_NAME : SITE_NAME, $storeId);
+        $this->smtpHost = $settings->get('smtp_host', defined('SMTP_HOST') ? SMTP_HOST : 'smtp.gmail.com', $storeId);
+        $this->smtpPort = $settings->get('smtp_port', defined('SMTP_PORT') ? SMTP_PORT : 587, $storeId);
+        $this->smtpUsername = $settings->get('smtp_username', defined('SMTP_USERNAME') ? SMTP_USERNAME : '', $storeId);
+        $this->smtpPassword = $settings->get('smtp_password', defined('SMTP_PASSWORD') ? SMTP_PASSWORD : '', $storeId);
+        $this->smtpEncryption = $settings->get('smtp_encryption', defined('SMTP_ENCRYPTION') ? SMTP_ENCRYPTION : 'tls', $storeId);
     }
     
     /**
@@ -64,17 +80,18 @@ class Email {
         try {
             // Server settings
             $mail->isSMTP();
-            $mail->Host = SMTP_HOST;
+            $mail->Host = $this->smtpHost;
             $mail->SMTPAuth = true;
-            $mail->Username = SMTP_USERNAME;
-            $mail->Password = SMTP_PASSWORD;
-            // Determine encryption: Force SSL for Port 465, otherwise respect setting or default to TLS
-            if (SMTP_PORT == 465 || (defined('SMTP_ENCRYPTION') && strtolower(SMTP_ENCRYPTION) === 'ssl')) {
+            $mail->Username = $this->smtpUsername;
+            $mail->Password = $this->smtpPassword;
+            
+            // Determine encryption
+            if ($this->smtpPort == 465 || strtolower($this->smtpEncryption) === 'ssl') {
                 $mail->SMTPSecure = PHPMailer\PHPMailer\PHPMailer::ENCRYPTION_SMTPS;
             } else {
                 $mail->SMTPSecure = PHPMailer\PHPMailer\PHPMailer::ENCRYPTION_STARTTLS;
             }
-            $mail->Port = SMTP_PORT;
+            $mail->Port = $this->smtpPort;
             
             // Recipients
             $mail->setFrom($this->fromEmail, $this->fromName);

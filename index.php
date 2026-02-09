@@ -71,15 +71,8 @@ if (empty($banners)) {
             }
 
             // Handle image URL
-            $bgImage = $banner['image_desktop'];
-            if (!preg_match('/^https?:\/\//', $bgImage)) {
-                $bgImage = $baseUrl . '/' . ltrim($bgImage, '/');
-            }
-            
-            $bgImageMobile = $banner['image_mobile'] ?? '';
-            if ($bgImageMobile && !preg_match('/^https?:\/\//', $bgImageMobile)) {
-                $bgImageMobile = $baseUrl . '/' . ltrim($bgImageMobile, '/');
-            }
+            $bgImage = getImageUrl($banner['image_desktop'] ?? '');
+            $bgImageMobile = getImageUrl($banner['image_mobile'] ?? '');
             
             // Handle Links
             $desktopLink = resolveBannerLink($banner['link'] ?? '', $baseUrl);

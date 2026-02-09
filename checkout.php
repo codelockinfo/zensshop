@@ -525,7 +525,7 @@ nav.bg-white.sticky.top-0 {
                         <div class="space-y-4 mb-6">
                             <?php foreach ($cartItems as $item): ?>
                             <div class="flex items-center space-x-3">
-                                <img src="<?php echo htmlspecialchars($item['image'] ?? 'https://placehold.co/80'); ?>" 
+                                <img src="<?php echo getImageUrl($item['image'] ?? ''); ?>" 
                                      alt="<?php echo htmlspecialchars($item['name']); ?>" 
                                      class="w-16 h-16 object-cover rounded"
                                      onerror="this.src='https://placehold.co/150x150?text=Product+Image'">

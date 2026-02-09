@@ -255,7 +255,7 @@ nav.bg-white.sticky.top-0 {
                             <?php foreach ($orderData['items'] as $item): ?>
                             <div class="flex items-start space-x-4">
                                 <?php 
-                                $imageUrl = getImageUrl($item['product_image'] ?? '');
+                                $imageUrl = getProductImage($item);
                                 ?>
                                 <img src="<?php echo htmlspecialchars($imageUrl); ?>" 
                                      alt="<?php echo htmlspecialchars($item['product_name']); ?>"

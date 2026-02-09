@@ -52,8 +52,8 @@ try {
 
     // 4. Send email notification to customer
     try {
-        Settings::loadEmailConfig();
-        $mailer = new Email();
+        Settings::loadEmailConfig($request['store_id']);
+        $mailer = new Email($request['store_id']);
         $mailer->sendOrderRequestStatusUpdate(
             $request['customer_email'],
             $request['type'],

@@ -124,7 +124,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     $destination = $uploadDir . $newName;
                     
                     if (move_uploaded_file($tmpName, $destination)) {
-                        $uploadedImages[] = $baseUrl . '/assets/images/uploads/' . $newName;
+                        $uploadedImages[] = '/assets/images/uploads/' . $newName;
                     }
                 }
             }
@@ -218,6 +218,9 @@ if (empty($existingCategoryIds) && !empty($productData['category_id'])) {
 
 // Parse existing images
 $existingImages = json_decode($productData['images'] ?? '[]', true);
+if (!is_array($existingImages)) {
+    $existingImages = [];
+}
 
 // Get existing variants
 $existingVariants = $product->getVariants($productId);
@@ -534,7 +537,7 @@ $existingVariants = $product->getVariants($productId);
                 for ($i = 0; $i < $initialBoxes; $i++): 
                     $hasImage = isset($existingImages[$i]);
                 ?>
-                <div class="image-upload-box border-2 border-dashed border-gray-300 rounded-lg p-4 text-center cursor-pointer hover:border-blue-500 transition-colors relative group" data-index="<?php echo $i; ?>">
+                <div class="image-upload-box border-2 border-dashed border-gray-300 rounded-lg p-4 text-center cursor-pointer hover:border-blue-500 transition-colors relative group" data-index="<?php echo $i; ?>" <?php echo $hasImage ? 'data-image-path="' . htmlspecialchars($existingImages[$i]) . '"' : ''; ?>>
                     <!-- Drag Handle -->
                     <div class="absolute top-2 left-2 cursor-grab move-handle text-grey-800 w-8 h-8 flex items-center justify-center rounded shadow-md z-20 transition-colors" title="Drag to reorder">
                         <i class="fas fa-grip-vertical"></i>
@@ -912,7 +915,7 @@ document.getElementById('productForm').addEventListener('submit', function(e) {
     document.getElementById('highlights_json').value = JSON.stringify(highlights);
 });
 </script>
-<script src="<?php echo $baseUrl; ?>/assets/js/admin-image-upload5.js?v=<?php echo time(); ?>"></script>
+<script src="<?php echo $baseUrl; ?>/assets/js/admin-image-upload7.js?v=<?php echo time(); ?>"></script>
 <script src="<?php echo $baseUrl; ?>/assets/js/product-variants6.js"></script>
 <script>
 // Initialize with existing images

@@ -197,51 +197,51 @@ class Settings {
     /**
      * Helper method to get email settings as constants
      */
-    public static function loadEmailConfig() {
+    public static function loadEmailConfig($storeId = null) {
         $settings = new self();
         
         // Define SITE_NAME first so it can be used as default
         if (!defined('SITE_NAME')) {
-            define('SITE_NAME', $settings->get('site_name', 'Zens Shop'));
+            define('SITE_NAME', $settings->get('site_name', 'Zens Shop', $storeId));
         }
         
         // Only define if not already defined
         if (!defined('SMTP_HOST')) {
-            define('SMTP_HOST', $settings->get('smtp_host', 'smtp.gmail.com'));
+            define('SMTP_HOST', $settings->get('smtp_host', 'smtp.gmail.com', $storeId));
         }
         if (!defined('SMTP_PORT')) {
-            define('SMTP_PORT', $settings->get('smtp_port', 587));
+            define('SMTP_PORT', $settings->get('smtp_port', 587, $storeId));
         }
         if (!defined('SMTP_ENCRYPTION')) {
-            define('SMTP_ENCRYPTION', $settings->get('smtp_encryption', 'tls'));
+            define('SMTP_ENCRYPTION', $settings->get('smtp_encryption', 'tls', $storeId));
         }
         
         // Define Site Logo
         if (!defined('SITE_LOGO')) {
-            define('SITE_LOGO', $settings->get('site_logo', 'logo.png'));
+            define('SITE_LOGO', $settings->get('site_logo', 'logo.png', $storeId));
         }
         if (!defined('SITE_LOGO_TYPE')) {
-            define('SITE_LOGO_TYPE', $settings->get('site_logo_type', 'image'));
+            define('SITE_LOGO_TYPE', $settings->get('site_logo_type', 'image', $storeId));
         }
         if (!defined('SITE_LOGO_TEXT')) {
-            define('SITE_LOGO_TEXT', $settings->get('site_logo_text', SITE_NAME));
+            define('SITE_LOGO_TEXT', $settings->get('site_logo_text', SITE_NAME, $storeId));
         }
         if (!defined('SMTP_USERNAME')) {
-            define('SMTP_USERNAME', $settings->get('smtp_username', ''));
+            define('SMTP_USERNAME', $settings->get('smtp_username', '', $storeId));
         }
         if (!defined('SMTP_PASSWORD')) {
-            define('SMTP_PASSWORD', $settings->get('smtp_password', ''));
+            define('SMTP_PASSWORD', $settings->get('smtp_password', '', $storeId));
         }
         if (!defined('SMTP_FROM_EMAIL')) {
-            define('SMTP_FROM_EMAIL', $settings->get('smtp_from_email', ''));
+            define('SMTP_FROM_EMAIL', $settings->get('smtp_from_email', '', $storeId));
         }
         if (!defined('SMTP_FROM_NAME')) {
-            define('SMTP_FROM_NAME', $settings->get('smtp_from_name', 'Zens Shop'));
+            define('SMTP_FROM_NAME', $settings->get('smtp_from_name', 'Zens Shop', $storeId));
         }
         
         // Don't override OTP_EXPIRY_MINUTES if already defined in constants.php
         if (!defined('OTP_EXPIRY_MINUTES')) {
-            define('OTP_EXPIRY_MINUTES', $settings->get('otp_expiry_minutes', 5));
+            define('OTP_EXPIRY_MINUTES', $settings->get('otp_expiry_minutes', 5, $storeId));
         }
     }
     

@@ -3,6 +3,9 @@ require_once __DIR__ . '/includes/functions.php';
 require_once __DIR__ . '/classes/Database.php';
 require_once __DIR__ . '/classes/CustomerAuth.php';
 require_once __DIR__ . '/classes/Order.php';
+require_once __DIR__ . '/classes/Settings.php';
+
+$settings = new Settings();
 
 // Auth check
 $auth = new CustomerAuth();
@@ -44,13 +47,14 @@ if ($order['user_id'] != $currentCustomer['customer_id']) {
     die("Access Denied: This order does not belong to you.");
 }
 
-// Fetch Settings
-$logo = getSetting('footer_logo_image');
-$logoText = getSetting('footer_logo_text', 'ZENSSHOP');
-$logoType = getSetting('footer_logo_type', 'text');
-$storeAddress = getSetting('footer_address', 'Store Address Not Set');
-$storePhone = getSetting('footer_phone', '');
-$storeEmail = getSetting('footer_email', '');
+// Fetch Settings (Dynamic based on Order's Store)
+$storeId = $order['store_id'];
+$logo = $settings->get('footer_logo_image', null, $storeId);
+$logoText = $settings->get('footer_logo_text', 'homeprox.in', $storeId);
+$logoType = $settings->get('footer_logo_type', 'text', $storeId);
+$storeAddress = $settings->get('footer_address', 'Store Address Not Set', $storeId);
+$storePhone = $settings->get('footer_phone', '', $storeId);
+$storeEmail = $settings->get('footer_email', '', $storeId);
 
 // Helpers
 function formatCurrency($amount) {
@@ -80,17 +84,43 @@ $customerAddressStr = implode(', ', array_filter([
     <style>
         @media print {
             .no-print { display: none !important; }
-            body { background: white; }
-            .shadow-lg { box-shadow: none; }
+            body { background: white; padding: 0 !important; margin: 0 !important; }
+            .shadow-lg { box-shadow: none !important; }
+            .invoice-container { 
+                width: 210mm !important; 
+                max-width: 210mm !important; 
+                margin: 0 !important; 
+                border: none !important;
+                padding-left: 5mm !important;
+                padding-right: 5mm !important;
+            }
+            table { font-size: 8.5pt !important; width: 100% !important; table-layout: fixed !important; }
+            th, td { word-wrap: break-word !important; padding-left: 1mm !important; padding-right: 1mm !important; }
+            .break-inside-avoid { break-inside: avoid !important; }
+        }
+        /* Custom scrollbar for mobile visibility */
+        .overflow-x-auto::-webkit-scrollbar {
+            height: 6px;
+        }
+        .overflow-x-auto::-webkit-scrollbar-track {
+            background: #f1f1f1;
+        }
+        .overflow-x-auto::-webkit-scrollbar-thumb {
+            background: #cbd5e1;
+            border-radius: 6px;
+        }
+        .overflow-x-auto {
+            scrollbar-width: thin;
+            scrollbar-color: #cbd5e1 #f1f1f1;
         }
     </style>
 </head>
-<body class="bg-gray-100 min-h-screen p-8">
+<body class="bg-gray-100 min-h-screen p-4 md:p-8">
 
     <div id="invoice-content" class="max-w-4xl mx-auto bg-white rounded-lg shadow-lg overflow-hidden invoice-container">
         
         <!-- Header / Logo -->
-        <div class="p-8 border-b border-gray-200 flex justify-between items-start">
+        <div class="md:p-8 p-4 border-b border-gray-200 flex justify-between items-start">
             <div class="w-1/2">
                 <?php if ($logoType === 'image' && !empty($logo)): ?>
                     <img src="<?php echo getImageUrl($logo); ?>" alt="Logo" class="h-16 object-contain mb-4">
@@ -123,61 +153,75 @@ $customerAddressStr = implode(', ', array_filter([
         </div>
 
         <!-- Order & Addresses -->
-        <div class="p-8 grid grid-cols-2 gap-8">
+        <div class="p-4 md:p-8 grid grid-cols-2 gap-8">
             <!-- Order Details -->
-            <div class="space-y-3">
+            <div class="space-y-3 text-sm">
                 <div class="flex justify-between border-b pb-2">
                     <span class="text-gray-500 font-medium">Order No:</span>
                     <span class="font-bold text-gray-800">#<?php echo htmlspecialchars($order['order_number']); ?></span>
                 </div>
                 <div class="flex justify-between border-b pb-2">
                     <span class="text-gray-500 font-medium">Order Date:</span>
-                    <span class="font-bold text-gray-800"><?php echo date('d M Y, h:i A', strtotime($order['created_at'])); ?></span>
+                    <span class="text-gray-800"><?php echo date('d M Y, h:i A', strtotime($order['created_at'])); ?></span>
                 </div>
-                <!-- Delivery Status -->
                 <div class="flex justify-between border-b pb-2">
                     <span class="text-gray-500 font-medium">Delivery Status:</span>
-                    <span class="font-bold text-gray-800 capitalize">
-                        <?php echo !empty($order['tracking_number']) ? 'Shipped' : $order['order_status']; ?>
-                    </span>
+                    <span class="px-2 py-1 rounded bg-blue-100 text-blue-800 text-xs font-bold uppercase"><?php echo str_replace('_', ' ', $order['order_status']); ?></span>
                 </div>
+                <?php if (!empty($order['delivery_date'])): ?>
+                <div class="flex justify-between border-b pb-2">
+                    <span class="text-gray-500 font-medium">Delivery Date:</span>
+                    <span class="text-gray-800"><?php echo date('d M Y', strtotime($order['delivery_date'])); ?></span>
+                </div>
+                <?php endif; ?>
             </div>
 
             <!-- Addresses -->
-            <div class="space-y-4 text-sm">
-                <!-- Supplier -->
+            <div class="grid grid-cols-1 gap-6 text-sm">
                 <div>
-                    <h3 class="text-gray-500 font-bold uppercase text-xs mb-1">Items Sold By:</h3>
-                    <p class="font-semibold text-gray-800"><?php echo htmlspecialchars(getSetting('site_name', 'Store Name')); ?></p>
-                    <p class="text-gray-600"><?php echo nl2br(htmlspecialchars($storeAddress)); ?></p>
-                    <?php if($storePhone): ?><p class="text-gray-600">Ph: <?php echo htmlspecialchars($storePhone); ?></p><?php endif; ?>
-                    <?php if($storeEmail): ?><p class="text-gray-600">Email: <?php echo htmlspecialchars($storeEmail); ?></p><?php endif; ?>
+                    <h3 class="font-bold text-gray-500 uppercase text-xs mb-2">Items Sold By:</h3>
+                    <p class="font-bold text-gray-800"><?php echo htmlspecialchars($logoText); ?></p>
+                    <p class="text-gray-600">
+                        <?php echo nl2br(htmlspecialchars($settings->get('store_address', 'Ashapuri Society, Ashwin society -2, Khodiyar nagar road, Varachha main road, surat', $order['store_id']))); ?><br>
+                        Ph: <?php echo htmlspecialchars($settings->get('store_phone', '+91 7383841408', $order['store_id'])); ?><br>
+                        Email: <?php echo htmlspecialchars($settings->get('store_email', 'zens.shop07@gmail.com', $order['store_id'])); ?>
+                    </p>
                 </div>
-                
-                <!-- Customer -->
                 <div>
-                    <h3 class="text-gray-500 font-bold uppercase text-xs mb-1">Billed To:</h3>
-                    <p class="font-semibold text-gray-800"><?php echo htmlspecialchars($order['customer_name']); ?></p>
-                    <p class="text-gray-600"><?php echo htmlspecialchars($customerAddressStr); ?></p>
-                    <?php if($order['customer_phone']): ?><p class="text-gray-600">Ph: <?php echo htmlspecialchars($order['customer_phone']); ?></p><?php endif; ?>
-                    <?php if($order['customer_email']): ?><p class="text-gray-600">Email: <?php echo htmlspecialchars($order['customer_email']); ?></p><?php endif; ?>
+                    <h3 class="font-bold text-gray-500 uppercase text-xs mb-2">Billed To:</h3>
+                    <p class="font-bold text-gray-800"><?php echo htmlspecialchars($order['customer_name']); ?></p>
+                    <p class="text-gray-600">
+                        <?php 
+                            $addr = is_array($order['shipping_address']) ? $order['shipping_address'] : json_decode($order['shipping_address'], true);
+                            $addrParts = array_filter([
+                                $addr['address'] ?? $addr['address_line1'] ?? '',
+                                $addr['city'] ?? '',
+                                $addr['state'] ?? '',
+                                $addr['pincode'] ?? $addr['postal_code'] ?? '',
+                                $addr['country'] ?? 'India'
+                            ]);
+                            echo htmlspecialchars(implode(', ', $addrParts));
+                        ?><br>
+                        Ph: <?php echo htmlspecialchars($order['customer_phone'] ?? ''); ?><br>
+                        Email: <?php echo htmlspecialchars($order['customer_email']); ?>
+                    </p>
                 </div>
             </div>
         </div>
 
         <!-- Items Table -->
-        <div class="px-8 py-4">
+        <div class="px-4 md:px-8 py-4 overflow-x-auto print:overflow-visible scrollbar-thin scrollbar-thumb-gray-300">
             <h3 class="font-bold text-lg mb-4 text-gray-800">Order Items</h3>
-            <table class="w-full text-sm text-left">
+            <table class="w-full text-xs md:text-sm text-left min-w-[800px] md:min-w-0 print:min-w-0 print:table-fixed border-collapse">
                 <thead class="bg-gray-50 text-gray-500 font-bold border-b border-gray-200">
                     <tr>
-                        <th class="py-3 px-4">No.</th>
-                        <th class="py-3 px-4">Item Name</th>
-                        <th class="py-3 px-4 text-right">Price</th>
-                        <th class="py-3 px-4 text-center">Qty</th>
-                        <th class="py-3 px-4 text-center">Tax %</th>
-                        <th class="py-3 px-4 text-right">Tax Amt.</th>
-                        <th class="py-3 px-4 text-right">Total</th>
+                        <th class="py-2 px-1 md:py-3 md:px-4 w-8 text-center">No.</th>
+                        <th class="py-2 px-1 md:py-3 md:px-4">Item Name</th>
+                        <th class="py-2 px-1 md:py-3 md:px-4 w-20 md:w-24 text-right">Price</th>
+                        <th class="py-2 px-1 md:py-3 md:px-4 w-10 md:w-16 text-center">Qty</th>
+                        <th class="py-2 px-1 md:py-3 md:px-4 w-12 md:w-16 text-center">Tax %</th>
+                        <th class="py-2 px-1 md:py-3 md:px-4 w-20 md:w-24 text-right">Tax Amt.</th>
+                        <th class="py-2 px-1 md:py-3 md:px-4 w-24 md:w-28 text-right">Total</th>
                     </tr>
                 </thead>
                 <tbody class="divide-y divide-gray-100">
@@ -207,31 +251,32 @@ $customerAddressStr = implode(', ', array_filter([
                          $calculatedTaxTotal += $totalLineTax;
                     ?>
                     <tr>
-                        <td class="py-4 px-4 text-gray-500"><?php echo $i++; ?></td>
-                        <td class="py-4 px-4">
+                        <td class="py-2 px-1 md:py-4 md:px-4 text-gray-500 text-center border-b border-gray-50"><?php echo $i++; ?></td>
+                        <td class="py-2 px-1 md:py-4 md:px-4 border-b border-gray-50">
                             <div class="flex items-center">
                                 <?php if (!empty($item['product_image'])): ?>
-                                    <img src="<?php echo getImageUrl($item['product_image']); ?>" class="w-10 h-10 object-cover rounded mr-3 border">
+                                    <img src="<?php echo getImageUrl($item['product_image']); ?>" class="w-8 h-8 md:w-12 md:h-12 object-cover rounded mr-2 md:mr-3 border shrink-0">
                                 <?php endif; ?>
-                                <div>
-                                    <p class="font-bold text-gray-800"><?php echo htmlspecialchars($item['product_name']); ?></p>
+                                <div class="min-w-0">
+                                    <p class="font-bold text-gray-800 break-words leading-tight"><?php echo htmlspecialchars($item['product_name']); ?></p>
                                     <?php if (!empty($item['product_sku'])): ?>
-                                        <p class="text-xs text-gray-500">SKU: <?php echo htmlspecialchars($item['product_sku']); ?></p>
+                                        <p class="text-[10px] md:text-xs text-gray-500">SKU: <?php echo htmlspecialchars($item['product_sku']); ?></p>
                                     <?php endif; ?>
                                 </div>
                             </div>
                         </td>
-                        <td class="py-4 px-4 text-right text-gray-600"><?php echo formatCurrency($unitPrice); ?></td>
-                        <td class="py-4 px-4 text-center text-gray-600"><?php echo $item['quantity']; ?></td>
-                        <td class="py-4 px-4 text-center text-gray-600">
-                            <?php echo $taxRate > 0 ? number_format($taxRate, 2) . '%' : '-'; ?>
+                        <td class="py-2 px-1 md:py-4 md:px-4 text-right text-gray-600 border-b border-gray-50"><?php echo formatCurrency($unitPrice); ?></td>
+                        <td class="py-2 px-1 md:py-4 md:px-4 text-center text-gray-600 border-b border-gray-50"><?php echo $item['quantity']; ?></td>
+                        <td class="py-2 px-1 md:py-4 md:px-4 text-center text-gray-600 border-b border-gray-50">
+                            <?php echo $taxRate > 0 ? (float)$taxRate . '%' : '-'; ?>
                         </td>
-                        <td class="py-4 px-4 text-right text-gray-600">
+                        <td class="py-2 px-1 md:py-4 md:px-4 text-right text-gray-600 border-b border-gray-50">
                             <?php 
-                                echo $totalLineTax > 0 ? formatCurrency($totalLineTax) : '-'; 
+                                $rowTax = (!empty($item['tax_amount']) && $item['tax_amount'] > 0) ? $item['tax_amount'] : $totalLineTax;
+                                echo formatCurrency($rowTax); 
                             ?>
                         </td>
-                        <td class="py-4 px-4 text-right font-bold text-gray-800">
+                        <td class="py-2 px-1 md:py-4 md:px-4 text-right font-bold text-gray-800 border-b border-gray-50">
                             <?php echo formatCurrency($lineTotal); ?>
                         </td>
                     </tr>
@@ -241,69 +286,53 @@ $customerAddressStr = implode(', ', array_filter([
         </div>
 
         <!-- Totals -->
-        <div class="p-8 bg-gray-50 border-t border-gray-200">
+        <div class="md:p-8 p-4 bg-gray-50 border-t border-gray-200 print:bg-white print:pt-4 break-inside-avoid">
             <div class="flex justify-end">
-                <div class="w-1/2 md:w-1/3 space-y-3">
+                <div class="w-full md:w-1/3 space-y-3">
                     <?php
-                        // Use DB values if present, else calculated
                         $subtotal = ($order['subtotal'] > 0) ? $order['subtotal'] : $calculatedSubtotal;
-                        $taxAmount = ($order['tax_amount'] > 0) ? $order['tax_amount'] : $calculatedTaxTotal;
-                        $shipping = $order['shipping_amount'];
-                        $discount = $order['discount_amount'];
-                        
-                        // Recalculate grand total if needed (fallback)
-                        $grandTotal = ($order['grand_total'] > 0) 
-                                      ? $order['grand_total'] 
-                                      : ($subtotal + $taxAmount + $shipping - $discount);
-                        
-                        // If tax is included in price logic vs excluded? 
-                        // Our earlier logic: Line Total = (Price + Tax) * Qty. 
-                        // So Subtotal usually excludes tax in typical scenarios, but if Price includes tax, it gets complicated.
-                        // Assuming simple "Price is ex-tax" or "Price is inc-tax" based on setup.
-                        // Current logic: LineTotal = (Price + Tax) * Qty. So Grand Total is Sum of Line Totals + Shipping - Discount.
-                        
-                        // Let's ensure Grand Total matches the sum of line totals + shipping - discount if logic fails
-                        if ($grandTotal == 0 && $lineTotal > 0) {
-                             $grandTotal = $calculatedSubtotal + $calculatedTaxTotal + $shipping - $discount;
-                        }
+                        $taxTotal = ($order['tax_amount'] > 0) ? $order['tax_amount'] : $calculatedTaxTotal;
+                        $shipping = $order['shipping_amount'] ?? 0;
+                        $discount = $order['discount_amount'] ?? 0;
+                        $grandTotal = ($order['grand_total'] > 0) ? $order['grand_total'] : ($subtotal + $taxTotal + $shipping - $discount);
                     ?>
-                
-                    <div class="flex justify-between text-gray-600">
-                        <span>Subtotal (Excl. Tax)</span>
-                        <span><?php echo formatCurrency($subtotal); ?></span>
+                    <div class="flex justify-between text-sm">
+                        <span class="text-gray-500">Subtotal (Excl. Tax)</span>
+                        <span class="text-gray-800"><?php echo formatCurrency($subtotal); ?></span>
                     </div>
-                    
-                    <?php if ($discount > 0): ?>
-                    <div class="flex justify-between text-green-600">
-                        <span>Discount</span>
-                        <span>- <?php echo formatCurrency($discount); ?></span>
-                    </div>
-                    <?php endif; ?>
-                    
                     <?php if ($shipping > 0): ?>
-                    <div class="flex justify-between text-gray-600">
-                        <span>Shipping/Delivery</span>
-                        <span><?php echo formatCurrency($shipping); ?></span>
+                    <div class="flex justify-between text-sm">
+                        <span class="text-gray-500">Shipping/Delivery</span>
+                        <span class="text-gray-800"><?php echo formatCurrency($shipping); ?></span>
                     </div>
                     <?php endif; ?>
-                    
-                    <?php if ($taxAmount > 0): ?>
-                    <div class="flex justify-between text-gray-600">
-                        <span>Total Tax</span>
-                        <span><?php echo formatCurrency($taxAmount); ?></span>
+                    <?php if ($discount > 0): ?>
+                    <div class="flex justify-between text-sm text-red-600">
+                        <span>Discount</span>
+                        <span>-<?php echo formatCurrency($discount); ?></span>
                     </div>
                     <?php endif; ?>
-                    
-                    <div class="flex justify-between border-t border-gray-300 pt-3 text-xl font-bold text-gray-800">
-                        <span>Grand Total</span>
-                        <span class="text-green-600"><?php echo formatCurrency($grandTotal); ?></span>
+                    <div class="flex justify-between text-sm">
+                        <span class="text-gray-500">Total Tax</span>
+                        <span class="text-gray-800"><?php echo formatCurrency($taxTotal); ?></span>
+                    </div>
+                    <div class="flex justify-between items-center pt-3 border-t border-gray-200 mt-2">
+                        <span class="text-lg font-bold text-gray-800">Grand Total</span>
+                        <span class="text-xl font-bold text-green-600"><?php echo formatCurrency($grandTotal); ?></span>
                     </div>
                 </div>
             </div>
             
-            <div class="mt-8 text-center text-xs text-gray-400">
-                <p>This is a computer-generated invoice.</p>
-                <p><?php echo htmlspecialchars($storeAddress); ?></p>
+            <!-- Notes / Footer -->
+            <div class="mt-8 pt-8 border-t border-gray-200 text-center text-gray-500 text-xs">
+                <p class="mb-1">This is a computer-generated invoice.</p>
+                <?php 
+                    $storeAddress = htmlspecialchars($logoText) . ' Pvt. Ltd.<br>' .
+                                    htmlspecialchars($settings->get('store_address', 'Ashapuri Society, Ashwin society -2, Khodiyar nagar road, Varachha main road, surat', $order['store_id'])) . '<br>' .
+                                    'Ph: ' . htmlspecialchars($settings->get('store_phone', '+91 7383841408', $order['store_id'])) . '<br>' .
+                                    'Email: ' . htmlspecialchars($settings->get('store_email', 'zens.shop07@gmail.com', $order['store_id']));
+                ?>
+                <p><?php echo $storeAddress; ?></p>
             </div>
         </div>
 

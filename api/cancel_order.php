@@ -154,10 +154,10 @@ try {
         require_once __DIR__ . '/../classes/Settings.php';
         
         $notifier = new Notification();
-        $mailer = new Email();
+        $mailer = new Email($storeId);
         
-        // Load config for SITE_NAME, etc.
-        Settings::loadEmailConfig();
+        // Load config for SITE_NAME, etc. (passing storeId)
+        Settings::loadEmailConfig($storeId);
         
         // Admin Notification
         if ($type === 'refund') {
@@ -167,9 +167,12 @@ try {
         }
         
         // Emails
-        $adminEmail = defined('SMTP_FROM_EMAIL') ? SMTP_FROM_EMAIL : null;
+        // 1. To Merchant (Admin)
+        // Fetch the merchant's actual account email for this store
+        $merchant = $db->fetchOne("SELECT email FROM users WHERE store_id = ? AND role = 'admin' LIMIT 1", [$storeId]);
+        $adminEmail = $merchant['email'] ?? (defined('SMTP_FROM_EMAIL') ? SMTP_FROM_EMAIL : null);
+        
         if ($adminEmail) {
-            // To Admin
             $mailer->sendOrderRequestNotification($adminEmail, $type, $orderNumber, $order['customer_name'], $reason, $comments, true);
         }
         

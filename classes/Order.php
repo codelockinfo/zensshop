@@ -125,7 +125,7 @@ class Order {
             $storeId = $_SESSION['store_id'] ?? null;
         }
 
-        $sql = "SELECT oi.*, p.name as product_name, p.featured_image as product_image, p.sku as product_sku, p.slug as product_slug
+        $sql = "SELECT oi.*, p.name as product_name, p.featured_image as product_image, p.featured_image, p.images, p.sku as product_sku, p.slug as product_slug
              FROM order_items oi 
              LEFT JOIN products p ON (oi.product_id = p.product_id OR (oi.product_id < 1000000000 AND oi.product_id = p.id))
              WHERE oi.order_num = ?";
@@ -353,7 +353,9 @@ class Order {
         
         try {
             require_once __DIR__ . '/Email.php';
-            $email = new Email();
+            require_once __DIR__ . '/Settings.php';
+            Settings::loadEmailConfig($storeId);
+            $email = new Email($storeId);
             $email->sendOrderConfirmation($data['customer_email'], $orderNumber, $data['customer_name'], $totalAmount, $data['items']);
         } catch (Exception $e) { error_log("Failed to send order confirmation email: " . $e->getMessage()); }
         

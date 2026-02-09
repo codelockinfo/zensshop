@@ -63,10 +63,7 @@ $categories = $db->fetchAll(
             $displayCategories = array_slice($homeCategories, 0, 6);
             
             foreach ($displayCategories as $category): 
-                $image = $category['image'];
-                if (!preg_match('/^https?:\/\//', $image)) {
-                    $image = $baseUrl . '/' . ltrim($image, '/');
-                }
+                $image = getImageUrl($category['image'] ?? '');
                 
                 $link = $category['link'];
                 if (!preg_match('/^https?:\/\//', $link) && strpos($link, $baseUrl) === false) {

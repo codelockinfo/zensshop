@@ -81,11 +81,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         }
         
         // Return relative path
-        $relativePath = $baseUrl . '/assets/images/uploads/' . $filename;
+        $fullPath = $baseUrl . '/assets/images/uploads/' . $filename;
+        $dbPath = '/assets/images/uploads/' . $filename;
         
         echo json_encode([
             'success' => true,
-            'path' => $relativePath,
+            'path' => $fullPath,
+            'db_path' => $dbPath,
             'filename' => $filename
         ]);
         

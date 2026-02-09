@@ -90,7 +90,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                         $destination = $uploadDir . $newName;
                         
                         if (move_uploaded_file($tmpName, $destination)) {
-                            $uploadedImages[] = $baseUrl . '/assets/images/uploads/' . $newName;
+                            $uploadedImages[] = '/assets/images/uploads/' . $newName;
                         }
                     }
                 }
@@ -776,7 +776,7 @@ document.getElementById('productForm').addEventListener('submit', function(e) {
     document.getElementById('highlights_json').value = JSON.stringify(highlights);
 });
 </script>
-<script src="<?php echo $baseUrl; ?>/assets/js/admin-image-upload5.js?v=<?php echo time(); ?>"></script>
+<script src="<?php echo $baseUrl; ?>/assets/js/admin-image-upload7.js?v=<?php echo time(); ?>"></script>
 <script src="<?php echo $baseUrl; ?>/assets/js/product-variants6.js"></script>
 
 <!-- Brand Management Modal -->

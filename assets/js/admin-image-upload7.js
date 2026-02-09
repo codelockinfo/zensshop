@@ -278,20 +278,21 @@ function handleFiles(files, box, placeholder, preview, removeBtn) {
     .then(response => response.json())
     .then(data => {
         if (data.success) {
-            console.log('Upload success:', data.path);
-            box.setAttribute('data-image-path', data.path);
+            console.log('Upload success:', data.db_path);
+            box.setAttribute('data-image-path', data.db_path);
             
-            // Check if it's a video based on file extension
-            const isVideo = data.path.match(/\.(mp4|webm|ogg|mov)$/i);
+            // Preview uses the full URL
+            const previewUrl = data.path;
+            const isVideo = previewUrl.match(/\.(mp4|webm|ogg|mov)$/i);
             
             if (isVideo) {
                  preview.innerHTML = `
-                    <video src="${data.path}" class="w-full h-32 object-cover rounded" controls></video>
+                    <video src="${previewUrl}" class="w-full h-32 object-cover rounded" controls></video>
                     <p class="text-xs text-gray-600 mt-2 truncate">${file.name}</p>
                 `;
             } else {
                 preview.innerHTML = `
-                    <img src="${data.path}" alt="Preview" class="w-full h-32 object-cover rounded">
+                    <img src="${previewUrl}" alt="Preview" class="w-full h-32 object-cover rounded">
                     <p class="text-xs text-gray-600 mt-2 truncate">${file.name}</p>
                 `;
             }

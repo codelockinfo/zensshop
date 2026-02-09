@@ -514,11 +514,11 @@ require_once __DIR__ . '/includes/header.php';
             
             $desktopAsset = $banVideo ?: $banImg;
             $isDesktopVideo = !empty($banVideo) || preg_match('/\.(mp4|webm|ogg)$/i', $banImg);
-            if($desktopAsset && strpos($desktopAsset, 'http') !== 0) $desktopAsset = $baseUrl . '/' . $desktopAsset;
+            if($desktopAsset) $desktopAsset = getImageUrl($desktopAsset);
             
             $mobileAsset = $banMobVideo ?: $banMobImg;
             $isMobileVideo = !empty($banMobVideo) || ($mobileAsset && preg_match('/\.(mp4|webm|ogg)$/i', $mobileAsset));
-            if($mobileAsset && strpos($mobileAsset, 'http') !== 0) $mobileAsset = $baseUrl . '/' . $mobileAsset;
+            if($mobileAsset) $mobileAsset = getImageUrl($mobileAsset);
             
             if (!$desktopAsset && !$mobileAsset) continue; 
             $wrapLink = !empty($banLink) && empty($banBtn);
@@ -590,7 +590,7 @@ require_once __DIR__ . '/includes/header.php';
         $aboutTitle = !empty($aboutGrp['title']) ? $aboutGrp['title'] : 'About Our Product';
         $aboutText = !empty($aboutGrp['text']) ? $aboutGrp['text'] : ($productData['description'] ?? '');
         if (!empty($aboutGrp['image'])) {
-            $aboutImage = (strpos($aboutGrp['image'], 'http') === 0 ? $aboutGrp['image'] : $baseUrl . '/' . $aboutGrp['image']);
+            $aboutImage = getImageUrl($aboutGrp['image']);
         } else {
             $aboutImage = $galleryPool[$currentImgIdx % $galleryCount];
             $currentImgIdx++;

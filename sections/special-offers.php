@@ -38,10 +38,7 @@ $sectionSubheading = $offers[0]['subheading'] ?? 'Grab limited-time deals on our
             <?php foreach ($offers as $offer): ?>
             <?php
 				// Resolve Image URL
-				$imgSrc = $offer['image'];
-				if (!preg_match('/^https?:\/\//', $imgSrc)) {
-					$imgSrc = $baseUrl . '/' . ltrim($imgSrc, '/');
-				}
+				$imgSrc = getImageUrl($offer['image'] ?? '');
 				
 				// Resolve Link URL
 				$link = $offer['link'];

@@ -126,15 +126,8 @@ class Cart {
             }
             
             // Convert to full URL if needed
-            if (!empty($item['image']) && strpos($item['image'], 'http') !== 0 && strpos($item['image'], '/') !== 0 && strpos($item['image'], 'data:') !== 0) {
-                if (defined('UPLOAD_URL')) {
-                    $item['image'] = UPLOAD_URL . '/' . $item['image'];
-                } else {
-                    require_once __DIR__ . '/../includes/functions.php';
-                    $baseUrl = getBaseUrl();
-                    $item['image'] = $baseUrl . '/assets/images/uploads/' . $item['image'];
-                }
-            }
+            require_once __DIR__ . '/../includes/functions.php';
+            $item['image'] = getImageUrl($item['image'] ?? '');
 
             $validItems[] = $item;
         }

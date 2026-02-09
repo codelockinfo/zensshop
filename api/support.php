@@ -65,13 +65,14 @@ try {
 
     // Try to send email notification to admin (optional - won't fail if email not configured)
     try {
-        require_once __DIR__ . '/../classes/Email.php';
-        require_once __DIR__ . '/../classes/Auth.php';
-        
-        // Get admin email from users table (first admin)
-        $admin = $db->fetchOne("SELECT email FROM users WHERE role = 'admin' LIMIT 1");
+        // Load store specific email configuration
+        require_once __DIR__ . '/../classes/Settings.php';
+        Settings::loadEmailConfig($storeId);
+
+        // Get admin email from users table for THIS store
+        $admin = $db->fetchOne("SELECT email FROM users WHERE role = 'admin' AND store_id = ? LIMIT 1", [$storeId]);
         if ($admin && !empty($admin['email'])) {
-            $email = new Email();
+            $email = new Email($storeId);
             $email->sendSupportNotificationToAdmin(
                 $admin['email'],
                 $customerName,
