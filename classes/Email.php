@@ -164,6 +164,9 @@ class Email {
                 <h3 style='margin-top: 0; border-bottom: 1px solid #e5e7eb; padding-bottom: 10px; margin-bottom: 15px; font-size: 16px; color: #4b5563;'>Order Details</h3>
                 <p style='margin: 5px 0;'><strong style='min-width: 120px; display: inline-block; color: #6b7280;'>Order Number:</strong> #$orderNumber</p>
                 <p style='margin: 5px 0;'><strong style='min-width: 120px; display: inline-block; color: #6b7280;'>Order Date:</strong> " . date('F d, Y') . "</p>
+                <div style='margin-top: 20px; text-align: center;'>
+                    <a href='" . (function_exists('url') ? url("invoice?order_number=$orderNumber") : (getBaseUrl() . "/invoice.php?order_number=$orderNumber")) . "' style='padding: 12px 24px; background-color: #000000; color: #ffffff; text-decoration: none; border-radius: 6px; font-weight: bold; display: inline-block;'>Download Invoice</a>
+                </div>
             </div>
             
             <h3 style='margin-bottom: 15px;'>Order Items</h3>
@@ -318,6 +321,67 @@ class Email {
             </ul>
             <div style='text-align: center; margin: 30px 0;'>
                 <a href='$siteUrl' class='button'>Start Shopping</a>
+            </div>
+        ";
+        
+        $message = $this->getEmailTemplate($subject, $content);
+        return $this->send($to, $subject, $message);
+    }
+
+    /**
+     * Send cancellation/refund request notification
+     */
+    public function sendOrderRequestNotification($to, $type, $orderNumber, $customerName, $reason, $comments, $isAdmin = false) {
+        $typeLabel = ($type === 'refund') ? 'Refund' : 'Cancellation';
+        $subject = ($isAdmin ? "New $typeLabel Request" : "$typeLabel Request Submitted") . " - Order #$orderNumber";
+        
+        $content = "
+            <h1 style='text-align: center;'>$typeLabel Request</h1>
+            <p>Dear " . ($isAdmin ? 'Admin' : $customerName) . ",</p>
+            <p>" . ($isAdmin ? "A new $typeLabel request has been submitted by $customerName for order #$orderNumber." : "Your $typeLabel request for order #$orderNumber has been successfully submitted.") . "</p>
+            
+            <div style='background: #f9fafb; padding: 24px; border-radius: 8px; margin: 25px 0;'>
+                <h3 style='margin-top: 0; border-bottom: 1px solid #e5e7eb; padding-bottom: 10px; margin-bottom: 15px; font-size: 16px; color: #4b5563;'>Request Details</h3>
+                <p style='margin: 5px 0;'><strong style='min-width: 120px; display: inline-block; color: #6b7280;'>Order Number:</strong> #$orderNumber</p>
+                <p style='margin: 5px 0;'><strong style='min-width: 120px; display: inline-block; color: #6b7280;'>Type:</strong> $typeLabel</p>
+                <p style='margin: 5px 0;'><strong style='min-width: 120px; display: inline-block; color: #6b7280;'>Reason:</strong> " . htmlspecialchars($reason) . "</p>
+                " . (!empty($comments) ? "<p style='margin: 5px 0;'><strong style='min-width: 120px; display: inline-block; color: #6b7280;'>Comments:</strong> " . nl2br(htmlspecialchars($comments)) . "</p>" : "") . "
+                <p style='margin: 5px 0;'><strong style='min-width: 120px; display: inline-block; color: #6b7280;'>Date:</strong> " . date('F d, Y') . "</p>
+            </div>
+            
+            " . ($isAdmin ? "<div style='text-align: center; margin: 30px 0;'>
+                <a href='" . getBaseUrl() . "/admin/orders/detail.php?order_number=$orderNumber' class='button' style='color: #ffffff; text-decoration: none;'>Process Request</a>
+            </div>" : "<p>We will review your request and get back to you shortly.</p>") . "
+        ";
+        
+        $message = $this->getEmailTemplate($subject, $content);
+        return $this->send($to, $subject, $message);
+    }
+
+    /**
+     * Send cancellation/refund request status update notification to customer
+     */
+    public function sendOrderRequestStatusUpdate($to, $type, $orderNumber, $customerName, $status) {
+        $typeLabel = ($type === 'refund') ? 'Refund' : 'Cancellation';
+        $statusLabel = ucfirst($status);
+        $subject = "$typeLabel Request $statusLabel - Order #$orderNumber";
+        
+        $content = "
+            <h1 style='text-align: center;'>$typeLabel Request $statusLabel</h1>
+            <p>Dear $customerName,</p>
+            <p>We are writing to inform you that your $typeLabel request for order #$orderNumber has been <strong>$status</strong>.</p>
+            
+            <div style='background: #f9fafb; padding: 24px; border-radius: 8px; margin: 25px 0; text-align: center;'>
+                <p style='margin: 0; font-size: 14px; color: #6b7280;'>Request Status</p>
+                <div style='display: inline-block; padding: 8px 16px; border-radius: 99px; font-weight: bold; margin-top: 10px; font-size: 18px; " . ($status === 'approved' ? "background: #dcfce7; color: #166534;" : "background: #fee2e2; color: #991b1b;") . "'>
+                    $statusLabel
+                </div>
+            </div>
+            
+            <p>" . ($status === 'approved' ? "The necessary changes have been made to your order. If a refund was involved, it will be processed according to our policy." : "If you have any questions regarding this decision, please contact our support team.") . "</p>
+            
+            <div style='text-align: center; margin: 30px 0;'>
+                <a href='" . getBaseUrl() . "/account' class='button' style='color: #ffffff; text-decoration: none;'>View Your Account</a>
             </div>
         ";
         

@@ -73,9 +73,23 @@ if ($section === 'orders') {
     }
     $orders = $orderModel->getAll($filters);
     
+    // Fetch cancellation/refund requests for these orders
+    $db = Database::getInstance();
+    $orderIds = array_column($orders, 'id');
+    $requests = [];
+    if (!empty($orderIds)) {
+        $placeholders = implode(',', array_fill(0, count($orderIds), '?'));
+        // Sort by ID DESC so that later requests for the same order overwrite earlier ones in the associative array
+        $reqData = $db->fetchAll("SELECT order_id, type, cancel_status FROM ordercancel WHERE order_id IN ($placeholders) AND customer_id = ? ORDER BY id ASC", [...$orderIds, $customer['customer_id']]);
+        foreach ($reqData as $rd) {
+            $requests[$rd['order_id']] = $rd;
+        }
+    }
+    
     // Get full items for each order
     foreach ($orders as &$o) {
         $o['items'] = $orderModel->getOrderItems($o['order_number']);
+        $o['request'] = $requests[$o['id']] ?? null;
     }
 }
 
@@ -313,9 +327,41 @@ if (!$isAjax) {
 
                                             <div>
                                                 <p class="text-gray-400 font-bold uppercase tracking-widest text-[10px] mb-2">Invoice</p>
-                                                <a href="<?php echo url('invoice.php?order_number=' . $order['order_number']); ?>" target="_blank" class="inline-block bg-red-500 text-white px-4 py-1.5 rounded text-sm font-bold hover:bg-red-600 transition">
-                                                    Download
-                                                </a>
+                                                <div class="flex flex-row gap-2">
+                                                    <a href="<?php echo url('invoice.php?order_number=' . $order['order_number']); ?>" target="_blank" class="inline-block bg-red-500 text-white px-4 py-1.5 rounded text-sm font-bold hover:bg-red-600 transition text-center">
+                                                        Download
+                                                    </a>
+                                                    <?php 
+                                                    $req = $order['request'] ?? null;
+                                                    $reqStatus = $req['cancel_status'] ?? null;
+                                                    
+                                                    // Show request status if it's pending or approved
+                                                    // If it's rejected, we show the status AND allow retrying if status permits
+                                                    if ($req && ($reqStatus === 'pending' || $reqStatus === 'approved')): 
+                                                        $labelClass = $reqStatus === 'approved' ? 'bg-green-100 text-green-600 border-green-200' : 'bg-gray-100 text-gray-500';
+                                                        $labelText = $reqStatus === 'approved' ? ucfirst($req['type'] ?? 'Request') . ' Approved' : 'Processing...';
+                                                        $icon = $reqStatus === 'approved' ? 'fa-check-circle' : 'fa-clock animate-pulse';
+                                                    ?>
+                                                        <span class="inline-flex items-center gap-1.5 px-4 py-1.5 rounded text-sm font-bold border <?php echo $labelClass; ?>">
+                                                            <i class="fas <?php echo $icon; ?> text-[10px]"></i>
+                                                            <?php echo $labelText; ?>
+                                                        </span>
+                                                    <?php else: ?>
+
+                                                        <?php if (in_array($order['order_status'], ['pending', 'processing', 'on_hold'])): ?>
+                                                            <button onclick="openCancelModal('<?php echo $order['order_number']; ?>', 'cancel')" class="inline-block border border-red-500 text-red-500 px-4 py-1.5 rounded text-sm font-bold hover:bg-red-50 transition whitespace-nowrap">
+                                                                Cancel Order
+                                                            </button>
+                                                        <?php elseif ($order['order_status'] === 'delivered'): 
+                                                            $deliveryDate = !empty($order['delivery_date']) ? strtotime($order['delivery_date']) : (!empty($order['updated_at']) ? strtotime($order['updated_at']) : null);
+                                                            if ($deliveryDate && (time() - $deliveryDate) <= (7 * 24 * 60 * 60)):
+                                                        ?>
+                                                            <button onclick="openCancelModal('<?php echo $order['order_number']; ?>', 'refund')" class="inline-block border border-gray-800 text-gray-800 px-4 py-1.5 rounded text-sm font-bold hover:bg-gray-100 transition whitespace-nowrap">
+                                                                Return / Refund
+                                                            </button>
+                                                        <?php endif; endif; ?>
+                                                    <?php endif; ?>
+                                                </div>
                                             </div>
                                         </div>
 
@@ -489,17 +535,10 @@ if (!$isAjax) {
                         Details updated successfully!
                     </div>
                     <script>
-                        setTimeout(function() {
-                            const msg = document.getElementById('successMessage');
-                            if (msg) {
-                                msg.style.opacity = '0';
-                                setTimeout(() => msg.remove(), 500);
-                                // Clean URL
-                                const url = new URL(window.location);
-                                url.searchParams.delete('success');
-                                window.history.replaceState({}, '', url);
-                            }
-                        }, 3000);
+                        // Clean URL immediately
+                        const url = new URL(window.location);
+                        url.searchParams.delete('success');
+                        window.history.replaceState({}, '', url);
                     </script>
                     <?php endif; ?>
 
@@ -734,7 +773,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 <p class="text-gray-500">Loading...</p>
             </div>
         `;
-        
+
         // Update URL
         if(url !== window.location.href) {
             window.history.pushState(null, '', url);
@@ -867,6 +906,221 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
 });
+</script>
+
+
+<!-- Cancel Order Modals -->
+<div id="cancelReasonModal" class="fixed inset-0 bg-black/50 hidden items-center justify-center z-50">
+    <div class="bg-white rounded-2xl p-6 w-full max-w-md mx-4 relative animate-[fadeIn_0.2s_ease-out]">
+        <button onclick="closeCancelModals()" class="absolute top-4 right-4 text-gray-400 hover:text-black">
+            <i class="fas fa-times"></i>
+        </button>
+        
+        <h3 class="text-xl font-bold mb-4">Why do you want to cancel?</h3>
+        <p class="text-gray-500 text-sm mb-6">Please select a reason for cancellation.</p>
+        
+        <div class="space-y-3 max-h-[60vh] overflow-y-auto pr-2" id="reasonList">
+            <!-- Populated by JS -->
+        </div>
+    </div>
+</div>
+
+<div id="cancelOtherModal" class="fixed inset-0 bg-black/50 hidden items-center justify-center z-50">
+    <div class="bg-white rounded-2xl p-6 w-full max-w-md mx-4 relative animate-[fadeIn_0.2s_ease-out]">
+        <button onclick="openCancelModal(currentCancelOrderNum)" class="absolute top-4 left-4 text-gray-400 hover:text-black">
+            <i class="fas fa-arrow-left"></i>
+        </button>
+        <button onclick="closeCancelModals()" class="absolute top-4 right-4 text-gray-400 hover:text-black">
+            <i class="fas fa-times"></i>
+        </button>
+        
+        <h3 class="text-xl font-bold mb-4">Other Reason</h3>
+        <p class="text-gray-500 text-sm mb-4">Please specify the reason for cancellation.</p>
+        
+        <form id="otherReasonForm">
+            <textarea id="customReason" class="w-full border border-gray-300 rounded-lg p-3 text-sm focus:outline-none focus:ring-2 focus:ring-black mb-4" rows="4" placeholder="Type your reason here..." required></textarea>
+            <button type="submit" class="w-full bg-black text-white py-3 rounded-lg font-bold hover:bg-gray-800">Submit Request</button>
+        </form>
+    </div>
+</div>
+
+<div id="cancelConfirmModal" class="fixed inset-0 bg-black/50 hidden items-center justify-center z-50">
+    <div class="bg-white rounded-2xl p-6 w-full max-w-md mx-4 relative animate-[fadeIn_0.2s_ease-out]">
+        <button onclick="openCancelModal(currentCancelOrderNum)" class="absolute top-4 left-4 text-gray-400 hover:text-black">
+            <i class="fas fa-arrow-left"></i>
+        </button>
+        <button onclick="closeCancelModals()" class="absolute top-4 right-4 text-gray-400 hover:text-black">
+            <i class="fas fa-times"></i>
+        </button>
+        
+        <h3 class="text-xl font-bold mb-4">Confirm Cancellation</h3>
+        <p class="text-gray-600 mb-2">Are you sure you want to cancel this order?</p>
+        <p class="text-gray-800 font-medium bg-gray-50 p-3 rounded mb-6">Reason: <span id="confirmReasonText"></span></p>
+        
+        <div class="grid grid-cols-2 gap-4">
+            <button onclick="closeCancelModals()" class="w-full border border-gray-300 py-3 rounded-lg font-bold hover:bg-gray-50">No, Keep Order</button>
+            <button onclick="submitCancellation()" class="w-full bg-black text-white py-3 rounded-lg font-bold hover:bg-gray-800">Yes, Cancel</button>
+        </div>
+    </div>
+</div>
+
+<script>
+    const cancelReasons = [
+        "Duplicate Order",
+        "Ordered by Mistake",
+        "Found Better Price",
+        "Items Not Arriving on Time",
+        "Shipping Cost Too High",
+        "Change of Mind",
+        "Forgot to Use Coupon",
+        "Wrong Shipping Address",
+        "Product Description Was Unclear",
+        "Need to Change Payment Method",
+        "Decided to Buy Different Product",
+        "Wait Time Is Too Long",
+        "Unexpected Financial Issue",
+        "Preferred Brand Not Available",
+        "Item Out of Stock Elsewhere",
+        "Discovered Hidden Fees",
+        "Order Process Was Too Complex",
+        "Selected Wrong Variant/Color",
+        "Other"
+    ];
+
+    const refundReasons = [
+        "Product Damaged on Arrival",
+        "Wrong Item Sent",
+        "Item Defective / Not Working",
+        "Arrived Later Than Promised",
+        "Better Price Found Elsewhere",
+        "Quality Did Not Meet Expectations",
+        "Missing Parts or Accessories",
+        "Received Extra Item by Mistake",
+        "Product Different From Images",
+        "Size/Fit Issues",
+        "Changed Mind After Delivery",
+        "Parcel Refused Due to Damage",
+        "Incomplete Set Received",
+        "Compatibility Issues",
+        "Instruction Manual Missing",
+        "Item Performance Inconsistent",
+        "Allergic Reaction/Sensitivity",
+        "Gift No Longer Needed",
+        "Other"
+    ];
+    
+    let currentCancelOrderNum = null;
+    let currentType = 'cancel'; 
+    let selectedReason = null;
+    let selectedComments = '';
+    
+    function openCancelModal(orderNum, type = 'cancel') {
+        currentCancelOrderNum = orderNum;
+        currentType = type;
+        closeCancelModals();
+        
+        const modalTitle = document.querySelector('#cancelReasonModal h3');
+        const modalDesc = document.querySelector('#cancelReasonModal p');
+        
+        if (type === 'refund') {
+            modalTitle.textContent = "Why do you want to return/refund?";
+            modalDesc.textContent = "Please select a reason for your return request.";
+        } else {
+            modalTitle.textContent = "Why do you want to cancel?";
+            modalDesc.textContent = "Please select a reason for cancellation.";
+        }
+        
+        const reasons = type === 'refund' ? refundReasons : cancelReasons;
+        const list = document.getElementById('reasonList');
+        list.innerHTML = reasons.map(r => `
+            <button onclick="selectReason('${r}')" class="w-full text-left px-4 py-3 rounded-lg border border-gray-200 hover:border-black hover:bg-gray-50 transition flex justify-between items-center group">
+                <span class="font-medium text-gray-700 group-hover:text-black">${r}</span>
+                <i class="fas fa-chevron-right text-gray-300 group-hover:text-black"></i>
+            </button>
+        `).join('');
+        
+        document.getElementById('cancelReasonModal').classList.replace('hidden', 'flex');
+    }
+    
+    function selectReason(reason) {
+        selectedReason = reason;
+        document.getElementById('cancelReasonModal').classList.replace('flex', 'hidden');
+        
+        if (reason === 'Other') {
+            document.getElementById('cancelOtherModal').classList.replace('hidden', 'flex');
+        } else {
+            showConfirmation(reason);
+        }
+    }
+
+    function showConfirmation(displayReason) {
+        const confirmTitle = document.querySelector('#cancelConfirmModal h3');
+        const confirmDesc = document.querySelector('#cancelConfirmModal p');
+        const confirmBtn = document.querySelector('#cancelConfirmModal button.bg-black');
+        
+        if (currentType === 'refund') {
+            confirmTitle.textContent = "Confirm Return Request";
+            confirmDesc.textContent = "Are you sure you want to request a return/refund for this order?";
+            confirmBtn.textContent = "Submit Request";
+        } else {
+            confirmTitle.textContent = "Confirm Cancellation";
+            confirmDesc.textContent = "Are you sure you want to cancel this order?";
+            confirmBtn.textContent = "Yes, Cancel";
+        }
+
+        document.getElementById('confirmReasonText').textContent = displayReason;
+        document.getElementById('cancelConfirmModal').classList.replace('hidden', 'flex');
+    }
+    
+    function closeCancelModals() {
+        document.getElementById('cancelReasonModal').classList.replace('flex', 'hidden');
+        document.getElementById('cancelOtherModal').classList.replace('flex', 'hidden');
+        document.getElementById('cancelConfirmModal').classList.replace('flex', 'hidden');
+    }
+    
+    document.getElementById('otherReasonForm').addEventListener('submit', (e) => {
+        e.preventDefault();
+        selectedComments = document.getElementById('customReason').value;
+        document.getElementById('cancelOtherModal').classList.replace('flex', 'hidden');
+        showConfirmation('Other: ' + selectedComments);
+    });
+    
+    async function submitCancellation() {
+        if (!currentCancelOrderNum || !selectedReason) return;
+        
+        const confirmBtn = document.querySelector('#cancelConfirmModal button.bg-black');
+        const originalText = confirmBtn.innerHTML;
+        confirmBtn.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>Processing...';
+        confirmBtn.disabled = true;
+        
+        try {
+            const res = await fetch('<?php echo $baseUrl; ?>/api/cancel_order.php', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    order_number: currentCancelOrderNum,
+                    reason: selectedReason,
+                    comments: selectedComments,
+                    type: currentType
+                })
+            });
+            
+            const data = await res.json();
+            
+            if (data.success) {
+                window.location.reload();
+            } else {
+                alert(data.message || 'Failed to process request.');
+                confirmBtn.innerHTML = originalText;
+                confirmBtn.disabled = false;
+            }
+        } catch (e) {
+            console.error(e);
+            alert('An error occurred. Please try again.');
+            confirmBtn.innerHTML = originalText;
+            confirmBtn.disabled = false;
+        }
+    }
 </script>
 
 <?php require_once __DIR__ . '/includes/footer.php'; ?>

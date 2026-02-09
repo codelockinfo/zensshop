@@ -603,13 +603,16 @@ if (columnExists($db, 'landing_pages', 'product_id')) {
 }
 
 // ==========================================
-// STEP 15: Increase Column Sizes for Large Payloads
+// STEP 15: Increase Column Sizes & Expand ENUMs
 // ==========================================
-echo "STEP 15: Increasing Column Sizes for Large Payloads\n";
+echo "STEP 15: Increasing Column Sizes & Expanding ENUMs\n";
 echo "--------------------------------------------------\n";
 
 executeSql($db, "ALTER TABLE products MODIFY COLUMN images MEDIUMTEXT", "Upgrade products.images to MEDIUMTEXT", $errors, $success, $EXECUTE);
 executeSql($db, "ALTER TABLE product_variants MODIFY COLUMN variant_attributes MEDIUMTEXT", "Upgrade product_variants.variant_attributes to MEDIUMTEXT", $errors, $success, $EXECUTE);
+
+// Expand Order Status ENUM to include refund related statuses
+executeSql($db, "ALTER TABLE orders MODIFY COLUMN order_status ENUM('pending','processing','shipped','delivered','cancelled','returned','return_requested') DEFAULT 'pending'", "Expand orders.order_status ENUM", $errors, $success, $EXECUTE);
 
 
 // ==========================================
@@ -1299,6 +1302,78 @@ if ($EXECUTE) {
     } catch (Exception $e) {
         $errors[] = "Error checking seller_state: " . $e->getMessage();
     }
+}
+
+
+
+// ==========================================
+// STEP 35: Order Cancellation Table
+// ==========================================
+echo "STEP 35: Creating/Updating ordercancel table\n";
+echo "---------------------------------\n";
+
+$sql_ordercancel = "CREATE TABLE IF NOT EXISTS ordercancel (
+    id BIGINT NOT NULL AUTO_INCREMENT PRIMARY KEY,
+    order_id BIGINT NOT NULL,
+    order_number VARCHAR(50) NOT NULL,
+    customer_id BIGINT NOT NULL,
+    store_id VARCHAR(50) DEFAULT NULL,
+    
+    -- Cancellation Details
+    cancel_reason VARCHAR(255) NOT NULL,
+    cancel_comment TEXT DEFAULT NULL,
+    cancel_status VARCHAR(50) DEFAULT 'pending', -- requested, approved, rejected, pending
+    
+    -- Snapshot of Order Details
+    customer_name VARCHAR(100),
+    customer_email VARCHAR(100),
+    customer_phone VARCHAR(20),
+    shipping_address JSON DEFAULT NULL,
+    
+    -- Payment & Shipping Snapshot
+    payment_method VARCHAR(50),
+    payment_status VARCHAR(50),
+    total_amount DECIMAL(10,2),
+    tracking_number VARCHAR(100) DEFAULT NULL,
+    
+    -- Items Snapshot
+    items_snapshot JSON DEFAULT NULL,
+    
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    
+    INDEX idx_order_cancel_customer (customer_id),
+    INDEX idx_order_cancel_store (store_id),
+    INDEX idx_order_cancel_number (order_number)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci";
+
+executeSql($db, $sql_ordercancel, "Create ordercancel table", $errors, $success, $EXECUTE);
+
+// Rename user_id to customer_id if it still exists
+if (columnExists($db, 'ordercancel', 'user_id')) {
+    executeSql($db, "ALTER TABLE ordercancel CHANGE COLUMN user_id customer_id BIGINT NOT NULL", "Rename user_id to customer_id in ordercancel", $errors, $success, $EXECUTE);
+    executeSql($db, "ALTER TABLE ordercancel DROP INDEX idx_order_cancel_user", "Drop old index", $errors, $success, $EXECUTE);
+    executeSql($db, "CREATE INDEX idx_cancel_customer ON ordercancel (customer_id)", "Index customer_id on ordercancel", $errors, $success, $EXECUTE);
+}
+
+// Update default status to pending
+executeSql($db, "ALTER TABLE ordercancel MODIFY COLUMN cancel_status VARCHAR(50) DEFAULT 'pending'", "Update cancel_status default to pending", $errors, $success, $EXECUTE);
+
+if (!columnExists($db, 'ordercancel', 'type')) {
+    executeSql($db, "ALTER TABLE ordercancel ADD COLUMN type VARCHAR(20) NOT NULL DEFAULT 'cancel' AFTER id", "Add 'type' to ordercancel", $errors, $success, $EXECUTE);
+}
+
+if (!columnExists($db, 'ordercancel', 'previous_status')) {
+    executeSql($db, "ALTER TABLE ordercancel ADD COLUMN previous_status VARCHAR(50) DEFAULT NULL AFTER type", "Add 'previous_status' to ordercancel", $errors, $success, $EXECUTE);
+}
+
+try {
+    executeSql($db, "CREATE INDEX idx_cancel_type ON ordercancel (type)", "Index 'type' on ordercancel", $errors, $success, $EXECUTE);
+} catch (Exception $e) {}
+
+
+if (!columnExists($db, 'ordercancel', 'refund_amount')) {
+    executeSql($db, "ALTER TABLE ordercancel ADD COLUMN refund_amount DECIMAL(10,2) DEFAULT NULL AFTER total_amount", "Add 'refund_amount' to ordercancel", $errors, $success, $EXECUTE);
 }
 
 

@@ -325,15 +325,7 @@ if (!function_exists('url')) {
     
     <!-- Tailwind CSS - Deferred for PageSpeed (Render Blocking Fix) -->
     <style>
-        /* Critical CSS for FOUC Prevention */
-        html { visibility: visible; opacity: 1; } /* Ensure root is visible */
-        body { 
-            visibility: hidden; 
-            opacity: 0; 
-            transition: opacity 0.2s ease-in-out; 
-        }
-        
-        /* Keep utility classes for non-Tailwind fallback */
+        /* Essential Utility Classes */
         .translate-x-full { transform: translateX(100%); }
         .-translate-x-full { transform: translateX(-100%); }
         .-translate-y-full { transform: translateY(-100%); }
@@ -344,20 +336,11 @@ if (!function_exists('url')) {
     <script src="https://cdn.tailwindcss.com?plugins=typography" fetchpriority="high"></script>
     
     <script>
-        // Reveal body as soon as DOM is ready to prevent "white screen" hang
-        function revealPage() {
+        // Ensure body is visible
+        document.addEventListener('DOMContentLoaded', () => {
             document.body.style.visibility = 'visible';
             document.body.style.opacity = '1';
-        }
-        
-        if (document.readyState === 'loading') {
-            document.addEventListener('DOMContentLoaded', revealPage);
-        } else {
-            revealPage();
-        }
-        
-        // Safety fallback
-        setTimeout(revealPage, 2000);
+        });
     </script>
     
     <!-- Custom CSS -->

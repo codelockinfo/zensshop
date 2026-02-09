@@ -46,6 +46,10 @@ if (!$orderData) {
 $billingAddress = !empty($orderData['billing_address']) ? json_decode($orderData['billing_address'], true) : null;
 $shippingAddress = !empty($orderData['shipping_address']) ? json_decode($orderData['shipping_address'], true) : null;
 
+// Fetch cancellation/refund request
+$db = Database::getInstance();
+$request = $db->fetchOne("SELECT * FROM ordercancel WHERE order_id = ? AND store_id = ? ORDER BY created_at DESC LIMIT 1", [$orderData['id'], $storeId]);
+
 $pageTitle = 'Order Details - ' . $orderData['order_number'];
 require_once __DIR__ . '/../../includes/admin-header.php';
 ?>
@@ -260,11 +264,12 @@ require_once __DIR__ . '/../../includes/admin-header.php';
             </div>
         </div>
         <?php endif; ?>
+
     </div>
 
     <!-- Right Column - Order Summary -->
-    <div class="lg:col-span-1">
-        <div class="admin-card sticky top-8">
+    <div class="lg:col-span-1 space-y-6">
+        <div class="admin-card">
             <h2 class="text-xl font-semibold mb-4">Order Summary</h2>
             
             <!-- Price Breakdown -->
@@ -374,8 +379,99 @@ require_once __DIR__ . '/../../includes/admin-header.php';
                 <?php endif; ?>
             </div>
         </div>
+<?php if ($request): ?>
+        <div class="admin-card border-2 border-red-500">
+            <div class="flex items-center justify-between mb-6">
+                <div class="flex items-center gap-3">
+                    <div class="w-12 h-12 bg-red-100 text-red-600 rounded-full flex items-center justify-center text-xl">
+                        <i class="fas <?php echo $request['type'] === 'refund' ? 'fa-undo' : 'fa-times-circle'; ?>"></i>
+                    </div>
+                    <div>
+                        <h2 class="text-xl font-bold text-gray-900"><?php echo $request['type'] === 'refund' ? 'Refund Requested' : 'Cancellation Requested'; ?></h2>
+                        <p class="text-sm text-gray-500">Submitted on <?php echo date('F j, Y, g:i a', strtotime($request['created_at'])); ?></p>
+                    </div>
+                </div>
+                <span class="px-4 py-1.5 rounded-full text-xs font-bold uppercase tracking-wider <?php 
+                    echo $request['cancel_status'] === 'approved' ? 'bg-green-100 text-green-700' : 
+                        ($request['cancel_status'] === 'rejected' ? 'bg-gray-100 text-gray-600' : 'bg-red-100 text-red-700'); 
+                ?>">
+                    <?php echo htmlspecialchars($request['cancel_status'] ?? 'pending'); ?>
+                </span>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-8 mb-8">
+                <div>
+                    <p class="text-xs font-bold text-gray-400 uppercase tracking-widest mb-2">Reason for <?php echo ucfirst($request['type']); ?></p>
+                    <p class="text-lg font-semibold text-gray-900"><?php echo htmlspecialchars($request['cancel_reason']); ?></p>
+                </div>
+                
+                <?php if (!empty($request['cancel_comment'])): ?>
+                <div>
+                    <p class="text-xs font-bold text-gray-400 uppercase tracking-widest mb-2">Customer Comments</p>
+                    <div class="text-gray-700 bg-gray-50 p-4 rounded-xl border-l-4 border-red-500 italic">
+                        "<?php echo nl2br(htmlspecialchars($request['cancel_comment'])); ?>"
+                    </div>
+                </div>
+                <?php endif; ?>
+            </div>
+
+            <?php if ($request['cancel_status'] === 'pending' || $request['cancel_status'] === 'requested'): ?>
+            <div class="pt-6 border-t border-gray-100 flex items-center gap-4">
+                <?php if ($request['type'] === 'refund'): ?>
+                    <button onclick="handleRequestAction(event, '<?php echo $request['id']; ?>', 'approved', 'refund')" class="bg-black text-white px-8 py-3 rounded-xl font-bold hover:bg-gray-800 transition flex items-center gap-2 shadow-lg">
+                        <i class="fas fa-check-circle"></i> Approve and Process Refund
+                    </button>
+                <?php else: ?>
+                    <button onclick="handleRequestAction(event, '<?php echo $request['id']; ?>', 'approved', 'cancel')" class="bg-red-600 text-white px-8 py-3 rounded-xl font-bold hover:bg-red-700 transition flex items-center gap-2 shadow-lg">
+                        <i class="fas fa-check-circle"></i> Approve Cancellation
+                    </button>
+                <?php endif; ?>
+                
+                <button onclick="handleRequestAction(event, '<?php echo $request['id']; ?>', 'rejected')" class="bg-white border-2 border-gray-200 text-gray-600 px-8 py-3 rounded-xl font-bold hover:bg-gray-50 transition">
+                    Reject Request
+                </button>
+            </div>
+            <?php endif; ?>
+        </div>
+        <?php endif; ?>
     </div>
 </div>
+</div>
+
+<script>
+async function handleRequestAction(event, requestId, status, type = '') {
+    const actionText = status === 'approved' ? 'Approve' : 'Reject';
+    // if (!confirm(`Are you sure you want to ${actionText} this request?`)) return;
+    
+    const btn = event.currentTarget;
+    const btns = btn.parentElement.querySelectorAll('button');
+    btns.forEach(b => b.disabled = true);
+    const originalContent = btn.innerHTML;
+    btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Processing...';
+
+    try {
+        const res = await fetch('<?php echo $baseUrl; ?>/admin/api/handle_request.php', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ requestId, status, type })
+        });
+        
+        const data = await res.json();
+        if (data.success) {
+            location.reload();
+        } else {
+            alert(data.message || 'Error updating request');
+            btns.forEach(b => b.disabled = false);
+            btn.innerHTML = originalContent;
+        }
+    } catch (e) {
+        console.error(e);
+        alert('Failed to connect to server');
+        btns.forEach(b => b.disabled = false);
+        btn.innerHTML = originalContent;
+    }
+}
+</script>
 
 <?php 
 require_once __DIR__ . '/../../includes/admin-footer.php';

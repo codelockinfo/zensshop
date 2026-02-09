@@ -118,4 +118,22 @@ class Notification {
             "/admin/customers/view.php?id=$customerId"
         );
     }
+
+    public function notifyCancellationRequest($orderNumber, $customerName) {
+        return $this->create(
+            'order',
+            'Cancellation Request',
+            "Cancellation request for order #$orderNumber from $customerName",
+            "/admin/orders/detail.php?order_number=" . urlencode($orderNumber)
+        );
+    }
+
+    public function notifyRefundRequest($orderNumber, $customerName) {
+        return $this->create(
+            'order',
+            'Refund Request',
+            "Refund request for order #$orderNumber from $customerName",
+            "/admin/orders/detail.php?order_number=" . urlencode($orderNumber)
+        );
+    }
 }
