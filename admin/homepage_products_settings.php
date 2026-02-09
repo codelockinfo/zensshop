@@ -157,7 +157,7 @@ require_once __DIR__ . '/../includes/admin-header.php';
             </p>
         </div>
         <div class="flex items-center gap-3">
-             <button type="button" onclick="window.location.href='<?php echo url('admin/products'); ?>'" class="px-5 py-2.5 border border-gray-300 rounded-lg hover:bg-gray-50 bg-white text-gray-700 font-medium transition-colors">
+             <button type="button" onclick="window.location.href='<?php echo url('admin/products'); ?>'" class="px-5 py-2.5 border border-gray-300 rounded-lg hover:bg-gray-50 bg-white text-gray-700 font-medium transition-colors">Cancle</button>
             <button type="submit" form="settingsForm" class="bg-blue-600 text-white px-6 py-2.5 rounded-lg font-bold hover:bg-blue-700 transition shadow-sm flex items-center gap-2 btn-loading">
                 <i class="fas fa-save"></i> Save Changes
             </button>
