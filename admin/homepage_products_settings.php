@@ -102,7 +102,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     } else {
         $_SESSION['flash_success'] = $successMsg;
     }
-    header("Location: " . $baseUrl . '/admin/dashboard');
+    header("Location: " . $baseUrl . '/admin/products');
     exit;
 }
 
@@ -152,14 +152,12 @@ require_once __DIR__ . '/../includes/admin-header.php';
             <h1 class="text-2xl font-bold text-gray-800 pt-4 pl-2">Product Sections</h1>
             <p class="text-sm text-gray-500 mt-1 pl-2">
                 <a href="<?php echo url('admin/dashboard.php'); ?>" class="hover:text-blue-600">Dashboard</a> > 
-                <a href="<?php echo url('admin/homepage_products_settings.php'); ?>" class="hover:text-blue-600">Settings</a> > 
+                <a href="<?php echo url('admin/products'); ?>" class="hover:text-blue-600">Products</a> > 
                 Homepage Products
             </p>
         </div>
         <div class="flex items-center gap-3">
-            <button type="button" onclick="window.location.href='<?php echo url('admin/dashboard.php'); ?>'" class="px-5 py-2.5 border border-gray-300 rounded-lg hover:bg-gray-50 bg-white text-gray-700 font-medium transition-colors">
-                Cancel
-            </button>
+             <button type="button" onclick="window.location.href='<?php echo url('admin/products'); ?>'" class="px-5 py-2.5 border border-gray-300 rounded-lg hover:bg-gray-50 bg-white text-gray-700 font-medium transition-colors">
             <button type="submit" form="settingsForm" class="bg-blue-600 text-white px-6 py-2.5 rounded-lg font-bold hover:bg-blue-700 transition shadow-sm flex items-center gap-2 btn-loading">
                 <i class="fas fa-save"></i> Save Changes
             </button>
@@ -524,7 +522,7 @@ document.getElementById('settingsForm').addEventListener('submit', function(e) {
     
     // Note: Global 'btn-loading' listener in admin-footer.php handles showing the loader.
     
-    fetch(`${BASE_URL}/admin/homepage_products_settings.php?ajax=1`, {
+     fetch(`${BASE_URL}/admin/products?ajax=1`, {
         method: 'POST',
         body: formData,
         headers: { 'X-Requested-With': 'XMLHttpRequest' }
