@@ -470,6 +470,24 @@ class Cart {
         
         return $count;
     }
+
+    /**
+     * Get total tax amount
+     */
+    public function getTaxTotal() {
+        $cartItems = $this->getCart();
+        $taxTotal = 0;
+        
+        foreach ($cartItems as $item) {
+            if (!empty($item['is_taxable']) && !empty($item['gst_percent'])) {
+                $itemTotal = $item['price'] * $item['quantity'];
+                $taxAmount = ($itemTotal * $item['gst_percent']) / 100;
+                $taxTotal += $taxAmount;
+            }
+        }
+        
+        return $taxTotal;
+    }
     
     /**
      * Save cart to cookie

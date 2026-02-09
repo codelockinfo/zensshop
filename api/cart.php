@@ -27,10 +27,15 @@ try {
             $items = $cart->getCart();
             // Include cookie_data in GET response too for consistency
             $cookieValue = json_encode($items);
+            $subTotal = $cart->getTotal();
+            $taxTotal = $cart->getTaxTotal();
+            
             echo json_encode([
                 'success' => true,
                 'cart' => $items,
-                'total' => $cart->getTotal(),
+                'total' => $subTotal,
+                'tax_total' => $taxTotal,
+                'grand_total' => $subTotal + $taxTotal,
                 'count' => $cart->getCount(),
                 'cookie_data' => $cookieValue
             ]);
@@ -63,11 +68,14 @@ try {
             $productName = !empty($items) && isset($items[count($items) - 1]['name']) ? $items[count($items) - 1]['name'] : 'Product';
             $cartTotal = $cart->getTotal();
             $cartCount = $cart->getCount();
+            $taxTotal = $cart->getTaxTotal();
             
             $response = [
                 'success' => true,
                 'cart' => $items,
                 'total' => $cartTotal,
+                'tax_total' => $taxTotal,
+                'grand_total' => $cartTotal + $taxTotal,
                 'count' => $cartCount,
                 'message' => 'Product added to cart',
                 'cookie_data' => $cookieValue,
@@ -101,10 +109,15 @@ try {
             // Include cookie_data for JavaScript to set cookie
             $cookieValue = json_encode($items);
             
+            $subTotal = $cart->getTotal();
+            $taxTotal = $cart->getTaxTotal();
+
             echo json_encode([
                 'success' => true,
                 'cart' => $items,
-                'total' => $cart->getTotal(),
+                'total' => $subTotal,
+                'tax_total' => $taxTotal,
+                'grand_total' => $subTotal + $taxTotal,
                 'count' => $cart->getCount(),
                 'message' => 'Cart updated',
                 'cookie_data' => $cookieValue
@@ -124,10 +137,15 @@ try {
             // Include cookie_data for JavaScript to set cookie
             $cookieValue = json_encode($items);
             
+            $subTotal = $cart->getTotal();
+            $taxTotal = $cart->getTaxTotal();
+
             echo json_encode([
                 'success' => true,
                 'cart' => $items,
-                'total' => $cart->getTotal(),
+                'total' => $subTotal,
+                'tax_total' => $taxTotal,
+                'grand_total' => $subTotal + $taxTotal,
                 'count' => $cart->getCount(),
                 'message' => 'Product removed from cart',
                 'cookie_data' => $cookieValue
