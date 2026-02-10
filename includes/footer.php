@@ -54,9 +54,6 @@ function renderFooterLinkRecursive($item, $baseUrl) {
     echo "</li>";
 }
 ?>
-    <!-- Footer Features Section -->
-    <?php require_once __DIR__ . '/../sections/footer_features.php'; ?>
-
     <!-- Footer -->
     <footer class="bg-white text-black relative">
         <div class="container footer-block mx-auto px-4 pt-20">
