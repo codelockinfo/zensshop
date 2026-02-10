@@ -1376,6 +1376,27 @@ if (!columnExists($db, 'ordercancel', 'refund_amount')) {
     executeSql($db, "ALTER TABLE ordercancel ADD COLUMN refund_amount DECIMAL(10,2) DEFAULT NULL AFTER total_amount", "Add 'refund_amount' to ordercancel", $errors, $success, $EXECUTE);
 }
 
+// ==========================================
+// STEP 36: Google Auth Columns (Customers)
+// ==========================================
+echo "STEP 36: Adding Google Auth columns to customers table\n";
+echo "---------------------------------\n";
+
+if (!columnExists($db, 'customers', 'google_id')) {
+    executeSql($db, "ALTER TABLE customers ADD COLUMN google_id VARCHAR(100) DEFAULT NULL AFTER password", "Add google_id to customers", $errors, $success, $EXECUTE);
+    try {
+        executeSql($db, "ALTER TABLE customers ADD INDEX idx_google_id (google_id)", "Add index idx_google_id to customers", $errors, $success, $EXECUTE);
+    } catch (Exception $e) {}
+}
+
+if (!columnExists($db, 'customers', 'avatar')) {
+    executeSql($db, "ALTER TABLE customers ADD COLUMN avatar VARCHAR(255) DEFAULT NULL AFTER google_id", "Add avatar to customers", $errors, $success, $EXECUTE);
+}
+
+if (!columnExists($db, 'customers', 'auth_provider')) {
+    executeSql($db, "ALTER TABLE customers ADD COLUMN auth_provider VARCHAR(20) DEFAULT 'local' AFTER avatar", "Add auth_provider to customers", $errors, $success, $EXECUTE);
+}
+
 
 echo "\n========================================\n";
 echo "SUMMARY\n";

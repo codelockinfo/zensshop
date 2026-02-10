@@ -64,6 +64,37 @@ require_once __DIR__ . '/includes/header.php';
                     </div>
                 <?php endif; ?>
 
+                <!-- Google Login Library -->
+                <script src="https://accounts.google.com/gsi/client" async defer></script>
+                
+                <!-- Google Login Configuration -->
+                <div id="g_id_onload"
+                     data-client_id="<?php echo GOOGLE_CLIENT_ID; ?>"
+                     data-context="signin"
+                     data-ux_mode="popup"
+                     data-login_uri="<?php echo SITE_URL; ?>/google-login-handler.php"
+                     data-auto_prompt="false">
+                </div>
+
+                <!-- Custom styled wrapper for Google Button -->
+                <div class="mb-6 flex justify-center">
+                    <div class="g_id_signin"
+                         data-type="standard"
+                         data-shape="rectangular"
+                         data-theme="outline"
+                         data-text="signup_with"
+                         data-size="large"
+                         data-logo_alignment="left"
+                         data-width="280">
+                    </div>
+                </div>
+
+                <div class="relative flex items-center gap-4 mb-6">
+                    <div class="flex-1 h-px bg-gray-200"></div>
+                    <span class="text-gray-400 text-xs font-bold uppercase tracking-widest">Or with email</span>
+                    <div class="flex-1 h-px bg-gray-200"></div>
+                </div>
+
                 <form method="POST" class="space-y-6" id="registerForm">
                     <div>
                         <label class="block text-sm font-medium text-gray-700 mb-1">Full Name</label>

@@ -17,10 +17,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['credential'])) {
             $googleId = $payload['sub'];
             $email = $payload['email'];
             $name = $payload['name'] ?? 'Google User';
+            $avatar = $payload['picture'] ?? null;
             
             $auth = new CustomerAuth();
             try {
-                $customer = $auth->loginWithGoogle($googleId, $email, $name);
+                $customer = $auth->loginWithGoogle($googleId, $email, $name, $avatar);
                 
                 // Sync cart after login
                 require_once __DIR__ . '/classes/Cart.php';

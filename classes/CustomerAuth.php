@@ -72,7 +72,7 @@ class CustomerAuth {
         return $customer;
     }
     
-    public function loginWithGoogle($googleId, $email, $name) {
+    public function loginWithGoogle($googleId, $email, $name, $avatar = null) {
         $storeId = function_exists('getCurrentStoreId') ? getCurrentStoreId() : ($_SESSION['store_id'] ?? null);
         
         $customer = $this->db->fetchOne(
@@ -81,8 +81,25 @@ class CustomerAuth {
         );
         
         if ($customer) {
+            // Update Google ID and Avatar if missing
+            $updates = [];
+            $params = [];
+            
             if (!$customer['google_id']) {
-                $this->db->execute("UPDATE customers SET google_id = ? WHERE id = ?", [$googleId, $customer['id']]);
+                $updates[] = "google_id = ?";
+                $params[] = $googleId;
+            }
+            
+            if (!$customer['avatar'] && $avatar) {
+                $updates[] = "avatar = ?";
+                $params[] = $avatar;
+            }
+            
+            if (!empty($updates)) {
+                $params[] = $customer['id'];
+                $this->db->execute("UPDATE customers SET " . implode(', ', $updates) . " WHERE id = ?", $params);
+                // Refresh customer data
+                $customer = $this->db->fetchOne("SELECT * FROM customers WHERE id = ?", [$customer['id']]);
             }
         } else {
             // Generate unique 10-digit customer ID
@@ -95,16 +112,16 @@ class CustomerAuth {
                 $storeId = $_SESSION['store_id'] ?? null;
             }
 
-            $id = $this->db->insert(
-                "INSERT INTO customers (customer_id, name, email, google_id, store_id) VALUES (?, ?, ?, ?, ?)",
-                [$customCustomerId, $name, $email, $googleId, $storeId]
+            $this->db->insert(
+                "INSERT INTO customers (customer_id, name, email, google_id, avatar, store_id, auth_provider) VALUES (?, ?, ?, ?, ?, ?, 'google')",
+                [$customCustomerId, $name, $email, $googleId, $avatar, $storeId]
             );
             $customer = $this->db->fetchOne("SELECT * FROM customers WHERE customer_id = ?", [$customCustomerId]);
             
             // Create notification for admin (new Google customer)
             require_once __DIR__ . '/Notification.php';
             $notification = new Notification();
-            $notification->notifyNewCustomer($name, $id);
+            $notification->notifyNewCustomer($name, $customCustomerId);
             
             // Send Welcome Email
             try {
@@ -125,6 +142,7 @@ class CustomerAuth {
         $_SESSION['customer_id'] = $customer['customer_id'];
         $_SESSION['customer_name'] = $customer['name'];
         $_SESSION['customer_email'] = $customer['email'];
+        $_SESSION['customer_avatar'] = $customer['avatar'] ?? null;
         $_SESSION['store_id'] = $customer['store_id'] ?? null;
         $_SESSION['customer_logged_in'] = true;
 
