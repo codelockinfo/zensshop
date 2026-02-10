@@ -1032,7 +1032,7 @@ if (!empty($productCategories)) {
         
         <!-- Recently Viewed -->
         <?php if (!empty($recentlyViewed)): ?>
-        <div class="mb-16">
+        <div class="mb-16 mt-[60px]">
             <div class="text-center mb-8">
                 <h2 class="text-2xl font-heading font-bold mb-2">Recently Viewed</h2>
                 <p class="text-gray-600 text-sm md:text-base max-w-2xl mx-auto">Explore your recently viewed items, blending quality and style for a refined living experience.</p>

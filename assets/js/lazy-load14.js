@@ -240,7 +240,7 @@ function setupCustomSlider(sliderElement, prevBtnId, nextBtnId) {
         const item = sliderElement.children[0];
         const itemWidth = item.offsetWidth;
         const gap = parseInt(window.getComputedStyle(sliderElement).gap) || 24;
-        const visibleCount = Math.floor((wrapper.offsetWidth + gap) / (itemWidth + gap)) || 1;
+        const visibleCount = Math.round((wrapper.offsetWidth + gap) / (itemWidth + gap)) || 1;
         const maxIndex = Math.max(0, sliderElement.children.length - visibleCount);
         
         metrics = { itemWidth, gap, maxIndex };
