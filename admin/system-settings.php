@@ -37,7 +37,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     }
     
     // Handle File Uploads
-    $uploadFiles = ['setting_favicon_png', 'setting_favicon_ico', 'setting_all_category_banner'];
+    $uploadFiles = ['setting_favicon_png', 'setting_favicon_ico', 'setting_all_category_banner', 'setting_email_logo'];
     $uploadErrors = [];
     
     foreach ($uploadFiles as $fileKey) {
@@ -77,7 +77,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             }
 
             $ext = pathinfo($_FILES[$fileKey]['name'], PATHINFO_EXTENSION);
-            $prefix = ($fileKey === 'setting_favicon_ico') ? 'favicon' : (($fileKey === 'setting_all_category_banner') ? 'banner_all_cat' : 'favicon_browser');
+            $prefix = ($fileKey === 'setting_favicon_ico') ? 'favicon' : (($fileKey === 'setting_all_category_banner') ? 'banner_all_cat' : (($fileKey === 'setting_email_logo') ? 'email_logo' : 'favicon_browser'));
             $fileName = $prefix . '_' . time() . '.' . $ext;
             
             if ($fileKey === 'setting_favicon_ico') {
@@ -98,7 +98,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 if (move_uploaded_file($_FILES[$fileKey]['tmp_name'], $uploadDir . $fileName)) {
                     // FIX: Store partial path so getImageUrl finds it in assets/images/ not uploads
                     $_POST[$fileKey] = 'assets/images/' . $fileName;
-                    $_POST['group_' . str_replace('setting_', '', $fileKey)] = ($fileKey === 'setting_all_category_banner') ? 'general' : 'seo';
+                    if ($fileKey === 'setting_all_category_banner') {
+                        $_POST['group_' . str_replace('setting_', '', $fileKey)] = 'general';
+                    } elseif ($fileKey === 'setting_email_logo') {
+                        $_POST['group_' . str_replace('setting_', '', $fileKey)] = 'email';
+                    } else {
+                        $_POST['group_' . str_replace('setting_', '', $fileKey)] = 'seo';
+                    }
                 } else {
                     $uploadErrors[] = "Failed to move uploaded file: " . htmlspecialchars($_FILES[$fileKey]['name']);
                 }
@@ -347,6 +353,79 @@ unset($_SESSION['error']);
                         <?php endif; ?>
                     </div>
                 <?php endforeach; ?>
+
+                <!-- Email Logo Upload -->
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Email Template Logo</label>
+                    <?php $emailLogo = $settings->get('email_logo'); ?>
+                    
+                    <div class="flex items-start space-x-4">
+                        <div class="relative group cursor-pointer w-48 h-32 border-2 <?php echo !empty($emailLogo) ? 'border-gray-200' : 'border-dashed border-gray-300'; ?> rounded-2xl overflow-hidden flex items-center justify-center bg-gray-50 hover:bg-gray-100 transition shadow-sm" onclick="document.getElementById('emailLogoInput').click()">
+                            
+                            <input type="file" id="emailLogoInput" name="setting_email_logo" class="hidden" onchange="previewEmailLogo(this, 'previewEmailLogo')">
+                            <input type="hidden" name="group_email_logo" value="email">
+                            
+                            <div id="previewEmailLogo" class="w-full h-full flex items-center justify-center p-4">
+                                <?php if($emailLogo): ?>
+                                    <img src="<?php echo htmlspecialchars(getImageUrl($emailLogo)); ?>" class="max-w-full max-h-full object-contain">
+                                    <div class="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition flex items-center justify-center">
+                                         <i class="fas fa-camera text-white text-xl"></i>
+                                    </div>
+                                    <button type="button" onclick="event.stopPropagation(); if(confirm('Remove email logo?')) removeEmailLogo();" class="absolute top-2 right-2 w-8 h-8 bg-white text-red-500 rounded-lg shadow-md flex items-center justify-center opacity-0 group-hover:opacity-100 transition hover:bg-red-50" title="Remove Logo">
+                                        <i class="fas fa-trash-alt text-sm"></i>
+                                    </button>
+                                <?php else: ?>
+                                    <div class="text-center text-gray-400">
+                                        <i class="fas fa-cloud-upload-alt text-3xl mb-2"></i>
+                                        <p class="text-[10px] leading-tight font-medium uppercase tracking-wide">Click to Upload<br>Email Logo</p>
+                                    </div>
+                                <?php endif; ?>
+                            </div>
+                        </div>
+                        
+                        <div class="pt-2">
+                             <div class="bg-blue-50/50 p-3 rounded-xl border border-blue-100/50">
+                                 <p class="text-[11px] text-blue-700 leading-relaxed italic">
+                                    <i class="fas fa-info-circle mr-1"></i>
+                                    <b>Note:</b> If empty, your <br><b>Site Logo</b> will be used <br>automatically.
+                                 </p>
+                             </div>
+                        </div>
+                    </div>
+                </div>
+
+                <script>
+                function previewEmailLogo(input, containerId) {
+                    if (input.files && input.files[0]) {
+                        var reader = new FileReader();
+                        reader.onload = function(e) {
+                            const container = document.getElementById(containerId);
+                            container.innerHTML = `
+                                <img src="${e.target.result}" class="max-w-full max-h-full object-contain">
+                                <div class="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition flex items-center justify-center">
+                                     <i class="fas fa-camera text-white text-xl"></i>
+                                </div>
+                                <button type="button" onclick="event.stopPropagation(); if(confirm('Remove email logo?')) removeEmailLogo();" class="absolute top-2 right-2 w-8 h-8 bg-white text-red-500 rounded-lg shadow-md flex items-center justify-center opacity-0 group-hover:opacity-100 transition hover:bg-red-50">
+                                    <i class="fas fa-trash-alt text-sm"></i>
+                                </button>
+                            `;
+                            container.parentElement.classList.remove('border-dashed', 'border-gray-300');
+                            container.parentElement.classList.add('border-gray-200');
+                        }
+                        reader.readAsDataURL(input.files[0]);
+                    }
+                }
+                
+                function removeEmailLogo() {
+                    const form = document.getElementById('settingsForm');
+                    const hiddenInput = document.createElement('input');
+                    hiddenInput.type = 'hidden';
+                    hiddenInput.name = 'setting_email_logo';
+                    hiddenInput.value = '';
+                    form.appendChild(hiddenInput);
+                    form.submit();
+                }
+                </script>
             </div>
 
             <div class="mt-6 p-4 bg-blue-50 rounded border border-blue-200">

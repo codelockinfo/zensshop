@@ -25,11 +25,13 @@ class Email {
     private $smtpEncryption;
     private $storeId;
     private $settings;
+    private $embeddedImages = []; // Track images to embed
     
     public function __construct($storeId = null) {
         $this->storeId = $storeId;
         require_once __DIR__ . '/Settings.php';
         $this->settings = new Settings();
+        $this->embeddedImages = []; // Reset for each instance
         
         // Use provided storeId or fallback to current context
         $this->fromEmail = $this->settings->get('smtp_from_email', defined('SMTP_FROM_EMAIL') ? SMTP_FROM_EMAIL : '', $storeId);
@@ -100,6 +102,14 @@ class Email {
             
             // Content
             $mail->isHTML(true);
+            
+            // Add Embedded Images (if any)
+            foreach ($this->embeddedImages as $img) {
+                if (file_exists($img['path'])) {
+                    $mail->addEmbeddedImage($img['path'], $img['cid']);
+                }
+            }
+
             $mail->Subject = $subject;
             $mail->Body = $message;
             if ($altMessage) {
@@ -369,7 +379,19 @@ class Email {
     private function getEmailTemplate($title, $content) {
         $logoType = $this->settings->get('site_logo_type', 'image', $this->storeId);
         $logoText = $this->settings->get('site_logo_text', SITE_NAME, $this->storeId);
-        $logoImage = $this->settings->get('site_logo', 'logo.png', $this->storeId);
+        if (empty($logoText)) $logoText = defined('SITE_NAME') ? SITE_NAME : 'Store';
+
+        // Try to get Email Specific Logo first, fallback to Site Logo
+        $logoImage = $this->settings->get('email_logo', '', $this->storeId);
+        
+        if (empty($logoImage)) {
+            $logoImage = $this->settings->get('site_logo', 'logo.png', $this->storeId);
+        } else {
+            // If an email logo is explicitly uploaded, we treat it as an image type
+            $logoType = 'image';
+        }
+
+        error_log("Email Template - Store: " . ($this->storeId ?: 'DEFAULT') . " | Type: $logoType | Logo: $logoImage");
         
         // Determine Logo HTML
         $logoHtml = '';
@@ -377,32 +399,47 @@ class Email {
         if ($logoType === 'text') {
             $logoHtml = "<span style='font-size: 28px; font-weight: 800; color: #000000; text-transform: uppercase; letter-spacing: -0.5px; font-family: -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, Helvetica, Arial, sans-serif;'>$logoText</span>";
         } else {
-            // Replicate getImageUrl logic to avoid dependency issues in background tasks
+            // Use Image Embedding (best for local dev and professional emails)
             $logoUrl = '';
             if (empty($logoImage)) {
                 $logoUrl = 'https://placehold.co/200x50?text=' . urlencode($logoText);
             } elseif (strpos($logoImage, 'http://') === 0 || strpos($logoImage, 'https://') === 0 || strpos($logoImage, 'data:') === 0) {
                 $logoUrl = $logoImage;
             } else {
-                $baseUrl = getBaseUrl();
+                $basePath = defined('BASE_PATH') ? BASE_PATH : realpath(__DIR__ . '/../');
                 $cleanPath = ltrim($logoImage, '/');
                 
-                // If path doesn't already contain assets/images/ or assets/images/uploads/
+                // If path doesn't already contain assets/images/
                 if (strpos($cleanPath, 'assets/images/') === false) {
-                     // Check common locations
-                     if (file_exists(__DIR__ . '/../assets/images/' . $cleanPath)) {
+                     if (file_exists($basePath . '/assets/images/' . $cleanPath)) {
                          $cleanPath = 'assets/images/' . $cleanPath;
                      } else {
-                         $cleanPath = 'assets/images/uploads/' . $cleanPath;
+                         // Default to uploads if not found in root images
+                         if (file_exists($basePath . '/assets/images/uploads/' . $cleanPath)) {
+                             $cleanPath = 'assets/images/uploads/' . $cleanPath;
+                         }
                      }
                 }
-                $logoUrl = $baseUrl . '/' . $cleanPath;
+                
+                $fullPath = $basePath . '/' . $cleanPath;
+                if (file_exists($fullPath)) {
+                    $this->embeddedImages['logo'] = [
+                        'path' => $fullPath,
+                        'cid' => 'logo_id'
+                    ];
+                    $logoUrl = 'cid:logo_id';
+                } else {
+                    // Final fallback to URL if file not readable for some reason
+                    $logoUrl = getBaseUrl() . '/' . $cleanPath;
+                }
             }
+            error_log("Email logo URL set to: $logoUrl");
             $logoHtml = "<img src='$logoUrl' alt='$logoText' style='max-height: 60px; width: auto; display: block; margin: 0 auto; outline: none; border: none; text-decoration: none;'>";
         }
 
         $year = date('Y');
         $siteName = $this->settings->get('site_name', SITE_NAME, $this->storeId);
+        if (empty($siteName)) $siteName = defined('SITE_NAME') ? SITE_NAME : 'Store';
         
         return "
 <!DOCTYPE html>

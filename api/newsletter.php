@@ -74,7 +74,7 @@ try {
     // Send confirmation email
     try {
         require_once __DIR__ . '/../classes/Email.php';
-        $emailService = new Email();
+        $emailService = new Email($storeId);
         $emailService->sendSubscriptionConfirmation($email);
     } catch (Throwable $te) {
         error_log("Email failed: " . $te->getMessage());

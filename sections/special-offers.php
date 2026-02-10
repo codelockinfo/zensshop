@@ -22,6 +22,7 @@ $sectionHeading = $offers[0]['heading'] ?? 'Special Offers';
 $sectionSubheading = $offers[0]['subheading'] ?? 'Grab limited-time deals on our best products.';
 ?>
 
+<?php if (!empty($offers)): ?>
 <section class="py-5 md:py-24 bg-white">
     <div class="container mx-auto px-4">
         <!-- Section Header -->
@@ -63,3 +64,4 @@ $sectionSubheading = $offers[0]['subheading'] ?? 'Grab limited-time deals on our
         </div>
     </div>
 </section>
+<?php endif; ?>

@@ -44,6 +44,7 @@ if (empty($products)) {
 }
 ?>
 
+<?php if (!empty($products)): ?>
 <section>
     <div class="container mx-auto px-4">
         <div class="text-center mb-12">
@@ -145,16 +146,10 @@ if (empty($products)) {
                         </div>
                     </div>
                     <?php endforeach; ?>
-                    
-                    <?php if (empty($products)): ?>
-                    <div class="min-w-full text-center py-12">
-                        <p class="text-gray-500">No products available at the moment.</p>
-                    </div>
-                    <?php endif; ?>
                 </div>
             </div>
             
-            <?php if (!empty($products)): ?>
+            <?php if (count($products) > 4): ?>
             <!-- Navigation Arrows -->
             <button class="absolute left-3 top-1/2 -translate-y-1/2 bg-white shadow-lg rounded-full w-12 h-12 flex items-center justify-center text-gray-800 hover:text-primary hover:bg-gray-50 transition z-10 best-selling-prev" aria-label="Previous best selling products" id="bestSellingPrev">
                 <i class="fas fa-chevron-left" aria-hidden="true"></i>
@@ -165,8 +160,8 @@ if (empty($products)) {
             <?php endif; ?>
         </div>
     </div>
-    </div>
 </section>
+<?php endif; ?>
 <!-- <script>
     const bestSellerCartItem = document.getElementById('addToCartByProductIcon');
     bestSellerCartItem.addEventListener('click', function(btn){
