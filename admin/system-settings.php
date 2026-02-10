@@ -13,6 +13,21 @@ $baseUrl = getBaseUrl();
 // Handle form submission
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['action'] === 'update_settings') {
     
+    // WAF BYPASS: Decode Base64 encoded sensitive fields
+    // This prevents ModSecurity/Server Firewalls from blocking requests containing HTML/JSON/SVG/Scripts
+    if (isset($_POST['is_encoded_submission']) && $_POST['is_encoded_submission'] === '1') {
+        $encodedFields = ['global_schema_json', 'header_scripts', 'pickup_message'];
+        foreach ($encodedFields as $field) {
+            if (isset($_POST['setting_' . $field])) {
+                $_POST['setting_' . $field] = base64_decode($_POST['setting_' . $field]);
+            }
+        }
+        
+        if (isset($_POST['payment_svgs']) && is_array($_POST['payment_svgs'])) {
+            $_POST['payment_svgs'] = array_map('base64_decode', $_POST['payment_svgs']);
+        }
+    }
+    
     // Handle File Uploads
     $uploadFiles = ['setting_favicon_png', 'setting_favicon_ico', 'setting_all_category_banner'];
     foreach ($uploadFiles as $fileKey) {
@@ -91,6 +106,8 @@ unset($_SESSION['success']);
 
     <form id="settingsForm" method="POST" enctype="multipart/form-data" class="space-y-6">
         <input type="hidden" name="action" value="update_settings">
+        <!-- Flag to indicate that sensitive fields are Base64 encoded -->
+        <input type="hidden" name="is_encoded_submission" value="0" id="isEncodedSubmission">
 
         <!-- SEO & Branding Settings -->
         <div class="bg-white rounded shadow p-6">
@@ -666,6 +683,31 @@ if (paymentData && paymentData.length > 0) {
     // Add one empty row by default
     addPaymentRow();
 }
+
+// Encode sensitive fields before submission to prevent WAF blocking
+document.getElementById('settingsForm').addEventListener('submit', function(e) {
+    // Set encoded flag
+    document.getElementById('isEncodedSubmission').value = '1';
+
+    const sensitiveFields = [
+        'setting_global_schema_json',
+        'setting_header_scripts', 
+        'setting_pickup_message'
+    ];
+    
+    // Helper to safely encode to Base64 (supporting UTF-8)
+    const toBase64 = (str) => btoa(unescape(encodeURIComponent(str)));
+    
+    sensitiveFields.forEach(name => {
+        const el = document.getElementsByName(name)[0];
+        if (el) el.value = toBase64(el.value);
+    });
+
+    const svgs = document.getElementsByName('payment_svgs[]');
+    svgs.forEach(el => {
+        el.value = toBase64(el.value);
+    });
+});
 </script>
 
 <?php require_once __DIR__ . '/../includes/admin-footer.php'; ?>
