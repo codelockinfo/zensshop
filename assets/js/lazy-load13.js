@@ -257,8 +257,16 @@ function setupCustomSlider(sliderElement, prevBtnId, nextBtnId) {
         sliderElement.style.transition = smooth ? 'transform 0.5s cubic-bezier(0.2, 0.8, 0.2, 1)' : 'none';
         sliderElement.style.transform = `translateX(${targetX}px)`;
         
-        if (prevBtn) prevBtn.style.opacity = currentIndex === 0 ? '0.3' : '1';
-        if (nextBtn) nextBtn.style.opacity = currentIndex >= maxIndex ? '0.3' : '1';
+        if (prevBtn) {
+            prevBtn.style.opacity = currentIndex === 0 ? '0' : '1';
+            prevBtn.style.pointerEvents = currentIndex === 0 ? 'none' : 'auto';
+            prevBtn.style.visibility = currentIndex === 0 ? 'hidden' : 'visible';
+        }
+        if (nextBtn) {
+            nextBtn.style.opacity = currentIndex >= maxIndex ? '0' : '1';
+            nextBtn.style.pointerEvents = currentIndex >= maxIndex ? 'none' : 'auto';
+            nextBtn.style.visibility = currentIndex >= maxIndex ? 'hidden' : 'visible';
+        }
     };
 
     const startDragging = (e) => {

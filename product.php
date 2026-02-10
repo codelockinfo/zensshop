@@ -984,12 +984,13 @@ if (!empty($productCategories)) {
                     </div>
                     <?php endforeach; ?>
                 </div>
-                <!-- Pagination -->
-                <div class="swiper-pagination"></div>
-                <!-- Navigation -->
                 <?php if (count($relatedProducts) > 4): ?>
-                <div class="swiper-button-next !text-black !w-10 !h-10 !bg-white !shadow-md !rounded-full after:!text-sm !right-2 md:!right-4"></div>
-                <div class="swiper-button-prev !text-black !w-10 !h-10 !bg-white !shadow-md !rounded-full after:!text-sm !left-2 md:!left-4"></div>
+                <button class="absolute left-2 top-1/2 -translate-y-1/2 bg-white shadow-lg rounded-full w-10 h-10 flex items-center justify-center text-gray-800 hover:text-primary hover:bg-gray-50 transition z-10 people-bought-prev" aria-label="Previous">
+                    <i class="fas fa-chevron-left" aria-hidden="true"></i>
+                </button>
+                <button class="absolute right-2 top-1/2 -translate-y-1/2 bg-white shadow-lg rounded-full w-10 h-10 flex items-center justify-center text-gray-800 hover:text-primary hover:bg-gray-50 transition z-10 people-bought-next" aria-label="Next">
+                    <i class="fas fa-chevron-right" aria-hidden="true"></i>
+                </button>
                 <?php endif; ?>
             </div>
 
@@ -1005,13 +1006,9 @@ if (!empty($productCategories)) {
                         delay: 5000,
                         disableOnInteraction: false,
                     },
-                    pagination: {
-                        el: '.swiper-pagination',
-                        clickable: true,
-                    },
                     navigation: {
-                        nextEl: '.swiper-button-next',
-                        prevEl: '.swiper-button-prev',
+                        nextEl: '.people-bought-next',
+                        prevEl: '.people-bought-prev',
                     },
                     breakpoints: {
                         640: {
@@ -1145,11 +1142,13 @@ if (!empty($productCategories)) {
                 </div>
                 
                 <?php if (count($recentlyViewed) > 4): ?>
-                    <div class="recently-viewed-next swiper-button-next text-primary !-right-2 md:!right-2"></div>
-                    <div class="recently-viewed-prev swiper-button-prev text-primary !-left-2 md:!left-2"></div>
+                    <button class="absolute left-2 top-1/2 -translate-y-1/2 bg-white shadow-lg rounded-full w-10 h-10 flex items-center justify-center text-gray-800 hover:text-primary hover:bg-gray-50 transition z-10 recently-viewed-prev" aria-label="Previous">
+                        <i class="fas fa-chevron-left" aria-hidden="true"></i>
+                    </button>
+                    <button class="absolute right-2 top-1/2 -translate-y-1/2 bg-white shadow-lg rounded-full w-10 h-10 flex items-center justify-center text-gray-800 hover:text-primary hover:bg-gray-50 transition z-10 recently-viewed-next" aria-label="Next">
+                        <i class="fas fa-chevron-right" aria-hidden="true"></i>
+                    </button>
                 <?php endif; ?>
-                
-                <div class="recently-viewed-pagination swiper-pagination !-bottom-2"></div>
             </div>
             
             <script>
@@ -1163,10 +1162,6 @@ if (!empty($productCategories)) {
                     autoplay: {
                         delay: 6000,
                         disableOnInteraction: false,
-                    },
-                    pagination: {
-                        el: '.recently-viewed-pagination',
-                        clickable: true,
                     },
                     navigation: {
                         nextEl: '.recently-viewed-next',
