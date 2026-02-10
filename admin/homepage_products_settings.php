@@ -120,7 +120,7 @@ if (!$storeId && isset($_SESSION['user_email'])) {
 }
 $queryBS = "SELECT p.*, h.sort_order, h.heading, h.subheading FROM products p 
             JOIN section_best_selling_products h ON p.product_id = h.product_id 
-            WHERE h.store_id = ? AND p.store_id = ?
+            WHERE h.store_id = ? AND p.store_id = ? AND p.status = 'active'
             ORDER BY h.sort_order ASC";
 $bestSellingProducts = $db->fetchAll($queryBS, [$storeId, $storeId]);
 
@@ -129,7 +129,7 @@ $bsHeaders = $db->fetchOne("SELECT heading, subheading FROM section_best_selling
 
 $queryTR = "SELECT p.*, h.sort_order, h.heading, h.subheading FROM products p 
             JOIN section_trending_products h ON p.product_id = h.product_id 
-            WHERE h.store_id = ? AND p.store_id = ?
+            WHERE h.store_id = ? AND p.store_id = ? AND p.status = 'active'
             ORDER BY h.sort_order ASC";
 $trendingProducts = $db->fetchAll($queryTR, [$storeId, $storeId]);
 

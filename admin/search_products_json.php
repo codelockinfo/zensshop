@@ -18,7 +18,7 @@ if (!$storeId && isset($_SESSION['user_email'])) {
 header('Content-Type: application/json');
 
 try {
-    $sql = "SELECT p.* FROM products p WHERE p.status != 'archived' AND p.store_id = ?";
+    $sql = "SELECT p.* FROM products p WHERE p.status = 'active' AND p.store_id = ?";
     $params = [$storeId];
 
     if (!empty($search)) {

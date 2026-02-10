@@ -16,7 +16,7 @@ $products = $db->fetchAll(
     "SELECT p.*, h.heading, h.subheading
      FROM products p 
      JOIN section_trending_products h ON p.product_id = h.product_id 
-     WHERE p.status != 'archived' 
+     WHERE p.status = 'active' 
      AND (h.store_id = ? OR h.store_id IS NULL)
      AND p.store_id = ?
      ORDER BY h.sort_order ASC",
