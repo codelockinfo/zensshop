@@ -116,13 +116,13 @@ $categoryJoin = " AND (
 
 $inStockCount = $db->fetchOne("SELECT COUNT(DISTINCT p.id) as count 
                                 FROM products p 
-                                WHERE p.status = 'active' AND p.stock_status = 'in_stock' AND (p.store_id = ? OR p.store_id IS NULL OR ? = 'DEFAULT')" . 
+                                WHERE p.status = 'active' AND (p.stock_status = 'in_stock' AND p.stock_quantity > 0) AND (p.store_id = ? OR p.store_id IS NULL OR ? = 'DEFAULT')" . 
                                 ($categorySlug ? $categoryJoin : ""),
                                 array_merge([$currentStoreId, $currentStoreId], $categorySlug ? [$categorySlug, $currentStoreId, $currentStoreId, $categorySlug, $categorySlug, $currentStoreId, $currentStoreId] : []))['count'] ?? 0;
 
 $outOfStockCount = $db->fetchOne("SELECT COUNT(DISTINCT p.id) as count 
                                    FROM products p 
-                                   WHERE p.status = 'active' AND p.stock_status = 'out_of_stock' AND (p.store_id = ? OR p.store_id IS NULL OR ? = 'DEFAULT')" . 
+                                   WHERE p.status = 'active' AND (p.stock_status = 'out_of_stock' OR p.stock_quantity <= 0) AND (p.store_id = ? OR p.store_id IS NULL OR ? = 'DEFAULT')" . 
                                    ($categorySlug ? $categoryJoin : ""),
                                    array_merge([$currentStoreId, $currentStoreId], $categorySlug ? [$categorySlug, $currentStoreId, $currentStoreId, $categorySlug, $categorySlug, $currentStoreId, $currentStoreId] : []))['count'] ?? 0;
 

@@ -113,8 +113,14 @@ class Product {
         }
         
         if (!empty($filters['stock_status'])) {
-            $sql .= " AND p.stock_status = ?";
-            $params[] = $filters['stock_status'];
+            if ($filters['stock_status'] === 'out_of_stock') {
+                $sql .= " AND (p.stock_status = 'out_of_stock' OR p.stock_quantity <= 0)";
+            } elseif ($filters['stock_status'] === 'in_stock') {
+                $sql .= " AND (p.stock_status = 'in_stock' AND p.stock_quantity > 0)";
+            } else {
+                $sql .= " AND p.stock_status = ?";
+                $params[] = $filters['stock_status'];
+            }
         }
 
         if (!empty($filters['min_price'])) {
