@@ -68,7 +68,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 'cost_per_item' => $_POST['cost_per_item'] ?? 0,
                 'total_expense' => $_POST['total_expense'] ?? 0,
                 'stock_quantity' => $_POST['stock_quantity'] ?? 0,
-                'stock_status' => $_POST['stock_status'] ?? 'in_stock',
+                'stock_status' => ($_POST['stock_quantity'] ?? 0) <= 0 ? 'out_of_stock' : ($_POST['stock_status'] ?? 'in_stock'),
                 'brand' => $_POST['brand'] ?? null,
                 'status' => $_POST['status'] ?? 'draft',
                 // Fix SKU NULL handling
@@ -693,14 +693,16 @@ $existingVariants = $product->getVariants($productId);
                 <label class="admin-form-label">Stock Quantity *</label>
                 <input type="number" 
                        name="stock_quantity" 
+                       id="stock_quantity"
                        required
                        value="<?php echo htmlspecialchars($_POST['stock_quantity'] ?? $productData['stock_quantity']); ?>"
-                       class="admin-form-input">
+                       class="admin-form-input"
+                       oninput="checkStockStatus(this)">
             </div>
             
             <div class="admin-form-group">
                 <label class="admin-form-label">Stock Status *</label>
-                <select name="stock_status" required class="admin-form-select">
+                <select name="stock_status" id="stock_status" required class="admin-form-select">
                     <?php $ss = $_POST['stock_status'] ?? $productData['stock_status'] ?? 'in_stock'; ?>
                     <option value="in_stock" <?php echo $ss === 'in_stock' ? 'selected' : ''; ?>>In Stock</option>
                     <option value="out_of_stock" <?php echo $ss === 'out_of_stock' ? 'selected' : ''; ?>>Out of Stock</option>
@@ -1179,6 +1181,18 @@ async function removeBrand(brand) {
         }
     } catch (error) {
         console.log(error);
+    }
+}
+
+function checkStockStatus(input) {
+    const stockStatus = document.getElementById('stock_status');
+    if (input.value && parseInt(input.value) <= 0) {
+        stockStatus.value = 'out_of_stock';
+    } else if (input.value && parseInt(input.value) > 0) {
+        // Optional: Automatically set back to in_stock if user enters a positive number
+        if(stockStatus.value === 'out_of_stock') {
+            stockStatus.value = 'in_stock';
+        }
     }
 }
 </script>

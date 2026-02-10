@@ -44,7 +44,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 'cost_per_item' => $_POST['cost_per_item'] ?? 0,
                 'total_expense' => $_POST['total_expense'] ?? 0,
                 'stock_quantity' => $_POST['stock_quantity'] ?? 0,
-                'stock_status' => $_POST['stock_status'] ?? 'in_stock',
+                'stock_status' => ($_POST['stock_quantity'] ?? 0) <= 0 ? 'out_of_stock' : ($_POST['stock_status'] ?? 'in_stock'),
                 'brand' => $_POST['brand'] ?? null,
                 'status' => $_POST['status'] ?? 'draft',
                 // Fix SKU: If empty, use NULL to avoid duplicate key error ('')
@@ -414,7 +414,7 @@ $brands = $brandsResult ? json_decode($brandsResult['setting_value'], true) : []
     <div class="space-y-6">
         <div class="admin-card">
             <div class="flex justify-between items-center mb-4">
-                <h2 class="text-lg md:text-xl font-bold">Upload images</h2>
+                <h2 class="text-lg md::text-xl font-bold">Upload images</h2>
             </div>
             
             <div class="grid grid-cols-2 gap-4 mb-4" id="imageUploadArea">
@@ -557,14 +557,16 @@ $brands = $brandsResult ? json_decode($brandsResult['setting_value'], true) : []
                 <label class="admin-form-label">Stock Quantity *</label>
                 <input type="number" 
                        name="stock_quantity" 
+                       id="stock_quantity"
                        required
                        value="<?php echo htmlspecialchars($_POST['stock_quantity'] ?? ''); ?>"
-                       class="admin-form-input">
+                       class="admin-form-input"
+                       oninput="checkStockStatus(this)">
             </div>
             
             <div class="admin-form-group">
                 <label class="admin-form-label">Stock Status *</label>
-                <select name="stock_status" required class="admin-form-select">
+                <select name="stock_status" id="stock_status" required class="admin-form-select">
                     <option value="in_stock" <?php echo (($_POST['stock_status'] ?? 'in_stock') === 'in_stock') ? 'selected' : ''; ?>>In Stock</option>
                     <option value="out_of_stock" <?php echo (($_POST['stock_status'] ?? '') === 'out_of_stock') ? 'selected' : ''; ?>>Out of Stock</option>
                     <option value="on_backorder" <?php echo (($_POST['stock_status'] ?? '') === 'on_backorder') ? 'selected' : ''; ?>>On Backorder</option>
@@ -775,6 +777,18 @@ document.getElementById('productForm').addEventListener('submit', function(e) {
     }
     document.getElementById('highlights_json').value = JSON.stringify(highlights);
 });
+
+function checkStockStatus(input) {
+    const stockStatus = document.getElementById('stock_status');
+    if (input.value && parseInt(input.value) <= 0) {
+        stockStatus.value = 'out_of_stock';
+    } else if (input.value && parseInt(input.value) > 0) {
+        // Optional: Automatically set back to in_stock if user enters a positive number
+        if(stockStatus.value === 'out_of_stock') {
+            stockStatus.value = 'in_stock';
+        }
+    }
+}
 </script>
 <script src="<?php echo $baseUrl; ?>/assets/js/admin-image-upload7.js?v=<?php echo time(); ?>"></script>
 <script src="<?php echo $baseUrl; ?>/assets/js/product-variants6.js"></script>

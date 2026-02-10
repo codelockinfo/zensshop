@@ -239,9 +239,9 @@ require_once __DIR__ . '/includes/header.php';
 
 // Re-fetch settings locally to ensure variables exist if header doesn't pass them
 $settingsObj = new Settings();
-$siteLogoType = $settingsObj->get('site_logo_type', 'image');
-$siteLogoText = $settingsObj->get('site_logo_text', 'HomeproX');
-$siteLogo = $settingsObj->get('site_logo', 'logo.png');
+$logoType = $settingsObj->get('footer_logo_type', 'image');
+$logoText = $settingsObj->get('footer_logo_text', 'HomeproX');
+$logo = $settingsObj->get('footer_logo_image', null);
 
 // Calculate totals
 $subtotal = $cartTotal;
@@ -263,11 +263,12 @@ nav.bg-white.sticky.top-0 {
         <!-- Header: Logo & Progress -->
         <div class="max-w-6xl mx-auto mb-8 flex flex-col md:flex-row items-center justify-start gap-8 md:gap-12">
             <!-- Logo -->
+            <!-- Logo -->
             <a href="<?php echo $baseUrl; ?>/" class="flex items-center">
-                <?php if ($siteLogoType == 'image'): ?>
-                    <img src="<?php echo getImageUrl($siteLogo); ?>" alt="<?php echo htmlspecialchars($siteLogoText); ?>" class="h-[60px] w-auto object-contain">
+                <?php if ($logoType == 'image' && !empty($logo)): ?>
+                    <img src="<?php echo getImageUrl($logo); ?>" alt="<?php echo htmlspecialchars($logoText); ?>" class="h-[60px] w-auto object-contain">
                 <?php else: ?>
-                    <span class="text-2xl md:text-3xl font-heading font-bold text-black"><?php echo htmlspecialchars($siteLogoText); ?></span>
+                    <span class="text-2xl md:text-3xl font-heading font-bold text-black"><?php echo htmlspecialchars($logoText); ?></span>
                 <?php endif; ?>
             </a>
 
@@ -953,9 +954,9 @@ document.getElementById('razorpayPayButton').addEventListener('click', async fun
             key: orderData.razorpay_key,
             amount: orderData.amount,
             currency: orderData.currency,
-            name: '<?php echo htmlspecialchars($siteLogoText ?: SITE_NAME, ENT_QUOTES, 'UTF-8'); ?>',
-            <?php if ($siteLogoType == 'image' && !empty($siteLogo)): ?>
-            image: '<?php echo getImageUrl($siteLogo); ?>',
+            name: '<?php echo htmlspecialchars($logoText ?: SITE_NAME, ENT_QUOTES, 'UTF-8'); ?>',
+            <?php if ($logoType == 'image' && !empty($logo)): ?>
+            image: '<?php echo getImageUrl($logo); ?>',
             <?php endif; ?>
             description: 'Order Payment',
             order_id: orderData.order_id,

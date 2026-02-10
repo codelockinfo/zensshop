@@ -45,9 +45,10 @@ require_once __DIR__ . '/includes/header.php';
 
 // Re-fetch settings locally to ensure variables exist if header doesn't pass them
 $settingsObj = new Settings();
-$siteLogoType = $settingsObj->get('site_logo_type', 'image');
-$siteLogoText = $settingsObj->get('site_logo_text', 'CookPro');
-$siteLogo = $settingsObj->get('site_logo', 'logo.png');
+$storeId = $orderData['store_id'] ?? null;
+$logoType = $settingsObj->get('footer_logo_type', 'image', $storeId);
+$logoText = $settingsObj->get('footer_logo_text', 'HomeproX', $storeId);
+$logo = $settingsObj->get('footer_logo_image', null, $storeId);
 ?>
 
 <style>
@@ -126,10 +127,10 @@ nav.bg-white.sticky.top-0 {
                     <!-- Logo -->
                     <div class="mb-8">
                         <a href="<?php echo $baseUrl; ?>/" class="flex items-center">
-                            <?php if ($siteLogoType == 'image'): ?>
-                                <img src="<?php echo getImageUrl($siteLogo); ?>" alt="<?php echo htmlspecialchars($siteLogoText); ?>" class="h-[60px] w-auto object-contain">
+                            <?php if ($logoType == 'image' && !empty($logo)): ?>
+                                <img src="<?php echo getImageUrl($logo); ?>" alt="<?php echo htmlspecialchars($logoText); ?>" class="h-[60px] w-auto object-contain">
                             <?php else: ?>
-                                <span class="text-3xl font-heading font-bold text-black"><?php echo htmlspecialchars($siteLogoText); ?></span>
+                                <span class="text-3xl font-heading font-bold text-black"><?php echo htmlspecialchars($logoText); ?></span>
                             <?php endif; ?>
                         </a>
                     </div>
