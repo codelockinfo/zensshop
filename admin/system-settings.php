@@ -11,7 +11,15 @@ $settings = new Settings();
 $baseUrl = getBaseUrl();
 
 // Handle form submission
-if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['action'] === 'update_settings') {
+if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    // Check for max post size violation
+    if (empty($_POST) && isset($_SERVER['CONTENT_LENGTH']) && $_SERVER['CONTENT_LENGTH'] > 0) {
+        $_SESSION['error'] = "The file is too large. It exceeds the server's post_max_size limit of " . ini_get('post_max_size') . ".";
+        header("Location: " . $baseUrl . '/admin/settings');
+        exit;
+    }
+
+    if (isset($_POST['action']) && $_POST['action'] === 'update_settings') {
     
     // WAF BYPASS: Decode Base64 encoded sensitive fields
     // This prevents ModSecurity/Server Firewalls from blocking requests containing HTML/JSON/SVG/Scripts
@@ -30,9 +38,44 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
     
     // Handle File Uploads
     $uploadFiles = ['setting_favicon_png', 'setting_favicon_ico', 'setting_all_category_banner'];
+    $uploadErrors = [];
+    
     foreach ($uploadFiles as $fileKey) {
         if (!empty($_FILES[$fileKey]['name'])) {
+            $fileError = $_FILES[$fileKey]['error'];
+            
+            if ($fileError !== UPLOAD_ERR_OK) {
+                switch ($fileError) {
+                    case UPLOAD_ERR_INI_SIZE:
+                    case UPLOAD_ERR_FORM_SIZE:
+                        $uploadErrors[] = "File too large: " . htmlspecialchars($_FILES[$fileKey]['name']) . " (Max " . ini_get('upload_max_filesize') . ")";
+                        break;
+                    case UPLOAD_ERR_PARTIAL:
+                        $uploadErrors[] = "File partial upload: " . htmlspecialchars($_FILES[$fileKey]['name']);
+                        break;
+                    case UPLOAD_ERR_NO_FILE:
+                        // No file selected, ignore
+                        break;
+                    default:
+                        $uploadErrors[] = "Upload error ($fileError): " . htmlspecialchars($_FILES[$fileKey]['name']);
+                }
+                continue; 
+            }
+
             $uploadDir = __DIR__ . '/../assets/images/';
+            
+            if (!is_dir($uploadDir)) {
+                 if (!mkdir($uploadDir, 0755, true)) {
+                     $uploadErrors[] = "Failed to create directory: " . $uploadDir;
+                     continue;
+                 }
+            }
+            
+            if (!is_writable($uploadDir)) {
+                $uploadErrors[] = "Directory not writable: " . $uploadDir;
+                continue;
+            }
+
             $ext = pathinfo($_FILES[$fileKey]['name'], PATHINFO_EXTENSION);
             $prefix = ($fileKey === 'setting_favicon_ico') ? 'favicon' : (($fileKey === 'setting_all_category_banner') ? 'banner_all_cat' : 'favicon_browser');
             $fileName = $prefix . '_' . time() . '.' . $ext;
@@ -41,8 +84,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
                 // FIX: Store partial path so getImageUrl finds it in assets/images/ not uploads
                 $_POST[$fileKey] = 'assets/images/' . $fileName;
                 $_POST['group_' . str_replace('setting_', '', $fileKey)] = ($fileKey === 'setting_all_category_banner') ? 'general' : 'seo';
+            } else {
+                $uploadErrors[] = "Failed to move uploaded file: " . htmlspecialchars($_FILES[$fileKey]['name']);
             }
         }
+    }
+
+    if (!empty($uploadErrors)) {
+        $_SESSION['error'] = implode('<br>', $uploadErrors);
+        // Continue processing other settings even if uploads fail, but show error
     }
 
     // Handle Payment Icons (JSON)
@@ -73,6 +123,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
     header("Location: " . $baseUrl . '/admin/settings');
     exit;
 }
+}
 
 // Get all settings grouped
 $emailSettings = $settings->getByGroup('email');
@@ -86,6 +137,8 @@ require_once __DIR__ . '/../includes/admin-header.php';
 
 $success = $_SESSION['success'] ?? '';
 unset($_SESSION['success']);
+$error = $_SESSION['error'] ?? '';
+unset($_SESSION['error']);
 ?>
 
 <div class="p-6">
@@ -102,6 +155,12 @@ unset($_SESSION['success']);
     <?php if ($success): ?>
         <div class="bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded mb-4">
             <?php echo htmlspecialchars($success); ?>
+        </div>
+    <?php endif; ?>
+
+    <?php if ($error): ?>
+        <div class="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4">
+            <?php echo $error; // Allow HTML for line breaks ?>
         </div>
     <?php endif; ?>
 
@@ -328,10 +387,10 @@ unset($_SESSION['success']);
                             <input type="file" id="allCatBannerInput" name="setting_all_category_banner" class="hidden" onchange="previewBanner(this, 'previewAllCatBanner')">
                             <input type="hidden" name="group_all_category_banner" value="general">
                             
-                            <div id="previewAllCatBanner" class="w-full h-full flex items-center justify-center">
-                                <?php if($allCatBanner): ?>
-                                    <img src="<?php echo getBaseUrl() . '/assets/images/' . $allCatBanner; ?>" class="w-full h-full object-cover">
-                                    <div class="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-40 transition flex items-center justify-center">
+                                <div id="previewAllCatBanner" class="w-full h-full flex items-center justify-center">
+                                    <?php if($allCatBanner): ?>
+                                        <img src="<?php echo getImageUrl($allCatBanner); ?>" class="w-full h-full object-cover">
+                                        <div class="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-40 transition flex items-center justify-center">
                                          <i class="fas fa-camera text-white text-3xl opacity-0 group-hover:opacity-100 transition"></i>
                                     </div>
                                 <?php else: ?>

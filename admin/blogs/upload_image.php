@@ -29,9 +29,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_FILES['upload'])) {
             if (move_uploaded_file($file['tmp_name'], $target)) {
                 require_once __DIR__ . '/../../includes/functions.php';
                 $baseUrl = getBaseUrl();
+                $basePath = parse_url($baseUrl, PHP_URL_PATH);
+                // Ensure basePath is just / or /subdir (no trailing slash)
+                $basePath = rtrim($basePath ?? '', '/');
                 
                 echo json_encode([
-                    'url' => $baseUrl . '/assets/images/blogs/content/' . $name
+                    'url' => $basePath . '/assets/images/blogs/content/' . $name
                 ]);
             } else {
                 echo json_encode(['error' => ['message' => 'Failed to move uploaded file.']]);

@@ -53,7 +53,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     // Check if POST data is empty but method is POST/length > 0 (exceeds post_max_size)
     if (empty($_POST) && isset($_SERVER['CONTENT_LENGTH']) && $_SERVER['CONTENT_LENGTH'] > 0) {
         $error = "The total size of your images and data exceeds the server limit (" . ini_get('post_max_size') . "). Please upload fewer or smaller images.";
-    } else {
+    } elseif (isset($_POST['name'])) {
         try {
             $data = [
                 'name' => $_POST['name'] ?? '',

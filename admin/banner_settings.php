@@ -12,7 +12,11 @@ $error = '';
 
 // Handle Form Submission
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    $action = $_POST['action'] ?? '';
+    // Check for max post size violation
+    if (empty($_POST) && isset($_SERVER['CONTENT_LENGTH']) && $_SERVER['CONTENT_LENGTH'] > 0) {
+        $error = "The file is too large. It exceeds the server's post_max_size limit of " . ini_get('post_max_size') . ".";
+    } else {
+        $action = $_POST['action'] ?? '';
     
     if ($action === 'delete') {
         $id = (int)$_POST['id'];
@@ -40,27 +44,39 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         
         // Handle Desktop Image Upload
         if (!empty($_FILES['image_desktop']['name'])) {
-            $uploadDir = __DIR__ . '/../assets/images/banners/';
-            if (!is_dir($uploadDir)) mkdir($uploadDir, 0777, true);
-            
-            $filename = 'desktop_' . time() . '_' . preg_replace('/[^a-zA-Z0-9.]/', '_', $_FILES['image_desktop']['name']);
-            if (move_uploaded_file($_FILES['image_desktop']['tmp_name'], $uploadDir . $filename)) {
-                $image_desktop = 'assets/images/banners/' . $filename;
+            if ($_FILES['image_desktop']['error'] === UPLOAD_ERR_OK) {
+                $uploadDir = __DIR__ . '/../assets/images/banners/';
+                if (!is_dir($uploadDir)) mkdir($uploadDir, 0777, true);
+                
+                $filename = 'desktop_' . time() . '_' . preg_replace('/[^a-zA-Z0-9.]/', '_', $_FILES['image_desktop']['name']);
+                if (move_uploaded_file($_FILES['image_desktop']['tmp_name'], $uploadDir . $filename)) {
+                    $image_desktop = 'assets/images/banners/' . $filename;
+                } else {
+                    $error = "Failed to move uploaded desktop image.";
+                }
+            } elseif ($_FILES['image_desktop']['error'] === UPLOAD_ERR_INI_SIZE || $_FILES['image_desktop']['error'] === UPLOAD_ERR_FORM_SIZE) {
+                $error = "Desktop image is too large (Max " . ini_get('upload_max_filesize') . ").";
             } else {
-                $error = "Failed to upload desktop image.";
+                $error = "Desktop image upload error code: " . $_FILES['image_desktop']['error'];
             }
         }
         
         // Handle Mobile Image Upload
         if (!empty($_FILES['image_mobile']['name'])) {
-            $uploadDir = __DIR__ . '/../assets/images/banners/';
-            if (!is_dir($uploadDir)) mkdir($uploadDir, 0777, true);
-            
-            $filename = 'mobile_' . time() . '_' . preg_replace('/[^a-zA-Z0-9.]/', '_', $_FILES['image_mobile']['name']);
-            if (move_uploaded_file($_FILES['image_mobile']['tmp_name'], $uploadDir . $filename)) {
-                $image_mobile = 'assets/images/banners/' . $filename;
+            if ($_FILES['image_mobile']['error'] === UPLOAD_ERR_OK) {
+                $uploadDir = __DIR__ . '/../assets/images/banners/';
+                if (!is_dir($uploadDir)) mkdir($uploadDir, 0777, true);
+                
+                $filename = 'mobile_' . time() . '_' . preg_replace('/[^a-zA-Z0-9.]/', '_', $_FILES['image_mobile']['name']);
+                if (move_uploaded_file($_FILES['image_mobile']['tmp_name'], $uploadDir . $filename)) {
+                    $image_mobile = 'assets/images/banners/' . $filename;
+                } else {
+                    $error = "Failed to move uploaded mobile image.";
+                }
+            } elseif ($_FILES['image_mobile']['error'] === UPLOAD_ERR_INI_SIZE || $_FILES['image_mobile']['error'] === UPLOAD_ERR_FORM_SIZE) {
+                $error = "Mobile image is too large (Max " . ini_get('upload_max_filesize') . ").";
             } else {
-                $error = "Failed to upload mobile image.";
+                $error = "Mobile image upload error code: " . $_FILES['image_mobile']['error'];
             }
         }
         
@@ -111,6 +127,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             }
         }
     }
+    } // End of else block for post_max_size check
 }
 
 // Check Flash

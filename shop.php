@@ -287,7 +287,7 @@ require_once __DIR__ . '/includes/header.php';
 <?php if ($category && (!empty($category['banner']) || !empty($category['image']))): ?>
     <?php
     $bannerPath = !empty($category['banner']) ? $category['banner'] : $category['image'];
-    $bannerUrl = $baseUrl . '/' . $bannerPath;
+    $bannerUrl = getImageUrl($bannerPath);
     ?>
     <!-- Skeleton Loader for Banner -->
     <div id="shop-banner-skeleton" class="relative h-[300px] md:h-[400px] bg-gradient-to-r from-gray-200 via-gray-300 to-gray-200 animate-pulse">
@@ -322,7 +322,7 @@ require_once __DIR__ . '/includes/header.php';
 
 <?php elseif ($allCatBanner): ?>
     <?php 
-        $bannerUrl = $baseUrl . '/assets/images/' . $allCatBanner;
+        $bannerUrl = getImageUrl($allCatBanner);
         $displayTitle = $category['name'] ?? 'Shop';
         $displayDesc = $category['description'] ?? 'Discover our curated collection of products';
     ?>
