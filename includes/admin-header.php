@@ -108,7 +108,7 @@ $action = $segments[count($segments) - 1] ?? '';  // add, list
                 $ah_logoImage = $h_db->fetchOne("SELECT setting_value FROM site_settings WHERE setting_key = 'site_logo' AND (store_id = ? OR store_id IS NULL) ORDER BY store_id DESC LIMIT 1", [$h_storeId])['setting_value'] ?? '';
 
                 if ($ah_logoType === 'image' && !empty($ah_logoImage)): ?>
-                    <img src="<?php echo $baseUrl; ?>/assets/images/<?php echo htmlspecialchars($ah_logoImage); ?>" alt="Logo" class="h-8 object-contain">
+                    <img src="<?php echo $baseUrl; ?>/assets/images/<?php echo htmlspecialchars($ah_logoImage); ?>" alt="Logo" class="h-14 object-contain">
                 <?php else: ?>
                     <div class="w-8 h-8 bg-blue-500 rounded flex items-center justify-center text-white font-bold"><?php echo substr($ah_logoText, 0, 1); ?></div>
                     <span class="text-xl font-bold text-gray-800"><?php echo htmlspecialchars($ah_logoText); ?></span>

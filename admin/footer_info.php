@@ -20,6 +20,19 @@ $error = '';
 // Handle Form Submission
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     try {
+        // WAF BYPASS: Decode Base64 encoded sensitive fields
+        if (isset($_POST['is_encoded_submission']) && $_POST['is_encoded_submission'] === '1') {
+            // Decode Description (HTML)
+            if (isset($_POST['footer_description'])) {
+                $_POST['footer_description'] = base64_decode($_POST['footer_description']);
+            }
+            
+            // Decode SVGs
+            if (isset($_POST['payment_svgs']) && is_array($_POST['payment_svgs'])) {
+                $_POST['payment_svgs'] = array_map('base64_decode', $_POST['payment_svgs']);
+            }
+        }
+
         // 1. General Info
         $settings = [
             'footer_logo_type' => $_POST['footer_logo_type'] ?? 'text',
@@ -162,7 +175,8 @@ require_once __DIR__ . '/../includes/admin-header.php';
 ?>
 
 
-<form method="POST" enctype="multipart/form-data">
+<form id="footerForm" method="POST" enctype="multipart/form-data">
+    <input type="hidden" name="is_encoded_submission" value="0" id="isEncodedSubmission">
     <!-- Sticky Header -->
     <div class="mb-6 flex justify-between items-end sticky top-0 bg-[#f7f8fc] py-4 z-50 border-b border-gray-200 px-1">
         <div>
@@ -454,13 +468,41 @@ if (paymentData && paymentData.length > 0) {
 }
 
 // Initialize CKEditor
+let descriptionEditor;
 ClassicEditor
     .create(document.querySelector('textarea[name="footer_description"]'), {
         toolbar: ['heading', '|', 'bold', 'italic', 'link', 'bulletedList', 'numberedList', 'blockQuote', 'undo', 'redo'],
     })
+    .then(editor => {
+        descriptionEditor = editor;
+    })
     .catch(error => {
         console.error(error);
     });
+
+// Encode sensitive fields before submission
+document.getElementById('footerForm').addEventListener('submit', function(e) {
+    // Set encoded flag
+    document.getElementById('isEncodedSubmission').value = '1';
+    
+    // Helper to safely encode to Base64 (supporting UTF-8)
+    const toBase64 = (str) => btoa(unescape(encodeURIComponent(str)));
+    
+    // 1. Handle CKEditor Content
+    if (descriptionEditor) {
+        // Get data from editor, encode it, and put it back into the textarea
+        const data = descriptionEditor.getData();
+        const encodedData = toBase64(data);
+        // We write directly to the textarea element so it gets submitted
+        document.querySelector('textarea[name="footer_description"]').value = encodedData;
+    }
+
+    // 2. Handle SVGs
+    const svgs = document.getElementsByName('payment_svgs[]');
+    svgs.forEach(el => {
+        el.value = toBase64(el.value);
+    });
+});
 </script>
 
 <?php require_once __DIR__ . '/../includes/admin-footer.php'; ?>

@@ -574,7 +574,7 @@ if (!function_exists('url')) {
                         <?php else: ?>
                             <img src="<?php echo $baseUrl; ?>/assets/images/<?php echo htmlspecialchars($siteLogo); ?>" 
                                  alt="Site Logo" 
-                                 class="h-8 object-contain"
+                                 class="h-14 object-contain"
                                  onerror="this.parentElement.innerHTML='<span class=\'text-3xl font-heading font-bold text-black\'>CookProo</span>'">
                         <?php endif; ?>
                     </a>
