@@ -24,20 +24,21 @@ class Email {
     private $smtpPassword;
     private $smtpEncryption;
     private $storeId;
+    private $settings;
     
     public function __construct($storeId = null) {
         $this->storeId = $storeId;
         require_once __DIR__ . '/Settings.php';
-        $settings = new Settings();
+        $this->settings = new Settings();
         
         // Use provided storeId or fallback to current context
-        $this->fromEmail = $settings->get('smtp_from_email', defined('SMTP_FROM_EMAIL') ? SMTP_FROM_EMAIL : '', $storeId);
-        $this->fromName = $settings->get('smtp_from_name', defined('SMTP_FROM_NAME') ? SMTP_FROM_NAME : SITE_NAME, $storeId);
-        $this->smtpHost = $settings->get('smtp_host', defined('SMTP_HOST') ? SMTP_HOST : 'smtp.gmail.com', $storeId);
-        $this->smtpPort = $settings->get('smtp_port', defined('SMTP_PORT') ? SMTP_PORT : 587, $storeId);
-        $this->smtpUsername = $settings->get('smtp_username', defined('SMTP_USERNAME') ? SMTP_USERNAME : '', $storeId);
-        $this->smtpPassword = $settings->get('smtp_password', defined('SMTP_PASSWORD') ? SMTP_PASSWORD : '', $storeId);
-        $this->smtpEncryption = $settings->get('smtp_encryption', defined('SMTP_ENCRYPTION') ? SMTP_ENCRYPTION : 'tls', $storeId);
+        $this->fromEmail = $this->settings->get('smtp_from_email', defined('SMTP_FROM_EMAIL') ? SMTP_FROM_EMAIL : '', $storeId);
+        $this->fromName = $this->settings->get('smtp_from_name', defined('SMTP_FROM_NAME') ? SMTP_FROM_NAME : SITE_NAME, $storeId);
+        $this->smtpHost = $this->settings->get('smtp_host', $this->settings->get('smtp_host', 'smtp.gmail.com', $storeId), $storeId);
+        $this->smtpPort = $this->settings->get('smtp_port', $this->settings->get('smtp_port', 587, $storeId), $storeId);
+        $this->smtpUsername = $this->settings->get('smtp_username', '', $storeId);
+        $this->smtpPassword = $this->settings->get('smtp_password', '', $storeId);
+        $this->smtpEncryption = $this->settings->get('smtp_encryption', 'tls', $storeId);
     }
     
     /**
@@ -129,31 +130,19 @@ class Email {
      * Send OTP email
      */
     public function sendOTP($to, $otp) {
-        $subject = "Password Reset OTP - " . SITE_NAME;
-        $message = "
-            <html>
-            <head>
-                <style>
-                    body { font-family: Arial, sans-serif; }
-                    .container { max-width: 600px; margin: 0 auto; padding: 20px; }
-                    .otp-box { background: #f3f4f6; padding: 20px; text-align: center; border-radius: 8px; margin: 20px 0; }
-                    .otp-code { font-size: 32px; font-weight: bold; color: #1a5d3a; letter-spacing: 5px; }
-                </style>
-            </head>
-            <body>
-                <div class='container'>
-                    <h2>Password Reset Request</h2>
-                    <p>You have requested to reset your password. Use the following OTP code:</p>
-                    <div class='otp-box'>
-                        <div class='otp-code'>{$otp}</div>
-                    </div>
-                    <p>This code will expire in " . OTP_EXPIRY_MINUTES . " minutes.</p>
-                    <p>If you didn't request this, please ignore this email.</p>
-                </div>
-            </body>
-            </html>
+        $siteName = $this->settings->get('site_name', SITE_NAME, $this->storeId);
+        $subject = "Password Reset OTP - " . $siteName;
+        $content = "
+            <h1 style='text-align: center;'>Password Reset Request</h1>
+            <p>You have requested to reset your password for <strong>$siteName</strong>. Use the following OTP code:</p>
+            <div style='background: #f3f4f6; padding: 30px; text-align: center; border-radius: 8px; margin: 20px 0;'>
+                <div style='font-size: 36px; font-weight: 800; color: #000; letter-spacing: 5px; font-family: monospace;'>{$otp}</div>
+            </div>
+            <p>This code will expire in " . OTP_EXPIRY_MINUTES . " minutes.</p>
+            <p style='color: #6b7280; font-size: 14px;'>If you didn't request this, please ignore this email.</p>
         ";
         
+        $message = $this->getEmailTemplate($subject, $content);
         return $this->send($to, $subject, $message);
     }
     
@@ -219,11 +208,12 @@ class Email {
      * Send newsletter subscription confirmation
      */
     public function sendSubscriptionConfirmation($to) {
-        $subject = "Welcome to " . SITE_NAME . "!";
+        $siteName = $this->settings->get('site_name', SITE_NAME, $this->storeId);
+        $subject = "Welcome to " . $siteName . "!";
         
         $content = "
-            <h1 style='text-align: center;'>Thanks for subscribing to us!</h1>
-            <p>Welcome to our " . SITE_NAME . " You'll be the first to know about:</p>
+            <h1 style='text-align: center;'>Thanks for subscribing!</h1>
+            <p>Welcome to the <strong>" . $siteName . "</strong> family. You'll be the first to know about:</p>
             <ul>
                 <li>New product launches</li>
                 <li>Exclusive deals and promotions</li>
@@ -232,7 +222,7 @@ class Email {
             </ul>
             <p>We're excited to have you with us!</p>
             <hr style='border: 0; border-top: 1px solid #e5e7eb; margin: 30px 0;'>
-            <p style='color: #6b7280; font-size: 13px; text-align: center;'>If you didn't subscribe to " . SITE_NAME . ", you can safely ignore this email.</p>
+            <p style='color: #6b7280; font-size: 13px; text-align: center;'>If you didn't subscribe to " . $siteName . ", you can safely ignore this email.</p>
         ";
         
         $message = $this->getEmailTemplate($subject, $content);
@@ -244,38 +234,22 @@ class Email {
      */
     public function sendSupportNotificationToAdmin($adminEmail, $customerName, $customerEmail, $subject, $message) {
         $emailSubject = "New Support Message from $customerName";
-        $emailMessage = "
-            <html>
-            <head>
-                <style>
-                    body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; }
-                    .container { max-width: 600px; margin: 0 auto; padding: 20px; }
-                    .header { background: #4F46E5; color: white; padding: 20px; text-align: center; border-radius: 8px 8px 0 0; }
-                    .content { background: #fff; padding: 30px; border: 1px solid #e5e7eb; }
-                    .message-box { background: #f9fafb; padding: 20px; border-left: 4px solid #4F46E5; margin: 20px 0; }
-                </style>
-            </head>
-            <body>
-                <div class='container'>
-                    <div class='header'>
-                        <h1 style='margin: 0;'>New Support Message</h1>
-                    </div>
-                    <div class='content'>
-                        <p><strong>From:</strong> $customerName ($customerEmail)</p>
-                        <p><strong>Subject:</strong> $subject</p>
-                        
-                        <div class='message-box'>
-                            <p><strong>Message:</strong></p>
-                            <p>" . nl2br(htmlspecialchars($message)) . "</p>
-                        </div>
-                        
-                        <p><a href='" . getBaseUrl() . "/admin/support.php' style='background: #4F46E5; color: white; padding: 10px 20px; text-decoration: none; border-radius: 5px; display: inline-block;'>View in Admin Panel</a></p>
-                    </div>
-                </div>
-            </body>
-            </html>
+        $content = "
+            <h1 style='text-align: center;'>New Support Message</h1>
+            <p><strong>From:</strong> $customerName ($customerEmail)</p>
+            <p><strong>Subject:</strong> $subject</p>
+            
+            <div style='background: #f9fafb; padding: 20px; border-left: 4px solid #000; margin: 20px 0;'>
+                <p><strong>Message:</strong></p>
+                <p>" . nl2br(htmlspecialchars($message)) . "</p>
+            </div>
+            
+            <div style='text-align: center; margin-top: 25px;'>
+                <a href='" . getBaseUrl() . "/admin/support.php' class='button'>View in Admin Panel</a>
+            </div>
         ";
         
+        $emailMessage = $this->getEmailTemplate($emailSubject, $content);
         return $this->send($adminEmail, $emailSubject, $emailMessage);
     }
     
@@ -284,38 +258,20 @@ class Email {
      */
     public function sendSupportReply($to, $customerName, $originalSubject, $reply) {
         $subject = "Re: $originalSubject";
-        $message = "
-            <html>
-            <head>
-                <style>
-                    body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; }
-                    .container { max-width: 600px; margin: 0 auto; padding: 20px; }
-                    .header { background: #4F46E5; color: white; padding: 20px; text-align: center; border-radius: 8px 8px 0 0; }
-                    .content { background: #fff; padding: 30px; border: 1px solid #e5e7eb; }
-                    .reply-box { background: #f0f9ff; padding: 20px; border-left: 4px solid #4F46E5; margin: 20px 0; }
-                </style>
-            </head>
-            <body>
-                <div class='container'>
-                    <div class='header'>
-                        <h1 style='margin: 0;'>Support Team Reply</h1>
-                    </div>
-                    <div class='content'>
-                        <p>Dear $customerName,</p>
-                        <p>Thank you for contacting us. Here's our response to your inquiry:</p>
-                        
-                        <div class='reply-box'>
-                            <p>" . nl2br(htmlspecialchars($reply)) . "</p>
-                        </div>
-                        
-                        <p>If you have any further questions, please don't hesitate to reach out.</p>
-                        <p>Best regards,<br>Support Team</p>
-                    </div>
-                </div>
-            </body>
-            </html>
+        $content = "
+            <h1 style='text-align: center;'>Support Team Reply</h1>
+            <p>Dear $customerName,</p>
+            <p>Thank you for contacting us. Here's our response to your inquiry:</p>
+            
+            <div style='background: #f0f9ff; padding: 20px; border-left: 4px solid #000; margin: 20px 0;'>
+                <p>" . nl2br(htmlspecialchars($reply)) . "</p>
+            </div>
+            
+            <p>If you have any further questions, please don't hesitate to reach out.</p>
+            <p>Best regards,<br>Support Team</p>
         ";
         
+        $message = $this->getEmailTemplate($subject, $content);
         return $this->send($to, $subject, $message);
     }
 
@@ -323,13 +279,14 @@ class Email {
      * Send welcome email to new customer
      */
     public function sendWelcomeEmail($to, $name) {
-        $subject = "Welcome to " . SITE_NAME . "!";
+        $siteName = $this->settings->get('site_name', SITE_NAME, $this->storeId);
+        $subject = "Welcome to " . $siteName . "!";
         $siteUrl = getBaseUrl();
         
         $content = "
-            <h1 style='text-align: center;'>Welcome to " . SITE_NAME . "!</h1>
+            <h1 style='text-align: center;'>Welcome to " . $siteName . "!</h1>
             <p>Dear $name,</p>
-            <p>We're thrilled to have you on board! Thank you for creating an account with us.</p>
+            <p>We're thrilled to have you on board! Thank you for creating an account with <strong>$siteName</strong>.</p>
             <p>As a registered member, you can now:</p>
             <ul>
                 <li>Track your orders easily</li>
@@ -410,24 +367,42 @@ class Email {
      * Standard Email Template
      */
     private function getEmailTemplate($title, $content) {
-        $logoType = defined('SITE_LOGO_TYPE') ? SITE_LOGO_TYPE : 'image';
-        $logoText = defined('SITE_LOGO_TEXT') ? SITE_LOGO_TEXT : SITE_NAME;
-        $logoImage = defined('SITE_LOGO') ? SITE_LOGO : 'logo.png';
+        $logoType = $this->settings->get('site_logo_type', 'image', $this->storeId);
+        $logoText = $this->settings->get('site_logo_text', SITE_NAME, $this->storeId);
+        $logoImage = $this->settings->get('site_logo', 'logo.png', $this->storeId);
         
         // Determine Logo HTML
         $logoHtml = '';
-        $imagePath = __DIR__ . '/../assets/images/' . $logoImage;
         
-        // Use text if type is text OR image file doesn't exist
-        if ($logoType === 'text' || !file_exists($imagePath)) {
-            $logoHtml = "<span style='font-size: 24px; font-weight: bold; color: #111827; text-transform: uppercase; letter-spacing: 1px;'>$logoText</span>";
+        if ($logoType === 'text') {
+            $logoHtml = "<span style='font-size: 28px; font-weight: 800; color: #000000; text-transform: uppercase; letter-spacing: -0.5px; font-family: -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, Helvetica, Arial, sans-serif;'>$logoText</span>";
         } else {
-            $logoUrl = getBaseUrl() . '/assets/images/' . $logoImage;
-            $logoHtml = "<img src='$logoUrl' alt='$logoText' class='logo'>";
+            // Replicate getImageUrl logic to avoid dependency issues in background tasks
+            $logoUrl = '';
+            if (empty($logoImage)) {
+                $logoUrl = 'https://placehold.co/200x50?text=' . urlencode($logoText);
+            } elseif (strpos($logoImage, 'http://') === 0 || strpos($logoImage, 'https://') === 0 || strpos($logoImage, 'data:') === 0) {
+                $logoUrl = $logoImage;
+            } else {
+                $baseUrl = getBaseUrl();
+                $cleanPath = ltrim($logoImage, '/');
+                
+                // If path doesn't already contain assets/images/ or assets/images/uploads/
+                if (strpos($cleanPath, 'assets/images/') === false) {
+                     // Check common locations
+                     if (file_exists(__DIR__ . '/../assets/images/' . $cleanPath)) {
+                         $cleanPath = 'assets/images/' . $cleanPath;
+                     } else {
+                         $cleanPath = 'assets/images/uploads/' . $cleanPath;
+                     }
+                }
+                $logoUrl = $baseUrl . '/' . $cleanPath;
+            }
+            $logoHtml = "<img src='$logoUrl' alt='$logoText' style='max-height: 60px; width: auto; display: block; margin: 0 auto; outline: none; border: none; text-decoration: none;'>";
         }
 
         $year = date('Y');
-        $siteName = SITE_NAME;
+        $siteName = $this->settings->get('site_name', SITE_NAME, $this->storeId);
         
         return "
 <!DOCTYPE html>
@@ -438,8 +413,8 @@ class Email {
         body { margin: 0; padding: 0; font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; background-color: #f3f4f6; color: #374151; }
         .wrapper { width: 100%; table-layout: fixed; background-color: #f3f4f6; padding-bottom: 40px; }
         .webkit { max-width: 600px; margin: 0 auto; background-color: #ffffff; border-radius: 12px; overflow: hidden; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06); }
-        .header { text-align: center; padding: 30px 20px; background-color: #ffffff; border-bottom: 1px solid #f3f4f6; }
-        .logo { height: 40px; width: auto; object-fit: contain; }
+        .header { text-align: center; padding: 40px 20px; background-color: #ffffff; border-bottom: 1px solid #f3f4f6; }
+        .logo { height: 60px; width: auto; object-fit: contain; }
         .content { padding: 40px 30px; }
         .footer { text-align: center; padding: 20px; color: #9ca3af; font-size: 12px; }
         .button { display: inline-block; padding: 14px 28px; background-color: #000000; color: #ffffff; text-decoration: none; border-radius: 6px; font-weight: bold; margin-top: 10px; transition: background 0.3s; }

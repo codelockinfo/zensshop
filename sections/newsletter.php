@@ -31,17 +31,17 @@ $bgStyle = $bgImage ? "background-image: url('{$bgImage}');" : "background-color
         <p class="text-gray-600 mb-8"><?php echo htmlspecialchars($subheading); ?></p>
         <?php endif; ?>
 
-        <form id="globalNewsletterForm" class="flex flex-col md:flex-row gap-3 mb-6">
-            <input type="email" name="email" placeholder="Your email address..." 
+        <form id="globalNewsletterForm" method="POST" class="flex flex-col md:flex-row gap-3 mb-6">
+            <input type="email" name="email" id="newsletterEmail" placeholder="Your email address..." 
                 class="flex-grow border border-gray-300 rounded px-4 py-3 focus:outline-none focus:ring-2 focus:ring-black focus:border-transparent" 
                 required>
-            <button type="submit" 
+            <button type="submit" id="newsletterSubmit"
                 class="bg-black text-white font-bold px-8 py-3 rounded hover:bg-gray-800 transition transform hover:scale-105">
                 <?php echo htmlspecialchars($btnText); ?>
             </button>
         </form>
 
-        <div id="globalNewsletterMessage" class="hidden text-sm mb-4"></div>
+        <div id="globalNewsletterMessage" class="hidden text-sm mb-4 p-3 rounded"></div>
 
         <?php if($footer): ?>
         <div class="text-xs text-gray-500 leading-relaxed max-w-lg mx-auto">
