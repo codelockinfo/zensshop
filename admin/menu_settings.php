@@ -511,86 +511,127 @@ require_once __DIR__ . '/../includes/admin-header.php';
 </div>
 
 <!-- Edit Modal -->
-<div id="editItemModal" class="hidden fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center">
-    <div class="bg-white rounded-lg p-6 w-full max-w-4xl">
-        <h3 class="font-bold text-lg mb-4">Edit Item</h3>
-        <form method="POST" enctype="multipart/form-data">
-            <input type="hidden" name="action" value="update_menu_item">
-            <input type="hidden" name="item_id" id="edit_item_id">
-            <input type="hidden" name="menu_id" value="<?php echo $selectedMenuId; ?>">
-            <div class="grid grid-cols-2 gap-4">
-                <div class="col-span-2 bg-gray-50 p-3 rounded border border-gray-200">
-                    <label class="block text-xs font-bold mb-2 text-gray-500 uppercase">Link Destination</label>
-                    <div class="flex flex-col gap-3">
-                        <div>
-                            <label class="block text-[10px] font-bold text-gray-400 mb-1">Resource Type</label>
-                            <select id="edit_link_type" onchange="updateLinkPicker(this, 'edit_link_item', 'edit_url', 'edit_label')" class="w-full border p-2 rounded text-sm outline-none focus:ring-1 focus:ring-blue-500">
-                                <option value="">-- Select Type --</option>
-                                <option value="system">System Link</option>
-                                <option value="pages">Store Page</option>
-                                <option value="products">Product</option>
-                                <option value="categories">Category</option>
-                                <option value="blogs">Blog Post</option>
-                                <option value="landing_pages">Special Page </option>
-                                <option value="custom">Custom URL</option>
-                            </select>
-                        </div>
-                        <div>
-                            <label class="block text-[10px] font-bold text-gray-400 mb-1">Select Item</label>
-                            <select id="edit_link_item" onchange="applyLinkSelection(this, 'edit_url', 'edit_label')" class="w-full border p-2 rounded text-sm outline-none focus:ring-1 focus:ring-blue-500 disabled:bg-gray-100 disabled:text-gray-400" disabled>
-                                <option value="">-- Select Reference --</option>
-                            </select>
-                        </div>
-                    </div>
-                    <p class="text-[10px] text-gray-400 mt-1 ml-1">Select a resource type, then choose the specific item to auto-fill the URL.</p>
-                </div>
-                <div class="col-span-2"><label class="block text-xs font-bold mb-1">Label</label><input type="text" name="label" id="edit_label" class="w-full border p-2 rounded" required></div>
-                <div class="col-span-2"><label class="block text-xs font-bold mb-1">URL</label><input type="text" name="url" id="edit_url" class="w-full border p-2 rounded"></div>
-                <!-- <div><label class="block text-xs font-bold mb-1">Order</label><input type="number" name="sort_order" id="edit_sort_order" class="w-full border p-2 rounded"></div> -->
-                <div><label class="block text-xs font-bold mb-1">Parent Item</label>
-                    <select name="parent_id" id="edit_parent_id" class="w-full border p-2 rounded">
-                        <option value="">(None)</option>
-                        <?php foreach($allItemsFlat as $opt): ?>
-                            <option value="<?php echo $opt['id']; ?>"><?php echo htmlspecialchars($opt['label']); ?></option>
-                        <?php endforeach; ?>
-                    </select>
-                </div>
-                <div><label class="block text-xs font-bold mb-1">Badge (Hot/New)</label><input type="text" name="badge_text" id="edit_badge_text" class="w-full border p-2 rounded" placeholder="HOT"></div>
-                <div><label class="block text-xs font-bold mb-1">Custom CSS Classes</label><textarea name="custom_classes" id="edit_custom_classes" class="w-full border p-2 rounded text-xs" rows="2" placeholder="text-black hover:text-red-700 transition font-sans"></textarea></div>
+<div id="editItemModal" class="hidden fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
+    <div class="bg-white rounded-lg w-full max-w-2xl max-h-[90vh] flex flex-col shadow-xl">
+        
+        <!-- Header -->
+        <div class="flex justify-between items-center p-4 border-b bg-gray-50 rounded-t-lg">
+            <h3 class="font-bold text-lg text-gray-800">Edit Item</h3>
+            <button onclick="closeModal('editItemModal')" class="text-gray-400 hover:text-gray-600 transition p-1">
+                <i class="fas fa-times text-lg"></i>
+            </button>
+        </div>
+
+        <!-- Scrollable Content -->
+        <div class="flex-1 overflow-y-auto custom-scrollbar p-6">
+            <form id="editItemForm" method="POST" enctype="multipart/form-data">
+                <input type="hidden" name="action" value="update_menu_item">
+                <input type="hidden" name="item_id" id="edit_item_id">
+                <input type="hidden" name="menu_id" value="<?php echo $selectedMenuId; ?>">
                 
-                <div class="col-span-2 pt-2">
-                     <label class="flex items-center gap-2 cursor-pointer">
-                         <input type="checkbox" name="is_mega_menu" id="edit_is_mega_menu" value="1" class="w-4 h-4 text-blue-600 rounded border-gray-300 focus:ring-blue-500">
-                         <span class="text-sm font-bold text-gray-700">Enable Mega Menu (Show Images in Submenu)</span>
-                     </label>
-                     <p class="text-xs text-gray-500 mt-1 ml-6">If enabled, this item's children will be displayed as a mega menu with images. Ensure children have images uploaded.</p>
-                </div>
-                
-                <div class="col-span-2">
-                    <label class="block text-xs font-bold mb-1">Image</label>
-                    <div id="current_image_container" class="hidden mb-2 p-3 border border-gray-200 rounded bg-gray-50">
-                        <div class="flex items-center gap-3">
-                            <img id="current_image_preview" src="" class="w-16 h-16 object-cover rounded border border-gray-300">
-                            <div class="flex-1">
-                                <p class="text-xs text-gray-600 mb-1">Current Image</p>
-                                <button type="button" onclick="removeCurrentImage()" class="text-red-600 hover:text-red-800 text-xs font-semibold">
-                                    <i class="fas fa-trash mr-1"></i> Remove Image
-                                </button>
+                <div class="grid grid-cols-2 gap-4">
+                    <!-- Resource Picker -->
+                    <div class="col-span-2 bg-blue-50 p-3 rounded border border-blue-100">
+                        <label class="block text-[10px] font-bold mb-2 text-blue-800 uppercase tracking-widest">Link Destination</label>
+                        <div class="grid grid-cols-2 gap-3">
+                            <div>
+                                <label class="block text-[10px] font-bold text-gray-500 mb-1">Type</label>
+                                <select id="edit_link_type" onchange="updateLinkPicker(this, 'edit_link_item', 'edit_url', 'edit_label')" class="w-full border p-2 rounded text-sm outline-none focus:ring-1 focus:ring-blue-500 bg-white">
+                                    <option value="">-- Select Type --</option>
+                                    <option value="system">System Link</option>
+                                    <option value="pages">Store Page</option>
+                                    <option value="products">Product</option>
+                                    <option value="categories">Category</option>
+                                    <option value="blogs">Blog Post</option>
+                                    <option value="landing_pages">Special Page</option>
+                                    <option value="custom">Custom URL</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label class="block text-[10px] font-bold text-gray-500 mb-1">Item</label>
+                                <select id="edit_link_item" onchange="applyLinkSelection(this, 'edit_url', 'edit_label')" class="w-full border p-2 rounded text-sm outline-none focus:ring-1 focus:ring-blue-500 bg-white disabled:bg-gray-100 disabled:text-gray-400" disabled>
+                                    <option value="">-- Select Reference --</option>
+                                </select>
                             </div>
                         </div>
                     </div>
-                    <input type="file" name="image" id="edit_image_input" class="w-full text-xs" accept="image/*" onchange="previewNewImage(this)">
-                    <input type="hidden" name="remove_image" id="remove_image_flag" value="0">
-                    <div id="new_image_preview_container" class="hidden mt-2">
-                        <img id="new_image_preview" src="" class="w-20 h-20 object-cover rounded border border-blue-300">
+
+                    <div class="col-span-2">
+                        <label class="block text-xs font-bold mb-1 text-gray-600">Label</label>
+                        <input type="text" name="label" id="edit_label" class="w-full border p-2 rounded text-sm focus:border-blue-500 focus:ring-1 focus:ring-blue-500 outline-none" required>
+                    </div>
+
+                    <div class="col-span-2">
+                        <label class="block text-xs font-bold mb-1 text-gray-600">URL</label>
+                        <input type="text" name="url" id="edit_url" class="w-full border p-2 rounded text-sm focus:border-blue-500 focus:ring-1 focus:ring-blue-500 outline-none">
+                    </div>
+
+                    <div class="col-span-1">
+                        <label class="block text-xs font-bold mb-1 text-gray-600">Badge (e.g. HOT)</label>
+                        <input type="text" name="badge_text" id="edit_badge_text" class="w-full border p-2 rounded text-sm hover:border-gray-400 focus:border-blue-500 outline-none" placeholder="New, Hot, etc.">
+                    </div>
+
+                    <div class="col-span-1">
+                        <label class="block text-xs font-bold mb-1 text-gray-600">Parent Item</label>
+                        <select name="parent_id" id="edit_parent_id" class="w-full border p-2 rounded text-sm bg-white focus:border-blue-500 focus:ring-1 focus:ring-blue-500 outline-none">
+                            <option value="">(None - Top Level)</option>
+                            <?php foreach($allItemsFlat as $opt): ?>
+                                <option value="<?php echo $opt['id']; ?>"><?php echo htmlspecialchars($opt['label']); ?></option>
+                            <?php endforeach; ?>
+                        </select>
+                    </div>
+
+                    <div class="col-span-2">
+                        <label class="block text-xs font-bold mb-1 text-gray-600">Custom CSS Classes</label>
+                        <input type="text" name="custom_classes" id="edit_custom_classes" class="w-full border p-2 rounded text-sm font-mono text-xs focus:border-blue-500 outline-none" placeholder="text-red-500 font-bold">
+                    </div>
+                    
+                    <div class="col-span-2 pt-2 pb-2">
+                         <label class="flex items-center gap-3 cursor-pointer group">
+                             <input type="checkbox" name="is_mega_menu" id="edit_is_mega_menu" value="1" class="w-5 h-5 text-blue-600 rounded border-gray-300 focus:ring-blue-500" onchange="toggleImageSection(this.checked)">
+                             <div>
+                                 <span class="text-sm font-bold text-gray-700 group-hover:text-blue-600 transition">Enable Mega Menu</span>
+                                 <p class="text-[10px] text-gray-500">Show sub-items with images in a grid layout.</p>
+                             </div>
+                         </label>
+                    </div>
+                    
+                    <!-- Image Upload -->
+                    <div class="col-span-2 hidden" id="edit_image_section">
+                        <label class="block text-xs font-bold mb-2 text-gray-600">Menu Image (Optional)</label>
+                        <div class="relative w-full h-32 border-2 border-dashed border-gray-300 rounded-lg hover:border-blue-400 hover:bg-blue-50 transition cursor-pointer flex flex-col items-center justify-center overflow-hidden group"
+                             onclick="document.getElementById('edit_image_input').click()">
+                            
+                            <input type="file" name="image" id="edit_image_input" class="hidden" accept="image/*" onchange="previewNewImage(this)">
+                            <input type="hidden" name="remove_image" id="remove_image_flag" value="0">
+                            
+                            <!-- Preview Image -->
+                            <img id="image_preview_box" src="" class="absolute inset-0 w-full h-full object-contain bg-gray-50 hidden p-2">
+                            
+                            <!-- Placeholder -->
+                            <div id="image_upload_placeholder" class="text-center p-4">
+                                <i class="fas fa-image text-2xl text-gray-400 mb-2 group-hover:text-blue-400 transition"></i>
+                                <p class="text-xs text-gray-500 group-hover:text-blue-600">Click to upload image</p>
+                            </div>
+                            
+                            <!-- Edit Overlay -->
+                            <div class="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-10 transition pointer-events-none"></div>
+
+                            <!-- Remove Button -->
+                            <button type="button" id="btn_remove_image" onclick="removeCurrentImage(event)" class="hidden absolute top-2 right-2 bg-white text-red-500 rounded-full w-8 h-8 shadow hover:bg-red-50 hover:text-red-700 z-20 flex items-center justify-center transition" title="Remove Image">
+                                <i class="fas fa-trash-alt text-xs"></i>
+                            </button>
+                        </div>
                     </div>
                 </div>
-            </div>
-            <div class="flex justify-end gap-2 mt-6">
-                <button type="button" onclick="closeModal('editItemModal')" class="px-4 py-2 text-gray-500">Cancel</button>
-                <button type="submit" class="bg-green-600 text-white px-4 py-2 rounded font-bold btn-loading">Update</button>
-            </div>
-        </form>
+            </form>
+        </div>
+
+        <!-- Footer -->
+        <div class="p-4 border-t bg-gray-50 rounded-b-lg flex justify-end gap-3">
+            <button type="button" onclick="closeModal('editItemModal')" class="px-5 py-2 text-gray-600 font-medium hover:bg-gray-200 rounded-lg transition text-sm">Cancel</button>
+            <button type="submit" form="editItemForm" class="bg-black text-white px-6 py-2 rounded-lg font-bold shadow hover:bg-gray-800 transition text-sm btn-loading">Update Item</button>
+        </div>
     </div>
 </div>
 
@@ -746,31 +787,56 @@ function editItem(item) {
     document.getElementById('edit_custom_classes').value = item.custom_classes || '';
     document.getElementById('edit_is_mega_menu').checked = (item.is_mega_menu == 1);
     
-    // Handle current image display
-    const currentImageContainer = document.getElementById('current_image_container');
-    const currentImagePreview = document.getElementById('current_image_preview');
+    // Toggle image section based on mega menu setting
+    toggleImageSection(item.is_mega_menu == 1);
+    
+    // Handle image display with new UI
+    const previewBox = document.getElementById('image_preview_box');
+    const placeholder = document.getElementById('image_upload_placeholder');
+    const removeBtn = document.getElementById('btn_remove_image');
     const removeImageFlag = document.getElementById('remove_image_flag');
     const editImageInput = document.getElementById('edit_image_input');
-    const newImagePreviewContainer = document.getElementById('new_image_preview_container');
     
     // Reset states
     removeImageFlag.value = '0';
     editImageInput.value = '';
-    newImagePreviewContainer.classList.add('hidden');
     
     if (item.image_path) {
-        currentImagePreview.src = '<?php echo getBaseUrl(); ?>/assets/images/uploads/' + item.image_path;
-        currentImageContainer.classList.remove('hidden');
+        previewBox.src = '<?php echo getBaseUrl(); ?>/assets/images/uploads/' + item.image_path;
+        previewBox.classList.remove('hidden');
+        placeholder.classList.add('hidden');
+        removeBtn.classList.remove('hidden');
     } else {
-        currentImageContainer.classList.add('hidden');
+        previewBox.src = '';
+        previewBox.classList.add('hidden');
+        placeholder.classList.remove('hidden');
+        removeBtn.classList.add('hidden');
     }
     
     document.getElementById('editItemModal').classList.remove('hidden');
 }
 
-function removeCurrentImage() {
+function toggleImageSection(show) {
+    const section = document.getElementById('edit_image_section');
+    if (show) {
+        section.classList.remove('hidden');
+    } else {
+        section.classList.add('hidden');
+    }
+}
+
+function removeCurrentImage(e) {
+    if(e) e.stopPropagation();
     document.getElementById('remove_image_flag').value = '1';
-    document.getElementById('current_image_container').classList.add('hidden');
+    
+    // Reset UI to placeholder
+    document.getElementById('image_preview_box').src = '';
+    document.getElementById('image_preview_box').classList.add('hidden');
+    document.getElementById('image_upload_placeholder').classList.remove('hidden');
+    document.getElementById('btn_remove_image').classList.add('hidden');
+    
+    // Clear input
+    document.getElementById('edit_image_input').value = '';
 }
 
 function autoFillEdit(select) {
@@ -790,17 +856,20 @@ function autoFillBulk(select, index) {
 }
 
 function previewNewImage(input) {
-    const preview = document.getElementById('new_image_preview');
-    const container = document.getElementById('new_image_preview_container');
+    const preview = document.getElementById('image_preview_box');
+    const placeholder = document.getElementById('image_upload_placeholder');
+    const removeBtn = document.getElementById('btn_remove_image');
     
     if (input.files && input.files[0]) {
         const reader = new FileReader();
         reader.onload = function(e) {
             preview.src = e.target.result;
-            container.classList.remove('hidden');
+            preview.classList.remove('hidden');
+            placeholder.classList.add('hidden');
+            removeBtn.classList.remove('hidden');
         };
         reader.readAsDataURL(input.files[0]);
-        document.getElementById('current_image_container').classList.add('hidden');
+        document.getElementById('remove_image_flag').value = '0';
     }
 }
 
