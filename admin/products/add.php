@@ -431,12 +431,12 @@ $brands = $brandsResult ? json_decode($brandsResult['setting_value'], true) : []
                         <span class="text-blue-500 text-sm">click to browse</span>
                     </div>
                     <div class="image-preview hidden"></div>
-                    <button type="button" class="remove-image-btn absolute top-2 right-2 bg-red-500 text-white rounded-full w-6 h-6 flex items-center justify-center hover:bg-red-600 hidden">
+                    <button type="button" class="remove-image-btn absolute top-2 right-2 bg-red-500 text-white rounded-full w-6 h-6 flex items-center justify-center hover:bg-red-600 hidden z-40">
                         <i class="fas fa-times text-xs"></i>
                     </button>
                     <?php if ($i >= 4): ?>
-                    <button type="button" onclick="event.stopPropagation(); removeImageBox(this);" class="remove-box-btn absolute top-2 left-2 bg-gray-500 text-white rounded-full w-6 h-6 flex items-center justify-center hover:bg-gray-700" title="Remove this box">
-                        <i class="fas fa-trash text-xs"></i>
+                    <button type="button" onclick="event.stopPropagation(); removeImageBox(this);" class="remove-box-btn absolute top-2 right-2 bg-gray-500 text-white rounded-full w-6 h-6 flex items-center justify-center hover:bg-gray-700 z-30" title="Remove this box">
+                        <i class="fas fa-times text-xs"></i>
                     </button>
                     <?php endif; ?>
                 </div>
@@ -790,7 +790,7 @@ function checkStockStatus(input) {
     }
 }
 </script>
-<script src="<?php echo $baseUrl; ?>/assets/js/admin-image-upload7.js?v=<?php echo time(); ?>"></script>
+<script src="<?php echo $baseUrl; ?>/assets/js/admin-image-upload8.js?v=<?php echo time(); ?>"></script>
 <script src="<?php echo $baseUrl; ?>/assets/js/product-variants6.js"></script>
 
 <!-- Brand Management Modal -->

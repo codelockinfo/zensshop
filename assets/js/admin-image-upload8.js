@@ -298,11 +298,15 @@ function handleFiles(files, box, placeholder, preview, removeBtn) {
             }
             
             removeBtn.classList.remove('hidden');
+            const boxRemoveBtn = box.querySelector('.remove-box-btn');
+            if (boxRemoveBtn) boxRemoveBtn.classList.add('hidden');
             updateImagesInput();
         } else {
             console.error('Upload failed:', data.message);
             preview.classList.add('hidden');
             placeholder.classList.remove('hidden');
+            const boxRemoveBtn = box.querySelector('.remove-box-btn');
+            if (boxRemoveBtn) boxRemoveBtn.classList.remove('hidden');
             showToast(data.message || 'Failed to upload file. Server returned error.', 'error', 5000);
         }
     })
@@ -310,6 +314,8 @@ function handleFiles(files, box, placeholder, preview, removeBtn) {
         console.error('Fetch error:', error);
         preview.classList.add('hidden');
         placeholder.classList.remove('hidden');
+        const boxRemoveBtn = box.querySelector('.remove-box-btn');
+        if (boxRemoveBtn) boxRemoveBtn.classList.remove('hidden');
         showToast('An error occurred while uploading. Please check your network or server logs.', 'error', 5000);
     });
 }
@@ -320,6 +326,8 @@ function removeImage(box, placeholder, preview, removeBtn) {
     preview.innerHTML = '';
     placeholder.classList.remove('hidden');
     removeBtn.classList.add('hidden');
+    const boxRemoveBtn = box.querySelector('.remove-box-btn');
+    if (boxRemoveBtn) boxRemoveBtn.classList.remove('hidden');
     updateImagesInput();
 }
 
@@ -355,6 +363,14 @@ function updateImagesInput() {
     }
 }
 
+function removeImageBox(btn) {
+    const box = btn.closest('.image-upload-box');
+    if (box) {
+        box.remove();
+        updateImagesInput();
+    }
+}
+
 function addMoreImage() {
     const container = document.getElementById('imageUploadArea');
     // Ensure index is unique
@@ -375,6 +391,9 @@ function addMoreImage() {
             </div>
             <div class="image-preview hidden"></div>
             <button type="button" class="remove-image-btn absolute top-2 right-2 bg-red-500 text-white rounded-full w-6 h-6 flex items-center justify-center hover:bg-red-600 hidden">
+                <i class="fas fa-times text-xs"></i>
+            </button>
+            <button type="button" onclick="event.stopPropagation(); removeImageBox(this);" class="remove-box-btn absolute top-2 right-2 bg-gray-500 text-white rounded-full w-6 h-6 flex items-center justify-center hover:bg-gray-700 z-30" title="Remove this box">
                 <i class="fas fa-times text-xs"></i>
             </button>
         </div>

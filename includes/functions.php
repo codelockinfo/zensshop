@@ -93,10 +93,12 @@ function getImageUrl($path) {
     }
     $cleanPath = ltrim($cleanPath, '/');
     
-    // If path doesn't contain 'assets/' or 'uploads/', it's just a filename or partial path
+    // If path doesn't contain 'assets/' or 'uploads/', it might be a root file or belongs in uploads
     if (strpos($cleanPath, 'assets/') === false && strpos($cleanPath, 'uploads/') === false) {
-        // Assume it belongs in uploads
-        $cleanPath = 'assets/images/uploads/' . $cleanPath;
+        // Check if file exists in root (for favicons)
+        if (!file_exists(__DIR__ . '/../' . $cleanPath)) {
+            $cleanPath = 'assets/images/uploads/' . $cleanPath;
+        }
     } elseif (strpos($cleanPath, 'uploads/') === 0) {
         // If it starts with uploads/, it likely needs assets/images/ prepended
         $cleanPath = 'assets/images/' . $cleanPath;

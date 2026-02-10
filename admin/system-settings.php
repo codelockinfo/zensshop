@@ -80,12 +80,28 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $prefix = ($fileKey === 'setting_favicon_ico') ? 'favicon' : (($fileKey === 'setting_all_category_banner') ? 'banner_all_cat' : 'favicon_browser');
             $fileName = $prefix . '_' . time() . '.' . $ext;
             
-            if (move_uploaded_file($_FILES[$fileKey]['tmp_name'], $uploadDir . $fileName)) {
-                // FIX: Store partial path so getImageUrl finds it in assets/images/ not uploads
-                $_POST[$fileKey] = 'assets/images/' . $fileName;
-                $_POST['group_' . str_replace('setting_', '', $fileKey)] = ($fileKey === 'setting_all_category_banner') ? 'general' : 'seo';
+            if ($fileKey === 'setting_favicon_ico') {
+                // SEO: Store .ico favicon directly in root for Multi-Store support
+                $storeId = $_SESSION['store_id'] ?? 'default';
+                $cleanStoreId = str_replace(['STORE-', ' '], ['', '_'], $storeId);
+                $fileName = 'favicon_' . $cleanStoreId . '.ico';
+                $finalUploadPage = __DIR__ . '/../' . $fileName;
+                
+                if (move_uploaded_file($_FILES[$fileKey]['tmp_name'], $finalUploadPage)) {
+                    $_POST[$fileKey] = $fileName; // Store just the filename (it's in root)
+                    $_POST['group_' . str_replace('setting_', '', $fileKey)] = 'seo';
+                } else {
+                    $uploadErrors[] = "Failed to move uploaded favicon to root: " . htmlspecialchars($_FILES[$fileKey]['name']);
+                }
             } else {
-                $uploadErrors[] = "Failed to move uploaded file: " . htmlspecialchars($_FILES[$fileKey]['name']);
+                // Regular assets/images upload for other files
+                if (move_uploaded_file($_FILES[$fileKey]['tmp_name'], $uploadDir . $fileName)) {
+                    // FIX: Store partial path so getImageUrl finds it in assets/images/ not uploads
+                    $_POST[$fileKey] = 'assets/images/' . $fileName;
+                    $_POST['group_' . str_replace('setting_', '', $fileKey)] = ($fileKey === 'setting_all_category_banner') ? 'general' : 'seo';
+                } else {
+                    $uploadErrors[] = "Failed to move uploaded file: " . htmlspecialchars($_FILES[$fileKey]['name']);
+                }
             }
         }
     }
@@ -223,7 +239,7 @@ unset($_SESSION['error']);
 
                          <div id="previewIco" class="w-full h-full flex items-center justify-center">
                              <?php if($favIco): ?>
-                                 <img src="<?php echo getBaseUrl() . '/assets/images/' . $favIco; ?>" class="w-16 h-16 object-contain">
+                                 <img src="<?php echo htmlspecialchars(getImageUrl($favIco)); ?>?v=<?php echo time(); ?>" class="w-16 h-16 object-contain">
                                  <!-- Overlay -->
                                  <div class="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-40 transition flex items-center justify-center">
                                       <i class="fas fa-camera text-white opacity-0 group-hover:opacity-100 transition"></i>

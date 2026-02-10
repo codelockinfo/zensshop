@@ -84,27 +84,19 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             ];
         
         // Handle image uploads
-        if (!empty($_POST['images'])) {
-            $imagesJson = $_POST['images'];
-            $imagePaths = json_decode($imagesJson, true);
-            if (is_array($imagePaths) && !empty($imagePaths)) {
-                // Filter out empty values
-                $imagePaths = array_filter($imagePaths);
-                $data['images'] = array_values($imagePaths);
-                // Set first image as featured
-                if (!empty($imagePaths[0])) {
-                    $data['featured_image'] = $imagePaths[0];
-                }
+        if (isset($_POST['images'])) {
+            $imagePaths = json_decode($_POST['images'], true);
+            if (is_array($imagePaths)) {
+                $data['images'] = array_values(array_filter($imagePaths));
+                $data['featured_image'] = !empty($data['images'][0]) ? $data['images'][0] : null;
             } else {
-                // Keep existing images if no new ones uploaded
-                $existingImages = json_decode($productData['images'] ?? '[]', true);
-                $data['images'] = $existingImages;
+                // Fallback to existing
+                $data['images'] = json_decode($productData['images'] ?? '[]', true);
                 $data['featured_image'] = $productData['featured_image'];
             }
         } else {
-            // Keep existing images if no new ones uploaded
-            $existingImages = json_decode($productData['images'] ?? '[]', true);
-            $data['images'] = $existingImages;
+            // Keep existing if no data sent
+            $data['images'] = json_decode($productData['images'] ?? '[]', true);
             $data['featured_image'] = $productData['featured_image'];
         }
         
@@ -130,9 +122,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             }
             
             if (!empty($uploadedImages)) {
-                // Merge with existing images
-                $existingImages = json_decode($productData['images'] ?? '[]', true);
-                $data['images'] = array_merge($existingImages, $uploadedImages);
+                // Merge with the already processed list (which includes removals)
+                $data['images'] = array_merge($data['images'], $uploadedImages);
                 if (empty($data['featured_image']) && !empty($uploadedImages[0])) {
                     $data['featured_image'] = $uploadedImages[0];
                 }
@@ -566,12 +557,12 @@ $existingVariants = $product->getVariants($productId);
                         <?php endif; ?>
                     </div>
                     
-                    <button type="button" class="remove-image-btn absolute top-2 right-2 bg-red-500 text-white rounded-full w-6 h-6 flex items-center justify-center hover:bg-red-600 <?php echo $hasImage ? '' : 'hidden'; ?>">
+                    <button type="button" class="remove-image-btn absolute top-2 right-2 bg-red-500 text-white rounded-full w-6 h-6 flex items-center justify-center hover:bg-red-600 <?php echo $hasImage ? '' : 'hidden'; ?> z-40">
                         <i class="fas fa-times text-xs"></i>
                     </button>
                     <?php if ($i >= 4): ?>
-                    <button type="button" onclick="event.stopPropagation(); removeImageBox(this);" class="remove-box-btn absolute top-2 left-2 bg-gray-500 text-white rounded-full w-6 h-6 flex items-center justify-center hover:bg-gray-700" title="Remove this box">
-                        <i class="fas fa-trash text-xs"></i>
+                    <button type="button" onclick="event.stopPropagation(); removeImageBox(this);" class="remove-box-btn absolute top-2 right-2 bg-gray-500 text-white rounded-full w-6 h-6 flex items-center justify-center hover:bg-gray-700 z-30 <?php echo $hasImage ? 'hidden' : ''; ?>" title="Remove this box">
+                        <i class="fas fa-times text-xs"></i>
                     </button>
                     <?php endif; ?>
                 </div>
@@ -917,7 +908,7 @@ document.getElementById('productForm').addEventListener('submit', function(e) {
     document.getElementById('highlights_json').value = JSON.stringify(highlights);
 });
 </script>
-<script src="<?php echo $baseUrl; ?>/assets/js/admin-image-upload7.js?v=<?php echo time(); ?>"></script>
+<script src="<?php echo $baseUrl; ?>/assets/js/admin-image-upload8.js?v=<?php echo time(); ?>"></script>
 <script src="<?php echo $baseUrl; ?>/assets/js/product-variants6.js"></script>
 <script>
 // Initialize with existing images
