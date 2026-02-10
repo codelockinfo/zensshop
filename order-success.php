@@ -42,6 +42,12 @@ $deliveryDate = (clone $orderDate)->modify('+7 days')->format('M j');
 
 $pageTitle = 'Order Confirmation';
 require_once __DIR__ . '/includes/header.php';
+
+// Re-fetch settings locally to ensure variables exist if header doesn't pass them
+$settingsObj = new Settings();
+$siteLogoType = $settingsObj->get('site_logo_type', 'image');
+$siteLogoText = $settingsObj->get('site_logo_text', 'CookPro');
+$siteLogo = $settingsObj->get('site_logo', 'logo.png');
 ?>
 
 <style>
@@ -116,18 +122,18 @@ nav.bg-white.sticky.top-0 {
                 <!-- Left Column - Order Details & Tracking -->
                 <div class="lg:col-span-2 space-y-8">
                     
+
                     <!-- Logo -->
                     <div class="mb-8">
                         <a href="<?php echo $baseUrl; ?>/" class="flex items-center">
                             <?php if ($siteLogoType == 'image'): ?>
-                                <img src="<?php echo getImageUrl($siteLogo); ?>" alt="<?php echo htmlspecialchars($siteLogoText); ?>" class="h-12 w-auto object-contain">
+                                <img src="<?php echo getImageUrl($siteLogo); ?>" alt="<?php echo htmlspecialchars($siteLogoText); ?>" class="h-[60px] w-auto object-contain">
                             <?php else: ?>
                                 <span class="text-3xl font-heading font-bold text-black"><?php echo htmlspecialchars($siteLogoText); ?></span>
                             <?php endif; ?>
                         </a>
                     </div>
                     
-                    <!-- Order Confirmation Header -->
                     <div class="flex items-start space-x-4 mb-8">
                         <div class="order-success-icon flex-shrink-0">
                             <i class="fas fa-check"></i>
