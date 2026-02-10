@@ -100,10 +100,10 @@ if (!function_exists('url')) {
     <title><?php echo isset($pageTitle) ? htmlspecialchars($pageTitle) . ' - ' : ''; ?><?php echo htmlspecialchars($siteTitleSuffix); ?></title>
     
     <?php if ($faviconPng): ?>
-    <link rel="icon" type="image/png" href="<?php echo $baseUrl; ?>/assets/images/<?php echo htmlspecialchars($faviconPng); ?>">
+    <link rel="icon" type="image/png" href="<?php echo htmlspecialchars(getImageUrl($faviconPng)); ?>?v=<?php echo time(); ?>">
     <?php endif; ?>
     <?php if ($faviconIco): ?>
-    <link rel="shortcut icon" href="<?php echo $baseUrl; ?>/assets/images/<?php echo htmlspecialchars($faviconIco); ?>">
+    <link rel="shortcut icon" href="<?php echo htmlspecialchars(getImageUrl($faviconIco)); ?>?v=<?php echo time(); ?>">
     <?php endif; ?>
 
     <?php 

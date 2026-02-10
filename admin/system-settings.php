@@ -38,7 +38,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
             $fileName = $prefix . '_' . time() . '.' . $ext;
             
             if (move_uploaded_file($_FILES[$fileKey]['tmp_name'], $uploadDir . $fileName)) {
-                $_POST[$fileKey] = $fileName;
+                // FIX: Store partial path so getImageUrl finds it in assets/images/ not uploads
+                $_POST[$fileKey] = 'assets/images/' . $fileName;
                 $_POST['group_' . str_replace('setting_', '', $fileKey)] = ($fileKey === 'setting_all_category_banner') ? 'general' : 'seo';
             }
         }
@@ -137,7 +138,7 @@ unset($_SESSION['success']);
                          
                          <div id="previewPng" class="w-full h-full flex items-center justify-center">
                              <?php if($favPng): ?>
-                                 <img src="<?php echo getBaseUrl() . '/assets/images/' . $favPng; ?>" class="w-16 h-16 object-contain">
+                                 <img src="<?php echo htmlspecialchars(getImageUrl($favPng)); ?>?v=<?php echo time(); ?>" class="w-16 h-16 object-contain">
                                  <!-- Overlay -->
                                  <div class="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-40 transition flex items-center justify-center">
                                       <i class="fas fa-camera text-white opacity-0 group-hover:opacity-100 transition"></i>

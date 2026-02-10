@@ -69,7 +69,16 @@ $action = $segments[count($segments) - 1] ?? '';  // add, list
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title><?php echo isset($pageTitle) ? $pageTitle . ' - ' : ''; ?>Admin Dashboard - CookPro</title>
-    <link rel="icon" type="image/png" href="<?php echo $baseUrl; ?>/admin/Images/admin-logo.png">
+    <?php 
+    // Fetch favicon from settings
+    $favicon = $h_db->fetchOne("SELECT setting_value FROM site_settings WHERE setting_key = 'favicon_png' AND (store_id = ? OR store_id IS NULL) ORDER BY store_id DESC LIMIT 1", [$h_storeId])['setting_value'] ?? '';
+    if (empty($favicon)) {
+        $faviconUrl = $baseUrl . '/admin/Images/Favicon.png';
+    } else {
+        $faviconUrl = getImageUrl($favicon);
+    }
+    ?>
+    <link rel="icon" type="image/png" href="<?php echo htmlspecialchars($faviconUrl) . '?v=' . time(); ?>">
     
     <!-- Tailwind CSS with Typography Plugin -->
     <script src="https://cdn.tailwindcss.com?plugins=typography"></script>
@@ -108,7 +117,7 @@ $action = $segments[count($segments) - 1] ?? '';  // add, list
                 $ah_logoImage = $h_db->fetchOne("SELECT setting_value FROM site_settings WHERE setting_key = 'site_logo' AND (store_id = ? OR store_id IS NULL) ORDER BY store_id DESC LIMIT 1", [$h_storeId])['setting_value'] ?? '';
 
                 if ($ah_logoType === 'image' && !empty($ah_logoImage)): ?>
-                    <img src="<?php echo $baseUrl; ?>/assets/images/<?php echo htmlspecialchars($ah_logoImage); ?>" alt="Logo" class="h-14 object-contain">
+                    <img src="<?php echo $baseUrl; ?>/assets/images/<?php echo htmlspecialchars($ah_logoImage); ?>?v=<?php echo time(); ?>" alt="Logo" class="h-14 object-contain">
                 <?php else: ?>
                     <div class="w-8 h-8 bg-blue-500 rounded flex items-center justify-center text-white font-bold"><?php echo substr($ah_logoText, 0, 1); ?></div>
                     <span class="text-xl font-bold text-gray-800"><?php echo htmlspecialchars($ah_logoText); ?></span>
@@ -199,34 +208,10 @@ $action = $segments[count($segments) - 1] ?? '';  // add, list
                 <div class="flex items-center space-x-2 cursor-pointer user-profile-trigger">
                     <?php 
                     $profileImage = $currentUser['profile_image'] ?? null;
-                    $imageUrl = $baseUrl . '/assets/images/default-avatar.svg';
-                    
-                    if ($profileImage) {
-                        // Normalize the URL (fix old /oecom/ paths)
-                        $profileImage = normalizeImageUrl($profileImage);
-                        
-                        // Check if it's already a full URL
-                        if (strpos($profileImage, 'http://') === 0 || strpos($profileImage, 'https://') === 0) {
-                            $imageUrl = $profileImage;
-                        } elseif (strpos($profileImage, 'data:image') === 0) {
-                            // It's a base64 data URI, use it directly
-                            $imageUrl = $profileImage;
-                        } elseif (strpos($profileImage, '/') === 0) {
-                            // It's already a path from root
-                            $imageUrl = $profileImage;
-                        } else {
-                            // Remove any base URL prefix and convert to file path
-                            $imagePath = str_replace($baseUrl . '/', '', $profileImage);
-                            $imagePath = preg_replace('#^[^/]+/#', '', $imagePath); // Remove any leading directory
-                            $fullPath = __DIR__ . '/../' . ltrim($imagePath, '/');
-                            
-                            if (file_exists($fullPath)) {
-                                $imageUrl = $baseUrl . '/' . ltrim($imagePath, '/');
-                            }
-                        }
-                    }
+                    // Use helper function for consistent image URL handling
+                    $imageUrl = !empty($profileImage) ? getImageUrl($profileImage) : $baseUrl . '/assets/images/default-avatar.svg';
                     ?>
-                    <img src="<?php echo htmlspecialchars($imageUrl); ?>" 
+                    <img src="<?php echo htmlspecialchars($imageUrl) . '?v=' . time(); ?>" 
                          alt="User" 
                          class="w-10 h-10 rounded-full object-cover border-2 border-gray-300"
                          onerror="this.src='<?php echo $baseUrl; ?>/assets/images/default-avatar.svg'">

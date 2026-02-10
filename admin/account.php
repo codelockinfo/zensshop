@@ -13,9 +13,13 @@ $error = '';
 $success = '';
 
 // Handle profile image upload (before header to allow redirects)
-if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['upload_profile'])) {
+if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    // Check if POST is empty but Content-Length > 0 (post_max_size exceeded)
+    if (empty($_POST) && empty($_FILES) && isset($_SERVER['CONTENT_LENGTH']) && $_SERVER['CONTENT_LENGTH'] > 0) {
+        $error = 'The uploaded file exceeds the allowed size limit (post_max_size). Please upload a smaller image.';
+    } elseif (isset($_POST['upload_profile']) || !empty($_FILES['profile_image']['name'])) {
     try {
-        // Check if file was uploaded
+        // Assume upload attempt if file is present
         if (empty($_FILES['profile_image']['name']) || $_FILES['profile_image']['error'] !== UPLOAD_ERR_OK) {
             throw new Exception('Please select an image file to upload.');
         }
@@ -68,8 +72,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['upload_profile'])) {
             throw new Exception('Failed to save uploaded file.');
         }
         
-        // Update database
-        $profileImagePath = $baseUrl . '/assets/images/profiles/' . $filename;
+        // Update database (Save relative path for better handling)
+        $profileImagePath = 'assets/images/profiles/' . $filename;
         $db->execute(
             "UPDATE users SET profile_image = ? WHERE id = ?",
             [$profileImagePath, $currentUser['id']]
@@ -81,6 +85,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['upload_profile'])) {
     } catch (Exception $e) {
         $error = $e->getMessage();
     }
+}
 }
 
 // Handle form submission (account info and password) - before header
@@ -170,41 +175,20 @@ require_once __DIR__ . '/../includes/admin-header.php';
             <div class="relative mb-4">
                 <?php 
                 $profileImage = $currentUser['profile_image'] ?? null;
-                $imageUrl = $baseUrl . '/assets/images/default-avatar.svg';
-                
-                if ($profileImage) {
-                    // Normalize the URL (fix old /oecom/ paths)
-                    $profileImage = normalizeImageUrl($profileImage);
-                    
-                    // Check if it's already a full URL
-                    if (strpos($profileImage, 'http://') === 0 || strpos($profileImage, 'https://') === 0) {
-                        $imageUrl = $profileImage;
-                    } elseif (strpos($profileImage, 'data:image') === 0) {
-                        // It's a base64 data URI, use it directly
-                        $imageUrl = $profileImage;
-                    } elseif (strpos($profileImage, '/') === 0) {
-                        // It's already a path from root
-                        $imageUrl = $profileImage;
-                    } else {
-                        // Remove any base URL prefix and convert to file path
-                        $imagePath = str_replace($baseUrl . '/', '', $profileImage);
-                        $imagePath = preg_replace('#^[^/]+/#', '', $imagePath); // Remove any leading directory
-                        $fullPath = __DIR__ . '/../' . ltrim($imagePath, '/');
-                        
-                        if (file_exists($fullPath)) {
-                            $imageUrl = $baseUrl . '/' . ltrim($imagePath, '/');
-                        }
-                    }
-                }
+                // Use helper function for consistent image URL handling which correctly resolves assets/ paths
+                $imageUrl = !empty($profileImage) ? getImageUrl($profileImage) : $baseUrl . '/assets/images/default-avatar.svg';
                 ?>
-                <img src="<?php echo htmlspecialchars($imageUrl); ?>" 
+                <img src="<?php echo htmlspecialchars($imageUrl) . '?v=' . time(); ?>" 
                      alt="Profile" 
                      id="profilePreview"
                      class="w-32 h-32 rounded-full object-cover border-4 border-gray-200"
                      onerror="this.src='<?php echo $baseUrl; ?>/assets/images/default-avatar.svg'">
             </div>
             
-            <form method="POST" action="" enctype="multipart/form-data" class="w-full">
+            <form method="POST" action="<?php echo htmlspecialchars($_SERVER['REQUEST_URI']); ?>" enctype="multipart/form-data" class="w-full">
+                <!-- Add hidden input to ensure POST triggers even if button name isn't sent -->
+                <input type="hidden" name="upload_profile" value="1">
+                
                 <input type="file" 
                        name="profile_image" 
                        id="profileImageInput"
@@ -218,7 +202,7 @@ require_once __DIR__ . '/../includes/admin-header.php';
                 </button>
                 <button type="submit" 
                         name="upload_profile"
-                        class="admin-btn bg-green-500 text-white w-full hidden btn-loading"
+                        class="admin-btn bg-green-500 text-white w-full <?php echo isset($_POST['upload_profile']) ? '' : 'hidden'; ?> btn-loading"
                         id="saveProfileBtn">
                     <i class="fas fa-save mr-2"></i>Save Image
                 </button>

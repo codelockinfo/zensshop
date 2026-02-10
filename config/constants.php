@@ -18,12 +18,20 @@ $projectDir = basename(dirname(__DIR__));
 
 if (strpos($cleanHost, 'localhost') !== false || strpos($cleanHost, '127.0.0.1') !== false) {
     // Local dev: match localhost/project-folder
-    $currentUrl = $cleanHost . '/' . $projectDir;
     define('SITE_URL', $protocol . $rawHost . '/' . $projectDir);
+    $currentUrl = $cleanHost . '/' . $projectDir;
 } else {
-    // Production: match just domain
-    $currentUrl = $cleanHost;
-    define('SITE_URL', $protocol . $cleanHost);
+    // Production or Custom Host
+    // Check if we are running from a subdirectory that matches projectDir
+    if (isset($_SERVER['SCRIPT_NAME']) && strpos($_SERVER['SCRIPT_NAME'], '/' . $projectDir . '/') === 0) {
+        // We are in a subdirectory (e.g. homeprox.in/zensshop/...)
+        define('SITE_URL', $protocol . $cleanHost . '/' . $projectDir);
+        $currentUrl = $cleanHost . '/' . $projectDir;
+    } else {
+        // We are at root (e.g. homeprox.in/...)
+        define('SITE_URL', $protocol . $cleanHost);
+        $currentUrl = $cleanHost;
+    }
 }
 
 // 2. Detect Store ID from database using the CURRENT_URL
