@@ -441,6 +441,13 @@ $currentPage = basename($_SERVER['PHP_SELF']);
             <span>Features</span>
         </a>
 
+        <a href="<?php echo url('admin/footer_features'); ?>"
+           class="flex items-center space-x-2 py-1 px-4 text-sm <?php echo ($currentPage === 'footer_features.php' || strpos($_SERVER['REQUEST_URI'], 'admin/footer_features') !== false) ? 'bg-gray-700' : ''; ?>"
+           title="Footer Features">
+            <i class="fas fa-layer-group text-xs"></i>
+            <span>Footer Features</span>
+        </a>
+
         <a href="<?php echo url('admin/newsletter'); ?>"
            class="flex items-center space-x-2 py-1 px-4 text-sm <?php echo ($currentPage === 'newsletter_settings' || strpos($_SERVER['REQUEST_URI'], 'admin/newsletter') !== false) ? 'bg-gray-700' : ''; ?>"
            title="Newsletter Section">

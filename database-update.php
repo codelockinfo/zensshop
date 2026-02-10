@@ -1398,17 +1398,60 @@ if (!columnExists($db, 'customers', 'auth_provider')) {
 }
 
 
+// ==========================================
+// STEP 20: Create/Update footer_features table
+// ==========================================
+echo "STEP 20: Creating/Updating footer_features table\n";
+echo "---------------------------------------------------\n";
+
+$sql_footer_features = "CREATE TABLE IF NOT EXISTS footer_features (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    store_id VARCHAR(50) DEFAULT NULL,
+    icon TEXT,
+    heading VARCHAR(255),
+    content TEXT,
+    bg_color VARCHAR(50) DEFAULT '#ffffff',
+    text_color VARCHAR(50) DEFAULT '#000000',
+    sort_order INT DEFAULT 0,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    INDEX idx_store (store_id)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci";
+
+executeSql($db, $sql_footer_features, "Create footer_features table", $errors, $success, $EXECUTE);
+
+// Add feature_id column if missing
+if (!columnExists($db, 'footer_features', 'feature_id')) {
+    executeSql($db, "ALTER TABLE footer_features ADD COLUMN feature_id BIGINT DEFAULT NULL AFTER id", "Add feature_id to footer_features", $errors, $success, $EXECUTE);
+    executeSql($db, "ALTER TABLE footer_features ADD UNIQUE INDEX idx_feature_id (feature_id)", "Add unique index on feature_id", $errors, $success, $EXECUTE);
+}
+
+// Populate missing feature_ids
+if ($EXECUTE) {
+    try {
+        $rows = $db->fetchAll("SELECT id FROM footer_features WHERE feature_id IS NULL");
+        foreach ($rows as $row) {
+            $randId = mt_rand(1000000000, 9999999999);
+            $db->execute("UPDATE footer_features SET feature_id = ? WHERE id = ?", [$randId, $row['id']]);
+        }
+        if (!empty($rows)) {
+            echo "Populated " . count($rows) . " footer features with 10-digit IDs\n";
+        }
+    } catch (Exception $e) {}
+}
+
 echo "\n========================================\n";
-echo "SUMMARY\n";
+echo "SUMMARY:\n";
 echo "========================================\n";
 echo "Successful operations: " . count($success) . "\n";
-echo "Errors encountered: " . count($errors) . "\n\n";
+echo "Errors encountered: " . count($errors) . "\n";
 
-if (!$EXECUTE) {
-    echo "⚠️  NOTE: This was a DRY RUN. No changes were applied.\n";
-    echo "To execute, edit this file and set \$EXECUTE = true;\n";
-    echo "Then run: php database-update.php\n";
+if (!empty($errors)) {
+    echo "\nError Details:\n";
+    foreach ($errors as $err) {
+        echo "- $err\n";
+    }
 } else {
-    echo "✅ Update Complete. You may verify your tables now.\n";
+    echo "\n✅ Update Complete. You may verify your tables now.\n";
     echo "We recommend deleting this file after successful execution.\n";
 }
