@@ -393,4 +393,4 @@ document.addEventListener('DOMContentLoaded', function() {
 
 <?php require_once __DIR__ . '/includes/footer.php'; ?>
 
-<script src="<?php echo $baseUrl; ?>/assets/js/lazy-load11.js?v=1" defer></script>
+<script src="<?php echo $baseUrl; ?>/assets/js/lazy-load12.js?v=1" defer></script>

@@ -8,6 +8,8 @@ if (!defined('SITE_URL')) {
     require_once __DIR__ . '/../config/constants.php';
 }
 require_once __DIR__ . '/../classes/Database.php';
+require_once __DIR__ . '/../classes/Auth.php';
+require_once __DIR__ . '/../classes/CustomerAuth.php';
 
 /**
  * Get the current Store ID based on domain or session
@@ -91,13 +93,17 @@ function getImageUrl($path) {
     }
     $cleanPath = ltrim($cleanPath, '/');
     
-    // If path doesn't contain 'assets/images/', it's just a filename or partial path
-    if (strpos($cleanPath, 'assets/images/') === false) {
+    // If path doesn't contain 'assets/' or 'uploads/', it's just a filename or partial path
+    if (strpos($cleanPath, 'assets/') === false && strpos($cleanPath, 'uploads/') === false) {
         // Assume it belongs in uploads
         $cleanPath = 'assets/images/uploads/' . $cleanPath;
+    } elseif (strpos($cleanPath, 'uploads/') === 0) {
+        // If it starts with uploads/, it likely needs assets/images/ prepended
+        $cleanPath = 'assets/images/' . $cleanPath;
     }
     
-    return $baseUrl . '/' . $cleanPath;
+    // Ensure no double slashes during concatenation
+    return rtrim($baseUrl, '/') . '/' . ltrim($cleanPath, '/');
 }
 
 /**

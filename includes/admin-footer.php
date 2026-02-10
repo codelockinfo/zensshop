@@ -93,19 +93,19 @@ document.addEventListener('submit', function(e) {
 
     // Auto-dismiss alerts
     document.addEventListener('DOMContentLoaded', function() {
-        // Only target elements that are explicitly marked as alerts
-        const alertSelector = '.admin-alert, [role="alert"]';
+        // Target explicit alerts and common message patterns
+        const alertSelector = '.admin-alert, [role="alert"], .bg-green-100.border, .bg-red-100.border';
         const alerts = document.querySelectorAll(alertSelector);
         
         alerts.forEach(function(alert) {
-            // Only process if it has text
+            // Only process if it has text and is not inside a static container
             if (alert.innerText.trim().length > 0) {
                 setTimeout(function() {
-                    alert.style.transition = 'opacity 0.5s ease';
+                    alert.style.transition = 'opacity 0.8s ease';
                     alert.style.opacity = '0';
                     setTimeout(function() {
-                        alert.remove();
-                    }, 500);
+                        alert.style.display = 'none';
+                    }, 800);
                 }, 5000); // 5 seconds
             }
         });

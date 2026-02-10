@@ -59,12 +59,11 @@ function showNotificationModal(message, type = 'success', title = null) {
     modal.classList.remove('hidden');
     document.body.style.overflow = 'hidden';
     
-    // Auto close after 3 seconds for success messages
-    if (type === 'success') {
-        setTimeout(() => {
-            closeNotificationModal();
-        }, 3000);
-    }
+    // Auto close after few seconds
+    const timeout = type === 'error' ? 5000 : 3000;
+    setTimeout(() => {
+        closeNotificationModal();
+    }, timeout);
 }
 
 function closeNotificationModal() {
