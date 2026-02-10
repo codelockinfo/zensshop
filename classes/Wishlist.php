@@ -121,16 +121,7 @@ class Wishlist {
                 }
             }
             
-            // Convert to full URL if needed
-            if (!empty($item['image']) && strpos($item['image'], 'http') !== 0 && strpos($item['image'], '/') !== 0 && strpos($item['image'], 'data:') !== 0) {
-                if (defined('UPLOAD_URL')) {
-                    $item['image'] = UPLOAD_URL . '/' . $item['image'];
-                } else {
-                    require_once __DIR__ . '/../includes/functions.php';
-                    $baseUrl = getBaseUrl();
-                    $item['image'] = $baseUrl . '/assets/images/uploads/' . $item['image'];
-                }
-            }
+            // Image URL logic removed - handled by getImageUrl() in view
 
             $validItems[] = $item;
         }
@@ -175,16 +166,7 @@ class Wishlist {
                 }
             }
             
-            // Convert to full URL if needed
-            if (!empty($productImage) && strpos($productImage, 'http') !== 0 && strpos($productImage, '/') !== 0) {
-                if (defined('UPLOAD_URL')) {
-                    $productImage = UPLOAD_URL . '/' . $productImage;
-                } else {
-                    require_once __DIR__ . '/../includes/functions.php';
-                    $baseUrl = getBaseUrl();
-                    $productImage = $baseUrl . '/assets/images/uploads/' . $productImage;
-                }
-            }
+            // Image logic removed - allow view to handle it with getImageUrl()
             
             $wishlistItems[] = [
                 'product_id' => $item['product_id'],
@@ -250,16 +232,7 @@ class Wishlist {
             }
         }
         
-        // Convert to full URL if needed
-        if (!empty($productImage) && strpos($productImage, 'http') !== 0 && strpos($productImage, '/') !== 0) {
-            if (defined('UPLOAD_URL')) {
-                $productImage = UPLOAD_URL . '/' . $productImage;
-            } else {
-                require_once __DIR__ . '/../includes/functions.php';
-                $baseUrl = getBaseUrl();
-                $productImage = $baseUrl . '/assets/images/uploads/' . $productImage;
-            }
-        }
+        // Image logic removed - allow view to handle it with getImageUrl()
         
         $wishlistItems[] = [
             'product_id' => $productId,
