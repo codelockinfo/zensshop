@@ -234,11 +234,11 @@ if (isset($_GET['ajax'])) {
                     
                     // Actions
                     echo '<div class="flex items-center justify-between card-actions">';
-                        echo '<div>';
+                        echo '<div class="flex flex-col pointer-events-none">';
                         if ($originalPrice) {
-                            echo '<span class="text-gray-400 text-sm line-through mr-2 font-bold">' . format_price($originalPrice, $item['currency'] ?? 'USD') . '</span>';
+                            echo '<span class="text-gray-400 text-sm line-through font-bold">' . format_price($originalPrice, $item['currency'] ?? 'USD') . '</span>';
                         }
-                        echo '<span class="text-md font-bold ' . ($originalPrice ? 'text-[#1a3d32]' : 'text-primary') . '">' . format_price($price, $item['currency'] ?? 'USD') . '</span>';
+                        echo '<span class="text-lg font-bold ' . ($originalPrice ? 'text-[#1a3d32]' : 'text-primary') . '">' . format_price($price, $item['currency'] ?? 'USD') . '</span>';
                         echo '</div>';
                         
                     echo '</div>'; // End actions
@@ -724,11 +724,11 @@ button.active {
                             </div>
                             
                             <div class="flex items-center justify-between card-actions">
-                                <div>
+                                <div class="flex flex-col pointer-events-none">
                                     <?php if ($originalPrice): ?>
-                                    <span class="text-gray-400 text-sm line-through mr-2 font-bold"><?php echo format_price($originalPrice, $item['currency'] ?? 'USD'); ?></span>
+                                    <span class="text-gray-400 text-sm line-through font-bold"><?php echo format_price($originalPrice, $item['currency'] ?? 'USD'); ?></span>
                                     <?php endif; ?>
-                                    <span class="text-md font-bold <?php echo $originalPrice ? 'text-[#1a3d32]' : 'text-primary'; ?>"><?php echo format_price($price, $item['currency'] ?? 'USD'); ?></span>
+                                    <span class="text-lg font-bold <?php echo $originalPrice ? 'text-[#1a3d32]' : 'text-primary'; ?>"><?php echo format_price($price, $item['currency'] ?? 'USD'); ?></span>
                                 </div>
                                  <?php $isOutOfStock = ($item['stock_status'] === 'out_of_stock' || (isset($item['stock_quantity']) && $item['stock_quantity'] <= 0)); ?>
                                  <button onclick='addToCart(<?php echo $currentId; ?>, 1, this, <?php echo htmlspecialchars($attributesJson, ENT_QUOTES, 'UTF-8'); ?>)' 

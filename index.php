@@ -72,7 +72,8 @@ if (empty($banners)) {
 
             // Handle image URL
             $bgImage = getImageUrl($banner['image_desktop'] ?? '');
-            $bgImageMobile = getImageUrl($banner['image_mobile'] ?? '');
+            // Only process mobile image if it exists, otherwise leave null to trigger fallback
+            $bgImageMobile = !empty($banner['image_mobile']) ? getImageUrl($banner['image_mobile']) : null;
             
             // Handle Links
             $desktopLink = resolveBannerLink($banner['link'] ?? '', $baseUrl);

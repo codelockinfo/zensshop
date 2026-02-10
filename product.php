@@ -82,8 +82,8 @@ $displayRecentIds = array_slice($displayRecentIds, 0, 10);
 if (!empty($displayRecentIds)) {
     $placeholders = implode(',', array_fill(0, count($displayRecentIds), '?'));
     $recentlyViewed = $db->fetchAll(
-        "SELECT * FROM products WHERE product_id IN ($placeholders) AND status = 'active' LIMIT 10",
-        $displayRecentIds
+        "SELECT * FROM products WHERE (product_id IN ($placeholders) OR id IN ($placeholders)) AND status = 'active' LIMIT 10",
+        array_merge($displayRecentIds, $displayRecentIds) // Merge params for both IN clauses
     );
 }
 // -------------------------------------------------------
@@ -1142,12 +1142,14 @@ if (!empty($productCategories)) {
                 </div>
                 
                 <?php if (count($recentlyViewed) > 4): ?>
+                    <?php if (count($recentlyViewed) > 4): ?>
                     <button class="absolute left-2 top-1/2 -translate-y-1/2 bg-white shadow-lg rounded-full w-10 h-10 flex items-center justify-center text-gray-800 hover:text-primary hover:bg-gray-50 transition z-10 recently-viewed-prev" aria-label="Previous">
                         <i class="fas fa-chevron-left" aria-hidden="true"></i>
                     </button>
                     <button class="absolute right-2 top-1/2 -translate-y-1/2 bg-white shadow-lg rounded-full w-10 h-10 flex items-center justify-center text-gray-800 hover:text-primary hover:bg-gray-50 transition z-10 recently-viewed-next" aria-label="Next">
                         <i class="fas fa-chevron-right" aria-hidden="true"></i>
                     </button>
+                <?php endif; ?>
                 <?php endif; ?>
             </div>
             
