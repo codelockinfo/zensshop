@@ -116,13 +116,13 @@ $categoryJoin = " AND (
 
 $inStockCount = $db->fetchOne("SELECT COUNT(DISTINCT p.id) as count 
                                 FROM products p 
-                                WHERE p.status = 'active' AND (p.stock_status = 'in_stock' AND p.stock_quantity > 0) AND (p.store_id = ? OR p.store_id IS NULL OR ? = 'DEFAULT')" . 
+                                WHERE p.status = 'active' AND (p.stock_status = 'in_stock' AND p.stock_quantity > 0) AND (p.store_id = ? OR p.store_id IS NULL OR p.store_id = '0' OR p.store_id = '' OR ? = 'DEFAULT')" . 
                                 ($categorySlug ? $categoryJoin : ""),
                                 array_merge([$currentStoreId, $currentStoreId], $categorySlug ? [$categorySlug, $currentStoreId, $currentStoreId, $categorySlug, $categorySlug, $currentStoreId, $currentStoreId] : []))['count'] ?? 0;
 
 $outOfStockCount = $db->fetchOne("SELECT COUNT(DISTINCT p.id) as count 
                                    FROM products p 
-                                   WHERE p.status = 'active' AND (p.stock_status = 'out_of_stock' OR p.stock_quantity <= 0) AND (p.store_id = ? OR p.store_id IS NULL OR ? = 'DEFAULT')" . 
+                                   WHERE p.status = 'active' AND (p.stock_status = 'out_of_stock' OR p.stock_quantity <= 0) AND (p.store_id = ? OR p.store_id IS NULL OR p.store_id = '0' OR p.store_id = '' OR ? = 'DEFAULT')" . 
                                    ($categorySlug ? $categoryJoin : ""),
                                    array_merge([$currentStoreId, $currentStoreId], $categorySlug ? [$categorySlug, $currentStoreId, $currentStoreId, $categorySlug, $categorySlug, $currentStoreId, $currentStoreId] : []))['count'] ?? 0;
 
@@ -807,23 +807,33 @@ function toggleFilter(filterName) {
 }
 
 
-// Add event listeners for stock checkboxes to implement radio-like behavior
-document.addEventListener('DOMContentLoaded', function() {
+// Reusable function to attach event listeners
+function attachFilterListeners() {
     const stockCheckboxes = document.querySelectorAll('input[name="stock"]');
     stockCheckboxes.forEach(checkbox => {
-        checkbox.addEventListener('change', function() {
-            if (this.checked) {
-                // If checking this one, uncheck others
-                stockCheckboxes.forEach(other => {
-                    if (other !== this) {
-                        other.checked = false;
-                    }
-                });
-            }
-            // Trigger filters automatically
-            applyFilters();
-        });
+        // Remove existing listener to avoid duplicates if re-attaching (cleaner way is to replace elements, which we do)
+        checkbox.removeEventListener('change', handleStockChange);
+        checkbox.addEventListener('change', handleStockChange);
     });
+}
+
+function handleStockChange() {
+    if (this.checked) {
+        // If checking this one, uncheck others
+        const stockCheckboxes = document.querySelectorAll('input[name="stock"]');
+        stockCheckboxes.forEach(other => {
+            if (other !== this) {
+                other.checked = false;
+            }
+        });
+    }
+    // Trigger filters automatically
+    applyFilters();
+}
+
+// Initial attachment
+document.addEventListener('DOMContentLoaded', function() {
+    attachFilterListeners();
 });
 
 // function to handle category clicks without reload and update banner
@@ -926,6 +936,23 @@ function applyFilters(page = 1) {
              if(currentCount && newCount) {
                  currentCount.innerText = newCount.innerText;
              }
+             
+            // Update Sidebar Filters (to update counts)
+            const currentCatFilter = document.getElementById('category-filter');
+            const newCatFilter = doc.getElementById('category-filter');
+            if (currentCatFilter && newCatFilter) {
+                currentCatFilter.innerHTML = newCatFilter.innerHTML;
+            }
+
+            const currentAvailFilter = document.getElementById('availability-filter');
+            const newAvailFilter = doc.getElementById('availability-filter');
+            if (currentAvailFilter && newAvailFilter) {
+                currentAvailFilter.innerHTML = newAvailFilter.innerHTML;
+                // Re-attach listeners since we replaced the HTML
+                attachFilterListeners();
+            }
+
+            // Note: We don't update #price-filter as it inputs and values are static unless changed by user
              
              // Re-initialize Shop Elements (Skeleton etc)
              if (typeof initShopUI === 'function') {
