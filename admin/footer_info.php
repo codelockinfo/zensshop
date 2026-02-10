@@ -59,14 +59,16 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
         // 2. Handle Image Upload
         if (!empty($_FILES['footer_logo_image']['name'])) {
-            $uploadDir = __DIR__ . '/../assets/uploads/';
+            // FIX: Use assets/images/uploads to match getImageUrl() expectation
+            $uploadDir = __DIR__ . '/../assets/images/uploads/';
             if (!is_dir($uploadDir)) mkdir($uploadDir, 0777, true);
             
             $fileName = time() . '_' . basename($_FILES['footer_logo_image']['name']);
             $targetPath = $uploadDir . $fileName;
             
             if (move_uploaded_file($_FILES['footer_logo_image']['tmp_name'], $targetPath)) {
-                $settings['footer_logo_image'] = 'assets/uploads/' . $fileName;
+                // Store relative path that works with getImageUrl
+                $settings['footer_logo_image'] = 'assets/images/uploads/' . $fileName;
             } else {
                 throw new Exception("Failed to upload image.");
             }
