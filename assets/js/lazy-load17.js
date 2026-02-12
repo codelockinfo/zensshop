@@ -11,6 +11,9 @@ const sections = [
   { id: "philosophy-section", endpoint: "philosophy" },
   { id: "features-section", endpoint: "features" },
   { id: "newsletter-section", endpoint: "newsletter" },
+  { id: "footer-features-section", endpoint: "footer_features" },
+  { id: "related-products-section", endpoint: "related-products" },
+  { id: "recently-viewed-section", endpoint: "recently-viewed" },
 ];
 
 // Global registry for slider instances to handle shared events like resize
@@ -103,12 +106,15 @@ async function loadSection(id, endpoint) {
             0,
             window.location.pathname.lastIndexOf("/"),
           );
+    const productParam = container.hasAttribute("data-product-id")
+      ? `&product_id=${container.getAttribute("data-product-id")}`
+      : "";
     const response = await fetch(
-      `${baseUrl}/api/sections.php?section=${endpoint}`,
+      `${baseUrl}/api/sections.php?section=${endpoint}${productParam}`,
     );
     const html = await response.text();
 
-    if (html) {
+    if (html && html.trim() !== "") {
       if (container.innerHTML.trim() !== html.trim()) {
         container.innerHTML = html;
         container.classList.remove("section-loading");
@@ -118,6 +124,10 @@ async function loadSection(id, endpoint) {
       if (isCachingAllowed()) {
         localStorage.setItem("cache_" + endpoint, html);
       }
+    } else {
+      // If no content, hide the entire section container to avoid gaps
+      container.style.display = "none";
+      container.classList.remove("section-loading");
     }
   } catch (error) {
     console.error(`Error loading section ${endpoint}:`, error);
@@ -160,6 +170,46 @@ function initializeSectionContent(container) {
   const newsletterForm = container.querySelector("#globalNewsletterForm");
   if (newsletterForm) {
     initGlobalNewsletter(newsletterForm);
+  }
+
+  // Related Products Slider
+  const relatedSlider = container.querySelector(".people-bought-slider");
+  if (relatedSlider && typeof Swiper !== "undefined") {
+    new Swiper(relatedSlider, {
+        slidesPerView: 1,
+        spaceBetween: 20,
+        loop: true,
+        autoplay: { delay: 5000, disableOnInteraction: false },
+        navigation: {
+            nextEl: '.people-bought-next',
+            prevEl: '.people-bought-prev',
+        },
+        breakpoints: {
+            640: { slidesPerView: 2, spaceBetween: 20 },
+            1024: { slidesPerView: 3, spaceBetween: 30 },
+            1280: { slidesPerView: 4, spaceBetween: 30 },
+        }
+    });
+  }
+
+  // Recently Viewed Slider
+  const recentSlider = container.querySelector(".recently-viewed-slider");
+  if (recentSlider && typeof Swiper !== "undefined") {
+    new Swiper(recentSlider, {
+        slidesPerView: 1,
+        spaceBetween: 20,
+        loop: true,
+        autoplay: { delay: 5000, disableOnInteraction: false },
+        navigation: {
+            nextEl: '.recently-viewed-next',
+            prevEl: '.recently-viewed-prev',
+        },
+        breakpoints: {
+            640: { slidesPerView: 2, spaceBetween: 20 },
+            1024: { slidesPerView: 3, spaceBetween: 30 },
+            1280: { slidesPerView: 4, spaceBetween: 30 },
+        }
+    });
   }
 }
 

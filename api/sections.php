@@ -17,6 +17,7 @@ if (session_status() === PHP_SESSION_NONE) {
 }
 
 require_once __DIR__ . '/../classes/Database.php';
+require_once __DIR__ . '/../includes/functions.php';
 $db = Database::getInstance();
 
 // Store ID is only used for admin side logic. 
@@ -34,11 +35,17 @@ $allowedSections = [
     'trending',
     'philosophy',
     'features',
-    'newsletter'
+    'newsletter',
+    'footer_features',
+    'related-products',
+    'recently-viewed'
 ];
 
+// Capture product ID if provided
+$productId = isset($_GET['product_id']) ? (int)$_GET['product_id'] : null;
+
 // Debug: Log the request
-error_log("Sections API called with section: " . $section);
+error_log("Sections API called with section: " . $section . ($productId ? " and product_id: " . $productId : ""));
 
 if (empty($section)) {
     http_response_code(400);

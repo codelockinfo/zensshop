@@ -453,37 +453,7 @@ if (isset($_SESSION['flash_success'])) {
 $pageTitle = 'Landing Page Settings';
 require_once __DIR__ . '/../includes/admin-header.php';
 ?>
-<!-- CKEditor 5 -->
-<script src="https://cdn.ckeditor.com/ckeditor5/41.1.0/classic/ckeditor.js"></script>
-<style>
-/* CKEditor content styling fix for Tailwind */
-.ck-editor__editable { min-height: 250px; }
-.ck-content h2 { font-size: 1.5em; font-weight: bold; margin-bottom: 0.5em; }
-.ck-content h3 { font-size: 1.25em; font-weight: bold; margin-bottom: 0.5em; }
-.ck-content p { margin-bottom: 1em; }
-.ck-content ul { list-style-type: disc !important; padding-left: 1.5em !important; margin-bottom: 1em; }
-.ck-content ol { list-style-type: decimal !important; padding-left: 1.5em !important; margin-bottom: 1em; }
-.ck-content a { color: blue; text-decoration: underline; }
-</style>
-<script>
-  document.addEventListener("DOMContentLoaded", function() {
-      const editors = document.querySelectorAll('.rich-text-editor');
-      editors.forEach(el => {
-          ClassicEditor
-              .create(el, {
-                  toolbar: ['heading', '|', 'bold', 'italic', 'link', 'bulletedList', 'numberedList', 'blockQuote', 'insertTable', '|', 'undo', 'redo'],
-                  heading: {
-                      options: [
-                          { model: 'paragraph', title: 'Paragraph', class: 'ck-heading_paragraph' },
-                          { model: 'heading2', view: 'h2', title: 'Heading 2', class: 'ck-heading_heading2' },
-                          { model: 'heading3', view: 'h3', title: 'Heading 3', class: 'ck-heading_heading3' }
-                      ]
-                  }
-              })
-              .catch(error => { console.error(error); });
-      });
-  });
-</script>
+
 <?php
 // --- DATA RECONCILIATION & BACKWARD COMPATIBILITY ---
 // Map JSON grouped data back to individual keys for the form UI to avoid undefined index warnings.

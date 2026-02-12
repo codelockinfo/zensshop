@@ -132,7 +132,7 @@ require_once __DIR__ . '/../../includes/admin-header.php';
                 </div>
                 <div>
                     <label class="block text-sm font-bold mb-2 text-gray-700">Content</label>
-                    <textarea name="content" id="editor" class="w-full border border-gray-300 p-2 rounded-lg" rows="20"><?php echo htmlspecialchars($blog['content'] ?? ''); ?></textarea>
+                    <textarea name="content" id="editor" class="rich-text-editor rich-text-full w-full border border-gray-300 p-2 rounded-lg" rows="20"><?php echo htmlspecialchars($blog['content'] ?? ''); ?></textarea>
                     <p class="text-xs text-gray-500 mt-2">You can paste images directly into the editor.</p>
                 </div>
             </div>
@@ -207,122 +207,24 @@ require_once __DIR__ . '/../../includes/admin-header.php';
     </form>
 </div>
 
-<!-- CKEditor 5 -->
-<script src="https://cdn.ckeditor.com/ckeditor5/41.1.0/classic/ckeditor.js"></script>
-<style>
-/* CKEditor Custom Height */
-.ck-editor__editable { min-height: 400px; }
-.ck-content ol, .ck-content ul { list-style: revert; margin: revert; padding: revert; }
-.ck-content h2 { font-size: 1.5em; font-weight: bold; margin-top: 1em; margin-bottom: 0.5em; }
-.ck-content h3 { font-size: 1.17em; font-weight: bold; margin-top: 1em; margin-bottom: 0.5em; }
-.ck-content p { margin-bottom: 1em; }
-.ck-content a { color: #2563eb; text-decoration: underline; }
-.ck-content blockquote { border-left: 4px solid #ccc; padding-left: 1em; color: #666; font-style: italic; }
-</style>
 <script>
-    function MyCustomUploadAdapterPlugin( editor ) {
-        editor.plugins.get( 'FileRepository' ).createUploadAdapter = ( loader ) => {
-            return {
-                upload: () => {
-                    return loader.file
-                        .then( file => new Promise( ( resolve, reject ) => {
-                            const data = new FormData();
-                            data.append( 'upload', file );
-                            
-                            fetch( '<?php echo $baseUrl; ?>/admin/blogs/upload_image.php', {
-                                method: 'POST',
-                                body: data
-                            } )
-                            .then( response => response.json() )
-                            .then( result => {
-                                if ( result.error ) {
-                                    reject( result.error.message );
-                                } else {
-                                    resolve( {
-                                        default: result.url
-                                    } );
-                                }
-                            } )
-                            .catch( error => {
-                                reject( 'Upload failed' );
-                            } );
-                        } ) );
-                }
-            };
-        };
-    }
-
-    ClassicEditor
-        .create( document.querySelector( '#editor' ), {
-            extraPlugins: [ MyCustomUploadAdapterPlugin ],
-            toolbar: {
-                items: [
-                    'heading', '|',
-                    'bold', 'italic', 'underline', 'strikethrough', 'link', '|',
-                    'bulletedList', 'numberedList', 'indent', 'outdent', '|',
-                    'blockQuote', 'insertTable', 'undo', 'redo', '|',
-                    'imageUpload', 'sourceEditing'
-                ]
-            },
-            language: 'en',
-            image: {
-                toolbar: [
-                    'imageTextAlternative',
-                    'toggleImageCaption',
-                    'imageStyle:inline',
-                    'imageStyle:block',
-                    'imageStyle:side'
-                ]
-            },
-            table: {
-                contentToolbar: [
-                    'tableColumn',
-                    'tableRow',
-                    'mergeTableCells'
-                ]
-            }
-        } )
-        .then( editor => {
-            console.log( 'Editor initialized', editor );
-        } )
-        .catch( error => {
-            console.error( error );
-        } );
-
-
+    // Rest of the functions (slug, preview)
     function generateSlug() {
         const title = document.getElementById('title').value;
         const slugInput = document.getElementById('slug');
-        
-        // Don't auto-update if user manually edited the slug
-        if (slugInput.getAttribute('data-manual') === 'true') {
-            return;
-        }
-        
-        // Simple slug generation
-        const slug = title.toLowerCase()
-            .replace(/[^\w ]+/g, '')
-            .replace(/ +/g, '-');
-        
+        if (slugInput.getAttribute('data-manual') === 'true') { return; }
+        const slug = title.toLowerCase().replace(/[^\w ]+/g, '').replace(/ +/g, '-');
         slugInput.value = slug;
     }
-
-    // Mark slug as manually edited when user types in it
-    document.getElementById('slug').addEventListener('input', function() {
-        this.setAttribute('data-manual', 'true');
-    });
-
+    document.getElementById('slug').addEventListener('input', function() { this.setAttribute('data-manual', 'true'); });
     function previewImage(input, containerId) {
         if (input.files && input.files[0]) {
             var reader = new FileReader();
             reader.onload = function(e) {
                 const container = document.getElementById(containerId);
                 const parent = container.parentElement;
-                
-                // Remove dashed border styling
                 parent.classList.remove('border-dashed', 'border-gray-300');
                 parent.classList.add('border-gray-200');
-                
                 container.innerHTML = `
                     <img src="${e.target.result}" class="w-full h-full object-cover">
                     <div class="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-40 transition flex items-center justify-center">

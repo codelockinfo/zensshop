@@ -150,7 +150,7 @@ require_once __DIR__ . '/../includes/admin-header.php';
             
             <div>
                 <label class="block text-sm font-bold mb-2">Page Content</label>
-                <textarea name="html_content" id="editor"><?php echo htmlspecialchars($contentData['html'] ?? ''); ?></textarea>
+                <textarea name="html_content" id="editor" class="rich-text-editor rich-text-full"><?php echo htmlspecialchars($contentData['html'] ?? ''); ?></textarea>
             </div>
             
             <!-- SEO Section -->
@@ -298,104 +298,20 @@ require_once __DIR__ . '/../includes/admin-header.php';
     </div>
 </form>
 
-</form>
 
 
-<!-- CKEditor 5 -->
-<script src="https://cdn.ckeditor.com/ckeditor5/41.1.0/classic/ckeditor.js"></script>
 
 <script>
-// Image Upload Adapter for CKEditor
-function MyCustomUploadAdapterPlugin(editor) {
-    editor.plugins.get('FileRepository').createUploadAdapter = (loader) => {
-        return new MyUploadAdapter(loader);
-    };
-}
-
-class MyUploadAdapter {
-    constructor(loader) {
-        this.loader = loader;
-    }
-
-    upload() {
-        return this.loader.file.then(file => new Promise((resolve, reject) => {
-            const data = new FormData();
-            data.append('upload', file);
-
-            fetch('<?php echo $baseUrl; ?>/admin/blogs/upload_image.php', {
-                method: 'POST',
-                body: data
-            })
-            .then(response => response.json())
-            .then(result => {
-                if (result.error) {
-                    reject(result.error.message);
-                } else {
-                    resolve({
-                        default: result.url
-                    });
-                }
-            })
-            .catch(error => {
-                reject('Upload failed');
-            });
-        }));
-    }
-}
-
-// Initialize CKEditor
-let editorInstance;
-ClassicEditor
-    .create(document.querySelector('#editor'), {
-        extraPlugins: [MyCustomUploadAdapterPlugin],
-        toolbar: {
-            items: [
-                'heading', '|',
-                'bold', 'italic', 'underline', 'strikethrough', 'link', '|',
-                'bulletedList', 'numberedList', 'indent', 'outdent', '|',
-                'blockQuote', 'insertTable', 'undo', 'redo', '|',
-                'imageUpload', 'sourceEditing'
-            ]
-        },
-        language: 'en',
-        image: {
-            toolbar: [
-                'imageTextAlternative',
-                'toggleImageCaption',
-                'imageStyle:inline',
-                'imageStyle:block',
-                'imageStyle:side'
-            ]
-        },
-        table: {
-            contentToolbar: [
-                'tableColumn',
-                'tableRow',
-                'mergeTableCells'
-            ]
-        }
-    })
-    .then(editor => {
-        editorInstance = editor;
-        console.log('CKEditor initialized');
-    })
-    .catch(error => {
-        console.error(error);
-    });
-
-
 // Auto-slug generation
 const titleInput = document.getElementById('pageTitle');
 const slugInput = document.getElementById('pageSlug');
 
 if (titleInput && slugInput) {
-    // Track manual edits
     slugInput.addEventListener('input', function() {
         this.setAttribute('data-manual', 'true');
     });
 
     titleInput.addEventListener('input', function() {
-        // Only update if not manually edited
         if (slugInput.getAttribute('data-manual') !== 'true') {
             const slug = this.value
                 .toLowerCase()
@@ -408,53 +324,7 @@ if (titleInput && slugInput) {
 }
 </script>
 
-<style>
-/* CKEditor Styling */
-.ck-editor__editable {
-    min-height: 500px;
-}
 
-.ck-content {
-    font-size: 16px;
-    line-height: 1.6;
-}
 
-/* Tailwind reset fix for CKEditor lists */
-.ck-content ol, .ck-content ul { list-style: revert; margin: revert; padding: revert; }
-
-.ck-content h2 {
-    font-size: 1.75em;
-    margin-top: 1em;
-    margin-bottom: 0.5em;
-}
-
-.ck-content blockquote { 
-    border-left: 4px solid #ccc; 
-    padding-left: 1em; 
-    color: #666; 
-    font-style: italic; 
-}
-
-.ck-content p {
-    margin-bottom: 1em;
-}
-
-.ck-content img {
-    max-width: 100%;
-    height: auto;
-}
-
-.ck-content table {
-    border-collapse: collapse;
-    width: 100%;
-    margin: 1em 0;
-}
-
-.ck-content table td,
-.ck-content table th {
-    border: 1px solid #ddd;
-    padding: 8px;
-}
-</style>
 
 <?php require_once __DIR__ . '/../includes/admin-footer.php'; ?>

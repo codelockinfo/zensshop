@@ -21,18 +21,32 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
     if (isset($_POST['action']) && $_POST['action'] === 'update_settings') {
     
-    // WAF BYPASS: Decode Base64 encoded sensitive fields
-    // This prevents ModSecurity/Server Firewalls from blocking requests containing HTML/JSON/SVG/Scripts
-    if (isset($_POST['is_encoded_submission']) && $_POST['is_encoded_submission'] === '1') {
-        $encodedFields = ['global_schema_json', 'header_scripts', 'pickup_message'];
-        foreach ($encodedFields as $field) {
-            if (isset($_POST['setting_' . $field])) {
-                $_POST['setting_' . $field] = base64_decode($_POST['setting_' . $field]);
+    // WAF BYPASS: Handle Base64 encoded sensitive fields
+    // We check for 'encoded_' prefixed fields sent by the JS for bypass
+    $encodedMap = [
+        'encoded_global_schema_json'    => 'setting_global_schema_json',
+        'encoded_header_scripts'        => 'setting_header_scripts',
+        'encoded_pickup_message'        => 'setting_pickup_message',
+        'encoded_global_meta_description' => 'setting_global_meta_description'
+    ];
+
+    foreach ($encodedMap as $encodedKey => $targetKey) {
+        if (isset($_POST[$encodedKey]) && is_string($_POST[$encodedKey])) {
+            $decoded = base64_decode($_POST[$encodedKey]);
+            if ($decoded !== false) {
+                $_POST[$targetKey] = $decoded;
             }
         }
-        
-        if (isset($_POST['payment_svgs']) && is_array($_POST['payment_svgs'])) {
-            $_POST['payment_svgs'] = array_map('base64_decode', $_POST['payment_svgs']);
+    }
+    
+    // Handle encoded payment SVGs
+    if (isset($_POST['encoded_payment_svgs']) && is_array($_POST['encoded_payment_svgs'])) {
+        $_POST['payment_svgs'] = [];
+        foreach ($_POST['encoded_payment_svgs'] as $val) {
+            $decoded = base64_decode($val);
+            if ($decoded !== false) {
+                $_POST['payment_svgs'][] = $decoded;
+            }
         }
     }
     
@@ -371,7 +385,7 @@ unset($_SESSION['error']);
                                     <div class="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition flex items-center justify-center">
                                          <i class="fas fa-camera text-white text-xl"></i>
                                     </div>
-                                    <button type="button" onclick="event.stopPropagation(); if(confirm('Remove email logo?')) removeEmailLogo();" class="absolute top-2 right-2 w-8 h-8 bg-white text-red-500 rounded-lg shadow-md flex items-center justify-center opacity-0 group-hover:opacity-100 transition hover:bg-red-50" title="Remove Logo">
+                                    <button type="button" onclick="event.stopPropagation(); removeEmailLogo();" class="absolute top-2 right-2 w-8 h-8 bg-white text-red-500 rounded-lg shadow-md flex items-center justify-center opacity-0 group-hover:opacity-100 transition hover:bg-red-50" title="Remove Logo">
                                         <i class="fas fa-trash-alt text-sm"></i>
                                     </button>
                                 <?php else: ?>
@@ -405,7 +419,7 @@ unset($_SESSION['error']);
                                 <div class="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition flex items-center justify-center">
                                      <i class="fas fa-camera text-white text-xl"></i>
                                 </div>
-                                <button type="button" onclick="event.stopPropagation(); if(confirm('Remove email logo?')) removeEmailLogo();" class="absolute top-2 right-2 w-8 h-8 bg-white text-red-500 rounded-lg shadow-md flex items-center justify-center opacity-0 group-hover:opacity-100 transition hover:bg-red-50">
+                                <button type="button" onclick="event.stopPropagation(); removeEmailLogo();" class="absolute top-2 right-2 w-8 h-8 bg-white text-red-500 rounded-lg shadow-md flex items-center justify-center opacity-0 group-hover:opacity-100 transition hover:bg-red-50">
                                     <i class="fas fa-trash-alt text-sm"></i>
                                 </button>
                             `;
@@ -672,7 +686,7 @@ unset($_SESSION['error']);
                     <label class="block text-sm font-medium text-gray-700 mb-2">Pickup Message (HTML/Rich Text)</label>
                     <input type="hidden" name="group_pickup_message" value="product">
                     <textarea name="setting_pickup_message" rows="4"
-                           class="w-full px-4 py-2 border rounded focus:ring-2 focus:ring-indigo-500 richtext"><?php echo htmlspecialchars($settings->get('pickup_message', 'Pickup available at Shop location. Usually ready in 24 hours')); ?></textarea>
+                           class="w-full px-4 py-2 border rounded focus:ring-2 focus:ring-indigo-500 rich-text-editor"><?php echo htmlspecialchars($settings->get('pickup_message', 'Pickup available at Shop location. Usually ready in 24 hours')); ?></textarea>
                 </div>
 
                 <!-- Pickup Icon -->
@@ -785,6 +799,38 @@ unset($_SESSION['error']);
 </div>
 
 <script>
+// Help recover from garbled data if any was saved in Base64
+document.addEventListener('DOMContentLoaded', function() {
+    const sensitiveFields = [
+        'setting_global_schema_json',
+        'setting_header_scripts', 
+        'setting_pickup_message',
+        'setting_global_meta_description'
+    ];
+    
+    sensitiveFields.forEach(name => {
+        const el = document.getElementsByName(name)[0];
+        if (el && el.value && el.value.length > 8) {
+            const val = el.value.trim();
+            // Simple check if it might be Base64
+            if (/^[A-Za-z0-9+/=]+$/.test(val) && val.length % 4 === 0) {
+                try {
+                    const decoded = decodeURIComponent(escape(atob(val)));
+                    // Only apply if it doesn't look like binary garbage
+                    if (!/[\x00-\x08\x0E-\x1F]/.test(decoded)) {
+                        el.value = decoded;
+                        // If it's the pickup message, we might need to sync TinyMCE
+                        if (name === 'setting_pickup_message' && typeof tinymce !== 'undefined') {
+                            const editor = tinymce.get(el.id);
+                            if (editor) editor.setContent(decoded);
+                        }
+                    }
+                } catch (e) {}
+            }
+        }
+    });
+});
+
 function togglePassword(fieldId) {
     const input = document.getElementById(fieldId);
     const icon = document.getElementById('eye-' + fieldId);
@@ -841,27 +887,57 @@ if (paymentData && paymentData.length > 0) {
 
 // Encode sensitive fields before submission to prevent WAF blocking
 document.getElementById('settingsForm').addEventListener('submit', function(e) {
-    // Set encoded flag
-    document.getElementById('isEncodedSubmission').value = '1';
+    const form = this;
+    
+    // Sync TinyMCE editors
+    if (typeof tinymce !== 'undefined') {
+        tinymce.triggerSave();
+    }
 
     const sensitiveFields = [
         'setting_global_schema_json',
         'setting_header_scripts', 
-        'setting_pickup_message'
+        'setting_pickup_message',
+        'setting_global_meta_description'
     ];
     
     // Helper to safely encode to Base64 (supporting UTF-8)
     const toBase64 = (str) => btoa(unescape(encodeURIComponent(str)));
     
+    // Create hidden fields for encoded values so we don't mess with the visible textareas
+    // We also nullify the name of the original field so it's not sent (prevents WAF block)
     sensitiveFields.forEach(name => {
-        const el = document.getElementsByName(name)[0];
-        if (el) el.value = toBase64(el.value);
+        const els = document.getElementsByName(name);
+        if (els && els.length > 0) {
+            const el = els[0];
+            const val = el.value;
+            
+            const hidden = document.createElement('input');
+            hidden.type = 'hidden';
+            hidden.name = 'encoded_' + name.replace('setting_', '');
+            hidden.value = toBase64(val);
+            form.appendChild(hidden);
+            
+            // Remove the name right before submission so the WAF never sees the raw content
+            el.removeAttribute('name');
+        }
     });
 
     const svgs = document.getElementsByName('payment_svgs[]');
-    svgs.forEach(el => {
-        el.value = toBase64(el.value);
-    });
+    if (svgs && svgs.length > 0) {
+        // Convert to array to avoid issues when removing attributes
+        const svgArray = Array.from(svgs);
+        svgArray.forEach(el => {
+            const hidden = document.createElement('input');
+            hidden.type = 'hidden';
+            hidden.name = 'encoded_payment_svgs[]';
+            hidden.value = toBase64(el.value);
+            form.appendChild(hidden);
+            
+            // Remove the name right before submission
+            el.removeAttribute('name');
+        });
+    }
 });
 </script>
 

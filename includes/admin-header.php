@@ -93,9 +93,51 @@ $action = $segments[count($segments) - 1] ?? '';  // add, list
     
     <!-- Custom CSS -->
     <link rel="stylesheet" href="<?php echo $baseUrl; ?>/assets/css/admin3.css">
+    <!-- TinyMCE 6 -->
+    <script src="https://cdn.jsdelivr.net/npm/tinymce@6/tinymce.min.js"></script>
     <script>
     // Make BASE_URL available globally for all admin pages
     const BASE_URL = '<?php echo $baseUrl; ?>';
+    
+    // Global TinyMCE 6 Initialization
+    document.addEventListener('DOMContentLoaded', function() {
+        if (typeof tinymce !== 'undefined') {
+            // Shared config options
+            const sharedConfig = {
+                plugins: 'advlist autolink lists link image charmap preview anchor searchreplace visualblocks code fullscreen insertdatetime media table code help wordcount',
+                toolbar: 'undo redo | blocks | bold italic underline strikethrough | fontfamily fontsize | forecolor backcolor | alignleft aligncenter alignright alignjustify | bullist numlist outdent indent | link image media table | removeformat | code fullscreen',
+                block_formats: 'Paragraph=p; Heading 1=h1; Heading 2=h2; Heading 3=h3; Heading 4=h4; Heading 5=h5; Heading 6=h6',
+                font_size_formats: "12px 14px 16px 18px 20px 24px 30px 36px 48px",
+                content_style: 'body { font-family: Arial, sans-serif; font-size: 16px; }',
+                images_upload_url: BASE_URL + '/admin/blogs/upload_image.php',
+                convert_urls: false,
+                branding: false,
+                promotion: false,
+                setup: function (editor) {
+                    editor.on('change', function () {
+                        editor.save();
+                    });
+                }
+            };
+
+            // Initialize "Full" editors (Blogs, Pages)
+            tinymce.init({
+                ...sharedConfig,
+                selector: '.rich-text-full',
+                height: 600,
+                menubar: 'file edit view insert format tools table help'
+            });
+
+            // Initialize "Normal" editors (Settings, Products)
+            // This targets .rich-text-editor but EXCLUDES those that are also .rich-text-full
+            tinymce.init({
+                ...sharedConfig,
+                selector: '.rich-text-editor:not(.rich-text-full)',
+                height: 350,
+                menubar: false
+            });
+        }
+    });
     </script>
 </head>
 <body class="bg-gray-100">

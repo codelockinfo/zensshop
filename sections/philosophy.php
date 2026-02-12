@@ -20,6 +20,11 @@ $linkUrl = $philosophy['link_url'] ?? '#';
 $bgColor = $philosophy['background_color'] ?? '#384135';
 $textColor = $philosophy['text_color'] ?? '#eee4d3';
 
+// If no heading and no content, hide the section
+if (empty($heading) && empty($content)) {
+    return;
+}
+
 // Resolve Link URL
 if ($linkUrl && !preg_match('/^https?:\/\//', $linkUrl) && strpos($linkUrl, '#') !== 0) {
     // If it's a relative path, ensure it has base url

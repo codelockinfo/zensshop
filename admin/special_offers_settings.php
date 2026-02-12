@@ -16,37 +16,23 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $action = $_POST['action'] ?? '';
     
     if ($action === 'save_settings') {
-        // Save Heading/Subheading
+        // Save Heading/Subheading to JSON
         $heading = $_POST['heading'] ?? '';
         $subheading = $_POST['subheading'] ?? '';
         
-        // Update ALL rows with the new heading/subheading (Since it's a section property denormalized)
-        // Check if any rows exist
+        $offersConfig = [
+            'heading' => $heading,
+            'subheading' => $subheading
+        ];
+        file_put_contents(__DIR__ . '/special_offers_config.json', json_encode($offersConfig));
+        
+        // Also update existing rows in DB for backward compatibility
         $storeId = $_SESSION['store_id'] ?? null;
         if (!$storeId && isset($_SESSION['user_email'])) {
              $storeUser = $db->fetchOne("SELECT store_id FROM users WHERE email = ?", [$_SESSION['user_email']]);
              $storeId = $storeUser['store_id'] ?? null;
         }
-        $exists = $db->fetchOne("SELECT id FROM special_offers WHERE store_id = ? LIMIT 1", [$storeId]);
-        
-        if ($exists) {
-            $db->execute("UPDATE special_offers SET heading = ?, subheading = ? WHERE store_id = ?", [$heading, $subheading, $storeId]);
-        } else {
-             // If no offers exist, we can't strictly save the settings unless we created a dummy row or had a separate table.
-             // BUT, user insisted on altering table.
-             // To ensure settings persist even with 0 offers, we might need to rely on the separate table, 
-             // but per instructions we must use this table.
-             // We'll attempt to Insert a dummy row IF empty, but that might clutter. 
-             // Let's just update if exists. If not, we might lose settings until an offer is added.
-             // EDIT: We will insert a placeholder if empty to save settings.
-             // Determine Store ID
-            $storeId = $_SESSION['store_id'] ?? null;
-            if (!$storeId && isset($_SESSION['user_email'])) {
-                 $storeUser = $db->fetchOne("SELECT store_id FROM users WHERE email = ?", [$_SESSION['user_email']]);
-                 $storeId = $storeUser['store_id'] ?? null;
-            }
-             $db->execute("INSERT INTO special_offers (heading, subheading, title, active, store_id) VALUES (?, ?, 'Placeholder', 0, ?)", [$heading, $subheading, $storeId]);
-        }
+        $db->execute("UPDATE special_offers SET heading = ?, subheading = ? WHERE store_id = ?", [$heading, $subheading, $storeId]);
         
         $_SESSION['flash_success'] = "Section settings updated!";
         header("Location: " . $baseUrl . '/admin/offers');
@@ -171,11 +157,31 @@ if (!$storeId && isset($_SESSION['user_email'])) {
      $storeUser = $db->fetchOne("SELECT store_id FROM users WHERE email = ?", [$_SESSION['user_email']]);
      $storeId = $storeUser['store_id'] ?? null;
 }
-$sectionSettings = $db->fetchOne("SELECT heading, subheading FROM special_offers WHERE store_id = ? LIMIT 1", [$storeId]);
-if (!$sectionSettings) {
-    // Default values if no record exists
-    $sectionSettings = ['heading' => 'Special Offers', 'subheading' => 'Grab limited-time deals on our best products.'];
+
+// Prepare values (JSON is master)
+$savedHeading = 'Special Offers';
+$savedSubheading = 'Grab limited-time deals on our best products.';
+
+$offersConfigPath = __DIR__ . '/special_offers_config.json';
+$savedConfig = null;
+if (file_exists($offersConfigPath)) {
+    $savedConfig = json_decode(file_get_contents($offersConfigPath), true);
 }
+
+$sectionSettings = $db->fetchOne("SELECT heading, subheading FROM special_offers WHERE store_id = ? LIMIT 1", [$storeId]);
+
+if ($savedConfig !== null) {
+    $current_heading = $savedConfig['heading'] ?? ($sectionSettings['heading'] ?? $savedHeading);
+    $current_subheading = $savedConfig['subheading'] ?? ($sectionSettings['subheading'] ?? $savedSubheading);
+} else {
+    $current_heading = $sectionSettings['heading'] ?? $savedHeading;
+    $current_subheading = $sectionSettings['subheading'] ?? $savedSubheading;
+}
+
+$sectionSettings = [
+    'heading' => $current_heading,
+    'subheading' => $current_subheading
+];
 
 // Fetch Offers
 $offers = $db->fetchAll("SELECT * FROM special_offers WHERE store_id = ? ORDER BY display_order ASC, created_at DESC", [$storeId]);

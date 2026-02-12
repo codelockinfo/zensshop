@@ -21,15 +21,27 @@ $error = '';
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     try {
         // WAF BYPASS: Decode Base64 encoded sensitive fields
-        if (isset($_POST['is_encoded_submission']) && $_POST['is_encoded_submission'] === '1') {
-            // Decode Description (HTML)
-            if (isset($_POST['footer_description'])) {
-                $_POST['footer_description'] = base64_decode($_POST['footer_description']);
+        $encodedMap = [
+            'encoded_footer_description' => 'footer_description',
+        ];
+
+        foreach ($encodedMap as $encodedKey => $targetKey) {
+            if (isset($_POST[$encodedKey]) && is_string($_POST[$encodedKey])) {
+                $decoded = base64_decode($_POST[$encodedKey]);
+                if ($decoded !== false) {
+                    $_POST[$targetKey] = $decoded;
+                }
             }
-            
-            // Decode SVGs
-            if (isset($_POST['payment_svgs']) && is_array($_POST['payment_svgs'])) {
-                $_POST['payment_svgs'] = array_map('base64_decode', $_POST['payment_svgs']);
+        }
+        
+        // Handle encoded payment SVGs
+        if (isset($_POST['encoded_payment_svgs']) && is_array($_POST['encoded_payment_svgs'])) {
+            $_POST['payment_svgs'] = [];
+            foreach ($_POST['encoded_payment_svgs'] as $val) {
+                $decoded = base64_decode($val);
+                if ($decoded !== false) {
+                    $_POST['payment_svgs'][] = $decoded;
+                }
             }
         }
 
@@ -250,7 +262,7 @@ require_once __DIR__ . '/../includes/admin-header.php';
             
             <div class="mb-4">
                 <label class="block text-sm font-semibold mb-2">Footer Description</label>
-                <textarea name="footer_description" rows="3" class="w-full border p-2 rounded"><?php echo htmlspecialchars($settings['footer_description']); ?></textarea>
+                <textarea name="footer_description" rows="3" class="rich-text-editor w-full border p-2 rounded"><?php echo htmlspecialchars($settings['footer_description']); ?></textarea>
             </div>
             
             <div class="mb-4">
@@ -366,19 +378,7 @@ require_once __DIR__ . '/../includes/admin-header.php';
     </div>
 </form>
 
-<!-- CKEditor 5 -->
-<script src="https://cdn.ckeditor.com/ckeditor5/41.1.0/classic/ckeditor.js"></script>
-<style>
-/* CKEditor content styling fix for Tailwind */
-.ck-editor__editable_inline {
-    min-height: 200px;
-    background-color: white !important;
-}
-.ck-content {
-    font-size: 14px;
-    line-height: 1.6;
-}
-</style>
+
 
 <script>
 function toggleLogoFields(type) {
@@ -469,41 +469,52 @@ if (paymentData && paymentData.length > 0) {
     // The user will add them.
 }
 
-// Initialize CKEditor
-let descriptionEditor;
-ClassicEditor
-    .create(document.querySelector('textarea[name="footer_description"]'), {
-        toolbar: ['heading', '|', 'bold', 'italic', 'link', 'bulletedList', 'numberedList', 'blockQuote', 'undo', 'redo'],
-    })
-    .then(editor => {
-        descriptionEditor = editor;
-    })
-    .catch(error => {
-        console.error(error);
-    });
 
-// Encode sensitive fields before submission
+
+// Encode sensitive fields before submission to prevent WAF blocking
 document.getElementById('footerForm').addEventListener('submit', function(e) {
-    // Set encoded flag
-    document.getElementById('isEncodedSubmission').value = '1';
+    const form = this;
+    
+    // Sync TinyMCE and Handle Content
+    if (typeof tinymce !== 'undefined') {
+        tinymce.triggerSave();
+    }
     
     // Helper to safely encode to Base64 (supporting UTF-8)
     const toBase64 = (str) => btoa(unescape(encodeURIComponent(str)));
     
-    // 1. Handle CKEditor Content
-    if (descriptionEditor) {
-        // Get data from editor, encode it, and put it back into the textarea
-        const data = descriptionEditor.getData();
-        const encodedData = toBase64(data);
-        // We write directly to the textarea element so it gets submitted
-        document.querySelector('textarea[name="footer_description"]').value = encodedData;
-    }
+    const sensitiveFields = ['footer_description'];
+    
+    sensitiveFields.forEach(name => {
+        const els = document.getElementsByName(name);
+        if (els && els.length > 0) {
+            const el = els[0];
+            const hidden = document.createElement('input');
+            hidden.type = 'hidden';
+            hidden.name = 'encoded_' + name;
+            hidden.value = toBase64(el.value);
+            form.appendChild(hidden);
+            
+            // Remove name attribute right before submission to prevent WAF block
+            el.removeAttribute('name');
+        }
+    });
 
     // 2. Handle SVGs
     const svgs = document.getElementsByName('payment_svgs[]');
-    svgs.forEach(el => {
-        el.value = toBase64(el.value);
-    });
+    if (svgs && svgs.length > 0) {
+        const svgArray = Array.from(svgs);
+        svgArray.forEach(el => {
+            const hidden = document.createElement('input');
+            hidden.type = 'hidden';
+            hidden.name = 'encoded_payment_svgs[]';
+            hidden.value = toBase64(el.value);
+            form.appendChild(hidden);
+            
+            // Remove name attribute right before submission
+            el.removeAttribute('name');
+        });
+    }
 });
 </script>
 

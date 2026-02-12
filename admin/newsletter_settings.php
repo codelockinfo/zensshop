@@ -216,31 +216,6 @@ require_once __DIR__ . '/../includes/admin-header.php';
     </form>
 </div>
 
-<!-- CKEditor 5 Rich Text Editor -->
-<script src="https://cdn.ckeditor.com/ckeditor5/40.2.0/classic/ckeditor.js"></script>
-<script>
-    document.querySelectorAll('.rich-text-editor').forEach(element => {
-        ClassicEditor
-            .create(element, {
-                toolbar: ['heading', '|', 'bold', 'italic', 'link', 'bulletedList', 'numberedList', '|', 'blockQuote', 'undo', 'redo'],
-                heading: {
-                    options: [
-                        { model: 'paragraph', title: 'Paragraph', class: 'ck-heading_paragraph' },
-                        { model: 'heading1', view: 'h1', title: 'Heading 1', class: 'ck-heading_heading1' },
-                        { model: 'heading2', view: 'h2', title: 'Heading 2', class: 'ck-heading_heading2' }
-                    ]
-                }
-            })
-            .then(editor => {
-                // Ensure data is synced to textarea on form submit
-                editor.model.document.on('change:data', () => {
-                    element.value = editor.getData();
-                });
-            })
-            .catch(error => {
-                console.error(error);
-            });
-    });
-</script>
+
 
 <?php require_once __DIR__ . '/../includes/admin-footer.php'; ?>

@@ -28,33 +28,11 @@ require_once __DIR__ . '/includes/header.php';
 $banners = $db->fetchAll("SELECT * FROM banners WHERE active = 1 AND (store_id = ? OR store_id IS NULL) ORDER BY display_order ASC", [CURRENT_STORE_ID]);
 
 // Fallback to default banners if none exist
+// Fallback banners removed per user request
 if (empty($banners)) {
-    $banners = [
-        [
-            'image_desktop' => 'https://images.unsplash.com/photo-1515562141207-7a88fb7ce338?w=1200',
-            'image_mobile' => '',
-            'subheading' => 'NEW ARRIVALS',
-            'heading' => 'Get Extra 15% Off',
-            'button_text' => 'Shop Collection',
-            'link' => url('shop')
-        ],
-        [
-            'image_desktop' => 'https://images.unsplash.com/photo-1605100804763-247f67b3557e?w=1200',
-            'image_mobile' => '',
-            'subheading' => 'TRENDING NOW',
-            'heading' => 'Elegant Jewelry Collection',
-            'button_text' => 'Explore Now',
-            'link' => url('shop')
-        ],
-        [
-            'image_desktop' => 'https://images.unsplash.com/photo-1599643478518-a784e5dc4c8f?w=1200',
-            'image_mobile' => '',
-            'subheading' => 'LIMITED TIME',
-            'heading' => 'Premium Quality, Best Prices',
-            'button_text' => 'Shop Now',
-            'link' => url('shop')
-        ]
-    ];
+    // If no banners, we can either return or show nothing. 
+    // Since this is the first section, let's just ensure $banners is empty so the foreach doesn't run.
+    $banners = [];
 }
 ?>
     <div class="hero-slider relative">
@@ -165,10 +143,10 @@ if (empty($banners)) {
         
         if (count($banners) > 1 && $showArrows): 
         ?>
-        <button class="hero-prev absolute left-2 md:left-4 top-1/2 transform -translate-y-1/2 bg-white bg-opacity-75 hover:bg-opacity-100 rounded-full w-10 h-10 md:w-12 md:h-12 flex items-center justify-center text-black z-50 transition shadow-lg" aria-label="Previous slide" style="display: flex !important; opacity: 1 !important;">
+        <button class="hero-prev absolute left-2 md:left-4 top-1/2 transform -translate-y-1/2 bg-white/75 hover:bg-white rounded-full w-10 h-10 md:w-12 md:h-12 flex items-center justify-center text-black z-10 transition shadow-lg border border-white backdrop-blur-sm" aria-label="Previous slide" style="display: flex !important; opacity: 1 !important;">
             <i class="fas fa-chevron-left text-sm md:text-base" aria-hidden="true"></i>
         </button>
-        <button class="hero-next absolute right-2 md:right-4 top-1/2 transform -translate-y-1/2 bg-white bg-opacity-75 hover:bg-opacity-100 rounded-full w-10 h-10 md:w-12 md:h-12 flex items-center justify-center text-black z-50 transition shadow-lg" aria-label="Next slide" style="display: flex !important; opacity: 1 !important;">
+        <button class="hero-next absolute right-2 md:right-4 top-1/2 transform -translate-y-1/2 bg-white/75 hover:bg-white rounded-full w-10 h-10 md:w-12 md:h-12 flex items-center justify-center text-black z-10 transition shadow-lg border border-white backdrop-blur-sm" aria-label="Next slide" style="display: flex !important; opacity: 1 !important;">
             <i class="fas fa-chevron-right text-sm md:text-base" aria-hidden="true"></i>
         </button>
         
@@ -248,10 +226,15 @@ document.addEventListener('DOMContentLoaded', function() {
     const heroSection = document.getElementById('hero-section');
     
     if (heroSkeleton && heroSection) {
-        // Show hero after a short delay to allow initial render
+        // Show hero after a short delay to allow initial render, but only if it has slides
+        const hasSlides = heroSection.querySelector('.hero-slide');
         setTimeout(function() {
             heroSkeleton.style.display = 'none';
-            heroSection.style.display = 'block';
+            if (hasSlides) {
+                heroSection.style.display = 'block';
+            } else {
+                heroSection.style.display = 'none';
+            }
         }, 300);
     }
 });
@@ -476,37 +459,236 @@ document.addEventListener('DOMContentLoaded', function() {
 
 
 <!-- Sections will be loaded progressively via AJAX -->
-<section id="categories-section" class="section-loading">
-    <div class="loading-spinner"></div>
-</section>
+<!-- Categories Skeleton -->
+<div id="categories-section" class="section-loading">
+    <section class="py-16 bg-white">
+        <div class="container mx-auto px-4">
+            <div class="text-center mb-12">
+                <div class="h-8 bg-gray-200 rounded w-64 mx-auto mb-4 relative overflow-hidden">
+                    <div class="absolute inset-0 animate-shimmer"></div>
+                </div>
+                <div class="h-4 bg-gray-200 rounded max-w-2xl mx-auto relative overflow-hidden">
+                    <div class="absolute inset-0 animate-shimmer"></div>
+                </div>
+            </div>
+            <div class="flex flex-wrap justify-center gap-6">
+                <?php for($i=0; $i<6; $i++): ?>
+                <div class="w-[45%] md:w-[30%] lg:w-[14%] flex flex-col items-center">
+                    <div class="w-full aspect-square bg-gray-200 rounded-full mb-4 relative overflow-hidden">
+                        <div class="absolute inset-0 animate-shimmer"></div>
+                    </div>
+                    <div class="h-4 bg-gray-200 rounded w-24 relative overflow-hidden">
+                        <div class="absolute inset-0 animate-shimmer"></div>
+                    </div>
+                </div>
+                <?php endfor; ?>
+            </div>
+        </div>
+    </section>
+</div>
 
-<section id="best-selling-section" class="section-loading">
-    <div class="loading-spinner"></div>
-</section>
+<!-- Best Selling Skeleton -->
+<div id="best-selling-section" class="section-loading">
+    <section class="py-14 bg-white">
+        <div class="container mx-auto px-4">
+            <div class="text-center mb-12">
+                <div class="h-8 bg-gray-200 rounded w-64 mx-auto mb-4 relative overflow-hidden">
+                    <div class="absolute inset-0 animate-shimmer"></div>
+                </div>
+                <div class="h-4 bg-gray-200 rounded max-w-2xl mx-auto relative overflow-hidden">
+                    <div class="absolute inset-0 animate-shimmer"></div>
+                </div>
+            </div>
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                <?php for($i=0; $i<4; $i++): ?>
+                <div class="bg-white rounded-lg border border-gray-100 p-4 space-y-4 shadow-sm">
+                    <div class="w-full h-64 bg-gray-200 rounded relative overflow-hidden">
+                        <div class="absolute inset-0 animate-shimmer"></div>
+                    </div>
+                    <div class="h-4 bg-gray-200 rounded w-3/4 relative overflow-hidden">
+                        <div class="absolute inset-0 animate-shimmer"></div>
+                    </div>
+                    <div class="h-4 bg-gray-200 rounded w-1/2 relative overflow-hidden">
+                        <div class="absolute inset-0 animate-shimmer"></div>
+                    </div>
+                    <div class="h-6 bg-gray-200 rounded w-1/4 relative overflow-hidden">
+                        <div class="absolute inset-0 animate-shimmer"></div>
+                    </div>
+                </div>
+                <?php endfor; ?>
+            </div>
+        </div>
+    </section>
+</div>
 
-<section id="special-offers-section" class="section-loading">
-    <div class="loading-spinner"></div>
-</section>
+<!-- Special Offers Skeleton -->
+<div id="special-offers-section" class="section-loading">
+    <section class="py-14 bg-white">
+        <div class="container mx-auto px-4">
+            <div class="text-center mb-10">
+                <div class="h-10 bg-gray-200 rounded w-72 mx-auto mb-3 relative overflow-hidden">
+                    <div class="absolute inset-0 animate-shimmer"></div>
+                </div>
+                <div class="h-5 bg-gray-200 rounded w-96 mx-auto relative overflow-hidden">
+                    <div class="absolute inset-0 animate-shimmer"></div>
+                </div>
+            </div>
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                <?php for($i=0; $i<4; $i++): ?>
+                <div class="h-64 bg-gray-200 rounded-lg relative overflow-hidden">
+                    <div class="absolute inset-0 animate-shimmer"></div>
+                </div>
+                <?php endfor; ?>
+            </div>
+        </div>
+    </section>
+</div>
 
-<section id="videos-section" class="section-loading">
-    <div class="loading-spinner"></div>
-</section>
+<!-- Videos Skeleton -->
+<div id="videos-section" class="section-loading">
+    <section class="py-10 bg-white">
+        <div class="container mx-auto px-4">
+            <div class="text-center mb-10">
+                <div class="h-10 bg-gray-200 rounded w-64 mx-auto mb-3 relative overflow-hidden">
+                    <div class="absolute inset-0 animate-shimmer"></div>
+                </div>
+                <div class="h-5 bg-gray-200 rounded w-80 mx-auto relative overflow-hidden">
+                    <div class="absolute inset-0 animate-shimmer"></div>
+                </div>
+            </div>
+            <div class="flex gap-6 overflow-hidden">
+                <?php for($i=0; $i<4; $i++): ?>
+                <div class="flex-shrink-0 w-full md:w-[calc(33.333%-16px)] lg:w-[calc(25%-18px)] h-[400px] md:h-[600px] bg-gray-200 rounded-lg relative overflow-hidden">
+                    <div class="absolute inset-0 animate-shimmer"></div>
+                </div>
+                <?php endfor; ?>
+            </div>
+        </div>
+    </section>
+</div>
 
-<section id="trending-section" class="section-loading">
-    <div class="loading-spinner"></div>
-</section>
+<!-- Trending Skeleton -->
+<div id="trending-section" class="section-loading">
+    <section class="py-14 bg-white">
+        <div class="container mx-auto px-4">
+            <div class="text-center mb-10">
+                <div class="h-8 bg-gray-200 rounded w-64 mx-auto mb-4 relative overflow-hidden">
+                    <div class="absolute inset-0 animate-shimmer"></div>
+                </div>
+                <div class="h-4 bg-gray-200 rounded max-w-2xl mx-auto relative overflow-hidden">
+                    <div class="absolute inset-0 animate-shimmer"></div>
+                </div>
+            </div>
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                <?php for($i=0; $i<4; $i++): ?>
+                <div class="bg-white rounded-lg border border-gray-100 p-4 space-y-4 shadow-sm">
+                    <div class="w-full h-64 bg-gray-200 rounded relative overflow-hidden">
+                        <div class="absolute inset-0 animate-shimmer"></div>
+                    </div>
+                    <div class="h-4 bg-gray-200 rounded w-3/4 relative overflow-hidden">
+                        <div class="absolute inset-0 animate-shimmer"></div>
+                    </div>
+                    <div class="h-4 bg-gray-200 rounded w-1/2 relative overflow-hidden">
+                        <div class="absolute inset-0 animate-shimmer"></div>
+                    </div>
+                    <div class="h-6 bg-gray-200 rounded w-1/4 relative overflow-hidden">
+                        <div class="absolute inset-0 animate-shimmer"></div>
+                    </div>
+                </div>
+                <?php endfor; ?>
+            </div>
+        </div>
+    </section>
+</div>
 
-<section id="philosophy-section" class="section-loading">
-    <div class="loading-spinner"></div>
-</section>
+<!-- Philosophy Skeleton -->
+<div id="philosophy-section" class="section-loading">
+    <section class="py-16 bg-[#384135]">
+        <div class="container mx-auto px-4 text-center">
+            <div class="h-10 bg-white/20 rounded w-80 mx-auto mb-8 relative overflow-hidden">
+                <div class="absolute inset-0 animate-shimmer"></div>
+            </div>
+            <div class="space-y-4 max-w-4xl mx-auto mb-10">
+                <div class="h-6 bg-white/20 rounded relative overflow-hidden"><div class="absolute inset-0 animate-shimmer"></div></div>
+                <div class="h-6 bg-white/20 rounded relative overflow-hidden"><div class="absolute inset-0 animate-shimmer"></div></div>
+                <div class="h-6 bg-white/20 rounded w-2/3 mx-auto relative overflow-hidden"><div class="absolute inset-0 animate-shimmer"></div></div>
+            </div>
+            <div class="h-4 bg-white/20 rounded w-32 mx-auto relative overflow-hidden">
+                <div class="absolute inset-0 animate-shimmer"></div>
+            </div>
+        </div>
+    </section>
+</div>
 
-<section id="features-section" class="section-loading">
-    <div class="loading-spinner"></div>
-</section>
+<!-- Features Skeleton -->
+<div id="features-section" class="section-loading">
+    <section class="py-16 bg-white">
+        <div class="container mx-auto px-4">
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-8 text-center">
+                <?php for($i=0; $i<3; $i++): ?>
+                <div class="flex flex-col items-center p-8 space-y-6 bg-gray-50 rounded shadow-sm">
+                    <div class="w-16 h-16 bg-gray-200 rounded-full relative overflow-hidden">
+                        <div class="absolute inset-0 animate-shimmer"></div>
+                    </div>
+                    <div class="h-6 bg-gray-200 rounded w-40 relative overflow-hidden">
+                        <div class="absolute inset-0 animate-shimmer"></div>
+                    </div>
+                    <div class="space-y-2 w-full">
+                        <div class="h-4 bg-gray-200 rounded relative overflow-hidden"><div class="absolute inset-0 animate-shimmer"></div></div>
+                        <div class="h-4 bg-gray-200 rounded w-5/6 mx-auto relative overflow-hidden"><div class="absolute inset-0 animate-shimmer"></div></div>
+                    </div>
+                </div>
+                <?php endfor; ?>
+            </div>
+        </div>
+    </section>
+</div>
 
-<section id="newsletter-section">
-</section>
-<?php require_once __DIR__ . '/sections/footer_features.php'; ?>
+<!-- Newsletter Skeleton -->
+<div id="newsletter-section" class="section-loading">
+    <section class="py-20 bg-gray-100">
+        <div class="container mx-auto px-4 flex justify-center">
+            <div class="bg-white rounded-xl shadow-lg p-10 max-w-2xl w-full text-center">
+                <div class="h-8 bg-gray-200 rounded w-64 mx-auto mb-4 relative overflow-hidden">
+                    <div class="absolute inset-0 animate-shimmer"></div>
+                </div>
+                <div class="h-4 bg-gray-200 rounded w-80 mx-auto mb-10 relative overflow-hidden">
+                    <div class="absolute inset-0 animate-shimmer"></div>
+                </div>
+                <div class="flex flex-col md:flex-row gap-3 mb-8">
+                    <div class="flex-grow h-12 bg-gray-200 rounded relative overflow-hidden"><div class="absolute inset-0 animate-shimmer"></div></div>
+                    <div class="w-32 h-12 bg-gray-200 rounded relative overflow-hidden"><div class="absolute inset-0 animate-shimmer"></div></div>
+                </div>
+                <div class="h-3 bg-gray-200 rounded w-48 mx-auto relative overflow-hidden">
+                    <div class="absolute inset-0 animate-shimmer"></div>
+                </div>
+            </div>
+        </div>
+    </section>
+</div>
+<!-- Footer Features Skeleton -->
+<div id="footer-features-section" class="section-loading">
+    <section class="py-12 bg-white border-t border-gray-100">
+        <div class="container mx-auto px-4">
+            <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6 text-center">
+                <?php for($i=0; $i<4; $i++): ?>
+                <div class="p-8 bg-gray-50 rounded space-y-4">
+                    <div class="w-12 h-12 bg-gray-200 rounded-full mx-auto relative overflow-hidden">
+                        <div class="absolute inset-0 animate-shimmer"></div>
+                    </div>
+                    <div class="h-6 bg-gray-200 rounded w-32 mx-auto relative overflow-hidden">
+                        <div class="absolute inset-0 animate-shimmer"></div>
+                    </div>
+                    <div class="space-y-2">
+                        <div class="h-4 bg-gray-200 rounded relative overflow-hidden"><div class="absolute inset-0 animate-shimmer"></div></div>
+                        <div class="h-4 bg-gray-200 rounded w-2/3 mx-auto relative overflow-hidden"><div class="absolute inset-0 animate-shimmer"></div></div>
+                    </div>
+                </div>
+                <?php endfor; ?>
+            </div>
+        </div>
+    </section>
+</div>
 <?php require_once __DIR__ . '/includes/footer.php'; ?>
 
-<script src="<?php echo $baseUrl; ?>/assets/js/lazy-load15.js?v=1" defer></script>
+<script src="<?php echo $baseUrl; ?>/assets/js/lazy-load17.js?v=1" defer></script>

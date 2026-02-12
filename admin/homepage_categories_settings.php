@@ -1,4 +1,6 @@
 <?php
+ob_start(); // Buffer output
+session_start();
 require_once __DIR__ . '/../classes/Database.php';
 require_once __DIR__ . '/../classes/Auth.php';
 require_once __DIR__ . '/../includes/functions.php';
@@ -11,25 +13,32 @@ $baseUrl = getBaseUrl();
 $success = '';
 $error = '';
 
+// Determine Store ID
+$storeId = $_SESSION['store_id'] ?? null;
+if (!$storeId && isset($_SESSION['user_email'])) {
+     $storeUser = $db->fetchOne("SELECT store_id FROM users WHERE email = ?", [$_SESSION['user_email']]);
+     $storeId = $storeUser['store_id'] ?? null;
+}
+
 // Handle Form Submission
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    $section_heading = $_POST['section_heading'] ?? '';
-    $section_subheading = $_POST['section_subheading'] ?? '';
+    $section_heading = $_POST['section_heading'] ?? 'Shop By Category';
+    $section_subheading = $_POST['section_subheading'] ?? 'Express your style with our standout collection—fashion meets sophistication.';
     $titles = $_POST['title'] ?? [];
     $links = $_POST['link'] ?? [];
     $orders = $_POST['sort_order'] ?? [];
     $ids = $_POST['id'] ?? [];
     $delete_ids = $_POST['delete_id'] ?? [];
     
-    // Determine Store ID
-    $storeId = $_SESSION['store_id'] ?? null;
-    if (!$storeId && isset($_SESSION['user_email'])) {
-         $storeUser = $db->fetchOne("SELECT store_id FROM users WHERE email = ?", [$_SESSION['user_email']]);
-         $storeId = $storeUser['store_id'] ?? null;
-    }
+    // Save Config to JSON for persistent storage (helps when table is empty)
+    $categoryConfig = [
+        'heading' => $section_heading,
+        'subheading' => $section_subheading
+    ];
+    file_put_contents(__DIR__ . '/category_config.json', json_encode($categoryConfig));
 
     // Update all existing rows with the global heading/subheading if titles are empty but heading changed
-    if (empty($titles) && (!empty($section_heading) || !empty($section_subheading))) {
+    if (empty($titles)) {
         $db->execute("UPDATE section_categories SET heading = ?, subheading = ? WHERE store_id = ?", [$section_heading, $section_subheading, $storeId]);
     }
     
@@ -41,30 +50,24 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     
     // Check for POST size limit
     if (empty($_POST) && $_SERVER['CONTENT_LENGTH'] > 0) {
-        $error = "Form submission failed. The data sent exceeds the server's maximum limit (" . ini_get('post_max_size') . ").";
+        $error = "Form submission failed. The sent data exceeds the server's limit.";
     }
 
     $insertedCount = 0;
+    $updatedCount = 0;
 
     // Handle Updates and Inserts
     try {
         if (!$error) {
-            $log = "";
             for ($i = 0; $i < count($titles); $i++) {
                 $id = $ids[$i] ?? null;
-                $title = trim($titles[$i]);
-                $link = preg_replace('/\.php(\?|$)/', '$1', trim($links[$i] ?? ''));
+                $title = trim((string)$titles[$i]);
+                $link = preg_replace('/\.php(\?|$)/', '$1', trim((string)($links[$i] ?? '')));
                 $order = (int)($orders[$i] ?? 0);
                 
-                $log .= "Row $i: ID='$id', Title='$title'. ";
-                
                 // Skip empty rows
-                if (empty($title)) {
-                    $log .= "Skipped (empty title)\n";
-                    continue;
-                }
+                if (empty($title)) continue;
                 
-                // ... (Keep existing image logic)
                 $imagePath = '';
                 if (isset($_FILES['image']['name'][$i]) && !empty($_FILES['image']['name'][$i])) {
                     $uploadDir = __DIR__ . '/../assets/images/categories/';
@@ -76,7 +79,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 } else {
                     if ($id) {
                         $existing = $db->fetchOne("SELECT image FROM section_categories WHERE id = ?", [$id]);
-                        $imagePath = $existing['image'];
+                        $imagePath = $existing['image'] ?? '';
                     }
                 }
 
@@ -84,12 +87,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 if (!empty($id)) {
                     $exists = $db->fetchOne("SELECT id FROM section_categories WHERE id = ? AND store_id = ?", [$id, $storeId]);
                 }
-                
-
 
                 if ($exists) {
-                    // Update
-                    $log .= "Updating ID $id.\n";
                     $sql = "UPDATE section_categories SET title = ?, link = ?, sort_order = ?, heading = ?, subheading = ?";
                     $params = [$title, $link, $order, $section_heading, $section_subheading];
                     if ($imagePath) {
@@ -102,8 +101,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     $db->execute($sql, $params);
                     $updatedCount++;
                 } else {
-                    // Insert
-                    $log .= "Inserting New.\n";
                     $imgToSave = $imagePath ? $imagePath : ''; 
                     $db->execute(
                         "INSERT INTO section_categories (title, link, sort_order, image, heading, subheading, store_id) VALUES (?, ?, ?, ?, ?, ?, ?)",
@@ -132,15 +129,27 @@ if (isset($_SESSION['flash_success'])) {
 $pageTitle = 'Homepage Categories';
 require_once __DIR__ . '/../includes/admin-header.php';
 
-// Determine Store ID
-$storeId = $_SESSION['store_id'] ?? null;
-if (!$storeId && isset($_SESSION['user_email'])) {
-     $storeUser = $db->fetchOne("SELECT store_id FROM users WHERE email = ?", [$_SESSION['user_email']]);
-     $storeId = $storeUser['store_id'] ?? null;
-}
-
 // Fetch Categories
 $categories = $db->fetchAll("SELECT * FROM section_categories WHERE store_id = ? ORDER BY sort_order ASC", [$storeId]);
+
+// Load saved config for headers
+$categoryConfigPath = __DIR__ . '/category_config.json';
+$savedConfig = null;
+if (file_exists($categoryConfigPath)) {
+    $savedConfig = json_decode(file_get_contents($categoryConfigPath), true);
+}
+
+// Fetch Section Settings - Prioritize JSON for Admin Form persistence
+$section_heading = 'Shop By Category';
+$section_subheading = 'Express your style with our standout collection—fashion meets sophistication.';
+
+if ($savedConfig !== null) {
+    $section_heading = $savedConfig['heading'] ?? $section_heading;
+    $section_subheading = $savedConfig['subheading'] ?? $section_subheading;
+} elseif (!empty($categories)) {
+    $section_heading = $categories[0]['heading'] ?? $section_heading;
+    $section_subheading = $categories[0]['subheading'] ?? $section_subheading;
+}
 
 // Fetch valid categories for the dropdown
 $validCategories = $db->fetchAll("SELECT id, name, slug FROM categories WHERE status = 'active' AND store_id = ? ORDER BY name ASC", [$storeId]);
@@ -148,6 +157,8 @@ $validCategories = $db->fetchAll("SELECT id, name, slug FROM categories WHERE st
 
 <div class="p-6 pl-0">
     <form method="POST" enctype="multipart/form-data">
+        <input type="hidden" name="check_submit" value="1">
+        
         <!-- Top Action Bar -->
         <div class="flex justify-between items-center mb-6 bg-white p-4 rounded-lg shadow-sm border border-gray-200 sticky top-0 z-10">
             <div class="flex items-center gap-4">
@@ -163,19 +174,15 @@ $validCategories = $db->fetchAll("SELECT id, name, slug FROM categories WHERE st
 
         <?php if ($success): ?>
             <div class="bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded relative mb-4 admin-alert">
-                <?php echo htmlspecialchars($success); ?>
+                <?php echo htmlspecialchars((string)$success); ?>
             </div>
         <?php endif; ?>
 
         <?php if ($error): ?>
             <div class="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative mb-4 admin-alert">
-                <?php echo htmlspecialchars($error); ?>
+                <?php echo htmlspecialchars((string)$error); ?>
             </div>
         <?php endif; ?>
-
-
-
-
 
         <!-- Section Headers -->
         <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-6 mb-8">
@@ -183,13 +190,13 @@ $validCategories = $db->fetchAll("SELECT id, name, slug FROM categories WHERE st
             <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div>
                     <label class="block text-sm font-semibold text-gray-700 mb-2">Section Heading</label>
-                    <input type="text" name="section_heading" value="<?php echo htmlspecialchars($categories[0]['heading'] ?? 'Shop By Category'); ?>" 
+                    <input type="text" name="section_heading" value="<?php echo htmlspecialchars((string)$section_heading); ?>" 
                            class="w-full border rounded-lg p-2.5 focus:ring-2 focus:ring-blue-500 outline-none" placeholder="e.g. Shop By Category">
                 </div>
                 <div>
                     <label class="block text-sm font-semibold text-gray-700 mb-2">Section Subheading</label>
                     <textarea name="section_subheading" rows="1" 
-                              class="w-full border rounded-lg p-2.5 focus:ring-2 focus:ring-blue-500 outline-none" placeholder="Enter subheading text..."><?php echo htmlspecialchars($categories[0]['subheading'] ?? 'Express your style with our standout collection—fashion meets sophistication.'); ?></textarea>
+                              class="w-full border rounded-lg p-2.5 focus:ring-2 focus:ring-blue-500 outline-none" placeholder="Enter subheading text..."><?php echo htmlspecialchars((string)$section_subheading); ?></textarea>
                 </div>
             </div>
         </div>
@@ -223,7 +230,7 @@ $validCategories = $db->fetchAll("SELECT id, name, slug FROM categories WHERE st
                             </div>
                         </td>
                         <td class="px-6 py-4">
-                            <input type="text" name="title[]" value="<?php echo htmlspecialchars($cat['title']); ?>" class="w-full border rounded p-2" required>
+                            <input type="text" name="title[]" value="<?php echo htmlspecialchars((string)$cat['title']); ?>" class="w-full border rounded p-2" required>
                         </td>
                         <td class="px-6 py-4">
                             <select onchange="updateLink(this)" class="w-full border rounded p-2 text-sm">
@@ -231,19 +238,18 @@ $validCategories = $db->fetchAll("SELECT id, name, slug FROM categories WHERE st
                                 <?php foreach ($validCategories as $vCat): ?>
                                     <?php 
                                     $isSelected = false;
-                                    // Check if link matches shop?category=slug
                                     if (strpos($cat['link'], 'category=' . $vCat['slug']) !== false) {
                                         $isSelected = true;
                                     }
                                     ?>
-                                    <option value="<?php echo htmlspecialchars($vCat['slug']); ?>" <?php echo $isSelected ? 'selected' : ''; ?>>
-                                        <?php echo htmlspecialchars($vCat['name']); ?>
+                                    <option value="<?php echo htmlspecialchars((string)$vCat['slug']); ?>" <?php echo $isSelected ? 'selected' : ''; ?>>
+                                        <?php echo htmlspecialchars((string)$vCat['name']); ?>
                                     </option>
                                 <?php endforeach; ?>
                             </select>
                         </td>
                         <td class="px-6 py-4">
-                            <input type="text" name="link[]" value="<?php echo htmlspecialchars($cat['link']); ?>" class="w-full border rounded p-2 bg-gray-50" placeholder="e.g., shop?category=rings">
+                            <input type="text" name="link[]" value="<?php echo htmlspecialchars((string)$cat['link']); ?>" class="w-full border rounded p-2 bg-gray-50" placeholder="e.g., shop?category=rings">
                         </td>
                         <td class="px-6 py-4 text-right">
                             <button type="button" onclick="markForDeletion(this, <?php echo $cat['id']; ?>)" class="text-red-500 hover:text-red-700 transition">
@@ -286,8 +292,8 @@ $validCategories = $db->fetchAll("SELECT id, name, slug FROM categories WHERE st
             <select onchange="updateLink(this)" class="w-full border rounded p-2 text-sm">
                 <option value="">-- Select --</option>
                 <?php foreach ($validCategories as $vCat): ?>
-                    <option value="<?php echo htmlspecialchars($vCat['slug']); ?>">
-                        <?php echo htmlspecialchars($vCat['name']); ?>
+                    <option value="<?php echo htmlspecialchars((string)$vCat['slug']); ?>">
+                        <?php echo htmlspecialchars((string)$vCat['name']); ?>
                     </option>
                 <?php endforeach; ?>
             </select>
@@ -342,14 +348,11 @@ function previewImage(input) {
 function updateLink(select) {
     const slug = select.value;
     if (slug) {
-        // Find the link input in the same row
         const row = select.closest('tr');
         const linkInput = row.querySelector('input[name="link[]"]');
         if (linkInput) {
             linkInput.value = 'shop?category=' + slug;
         }
-        
-        // Also update the Title input with the selected category name
         const titleInput = row.querySelector('input[name="title[]"]');
         const selectedText = select.options[select.selectedIndex].text;
         if (titleInput) {
@@ -362,19 +365,13 @@ function markForDeletion(btn, id) {
     const row = btn.closest('tr');
     row.style.opacity = '0.5';
     row.style.backgroundColor = '#fee2e2';
-    
-    // Add hidden input for deletion
     const input = document.createElement('input');
     input.type = 'hidden';
     input.name = 'delete_id[]';
     input.value = id;
     row.appendChild(input);
-    
-    // Disable inputs in this row so they don't get submitted as updates
     const inputs = row.querySelectorAll('input:not([type="hidden"][name="delete_id[]"])');
     inputs.forEach(input => input.disabled = true);
-    
-    // Change button to undo
     btn.innerHTML = '<i class="fas fa-undo"></i>';
     btn.onclick = function() { undoDeletion(this, id) };
     btn.className = 'text-green-500 hover:text-green-700 transition';
@@ -384,16 +381,10 @@ function undoDeletion(btn, id) {
     const row = btn.closest('tr');
     row.style.opacity = '1';
     row.style.backgroundColor = '';
-    
-    // Remove deletion input
     const delInput = row.querySelector('input[name="delete_id[]"]');
     if (delInput) delInput.remove();
-    
-    // Re-enable inputs
     const inputs = row.querySelectorAll('input');
     inputs.forEach(input => input.disabled = false);
-    
-    // Change button back to delete
     btn.innerHTML = '<i class="fas fa-trash"></i>';
     btn.onclick = function() { markForDeletion(this, id) };
     btn.className = 'text-red-500 hover:text-red-700 transition';

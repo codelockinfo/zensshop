@@ -13,11 +13,14 @@ header('Content-Type: application/json');
 // Success: { urls: { default: "http://..." } }
 // Error: { error: { message: "..." } }
 
-if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_FILES['upload'])) {
+// TinyMCE and CKEditor compatibility
+$fileKey = isset($_FILES['file']) ? 'file' : (isset($_FILES['upload']) ? 'upload' : null);
+
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && $fileKey) {
     $uploadDir = __DIR__ . '/../../assets/images/blogs/content/';
     if (!is_dir($uploadDir)) mkdir($uploadDir, 0777, true);
 
-    $file = $_FILES['upload'];
+    $file = $_FILES[$fileKey];
     if ($file['error'] === UPLOAD_ERR_OK) {
         $ext = strtolower(pathinfo($file['name'], PATHINFO_EXTENSION));
         $allowed = ['jpg', 'jpeg', 'png', 'gif', 'webp'];
@@ -30,20 +33,33 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_FILES['upload'])) {
                 require_once __DIR__ . '/../../includes/functions.php';
                 $baseUrl = getBaseUrl();
                 $basePath = parse_url($baseUrl, PHP_URL_PATH);
-                // Ensure basePath is just / or /subdir (no trailing slash)
                 $basePath = rtrim($basePath ?? '', '/');
                 
+                $finalUrl = $basePath . '/assets/images/blogs/content/' . $name;
+                
                 echo json_encode([
-                    'url' => $basePath . '/assets/images/blogs/content/' . $name
+                    'uploaded' => 1,
+                    'fileName' => $name,
+                    'url' => $finalUrl,
+                    'location' => $finalUrl // TinyMCE expects 'location'
                 ]);
             } else {
-                echo json_encode(['error' => ['message' => 'Failed to move uploaded file.']]);
+                echo json_encode([
+                    'uploaded' => 0,
+                    'error' => ['message' => 'Failed to move uploaded file.']
+                ]);
             }
         } else {
-            echo json_encode(['error' => ['message' => 'Invalid file type. Only images allowed.']]);
+            echo json_encode([
+                'uploaded' => 0,
+                'error' => ['message' => 'Invalid file type. Only images allowed.']
+            ]);
         }
     } else {
-        echo json_encode(['error' => ['message' => 'Upload error: ' . $file['error']]]);
+        echo json_encode([
+            'uploaded' => 0,
+            'error' => ['message' => 'Upload error: ' . $file['error']]
+        ]);
     }
 } else {
     echo json_encode(['error' => ['message' => 'No file uploaded.']]);

@@ -37,10 +37,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
          $storeId = $storeUser['store_id'] ?? null;
     }
 
-    // Save Arrow Config
+    // Save Config (Arrows & Headers)
     $productsConfig = [
         'show_best_selling_arrows' => isset($_POST['show_best_selling_arrows']),
-        'show_trending_arrows' => isset($_POST['show_trending_arrows'])
+        'show_trending_arrows' => isset($_POST['show_trending_arrows']),
+        'bs_heading' => $_POST['bs_heading'] ?? '',
+        'bs_subheading' => $_POST['bs_subheading'] ?? '',
+        'tr_heading' => $_POST['tr_heading'] ?? '',
+        'tr_subheading' => $_POST['tr_subheading'] ?? ''
     ];
     file_put_contents(__DIR__ . '/homepage_products_config.json', json_encode($productsConfig));
 
@@ -151,10 +155,30 @@ $trendingIdsStr = implode(',', array_column($trendingProducts, 'product_id'));
 $productsConfigPath = __DIR__ . '/homepage_products_config.json';
 $showBSArrows = true;
 $showTRArrows = true;
+$savedConfig = null;
+
 if (file_exists($productsConfigPath)) {
-    $conf = json_decode(file_get_contents($productsConfigPath), true);
-    $showBSArrows = isset($conf['show_best_selling_arrows']) ? $conf['show_best_selling_arrows'] : true;
-    $showTRArrows = isset($conf['show_trending_arrows']) ? $conf['show_trending_arrows'] : true;
+    $savedConfig = json_decode(file_get_contents($productsConfigPath), true);
+    $showBSArrows = isset($savedConfig['show_best_selling_arrows']) ? $savedConfig['show_best_selling_arrows'] : true;
+    $showTRArrows = isset($savedConfig['show_trending_arrows']) ? $savedConfig['show_trending_arrows'] : true;
+}
+
+// Prepare headers (JSON is master)
+$best_selling_heading = 'Best Selling Products';
+$best_selling_subheading = 'Discover our most loved items by customers.';
+$trending_heading = 'Trending Products';
+$trending_subheading = 'Check out what is currently trending in our store.';
+
+if ($savedConfig !== null) {
+    $best_selling_heading = $savedConfig['bs_heading'] ?? ($bsHeaders['heading'] ?? $best_selling_heading);
+    $best_selling_subheading = $savedConfig['bs_subheading'] ?? ($bsHeaders['subheading'] ?? $best_selling_subheading);
+    $trending_heading = $savedConfig['tr_heading'] ?? ($trHeaders['heading'] ?? $trending_heading);
+    $trending_subheading = $savedConfig['tr_subheading'] ?? ($trHeaders['subheading'] ?? $trending_subheading);
+} else {
+    $best_selling_heading = $bsHeaders['heading'] ?? $best_selling_heading;
+    $best_selling_subheading = $bsHeaders['subheading'] ?? $best_selling_subheading;
+    $trending_heading = $trHeaders['heading'] ?? $trending_heading;
+    $trending_subheading = $trHeaders['subheading'] ?? $trending_subheading;
 }
 
 // START HTML OUTPUT
@@ -248,12 +272,12 @@ require_once __DIR__ . '/../includes/admin-header.php';
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
                     <div>
                         <label class="block text-sm font-semibold text-gray-700 mb-1">Section Heading</label>
-                        <input type="text" name="bs_heading" value="<?php echo htmlspecialchars($bsHeaders['heading'] ?? 'Best Selling Products'); ?>" 
+                        <input type="text" name="bs_heading" value="<?php echo htmlspecialchars((string)$best_selling_heading); ?>" 
                                class="w-full border rounded-lg p-2 focus:ring-2 focus:ring-blue-500 outline-none text-sm">
                     </div>
                     <div>
                         <label class="block text-sm font-semibold text-gray-700 mb-1">Section Subheading</label>
-                        <input type="text" name="bs_subheading" value="<?php echo htmlspecialchars($bsHeaders['subheading'] ?? 'Discover our most loved items by customers.'); ?>" 
+                        <input type="text" name="bs_subheading" value="<?php echo htmlspecialchars((string)$best_selling_subheading); ?>" 
                                class="w-full border rounded-lg p-2 focus:ring-2 focus:ring-blue-500 outline-none text-sm">
                     </div>
                 </div>
@@ -320,12 +344,12 @@ require_once __DIR__ . '/../includes/admin-header.php';
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
                     <div>
                         <label class="block text-sm font-semibold text-gray-700 mb-1">Section Heading</label>
-                        <input type="text" name="tr_heading" value="<?php echo htmlspecialchars($trHeaders['heading'] ?? 'Trending Products'); ?>" 
+                        <input type="text" name="tr_heading" value="<?php echo htmlspecialchars((string)$trending_heading); ?>" 
                                class="w-full border rounded-lg p-2 focus:ring-2 focus:ring-blue-500 outline-none text-sm">
                     </div>
                     <div>
                         <label class="block text-sm font-semibold text-gray-700 mb-1">Section Subheading</label>
-                        <input type="text" name="tr_subheading" value="<?php echo htmlspecialchars($trHeaders['subheading'] ?? 'Check out what is currently trending in our store.'); ?>" 
+                        <input type="text" name="tr_subheading" value="<?php echo htmlspecialchars((string)$trending_subheading); ?>" 
                                class="w-full border rounded-lg p-2 focus:ring-2 focus:ring-blue-500 outline-none text-sm">
                     </div>
                 </div>

@@ -73,19 +73,6 @@ $recentIds = array_slice($recentIds, 0, 10); // Keep last 10
 setcookie('recently_viewed', json_encode($recentIds), time() + (30 * 24 * 60 * 60), '/'); // Allow accross entire domain
 $_COOKIE['recently_viewed'] = json_encode($recentIds); // Update current runtime global
 
-// Fetch the actual product data for these IDs (excluding current)
-$displayRecentIds = array_filter($recentIds, function($id) use ($currentId) {
-    return $id != $currentId;
-});
-$displayRecentIds = array_slice($displayRecentIds, 0, 10);
-
-if (!empty($displayRecentIds)) {
-    $placeholders = implode(',', array_fill(0, count($displayRecentIds), '?'));
-    $recentlyViewed = $db->fetchAll(
-        "SELECT * FROM products WHERE (product_id IN ($placeholders) OR id IN ($placeholders)) AND status = 'active' LIMIT 10",
-        array_merge($displayRecentIds, $displayRecentIds) // Merge params for both IN clauses
-    );
-}
 // -------------------------------------------------------
 
 // Get product categories (Source of Truth: products table category_id)
@@ -223,28 +210,7 @@ $totalSold = (int)($productData['total_sales'] ?? 0);
 $isOutOfStock = ($currentStatus === 'out_of_stock' || $currentStock <= 0);
 $stockLabel = get_stock_status_text($currentStatus, $currentStock, $totalSold);
 
-// Get related products (same category)
-$relatedProducts = [];
-if (!empty($productCategories)) {
-    $categoryId = $productCategories[0]['id'] ?? null;
-    if ($categoryId) {
-        try {
-            $relatedProducts = $product->getAll([
-                'category_id' => $categoryId,
-                'status' => 'active',
-                'limit' => 11 // Fetch 11 to ensure we have enough after filtering current
-            ]);
-            // Remove current product from related
-            $relatedProducts = array_filter($relatedProducts, function($p) use ($productData) {
-                return isset($p['id']) && $p['id'] != $productData['id'];
-            });
-            $relatedProducts = array_slice($relatedProducts, 0, 10);
-        } catch (Exception $e) {
-            error_log("Error fetching related products: " . $e->getMessage());
-            $relatedProducts = [];
-        }
-    }
-}
+// Related products are now handled via AJAX
 
 // Product Options and Variants (already fetched above)
 ?>
@@ -478,7 +444,7 @@ if (!empty($productCategories)) {
             
             <!-- Product Information -->
             <div>
-                <h1 class="text-3xl font-heading font-bold mb-4"><?php echo htmlspecialchars($productData['name'] ?? 'Product'); ?></h1>
+                <h1 class="text-2xl md:text-3xl font-heading font-bold mb-4"><?php echo htmlspecialchars($productData['name'] ?? 'Product'); ?></h1>
                 
                 <!-- Rating and Reviews -->
                 <div class="flex items-center space-x-4 mb-4 text-sm cursor-pointer hover:opacity-80 transition" onclick="document.getElementById('customer-reviews').scrollIntoView({ behavior: 'smooth' })">
@@ -873,321 +839,41 @@ if (!empty($productCategories)) {
             </div>
         </div>
         
-        <!-- People Also Bought -->
-        <?php if (!empty($relatedProducts)): ?>
-        <div class="mb-5">
+        <!-- People Also Bought Skeleton -->
+        <div id="related-products-section" class="section-loading mb-5" data-product-id="<?php echo $productData['id']; ?>">
             <div class="text-center mb-8">
-                <h2 class="text-2xl font-heading font-bold mb-2">People Also Bought</h2>
-                <p class="text-gray-600">Here's some of our most similar products people are buying. Click to discover trending style.</p>
+                <div class="h-8 bg-gray-200 rounded w-64 mx-auto mb-2 relative overflow-hidden"><div class="absolute inset-0 animate-shimmer"></div></div>
+                <div class="h-4 bg-gray-200 rounded max-w-xl mx-auto relative overflow-hidden"><div class="absolute inset-0 animate-shimmer"></div></div>
             </div>
-            <div class="swiper people-bought-slider pb-12 px-4 md:px-12 relative overflow-hidden">
-                <div class="swiper-wrapper">
-                    <?php foreach ($relatedProducts as $item): 
-                        $itemImage = getProductImage($item);
-                        $itemPrice = $item['sale_price'] ?? $item['price'] ?? 0;
-                        $itemOriginalPrice = !empty($item['sale_price']) ? $item['price'] : null;
-                        $itemDiscount = $itemOriginalPrice && $itemOriginalPrice > 0 ? round((($itemOriginalPrice - $itemPrice) / $itemOriginalPrice) * 100) : 0;
-                        
-                        // Use product_id (10-digit) if available, matching best-selling logic
-                        $currentId = !empty($item['product_id']) ? $item['product_id'] : $item['id'];
-                        $inWishlist = in_array($currentId, $wishlistIds);
-                    ?>
-                    <div class="swiper-slide h-auto">
-                        <div class="group product-card bg-white rounded-lg overflow-hidden shadow-md hover:shadow-xl transition-all duration-300 relative flex flex-col h-full w-full max-w-sm">
-                            <div class="relative overflow-hidden">
-                                <a href="<?php echo $baseUrl; ?>/product?slug=<?php echo urlencode($item['slug'] ?? ''); ?>" class="block">
-                                    <img src="<?php echo htmlspecialchars($itemImage); ?>" 
-                                            alt="<?php echo htmlspecialchars($item['name'] ?? 'Product'); ?>"
-                                            class="w-full h-64 object-cover group-hover:scale-110 transition-transform duration-500"
-                                            loading="lazy"
-                                            onerror="this.src='https://placehold.co/600x600?text=Product+Image'">
-                                </a>
-                                <?php if ($itemDiscount > 0): ?>
-                                <span class="absolute top-3 left-3 bg-red-500 text-white px-2 py-1 rounded text-xs font-semibold z-10">
-                                    -<?php echo $itemDiscount; ?>%
-                                </span>
-                                <?php endif; ?>
-                                <button type="button" class="absolute top-2 right-2 w-10 h-10 rounded-full flex items-center justify-center <?php echo $inWishlist ? 'bg-black text-white' : 'bg-white text-black'; ?> hover:bg-black hover:text-white transition z-20 wishlist-btn"
-                                        data-product-id="<?php echo $currentId; ?>"
-                                        aria-label="<?php echo $inWishlist ? 'Remove from Wishlist' : 'Add to Wishlist'; ?>"
-                                        title="<?php echo $inWishlist ? 'Remove from Wishlist' : 'Add to Wishlist'; ?>">
-                                    <i class="<?php echo $inWishlist ? 'fas' : 'far'; ?> fa-heart" aria-hidden="true"></i>
-                                    <span class="product-tooltip"><?php echo $inWishlist ? 'Remove from Wishlist' : 'Add to Wishlist'; ?></span>
-                                </button>
-                                
-                                <!-- Hover Action Buttons -->
-                                <div class="product-actions absolute right-2 top-12 flex flex-col gap-2 mt-2 opacity-0 group-hover:opacity-100 transition-opacity duration-300 z-30">
-                                    <button type="button" class="product-action-btn w-10 h-10 bg-white rounded-full flex items-center justify-center hover:bg-black hover:text-white transition shadow-lg quick-view-btn relative group" 
-                                            data-product-id="<?php echo $currentId; ?>"
-                                            aria-label="Quick view product"
-                                            data-product-slug="<?php echo htmlspecialchars($item['slug'] ?? ''); ?>">
-                                        <i class="fas fa-eye" aria-hidden="true"></i>
-                                        <span class="product-tooltip">Quick View</span>
-                                    </button>
-                                </div>
-                            </div>
-                            <div class="p-4 flex flex-col flex-1">
-                                <h3 class="font-semibold text-gray-800 mb-2 h-10 overflow-hidden line-clamp-2" style="display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical;" title="<?php echo htmlspecialchars($item['name'] ?? 'Product'); ?>">
-                                    <a href="<?php echo $baseUrl; ?>/product?slug=<?php echo urlencode($item['slug'] ?? ''); ?>" class="hover:text-primary transition">
-                                        <?php echo htmlspecialchars($item['name'] ?? 'Product'); ?>
-                                    </a>
-                                </h3>
-                                <div class="flex items-center mb-3">
-                                    <div class="flex text-yellow-400">
-                                        <?php 
-                                        $itemRatingValue = floor($item['rating'] ?? 5);
-                                        for ($i = 0; $i < 5; $i++): 
-                                        ?>
-                                        <i class="fas fa-star text-[10px] <?php echo $i < $itemRatingValue ? '' : 'text-gray-300'; ?>"></i>
-                                        <?php endfor; ?>
-                                    </div>
-                                </div>
-                                <div class="flex items-center gap-2 mb-4 mt-auto">
-                                    <span class="text-base font-bold <?php echo $itemOriginalPrice ? 'text-[#1a3d32]' : 'text-primary'; ?>">
-                                        <?php echo format_price($itemPrice, $item['currency'] ?? 'USD'); ?>
-                                    </span>
-                                    <?php if ($itemOriginalPrice): ?>
-                                        <span class="text-red-500 font-bold line-through text-xs"><?php echo format_price($itemOriginalPrice, $item['currency'] ?? 'USD'); ?></span>
-                                    <?php endif; ?>
-                                </div>
-
-                                <!-- Add to Cart Button -->
-                                <?php
-                                // Get default variant attributes
-                                $variantsData = $product->getVariants($item['id']);
-                                $defaultAttributes = [];
-                                if (!empty($variantsData['variants'])) {
-                                    $defaultVariant = $variantsData['variants'][0];
-                                    foreach ($variantsData['variants'] as $v) {
-                                        if (!empty($v['is_default'])) {
-                                            $defaultVariant = $v;
-                                            break;
-                                        }
-                                    }
-                                    $defaultAttributes = $defaultVariant['variant_attributes'];
-                                }
-                                $attributesJson = json_encode($defaultAttributes);
-                                $isOutOfStock = (($item['stock_status'] ?? 'in_stock') === 'out_of_stock' || (isset($item['stock_quantity']) && $item['stock_quantity'] <= 0));
-                                ?>
-                                <button onclick='addToCart(<?php echo $item['product_id']; ?>, 1, this, <?php echo htmlspecialchars($attributesJson, ENT_QUOTES, 'UTF-8'); ?>)' 
-                                        class="w-full bg-[#1a3d32] text-white px-4 py-2.5 rounded hover:bg-black transition text-xs font-bold flex items-center justify-center gap-2 <?php echo $isOutOfStock ? 'opacity-50 cursor-not-allowed' : ''; ?>"
-                                        <?php echo $isOutOfStock ? 'disabled' : ''; ?>>
-                                    <?php if ($isOutOfStock): ?>
-                                        <span><?php echo strtoupper(get_stock_status_text($item['stock_status'] ?? 'in_stock', $item['stock_quantity'] ?? 0)); ?></span>
-                                    <?php else: ?>
-                                        <i class="fas fa-shopping-cart text-[10px]"></i>
-                                        <span>ADD TO CART</span>
-                                    <?php endif; ?>
-                                </button>
-                            </div>
-                        </div>
-                    </div>
-                    <?php endforeach; ?>
+            <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6 px-4 md:px-12">
+                <?php for($i=0; $i<4; $i++): ?>
+                <div class="bg-white rounded-lg overflow-hidden shadow-md p-4 space-y-4">
+                    <div class="w-full h-64 bg-gray-200 rounded relative overflow-hidden"><div class="absolute inset-0 animate-shimmer"></div></div>
+                    <div class="h-4 bg-gray-200 rounded w-3/4 relative overflow-hidden"><div class="absolute inset-0 animate-shimmer"></div></div>
+                    <div class="h-3 bg-gray-200 rounded w-1/4 relative overflow-hidden"><div class="absolute inset-0 animate-shimmer"></div></div>
+                    <div class="h-10 bg-gray-200 rounded w-full relative overflow-hidden"><div class="absolute inset-0 animate-shimmer"></div></div>
                 </div>
-                <?php if (count($relatedProducts) > 4): ?>
-                <button class="absolute left-2 top-1/2 -translate-y-1/2 bg-white shadow-lg rounded-full w-10 h-10 flex items-center justify-center text-gray-800 hover:text-primary hover:bg-gray-50 transition z-10 people-bought-prev" aria-label="Previous">
-                    <i class="fas fa-chevron-left" aria-hidden="true"></i>
-                </button>
-                <button class="absolute right-2 top-1/2 -translate-y-1/2 bg-white shadow-lg rounded-full w-10 h-10 flex items-center justify-center text-gray-800 hover:text-primary hover:bg-gray-50 transition z-10 people-bought-next" aria-label="Next">
-                    <i class="fas fa-chevron-right" aria-hidden="true"></i>
-                </button>
-                <?php endif; ?>
+                <?php endfor; ?>
             </div>
-
-            <script>
-            document.addEventListener('DOMContentLoaded', function() {
-                new Swiper('.people-bought-slider', {
-                    slidesPerView: 1,
-                    spaceBetween: 20,
-                    loop: <?php echo count($relatedProducts) > 4 ? 'true' : 'false'; ?>,
-                    centerInsufficientSlides: false,
-                    centeredSlides: false,
-                    autoplay: {
-                        delay: 5000,
-                        disableOnInteraction: false,
-                    },
-                    navigation: {
-                        nextEl: '.people-bought-next',
-                        prevEl: '.people-bought-prev',
-                    },
-                    breakpoints: {
-                        640: {
-                            slidesPerView: 2,
-                            spaceBetween: 20,
-                        },
-                        1024: {
-                            slidesPerView: 3,
-                            spaceBetween: 30,
-                        },
-                        1280: {
-                            slidesPerView: 4,
-                            spaceBetween: 30,
-                        },
-                    }
-                });
-            });
-            </script>
         </div>
-        <?php endif; ?>
         
-        <!-- Recently Viewed -->
-        <?php if (!empty($recentlyViewed)): ?>
-        <div class="mb-16 mt-[60px]">
+        <!-- Recently Viewed Skeleton -->
+        <div id="recently-viewed-section" class="section-loading mb-16 mt-[60px]" data-product-id="<?php echo $productData['id']; ?>">
             <div class="text-center mb-8">
-                <h2 class="text-2xl font-heading font-bold mb-2">Recently Viewed</h2>
-                <p class="text-gray-600 text-sm md:text-base max-w-2xl mx-auto">Explore your recently viewed items, blending quality and style for a refined living experience.</p>
+                <div class="h-8 bg-gray-200 rounded w-64 mx-auto mb-2 relative overflow-hidden"><div class="absolute inset-0 animate-shimmer"></div></div>
+                <div class="h-4 bg-gray-200 rounded max-w-2xl mx-auto relative overflow-hidden"><div class="absolute inset-0 animate-shimmer"></div></div>
             </div>
-            
-            <div class="swiper recently-viewed-slider pb-12 px-4 md:px-12 relative overflow-hidden">
-                <div class="swiper-wrapper">
-                    <?php foreach ($recentlyViewed as $item): 
-                        $itemImage = getProductImage($item);
-                        $itemPrice = $item['sale_price'] ?? $item['price'] ?? 0;
-                        $itemOriginalPrice = !empty($item['sale_price']) ? $item['price'] : null;
-                        
-                        $currentId = !empty($item['product_id']) ? $item['product_id'] : $item['id'];
-                        $inWishlist = in_array($currentId, $wishlistIds);
-                    ?>
-                    <div class="swiper-slide h-auto">
-                        <div class="group product-card bg-white rounded-lg overflow-hidden shadow-md hover:shadow-xl transition-all duration-300 relative flex flex-col h-full w-full max-w-sm">
-                            <div class="relative overflow-hidden">
-                                <a href="<?php echo $baseUrl; ?>/product?slug=<?php echo urlencode($item['slug'] ?? ''); ?>" class="block">
-                                    <img src="<?php echo htmlspecialchars($itemImage); ?>" 
-                                         alt="<?php echo htmlspecialchars($item['name'] ?? 'Product'); ?>"
-                                         class="w-full h-64 object-cover group-hover:scale-110 transition-transform duration-500"
-                                         onerror="this.src='https://placehold.co/600x600?text=Product+Image'">
-                                </a>
-                                <?php if ($item['id'] == $productData['id']): ?>
-                                <span class="absolute top-3 left-3 bg-[#1a3d32] text-white px-2 py-1 rounded text-[10px] font-bold z-10 uppercase tracking-tight">
-                                    Current Item
-                                </span>
-                                <?php endif; ?>
-                                <!-- Wishlist Button -->
-                                <button type="button" class="absolute top-2 right-2 w-10 h-10 rounded-full flex items-center justify-center <?php echo $inWishlist ? 'bg-black text-white' : 'bg-white text-black'; ?> hover:bg-black hover:text-white transition z-20 wishlist-btn"
-                                        data-product-id="<?php echo $currentId; ?>"
-                                        aria-label="<?php echo $inWishlist ? 'Remove from Wishlist' : 'Add to Wishlist'; ?>"
-                                        title="<?php echo $inWishlist ? 'Remove from Wishlist' : 'Add to Wishlist'; ?>">
-                                    <i class="<?php echo $inWishlist ? 'fas' : 'far'; ?> fa-heart" aria-hidden="true"></i>
-                                    <span class="product-tooltip"><?php echo $inWishlist ? 'Remove from Wishlist' : 'Add to Wishlist'; ?></span>
-                                </button>
-                                
-                                <!-- Hover Action Buttons (Quick View) -->
-                                <div class="product-actions absolute right-2 top-12 flex flex-col gap-2 mt-2 opacity-0 group-hover:opacity-100 transition-opacity duration-300 z-30">
-                                    <button type="button" class="product-action-btn w-10 h-10 bg-white rounded-full flex items-center justify-center hover:bg-black hover:text-white transition shadow-lg quick-view-btn relative group" 
-                                            data-product-id="<?php echo $currentId; ?>"
-                                            aria-label="Quick view product"
-                                            data-product-slug="<?php echo htmlspecialchars($item['slug'] ?? ''); ?>">
-                                        <i class="fas fa-eye" aria-hidden="true"></i>
-                                        <span class="product-tooltip">Quick View</span>
-                                    </button>
-                                </div>
-                            </div>
-                            <div class="p-4 flex flex-col flex-1">
-                                <h3 class="font-semibold text-gray-800 mb-2 h-10 overflow-hidden line-clamp-2" style="display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical;" title="<?php echo htmlspecialchars($item['name'] ?? 'Product'); ?>">
-                                    <a href="<?php echo $baseUrl; ?>/product?slug=<?php echo urlencode($item['slug'] ?? ''); ?>" class="hover:text-primary transition">
-                                        <?php echo htmlspecialchars($item['name'] ?? 'Product'); ?>
-                                    </a>
-                                </h3>
-                                <div class="flex items-center mb-3">
-                                    <div class="flex text-yellow-400">
-                                        <?php 
-                                        $itemRatingValue = floor($item['rating'] ?? 5);
-                                        for ($i = 0; $i < 5; $i++): 
-                                        ?>
-                                        <i class="fas fa-star text-[10px] <?php echo $i < $itemRatingValue ? '' : 'text-gray-300'; ?>"></i>
-                                        <?php endfor; ?>
-                                    </div>
-                                </div>
-                                <div class="flex items-center gap-2 mt-auto">
-                                    <span class="text-base font-bold <?php echo $itemOriginalPrice ? 'text-[#1a3d32]' : 'text-primary'; ?>">
-                                        <?php echo format_price($itemPrice, $item['currency'] ?? 'USD'); ?>
-                                    </span>
-                                    <?php if ($itemOriginalPrice): ?>
-                                        <span class="text-red-500 font-bold line-through text-xs"><?php echo format_price($itemOriginalPrice, $item['currency'] ?? 'USD'); ?></span>
-                                    <?php endif; ?>
-                                </div>
-                                
-                                <?php
-                                $vData = $product->getVariants($item['id']);
-                                $defAttrs = [];
-                                if (!empty($vData['variants'])) {
-                                    $defVar = $vData['variants'][0];
-                                    foreach ($vData['variants'] as $v) {
-                                        if (!empty($v['is_default'])) {
-                                            $defVar = $v;
-                                            break;
-                                        }
-                                    }
-                                    $defAttrs = $defVar['variant_attributes'];
-                                }
-                                $attrsJson = json_encode($defAttrs);
-                                $outOfStock = (($item['stock_status'] ?? 'in_stock') === 'out_of_stock' || (isset($item['stock_quantity']) && $item['stock_quantity'] <= 0));
-                                ?>
-                                <div class="mt-4">
-                                    <button type="button" onclick="addToCart('<?php echo $currentId; ?>', 1, this, <?php echo htmlspecialchars($attrsJson, ENT_QUOTES, 'UTF-8'); ?>)" 
-                                            class="w-full bg-[#1a3d32] text-white px-4 py-2.5 rounded hover:bg-black transition text-xs font-bold flex items-center justify-center gap-2 <?php echo $outOfStock ? 'opacity-50 cursor-not-allowed' : ''; ?>"
-                                            <?php echo $outOfStock ? 'disabled' : ''; ?>>
-                                        <?php if ($outOfStock): ?>
-                                            <span><?php echo strtoupper(get_stock_status_text($item['stock_status'] ?? 'in_stock', $item['stock_quantity'] ?? 0)); ?></span>
-                                        <?php else: ?>
-                                            <i class="fas fa-shopping-cart text-[10px]"></i>
-                                            <span>ADD TO CART</span>
-                                        <?php endif; ?>
-                                    </button>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                    <?php endforeach; ?>
+            <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6 px-4 md:px-12">
+                <?php for($i=0; $i<4; $i++): ?>
+                <div class="bg-white rounded-lg overflow-hidden shadow-md p-4 space-y-4">
+                    <div class="w-full h-64 bg-gray-200 rounded relative overflow-hidden"><div class="absolute inset-0 animate-shimmer"></div></div>
+                    <div class="h-4 bg-gray-200 rounded w-3/4 relative overflow-hidden"><div class="absolute inset-0 animate-shimmer"></div></div>
+                    <div class="h-3 bg-gray-200 rounded w-1/4 relative overflow-hidden"><div class="absolute inset-0 animate-shimmer"></div></div>
+                    <div class="h-10 bg-gray-200 rounded w-full relative overflow-hidden"><div class="absolute inset-0 animate-shimmer"></div></div>
                 </div>
-                
-                <?php if (count($recentlyViewed) > 4): ?>
-                    <?php if (count($recentlyViewed) > 4): ?>
-                    <button class="absolute left-2 top-1/2 -translate-y-1/2 bg-white shadow-lg rounded-full w-10 h-10 flex items-center justify-center text-gray-800 hover:text-primary hover:bg-gray-50 transition z-10 recently-viewed-prev" aria-label="Previous">
-                        <i class="fas fa-chevron-left" aria-hidden="true"></i>
-                    </button>
-                    <button class="absolute right-2 top-1/2 -translate-y-1/2 bg-white shadow-lg rounded-full w-10 h-10 flex items-center justify-center text-gray-800 hover:text-primary hover:bg-gray-50 transition z-10 recently-viewed-next" aria-label="Next">
-                        <i class="fas fa-chevron-right" aria-hidden="true"></i>
-                    </button>
-                <?php endif; ?>
-                <?php endif; ?>
+                <?php endfor; ?>
             </div>
-            
-            <script>
-            document.addEventListener('DOMContentLoaded', function() {
-                new Swiper('.recently-viewed-slider', {
-                    slidesPerView: 1,
-                    spaceBetween: 20,
-                    loop: <?php echo count($recentlyViewed) > 4 ? 'true' : 'false'; ?>,
-                    centerInsufficientSlides: false,
-                    centeredSlides: false,
-                    autoplay: {
-                        delay: 6000,
-                        disableOnInteraction: false,
-                    },
-                    navigation: {
-                        nextEl: '.recently-viewed-next',
-                        prevEl: '.recently-viewed-prev',
-                    },
-                    breakpoints: {
-                        640: {
-                            slidesPerView: 2,
-                            spaceBetween: 20,
-                        },
-                        1024: {
-                            slidesPerView: 3,
-                            spaceBetween: 30,
-                        },
-                        1280: {
-                            slidesPerView: 4,
-                            spaceBetween: 30,
-                        },
-                    }
-                });
-            });
-            </script>
         </div>
-        <?php endif; ?>
     </div>
 </section>
 
@@ -2270,8 +1956,8 @@ function stickyAddToCart() {
 }
 </script>
 
-<?php if (count($galleryItems ?? []) > 1): ?>
 <script src="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.js"></script>
+<?php if (count($galleryItems ?? []) > 1): ?>
 <script>
 document.addEventListener('DOMContentLoaded', function() {
     new Swiper('.thumbnail-slider', {
@@ -2291,5 +1977,6 @@ document.addEventListener('DOMContentLoaded', function() {
 </script>
 <?php endif; ?>
 
+<script src="<?php echo $baseUrl; ?>/assets/js/lazy-load17.js?v=4" defer></script>
 <?php require_once __DIR__ . '/includes/footer.php'; ?>
 

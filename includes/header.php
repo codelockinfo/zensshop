@@ -345,12 +345,12 @@ if (!function_exists('url')) {
     
     <!-- Custom CSS -->
     <link rel="preload"
-        href="<?php echo $baseUrl; ?>/assets/css/main6.css"
+        href="<?php echo $baseUrl; ?>/assets/css/main7.css"
         as="style"
         onload="this.onload=null;this.rel='stylesheet'">
 
     <noscript>
-        <link rel="stylesheet" href="<?php echo $baseUrl; ?>/assets/css/main6.css">
+        <link rel="stylesheet" href="<?php echo $baseUrl; ?>/assets/css/main7.css">
     </noscript>
 
     

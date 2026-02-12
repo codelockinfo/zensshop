@@ -17,13 +17,24 @@ if (empty($offers)) {
     // Optional: Keep hardcoded fallback or verify it's just empty
 }
 
-// Get Section Heading/Subheading from the first item (since it's denormalized)
-$sectionHeading = $offers[0]['heading'] ?? 'Special Offers';
-$sectionSubheading = $offers[0]['subheading'] ?? 'Grab limited-time deals on our best products.';
+// Get Section Heading/Subheading (JSON is master)
+$sectionHeading = 'Special Offers';
+$sectionSubheading = 'Grab limited-time deals on our best products.';
+
+$offersConfigPath = __DIR__ . '/../admin/special_offers_config.json';
+if (file_exists($offersConfigPath)) {
+    $conf = json_decode(file_get_contents($offersConfigPath), true);
+    $sectionHeading = $conf['heading'] ?? $sectionHeading;
+    $sectionSubheading = $conf['subheading'] ?? $sectionSubheading;
+} elseif (!empty($offers)) {
+    // Fallback to denormalized data in first row
+    $sectionHeading = $offers[0]['heading'] ?? $sectionHeading;
+    $sectionSubheading = $offers[0]['subheading'] ?? $sectionSubheading;
+}
 ?>
 
 <?php if (!empty($offers)): ?>
-<section class="py-5 md:py-20 bg-white">
+<section class="py-5 md:py-14 bg-white">
     <div class="container mx-auto px-4">
         <!-- Section Header -->
         <div class="text-center mb-10">

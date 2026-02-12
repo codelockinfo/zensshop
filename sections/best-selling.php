@@ -26,22 +26,18 @@ $products = $db->fetchAll(
 // Fetch dynamic headers if available from any row
 $sectionHeading = 'Best Selling';
 $sectionSubheading = 'Unmatched design—superior performance and customer satisfaction in one.';
-if (!empty($products)) {
-    $sectionHeading = !empty($products[0]['heading']) ? $products[0]['heading'] : $sectionHeading;
-    $sectionSubheading = !empty($products[0]['subheading']) ? $products[0]['subheading'] : $sectionSubheading;
-} else {
-    // Fallback headers if table is empty but we want to check if headers exist anyway
-    $headers = $db->fetchOne("SELECT heading, subheading FROM section_best_selling_products LIMIT 1");
-    if ($headers) {
-        $sectionHeading = !empty($headers['heading']) ? $headers['heading'] : $sectionHeading;
-        $sectionSubheading = !empty($headers['subheading']) ? $headers['subheading'] : $sectionSubheading;
-    }
+
+$productsConfigPath = __DIR__ . '/../admin/homepage_products_config.json';
+if (file_exists($productsConfigPath)) {
+    $conf = json_decode(file_get_contents($productsConfigPath), true);
+    $sectionHeading = $conf['bs_heading'] ?? $sectionHeading;
+    $sectionSubheading = $conf['bs_subheading'] ?? $sectionSubheading;
+} elseif (!empty($products)) {
+    $sectionHeading = $products[0]['heading'] ?? $sectionHeading;
+    $sectionSubheading = $products[0]['subheading'] ?? $sectionSubheading;
 }
 
-// Fallback if no specific products selected
-if (empty($products)) {
-    $products = $product->getBestSelling(12, CURRENT_STORE_ID);
-}
+// Fallback logic removed per user request
 ?>
 
 <?php if (!empty($products)): ?>
@@ -160,10 +156,10 @@ if (empty($products)) {
             if (count($products) > 1 && $showBSArrows): 
             ?>
             <!-- Navigation Arrows -->
-            <button class="absolute left-3 top-1/2 -translate-y-1/2 bg-white shadow-lg rounded-full w-12 h-12 flex items-center justify-center text-gray-800 hover:text-primary hover:bg-gray-50 transition z-10 best-selling-prev" aria-label="Previous best selling products" id="bestSellingPrev">
+            <button class="absolute left-3 top-1/2 -translate-y-1/2 bg-white/90 shadow-xl border border-white rounded-full w-12 h-12 flex items-center justify-center text-gray-800 hover:text-primary hover:bg-white transition z-10 custom-arrow backdrop-blur-sm best-selling-prev" aria-label="Previous best selling products" id="bestSellingPrev">
                 <i class="fas fa-chevron-left" aria-hidden="true"></i>
             </button>
-            <button class="absolute right-3 top-1/2 -translate-y-1/2 bg-white shadow-lg rounded-full w-12 h-12 flex items-center justify-center text-gray-800 hover:text-primary hover:bg-gray-50 transition z-10 best-selling-next" aria-label="Next best selling products" id="bestSellingNext">
+            <button class="absolute right-3 top-1/2 -translate-y-1/2 bg-white/90 shadow-xl border border-white rounded-full w-12 h-12 flex items-center justify-center text-gray-800 hover:text-primary hover:bg-white transition z-10 custom-arrow backdrop-blur-sm best-selling-next" aria-label="Next best selling products" id="bestSellingNext">
                 <i class="fas fa-chevron-right" aria-hidden="true"></i>
             </button>
             <?php endif; ?>

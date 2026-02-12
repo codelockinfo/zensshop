@@ -10,23 +10,24 @@ $db = Database::getInstance();
 // Fetch videos from database (Store Specific)
 $videos = $db->fetchAll("SELECT * FROM section_videos WHERE (store_id = ? OR store_id IS NULL) ORDER BY sort_order ASC", [CURRENT_STORE_ID]);
 
-// Fallback if empty
-if (empty($videos)) {
-    $videos = [
-        [
-            'title' => 'Limited Time Deals',
-            'subtitle' => 'SPECIAL 50% OFF',
-            'link_url' => 'shop.php?filter=deals',
-            'poster_url' => 'https://demo-CookPro.myshopify.com/cdn/shop/files/jew2_1.webp?v=1739185331&width=480'
-        ]
-        // ...
-    ];
-}
-$sectionHeading = $videos[0]['heading'] ?? 'Video Reels';
-$sectionSubheading = $videos[0]['subheading'] ?? 'Watch our latest stories';
+// Fallback logic removed per user request - do not show section if empty
 
+// If no videos, do not show the section
 if (empty($videos)) {
     return;
+}
+
+$sectionHeading = 'Video Reels';
+$sectionSubheading = 'Watch our latest stories';
+
+$videoConfigPath = __DIR__ . '/../admin/video_config.json';
+if (file_exists($videoConfigPath)) {
+    $conf = json_decode(file_get_contents($videoConfigPath), true);
+    $sectionHeading = $conf['heading'] ?? $sectionHeading;
+    $sectionSubheading = $conf['subheading'] ?? $sectionSubheading;
+} elseif (!empty($videos)) {
+    $sectionHeading = $videos[0]['heading'] ?? $sectionHeading;
+    $sectionSubheading = $videos[0]['subheading'] ?? $sectionSubheading;
 }
 ?>
 
@@ -51,12 +52,12 @@ if (empty($videos)) {
                 $conf = json_decode(file_get_contents($videoConfigPath), true);
                 $showVideoArrows = isset($conf['show_arrows']) ? $conf['show_arrows'] : true;
             }
-            if (count($videos) > 4 && $showVideoArrows): 
+            if (count($videos) > 1 && $showVideoArrows): 
             ?>
-            <button id="videoSectionPrev" type="button"style="z-index: 11 !important;" class="absolute left-4  top-1/2 -translate-y-1/2 z-50 bg-white shadow-lg rounded-full w-12 h-12 flex items-center justify-center text-gray-800 hover:text-primary hover:bg-gray-50 transition focus:outline-none backdrop-blur-sm cursor-pointer border border-gray-100 hidden md:flex">
+            <button id="videoSectionPrev" type="button" style="z-index: 11 !important;" class="absolute left-4 top-1/2 -translate-y-1/2 z-50 bg-white/90 shadow-xl rounded-full w-12 h-12 flex items-center justify-center text-gray-800 hover:text-primary hover:bg-white transition focus:outline-none backdrop-blur-sm cursor-pointer border border-white flex">
                 <i class="fas fa-chevron-left"></i>
             </button>
-            <button id="videoSectionNext" style="z-index: 11 !important;" type="button" class="absolute right-4 top-1/2 -translate-y-1/2 z-50 bg-white shadow-lg rounded-full w-12 h-12 flex items-center justify-center text-gray-800 hover:text-primary hover:bg-gray-50 transition focus:outline-none backdrop-blur-sm cursor-pointer border border-gray-100 hidden md:flex">
+            <button id="videoSectionNext" style="z-index: 11 !important;" type="button" class="absolute right-4 top-1/2 -translate-y-1/2 z-50 bg-white/90 shadow-xl rounded-full w-12 h-12 flex items-center justify-center text-gray-800 hover:text-primary hover:bg-white transition focus:outline-none backdrop-blur-sm cursor-pointer border border-white flex">
                 <i class="fas fa-chevron-right"></i>
             </button>
             <?php endif; ?>

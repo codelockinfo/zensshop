@@ -26,26 +26,22 @@ $products = $db->fetchAll(
 // Fetch dynamic headers if available from any row
 $sectionHeading = 'Trending Jewelry';
 $sectionSubheading = 'Unmatched design—superior performance and customer satisfaction in one.';
-if (!empty($products)) {
-    $sectionHeading = !empty($products[0]['heading']) ? $products[0]['heading'] : $sectionHeading;
-    $sectionSubheading = !empty($products[0]['subheading']) ? $products[0]['subheading'] : $sectionSubheading;
-} else {
-    // Fallback headers if table is empty but we want to check if headers exist anyway
-    $headers = $db->fetchOne("SELECT heading, subheading FROM section_trending_products LIMIT 1");
-    if ($headers) {
-        $sectionHeading = !empty($headers['heading']) ? $headers['heading'] : $sectionHeading;
-        $sectionSubheading = !empty($headers['subheading']) ? $headers['subheading'] : $sectionSubheading;
-    }
+
+$productsConfigPath = __DIR__ . '/../admin/homepage_products_config.json';
+if (file_exists($productsConfigPath)) {
+    $conf = json_decode(file_get_contents($productsConfigPath), true);
+    $sectionHeading = $conf['tr_heading'] ?? $sectionHeading;
+    $sectionSubheading = $conf['tr_subheading'] ?? $sectionSubheading;
+} elseif (!empty($products)) {
+    $sectionHeading = $products[0]['heading'] ?? $sectionHeading;
+    $sectionSubheading = $products[0]['subheading'] ?? $sectionSubheading;
 }
 
-// Fallback if no specific products selected
-if (empty($products)) {
-    $products = $product->getTrending(6, CURRENT_STORE_ID);
-}
+// Fallback logic removed per user request
 ?>
 
 <?php if (!empty($products)): ?>
-<section id="trending-section" class="py-5 md:py-20 bg-white">
+<section id="trending-section" class="py-5 md:py-14 bg-white">
     <div class="container mx-auto px-4">
         <div class="text-center mb-10">
             <h2 class="text-2xl md:text-3xl font-heading font-bold mb-4"><?php echo htmlspecialchars($sectionHeading); ?></h2>
@@ -162,10 +158,10 @@ if (empty($products)) {
             if (count($products) > 1 && $showTRArrows): 
             ?>
             <!-- Navigation Arrows -->
-            <button class="absolute left-3 top-1/2 -translate-y-1/2 bg-white shadow-lg rounded-full w-12 h-12 flex items-center justify-center text-gray-800 hover:text-primary hover:bg-gray-50 transition z-10 trending-prev" aria-label="Previous trending products" id="trendingPrev">
+            <button class="absolute left-3 top-1/2 -translate-y-1/2 bg-white/90 shadow-xl border border-white rounded-full w-12 h-12 flex items-center justify-center text-gray-800 hover:text-primary hover:bg-white transition z-10 custom-arrow backdrop-blur-sm trending-prev" aria-label="Previous trending products" id="trendingPrev">
                 <i class="fas fa-chevron-left" aria-hidden="true"></i>
             </button>
-            <button class="absolute right-3 top-1/2 -translate-y-1/2 bg-white shadow-lg rounded-full w-12 h-12 flex items-center justify-center text-gray-800 hover:text-primary hover:bg-gray-50 transition z-10 trending-next" aria-label="Next trending products" id="trendingNext">
+            <button class="absolute right-3 top-1/2 -translate-y-1/2 bg-white/90 shadow-xl border border-white rounded-full w-12 h-12 flex items-center justify-center text-gray-800 hover:text-primary hover:bg-white transition z-10 custom-arrow backdrop-blur-sm trending-next" aria-label="Next trending products" id="trendingNext">
                 <i class="fas fa-chevron-right" aria-hidden="true"></i>
             </button>
             <?php endif; ?>

@@ -7,36 +7,26 @@ $baseUrl = getBaseUrl();
 $db = Database::getInstance();
 
 // Fetch section headers for this store
-$sectionData = $db->fetchOne("SELECT heading, subheading FROM section_categories WHERE (store_id = ? OR store_id IS NULL) ORDER BY store_id DESC LIMIT 1", [CURRENT_STORE_ID]);
-$heading = !empty($sectionData['heading']) ? $sectionData['heading'] : 'Shop By Category';
-$subheading = !empty($sectionData['subheading']) ? $sectionData['subheading'] : 'Express your style with our standout collection—fashion meets sophistication.';
+$heading = 'Shop By Category';
+$subheading = 'Express your style with our standout collection—fashion meets sophistication.';
+
+$categoryConfigPath = __DIR__ . '/../admin/category_config.json';
+if (file_exists($categoryConfigPath)) {
+    $conf = json_decode(file_get_contents($categoryConfigPath), true);
+    $heading = $conf['heading'] ?? $heading;
+    $subheading = $conf['subheading'] ?? $subheading;
+} else {
+    $sectionData = $db->fetchOne("SELECT heading, subheading FROM section_categories WHERE (store_id = ? OR store_id IS NULL) ORDER BY store_id DESC LIMIT 1", [CURRENT_STORE_ID]);
+    if ($sectionData) {
+        $heading = $sectionData['heading'] ?? $heading;
+        $subheading = $sectionData['subheading'] ?? $subheading;
+    }
+}
 
 // Fetch from homepage_categories table (Store Specific)
 $homeCategories = $db->fetchAll("SELECT * FROM section_categories WHERE active = 1 AND (store_id = ? OR store_id IS NULL) ORDER BY sort_order ASC", [CURRENT_STORE_ID]);
 
-// Fallback for demonstration if table is empty
-if (empty($homeCategories)) {
-    // Fetch from main categories table as fallback
-    $dbCategories = $db->fetchAll("SELECT * FROM categories WHERE status = 'active' AND (store_id = ? OR store_id IS NULL) ORDER BY sort_order ASC", [CURRENT_STORE_ID]);
-    
-    $categoryImages = [
-        'https://images.unsplash.com/photo-1515562141207-7a88fb7ce338?w=300&h=300&fit=crop',
-        'https://images.unsplash.com/photo-1605100804763-247f67b3557e?w=300&h=300&fit=crop',
-        'https://images.unsplash.com/photo-1599643478518-a784e5dc4c8f?w=300&h=300&fit=crop',
-        'https://images.unsplash.com/photo-1611591437281-460bfbe1220a?w=300&h=300&fit=crop',
-        'https://images.unsplash.com/photo-1603561591411-07134e71a2a9?w=300&h=300&fit=crop',
-        'https://images.unsplash.com/photo-1515562141207-7a88fb7ce338?w=300&h=300&fit=crop'
-    ];
-    
-    $homeCategories = [];
-    foreach ($dbCategories as $index => $cat) {
-        $homeCategories[] = [
-            'title' => $cat['name'],
-            'link' => 'category?slug=' . $cat['slug'],
-            'image' => !empty($cat['image']) ? $cat['image'] : $categoryImages[$index % count($categoryImages)]
-        ];
-    }
-}
+// Fallback logic removed per user request
 
 if (empty($homeCategories)) {
     return;
@@ -49,7 +39,7 @@ $totalCategories = count($homeCategories);
 $displayCategories = array_slice($homeCategories, 0, 6);
 ?>
 
-<section class="py-16 md:py-20 bg-white">
+<section class="py-16 md:py-14 bg-white">
     <div class="container mx-auto px-4">
         <div class="text-center mb-12">
             <h2 class="text-2xl md:text-3xl font-heading font-bold mb-4"><?php echo htmlspecialchars($heading); ?></h2>

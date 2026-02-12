@@ -194,7 +194,7 @@ $brands = $brandsResult ? json_decode($brandsResult['setting_value'], true) : []
                     <textarea name="description" 
                               id="description_editor"
                               placeholder="Description"
-                              class="admin-form-input admin-form-textarea"><?php echo htmlspecialchars($_POST['description'] ?? ''); ?></textarea>
+                              class="admin-form-input admin-form-textarea rich-text-editor"><?php echo htmlspecialchars($_POST['description'] ?? ''); ?></textarea>
                 </div>
 
                 <div class="admin-form-group">
@@ -400,12 +400,12 @@ $brands = $brandsResult ? json_decode($brandsResult['setting_value'], true) : []
 
                 <div class="admin-form-group">
                     <label class="admin-form-label">Shipping Policy</label>
-                    <textarea name="shipping_policy" id="shipping_policy_editor" class="admin-form-input admin-form-textarea"><?php echo htmlspecialchars($_POST['shipping_policy'] ?? ''); ?></textarea>
+                    <textarea name="shipping_policy" id="shipping_policy_editor" class="admin-form-input admin-form-textarea rich-text-editor"><?php echo htmlspecialchars($_POST['shipping_policy'] ?? ''); ?></textarea>
                 </div>
 
                 <div class="admin-form-group">
                     <label class="admin-form-label">Return Policy</label>
-                    <textarea name="return_policy" id="return_policy_editor" class="admin-form-input admin-form-textarea"><?php echo htmlspecialchars($_POST['return_policy'] ?? ''); ?></textarea>
+                    <textarea name="return_policy" id="return_policy_editor" class="admin-form-input admin-form-textarea rich-text-editor"><?php echo htmlspecialchars($_POST['return_policy'] ?? ''); ?></textarea>
                 </div>
         </div>
     </div>
@@ -682,19 +682,7 @@ if (typeof BASE_URL === 'undefined') {
     const BASE_URL = '<?php echo $baseUrl; ?>';
 }
 </script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/tinymce/6.8.2/tinymce.min.js" referrerpolicy="origin"></script>
 <script>
-tinymce.init({
-    selector: '#shipping_policy_editor, #return_policy_editor, #description_editor',
-    license_key: 'gpl',
-    plugins: 'advlist autolink lists link image charmap preview anchor searchreplace visualblocks code fullscreen insertdatetime media table code help wordcount',
-    toolbar: 'undo redo | blocks | bold italic backcolor | alignleft aligncenter alignright alignjustify | bullist numlist outdent indent | removeformat | help',
-    height: 200,
-    menubar: false,
-    promotion: false,
-    branding: false
-});
-
 // Inline mini editor for highlights (looks like a text field)
 function initHighlightEditor(selector) {
     tinymce.init({

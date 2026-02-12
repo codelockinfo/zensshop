@@ -183,7 +183,7 @@ require_once __DIR__ . '/../includes/admin-header.php';
     
     <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
         <?php foreach ($features as $f): ?>
-            <div class="p-4 rounded shadow border border-gray-200 relative group" style="background-color: <?php echo htmlspecialchars($f['bg_color']); ?>; color: <?php echo htmlspecialchars($f['text_color']); ?>;">
+            <div id="feature-card-<?php echo $f['id']; ?>" class="p-4 rounded shadow border border-gray-200 relative group flex flex-col justify-between" style="background-color: <?php echo htmlspecialchars($f['bg_color']); ?>; color: <?php echo htmlspecialchars($f['text_color']); ?>;">
                 <div class="flex justify-end mb-2 absolute top-2 right-2">
                     <button onclick='editFeature(<?php echo json_encode($f, JSON_HEX_APOS | JSON_HEX_QUOT); ?>)' class="text-blue-600 hover:text-blue-800 mr-2 bg-white rounded-full p-1" title="Edit">
                         <i class="fas fa-edit"></i>
@@ -196,12 +196,12 @@ require_once __DIR__ . '/../includes/admin-header.php';
                     </form>
                 </div>
                 
-                <div class="text-center mb-4 text-4xl h-12 flex items-center justify-center mt-6">
+                <div class="feature-icon-preview text-center mb-4 text-4xl h-12 flex items-center justify-center mt-6">
                     <!-- Echoing Raw SVG -->
                     <?php echo $f['icon']; ?>
                 </div>
-                <h3 class="font-bold text-lg text-center mb-2"><?php echo htmlspecialchars($f['heading'] ?? ''); ?></h3>
-                <p class="text-center text-sm opacity-90"><?php echo nl2br(htmlspecialchars($f['content'] ?? '')); ?></p>
+                <h3 class="feature-heading-preview font-bold text-lg text-center mb-2" style="color: <?php echo htmlspecialchars($f['heading_color'] ?? $f['text_color']); ?>;"><?php echo htmlspecialchars($f['heading'] ?? ''); ?></h3>
+                <p class="feature-content-preview text-center text-sm opacity-90"><?php echo nl2br(htmlspecialchars($f['content'] ?? '')); ?></p>
             </div>
         <?php endforeach; ?>
 
@@ -316,37 +316,69 @@ const inpBgColor = document.getElementById('inpBgColor');
 const inpBgColorText = document.getElementById('inpBgColorText');
 const inpTextColor = document.getElementById('inpTextColor');
 const inpTextColorText = document.getElementById('inpTextColorText');
+const inpHeadingColor = document.getElementById('inpHeadingColor');
+const inpHeadingColorText = document.getElementById('inpHeadingColorText');
+
+let currentEditingId = null;
+
+function updateLivePreview() {
+    if (!currentEditingId) return;
+    const card = document.getElementById(`feature-card-${currentEditingId}`);
+    if (!card) return;
+
+    const iconPreview = card.querySelector('.feature-icon-preview');
+    const headingPreview = card.querySelector('.feature-heading-preview');
+    const contentPreview = card.querySelector('.feature-content-preview');
+
+    // Update Content
+    iconPreview.innerHTML = inpIcon.value;
+    headingPreview.textContent = inpHeading.value;
+    contentPreview.textContent = inpContent.value;
+
+    // Update Colors
+    card.style.backgroundColor = inpBgColor.value;
+    card.style.color = inpTextColor.value;
+    headingPreview.style.color = inpHeadingColor.value || inpTextColor.value;
+}
+
+// Add input listeners for all fields
+[inpIcon, inpHeading, inpContent, inpBgColor, inpTextColor, inpHeadingColor].forEach(el => {
+    el.addEventListener('input', updateLivePreview);
+});
 
 // Sync modal background color
 inpBgColor.addEventListener('input', (e) => {
     inpBgColorText.value = e.target.value.toUpperCase();
+    updateLivePreview();
 });
 inpBgColorText.addEventListener('input', (e) => {
     if (/^#[0-9A-Fa-f]{6}$/.test(e.target.value)) {
         inpBgColor.value = e.target.value;
+        updateLivePreview();
     }
 });
 
 // Sync modal text color
 inpTextColor.addEventListener('input', (e) => {
     inpTextColorText.value = e.target.value.toUpperCase();
+    updateLivePreview();
 });
 inpTextColorText.addEventListener('input', (e) => {
     if (/^#[0-9A-Fa-f]{6}$/.test(e.target.value)) {
         inpTextColor.value = e.target.value;
+        updateLivePreview();
     }
 });
 
 // Sync modal heading color
-const inpHeadingColor = document.getElementById('inpHeadingColor');
-const inpHeadingColorText = document.getElementById('inpHeadingColorText');
-
 inpHeadingColor.addEventListener('input', (e) => {
     inpHeadingColorText.value = e.target.value.toUpperCase();
+    updateLivePreview();
 });
 inpHeadingColorText.addEventListener('input', (e) => {
     if (/^#[0-9A-Fa-f]{6}$/.test(e.target.value)) {
         inpHeadingColor.value = e.target.value;
+        updateLivePreview();
     }
 });
 
@@ -363,18 +395,23 @@ function openModal() {
     inpContent.value = '';
     inpBgColor.value = '#ffffff';
     inpBgColorText.value = '#FFFFFF';
-    document.getElementById('inpHeadingColor').value = '#000000';
-    document.getElementById('inpHeadingColorText').value = '#000000';
+    inpHeadingColor.value = '#000000';
+    inpHeadingColorText.value = '#000000';
     inpTextColor.value = '#000000';
     inpTextColorText.value = '#000000';
+    currentEditingId = null;
 }
 
 function closeModal() {
     modal.classList.add('hidden');
     modal.classList.remove('flex');
+    // We don't reload on cancel because the live preview modified the UI
+    // If user cancels, we should actually reload to discard live changes
+    location.reload(); 
 }
 
 function editFeature(data) {
+    currentEditingId = data.id;
     openModal();
     title.textContent = 'Edit Footer Feature';
     inpId.value = data.id;
@@ -383,8 +420,8 @@ function editFeature(data) {
     inpContent.value = data.content;
     inpBgColor.value = data.bg_color || '#ffffff';
     inpBgColorText.value = (data.bg_color || '#ffffff').toUpperCase();
-    document.getElementById('inpHeadingColor').value = data.heading_color || '#000000';
-    document.getElementById('inpHeadingColorText').value = (data.heading_color || '#000000').toUpperCase();
+    inpHeadingColor.value = data.heading_color || '#000000';
+    inpHeadingColorText.value = (data.heading_color || '#000000').toUpperCase();
     inpTextColor.value = data.text_color || '#000000';
     inpTextColorText.value = (data.text_color || '#000000').toUpperCase();
     document.getElementById('inpSort').value = data.sort_order;
