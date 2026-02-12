@@ -314,7 +314,16 @@ document.addEventListener('DOMContentLoaded', function() {
         if (!isDragging) return;
         isDragging = false;
         sliderContainer.style.cursor = 'default';
-        const currentPosition = (event.changedTouches && event.changedTouches.length > 0) ? event.changedTouches[0].clientX : (event.clientX || startPos); // Fallback if no clientX
+        
+        let currentPosition = startPos;
+        if (event) {
+            if (event.changedTouches && event.changedTouches.length > 0) {
+                currentPosition = event.changedTouches[0].clientX;
+            } else {
+                currentPosition = event.clientX || event.pageX || startPos;
+            }
+        }
+        
         const diff = currentPosition - startPos;
         
         track.style.transition = 'transform 0.5s ease-out';
@@ -603,17 +612,18 @@ document.addEventListener('DOMContentLoaded', function() {
 
 <!-- Philosophy Skeleton -->
 <div id="philosophy-section" class="section-loading">
-    <section class="py-16 bg-[#384135]">
+    <section class="py-20">
         <div class="container mx-auto px-4 text-center">
-            <div class="h-10 bg-white/20 rounded w-80 mx-auto mb-8 relative overflow-hidden">
+            <div class="h-10 bg-gray-200 rounded w-3/4 md:w-1/2 mx-auto mb-10 relative overflow-hidden">
                 <div class="absolute inset-0 animate-shimmer"></div>
             </div>
-            <div class="space-y-4 max-w-4xl mx-auto mb-10">
-                <div class="h-6 bg-white/20 rounded relative overflow-hidden"><div class="absolute inset-0 animate-shimmer"></div></div>
-                <div class="h-6 bg-white/20 rounded relative overflow-hidden"><div class="absolute inset-0 animate-shimmer"></div></div>
-                <div class="h-6 bg-white/20 rounded w-2/3 mx-auto relative overflow-hidden"><div class="absolute inset-0 animate-shimmer"></div></div>
+            <div class="space-y-4 max-w-5xl mx-auto mb-12">
+                <div class="h-5 bg-gray-200 rounded relative overflow-hidden"><div class="absolute inset-0 animate-shimmer"></div></div>
+                <div class="h-5 bg-gray-200 rounded relative overflow-hidden"><div class="absolute inset-0 animate-shimmer"></div></div>
+                <div class="h-5 bg-gray-200 rounded relative overflow-hidden"><div class="absolute inset-0 animate-shimmer"></div></div>
+                <div class="h-5 bg-gray-200 rounded w-4/5 mx-auto relative overflow-hidden"><div class="absolute inset-0 animate-shimmer"></div></div>
             </div>
-            <div class="h-4 bg-white/20 rounded w-32 mx-auto relative overflow-hidden">
+            <div class="h-4 bg-gray-200 rounded w-40 mx-auto relative overflow-hidden">
                 <div class="absolute inset-0 animate-shimmer"></div>
             </div>
         </div>
