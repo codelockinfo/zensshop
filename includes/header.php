@@ -99,8 +99,13 @@ if (!function_exists('url')) {
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title><?php echo isset($pageTitle) ? htmlspecialchars($pageTitle) . ' - ' : ''; ?><?php echo htmlspecialchars($siteTitleSuffix); ?></title>
     
-<?php if ($faviconPng): ?>
-    <link rel="icon" type="image/png" sizes="64x64" href="<?php echo htmlspecialchars(getImageUrl($faviconPng)); ?>">
+    <?php if ($faviconPng): ?>
+    <link rel="icon" type="image/png" sizes="48x48" href="<?php echo htmlspecialchars(getImageUrl($faviconPng)); ?>?v=<?php echo time(); ?>">
+    <?php endif; ?>
+    <?php if (!empty($faviconIco)): ?>
+    <link rel="icon" type="image/x-icon" sizes="48x48" href="<?php echo htmlspecialchars(getImageUrl($faviconIco)); ?>?v=<?php echo time(); ?>">
+    <?php elseif (file_exists(__DIR__ . '/../favicon.ico')): ?>
+    <link rel="icon" type="image/x-icon" sizes="48x48" href="<?php echo $baseUrl; ?>/favicon.ico?v=<?php echo time(); ?>">
     <?php endif; ?>
 
 
