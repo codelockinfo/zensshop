@@ -24,7 +24,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $link_text = trim($_POST['link_text'] ?? '');
         $link_url = preg_replace('/\.php(\?|$)/', '$1', trim($_POST['link_url'] ?? ''));
         $text_color = trim($_POST['text_color'] ?? '#eee4d3');
-        $active = 1; // Always active since toggle is removed
+        $active = isset($_POST['active']) ? 1 : 0;
 
         // Determine Store ID
         $storeId = $_SESSION['store_id'] ?? null;
@@ -107,6 +107,14 @@ require_once __DIR__ . '/../includes/admin-header.php';
         
         <div class="flex justify-between items-center mb-6 border-b pb-4">
             <h3 class="font-bold text-xl text-gray-700">Content Settings</h3>
+            
+            <div class="flex items-center gap-3">
+                <span class="text-sm font-bold text-gray-700">Show Section</span>
+                <label class="relative inline-flex items-center cursor-pointer">
+                    <input type="checkbox" name="active" class="sr-only peer" <?php echo ($data['active'] == 1) ? 'checked' : ''; ?>>
+                    <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
+                </label>
+            </div>
         </div>
 
         <div class="grid grid-cols-1 gap-6">

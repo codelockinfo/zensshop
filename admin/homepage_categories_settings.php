@@ -31,9 +31,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $delete_ids = $_POST['delete_id'] ?? [];
     
     // Save Config to JSON for persistent storage (helps when table is empty)
+    $show_section = isset($_POST['show_section']) ? true : false;
     $categoryConfig = [
         'heading' => $section_heading,
-        'subheading' => $section_subheading
+        'subheading' => $section_subheading,
+        'show_section' => $show_section
     ];
     file_put_contents(__DIR__ . '/category_config.json', json_encode($categoryConfig));
 
@@ -135,8 +137,10 @@ $categories = $db->fetchAll("SELECT * FROM section_categories WHERE store_id = ?
 // Load saved config for headers
 $categoryConfigPath = __DIR__ . '/category_config.json';
 $savedConfig = null;
+$showSection = true;
 if (file_exists($categoryConfigPath)) {
     $savedConfig = json_decode(file_get_contents($categoryConfigPath), true);
+    $showSection = isset($savedConfig['show_section']) ? $savedConfig['show_section'] : true;
 }
 
 // Fetch Section Settings - Prioritize JSON for Admin Form persistence
@@ -183,6 +187,31 @@ $validCategories = $db->fetchAll("SELECT id, name, slug FROM categories WHERE st
                 <?php echo htmlspecialchars((string)$error); ?>
             </div>
         <?php endif; ?>
+
+        <!-- Visibility Settings -->
+        <div class="bg-white rounded-lg shadow-sm border border-gray-200 mb-8 overflow-hidden">
+            <div class="bg-gray-50 px-6 py-4 border-b border-gray-200">
+                <h2 class="text-xl font-semibold text-gray-800">Section Visibility</h2>
+                <p class="text-sm text-gray-500">Control the visibility of this section on the homepage.</p>
+            </div>
+            <div class="p-6">
+                <div class="flex items-center justify-between">
+                    <div class="flex items-center gap-4">
+                        <div class="p-3 bg-blue-50 rounded-lg text-blue-600">
+                            <i class="fas fa-eye text-lg"></i>
+                        </div>
+                        <div>
+                            <h3 class="font-bold text-gray-800">Show Categories Section</h3>
+                            <p class="text-sm text-gray-500">Toggle the visibility of the categories section</p>
+                        </div>
+                    </div>
+                    <label class="relative inline-flex items-center cursor-pointer">
+                        <input type="checkbox" name="show_section" class="sr-only peer" <?php echo $showSection ? 'checked' : ''; ?>>
+                        <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
+                    </label>
+                </div>
+            </div>
+        </div>
 
         <!-- Section Headers -->
         <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-6 mb-8">

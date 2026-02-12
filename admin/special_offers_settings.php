@@ -19,10 +19,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         // Save Heading/Subheading to JSON
         $heading = $_POST['heading'] ?? '';
         $subheading = $_POST['subheading'] ?? '';
+        $show_section = isset($_POST['show_section']) ? true : false;
         
         $offersConfig = [
             'heading' => $heading,
-            'subheading' => $subheading
+            'subheading' => $subheading,
+            'show_section' => $show_section
         ];
         file_put_contents(__DIR__ . '/special_offers_config.json', json_encode($offersConfig));
         
@@ -164,8 +166,10 @@ $savedSubheading = 'Grab limited-time deals on our best products.';
 
 $offersConfigPath = __DIR__ . '/special_offers_config.json';
 $savedConfig = null;
+$showSection = true;
 if (file_exists($offersConfigPath)) {
     $savedConfig = json_decode(file_get_contents($offersConfigPath), true);
+    $showSection = isset($savedConfig['show_section']) ? $savedConfig['show_section'] : true;
 }
 
 $sectionSettings = $db->fetchOne("SELECT heading, subheading FROM special_offers WHERE store_id = ? LIMIT 1", [$storeId]);
@@ -234,6 +238,22 @@ $offers = $db->fetchAll("SELECT * FROM special_offers WHERE store_id = ? ORDER B
                     <input type="text" name="subheading" value="<?php echo htmlspecialchars($sectionSettings['subheading'] ?? ''); ?>" 
                            class="w-full pl-10 border border-gray-300 p-2.5 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition" 
                            placeholder="e.g. Exclusive deals just for you">
+                </div>
+            </div>
+            
+            <div class="col-span-1 md:col-span-2 border-t pt-4 mt-2">
+                 <div class="flex items-center justify-between">
+                    <div class="flex items-center gap-3">
+                        <div class="p-2 bg-blue-50 rounded-lg text-blue-600"><i class="fas fa-eye"></i></div>
+                        <div>
+                            <h3 class="font-bold text-gray-700">Show Special Offers Section</h3>
+                            <p class="text-xs text-gray-500">Toggle visibility of this section on the homepage.</p>
+                        </div>
+                    </div>
+                    <label class="relative inline-flex items-center cursor-pointer">
+                        <input type="checkbox" name="show_section" class="sr-only peer" <?php echo $showSection ? 'checked' : ''; ?>>
+                        <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
+                    </label>
                 </div>
             </div>
             

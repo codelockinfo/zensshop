@@ -39,12 +39,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
     try {
         $section_bg = trim($_POST['section_bg'] ?? '#ffffff');
         $section_text = trim($_POST['section_text'] ?? '#000000');
+        $section_visibility = isset($_POST['section_visibility']) ? '1' : '0';
         
         // Save to settings table
         require_once __DIR__ . '/../classes/Settings.php';
         $settings = new Settings();
         $settings->set('features_section_bg', $section_bg);
         $settings->set('features_section_text', $section_text);
+        $settings->set('features_section_visibility', $section_visibility);
         
         $_SESSION['flash_success'] = "Section settings saved successfully.";
         header("Location: " . $baseUrl . '/admin/features');
@@ -122,6 +124,7 @@ require_once __DIR__ . '/../classes/Settings.php';
 $settingsObj = new Settings();
 $section_bg = $settingsObj->get('features_section_bg', '#ffffff');
 $section_text = $settingsObj->get('features_section_text', '#000000');
+$section_visibility = $settingsObj->get('features_section_visibility', '1');
 
 $pageTitle = 'Features Section Manager';
 require_once __DIR__ . '/../includes/admin-header.php';
@@ -175,6 +178,21 @@ require_once __DIR__ . '/../includes/admin-header.php';
                         <input type="text" id="sectionTextText" class="flex-1 h-10 border px-3 rounded font-mono text-sm" value="<?php echo htmlspecialchars($section_text); ?>" placeholder="#000000" pattern="^#[0-9A-Fa-f]{6}$">
                     </div>
                 </div>
+            </div>
+            
+            <!-- Visibility Toggle -->
+            <div class="flex items-center justify-between mt-4 mb-4 border-t pt-4">
+                <div class="flex items-center gap-3">
+                    <div class="p-2 bg-blue-50 rounded-lg text-blue-600"><i class="fas fa-eye"></i></div>
+                    <div>
+                        <h3 class="font-bold text-gray-700">Show Features Section</h3>
+                        <p class="text-xs text-gray-500">Toggle visibility of this section on the homepage.</p>
+                    </div>
+                </div>
+                <label class="relative inline-flex items-center cursor-pointer">
+                    <input type="checkbox" name="section_visibility" class="sr-only peer" <?php echo ($section_visibility == '1') ? 'checked' : ''; ?>>
+                    <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
+                </label>
             </div>
             
             <div class="flex justify-between items-center">

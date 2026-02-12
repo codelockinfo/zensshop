@@ -37,10 +37,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
          $storeId = $storeUser['store_id'] ?? null;
     }
 
-    // Save Config (Arrows & Headers)
+    // Save Config (Arrows & Headers & Visibility)
     $productsConfig = [
         'show_best_selling_arrows' => isset($_POST['show_best_selling_arrows']),
         'show_trending_arrows' => isset($_POST['show_trending_arrows']),
+        'show_best_selling_section' => isset($_POST['show_best_selling_section']),
+        'show_trending_section' => isset($_POST['show_trending_section']),
         'bs_heading' => $_POST['bs_heading'] ?? '',
         'bs_subheading' => $_POST['bs_subheading'] ?? '',
         'tr_heading' => $_POST['tr_heading'] ?? '',
@@ -155,12 +157,16 @@ $trendingIdsStr = implode(',', array_column($trendingProducts, 'product_id'));
 $productsConfigPath = __DIR__ . '/homepage_products_config.json';
 $showBSArrows = true;
 $showTRArrows = true;
+$showBSSection = true;
+$showTRSection = true;
 $savedConfig = null;
 
 if (file_exists($productsConfigPath)) {
     $savedConfig = json_decode(file_get_contents($productsConfigPath), true);
     $showBSArrows = isset($savedConfig['show_best_selling_arrows']) ? $savedConfig['show_best_selling_arrows'] : true;
     $showTRArrows = isset($savedConfig['show_trending_arrows']) ? $savedConfig['show_trending_arrows'] : true;
+    $showBSSection = isset($savedConfig['show_best_selling_section']) ? $savedConfig['show_best_selling_section'] : true;
+    $showTRSection = isset($savedConfig['show_trending_section']) ? $savedConfig['show_trending_section'] : true;
 }
 
 // Prepare headers (JSON is master)
@@ -221,19 +227,33 @@ require_once __DIR__ . '/../includes/admin-header.php';
         <!-- Visibility Settings -->
         <div class="bg-white rounded-lg shadow-sm border border-gray-200 mb-8 overflow-hidden">
             <div class="bg-gray-50 px-6 py-4 border-b border-gray-200">
-                <h2 class="text-xl font-semibold text-gray-800">Slider Visibility</h2>
-                <p class="text-sm text-gray-500">Control the visibility of navigation arrows on sliders.</p>
+                <h2 class="text-xl font-semibold text-gray-800">Visibility Settings</h2>
+                <p class="text-sm text-gray-500">Control usage and visibility of product sections.</p>
             </div>
-            <div class="p-6">
-                <!-- Best Selling Toggle -->
-                <div class="flex items-center justify-between py-4 border-b border-gray-100">
+            <div class="p-6 space-y-4">
+                <!-- Best Selling Section Visibility -->
+                <div class="flex items-center justify-between pb-4 border-b border-gray-100">
                     <div class="flex items-center gap-4">
                         <div class="p-3 bg-blue-50 rounded-lg text-blue-600">
-                            <i class="fas fa-chart-line text-lg"></i>
+                            <i class="fas fa-eye text-lg"></i>
                         </div>
                         <div>
-                            <h3 class="font-bold text-gray-800">Best Selling Arrows</h3>
-                            <p class="text-sm text-gray-500">Show navigation arrows for Best Selling slider</p>
+                            <h3 class="font-bold text-gray-800">Show Best Selling Section</h3>
+                            <p class="text-sm text-gray-500">Toggle visibility of the Best Selling Products section</p>
+                        </div>
+                    </div>
+                    <label class="relative inline-flex items-center cursor-pointer">
+                        <input type="checkbox" name="show_best_selling_section" class="sr-only peer" <?php echo $showBSSection ? 'checked' : ''; ?>>
+                        <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
+                    </label>
+                </div>
+                
+                <!-- Best Selling Arrows -->
+                <div class="flex items-center justify-between pb-4 border-b border-gray-100 pl-16">
+                    <div class="flex items-center gap-4">
+                        <div>
+                            <div class="text-gray-700 font-medium">Show Slider Arrows</div>
+                            <div class="text-xs text-gray-500">Navigation arrows for Best Selling</div>
                         </div>
                     </div>
                     <label class="relative inline-flex items-center cursor-pointer">
@@ -241,16 +261,30 @@ require_once __DIR__ . '/../includes/admin-header.php';
                         <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
                     </label>
                 </div>
-                
-                <!-- Trending Toggle -->
-                <div class="flex items-center justify-between py-4">
+
+                <!-- Trending Section Visibility -->
+                <div class="flex items-center justify-between pb-4 border-b border-gray-100 pt-4">
                     <div class="flex items-center gap-4">
                         <div class="p-3 bg-purple-50 rounded-lg text-purple-600">
-                            <i class="fas fa-fire text-lg"></i>
+                            <i class="fas fa-eye text-lg"></i>
                         </div>
                         <div>
-                            <h3 class="font-bold text-gray-800">Trending Arrows</h3>
-                            <p class="text-sm text-gray-500">Show navigation arrows for Trending slider</p>
+                            <h3 class="font-bold text-gray-800">Show Trending Section</h3>
+                            <p class="text-sm text-gray-500">Toggle visibility of the Trending Products section</p>
+                        </div>
+                    </div>
+                    <label class="relative inline-flex items-center cursor-pointer">
+                        <input type="checkbox" name="show_trending_section" class="sr-only peer" <?php echo $showTRSection ? 'checked' : ''; ?>>
+                        <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-purple-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-purple-600"></div>
+                    </label>
+                </div>
+
+                <!-- Trending Arrows -->
+                <div class="flex items-center justify-between pb-2 pl-16">
+                     <div class="flex items-center gap-4">
+                        <div>
+                            <div class="text-gray-700 font-medium">Show Slider Arrows</div>
+                            <div class="text-xs text-gray-500">Navigation arrows for Trending</div>
                         </div>
                     </div>
                     <label class="relative inline-flex items-center cursor-pointer">

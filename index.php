@@ -7,7 +7,50 @@ ini_set('log_errors', 1);
 $pageTitle = 'Home';
 require_once __DIR__ . '/includes/header.php';
 ?>
+<?php
+// --- VISIBILITY CONFIGURATION ---
+function getSectionConfig($file) {
+    $path = __DIR__ . '/admin/' . $file;
+    return file_exists($path) ? json_decode(file_get_contents($path), true) : [];
+}
 
+// 1. Banner
+$bannerConf = getSectionConfig('banner_config.json');
+$showBanner = $bannerConf['show_section'] ?? true;
+
+// 2. Categories
+$catConf = getSectionConfig('category_config.json');
+$showCategories = $catConf['show_section'] ?? true;
+
+// 3. Products
+$prodConf = getSectionConfig('homepage_products_config.json');
+$showBest = $prodConf['show_best_selling_section'] ?? true;
+$showTrend = $prodConf['show_trending_section'] ?? true;
+
+// 4. Special Offers
+$offerConf = getSectionConfig('special_offers_config.json');
+$showOffers = $offerConf['show_section'] ?? true;
+
+// 5. Videos
+$vidConf = getSectionConfig('video_config.json');
+$showVideos = $vidConf['show_section'] ?? true;
+
+// 6. Newsletter
+$newsConf = getSectionConfig('newsletter_config.json');
+$showNewsletter = $newsConf['show_section'] ?? true;
+
+// 7. Philosophy (DB)
+$philRow = $db->fetchOne("SELECT active FROM philosophy_section WHERE store_id = ? LIMIT 1", [CURRENT_STORE_ID]);
+$showPhilosophy = $philRow ? ($philRow['active'] == 1) : true;
+
+// 8. Features (Settings)
+$showFeatures = $settingsObj->get('features_section_visibility', '1') == '1';
+
+// 9. Footer Features (Settings)
+$showFooterFeatures = $settingsObj->get('footer_features_section_visibility', '1') == '1';
+?>
+
+<?php if ($showBanner): ?>
 <!-- Hero Section (Loaded First) -->
 <!-- Skeleton Loader for Banner -->
 <div id="hero-skeleton" class="relative h-[600px] md:h-[700px] bg-gradient-to-r from-gray-200 via-gray-300 to-gray-200 animate-pulse">
@@ -159,6 +202,7 @@ if (empty($banners)) {
         <?php endif; ?>
     </div>
 </section>
+<?php endif; ?>
 
 <style>
     /* Smooth Scroll */
@@ -469,6 +513,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
 <!-- Sections will be loaded progressively via AJAX -->
 <!-- Categories Skeleton -->
+<?php if ($showCategories): ?>
 <div id="categories-section" class="section-loading">
     <section class="py-16 bg-white">
         <div class="container mx-auto px-4">
@@ -495,8 +540,10 @@ document.addEventListener('DOMContentLoaded', function() {
         </div>
     </section>
 </div>
+<?php endif; ?>
 
 <!-- Best Selling Skeleton -->
+<?php if ($showBest): ?>
 <div id="best-selling-section" class="section-loading">
     <section class="py-14 bg-white">
         <div class="container mx-auto px-4">
@@ -529,8 +576,10 @@ document.addEventListener('DOMContentLoaded', function() {
         </div>
     </section>
 </div>
+<?php endif; ?>
 
 <!-- Special Offers Skeleton -->
+<?php if ($showOffers): ?>
 <div id="special-offers-section" class="section-loading">
     <section class="py-14 bg-white">
         <div class="container mx-auto px-4">
@@ -552,8 +601,10 @@ document.addEventListener('DOMContentLoaded', function() {
         </div>
     </section>
 </div>
+<?php endif; ?>
 
 <!-- Videos Skeleton -->
+<?php if ($showVideos): ?>
 <div id="videos-section" class="section-loading">
     <section class="py-10 bg-white">
         <div class="container mx-auto px-4">
@@ -575,8 +626,10 @@ document.addEventListener('DOMContentLoaded', function() {
         </div>
     </section>
 </div>
+<?php endif; ?>
 
 <!-- Trending Skeleton -->
+<?php if ($showTrend): ?>
 <div id="trending-section" class="section-loading">
     <section class="py-14 bg-white">
         <div class="container mx-auto px-4">
@@ -609,8 +662,10 @@ document.addEventListener('DOMContentLoaded', function() {
         </div>
     </section>
 </div>
+<?php endif; ?>
 
 <!-- Philosophy Skeleton -->
+<?php if ($showPhilosophy): ?>
 <div id="philosophy-section" class="section-loading">
     <section class="py-20">
         <div class="container mx-auto px-4 text-center">
@@ -629,8 +684,10 @@ document.addEventListener('DOMContentLoaded', function() {
         </div>
     </section>
 </div>
+<?php endif; ?>
 
 <!-- Features Skeleton -->
+<?php if ($showFeatures): ?>
 <div id="features-section" class="section-loading">
     <section class="py-16 bg-white">
         <div class="container mx-auto px-4">
@@ -653,8 +710,10 @@ document.addEventListener('DOMContentLoaded', function() {
         </div>
     </section>
 </div>
+<?php endif; ?>
 
 <!-- Newsletter Skeleton -->
+<?php if ($showNewsletter): ?>
 <div id="newsletter-section" class="section-loading">
     <section class="py-20 bg-gray-100">
         <div class="container mx-auto px-4 flex justify-center">
@@ -676,7 +735,9 @@ document.addEventListener('DOMContentLoaded', function() {
         </div>
     </section>
 </div>
+<?php endif; ?>
 <!-- Footer Features Skeleton -->
+<?php if ($showFooterFeatures): ?>
 <div id="footer-features-section" class="section-loading">
     <section class="py-12 bg-white border-t border-gray-100">
         <div class="container mx-auto px-4">
@@ -699,6 +760,7 @@ document.addEventListener('DOMContentLoaded', function() {
         </div>
     </section>
 </div>
+<?php endif; ?>
 <?php require_once __DIR__ . '/includes/footer.php'; ?>
 
 <script src="<?php echo $baseUrl; ?>/assets/js/lazy-load17.js?v=1" defer></script>

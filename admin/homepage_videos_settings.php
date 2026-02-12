@@ -43,6 +43,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             // Save Arrow & Heading Config
             $videoConfig = [
                 'show_arrows' => isset($_POST['show_arrows']),
+                'show_section' => isset($_POST['show_section']),
                 'heading' => $heading,
                 'subheading' => $subheading
             ];
@@ -205,11 +206,13 @@ require_once __DIR__ . '/../includes/admin-header.php';
     // Load Config
     $videoConfigPath = __DIR__ . '/video_config.json';
     $showVideoArrows = true;
+    $showSection = true;
     $savedConfig = null;
     
     if (file_exists($videoConfigPath)) {
         $savedConfig = json_decode(file_get_contents($videoConfigPath), true);
         $showVideoArrows = isset($savedConfig['show_arrows']) ? $savedConfig['show_arrows'] : true;
+        $showSection = isset($savedConfig['show_section']) ? $savedConfig['show_section'] : true;
     }
 
     // Fetch Section Settings - Prioritize JSON for Admin Form persistence
@@ -263,7 +266,8 @@ require_once __DIR__ . '/../includes/admin-header.php';
                     </div>
                 </div>
                 
-                <div class="col-span-1 md:col-span-2 border-t pt-4 mt-2">
+                <div class="col-span-1 md:col-span-2 border-t pt-4 mt-2 grid grid-cols-1 md:grid-cols-2 gap-6">
+                     <!-- Slider Arrows Toggle -->
                      <div class="flex items-center justify-between">
                         <div class="flex items-center gap-3">
                             <div class="p-2 bg-red-50 rounded-lg text-red-600"><i class="fas fa-arrows-alt-h"></i></div>
@@ -275,6 +279,21 @@ require_once __DIR__ . '/../includes/admin-header.php';
                         <label class="relative inline-flex items-center cursor-pointer">
                             <input type="checkbox" name="show_arrows" class="sr-only peer" <?php echo $showVideoArrows ? 'checked' : ''; ?>>
                             <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-red-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-red-600"></div>
+                        </label>
+                    </div>
+
+                    <!-- Section Visibility Toggle -->
+                    <div class="flex items-center justify-between">
+                        <div class="flex items-center gap-3">
+                            <div class="p-2 bg-blue-50 rounded-lg text-blue-600"><i class="fas fa-eye"></i></div>
+                            <div>
+                                <h3 class="font-bold text-gray-700">Show Videos Section</h3>
+                                <p class="text-xs text-gray-500">Toggle visibility of this section on the homepage.</p>
+                            </div>
+                        </div>
+                        <label class="relative inline-flex items-center cursor-pointer">
+                            <input type="checkbox" name="show_section" class="sr-only peer" <?php echo $showSection ? 'checked' : ''; ?>>
+                            <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
                         </label>
                     </div>
                 </div>

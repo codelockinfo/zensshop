@@ -129,7 +129,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     }
     elseif ($action === 'update_settings') {
         $show_arrows = isset($_POST['show_arrows']) ? true : false;
-        $config = ['show_arrows' => $show_arrows];
+        $show_section = isset($_POST['show_section']) ? true : false;
+        $config = [
+            'show_arrows' => $show_arrows,
+            'show_section' => $show_section
+        ];
         file_put_contents(__DIR__ . '/banner_config.json', json_encode($config));
         $_SESSION['flash_success'] = "Settings updated successfully!";
         header("Location: " . url('admin/banner'));
@@ -160,9 +164,11 @@ $banners = $db->fetchAll("SELECT * FROM banners WHERE store_id = ? ORDER BY disp
 // Load Config
 $bannerConfigPath = __DIR__ . '/banner_config.json';
 $showArrows = true;
+$showSection = true;
 if (file_exists($bannerConfigPath)) {
     $config = json_decode(file_get_contents($bannerConfigPath), true);
     $showArrows = isset($config['show_arrows']) ? $config['show_arrows'] : true;
+    $showSection = isset($config['show_section']) ? $config['show_section'] : true;
 }
 ?>
 
@@ -188,7 +194,7 @@ if (file_exists($bannerConfigPath)) {
             <form method="POST" id="settingsForm">
                 <input type="hidden" name="action" value="update_settings">
                 <!-- Banner Arrows Toggle -->
-                <div class="flex items-center justify-between">
+                <div class="flex items-center justify-between mb-4">
                     <div class="flex items-center gap-4">
                         <div class="p-3 bg-indigo-50 rounded-lg text-indigo-600">
                             <i class="fas fa-images text-lg"></i>
@@ -201,6 +207,23 @@ if (file_exists($bannerConfigPath)) {
                     <label class="relative inline-flex items-center cursor-pointer">
                         <input type="checkbox" name="show_arrows" class="sr-only peer" onchange="this.form.submit()" <?php echo $showArrows ? 'checked' : ''; ?>>
                         <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-indigo-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-indigo-600"></div>
+                    </label>
+                </div>
+                
+                <!-- Hero Section Visibility Toggle -->
+                <div class="flex items-center justify-between border-t border-gray-100 pt-4">
+                    <div class="flex items-center gap-4">
+                        <div class="p-3 bg-blue-50 rounded-lg text-blue-600">
+                            <i class="fas fa-eye text-lg"></i>
+                        </div>
+                        <div>
+                            <h3 class="font-bold text-gray-800">Show Hero Section</h3>
+                            <p class="text-sm text-gray-500">Toggle the visibility of the entire hero banner section</p>
+                        </div>
+                    </div>
+                    <label class="relative inline-flex items-center cursor-pointer">
+                        <input type="checkbox" name="show_section" class="sr-only peer" onchange="this.form.submit()" <?php echo $showSection ? 'checked' : ''; ?>>
+                        <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
                     </label>
                 </div>
             </form>

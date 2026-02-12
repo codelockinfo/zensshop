@@ -63,6 +63,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $db->execute($sql, [$heading, $subheading, $button_text, $footer_content, $background_image, $storeId]);
         }
 
+        // Save Config
+        $show_section = isset($_POST['show_section']) ? true : false;
+        $newsletterConfig = ['show_section' => $show_section];
+        file_put_contents(__DIR__ . '/newsletter_config.json', json_encode($newsletterConfig));
+
         $_SESSION['flash_success'] = "Newsletter section updated successfully!";
         header("Location: " . $baseUrl . '/admin/newsletter');
         exit;
@@ -87,6 +92,14 @@ if (!$data) {
         'footer_content' => '',
         'background_image' => ''
     ];
+}
+
+// Load Config
+$newsletterConfigPath = __DIR__ . '/newsletter_config.json';
+$showSection = true;
+if (file_exists($newsletterConfigPath)) {
+    $config = json_decode(file_get_contents($newsletterConfigPath), true);
+    $showSection = isset($config['show_section']) ? $config['show_section'] : true;
 }
 
 $pageTitle = 'Newsletter Settings';
@@ -199,6 +212,22 @@ require_once __DIR__ . '/../includes/admin-header.php';
                      <input type="text" name="button_text" value="<?php echo htmlspecialchars($data['button_text'] ?? ''); ?>" class="w-full border p-2 rounded" placeholder="Subscribe">
                 </div>
                 
+                <div class="border-t pt-4 mt-2">
+                     <div class="flex items-center justify-between">
+                        <div class="flex items-center gap-3">
+                            <div class="p-2 bg-blue-50 rounded-lg text-blue-600"><i class="fas fa-eye"></i></div>
+                            <div>
+                                <h3 class="font-bold text-gray-700">Show Newsletter Section</h3>
+                                <p class="text-xs text-gray-500">Toggle visibility of this section on the homepage.</p>
+                            </div>
+                        </div>
+                        <label class="relative inline-flex items-center cursor-pointer">
+                            <input type="checkbox" name="show_section" class="sr-only peer" <?php echo $showSection ? 'checked' : ''; ?>>
+                            <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
+                        </label>
+                    </div>
+                </div>
+
                 <div>
                      <label class="block text-sm font-bold mb-2">Footer / Privacy Text (Rich Text)</label>
                      <textarea name="footer_content" class="rich-text-editor w-full border p-2 rounded h-64"><?php echo htmlspecialchars($data['footer_content'] ?? ''); ?></textarea>
