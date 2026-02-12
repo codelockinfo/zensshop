@@ -102,31 +102,23 @@ if (!function_exists('url')) {
     <?php
     $faviconUrl = '';
     
-    // Check for configured favicon (which might be the renamed one in root)
     if (!empty($faviconIco)) {
-        // If it's a full URL, use it; otherwise, check if it's in root
         if (file_exists(__DIR__ . '/../' . $faviconIco)) {
-             $faviconUrl = $baseUrl . '/' . $faviconIco;
+            $faviconUrl = $baseUrl . '/' . $faviconIco;
         } else {
-             $faviconUrl = htmlspecialchars(getImageUrl($faviconIco));
+            $faviconUrl = htmlspecialchars(getImageUrl($faviconIco));
         }
-    } 
-    // Fallback to configured PNG
-    elseif (!empty($faviconPng)) {
+    } elseif (!empty($faviconPng)) {
         $faviconUrl = htmlspecialchars(getImageUrl($faviconPng));
-    }
-    // Final fallback: generic favicon.ico in root if it exists
-    elseif (file_exists(__DIR__ . '/../favicon.ico')) {
-         $faviconUrl = $baseUrl . '/favicon.ico';
-    } 
-    else {
+    } elseif (file_exists(__DIR__ . '/../favicon.ico')) {
+        $faviconUrl = $baseUrl . '/favicon.ico';
+    } else {
         $faviconUrl = $baseUrl . '/favicon.ico';
     }
     
-    // Determine type
     $favType = (strpos($faviconUrl, '.png') !== false) ? 'image/png' : 'image/x-icon';
     ?>
-    <link rel="icon" type="<?php echo $favType; ?>" sizes="48x48" href="<?php echo $faviconUrl; ?>?v=<?php echo time(); ?>">
+    <link rel="icon" type="<?php echo $favType; ?>" sizes="64x64" href="<?php echo $faviconUrl; ?>">
 
 
     <?php 
