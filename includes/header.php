@@ -99,12 +99,10 @@ if (!function_exists('url')) {
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title><?php echo isset($pageTitle) ? htmlspecialchars($pageTitle) . ' - ' : ''; ?><?php echo htmlspecialchars($siteTitleSuffix); ?></title>
     
-    <?php if ($faviconPng): ?>
-    <link rel="icon" type="image/png" sizes="32x32" href="<?php echo htmlspecialchars(getImageUrl($faviconPng)); ?>?v=<?php echo time(); ?>">
+<?php if ($faviconPng): ?>
+    <link rel="icon" type="image/png" sizes="64x64" href="<?php echo htmlspecialchars(getImageUrl($faviconPng)); ?>">
     <?php endif; ?>
-    <?php if ($faviconIco): ?>
-    <link rel="shortcut icon" type="image/x-icon" sizes="32x32" href="<?php echo htmlspecialchars(getImageUrl($faviconIco)); ?>?v=<?php echo time(); ?>">
-    <?php endif; ?>
+
 
     <?php 
     $finalMetaDesc = !empty($metaDescription) ? $metaDescription : $globalMetaDesc;
