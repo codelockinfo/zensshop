@@ -49,14 +49,14 @@ $totalCategories = count($homeCategories);
 $displayCategories = array_slice($homeCategories, 0, 6);
 ?>
 
-<section class="py-16 md:py-24 bg-white">
+<section class="py-16 md:py-20 bg-white">
     <div class="container mx-auto px-4">
         <div class="text-center mb-12">
             <h2 class="text-2xl md:text-3xl font-heading font-bold mb-4"><?php echo htmlspecialchars($heading); ?></h2>
             <p class="text-gray-600 text-sm md:text-md max-w-2xl mx-auto"><?php echo htmlspecialchars($subheading); ?></p>
         </div>
         
-        <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-6">
+        <div class="flex flex-wrap justify-center gap-6">
             
             <?php foreach ($displayCategories as $category): 
                 $image = getImageUrl($category['image'] ?? '');
@@ -66,7 +66,7 @@ $displayCategories = array_slice($homeCategories, 0, 6);
                      $link = $baseUrl . '/' . ltrim($link, '/');
                 }
             ?>
-            <a href="<?php echo htmlspecialchars($link); ?>" class="group text-center">
+            <a href="<?php echo htmlspecialchars($link); ?>" class="group text-center w-[45%] md:w-[30%] lg:w-[14%] flex-shrink-0">
                 <div class="relative mb-4 overflow-hidden rounded-full aspect-square">
                     <img src="<?php echo htmlspecialchars($image); ?>" alt="<?php echo htmlspecialchars($category['title']); ?>" 
                          class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-300"

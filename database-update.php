@@ -1440,6 +1440,61 @@ if ($EXECUTE) {
     } catch (Exception $e) {}
 }
 
+// ==========================================
+// STEP 21: Latest UI Section Updates (Colors & Philosophy)
+// ==========================================
+echo "STEP 21: Updating Schema for UI Sections (Features & Philosophy)\n";
+echo "------------------------------------------------------------\n";
+
+// 1. Footer Features Updates
+if (!columnExists($db, 'footer_features', 'heading_color')) {
+    executeSql($db, "ALTER TABLE footer_features ADD COLUMN heading_color VARCHAR(20) DEFAULT NULL AFTER text_color", "Add heading_color to footer_features", $errors, $success, $EXECUTE);
+}
+
+// 2. Section Features (3-Column Layout)
+$sql_section_features = "CREATE TABLE IF NOT EXISTS section_features (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    store_id VARCHAR(50) DEFAULT NULL,
+    icon TEXT,
+    heading VARCHAR(255),
+    content TEXT,
+    bg_color VARCHAR(20) DEFAULT '#ffffff',
+    text_color VARCHAR(20) DEFAULT '#000000',
+    heading_color VARCHAR(20) DEFAULT NULL,
+    sort_order INT DEFAULT 0,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    INDEX idx_store (store_id)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci";
+executeSql($db, $sql_section_features, "Create/Verify section_features table", $errors, $success, $EXECUTE);
+
+// Ensure columns exist if table was already there
+if (!columnExists($db, 'section_features', 'bg_color')) {
+    executeSql($db, "ALTER TABLE section_features ADD COLUMN bg_color VARCHAR(20) DEFAULT '#ffffff'", "Add bg_color to section_features", $errors, $success, $EXECUTE);
+}
+if (!columnExists($db, 'section_features', 'text_color')) {
+    executeSql($db, "ALTER TABLE section_features ADD COLUMN text_color VARCHAR(20) DEFAULT '#000000'", "Add text_color to section_features", $errors, $success, $EXECUTE);
+}
+if (!columnExists($db, 'section_features', 'heading_color')) {
+    executeSql($db, "ALTER TABLE section_features ADD COLUMN heading_color VARCHAR(20) DEFAULT NULL", "Add heading_color to section_features", $errors, $success, $EXECUTE);
+}
+
+// 3. Philosophy Section
+$sql_philosophy = "CREATE TABLE IF NOT EXISTS philosophy_section (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    store_id VARCHAR(50) DEFAULT NULL,
+    heading VARCHAR(255),
+    content TEXT,
+    link_text VARCHAR(100),
+    link_url VARCHAR(255),
+    background_color VARCHAR(20) DEFAULT '#384135',
+    text_color VARCHAR(20) DEFAULT '#eee4d3',
+    active TINYINT(1) DEFAULT 1,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    INDEX idx_store (store_id)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci";
+executeSql($db, $sql_philosophy, "Create/Verify philosophy_section table", $errors, $success, $EXECUTE);
+
 echo "\n========================================\n";
 echo "SUMMARY:\n";
 echo "========================================\n";

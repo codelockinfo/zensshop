@@ -56,7 +56,7 @@ if (empty($products)) {
         <div class="relative">
             <!-- Slider Wrapper -->
             <div class="best-selling-slider overflow-hidden">
-                <div class="flex" id="bestSellingSlider" style="will-change: transform;">
+                <div class="flex gap-6" id="bestSellingSlider" style="will-change: transform;">
                     <?php foreach ($products as $item): 
                         $mainImage = getProductImage($item);
                         $price = $item['sale_price'] ?? $item['price'];
@@ -149,7 +149,16 @@ if (empty($products)) {
                 </div>
             </div>
             
-            <?php if (count($products) > 4): ?>
+            <?php 
+            $productsConfigPath = __DIR__ . '/../admin/homepage_products_config.json';
+            $showBSArrows = true;
+            if (file_exists($productsConfigPath)) {
+                $conf = json_decode(file_get_contents($productsConfigPath), true);
+                $showBSArrows = isset($conf['show_best_selling_arrows']) ? $conf['show_best_selling_arrows'] : true;
+            }
+            
+            if (count($products) > 1 && $showBSArrows): 
+            ?>
             <!-- Navigation Arrows -->
             <button class="absolute left-3 top-1/2 -translate-y-1/2 bg-white shadow-lg rounded-full w-12 h-12 flex items-center justify-center text-gray-800 hover:text-primary hover:bg-gray-50 transition z-10 best-selling-prev" aria-label="Previous best selling products" id="bestSellingPrev">
                 <i class="fas fa-chevron-left" aria-hidden="true"></i>

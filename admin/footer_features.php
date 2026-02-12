@@ -63,24 +63,29 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
         $content = trim($_POST['content'] ?? '');
         $bg_color = trim($_POST['bg_color'] ?? '#ffffff');
         $text_color = trim($_POST['text_color'] ?? '#000000');
+        $heading_color = trim($_POST['heading_color'] ?? '#000000');
         $sort_order = (int)($_POST['sort_order'] ?? 0);
 
         if ($id) {
             // Update
-            $sql = "UPDATE footer_features SET icon = ?, heading = ?, content = ?, bg_color = ?, text_color = ?, sort_order = ? WHERE id = ? AND store_id = ?";
-            $db->execute($sql, [$icon, $heading, $content, $bg_color, $text_color, $sort_order, $id, $storeId]);
+            $sql = "UPDATE footer_features SET icon = ?, heading = ?, content = ?, bg_color = ?, text_color = ?, heading_color = ?, sort_order = ? WHERE id = ? AND store_id = ?";
+            $db->execute($sql, [$icon, $heading, $content, $bg_color, $text_color, $heading_color, $sort_order, $id, $storeId]);
             $_SESSION['flash_success'] = "Feature updated successfully.";
         } else {
             // Insert
             $countResult = $db->fetchOne("SELECT COUNT(*) as c FROM footer_features WHERE store_id = ?", [$storeId]);
             $count = $countResult['c'];
-            // Limit removed as per user request for slider
+            if ($count >= 4) {
+                $_SESSION['flash_error'] = "Maximum 4 features allowed.";
+                header("Location: " . $baseUrl . '/admin/footer_features.php');
+                exit;
+            }
             
             // Generate 10-digit random ID
             $featureId = mt_rand(1000000000, 9999999999);
             
-            $sql = "INSERT INTO footer_features (feature_id, icon, heading, content, bg_color, text_color, sort_order, store_id) VALUES (?, ?, ?, ?, ?, ?, ?, ?)";
-            $db->execute($sql, [$featureId, $icon, $heading, $content, $bg_color, $text_color, $sort_order, $storeId]);
+            $sql = "INSERT INTO footer_features (feature_id, icon, heading, content, bg_color, text_color, heading_color, sort_order, store_id) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)";
+            $db->execute($sql, [$featureId, $icon, $heading, $content, $bg_color, $text_color, $heading_color, $sort_order, $storeId]);
             $_SESSION['flash_success'] = "Feature added successfully.";
         }
         
@@ -200,17 +205,19 @@ require_once __DIR__ . '/../includes/admin-header.php';
             </div>
         <?php endforeach; ?>
 
+        <?php if ($count < 4): ?>
         <button onclick="openModal()" class="flex flex-col items-center justify-center bg-gray-50 border-2 border-dashed border-gray-300 p-6 rounded hover:bg-gray-100 transition min-h-[200px] text-gray-500">
             <i class="fas fa-plus-circle text-3xl mb-2"></i>
             <span class="font-bold">Add Footer Feature</span>
-            <span class="text-xs mt-1">(<?php echo $count; ?> items)</span>
+            <span class="text-xs mt-1">(<?php echo $count; ?>/4 items)</span>
         </button>
+        <?php endif; ?>
     </div>
 </div>
 
 <!-- Modal -->
 <div id="featureModal" class="fixed inset-0 bg-black bg-opacity-50 hidden items-center justify-center z-50">
-    <div class="bg-white rounded-lg shadow-xl w-full max-w-lg mx-4 max-h-[90vh] overflow-y-auto">
+    <div class="bg-white rounded-lg shadow-xl w-full max-w-3xl mx-4 max-h-[90vh] overflow-y-auto">
         <div class="flex justify-between items-center p-4 border-b">
             <h3 class="text-xl font-bold text-gray-800 modal-title">Add Footer Feature</h3>
             <button onclick="closeModal()" class="text-gray-500 hover:text-gray-700">
@@ -239,12 +246,19 @@ require_once __DIR__ . '/../includes/admin-header.php';
                  <textarea name="content" id="inpContent" rows="3" class="w-full border p-2 rounded" required></textarea>
             </div>
 
-            <div class="grid grid-cols-2 gap-4 mb-4">
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
                 <div>
                     <label class="block text-sm font-bold mb-2">Background Color</label>
                     <div class="flex gap-2">
                         <input type="color" name="bg_color" id="inpBgColor" class="h-10 border p-1 rounded w-16" value="#ffffff">
                         <input type="text" id="inpBgColorText" class="flex-1 h-10 border px-3 rounded font-mono text-sm" value="#ffffff" placeholder="#FFFFFF" pattern="^#[0-9A-Fa-f]{6}$">
+                    </div>
+                </div>
+                <div>
+                    <label class="block text-sm font-bold mb-2">Heading Color</label>
+                    <div class="flex gap-2">
+                        <input type="color" name="heading_color" id="inpHeadingColor" class="h-10 border p-1 rounded w-16" value="#000000">
+                        <input type="text" id="inpHeadingColorText" class="flex-1 h-10 border px-3 rounded font-mono text-sm" value="#000000" placeholder="#000000" pattern="^#[0-9A-Fa-f]{6}$">
                     </div>
                 </div>
                 <div>
@@ -323,6 +337,19 @@ inpTextColorText.addEventListener('input', (e) => {
     }
 });
 
+// Sync modal heading color
+const inpHeadingColor = document.getElementById('inpHeadingColor');
+const inpHeadingColorText = document.getElementById('inpHeadingColorText');
+
+inpHeadingColor.addEventListener('input', (e) => {
+    inpHeadingColorText.value = e.target.value.toUpperCase();
+});
+inpHeadingColorText.addEventListener('input', (e) => {
+    if (/^#[0-9A-Fa-f]{6}$/.test(e.target.value)) {
+        inpHeadingColor.value = e.target.value;
+    }
+});
+
 
 function openModal() {
     modal.classList.remove('hidden');
@@ -336,6 +363,8 @@ function openModal() {
     inpContent.value = '';
     inpBgColor.value = '#ffffff';
     inpBgColorText.value = '#FFFFFF';
+    document.getElementById('inpHeadingColor').value = '#000000';
+    document.getElementById('inpHeadingColorText').value = '#000000';
     inpTextColor.value = '#000000';
     inpTextColorText.value = '#000000';
 }
@@ -354,6 +383,8 @@ function editFeature(data) {
     inpContent.value = data.content;
     inpBgColor.value = data.bg_color || '#ffffff';
     inpBgColorText.value = (data.bg_color || '#ffffff').toUpperCase();
+    document.getElementById('inpHeadingColor').value = data.heading_color || '#000000';
+    document.getElementById('inpHeadingColorText').value = (data.heading_color || '#000000').toUpperCase();
     inpTextColor.value = data.text_color || '#000000';
     inpTextColorText.value = (data.text_color || '#000000').toUpperCase();
     document.getElementById('inpSort').value = data.sort_order;

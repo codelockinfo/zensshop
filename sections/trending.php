@@ -45,7 +45,7 @@ if (empty($products)) {
 ?>
 
 <?php if (!empty($products)): ?>
-<section id="trending-section" class="py-5 md:py-24 bg-white">
+<section id="trending-section" class="py-5 md:py-20 bg-white">
     <div class="container mx-auto px-4">
         <div class="text-center mb-10">
             <h2 class="text-2xl md:text-3xl font-heading font-bold mb-4"><?php echo htmlspecialchars($sectionHeading); ?></h2>
@@ -56,7 +56,7 @@ if (empty($products)) {
         <div class="relative">
             <!-- Slider Wrapper -->
             <div class="trending-slider overflow-hidden">
-                <div class="flex" id="trendingSlider" style="will-change: transform;">
+                <div class="flex gap-6" id="trendingSlider" style="will-change: transform;">
                     <?php foreach ($products as $item): 
                 $mainImage = getProductImage($item);
                 $price = $item['sale_price'] ?? $item['price'];
@@ -151,7 +151,16 @@ if (empty($products)) {
                 </div>
             </div>
             
-            <?php if (count($products) > 4): ?>
+            <?php 
+            $productsConfigPath = __DIR__ . '/../admin/homepage_products_config.json';
+            $showTRArrows = true;
+            if (file_exists($productsConfigPath)) {
+                $conf = json_decode(file_get_contents($productsConfigPath), true);
+                $showTRArrows = isset($conf['show_trending_arrows']) ? $conf['show_trending_arrows'] : true;
+            }
+            
+            if (count($products) > 1 && $showTRArrows): 
+            ?>
             <!-- Navigation Arrows -->
             <button class="absolute left-3 top-1/2 -translate-y-1/2 bg-white shadow-lg rounded-full w-12 h-12 flex items-center justify-center text-gray-800 hover:text-primary hover:bg-gray-50 transition z-10 trending-prev" aria-label="Previous trending products" id="trendingPrev">
                 <i class="fas fa-chevron-left" aria-hidden="true"></i>

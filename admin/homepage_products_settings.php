@@ -37,6 +37,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
          $storeId = $storeUser['store_id'] ?? null;
     }
 
+    // Save Arrow Config
+    $productsConfig = [
+        'show_best_selling_arrows' => isset($_POST['show_best_selling_arrows']),
+        'show_trending_arrows' => isset($_POST['show_trending_arrows'])
+    ];
+    file_put_contents(__DIR__ . '/homepage_products_config.json', json_encode($productsConfig));
+
     try {
         // Process Best Selling
         $db->execute("DELETE FROM section_best_selling_products WHERE store_id = ?", [$storeId]); 
@@ -140,6 +147,16 @@ $trHeaders = $db->fetchOne("SELECT heading, subheading FROM section_trending_pro
 $bestSellingIdsStr = implode(',', array_column($bestSellingProducts, 'product_id'));
 $trendingIdsStr = implode(',', array_column($trendingProducts, 'product_id'));
 
+// Load Config
+$productsConfigPath = __DIR__ . '/homepage_products_config.json';
+$showBSArrows = true;
+$showTRArrows = true;
+if (file_exists($productsConfigPath)) {
+    $conf = json_decode(file_get_contents($productsConfigPath), true);
+    $showBSArrows = isset($conf['show_best_selling_arrows']) ? $conf['show_best_selling_arrows'] : true;
+    $showTRArrows = isset($conf['show_trending_arrows']) ? $conf['show_trending_arrows'] : true;
+}
+
 // START HTML OUTPUT
 $pageTitle = 'Homepage Products';
 require_once __DIR__ . '/../includes/admin-header.php';
@@ -157,7 +174,7 @@ require_once __DIR__ . '/../includes/admin-header.php';
             </p>
         </div>
         <div class="flex items-center gap-3">
-             <button type="button" onclick="window.location.href='<?php echo url('admin/products'); ?>'" class="px-5 py-2.5 border border-gray-300 rounded-lg hover:bg-gray-50 bg-white text-gray-700 font-medium transition-colors">Cancle</button>
+             <button type="button" onclick="window.location.href='<?php echo url('admin/products'); ?>'" class="px-5 py-2.5 border border-gray-300 rounded-lg hover:bg-gray-50 bg-white text-gray-700 font-medium transition-colors">Cancel</button>
             <button type="submit" form="settingsForm" class="bg-blue-600 text-white px-6 py-2.5 rounded-lg font-bold hover:bg-blue-700 transition shadow-sm flex items-center gap-2 btn-loading">
                 <i class="fas fa-save"></i> Save Changes
             </button>
@@ -177,6 +194,49 @@ require_once __DIR__ . '/../includes/admin-header.php';
 
     <form method="POST" id="settingsForm">
         
+        <!-- Visibility Settings -->
+        <div class="bg-white rounded-lg shadow-sm border border-gray-200 mb-8 overflow-hidden">
+            <div class="bg-gray-50 px-6 py-4 border-b border-gray-200">
+                <h2 class="text-xl font-semibold text-gray-800">Slider Visibility</h2>
+                <p class="text-sm text-gray-500">Control the visibility of navigation arrows on sliders.</p>
+            </div>
+            <div class="p-6">
+                <!-- Best Selling Toggle -->
+                <div class="flex items-center justify-between py-4 border-b border-gray-100">
+                    <div class="flex items-center gap-4">
+                        <div class="p-3 bg-blue-50 rounded-lg text-blue-600">
+                            <i class="fas fa-chart-line text-lg"></i>
+                        </div>
+                        <div>
+                            <h3 class="font-bold text-gray-800">Best Selling Arrows</h3>
+                            <p class="text-sm text-gray-500">Show navigation arrows for Best Selling slider</p>
+                        </div>
+                    </div>
+                    <label class="relative inline-flex items-center cursor-pointer">
+                        <input type="checkbox" name="show_best_selling_arrows" class="sr-only peer" <?php echo $showBSArrows ? 'checked' : ''; ?>>
+                        <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
+                    </label>
+                </div>
+                
+                <!-- Trending Toggle -->
+                <div class="flex items-center justify-between py-4">
+                    <div class="flex items-center gap-4">
+                        <div class="p-3 bg-purple-50 rounded-lg text-purple-600">
+                            <i class="fas fa-fire text-lg"></i>
+                        </div>
+                        <div>
+                            <h3 class="font-bold text-gray-800">Trending Arrows</h3>
+                            <p class="text-sm text-gray-500">Show navigation arrows for Trending slider</p>
+                        </div>
+                    </div>
+                    <label class="relative inline-flex items-center cursor-pointer">
+                        <input type="checkbox" name="show_trending_arrows" class="sr-only peer" <?php echo $showTRArrows ? 'checked' : ''; ?>>
+                        <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-purple-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-purple-600"></div>
+                    </label>
+                </div>
+            </div>
+        </div>
+
         <!-- Best Selling Section -->
         <div class="bg-white rounded-lg shadow-sm border border-gray-200 mb-8 overflow-hidden">
             <div class="bg-gray-50 px-6 py-4 border-b border-gray-200">

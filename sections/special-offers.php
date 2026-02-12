@@ -23,7 +23,7 @@ $sectionSubheading = $offers[0]['subheading'] ?? 'Grab limited-time deals on our
 ?>
 
 <?php if (!empty($offers)): ?>
-<section class="py-5 md:py-24 bg-white">
+<section class="py-5 md:py-20 bg-white">
     <div class="container mx-auto px-4">
         <!-- Section Header -->
         <div class="text-center mb-10">

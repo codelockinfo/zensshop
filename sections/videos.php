@@ -44,7 +44,15 @@ if (empty($videos)) {
         
         <div class="relative">
             <!-- Navigation Buttons -->
-            <?php if (count($videos) > 4): ?>
+            <?php 
+            $videoConfigPath = __DIR__ . '/../admin/video_config.json';
+            $showVideoArrows = true;
+            if (file_exists($videoConfigPath)) {
+                $conf = json_decode(file_get_contents($videoConfigPath), true);
+                $showVideoArrows = isset($conf['show_arrows']) ? $conf['show_arrows'] : true;
+            }
+            if (count($videos) > 4 && $showVideoArrows): 
+            ?>
             <button id="videoSectionPrev" type="button"style="z-index: 11 !important;" class="absolute left-4  top-1/2 -translate-y-1/2 z-50 bg-white shadow-lg rounded-full w-12 h-12 flex items-center justify-center text-gray-800 hover:text-primary hover:bg-gray-50 transition focus:outline-none backdrop-blur-sm cursor-pointer border border-gray-100 hidden md:flex">
                 <i class="fas fa-chevron-left"></i>
             </button>

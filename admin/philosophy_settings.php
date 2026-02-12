@@ -138,7 +138,7 @@ require_once __DIR__ . '/../includes/admin-header.php';
 
             <div>
                 <label class="block text-sm font-bold mb-2">Main Content (Context)</label>
-                <textarea name="content" rows="4" class="w-full border p-2 rounded" required><?php echo htmlspecialchars($data['content'] ?? ''); ?></textarea>
+                <textarea name="content" id="editor" rows="4" class="w-full border p-2 rounded"><?php echo htmlspecialchars($data['content'] ?? ''); ?></textarea>
             </div>
 
             <div class="grid grid-cols-2 gap-6">
@@ -162,5 +162,41 @@ require_once __DIR__ . '/../includes/admin-header.php';
 
     </form>
 </div>
+
+<!-- CKEditor 4 Full Version (Direct Load) -->
+<script src="https://cdn.ckeditor.com/4.22.1/full/ckeditor.js"></script>
+<script>
+    // Initialize CKEditor directly - no event listeners to avoid timing issues
+    if (typeof CKEDITOR !== 'undefined') {
+        CKEDITOR.config.versionCheck = false; // Disable EOL/Security warning
+        CKEDITOR.replace('editor', {
+            height: 400,
+            toolbar: [
+                { name: 'styles', items: [ 'Format', 'Font', 'FontSize' ] },
+                { name: 'colors', items: [ 'TextColor', 'BGColor' ] },
+                { name: 'basicstyles', items: [ 'Bold', 'Italic', 'Underline', 'Strike', 'Subscript', 'Superscript', '-', 'RemoveFormat' ] },
+                { name: 'paragraph', items: [ 'NumberedList', 'BulletedList', '-', 'Outdent', 'Indent', '-', 'Blockquote', '-', 'JustifyLeft', 'JustifyCenter', 'JustifyRight', 'JustifyBlock' ] },
+                { name: 'links', items: [ 'Link', 'Unlink' ] },
+                { name: 'insert', items: [ 'Image', 'Table', 'HorizontalRule' ] },
+                { name: 'tools', items: [ 'Maximize', 'Source' ] }
+            ],
+            // Custom Font Config
+            font_names: 'Arial/Arial, Helvetica, sans-serif;' +
+                        'Comic Sans MS/Comic Sans MS, cursive;' +
+                        'Courier New/Courier New, Courier, monospace;' +
+                        'Georgia/Georgia, serif;' +
+                        'Lucida Sans Unicode/Lucida Sans Unicode, Lucida Grande, sans-serif;' +
+                        'Tahoma/Tahoma, Geneva, sans-serif;' +
+                        'Times New Roman/Times New Roman, Times, serif;' +
+                        'Trebuchet MS/Trebuchet MS, Helvetica, sans-serif;' +
+                        'Verdana/Verdana, Geneva, sans-serif',
+            fontSize_sizes: '8/8px;9/9px;10/10px;11/11px;12/12px;14/14px;16/16px;18/18px;20/20px;22/22px;24/24px;26/26px;28/28px;36/36px;48/48px;72/72px',
+            colorButton_enableMore: true,
+            uiColor: '#FFFFFF'
+        });
+    } else {
+        console.error('CKEditor library not loaded!');
+    }
+</script>
 
 <?php require_once __DIR__ . '/../includes/admin-footer.php'; ?>

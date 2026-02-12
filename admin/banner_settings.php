@@ -127,6 +127,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             }
         }
     }
+    elseif ($action === 'update_settings') {
+        $show_arrows = isset($_POST['show_arrows']) ? true : false;
+        $config = ['show_arrows' => $show_arrows];
+        file_put_contents(__DIR__ . '/banner_config.json', json_encode($config));
+        $_SESSION['flash_success'] = "Settings updated successfully!";
+        header("Location: " . url('admin/banner'));
+        exit;
+    }
     } // End of else block for post_max_size check
 }
 
@@ -148,12 +156,55 @@ if (!$storeId && isset($_SESSION['user_email'])) {
 $banners = $db->fetchAll("SELECT * FROM banners WHERE store_id = ? ORDER BY display_order ASC, created_at DESC", [$storeId]);
 ?>
 
+<?php
+// Load Config
+$bannerConfigPath = __DIR__ . '/banner_config.json';
+$showArrows = true;
+if (file_exists($bannerConfigPath)) {
+    $config = json_decode(file_get_contents($bannerConfigPath), true);
+    $showArrows = isset($config['show_arrows']) ? $config['show_arrows'] : true;
+}
+?>
+
 <div class="container mx-auto p-6">
+    <!-- Header -->
     <div class="flex justify-between items-center mb-6">
-        <h1 class="text-2xl font-bold text-gray-800">Banner Settings</h1>
-        <button onclick="openModal()" class="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition">
+        <div>
+            <h1 class="text-2xl font-bold text-gray-800">Banner Manager</h1>
+            <p class="text-gray-600">Manage homepage banners and slider settings.</p>
+        </div>
+        <button onclick="openModal()" class="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition shadow-sm font-medium flex items-center">
             <i class="fas fa-plus mr-2"></i> Add New Banner
         </button>
+    </div>
+
+    <!-- Visibility Settings Card -->
+    <div class="bg-white rounded-lg shadow-sm border border-gray-200 mb-8 overflow-hidden">
+        <div class="bg-gray-50 px-6 py-4 border-b border-gray-200">
+            <h2 class="text-xl font-semibold text-gray-800">Slider Visibility</h2>
+            <p class="text-sm text-gray-500">Control the visibility of navigation arrows on sliders.</p>
+        </div>
+        <div class="p-6">
+            <form method="POST" id="settingsForm">
+                <input type="hidden" name="action" value="update_settings">
+                <!-- Banner Arrows Toggle -->
+                <div class="flex items-center justify-between">
+                    <div class="flex items-center gap-4">
+                        <div class="p-3 bg-indigo-50 rounded-lg text-indigo-600">
+                            <i class="fas fa-images text-lg"></i>
+                        </div>
+                        <div>
+                            <h3 class="font-bold text-gray-800">Banner Arrows</h3>
+                            <p class="text-sm text-gray-500">Show navigation arrows for the main banner slider</p>
+                        </div>
+                    </div>
+                    <label class="relative inline-flex items-center cursor-pointer">
+                        <input type="checkbox" name="show_arrows" class="sr-only peer" onchange="this.form.submit()" <?php echo $showArrows ? 'checked' : ''; ?>>
+                        <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-indigo-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-indigo-600"></div>
+                    </label>
+                </div>
+            </form>
+        </div>
     </div>
 
     <?php if ($success): ?>

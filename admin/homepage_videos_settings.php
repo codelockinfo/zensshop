@@ -41,6 +41,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $heading = $_POST['heading'] ?? '';
             $subheading = $_POST['subheading'] ?? '';
             
+            // Save Arrow Config
+            $videoConfig = ['show_arrows' => isset($_POST['show_arrows'])];
+            file_put_contents(__DIR__ . '/video_config.json', json_encode($videoConfig));
+            
             // Update ALL rows in section_videos (denormalized section settings)
             $storeId = $_SESSION['store_id'] ?? null;
             if (!$storeId && isset($_SESSION['user_email'])) {
@@ -269,6 +273,14 @@ require_once __DIR__ . '/../includes/admin-header.php';
     if (!$sectionSettings) {
         $sectionSettings = ['heading' => 'Video Reels', 'subheading' => 'Watch our latest stories.'];
     }
+    
+    // Load Config
+    $videoConfigPath = __DIR__ . '/video_config.json';
+    $showVideoArrows = true;
+    if (file_exists($videoConfigPath)) {
+        $conf = json_decode(file_get_contents($videoConfigPath), true);
+        $showVideoArrows = isset($conf['show_arrows']) ? $conf['show_arrows'] : true;
+    }
     ?>
 
     <!-- Section Settings Card -->
@@ -299,6 +311,22 @@ require_once __DIR__ . '/../includes/admin-header.php';
                     <input type="text" name="subheading" value="<?php echo htmlspecialchars($sectionSettings['subheading'] ?? ''); ?>" 
                            class="w-full pl-10 border border-gray-300 p-2.5 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition" 
                            placeholder="e.g. Watch our latest stories">
+                </div>
+            </div>
+            
+            <div class="col-span-1 md:col-span-2 border-t pt-4 mt-2">
+                 <div class="flex items-center justify-between">
+                    <div class="flex items-center gap-3">
+                        <div class="p-2 bg-red-50 rounded-lg text-red-600"><i class="fas fa-arrows-alt-h"></i></div>
+                        <div>
+                            <h3 class="font-bold text-gray-700">Slider Navigation Arrows</h3>
+                            <p class="text-xs text-gray-500">Show/Hide left and right arrows on the video slider.</p>
+                        </div>
+                    </div>
+                    <label class="relative inline-flex items-center cursor-pointer">
+                        <input type="checkbox" name="show_arrows" class="sr-only peer" <?php echo $showVideoArrows ? 'checked' : ''; ?>>
+                        <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-red-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-red-600"></div>
+                    </label>
                 </div>
             </div>
             

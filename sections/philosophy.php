@@ -39,9 +39,9 @@ if ($linkUrl && !preg_match('/^https?:\/\//', $linkUrl) && strpos($linkUrl, '#')
         <?php endif; ?>
 
         <?php if ($content): ?>
-            <p class="text-2xl md:text-3xl max-w-6xl mx-auto mb-8 leading-relaxed font-light" style="line-height: 1.6; color: <?php echo htmlspecialchars($textColor); ?>;">
-                <?php echo nl2br(htmlspecialchars($content)); ?>
-            </p>
+            <div class="philosophy-content text-2xl md:text-3xl max-w-6xl mx-auto mb-8 leading-relaxed font-light" style="line-height: 1.6; color: <?php echo htmlspecialchars($textColor); ?>;">
+                <?php echo $content; ?>
+            </div>
         <?php endif; ?>
 
         <?php if ($linkText): ?>

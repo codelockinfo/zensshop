@@ -302,8 +302,8 @@ nav.bg-white.sticky.top-0 {
             </div>
         </div>
 
-        <!-- Error Message Container -->
-        <div id="errorMessageContainer" class="hidden mb-6 max-w-6xl mx-auto">
+        <!-- Error Message Container (Updated with transitions) -->
+        <div id="errorMessageContainer" class="hidden mb-6 max-w-6xl mx-auto transition-all duration-500 ease-in-out opacity-0 transform -translate-y-4">
             <div class="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded">
                 <div class="flex items-center justify-between">
                     <span id="errorMessageText"></span>
@@ -401,6 +401,9 @@ nav.bg-white.sticky.top-0 {
                             <div>
                                 <label class="block text-sm font-semibold mb-2 text-gray-700">Full name</label>
                                 <input type="text" name="customer_name" required 
+                                       pattern="[a-zA-Z\s\.-]{2,50}"
+                                       title="Please enter a valid name (letters only)"
+                                       onkeypress="return (event.charCode >= 65 && event.charCode <= 90) || (event.charCode >= 97 && event.charCode <= 122) || event.charCode === 32 || event.charCode === 46 || event.charCode === 45"
                                        value="<?php echo htmlspecialchars($_POST['customer_name'] ?? ($customer['name'] ?? '')); ?>"
                                        class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent">
                             </div>
@@ -408,6 +411,8 @@ nav.bg-white.sticky.top-0 {
                             <div>
                                 <label class="block text-sm font-semibold mb-2 text-gray-700">Email address</label>
                                 <input type="email" name="customer_email" required 
+                                       pattern="[a-z0-9._%+-]+@[a-z0-9.-]+\.[a-z]{2,}$"
+                                       title="Please enter a valid email address (e.g., user@example.com)"
                                        value="<?php echo htmlspecialchars($_POST['customer_email'] ?? ($customer['email'] ?? '')); ?>"
                                        class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent">
                             </div>
@@ -417,71 +422,107 @@ nav.bg-white.sticky.top-0 {
                                 <div class="flex relative w-full">
                                     <select name="phone_code" id="phoneCodeSelect" class="px-3 py-3 border border-gray-300 rounded-l-lg focus:outline-none focus:ring-2 focus:ring-primary bg-gray-50 appearance-none cursor-pointer" style="min-width: 90px;">
                                         <?php
-                                        // Comprehensive phone country codes
+                                        // Comprehensive phone country codes with lengths
+                                        // Format: [Flag, Code, ISO, Length]
                                         $phoneCodes = [
-                                            '+91' => ['🇮🇳', '+91', 'IN'], // India - First
-                                            '+1' => ['🇺🇸', '+1', 'US'], '+44' => ['🇬🇧', '+44', 'GB'], '+61' => ['🇦🇺', '+61', 'AU'], 
-                                            '+49' => ['🇩🇪', '+49', 'DE'], '+33' => ['🇫🇷', '+33', 'FR'], '+39' => ['🇮🇹', '+39', 'IT'], 
-                                            '+34' => ['🇪🇸', '+34', 'ES'], '+31' => ['🇳🇱', '+31', 'NL'], '+32' => ['🇧🇪', '+32', 'BE'], 
-                                            '+41' => ['🇨🇭', '+41', 'CH'], '+43' => ['🇦🇹', '+43', 'AT'], '+46' => ['🇸🇪', '+46', 'SE'], 
-                                            '+47' => ['🇳🇴', '+47', 'NO'], '+45' => ['🇩🇰', '+45', 'DK'], '+358' => ['🇫🇮', '+358', 'FI'],
-                                            '+48' => ['🇵🇱', '+48', 'PL'], '+420' => ['🇨🇿', '+420', 'CZ'], '+353' => ['🇮🇪', '+353', 'IE'], 
-                                            '+351' => ['🇵🇹', '+351', 'PT'], '+30' => ['🇬🇷', '+30', 'GR'], '+40' => ['🇷🇴', '+40', 'RO'], 
-                                            '+36' => ['🇭🇺', '+36', 'HU'], '+359' => ['🇧🇬', '+359', 'BG'], '+385' => ['🇭🇷', '+385', 'HR'], 
-                                            '+421' => ['🇸🇰', '+421', 'SK'], '+386' => ['🇸🇮', '+386', 'SI'], '+370' => ['🇱🇹', '+370', 'LT'],
-                                            '+371' => ['🇱🇻', '+371', 'LV'], '+372' => ['🇪🇪', '+372', 'EE'], '+352' => ['🇱🇺', '+352', 'LU'], 
-                                            '+356' => ['🇲🇹', '+356', 'MT'], '+357' => ['🇨🇾', '+357', 'CY'], '+354' => ['🇮🇸', '+354', 'IS'], 
-                                            '+423' => ['🇱🇮', '+423', 'LI'], '+377' => ['🇲🇨', '+377', 'MC'], '+376' => ['🇦🇩', '+376', 'AD'], 
-                                            '+378' => ['🇸🇲', '+378', 'SM'],
-                                            '+81' => ['🇯🇵', '+81', 'JP'], '+86' => ['🇨🇳', '+86', 'CN'], '+82' => ['🇰🇷', '+82', 'KR'], 
-                                           
-                                            '+66' => ['🇹🇭', '+66', 'TH'], '+63' => ['🇵🇭', '+63', 'PH'], '+62' => ['🇮🇩', '+62', 'ID'], 
-                                            '+84' => ['🇻🇳', '+84', 'VN'], '+852' => ['🇭🇰', '+852', 'HK'], '+886' => ['🇹🇼', '+886', 'TW'],
-                                            '+64' => ['🇳🇿', '+64', 'NZ'], '+27' => ['🇿🇦', '+27', 'ZA'], '+20' => ['🇪🇬', '+20', 'EG'], 
-                                            '+971' => ['🇦🇪', '+971', 'AE'], '+966' => ['🇸🇦', '+966', 'SA'], '+972' => ['🇮🇱', '+972', 'IL'], 
-                                            '+90' => ['🇹🇷', '+90', 'TR'], '+7' => ['🇷🇺', '+7', 'RU'],
-                                            '+55' => ['🇧🇷', '+55', 'BR'], '+52' => ['🇲🇽', '+52', 'MX'], '+54' => ['🇦🇷', '+54', 'AR'], 
-                                            '+56' => ['🇨🇱', '+56', 'CL'], '+57' => ['🇨🇴', '+57', 'CO'], '+51' => ['🇵🇪', '+51', 'PE'], 
-                                            '+58' => ['🇻🇪', '+58', 'VE'], '+593' => ['🇪🇨', '+593', 'EC'], '+598' => ['🇺🇾', '+598', 'UY'], 
-                                            '+595' => ['🇵🇾', '+595', 'PY'], '+591' => ['🇧🇴', '+591', 'BO'], '+506' => ['🇨🇷', '+506', 'CR'],
-                                            '+507' => ['🇵🇦', '+507', 'PA'], '+502' => ['🇬🇹', '+502', 'GT'], '+53' => ['🇨🇺', '+53', 'CU'],
-                                            '+234' => ['🇳🇬', '+234', 'NG'], '+254' => ['🇰🇪', '+254', 'KE'], '+233' => ['🇬🇭', '+233', 'GH'], 
-                                            '+255' => ['🇹🇿', '+255', 'TZ'], '+251' => ['🇪🇹', '+251', 'ET'], '+256' => ['🇺🇬', '+256', 'UG'], 
-                                            '+212' => ['🇲🇦', '+212', 'MA'], '+216' => ['🇹🇳', '+216', 'TN'], '+213' => ['🇩🇿', '+213', 'DZ'], 
-                                            '+218' => ['🇱🇾', '+218', 'LY'], '+249' => ['🇸🇩', '+249', 'SD'], '+244' => ['🇦🇴', '+244', 'AO'],
-                                            '+258' => ['🇲🇿', '+258', 'MZ'], '+260' => ['🇿🇲', '+260', 'ZM'], '+263' => ['🇿🇼', '+263', 'ZW'], 
-                                            '+267' => ['🇧🇼', '+267', 'BW'], '+264' => ['🇳🇦', '+264', 'NA'], '+230' => ['🇲🇺', '+230', 'MU'], 
-                                            '+248' => ['🇸🇨', '+248', 'SC'], '+960' => ['🇲🇻', '+960', 'MV'],
-                                            '+880' => ['🇧🇩', '+880', 'BD'], '+92' => ['🇵🇰', '+92', 'PK'], '+94' => ['🇱🇰', '+94', 'LK'], 
-                                            '+977' => ['🇳🇵', '+977', 'NP'], '+975' => ['🇧🇹', '+975', 'BT'], '+95' => ['🇲🇲', '+95', 'MM'], 
-                                            '+855' => ['🇰🇭', '+855', 'KH'], '+856' => ['🇱🇦', '+856', 'LA'], '+673' => ['🇧🇳', '+673', 'BN'], 
-                                            '+679' => ['🇫🇯', '+679', 'FJ'], '+675' => ['🇵🇬', '+675', 'PG'], '+687' => ['🇳🇨', '+687', 'NC'], 
-                                            '+689' => ['🇵🇫', '+689', 'PF'],
+                                            '+91' => ['🇮🇳', '+91', 'IN', 10], // India
+                                            '+1' => ['🇺🇸', '+1', 'US', 10],   // USA/Canada
+                                            '+44' => ['��', '+44', 'GB', 10], // UK (excluding 0)
+                                            '+61' => ['��', '+61', 'AU', 9],  // Australia (mobile often 9)
+                                            '+49' => ['��', '+49', 'DE', 11], // Germany
+                                            '+33' => ['��', '+33', 'FR', 9],  // France
+                                            '+86' => ['��', '+86', 'CN', 11], // China
+                                            '+81' => ['��', '+81', 'JP', 10], // Japan
+                                            '+971' => ['��', '+971', 'AE', 9], // UAE
+                                            '+966' => ['🇸�', '+966', 'SA', 9], // Saudi Arabia
+                                            '+7' => ['��', '+7', 'RU', 10],   // Russia
+                                            '+55' => ['��', '+55', 'BR', 11], // Brazil
+                                            '+20' => ['��', '+20', 'EG', 10], // Egypt
+                                            '+27' => ['��', '+27', 'ZA', 9],  // South Africa
+                                            '+90' => ['��', '+90', 'TR', 10], // Turkey
+                                            '+39' => ['��', '+39', 'IT', 10], // Italy
+                                            '+34' => ['🇪🇸', '+34', 'ES', 9],  // Spain
+                                            '+65' => ['��', '+65', 'SG', 8],  // Singapore
+                                            '+60' => ['��', '+60', 'MY', 9],  // Malaysia
+                                            '+62' => ['��', '+62', 'ID', 11], // Indonesia (can vary 10-12)
+                                            '+63' => ['��', '+63', 'PH', 10], // Philippines
+                                            '+92' => ['��', '+92', 'PK', 10], // Pakistan
+                                            '+880' => ['🇧�', '+880', 'BD', 10], // Bangladesh
+                                            // Defaults/Others
+                                            '+41' => ['��', '+41', 'CH', 9],
+                                            '+31' => ['��', '+31', 'NL', 9],
+                                            '+32' => ['🇧�', '+32', 'BE', 9],
+                                            '+46' => ['��', '+46', 'SE', 9],
+                                            '+47' => ['🇳�', '+47', 'NO', 8],
+                                            '+45' => ['��', '+45', 'DK', 8],
+                                            '+358' => ['��', '+358', 'FI', 10],
+                                            '+48' => ['🇵🇱', '+48', 'PL', 9],
+                                            '+351' => ['��', '+351', 'PT', 9],
+                                            '+30' => ['��', '+30', 'GR', 10],
+                                            '+972' => ['��', '+972', 'IL', 9],
+                                            '+52' => ['��', '+52', 'MX', 10],
+                                            '+54' => ['��', '+54', 'AR', 10],
                                         ];
                                         
                                         $selectedCode = $_POST['phone_code'] ?? '+91'; // Default to India
+                                        
+                                        // Fallback if specific country isn't in top list, add generic
+                                        if (!array_key_exists($selectedCode, $phoneCodes)) {
+                                             // If it was one of the many others not listed above explicitly with length
+                                             // We will just treat it as flexible if not found, or default 10
+                                        }
+
                                         foreach ($phoneCodes as $code => $data) {
-                                            $flag = $data[0];
+                                            $flag = $data[2]; // Use ISO code (index 2) instead of Flag Emoji (index 0) to fix encoding/display issues
                                             $display = $flag . ' ' . $code;
+                                            $length = $data[3] ?? 10;
                                             $selected = ($selectedCode === $code) ? 'selected' : '';
-                                            echo "<option value=\"{$code}\" {$selected}>{$display}</option>\n";
+                                            echo "<option value=\"{$code}\" data-length=\"{$length}\" {$selected}>{$display}</option>\n";
                                         }
                                         ?>
                                     </select>
                                     <div class="absolute left-3 top-1/2 transform -translate-y-1/2 pointer-events-none">
                                         <i class="fas fa-chevron-down text-gray-400 text-xs"></i>
                                     </div>
-                                    <input type="tel" name="phone" required 
+                                    <input type="tel" name="phone" id="phoneInput" required 
                                            value="<?php echo htmlspecialchars($_POST['phone'] ?? ''); ?>"
-                                           placeholder="425 151 2318"
+                                           placeholder="Mobile number"
+                                           pattern="[0-9]{10}"
+                                           title="Please enter a valid 10-digit mobile number"
+                                           onkeypress="return event.charCode >= 48 && event.charCode <= 57"
                                            maxlength="10"
                                            class="flex-1 min-w-0 px-4 py-3 border border-gray-300 border-l-0 rounded-r-lg focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent">
                                 </div>
+                                <script>
+                                    document.addEventListener('DOMContentLoaded', function() {
+                                        const phoneSelect = document.getElementById('phoneCodeSelect');
+                                        const phoneInput = document.getElementById('phoneInput');
+                                        
+                                        function updatePhoneValidation() {
+                                            const selectedOption = phoneSelect.options[phoneSelect.selectedIndex];
+                                            const length = selectedOption.getAttribute('data-length') || 10;
+                                            
+                                            phoneInput.setAttribute('maxlength', length);
+                                            phoneInput.setAttribute('pattern', '[0-9]{' + length + '}');
+                                            phoneInput.setAttribute('title', 'Please enter a valid ' + length + '-digit mobile number');
+                                            phoneInput.setAttribute('placeholder', 'Enter your number');
+                                            
+                                            // Optional: truncate value if too long
+                                            if (phoneInput.value.length > length) {
+                                                phoneInput.value = phoneInput.value.slice(0, length);
+                                            }
+                                        }
+                                        
+                                        // Run on change and on load
+                                        phoneSelect.addEventListener('change', updatePhoneValidation);
+                                        updatePhoneValidation(); // Set initial state
+                                    });
+                                </script>
                             </div>
                             
                             <div>
                                 <label class="block text-sm font-semibold mb-2 text-gray-700">Address</label>
-                                <input type="text" name="address" 
+                                <input type="text" name="address" required minlength="5"
                                        value="<?php echo htmlspecialchars($_POST['address'] ?? ''); ?>"
                                        class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent">
                             </div>
@@ -489,13 +530,19 @@ nav.bg-white.sticky.top-0 {
                             <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                                 <div>
                                     <label class="block text-sm font-semibold mb-2 text-gray-700">City</label>
-                                    <input type="text" name="city" 
+                                    <input type="text" name="city" required
+                                           pattern="[a-zA-Z\s]+"
+                                           title="Please enter a valid city name (letters only)"
+                                           onkeypress="return (event.charCode >= 65 && event.charCode <= 90) || (event.charCode >= 97 && event.charCode <= 122) || event.charCode === 32"
                                            value="<?php echo htmlspecialchars($_POST['city'] ?? ''); ?>"
                                            class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent">
                                 </div>
                                 <div>
                                     <label class="block text-sm font-semibold mb-2 text-gray-700">State</label>
-                                    <input type="text" name="state" id="customerStateInput"
+                                    <input type="text" name="state" id="customerStateInput" required
+                                           pattern="[a-zA-Z\s]+"
+                                           title="Please enter a valid state name (letters only)"
+                                           onkeypress="return (event.charCode >= 65 && event.charCode <= 90) || (event.charCode >= 97 && event.charCode <= 122) || event.charCode === 32"
                                            value="<?php echo htmlspecialchars($_POST['state'] ?? $customer['shipping_address']['state'] ?? ''); ?>"
                                            class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent"
                                            onblur="recalculateTaxes()">
@@ -505,7 +552,11 @@ nav.bg-white.sticky.top-0 {
                             <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                                 <div>
                                     <label class="block text-sm font-semibold mb-2 text-gray-700">ZIP Code</label>
-                                    <input type="text" name="zip" 
+                                    <input type="text" name="zip" required
+                                           pattern="[0-9\s-]{6}"
+                                           title="Please enter a valid 6-digit ZIP code"
+                                           onkeypress="return (event.charCode >= 48 && event.charCode <= 57) || event.charCode === 45 || event.charCode === 32"
+                                           maxlength="6"
                                            value="<?php echo htmlspecialchars($_POST['zip'] ?? ''); ?>"
                                            class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent">
                                 </div>
@@ -514,6 +565,9 @@ nav.bg-white.sticky.top-0 {
                                     <input type="text" name="country" 
                                            value="<?php echo htmlspecialchars($_POST['country'] ?? 'India'); ?>"
                                            required
+                                           pattern="[a-zA-Z\s]+"
+                                           title="Please enter a valid country name (letters only)"
+                                           onkeypress="return (event.charCode >= 65 && event.charCode <= 90) || (event.charCode >= 97 && event.charCode <= 122) || event.charCode === 32"
                                            placeholder="Enter country name"
                                            class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent">
 
@@ -785,14 +839,27 @@ function showErrorMessage(message) {
     const container = document.getElementById('errorMessageContainer');
     const text = document.getElementById('errorMessageText');
     if (container && text) {
-        // Clear any existing timeout
+        // Clear any existing timeout for auto-hide
         if (errorMessageTimeout) {
             clearTimeout(errorMessageTimeout);
             errorMessageTimeout = null;
         }
         
+        // Clear any pending hide animation
+        if (container._hideTimeout) {
+            clearTimeout(container._hideTimeout);
+            container._hideTimeout = null;
+        }
+        
         text.textContent = message;
         container.classList.remove('hidden');
+        
+        // Force reflow to enable transition
+        void container.offsetWidth;
+        
+        // Animate in
+        container.classList.remove('opacity-0', '-translate-y-4');
+        
         // Scroll to top to show error
         window.scrollTo({ top: 0, behavior: 'smooth' });
         
@@ -806,7 +873,17 @@ function showErrorMessage(message) {
 function hideErrorMessage() {
     const container = document.getElementById('errorMessageContainer');
     if (container) {
-        container.classList.add('hidden');
+        // Animate out
+        container.classList.add('opacity-0', '-translate-y-4');
+        
+        // Clear any pending hide animation
+        if (container._hideTimeout) clearTimeout(container._hideTimeout);
+
+        // Wait for transition before setting display:none
+        container._hideTimeout = setTimeout(() => {
+            container.classList.add('hidden');
+        }, 500); // 500ms matches duration-500
+
         // Clear timeout if message is manually closed
         if (errorMessageTimeout) {
             clearTimeout(errorMessageTimeout);

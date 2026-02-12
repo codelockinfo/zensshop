@@ -58,114 +58,178 @@ if (empty($banners)) {
 }
 ?>
     <div class="hero-slider relative">
-        <?php foreach ($banners as $index => $banner): ?>
-            <?php 
-            // Helper to resolve link
-            if (!function_exists('resolveBannerLink')) {
-                function resolveBannerLink($url, $base) {
-                    if (empty($url)) return '';
-                    if (preg_match('/^https?:\/\//', $url)) return $url;
-                    if (strpos($url, 'mailto:') === 0 || strpos($url, 'tel:') === 0) return $url;
-                    return $base . '/' . preg_replace('/\.php($|\?)/', '$1', ltrim($url, '/'));
-                }
-            }
-
-            // Handle image URL
-            $bgImage = getImageUrl($banner['image_desktop'] ?? '');
-            // Only process mobile image if it exists, otherwise leave null to trigger fallback
-            $bgImageMobile = !empty($banner['image_mobile']) ? getImageUrl($banner['image_mobile']) : null;
-            
-            // Handle Links
-            $desktopLink = resolveBannerLink($banner['link'] ?? '', $baseUrl);
-            $mobileLink = resolveBannerLink(($banner['link_mobile'] ?? '') ?: ($banner['link'] ?? ''), $baseUrl);
-            ?>
-            <!-- Slide <?php echo $index + 1; ?> -->
-            <div class="hero-slide <?php echo $index === 0 ? 'active' : ''; ?> relative h-[600px] md:h-[700px]">
-                <!-- Desktop Image -->
-                <?php if($desktopLink): ?>
-                <a href="<?php echo htmlspecialchars($desktopLink); ?>" class="hidden md:block absolute inset-0 z-0">
-                    <img src="<?php echo htmlspecialchars($bgImage); ?>" 
-                         class="w-full h-full object-cover" 
-                         <?php echo $index === 0 ? 'fetchpriority="high" loading="eager"' : 'loading="lazy"'; ?> 
-                         alt="<?php echo htmlspecialchars($banner['heading'] ?? 'Banner Image'); ?>"
-                         onerror="this.src='https://placehold.co/1200x600?text=Banner+Image'">
-                </a>
-                <?php else: ?>
-                <div class="absolute inset-0 hidden md:block z-0 h-full w-full">
-                    <img src="<?php echo htmlspecialchars($bgImage); ?>" 
-                         class="w-full h-full object-cover" 
-                         <?php echo $index === 0 ? 'fetchpriority="high" loading="eager"' : 'loading="lazy"'; ?> 
-                         alt="<?php echo htmlspecialchars($banner['heading'] ?? 'Banner Image'); ?>"
-                         onerror="this.src='https://placehold.co/1200x600?text=Banner+Image'">
-                </div>
-                <?php endif; ?>
-                
-                <!-- Mobile Image (Fallback to desktop if empty) -->
-                <?php if($mobileLink): ?>
-                <a href="<?php echo htmlspecialchars($mobileLink); ?>" class="md:hidden absolute inset-0 z-0">
-                    <img src="<?php echo htmlspecialchars($bgImageMobile ?: $bgImage); ?>" 
-                         class="w-full h-full object-cover" 
-                         <?php echo $index === 0 ? 'fetchpriority="high" loading="eager"' : 'loading="lazy"'; ?> 
-                         alt="<?php echo htmlspecialchars($banner['heading'] ?? 'Banner Image'); ?>"
-                         onerror="this.src='https://placehold.co/1200x600?text=Banner+Image'">
-                </a>
-                <?php else: ?>
-                <div class="absolute inset-0 md:hidden z-0 h-full w-full">
-                    <img src="<?php echo htmlspecialchars($bgImageMobile ?: $bgImage); ?>" 
-                         class="w-full h-full object-cover" 
-                         <?php echo $index === 0 ? 'fetchpriority="high" loading="eager"' : 'loading="lazy"'; ?> 
-                         alt="<?php echo htmlspecialchars($banner['heading'] ?? 'Banner Image'); ?>"
-                         onerror="this.src='https://placehold.co/1200x600?text=Banner+Image'">
-                </div>
-                <?php endif; ?>
-                
-                <div class="absolute inset-0 bg-black bg-opacity-30"></div>
-                <div class="container mx-auto px-4 h-full flex items-center relative z-10">
-                    <div class="max-w-md text-white">
-                        <?php if (!empty($banner['subheading'])): ?>
-                            <p class="text-md md:text-lg uppercase tracking-wider mb-2"><?php echo htmlspecialchars($banner['subheading']); ?></p>
+        <div class="hero-view-port">
+            <div class="hero-track">
+                <?php foreach ($banners as $index => $banner): ?>
+                    <?php 
+                    // Helper to resolve link
+                    if (!function_exists('resolveBannerLink')) {
+                        function resolveBannerLink($url, $base) {
+                            if (empty($url)) return '';
+                            if (preg_match('/^https?:\/\//', $url)) return $url;
+                            if (strpos($url, 'mailto:') === 0 || strpos($url, 'tel:') === 0) return $url;
+                            return $base . '/' . preg_replace('/\.php($|\?)/', '$1', ltrim($url, '/'));
+                        }
+                    }
+        
+                    // Handle image URL
+                    $bgImage = getImageUrl($banner['image_desktop'] ?? '');
+                    // Only process mobile image if it exists, otherwise leave null to trigger fallback
+                    $bgImageMobile = !empty($banner['image_mobile']) ? getImageUrl($banner['image_mobile']) : null;
+                    
+                    // Handle Links
+                    $desktopLink = resolveBannerLink($banner['link'] ?? '', $baseUrl);
+                    $mobileLink = resolveBannerLink(($banner['link_mobile'] ?? '') ?: ($banner['link'] ?? ''), $baseUrl);
+                    ?>
+                    <!-- Slide <?php echo $index + 1; ?> -->
+                    <div class="hero-slide <?php echo $index === 0 ? 'active' : ''; ?> relative h-[600px] md:h-[700px]">
+                        <!-- Desktop Image -->
+                        <?php if($desktopLink): ?>
+                        <a href="<?php echo htmlspecialchars($desktopLink); ?>" class="hidden md:block absolute inset-0 z-0">
+                            <img src="<?php echo htmlspecialchars($bgImage); ?>" 
+                                 class="w-full h-full object-cover" 
+                                 <?php echo $index === 0 ? 'fetchpriority="high" loading="eager"' : 'loading="lazy"'; ?> 
+                                 alt="<?php echo htmlspecialchars($banner['heading'] ?? 'Banner Image'); ?>"
+                                 onerror="this.src='https://placehold.co/1200x600?text=Banner+Image'">
+                        </a>
+                        <?php else: ?>
+                        <div class="absolute inset-0 hidden md:block z-0 h-full w-full">
+                            <img src="<?php echo htmlspecialchars($bgImage); ?>" 
+                                 class="w-full h-full object-cover" 
+                                 <?php echo $index === 0 ? 'fetchpriority="high" loading="eager"' : 'loading="lazy"'; ?> 
+                                 alt="<?php echo htmlspecialchars($banner['heading'] ?? 'Banner Image'); ?>"
+                                 onerror="this.src='https://placehold.co/1200x600?text=Banner+Image'">
+                        </div>
                         <?php endif; ?>
                         
-                        <?php if (!empty($banner['heading'])): ?>
-                            <h1 class="text-4xl md:text-5xl font-heading font-bold mb-6"><?php echo htmlspecialchars($banner['heading']); ?></h1>
+                        <!-- Mobile Image (Fallback to desktop if empty) -->
+                        <?php if($mobileLink): ?>
+                        <a href="<?php echo htmlspecialchars($mobileLink); ?>" class="md:hidden absolute inset-0 z-0">
+                            <img src="<?php echo htmlspecialchars($bgImageMobile ?: $bgImage); ?>" 
+                                 class="w-full h-full object-cover" 
+                                 <?php echo $index === 0 ? 'fetchpriority="high" loading="eager"' : 'loading="lazy"'; ?> 
+                                 alt="<?php echo htmlspecialchars($banner['heading'] ?? 'Banner Image'); ?>"
+                                 onerror="this.src='https://placehold.co/1200x600?text=Banner+Image'">
+                        </a>
+                        <?php else: ?>
+                        <div class="absolute inset-0 md:hidden z-0 h-full w-full">
+                            <img src="<?php echo htmlspecialchars($bgImageMobile ?: $bgImage); ?>" 
+                                 class="w-full h-full object-cover" 
+                                 <?php echo $index === 0 ? 'fetchpriority="high" loading="eager"' : 'loading="lazy"'; ?> 
+                                 alt="<?php echo htmlspecialchars($banner['heading'] ?? 'Banner Image'); ?>"
+                                 onerror="this.src='https://placehold.co/1200x600?text=Banner+Image'">
+                        </div>
                         <?php endif; ?>
                         
-                        <?php if (!empty($banner['button_text'])): ?>
-                            <!-- Desktop Button -->
-                            <?php if($desktopLink): ?>
-                            <a href="<?php echo htmlspecialchars($desktopLink); ?>" class="hidden md:inline-block border border-white px-8 py-3 hover:bg-white hover:text-black transition banner-btn relative z-10">
-                                <?php echo htmlspecialchars($banner['button_text']); ?>
-                            </a>
-                            <?php endif; ?>
-
-                            <!-- Mobile Button -->
-                            <?php if($mobileLink): ?>
-                            <a href="<?php echo htmlspecialchars($mobileLink); ?>" class="md:hidden inline-block border border-white px-8 py-3 hover:bg-white hover:text-black transition banner-btn relative z-10">
-                                <?php echo htmlspecialchars($banner['button_text']); ?>
-                            </a>
-                            <?php endif; ?>
-                        <?php endif; ?>
+                        <div class="absolute inset-0 bg-black bg-opacity-30"></div>
+                        <div class="container mx-auto px-4 h-full flex items-center relative z-10">
+                            <div class="max-w-md text-white">
+                                <?php if (!empty($banner['subheading'])): ?>
+                                    <p class="text-md md:text-lg uppercase tracking-wider mb-2"><?php echo htmlspecialchars($banner['subheading']); ?></p>
+                                <?php endif; ?>
+                                
+                                <?php if (!empty($banner['heading'])): ?>
+                                    <h1 class="text-4xl md:text-5xl font-heading font-bold mb-6"><?php echo htmlspecialchars($banner['heading']); ?></h1>
+                                <?php endif; ?>
+                                
+                                <?php if (!empty($banner['button_text'])): ?>
+                                    <!-- Desktop Button -->
+                                    <?php if($desktopLink): ?>
+                                    <a href="<?php echo htmlspecialchars($desktopLink); ?>" class="hidden md:inline-block border border-white px-8 py-3 hover:bg-white hover:text-black transition banner-btn relative z-10">
+                                        <?php echo htmlspecialchars($banner['button_text']); ?>
+                                    </a>
+                                    <?php endif; ?>
+        
+                                    <!-- Mobile Button -->
+                                    <?php if($mobileLink): ?>
+                                    <a href="<?php echo htmlspecialchars($mobileLink); ?>" class="md:hidden inline-block border border-white px-8 py-3 hover:bg-white hover:text-black transition banner-btn relative z-10">
+                                        <?php echo htmlspecialchars($banner['button_text']); ?>
+                                    </a>
+                                    <?php endif; ?>
+                                <?php endif; ?>
+                            </div>
+                        </div>
                     </div>
-                </div>
+                <?php endforeach; ?>
             </div>
-        <?php endforeach; ?>
+        </div>
         
         <!-- Navigation Arrows -->
-        <button class="hero-prev absolute left-4 top-1/2 transform -translate-y-1/2 bg-white bg-opacity-50 hover:bg-opacity-75 rounded-full w-12 h-12 flex items-center justify-center text-black z-20 transition" aria-label="Previous slide">
-            <i class="fas fa-chevron-left" aria-hidden="true"></i>
+        <?php 
+        $bannerConfigPath = __DIR__ . '/admin/banner_config.json';
+        $showArrows = true;
+        if (file_exists($bannerConfigPath)) {
+            $config = json_decode(file_get_contents($bannerConfigPath), true);
+            $showArrows = isset($config['show_arrows']) ? $config['show_arrows'] : true;
+        }
+        
+        if (count($banners) > 1 && $showArrows): 
+        ?>
+        <button class="hero-prev absolute left-2 md:left-4 top-1/2 transform -translate-y-1/2 bg-white bg-opacity-75 hover:bg-opacity-100 rounded-full w-10 h-10 md:w-12 md:h-12 flex items-center justify-center text-black z-50 transition shadow-lg" aria-label="Previous slide" style="display: flex !important; opacity: 1 !important;">
+            <i class="fas fa-chevron-left text-sm md:text-base" aria-hidden="true"></i>
         </button>
-        <button class="hero-next absolute right-4 top-1/2 transform -translate-y-1/2 bg-white bg-opacity-50 hover:bg-opacity-75 rounded-full w-12 h-12 flex items-center justify-center text-black z-20 transition" aria-label="Next slide">
-            <i class="fas fa-chevron-right" aria-hidden="true"></i>
+        <button class="hero-next absolute right-2 md:right-4 top-1/2 transform -translate-y-1/2 bg-white bg-opacity-75 hover:bg-opacity-100 rounded-full w-10 h-10 md:w-12 md:h-12 flex items-center justify-center text-black z-50 transition shadow-lg" aria-label="Next slide" style="display: flex !important; opacity: 1 !important;">
+            <i class="fas fa-chevron-right text-sm md:text-base" aria-hidden="true"></i>
         </button>
         
         <!-- Slide Indicators -->
-        <div class="absolute bottom-4 left-1/2 transform -translate-x-1/2 z-20 flex items-center space-x-2">
+        <div class="absolute bottom-4 left-1/2 transform -translate-x-1/2 z-50 flex items-center space-x-2">
             <?php foreach ($banners as $index => $banner): ?>
-                <button class="hero-indicator" aria-label="Go to slide <?php echo $index + 1; ?>" <?php echo $index === 0 ? 'active' : ''; ?>" data-slide="<?php echo $index; ?>"></button>
+                <button class="hero-indicator <?php echo $index === 0 ? 'active' : ''; ?>" aria-label="Go to slide <?php echo $index + 1; ?>" data-slide="<?php echo $index; ?>"></button>
             <?php endforeach; ?>
         </div>
+        <?php endif; ?>
     </div>
 </section>
+
+<style>
+    /* Smooth Scroll */
+    html {
+        scroll-behavior: smooth;
+    }
+
+    /* Banner Slider Styles */
+    .hero-view-port {
+        overflow: hidden;
+        position: relative;
+        width: 100%;
+        height: 600px;
+    }
+    @media (min-width: 768px) {
+        .hero-view-port {
+            height: 700px;
+        }
+    }
+    .hero-track {
+        display: flex;
+        height: 100%;
+        transition: transform 0.6s cubic-bezier(0.25, 1, 0.5, 1);
+        width: 100%;
+    }
+    .hero-slide {
+        min-width: 100%;
+        flex-shrink: 0;
+        position: relative;
+        display: block !important; /* Override current display:none */
+        opacity: 1 !important;
+    }
+    
+    /* Section Loading Animation */
+    @keyframes fadeInUp {
+        from {
+            opacity: 0;
+            transform: translate3d(0, 30px, 0);
+        }
+        to {
+            opacity: 1;
+            transform: translate3d(0, 0, 0);
+        }
+    }
+
+    .section-announce {
+        animation: fadeInUp 0.8s ease-out forwards;
+    }
+</style>
 
 <style>
 @keyframes shimmer {
@@ -192,171 +256,222 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 });
 
-// Hero Banner Slider
+// Hero Banner Slider (Infinite + Drag)
 document.addEventListener('DOMContentLoaded', function() {
-    const slides = document.querySelectorAll('.hero-slide');
+    const track = document.querySelector('.hero-track');
+    const originalSlides = document.querySelectorAll('.hero-slide');
     const prevBtn = document.querySelector('.hero-prev');
     const nextBtn = document.querySelector('.hero-next');
     const indicators = document.querySelectorAll('.hero-indicator');
     const sliderContainer = document.querySelector('.hero-slider');
     
-    if (slides.length === 0) return;
+    if (originalSlides.length < 2) return; // Don't initialize slider if only 1 or 0 slides
+
+    // Clone first and last slides for infinite loop effect
+    const firstClone = originalSlides[0].cloneNode(true);
+    const lastClone = originalSlides[originalSlides.length - 1].cloneNode(true);
     
-    let currentSlide = 0;
+    firstClone.id = 'first-clone';
+    lastClone.id = 'last-clone';
+    
+    track.appendChild(firstClone);
+    track.insertBefore(lastClone, originalSlides[0]);
+    
+    const allSlides = document.querySelectorAll('.hero-slide'); // Re-query including clones
+    let currentIndex = 1; // Start at 1 (because of first clone)
+    let isDragging = false;
+    let startPos = 0;
+    let currentTranslate = 0;
+    let prevTranslate = 0;
     let slideInterval;
-    
-    function showSlide(index) {
-        // Hide all slides
-        slides.forEach((slide, i) => {
-            slide.classList.remove('active');
-            slide.style.display = 'none';
-            if (indicators[i]) {
-                indicators[i].classList.remove('active');
-            }
-        });
+    const totalSlides = originalSlides.length;
+    let isTransitioning = false;
+
+    // Set initial position
+    track.style.transform = `translateX(-${currentIndex * 100}%)`;
+
+    function getPositionX(event) {
+        return event.type.includes('mouse') ? event.pageX : event.touches[0].clientX;
+    }
+
+    // Touch/Mouse Events
+    sliderContainer.addEventListener('mousedown', touchStart);
+    sliderContainer.addEventListener('touchstart', touchStart, {passive: true});
+
+    sliderContainer.addEventListener('mouseup', touchEnd);
+    sliderContainer.addEventListener('mouseleave', () => {
+         if(isDragging) touchEnd();
+    });
+    sliderContainer.addEventListener('touchend', touchEnd);
+
+    sliderContainer.addEventListener('mousemove', touchMove);
+    sliderContainer.addEventListener('touchmove', touchMove, {passive: true}); 
+
+    function touchStart(event) {
+        // Ignore if clicking on controls
+        if (event.target.closest('.hero-prev') || event.target.closest('.hero-next') || event.target.closest('.hero-indicator')) return;
         
-        // Show current slide
-        if (slides[index]) {
-            slides[index].classList.add('active');
-            slides[index].style.display = 'block';
-            if (indicators[index]) {
-                indicators[index].classList.add('active');
+        if (isTransitioning) return; // Prevent drag during transition
+        stopAutoSlide();
+        isDragging = true;
+        startPos = getPositionX(event);
+        sliderContainer.style.cursor = 'grabbing';
+        track.style.transition = 'none';
+    }
+
+    function touchMove(event) {
+        if (!isDragging) return;
+        const currentPosition = getPositionX(event);
+        const diff = currentPosition - startPos;
+        const movePercent = (diff / sliderContainer.offsetWidth) * 100;
+        track.style.transform = `translateX(calc(-${currentIndex * 100}% + ${movePercent}%))`;
+    }
+
+    function touchEnd(event) {
+        if (!isDragging) return;
+        isDragging = false;
+        sliderContainer.style.cursor = 'default';
+        const currentPosition = (event.changedTouches && event.changedTouches.length > 0) ? event.changedTouches[0].clientX : (event.clientX || startPos); // Fallback if no clientX
+        const diff = currentPosition - startPos;
+        
+        track.style.transition = 'transform 0.5s ease-out';
+
+        // Boundary checks before incrementing
+        if (diff < -50) {
+            if (currentIndex < allSlides.length - 1) {
+                currentIndex++;
+            }
+        } else if (diff > 50) {
+            if (currentIndex > 0) {
+                currentIndex--;
             }
         }
         
-        currentSlide = index;
+        updateSlidePosition();
+        startAutoSlide();
     }
     
-    function nextSlide() {
-        const next = (currentSlide + 1) % slides.length;
-        showSlide(next);
+    function updateSlidePosition() {
+        if (!track) return;
+        isTransitioning = true;
+        track.style.transform = `translateX(-${currentIndex * 100}%)`;
+        
+        // Use a timeout backup in case transitionend failes (e.g. tab inactive)
+        const transitionTimeout = setTimeout(() => {
+            checkIndex();
+        }, 550); // Slightly longer than 0.5s transition
+
+        const onTransitionEnd = () => {
+             clearTimeout(transitionTimeout);
+             checkIndex();
+             track.removeEventListener('transitionend', onTransitionEnd);
+        };
+
+        track.addEventListener('transitionend', onTransitionEnd);
+        updateIndicators();
     }
     
-    function prevSlide() {
-        const prev = (currentSlide - 1 + slides.length) % slides.length;
-        showSlide(prev);
+    function checkIndex() {
+        isTransitioning = false;
+        track.style.transition = 'none'; // Disable transition for jump
+        
+        if (currentIndex === 0) {
+            currentIndex = allSlides.length - 2;
+            track.style.transform = `translateX(-${currentIndex * 100}%)`;
+        }
+        if (currentIndex === allSlides.length - 1) {
+            currentIndex = 1;
+            track.style.transform = `translateX(-${currentIndex * 100}%)`;
+        }
+        
+        // Restore transition after small delay for next move
+        // We don't necessarily need to restore it immediately, only on next action
+        // But safe to restore in a requestAnimationFrame
+        requestAnimationFrame(() => {
+             // track.style.transition = 'transform 0.5s ease-out'; 
+             // Don't restore here per se, individual actions will set it to ease-out or none
+        });
+    }
+
+    function moveToNextSlide() {
+        if (isTransitioning) return;
+        if (currentIndex >= allSlides.length - 1) return;
+        currentIndex++;
+        track.style.transition = 'transform 0.5s ease-out';
+        updateSlidePosition();
+    }
+
+    function moveToPrevSlide() {
+        if (isTransitioning) return;
+        if (currentIndex <= 0) return;
+        currentIndex--;
+        track.style.transition = 'transform 0.5s ease-out';
+        updateSlidePosition();
     }
     
+    function updateIndicators() {
+        let realIndex = currentIndex - 1;
+        if (realIndex < 0) realIndex = totalSlides - 1;
+        if (realIndex >= totalSlides) realIndex = 0;
+        
+        indicators.forEach((ind, index) => {
+            if (index === realIndex) {
+                ind.classList.add('active');
+            } else {
+                ind.classList.remove('active');
+            }
+        });
+    }
+
+    // Auto Play
     function startAutoSlide() {
-        stopAutoSlide(); // Ensure no duplicates
-        slideInterval = setInterval(nextSlide, 5000); // Change slide every 5 seconds
+        stopAutoSlide();
+        slideInterval = setInterval(() => {
+            moveToNextSlide();
+        }, 5000);
     }
-    
+
     function stopAutoSlide() {
-        if(slideInterval) clearInterval(slideInterval);
+        clearInterval(slideInterval);
     }
     
-    // Event listeners
+    // Controls
     if (nextBtn) {
-        nextBtn.addEventListener('click', function() {
+        nextBtn.addEventListener('click', (e) => {
+            e.stopPropagation(); // Stop propagation to container
             stopAutoSlide();
-            nextSlide();
+            moveToNextSlide();
             startAutoSlide();
         });
     }
-    
+
     if (prevBtn) {
-        prevBtn.addEventListener('click', function() {
+        prevBtn.addEventListener('click', (e) => {
+             e.stopPropagation(); // Stop propagation to container
             stopAutoSlide();
-            prevSlide();
+            moveToPrevSlide();
             startAutoSlide();
         });
     }
     
     indicators.forEach((indicator, index) => {
-        indicator.addEventListener('click', function() {
+        indicator.addEventListener('click', (e) => {
+            e.stopPropagation(); // Stop propagation to container
             stopAutoSlide();
-            showSlide(index);
+            currentIndex = index + 1; // +1 because of first clone
+            track.style.transition = 'transform 0.5s ease-out';
+            updateSlidePosition();
             startAutoSlide();
         });
     });
-    
+
     // Pause on hover
-    const heroSection = document.getElementById('hero-section');
-    if (heroSection) {
-        heroSection.addEventListener('mouseenter', stopAutoSlide);
-        heroSection.addEventListener('mouseleave', startAutoSlide);
-    }
+    sliderContainer.addEventListener('mouseenter', stopAutoSlide);
+    sliderContainer.addEventListener('mouseleave', startAutoSlide);
 
-    // Keyboard Navigation
-    document.addEventListener('keydown', function(e) {
-        if (e.key === 'ArrowLeft') {
-            stopAutoSlide();
-            prevSlide();
-            startAutoSlide();
-        }
-        if (e.key === 'ArrowRight') {
-            stopAutoSlide();
-            nextSlide();
-            startAutoSlide();
-        }
-    });
-
-    // Swipe and Drag Logic
-    if (sliderContainer) {
-        let touchStartX = 0;
-        let touchEndX = 0;
-        let isDragging = false;
-
-        // Touch Events (Mobile)
-        sliderContainer.addEventListener('touchstart', e => {
-            touchStartX = e.changedTouches[0].screenX;
-            stopAutoSlide();
-        }, {passive: true});
-
-        sliderContainer.addEventListener('touchend', e => {
-            touchEndX = e.changedTouches[0].screenX;
-            handleSwipe();
-            startAutoSlide();
-        }, {passive: true});
-
-        // Mouse Events (Desktop)
-        sliderContainer.addEventListener('mousedown', e => {
-            isDragging = true;
-            touchStartX = e.clientX;
-            stopAutoSlide();
-            sliderContainer.style.cursor = 'grabbing';
-            // Prevent text selection during drag
-            e.preventDefault();
-        });
-
-        sliderContainer.addEventListener('mousemove', e => {
-            if (!isDragging) return;
-            // Optional: You could add logic here to visually drag the slide
-        });
-
-        sliderContainer.addEventListener('mouseup', e => {
-            if (!isDragging) return;
-            isDragging = false;
-            touchEndX = e.clientX;
-            handleSwipe();
-            startAutoSlide();
-            sliderContainer.style.cursor = 'default';
-        });
-
-        sliderContainer.addEventListener('mouseleave', e => {
-            if (isDragging) {
-                isDragging = false;
-                startAutoSlide();
-                sliderContainer.style.cursor = 'default';
-            }
-        });
-
-        function handleSwipe() {
-            const threshold = 50; // Minimum distance for swipe
-            if (touchEndX < touchStartX - threshold) {
-                nextSlide(); // Swiped Left -> Next
-            }
-            if (touchEndX > touchStartX + threshold) {
-                prevSlide(); // Swiped Right -> Prev
-            }
-        }
-    }
-    
-    // Initialize
-    showSlide(0);
     startAutoSlide();
 });
+
 </script>
 
 
@@ -394,4 +509,4 @@ document.addEventListener('DOMContentLoaded', function() {
 <?php require_once __DIR__ . '/sections/footer_features.php'; ?>
 <?php require_once __DIR__ . '/includes/footer.php'; ?>
 
-<script src="<?php echo $baseUrl; ?>/assets/js/lazy-load14.js?v=1" defer></script>
+<script src="<?php echo $baseUrl; ?>/assets/js/lazy-load15.js?v=1" defer></script>
