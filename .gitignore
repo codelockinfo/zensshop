@@ -1,6 +1,7 @@
-.htaccess
-*.log
+.DS_Store
+admin/*.json
 admin/*.log
+*.log
+.htaccess
 vendor/
 node_modules/
-.DS_Store
