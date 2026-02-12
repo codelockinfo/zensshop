@@ -51,7 +51,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     }
     
     // Handle File Uploads
-    $uploadFiles = ['setting_favicon_png', 'setting_favicon_ico', 'setting_all_category_banner', 'setting_email_logo'];
+    $uploadFiles = ['setting_favicon_png', 'setting_favicon_ico', 'setting_all_category_banner', 'setting_email_logo', 'setting_og_image'];
     $uploadErrors = [];
     
     foreach ($uploadFiles as $fileKey) {
@@ -91,7 +91,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             }
 
             $ext = pathinfo($_FILES[$fileKey]['name'], PATHINFO_EXTENSION);
-            $prefix = ($fileKey === 'setting_favicon_ico') ? 'favicon' : (($fileKey === 'setting_all_category_banner') ? 'banner_all_cat' : (($fileKey === 'setting_email_logo') ? 'email_logo' : 'favicon_browser'));
+            
+            // Determing prefix
+            if ($fileKey === 'setting_favicon_ico') $prefix = 'favicon';
+            elseif ($fileKey === 'setting_all_category_banner') $prefix = 'banner_all_cat';
+            elseif ($fileKey === 'setting_email_logo') $prefix = 'email_logo';
+            elseif ($fileKey === 'setting_og_image') $prefix = 'og_social';
+            else $prefix = 'favicon_browser';
+
             $fileName = $prefix . '_' . time() . '.' . $ext;
             
             if ($fileKey === 'setting_favicon_ico') {
@@ -272,6 +279,33 @@ unset($_SESSION['error']);
                              <?php endif; ?>
                          </div>
                      </div>
+                </div>
+
+                <!-- SEO Image (Open Graph) -->
+                <div>
+                     <label class="block text-sm font-medium text-gray-700 mb-2">Social Share / SEO Image</label>
+                     <?php $ogImage = $settings->get('og_image'); ?>
+                     <div class="relative group cursor-pointer w-full h-24 border-2 <?php echo !empty($ogImage) ? 'border-gray-200' : 'border-dashed border-gray-300'; ?> rounded-lg overflow-hidden flex items-center justify-center bg-gray-50 hover:bg-gray-100 transition" onclick="document.getElementById('ogImageInput').click()">
+                         
+                         <input type="file" id="ogImageInput" name="setting_og_image" class="hidden" onchange="previewFavicon(this, 'previewOg')">
+                         <input type="hidden" name="group_og_image" value="seo">
+
+                         <div id="previewOg" class="w-full h-full flex items-center justify-center">
+                             <?php if($ogImage): ?>
+                                 <img src="<?php echo htmlspecialchars(getImageUrl($ogImage)); ?>?v=<?php echo time(); ?>" class="w-full h-full object-cover">
+                                 <!-- Overlay -->
+                                 <div class="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-40 transition flex items-center justify-center">
+                                      <i class="fas fa-camera text-white opacity-0 group-hover:opacity-100 transition"></i>
+                                 </div>
+                             <?php else: ?>
+                                 <div class="text-center text-gray-400">
+                                     <i class="fas fa-image text-2xl"></i>
+                                     <p class="text-[10px] mt-1">JPG/PNG</p>
+                                 </div>
+                             <?php endif; ?>
+                         </div>
+                     </div>
+                     <p class="text-xs text-gray-500 mt-1">Shown when sharing links on social media.</p>
                 </div>
 
                 <script>

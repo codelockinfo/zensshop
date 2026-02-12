@@ -112,6 +112,37 @@ if (!function_exists('url')) {
     <meta name="description" content="<?php echo htmlspecialchars($finalMetaDesc); ?>">
     <?php endif; ?>
 
+    <!-- Open Graph / Social Media -->
+    <meta property="og:type" content="website">
+    <meta property="og:title" content="<?php echo isset($pageTitle) ? htmlspecialchars($pageTitle) . ' - ' : ''; ?><?php echo htmlspecialchars($siteTitleSuffix); ?>">
+    <meta property="og:description" content="<?php echo htmlspecialchars($finalMetaDesc); ?>">
+    <meta property="og:url" content="<?php echo $baseUrl . $_SERVER['REQUEST_URI']; ?>">
+    <meta property="og:site_name" content="<?php echo htmlspecialchars($siteLogoText); ?>">
+    
+    <?php 
+    $ogImageVal = $settingsObj->get('og_image');
+    if ($ogImageVal) {
+        $ogImageUrl = getImageUrl($ogImageVal); 
+        // Ensure absolute URL
+        if (strpos($ogImageUrl, 'http') !== 0) {
+            $ogImageUrl = $baseUrl . '/' . ltrim($ogImageUrl, '/');
+        }
+    ?>
+    <meta property="og:image" content="<?php echo htmlspecialchars($ogImageUrl); ?>">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:image" content="<?php echo htmlspecialchars($ogImageUrl); ?>">
+    <?php } elseif (!empty($siteLogo) && $siteLogoType !== 'text') { 
+        // Fallback to site logo if no specific OG image
+        $logoUrl = getImageUrl($siteLogo);
+        if (strpos($logoUrl, 'http') !== 0) {
+            $logoUrl = $baseUrl . '/' . ltrim($logoUrl, '/');
+        }
+    ?>
+    <meta property="og:image" content="<?php echo htmlspecialchars($logoUrl); ?>">
+    <meta name="twitter:card" content="summary">
+    <meta name="twitter:image" content="<?php echo htmlspecialchars($logoUrl); ?>">
+    <?php } ?>
+
     <?php 
     if (!empty($globalSchema)): 
         // 1. Prepare Dynamic Values
