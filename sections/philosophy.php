@@ -32,7 +32,7 @@ if ($linkUrl && !preg_match('/^https?:\/\//', $linkUrl) && strpos($linkUrl, '#')
 }
 ?>
 
-<section class="py-16 md:py-24" style="background-color: <?php echo htmlspecialchars($bgColor); ?>; color: <?php echo htmlspecialchars($textColor); ?>;">
+<section class="py-16 md:py-15" style="background-color: <?php echo htmlspecialchars($bgColor); ?>; color: <?php echo htmlspecialchars($textColor); ?>;">
     <div class="container mx-auto px-4 text-center">
         <?php if ($heading): ?>
             <h2 class="text-3xl md:text-4xl font-heading mb-6 tracking-wide" style="color: <?php echo htmlspecialchars($textColor); ?>;"><?php echo htmlspecialchars($heading); ?></h2>
