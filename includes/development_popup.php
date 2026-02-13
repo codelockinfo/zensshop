@@ -123,6 +123,15 @@ function getCookie(name) {
 
 async function handleDevSubscribe(e) {
     e.preventDefault();
+    
+    // Trigger GTM event for tracking
+    if (typeof window.dataLayer !== 'undefined') {
+        window.dataLayer.push({
+            'event': 'formSubmit',
+            'formId': 'dev-subscribe-form'
+        });
+    }
+    
     const form = e.target;
     const btn = form.querySelector('button');
     const input = form.querySelector('input');
