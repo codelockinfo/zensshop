@@ -351,6 +351,14 @@ unset($_SESSION['error']);
                      <p class="text-xs text-gray-500 mt-1">Paste your Google Analytics code (G-XXXX) or any other scripts to be inserted into the <code>&lt;head&gt;</code> tag.</p>
                      <input type="hidden" name="group_header_scripts" value="seo">
                 </div>
+                
+                <!-- Google Tag Manager ID -->
+                <div class="md:col-span-2">
+                     <label class="block text-sm font-medium text-gray-700 mb-2">Google Tag Manager ID</label>
+                     <input type="text" name="setting_gtm_id" value="<?php echo htmlspecialchars($settings->get('gtm_id', '')); ?>" class="w-full px-4 py-2 border rounded focus:ring-2 focus:ring-green-500" placeholder="GTM-XXXXXXX">
+                     <p class="text-xs text-gray-500 mt-1">Enter your Google Tag Manager container ID (e.g., GTM-SSLQRGJR). The GTM code will be automatically inserted into your site.</p>
+                     <input type="hidden" name="group_gtm_id" value="seo">
+                </div>
             </div>
         </div>
 

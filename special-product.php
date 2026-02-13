@@ -435,7 +435,7 @@ require_once __DIR__ . '/includes/header.php';
                 </div>
                 
                     <div class="flex items-center gap-4 justify-center lg:justify-start flex-wrap">
-                        <button onclick="spAddToCart(<?php echo $productData['product_id']; ?>, this, <?php echo htmlspecialchars(json_encode($firstVariant['variant_attributes'] ?? (object)[])); ?>)" class="bg-[#1a3d32] btn-accent px-6 h-[58px] py-[17px] rounded text-[11px] font-bold tracking-widest uppercase transition transform flex items-center justify-center gap-3 <?php echo $isOutOfStock ? 'opacity-50 cursor-not-allowed' : ''; ?>" data-loading-text="Adding..." <?php echo $isOutOfStock ? 'disabled' : ''; ?>>
+                        <button id="special-add-to-cart-btn" onclick="spAddToCart(<?php echo $productData['product_id']; ?>, this, <?php echo htmlspecialchars(json_encode($firstVariant['variant_attributes'] ?? (object)[])); ?>)" class="bg-[#1a3d32] btn-accent px-6 h-[58px] py-[17px] rounded text-[11px] font-bold tracking-widest uppercase transition transform flex items-center justify-center gap-3 <?php echo $isOutOfStock ? 'opacity-50 cursor-not-allowed' : ''; ?>" data-loading-text="Adding..." <?php echo $isOutOfStock ? 'disabled' : ''; ?>>
                             <i class="fas fa-shopping-cart text-[13px]"></i>
                             <span><?php echo $isOutOfStock ? 'Out of Stock' : 'Add to cart'; ?></span>
                         </button>
@@ -605,7 +605,7 @@ require_once __DIR__ . '/includes/header.php';
                             <?php echo $aboutText; ?>
                         </div>
                         <div class="mt-6">
-                             <button onclick="spAddToCart(<?php echo $productData['product_id']; ?>, this)" class="btn-accent px-10 py-4 rounded text-lg font-medium tracking-wide uppercase transition shadow-lg hover:shadow-xl <?php echo $isOutOfStock ? 'opacity-50 cursor-not-allowed' : ''; ?>" data-loading-text="Adding..." <?php echo $isOutOfStock ? 'disabled' : ''; ?>>
+                             <button id="special-shop-now-btn" onclick="spAddToCart(<?php echo $productData['product_id']; ?>, this)" class="btn-accent px-10 py-4 rounded text-lg font-medium tracking-wide uppercase transition shadow-lg hover:shadow-xl <?php echo $isOutOfStock ? 'opacity-50 cursor-not-allowed' : ''; ?>" data-loading-text="Adding..." <?php echo $isOutOfStock ? 'disabled' : ''; ?>>
                                 <?php echo $isOutOfStock ? 'Out of Stock' : 'Shop Now'; ?>
                              </button>
                         </div>
@@ -654,7 +654,7 @@ require_once __DIR__ . '/includes/header.php';
                          <p class="text-gray-500 text-base md:text-lg mb-8 leading-relaxed max-w-lg mx-auto md:mx-0"><?php echo htmlspecialchars($newsText); ?></p>
                          <form id="landingNewsletterForm" class="flex flex-col sm:flex-row w-full gap-3 sm:gap-0">
                              <input type="email" name="email" placeholder="Enter your email" required class="w-full flex-grow px-5 py-3 md:px-6 md:py-4 bg-gray-50 border border-gray-200 rounded-lg sm:rounded-r-none focus:outline-none text-base md:text-lg focus:ring-2 focus:ring-gray-200 transition">
-                              <button type="submit" class="w-full sm:w-auto btn-accent px-8 py-3 md:py-4 rounded-lg sm:rounded-l-none text-sm md:text-base font-bold uppercase transition whitespace-nowrap shadow-md hover:shadow-lg transform active:scale-95" data-loading-text="Subscribing...">Get Started</button>
+                              <button type="submit" id="special-sub-btn" class="w-full sm:w-auto btn-accent px-8 py-3 md:py-4 rounded-lg sm:rounded-l-none text-sm md:text-base font-bold uppercase transition whitespace-nowrap shadow-md hover:shadow-lg transform active:scale-95" data-loading-text="Subscribing...">Get Started</button>
                          </form>
                          <div id="landingNewsletterMessage" class="hidden text-center text-sm mt-3"></div>
                          <p class="text-xs text-gray-400 mt-4"><i class="fas fa-lock mr-1"></i> Your privacy is our priority.</p>
