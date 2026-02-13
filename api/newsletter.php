@@ -8,6 +8,7 @@ require_once __DIR__ . '/../classes/Database.php';
 
 $input = json_decode(file_get_contents('php://input'), true);
 $email = $input['email'] ?? '';
+$type = $input['type'] ?? 'regular';
 
 if (empty($email) || !filter_var($email, FILTER_VALIDATE_EMAIL)) {
     http_response_code(400);
@@ -75,7 +76,12 @@ try {
     try {
         require_once __DIR__ . '/../classes/Email.php';
         $emailService = new Email($storeId);
-        $emailService->sendSubscriptionConfirmation($email);
+        
+        if ($type === 'development') {
+            $emailService->sendDevelopmentNotification($email);
+        } else {
+            $emailService->sendSubscriptionConfirmation($email);
+        }
     } catch (Throwable $te) {
         error_log("Email failed: " . $te->getMessage());
     }

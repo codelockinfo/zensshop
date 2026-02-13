@@ -238,6 +238,27 @@ class Email {
         $message = $this->getEmailTemplate($subject, $content);
         return $this->send($to, $subject, $message);
     }
+
+    /**
+     * Send development notification email
+     */
+    public function sendDevelopmentNotification($to) {
+        $siteName = $this->settings->get('site_name', SITE_NAME, $this->storeId);
+        $subject = "You're on the list! - " . $siteName;
+        
+        $content = "
+            <h1 style='text-align: center;'>Thank You for Subscribing!</h1>
+            <p>We appreciate your interest in <strong>" . $siteName . "</strong>.</p>
+            <p>Our site is currently under construction, and we are working hard to bring you the best experience possible.</p>
+            <div style='background: #f0fdf4; border-left: 4px solid #16a34a; padding: 20px; margin: 25px 0;'>
+                <p style='margin: 0; color: #166534; font-weight: 500;'>We will notify you as soon as the site is fully live.</p>
+            </div>
+            <p>Stay tuned!</p>
+        ";
+        
+        $message = $this->getEmailTemplate($subject, $content);
+        return $this->send($to, $subject, $message);
+    }
     
     /**
      * Send support message notification to admin
@@ -440,47 +461,71 @@ class Email {
         $year = date('Y');
         $siteName = $this->settings->get('site_name', SITE_NAME, $this->storeId);
         if (empty($siteName)) $siteName = defined('SITE_NAME') ? SITE_NAME : 'Store';
+        $siteUrl = getBaseUrl();
         
         return "
 <!DOCTYPE html>
-<html>
+<html lang='en'>
 <head>
-    <meta name='viewport' content='width=device-width, initial-scale=1.0'>
-    <style>
-        body { margin: 0; padding: 0; font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; background-color: #f3f4f6; color: #374151; }
-        .wrapper { width: 100%; table-layout: fixed; background-color: #f3f4f6; padding-bottom: 40px; }
-        .webkit { max-width: 600px; margin: 0 auto; background-color: #ffffff; border-radius: 12px; overflow: hidden; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06); }
-        .header { text-align: center; padding: 40px 20px; background-color: #ffffff; border-bottom: 1px solid #f3f4f6; }
-        .logo { height: 60px; width: auto; object-fit: contain; }
-        .content { padding: 40px 30px; }
-        .footer { text-align: center; padding: 20px; color: #9ca3af; font-size: 12px; }
-        .button { display: inline-block; padding: 14px 28px; background-color: #000000; color: #ffffff; text-decoration: none; border-radius: 6px; font-weight: bold; margin-top: 10px; transition: background 0.3s; }
-        h1 { color: #111827; margin-top: 0; font-size: 24px; font-weight: bold; }
-        p { margin-bottom: 16px; line-height: 1.6; font-size: 16px; }
-        ul { margin-bottom: 24px; padding-left: 20px; }
-        li { margin-bottom: 10px; }
-        @media screen and (max-width: 600px) {
-            .content { padding: 30px 20px; }
-            h1 { font-size: 20px; }
-            .logo { height: 32px; }
-        }
-    </style>
+<meta charset='UTF-8'>
+<meta name='viewport' content='width=device-width, initial-scale=1.0'>
+<title>$title</title>
+<style>
+    /* Reset styles */ 
+    body, table, td, a { -webkit-text-size-adjust: 100%; -ms-text-size-adjust: 100%; }
+    table, td { mso-table-lspace: 0pt; mso-table-rspace: 0pt; }
+    img { -ms-interpolation-mode: bicubic; border: 0; outline: none; text-decoration: none; }
+    table { border-collapse: collapse !important; }
+    body { height: 100% !important; margin: 0 !important; padding: 0 !important; width: 100% !important; font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; background-color: #ffffff; }
+    
+    /* Component styles */
+    .button { display: inline-block; padding: 14px 28px; background-color: #000000; color: #ffffff; text-decoration: none; border-radius: 6px; font-weight: bold; margin-top: 10px; }
+    
+    /* Mobile styles */
+    @media screen and (max-width: 600px) {
+        .email-container { width: 100% !important; margin: auto !important; }
+        .padding-mobile { padding: 20px !important; }
+        h1 { font-size: 20px !important; }
+        .logo-img { height: 32px !important; width: auto !important; }
+    }
+</style>
 </head>
-<body>
-    <div class='wrapper'>
-        <div style='height: 40px;'></div>
-        <div class='webkit'>
-            <div class='header'>
-                $logoHtml
-            </div>
-            <div class='content'>
-                $content
-            </div>
+<body style='margin: 0; padding: 0; background-color: #ffffff;'>
+    <center style='width: 100%; background-color: #ffffff;'>
+        <div style='display: none; font-size: 1px; line-height: 1px; max-height: 0px; max-width: 0px; opacity: 0; overflow: hidden; mso-hide: all; font-family: sans-serif;'>
+            $title
         </div>
-        <div class='footer'>
-            <p>&copy; $year $siteName. All rights reserved.</p>
-        </div>
-    </div>
+        
+        <table role='presentation' border='0' cellpadding='0' cellspacing='0' width='100%'>
+            <tr>
+                <td style='padding: 20px 0;' align='center'>
+                    <!-- Email Container -->
+                    <table role='presentation' border='0' cellpadding='0' cellspacing='0' width='100%' style='max-width: 600px; margin: 0 auto; background-color: #ffffff; border-radius: 8px; overflow: hidden; border: 1px solid #f0f0f0;' class='email-container'>
+                        <!-- Header -->
+                        <tr>
+                            <td style='padding: 20px 20px 5px 20px; text-align: center; border-bottom: 1px solid #f0f0f0;'>
+                                $logoHtml
+                            </td>
+                        </tr>
+                        
+                        <!-- Content -->
+                        <tr>
+                            <td style='padding: 5px 30px 40px 30px; font-size: 16px; line-height: 1.6; color: #333333; text-align: left;' class='padding-mobile'>
+                                $content
+                            </td>
+                        </tr>
+                        
+                        <!-- Footer -->
+                        <tr>
+                            <td style='padding: 20px; text-align: center; background-color: #f9fafb; font-size: 12px; color: #999999;'>
+                                <p style='margin: 0;'>&copy; $year $siteName. All rights reserved.</p>
+                            </td>
+                        </tr>
+                    </table>
+                </td>
+            </tr>
+        </table>
+    </center>
 </body>
 </html>
         ";

@@ -711,6 +711,8 @@ document.getElementById('askQuestionForm').addEventListener('submit', async func
     }
 });
 </script>
+
+<?php require_once __DIR__ . '/development_popup.php'; ?>
 </body>
 </html>
 <style>
