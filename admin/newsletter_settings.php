@@ -197,22 +197,7 @@ require_once __DIR__ . '/../includes/admin-header.php';
 
             <!-- Right Column: Content -->
             <div class="space-y-4">
-                <div>
-                     <label class="block text-sm font-bold mb-2">Heading</label>
-                     <input type="text" name="heading" value="<?php echo htmlspecialchars($data['heading'] ?? ''); ?>" class="w-full border p-2 rounded" placeholder="Join our family">
-                </div>
-                
-                <div>
-                     <label class="block text-sm font-bold mb-2">Subheading (Context)</label>
-                     <textarea name="subheading" rows="2" class="w-full border p-2 rounded"><?php echo htmlspecialchars($data['subheading'] ?? ''); ?></textarea>
-                </div>
-                
-                <div>
-                     <label class="block text-sm font-bold mb-2">Button Text</label>
-                     <input type="text" name="button_text" value="<?php echo htmlspecialchars($data['button_text'] ?? ''); ?>" class="w-full border p-2 rounded" placeholder="Subscribe">
-                </div>
-                
-                <div class="border-t pt-4 mt-2">
+                 <div class="border-b pb-4 mb-6">
                      <div class="flex items-center justify-between">
                         <div class="flex items-center gap-3">
                             <div class="p-2 bg-blue-50 rounded-lg text-blue-600"><i class="fas fa-eye"></i></div>
@@ -226,6 +211,20 @@ require_once __DIR__ . '/../includes/admin-header.php';
                             <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
                         </label>
                     </div>
+                </div>
+                <div>
+                     <label class="block text-sm font-bold mb-2">Heading</label>
+                     <input type="text" name="heading" value="<?php echo htmlspecialchars($data['heading'] ?? ''); ?>" class="w-full border p-2 rounded" placeholder="Join our family">
+                </div>
+                
+                <div>
+                     <label class="block text-sm font-bold mb-2">Subheading (Context)</label>
+                     <textarea name="subheading" rows="2" class="w-full border p-2 rounded"><?php echo htmlspecialchars($data['subheading'] ?? ''); ?></textarea>
+                </div>
+                
+                <div>
+                     <label class="block text-sm font-bold mb-2">Button Text</label>
+                     <input type="text" name="button_text" value="<?php echo htmlspecialchars($data['button_text'] ?? ''); ?>" class="w-full border p-2 rounded" placeholder="Subscribe">
                 </div>
 
                 <div>

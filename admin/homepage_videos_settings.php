@@ -240,33 +240,7 @@ require_once __DIR__ . '/../includes/admin-header.php';
         <!-- Section Settings Card -->
         <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-6 mb-8 transform transition hover:shadow-md">
             <h3 class="text-lg font-bold text-gray-700 mb-4 border-b pb-2">Section Configuration</h3>
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                
-                <div class="col-span-1">
-                    <label class="block text-sm font-bold text-gray-700 mb-2">Section Heading</label>
-                    <div class="relative">
-                        <span class="absolute inset-y-0 left-0 pl-3 flex items-center text-gray-400">
-                            <i class="fas fa-heading"></i>
-                        </span>
-                        <input type="text" name="heading" value="<?php echo htmlspecialchars((string)($sectionSettings['heading'] ?? '')); ?>" 
-                               class="w-full pl-10 border border-gray-300 p-2.5 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition" 
-                               placeholder="e.g. Video Reels">
-                    </div>
-                </div>
-                
-                <div class="col-span-1">
-                    <label class="block text-sm font-bold text-gray-700 mb-2">Section Subheading</label>
-                     <div class="relative">
-                        <span class="absolute inset-y-0 left-0 pl-3 flex items-center text-gray-400">
-                            <i class="fas fa-align-left"></i>
-                        </span>
-                        <input type="text" name="subheading" value="<?php echo htmlspecialchars((string)($sectionSettings['subheading'] ?? '')); ?>" 
-                               class="w-full pl-10 border border-gray-300 p-2.5 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition" 
-                               placeholder="e.g. Watch our latest stories">
-                    </div>
-                </div>
-                
-                <div class="col-span-1 md:col-span-2 border-t pt-4 mt-2 grid grid-cols-1 md:grid-cols-2 gap-6">
+             <div class="col-span-1 md:col-span-2 pt-4 mt-2 mb-2 grid grid-cols-1 md:grid-cols-2 gap-6">
                      <!-- Slider Arrows Toggle -->
                      <div class="flex items-center justify-between">
                         <div class="flex items-center gap-3">
@@ -295,6 +269,31 @@ require_once __DIR__ . '/../includes/admin-header.php';
                             <input type="checkbox" name="show_section" class="sr-only peer" <?php echo $showSection ? 'checked' : ''; ?>>
                             <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
                         </label>
+                    </div>
+                </div>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mt-10">
+                
+                <div class="col-span-1">
+                    <label class="block text-sm font-bold text-gray-700 mb-2">Section Heading</label>
+                    <div class="relative">
+                        <span class="absolute inset-y-0 left-0 pl-3 flex items-center text-gray-400">
+                            <i class="fas fa-heading"></i>
+                        </span>
+                        <input type="text" name="heading" value="<?php echo htmlspecialchars((string)($sectionSettings['heading'] ?? '')); ?>" 
+                               class="w-full pl-10 border border-gray-300 p-2.5 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition" 
+                               placeholder="e.g. Video Reels">
+                    </div>
+                </div>
+                
+                <div class="col-span-1">
+                    <label class="block text-sm font-bold text-gray-700 mb-2">Section Subheading</label>
+                     <div class="relative">
+                        <span class="absolute inset-y-0 left-0 pl-3 flex items-center text-gray-400">
+                            <i class="fas fa-align-left"></i>
+                        </span>
+                        <input type="text" name="subheading" value="<?php echo htmlspecialchars((string)($sectionSettings['subheading'] ?? '')); ?>" 
+                               class="w-full pl-10 border border-gray-300 p-2.5 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition" 
+                               placeholder="e.g. Watch our latest stories">
                     </div>
                 </div>
             </div>

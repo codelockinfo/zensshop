@@ -144,6 +144,20 @@ require_once __DIR__ . '/../includes/admin-header.php';
             <i class="fas fa-palette mr-2"></i>Section Appearance
         </h2>
         <form method="POST">
+             <!-- Visibility Toggle -->
+            <div class="flex items-center justify-between mt-4 mb-10 border-t pt-4">
+                <div class="flex items-center gap-3">
+                    <div class="p-2 bg-blue-50 rounded-lg text-blue-600"><i class="fas fa-eye"></i></div>
+                    <div>
+                        <h3 class="font-bold text-gray-700">Show Footer Features Section</h3>
+                        <p class="text-xs text-gray-500">Toggle visibility of this section on the homepage.</p>
+                    </div>
+                </div>
+                <label class="relative inline-flex items-center cursor-pointer">
+                    <input type="checkbox" name="section_visibility" class="sr-only peer" <?php echo ($section_visibility == '1') ? 'checked' : ''; ?>>
+                    <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
+                </label>
+            </div>
             <input type="hidden" name="action" value="save_section">
             
             <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
@@ -162,21 +176,6 @@ require_once __DIR__ . '/../includes/admin-header.php';
                         <input type="text" id="sectionTextText" class="flex-1 h-10 border px-3 rounded font-mono text-sm" value="<?php echo htmlspecialchars($section_text); ?>" placeholder="#000000" pattern="^#[0-9A-Fa-f]{6}$">
                     </div>
                 </div>
-            </div>
-            
-            <!-- Visibility Toggle -->
-            <div class="flex items-center justify-between mt-4 mb-4 border-t pt-4">
-                <div class="flex items-center gap-3">
-                    <div class="p-2 bg-blue-50 rounded-lg text-blue-600"><i class="fas fa-eye"></i></div>
-                    <div>
-                        <h3 class="font-bold text-gray-700">Show Footer Features Section</h3>
-                        <p class="text-xs text-gray-500">Toggle visibility of this section on the homepage.</p>
-                    </div>
-                </div>
-                <label class="relative inline-flex items-center cursor-pointer">
-                    <input type="checkbox" name="section_visibility" class="sr-only peer" <?php echo ($section_visibility == '1') ? 'checked' : ''; ?>>
-                    <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
-                </label>
             </div>
 
             <div class="flex justify-between items-center">
