@@ -309,19 +309,6 @@ require_once __DIR__ . '/../../includes/admin-header.php';
             }
         });
         </script>
-        
-        <div class="admin-form-group">
-            <label class="admin-form-label">Select category icon</label>
-            <select name="icon" class="admin-form-select">
-                <option value="">Select icon</option>
-                <option value="fa-gem" <?php echo ($category['icon'] ?? '') === 'fa-gem' ? 'selected' : ''; ?>>💎 Gem</option>
-                <option value="fa-ring" <?php echo ($category['icon'] ?? '') === 'fa-ring' ? 'selected' : ''; ?>>💍 Ring</option>
-                <option value="fa-necklace" <?php echo ($category['icon'] ?? '') === 'fa-necklace' ? 'selected' : ''; ?>>📿 Necklace</option>
-                <option value="fa-earrings" <?php echo ($category['icon'] ?? '') === 'fa-earrings' ? 'selected' : ''; ?>>👂 Earrings</option>
-                <option value="fa-bracelet" <?php echo ($category['icon'] ?? '') === 'fa-bracelet' ? 'selected' : ''; ?>>⌚ Bracelet</option>
-            </select>
-        </div>
-        
         <div class="admin-form-group">
             <label class="admin-form-label">Slug</label>
             <input type="text" 
