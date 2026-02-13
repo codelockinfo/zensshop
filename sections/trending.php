@@ -69,7 +69,7 @@ if (file_exists($productsConfigPath)) {
                     <div class="min-w-full md:min-w-[300px] my-2">
                         <div class="product-card bg-white rounded-lg overflow-hidden shadow-md transition-all duration-300 group relative">
                 <div class="relative overflow-hidden">
-                    <a id="product-card-view-btn" href="<?php echo url('product?slug=' . urlencode($item['slug'] ?? '')); ?>">
+                    <a class="product-card-view-link" href="<?php echo url('product?slug=' . urlencode($item['slug'] ?? '')); ?>">
                         <img src="<?php echo htmlspecialchars($mainImage); ?>" alt="<?php echo htmlspecialchars($item['name']); ?>" 
                              class="w-full h-64 object-cover group-hover:scale-110 transition-transform duration-500"
                              loading="lazy"
@@ -118,7 +118,7 @@ if (file_exists($productsConfigPath)) {
                 
                 <div class="p-4">
                     <h3 class="font-semibold text-sm md:text-base text-gray-800 md:max-w-[250px] max-w-[250px] mb-2 overflow-hidden" style="display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; min-height: 3rem; line-height: 1.5rem;" title="<?php echo htmlspecialchars($item['name']); ?>">
-                        <a id="product-card-view-btn" href="<?php echo $baseUrl; ?>/product?slug=<?php echo urlencode($item['slug'] ?? ''); ?>" class="hover:text-primary transition block">
+                        <a class="product-card-view-link" href="<?php echo $baseUrl; ?>/product?slug=<?php echo urlencode($item['slug'] ?? ''); ?>" class="hover:text-primary transition block">
                             <?php echo htmlspecialchars($item['name']); ?>
                         </a>
                     </h3>

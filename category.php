@@ -98,7 +98,7 @@ if (isset($_GET['ajax'])) {
             
             echo '<div class="product-card bg-white rounded-lg overflow-hidden shadow-md hover:shadow-xl transition-all duration-300 group relative">
                     <div class="relative overflow-hidden">
-                        <a id="product-card-view-btn" href="' . url('product.php?slug=' . urlencode($item['slug'] ?? '')) . '">
+                        <a class="product-card-view-link" href="' . url('product.php?slug=' . urlencode($item['slug'] ?? '')) . '">
                             <img src="' . htmlspecialchars($mainImage) . '" 
                                  alt="' . htmlspecialchars($item['name']) . '" 
                                  class="w-full h-64 object-cover group-hover:scale-110 transition-transform duration-500">
@@ -138,7 +138,7 @@ if (isset($_GET['ajax'])) {
             
             echo '  <div class="p-4">
                         <h3 class="font-semibold text-gray-800 mb-2 overflow-hidden" style="display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; min-height: 3rem; line-height: 1.5rem;" title="' . htmlspecialchars($item['name'] ?? 'Product') . '">
-                            <a id="product-card-view-btn" href="' . $baseUrl . '/product.php?slug=' . urlencode($item['slug'] ?? '') . '" class="hover:text-primary transition">
+                            <a class="product-card-view-link" href="' . $baseUrl . '/product.php?slug=' . urlencode($item['slug'] ?? '') . '" class="hover:text-primary transition">
                                 ' . htmlspecialchars($item['name']) . '
                             </a>
                         </h3>
@@ -293,7 +293,7 @@ if (empty($catImageRaw)) {
                     ?>
                     <div class="product-card bg-white rounded-lg overflow-hidden shadow-md hover:shadow-xl transition-all duration-300 group relative">
                         <div class="relative overflow-hidden">
-                            <a id="product-card-view-btn" href="<?php echo url('product.php?slug=' . urlencode($item['slug'] ?? '')); ?>">
+                            <a class="product-card-view-link" href="<?php echo url('product.php?slug=' . urlencode($item['slug'] ?? '')); ?>">
                                 <img src="<?php echo htmlspecialchars($mainImage); ?>" 
                                      alt="<?php echo htmlspecialchars($item['name']); ?>" 
                                      class="w-full h-64 object-cover group-hover:scale-110 transition-transform duration-500"
@@ -334,7 +334,7 @@ if (empty($catImageRaw)) {
                         
                         <div class="p-4">
                             <h3 class="font-semibold text-gray-800 mb-2 overflow-hidden" style="display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; min-height: 3rem; line-height: 1.5rem;" title="<?php echo htmlspecialchars($item['name'] ?? 'Product'); ?>">
-                                <a id="product-card-view-btn" href="<?php echo $baseUrl; ?>/product.php?slug=<?php echo urlencode($item['slug'] ?? ''); ?>" class="hover:text-primary transition">
+                                <a class="product-card-view-link" href="<?php echo $baseUrl; ?>/product.php?slug=<?php echo urlencode($item['slug'] ?? ''); ?>" class="hover:text-primary transition">
                                     <?php echo htmlspecialchars($item['name']); ?>
                                 </a>
                             </h3>

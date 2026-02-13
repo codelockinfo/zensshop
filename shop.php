@@ -168,7 +168,7 @@ if (isset($_GET['ajax'])) {
                 
                 // Image Wrapper
                 echo '<div class="relative overflow-hidden card-image-wrap">';
-                    echo '<a id="product-card-view-btn" href="' . url('product?slug=' . urlencode($itemSlug)) . '">';
+                    echo '<a class="product-card-view-link" href="' . url('product?slug=' . urlencode($itemSlug)) . '">';
                     echo '<img src="' . htmlspecialchars($mainImage) . '" alt="' . htmlspecialchars($itemName) . '" class="w-full h-64 object-cover group-hover:scale-110 transition-transform duration-500" onerror="this.src=\'https://placehold.co/600x600?text=Product+Image\'">';
                     echo '</a>';
                     
@@ -214,7 +214,7 @@ if (isset($_GET['ajax'])) {
                 // Content Wrapper
                 echo '<div class="p-4 card-content">';
                     echo '<h3 class="font-semibold text-base mb-2 card-title" title="' . htmlspecialchars($itemName) . '">';
-                    echo '<a id="product-card-view-btn" href="' . $baseUrl . '/product?slug=' . urlencode($itemSlug) . '" class="hover:text-primary transition">' . htmlspecialchars($itemName) . '</a>';
+                    echo '<a class="product-card-view-link" href="' . $baseUrl . '/product?slug=' . urlencode($itemSlug) . '" class="hover:text-primary transition">' . htmlspecialchars($itemName) . '</a>';
                     echo '</h3>';
                     
                     // Star Rating
