@@ -69,7 +69,7 @@ if (file_exists($productsConfigPath)) {
                     <div class="min-w-full md:min-w-[300px] my-2">
                         <div class="product-card bg-white rounded-lg overflow-hidden shadow-md transition-all duration-300 group relative">
                 <div class="relative overflow-hidden">
-                    <a href="<?php echo url('product?slug=' . urlencode($item['slug'] ?? '')); ?>">
+                    <a id="product-card-view-btn" href="<?php echo url('product?slug=' . urlencode($item['slug'] ?? '')); ?>">
                         <img src="<?php echo htmlspecialchars($mainImage); ?>" alt="<?php echo htmlspecialchars($item['name']); ?>" 
                              class="w-full h-64 object-cover group-hover:scale-110 transition-transform duration-500"
                              loading="lazy"
@@ -87,7 +87,7 @@ if (file_exists($productsConfigPath)) {
                     $inWishlist = in_array($currentId, $wishlistIds);
                     ?>
                     <div class="absolute top-2 right-2 z-30 flex flex-col items-center gap-2">
-                    <button class="w-10 h-10 rounded-full flex items-center justify-center relative group <?php echo $inWishlist ? 'bg-black text-white' : 'bg-white text-black'; ?> hover:bg-black hover:text-white transition wishlist-btn" 
+                    <button id="product-card-wishlist-btn" class="w-10 h-10 rounded-full flex items-center justify-center relative group <?php echo $inWishlist ? 'bg-black text-white' : 'bg-white text-black'; ?> hover:bg-black hover:text-white transition wishlist-btn" 
                             data-product-id="<?php echo $currentId; ?>"
                             aria-label="<?php echo $inWishlist ? 'Remove from Wishlist' : 'Add to Wishlist'; ?>"
                             title="<?php echo $inWishlist ? 'Remove from Wishlist' : 'Add to Wishlist'; ?>">
@@ -96,7 +96,7 @@ if (file_exists($productsConfigPath)) {
                     </button>
                     
                     <div class="flex flex-col gap-2 opacity-100 md:opacity-0 md:group-hover:opacity-100 transition-opacity duration-300">
-                        <a href="<?php echo $baseUrl; ?>/product?slug=<?php echo urlencode($item['slug'] ?? ''); ?>" 
+                        <a id="product-card-quick-view-btn" href="<?php echo $baseUrl; ?>/product?slug=<?php echo urlencode($item['slug'] ?? ''); ?>" 
                            class="product-action-btn w-10 h-10 bg-white rounded-full flex items-center justify-center hover:bg-black hover:text-white transition shadow-lg quick-view-btn relative group" 
                            data-product-id="<?php echo $item['product_id']; ?>"
                            aria-label="Quick view product"
@@ -104,7 +104,7 @@ if (file_exists($productsConfigPath)) {
                             <i class="fas fa-eye" aria-hidden="true"></i>
                             <span class="product-tooltip">Quick View</span>
                         </a>
-                        <button class="product-action-btn w-10 h-10 bg-white rounded-full flex items-center justify-center hover:bg-black hover:text-white transition shadow-lg add-to-cart-hover-btn relative group <?php echo ($item['stock_status'] === 'out_of_stock' || $item['stock_quantity'] <= 0) ? 'opacity-50 cursor-not-allowed' : ''; ?>" 
+                        <button id="product-card-add-to-cart-btn" class="product-action-btn w-10 h-10 bg-white rounded-full flex items-center justify-center hover:bg-black hover:text-white transition shadow-lg add-to-cart-hover-btn relative group <?php echo ($item['stock_status'] === 'out_of_stock' || $item['stock_quantity'] <= 0) ? 'opacity-50 cursor-not-allowed' : ''; ?>" 
                                 aria-label="Add product to cart"
                                 data-product-id="<?php echo $item['product_id']; ?>"
                                 data-attributes='<?php echo htmlspecialchars($attributesJson, ENT_QUOTES, 'UTF-8'); ?>'
@@ -118,7 +118,7 @@ if (file_exists($productsConfigPath)) {
                 
                 <div class="p-4">
                     <h3 class="font-semibold text-sm md:text-base text-gray-800 md:max-w-[250px] max-w-[250px] mb-2 overflow-hidden" style="display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; min-height: 3rem; line-height: 1.5rem;" title="<?php echo htmlspecialchars($item['name']); ?>">
-                        <a href="<?php echo $baseUrl; ?>/product?slug=<?php echo urlencode($item['slug'] ?? ''); ?>" class="hover:text-primary transition block">
+                        <a id="product-card-view-btn" href="<?php echo $baseUrl; ?>/product?slug=<?php echo urlencode($item['slug'] ?? ''); ?>" class="hover:text-primary transition block">
                             <?php echo htmlspecialchars($item['name']); ?>
                         </a>
                     </h3>

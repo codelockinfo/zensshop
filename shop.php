@@ -168,7 +168,7 @@ if (isset($_GET['ajax'])) {
                 
                 // Image Wrapper
                 echo '<div class="relative overflow-hidden card-image-wrap">';
-                    echo '<a href="' . url('product?slug=' . urlencode($itemSlug)) . '">';
+                    echo '<a id="product-card-view-btn" href="' . url('product?slug=' . urlencode($itemSlug)) . '">';
                     echo '<img src="' . htmlspecialchars($mainImage) . '" alt="' . htmlspecialchars($itemName) . '" class="w-full h-64 object-cover group-hover:scale-110 transition-transform duration-500" onerror="this.src=\'https://placehold.co/600x600?text=Product+Image\'">';
                     echo '</a>';
                     
@@ -176,13 +176,13 @@ if (isset($_GET['ajax'])) {
                         echo '<span class="absolute top-3 left-3 bg-red-500 text-white px-2 py-1 rounded text-sm font-semibold">-' . $discount . '%</span>';
                     }
                     
-                    echo '<button class="wishlist-btn absolute top-3 right-3 rounded-full w-9 h-9 flex items-center justify-center transition ' . ($inWishlist ? 'bg-black text-white' : 'bg-white text-black') . ' hover:bg-black hover:text-white" data-product-id="' . $currentId . '" title="' . ($inWishlist ? 'Remove from Wishlist' : 'Add to Wishlist') . '">';
+                    echo '<button id="product-card-wishlist-btn" class="wishlist-btn absolute top-3 right-3 rounded-full w-9 h-9 flex items-center justify-center transition ' . ($inWishlist ? 'bg-black text-white' : 'bg-white text-black') . ' hover:bg-black hover:text-white" data-product-id="' . $currentId . '" title="' . ($inWishlist ? 'Remove from Wishlist' : 'Add to Wishlist') . '">';
                     echo '<i class="' . ($inWishlist ? 'fas' : 'far') . ' fa-heart"></i>';
                     echo '</button>';
 
                     // Hover Action Buttons
                     echo '<div class="product-actions absolute right-3 top-12 flex flex-col gap-2 mt-2 pr-[10px] md:pr-0 opacity-100 md:opacity-0 md:group-hover:opacity-100 transition-opacity duration-300 z-30">';
-                        echo '<a href="' . $baseUrl . '/product?slug=' . urlencode($itemSlug) . '" class="product-action-btn w-10 h-10 bg-white rounded-full flex items-center justify-center hover:bg-black hover:text-white transition shadow-lg quick-view-btn relative group" data-product-id="' . $currentId . '" data-product-slug="' . htmlspecialchars($itemSlug) . '">';
+                        echo '<a id="product-card-quick-view-btn" href="' . $baseUrl . '/product?slug=' . urlencode($itemSlug) . '" class="product-action-btn w-10 h-10 bg-white rounded-full flex items-center justify-center hover:bg-black hover:text-white transition shadow-lg quick-view-btn relative group" data-product-id="' . $currentId . '" data-product-slug="' . htmlspecialchars($itemSlug) . '">';
                         echo '<i class="fas fa-eye"></i>';
                         echo '<span class="product-tooltip">Quick View</span>';
                         echo '</a>';
@@ -203,7 +203,7 @@ if (isset($_GET['ajax'])) {
                         $attributesJson = json_encode($defaultAttributes);
                         $isOutOfStock = ($item['stock_status'] === 'out_of_stock' || (isset($item['stock_quantity']) && $item['stock_quantity'] <= 0));
 
-                        echo '<button class="product-action-btn w-10 h-10 bg-white rounded-full flex items-center justify-center hover:bg-black hover:text-white transition shadow-lg add-to-cart-hover-btn relative group ' . ($isOutOfStock ? 'opacity-50 cursor-not-allowed' : '') . '" data-product-id="' . $currentId . '" data-attributes=\'' . htmlspecialchars($attributesJson, ENT_QUOTES, 'UTF-8') . '\' ' . ($isOutOfStock ? 'disabled' : '') . '>';
+                        echo '<button id="product-card-add-to-cart-btn" class="product-action-btn w-10 h-10 bg-white rounded-full flex items-center justify-center hover:bg-black hover:text-white transition shadow-lg add-to-cart-hover-btn relative group ' . ($isOutOfStock ? 'opacity-50 cursor-not-allowed' : '') . '" data-product-id="' . $currentId . '" data-attributes=\'' . htmlspecialchars($attributesJson, ENT_QUOTES, 'UTF-8') . '\' ' . ($isOutOfStock ? 'disabled' : '') . '>';
                         echo '<i class="fas fa-shopping-cart"></i>';
                         echo '<span class="product-tooltip">' . ($isOutOfStock ? get_stock_status_text($item['stock_status'], $item['stock_quantity'] ?? 0) : 'Add to Cart') . '</span>';
                         echo '</button>';
@@ -214,7 +214,7 @@ if (isset($_GET['ajax'])) {
                 // Content Wrapper
                 echo '<div class="p-4 card-content">';
                     echo '<h3 class="font-semibold text-base mb-2 card-title" title="' . htmlspecialchars($itemName) . '">';
-                    echo '<a href="' . $baseUrl . '/product?slug=' . urlencode($itemSlug) . '" class="hover:text-primary transition">' . htmlspecialchars($itemName) . '</a>';
+                    echo '<a id="product-card-view-btn" href="' . $baseUrl . '/product?slug=' . urlencode($itemSlug) . '" class="hover:text-primary transition">' . htmlspecialchars($itemName) . '</a>';
                     echo '</h3>';
                     
                     // Star Rating

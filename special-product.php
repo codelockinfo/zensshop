@@ -605,7 +605,7 @@ require_once __DIR__ . '/includes/header.php';
                             <?php echo $aboutText; ?>
                         </div>
                         <div class="mt-6">
-                             <button id="special-shop-now-btn" onclick="spAddToCart(<?php echo $productData['product_id']; ?>, this)" class="btn-accent px-10 py-4 rounded text-lg font-medium tracking-wide uppercase transition shadow-lg hover:shadow-xl <?php echo $isOutOfStock ? 'opacity-50 cursor-not-allowed' : ''; ?>" data-loading-text="Adding..." <?php echo $isOutOfStock ? 'disabled' : ''; ?>>
+                             <button id="special-add-to-cart-btn" onclick="spAddToCart(<?php echo $productData['product_id']; ?>, this)" class="btn-accent px-10 py-4 rounded text-lg font-medium tracking-wide uppercase transition shadow-lg hover:shadow-xl <?php echo $isOutOfStock ? 'opacity-50 cursor-not-allowed' : ''; ?>" data-loading-text="Adding..." <?php echo $isOutOfStock ? 'disabled' : ''; ?>>
                                 <?php echo $isOutOfStock ? 'Out of Stock' : 'Shop Now'; ?>
                              </button>
                         </div>
