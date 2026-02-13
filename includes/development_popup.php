@@ -29,14 +29,14 @@ $devPopupImage = getBaseUrl() . '/pop-up/pop-up.png';
                  </p>
              </div>
              
-             <form id="dev-popup-form" onsubmit="handleDevSubscribe(event)" class="mt-2">
+             <form id="dev-subscribe-form" onsubmit="handleDevSubscribe(event)" class="mt-2">
                  <div class="relative">
                      <label class="block text-sm font-medium text-gray-700 mb-1 sr-only">Email Address</label>
                      <div class="flex shadow-sm">
                          <input type="email" name="email" required 
                                 class="flex-1 w-full border border-gray-300 rounded-l-lg px-4 py-3 focus:outline-none focus:ring-2 focus:ring-black focus:border-transparent"
                                 placeholder="Enter your email address">
-                         <button type="submit" class="bg-black text-white px-6 py-3 rounded-r-lg font-bold hover:bg-gray-800 transition-all transform hover:translate-x-1">
+                         <button type="submit" id="dev-subscribe-btn" class="bg-black text-white px-6 py-3 rounded-r-lg font-bold hover:bg-gray-800 transition-all transform hover:translate-x-1">
                              Notify Me
                          </button>
                      </div>
