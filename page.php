@@ -106,12 +106,12 @@ require_once __DIR__ . '/includes/header.php';
 
     <?php 
     $layout = $contentData['settings']['layout'] ?? 'standard';
-    $containerClass = 'container mx-auto px-4 py-12'; // Default (Wide)
+    $containerClass = 'container mx-auto px-4 py-8'; // Default (Wide)
     
     if ($layout === 'standard') {
-        $containerClass = 'container mx-auto px-4 py-12 max-w-4xl';
+        $containerClass = 'container mx-auto px-4 py-8 max-w-4xl';
     } elseif ($layout === 'full_width') {
-        $containerClass = 'w-full py-12 px-4 md:px-8';
+        $containerClass = 'w-full py-8 px-4 md:px-8';
     }
     ?>
 

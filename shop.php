@@ -990,21 +990,35 @@ function setView(view) {
 function openFilterDrawer() {
     const drawer = document.getElementById('filterDrawer');
     const overlay = document.getElementById('filterOverlay');
+    
+    // Unhide elements
     drawer.classList.remove('hidden');
-    drawer.classList.remove('-translate-x-full');
     overlay.classList.remove('hidden');
+    
+    // Use setTimeout to ensure the browser registers the display change
+    // before applying the transition classes
+    setTimeout(() => {
+        drawer.classList.remove('-translate-x-full', 'opacity-0');
+        overlay.classList.remove('opacity-0');
+    }, 20);
+    
     document.body.style.overflow = 'hidden';
 }
 
 function closeFilterDrawer() {
     const drawer = document.getElementById('filterDrawer');
     const overlay = document.getElementById('filterOverlay');
-    drawer.classList.add('-translate-x-full');
-    // Add hidden class after transition completes
+    
+    // Apply exit states
+    drawer.classList.add('-translate-x-full', 'opacity-0');
+    overlay.classList.add('opacity-0');
+    
+    // Wait for transition to complete before adding hidden
     setTimeout(() => {
         drawer.classList.add('hidden');
+        overlay.classList.add('hidden');
     }, 300);
-    overlay.classList.add('hidden');
+    
     document.body.style.overflow = '';
 }
 
@@ -1095,8 +1109,8 @@ function applyFiltersFromDrawer() {
 </script>
 
 <!-- Mobile Filter Drawer -->
-<div id="filterOverlay" class="hidden fixed inset-0 bg-black bg-opacity-50 z-40 lg:hidden"></div>
-<div id="filterDrawer" class="hidden fixed top-0 left-0 h-full w-80 bg-white shadow-2xl z-50 transform -translate-x-full transition-transform duration-300 overflow-y-auto lg:hidden">
+<div id="filterOverlay" class="hidden fixed inset-0 bg-black bg-opacity-50 z-40 lg:hidden transition-opacity duration-300 opacity-0"></div>
+<div id="filterDrawer" class="hidden fixed top-0 left-0 h-full w-80 bg-white shadow-2xl z-50 transform -translate-x-full transition-all duration-300 opacity-0 overflow-y-auto lg:hidden">
     <div class="p-6">
         <!-- Drawer Header -->
         <div class="flex items-center justify-between mb-6 pb-4 border-b">

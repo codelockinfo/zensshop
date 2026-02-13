@@ -664,7 +664,7 @@ $stockLabel = get_stock_status_text($currentStatus, $currentStock, $totalSold);
                 
                 <!-- Pickup Information -->
                 <?php if ($settings->get('pickup_enable', '1') == '1'): ?>
-                <div class="bg-gray-50 p-4 rounded-lg mb-6">
+                <div class="bg-gray-50 p-4 rounded-lg">
                     <div class="text-sm text-gray-700 flex items-start">
                         <i class="<?php echo htmlspecialchars($settings->get('pickup_icon', 'fas fa-store')); ?> mr-2 text-primary mt-1 flex-shrink-0"></i>
                         <div class="prose prose-sm max-w-none">
@@ -678,7 +678,7 @@ $stockLabel = get_stock_status_text($currentStatus, $currentStock, $totalSold);
                 <?php endif; ?>
                 
                 <!-- Product Details -->
-                <div class="border-t pt-6 space-y-2 text-sm">
+                <div class="border-t pt-4 space-y-2 text-sm">
                     <div class="flex">
                         <span class="font-semibold text-gray-700 w-20">Sku:</span>
                         <span id="variant-sku" class="text-gray-600"><?php echo htmlspecialchars($productData['sku'] ?? 'N/A'); ?></span>
@@ -706,12 +706,27 @@ $stockLabel = get_stock_status_text($currentStatus, $currentStock, $totalSold);
                 </div>
                 
                 <!-- Guarantee -->
-                <div class="mt-6 pt-6 border-t">
-                    <p class="text-sm text-gray-600 text-center">Guarantee Safe Checkout</p>
-                    <div class="flex justify-center items-center space-x-4 mt-4">
-                        <img src="<?php echo $baseUrl; ?>/assets/images/checkout-image/Visa_Inc._logo.svg.png" alt="Visa" class="h-8 w-8 object-contain">
-                        <img src="<?php echo $baseUrl; ?>/assets/images/checkout-image/Mastercard-logo.svg.png" alt="Mastercard" class="h-8 w-8 object-contain">
-                        <img src="<?php echo $baseUrl; ?>/assets/images/checkout-image/American_Express_logo.svg.png" alt="American Express" class="h-8 w-8 object-contain">
+                <div class="mt-6 pt-4 border-t">
+                    <p class="text-sm text-gray-600 text-right">Guarantee Safe Checkout</p>
+                    <div class="flex justify-end items-center flex-wrap gap-1 mt-2">
+                        <?php 
+                        $checkoutPaymentIconsJson = $settings->get('checkout_payment_icons_json', '[]');
+                        $checkoutPaymentIcons = json_decode($checkoutPaymentIconsJson, true) ?: [];
+                        
+                        if (!empty($checkoutPaymentIcons)): 
+                            foreach ($checkoutPaymentIcons as $icon): ?>
+                                <div class="h-8 flex items-center justify-center" title="<?php echo htmlspecialchars($icon['name'] ?? ''); ?>" style="max-width: 60px;">
+                                    <div class="w-full h-full flex items-center justify-center">
+                                        <?php echo $icon['svg'] ?? ''; ?>
+                                    </div>
+                                </div>
+                            <?php endforeach; 
+                        else: ?>
+                            <!-- Fallback if no icons configured -->
+                            <img src="<?php echo $baseUrl; ?>/assets/images/checkout-image/Visa_Inc._logo.svg.png" alt="Visa" class="h-8 w-8 object-contain">
+                            <img src="<?php echo $baseUrl; ?>/assets/images/checkout-image/Mastercard-logo.svg.png" alt="Mastercard" class="h-8 w-8 object-contain">
+                            <img src="<?php echo $baseUrl; ?>/assets/images/checkout-image/American_Express_logo.svg.png" alt="American Express" class="h-8 w-8 object-contain">
+                        <?php endif; ?>
                     </div>
                 </div>
             </div>
@@ -736,11 +751,13 @@ $stockLabel = get_stock_status_text($currentStatus, $currentStock, $totalSold);
                 <div class="border-b">
                     <button onclick="toggleSection('description')" class="w-full flex items-center justify-between py-4 text-left">
                         <span class="font-semibold text-lg">Description</span>
-                        <i class="fas fa-plus text-gray-400" id="description-icon"></i>
+                        <i class="fas fa-plus text-gray-400 transition-transform duration-300" id="description-icon"></i>
                     </button>
-                    <div id="description-content" class="hidden pb-4 text-gray-700 text-sm">
-                        <div class="prose prose-sm max-w-none">
-                            <?php echo htmlspecialchars_decode($productData['description'] ?? 'No description available.'); ?>
+                    <div id="description-content" class="max-h-0 overflow-hidden transition-all duration-500 ease-in-out text-gray-700 text-sm">
+                        <div class="pb-4">
+                            <div class="prose prose-sm max-w-none">
+                                <?php echo htmlspecialchars_decode($productData['description'] ?? 'No description available.'); ?>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -749,17 +766,19 @@ $stockLabel = get_stock_status_text($currentStatus, $currentStock, $totalSold);
                 <div class="border-b">
                     <button onclick="toggleSection('shipping')" class="w-full flex items-center justify-between py-4 text-left">
                         <span class="font-semibold text-lg">Shipping and Returns</span>
-                        <i class="fas fa-plus text-gray-400" id="shipping-icon"></i>
+                        <i class="fas fa-plus text-gray-400 transition-transform duration-300" id="shipping-icon"></i>
                     </button>
-                    <div id="shipping-content" class="hidden pb-4 text-gray-700 text-sm">
-                        <?php if (!empty($productData['shipping_policy'])): ?>
-                            <div class="prose prose-sm max-w-none text-[15px]">
-                                <?php echo $productData['shipping_policy']; ?>
-                            </div>
-                        <?php else: ?>
-                            <p>We offer free shipping on all orders over <?php echo format_price(150, $productData['currency'] ?? 'USD'); ?>. Standard shipping takes 3-5 business days. International shipping may take 7-14 business days.</p>
-                            <p class="mt-2">Returns are accepted within 30 days of purchase. Items must be unworn and in original packaging.</p>
-                        <?php endif; ?>
+                    <div id="shipping-content" class="max-h-0 overflow-hidden transition-all duration-500 ease-in-out text-gray-700 text-sm">
+                        <div class="pb-4">
+                            <?php if (!empty($productData['shipping_policy'])): ?>
+                                <div class="prose prose-sm max-w-none text-[15px]">
+                                    <?php echo $productData['shipping_policy']; ?>
+                                </div>
+                            <?php else: ?>
+                                <p>We offer free shipping on all orders over <?php echo format_price(150, $productData['currency'] ?? 'USD'); ?>. Standard shipping takes 3-5 business days. International shipping may take 7-14 business days.</p>
+                                <p class="mt-2">Returns are accepted within 30 days of purchase. Items must be unworn and in original packaging.</p>
+                            <?php endif; ?>
+                        </div>
                     </div>
                 </div>
                 
@@ -767,17 +786,19 @@ $stockLabel = get_stock_status_text($currentStatus, $currentStock, $totalSold);
                 <div class="border-b">
                     <button onclick="toggleSection('returns')" class="w-full flex items-center justify-between py-4 text-left">
                         <span class="font-semibold text-lg">Return Policies</span>
-                        <i class="fas fa-plus text-gray-400" id="returns-icon"></i>
+                        <i class="fas fa-plus text-gray-400 transition-transform duration-300" id="returns-icon"></i>
                     </button>
-                    <div id="returns-content" class="hidden pb-4 text-gray-700 text-sm">
-                        <?php if (!empty($productData['return_policy'])): ?>
-                            <div class="prose prose-sm max-w-none text-[15px]">
-                                <?php echo $productData['return_policy']; ?>
-                            </div>
-                        <?php else: ?>
-                            <p>We accept returns within 30 days of purchase. Items must be in original condition with tags attached.</p>
-                            <p class="mt-2">To initiate a return, please contact our customer service team or visit your account page.</p>
-                        <?php endif; ?>
+                    <div id="returns-content" class="max-h-0 overflow-hidden transition-all duration-500 ease-in-out text-gray-700 text-sm">
+                        <div class="pb-4">
+                            <?php if (!empty($productData['return_policy'])): ?>
+                                <div class="prose prose-sm max-w-none text-[15px]">
+                                    <?php echo $productData['return_policy']; ?>
+                                </div>
+                            <?php else: ?>
+                                <p>We accept returns within 30 days of purchase. Items must be in original condition with tags attached.</p>
+                                <p class="mt-2">To initiate a return, please contact our customer service team or visit your account page.</p>
+                            <?php endif; ?>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -858,7 +879,7 @@ $stockLabel = get_stock_status_text($currentStatus, $currentStock, $totalSold);
         </div>
         
         <!-- Recently Viewed Skeleton -->
-        <div id="recently-viewed-section" class="section-loading mb-16 mt-[60px]" data-product-id="<?php echo $productData['id']; ?>">
+        <div id="recently-viewed-section" class="section-loading mb-16 mt-[25px] md:mt-[60px]" data-product-id="<?php echo $productData['id']; ?>">
             <div class="text-center mb-8">
                 <div class="h-8 bg-gray-200 rounded w-64 mx-auto mb-2 relative overflow-hidden"><div class="absolute inset-0 animate-shimmer"></div></div>
                 <div class="h-4 bg-gray-200 rounded max-w-2xl mx-auto relative overflow-hidden"><div class="absolute inset-0 animate-shimmer"></div></div>
@@ -1313,14 +1334,16 @@ function toggleSection(sectionId) {
     const content = document.getElementById(sectionId + '-content');
     const icon = document.getElementById(sectionId + '-icon');
     
-    if (content.classList.contains('hidden')) {
-        content.classList.remove('hidden');
-        icon.classList.remove('fa-plus');
-        icon.classList.add('fa-minus');
-    } else {
-        content.classList.add('hidden');
-        icon.classList.remove('fa-minus');
+    // Check if the max-height is set (meaning it's open) and not '0px'
+    if (content.style.maxHeight && content.style.maxHeight !== '0px') {
+        content.style.maxHeight = '0px';
+        icon.classList.remove('fa-minus', 'rotate-180');
         icon.classList.add('fa-plus');
+    } else {
+        // Set max-height to scrollHeight to open it
+        content.style.maxHeight = content.scrollHeight + "px";
+        icon.classList.remove('fa-plus');
+        icon.classList.add('fa-minus', 'rotate-180');
     }
 }
 

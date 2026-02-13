@@ -703,7 +703,8 @@ if (!empty($headerMenuItems)) {
                     <a href="<?php echo url('products'); ?>" class="text-gray-800 hover:text-primary transition">Products</a>
                     <a href="<?php echo url('pages'); ?>" class="text-gray-800 hover:text-primary transition">Pages</a>
                     <a href="<?php echo url('blog'); ?>" class="text-gray-800 hover:text-primary transition">Blog</a>
-        </div>
+                </div>
+            </div>
     </nav>
     
     <!-- NEW REBUILT MOBILE MENU START -->
@@ -717,7 +718,7 @@ if (!empty($headerMenuItems)) {
 
     <!-- Main Menu Drawer -->
     <div id="mobile-menu-main" 
-         class="fixed top-0 left-0 bottom-0 w-80 bg-white z-50 transform -translate-x-full transition-transform duration-300 ease-in-out flex flex-col shadow-2xl overflow-hidden">
+         class="fixed top-0 left-0 bottom-0 w-80 bg-white z-50 transform -translate-x-full transition-transform duration-300 ease-in-out flex flex-col overflow-hidden">
         
         <!-- Header -->
         <div class="bg-black text-white px-5 py-4 flex items-center justify-between flex-shrink-0">
@@ -792,7 +793,7 @@ if (!empty($headerMenuItems)) {
                     
                     ?>
                     <div id="<?php echo $thisId; ?>" 
-                         class="fixed top-0 left-0 bottom-0 w-80 bg-white z-[60] transform -translate-x-full transition-transform duration-300 ease-in-out flex flex-col shadow-2xl overflow-hidden">
+                         class="fixed top-0 left-0 bottom-0 w-80 bg-white z-[60] transform -translate-x-full transition-transform duration-300 ease-in-out flex flex-col overflow-hidden">
                         
                         <!-- Header with Back & Close -->
                         <div class="bg-black text-white px-5 py-4 flex items-center justify-between flex-shrink-0">

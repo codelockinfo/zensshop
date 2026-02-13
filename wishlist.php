@@ -106,11 +106,23 @@ require_once __DIR__ . '/includes/header.php';
             <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-16">
                 <?php foreach ($wishlistItems as $item): ?>
                     <div class="group relative bg-white border border-gray-200 rounded-lg overflow-hidden hover:shadow-lg transition-shadow flex flex-col h-full">
-                        <!-- Remove Button -->
-                        <button onclick="removeFromWishlist(<?php echo $item['product_id']; ?>)" 
-                                class="absolute top-2 md:top-4 right-2 md:right-4 z-10 bg-white rounded-full h-9 w-9 shadow-md hover:bg-black hover:text-white transition">
-                            <i class="fas fa-times"></i>
-                        </button>
+                        <div class="absolute top-2 md:top-4 right-2 md:right-4 z-10 flex flex-col items-center gap-2">
+                            <!-- Remove Button -->
+                            <button onclick="removeFromWishlist(<?php echo $item['product_id']; ?>)" 
+                                    class="bg-white rounded-full h-9 w-9 shadow-md hover:bg-black hover:text-white transition flex items-center justify-center text-gray-500 relative group product-action-btn">
+                                <i class="fas fa-times"></i>
+                                <span class="product-tooltip">Remove from wishlist</span>
+                            </button>
+                            
+                            <!-- Quick View Button -->
+                            <button type="button" 
+                                    class="bg-white rounded-full h-9 w-9 shadow-md hover:bg-black hover:text-white transition flex items-center justify-center text-gray-800 quick-view-btn relative group product-action-btn"
+                                    data-product-id="<?php echo $item['product_id']; ?>"
+                                    data-product-slug="<?php echo htmlspecialchars($item['slug'] ?? ''); ?>">
+                                <i class="fas fa-eye"></i>
+                                <span class="product-tooltip">Quick View</span>
+                            </button>
+                        </div>
                         
                         <!-- Product Image -->
                         <a href="<?php echo url('product?slug=' . urlencode($item['slug'] ?? '')); ?>">
@@ -332,19 +344,19 @@ document.addEventListener('DOMContentLoaded', function() {
         btn.addEventListener('mouseenter', function(e) {
             const tooltip = document.createElement('div');
             tooltip.className = 'custom-remove-tooltip';
-            tooltip.textContent = this.getAttribute('title') || 'Remove from Wishlist';
-            tooltip.style.cssText = `
-                position: fixed;
-                background: #000;
-                color: #fff;
-                padding: 6px 12px;
-                border-radius: 4px;
-                font-size: 12px;
-                white-space: nowrap;
-                z-index: 10000;
-                pointer-events: none;
-                font-weight: 500;
-            `;
+            // tooltip.textContent = this.getAttribute('title') || 'Remove from wishlist';
+            // tooltip.style.cssText = `
+            //     position: fixed;
+            //     background: #000;
+            //     color: #fff;
+            //     padding: 6px 12px;
+            //     border-radius: 4px;
+            //     font-size: 12px;
+            //     white-space: nowrap;
+            //     z-index: 10000;
+            //     pointer-events: none;
+            //     font-weight: 500;
+            // `;
             
             document.body.appendChild(tooltip);
             

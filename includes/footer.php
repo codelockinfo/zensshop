@@ -139,11 +139,11 @@ function renderFooterLinkRecursive($item, $baseUrl) {
                     <div class="flex items-center justify-between cursor-pointer md:cursor-default group" onclick="toggleFooterAccordion(this)">
                         <h3 class="text-lg font-sans text-black nav-link font-bold select-none"><?php echo htmlspecialchars($colTitle); ?></h3>
                         <span class="md:hidden text-gray-500 group-hover:text-black transition-colors">
-                            <i class="fas fa-plus"></i>
+                            <i class="fas fa-plus transition-transform duration-300"></i>
                         </span>
                     </div>
                 
-                    <div class="hidden md:block mt-4 footer-accordion-content transition-all duration-300">
+                    <div class="max-h-0 opacity-0 md:max-h-none md:opacity-100 md:block pt-4 footer-accordion-content overflow-hidden md:overflow-visible transition-all duration-500 ease-in-out">
                     <?php if (stripos($colTitle, 'Follow') !== false): // Basic detection for Follow Us ?>
                         <!-- Social Icons Logic -->
                         <div class="flex space-x-3">
@@ -450,18 +450,25 @@ function renderFooterLinkRecursive($item, $baseUrl) {
         const content = element.nextElementSibling;
         const icon = element.querySelector('i');
         
-        // Check if currently hidden
-        const isHidden = content.classList.contains('hidden');
-        
-        // Toggle Hidden
-        if (isHidden) {
-            content.classList.remove('hidden');
-            icon.classList.remove('fa-plus');
-            icon.classList.add('fa-times');
-        } else {
-            content.classList.add('hidden');
+        // Check if currently open
+        if (content.style.maxHeight && content.style.maxHeight !== '0px') {
+            // Close
+            content.style.maxHeight = '0px';
+            content.classList.remove('opacity-100');
+            content.classList.add('opacity-0');
+            
             icon.classList.remove('fa-times');
             icon.classList.add('fa-plus');
+            icon.style.transform = 'rotate(0deg)';
+        } else {
+            // Open
+            content.style.maxHeight = content.scrollHeight + "px";
+            content.classList.remove('opacity-0');
+            content.classList.add('opacity-100');
+            
+            icon.classList.remove('fa-plus');
+            icon.classList.add('fa-times');
+            icon.style.transform = 'rotate(90deg)';
         }
     }
     </script>

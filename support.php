@@ -42,7 +42,7 @@ require_once __DIR__ . '/includes/header.php';
             </div>
         </div>
 
-        <div class="bg-white rounded-lg shadow-md p-8">
+        <div class="bg-white rounded-lg shadow-md p-8 pt-4">
             <h2 class="text-2xl font-bold mb-6">Send us a message</h2>
             
             <form id="supportForm" class="space-y-6">
