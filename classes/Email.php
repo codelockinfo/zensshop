@@ -420,40 +420,46 @@ class Email {
         if ($logoType === 'text') {
             $logoHtml = "<span style='font-size: 28px; font-weight: 800; color: #000000; text-transform: uppercase; letter-spacing: -0.5px; font-family: -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, Helvetica, Arial, sans-serif;'>$logoText</span>";
         } else {
-            // Use Image Embedding (best for local dev and professional emails)
+            // Hybrid Strategy: Embed ONLY on Localhost to fix broken image issue during dev.
+            // On Production, use URL to avoid attachment listing.
+            $baseUrl = getBaseUrl();
+            $isLocal = (strpos($baseUrl, 'localhost') !== false || strpos($baseUrl, '127.0.0.1') !== false);
+            
             $logoUrl = '';
             if (empty($logoImage)) {
                 $logoUrl = 'https://placehold.co/200x50?text=' . urlencode($logoText);
             } elseif (strpos($logoImage, 'http://') === 0 || strpos($logoImage, 'https://') === 0 || strpos($logoImage, 'data:') === 0) {
+                // Remote URL, use directly
                 $logoUrl = $logoImage;
             } else {
-                $basePath = defined('BASE_PATH') ? BASE_PATH : realpath(__DIR__ . '/../');
                 $cleanPath = ltrim($logoImage, '/');
+                // Default to URL for production (Clean, no attachment)
+                $logoUrl = $baseUrl . '/' . $cleanPath;
                 
-                // If path doesn't already contain assets/images/
-                if (strpos($cleanPath, 'assets/images/') === false) {
-                     if (file_exists($basePath . '/assets/images/' . $cleanPath)) {
-                         $cleanPath = 'assets/images/' . $cleanPath;
-                     } else {
-                         // Default to uploads if not found in root images
-                         if (file_exists($basePath . '/assets/images/uploads/' . $cleanPath)) {
-                             $cleanPath = 'assets/images/uploads/' . $cleanPath;
-                         }
-                     }
-                }
-                
-                $fullPath = $basePath . '/' . $cleanPath;
-                if (file_exists($fullPath)) {
-                    $this->embeddedImages['logo'] = [
-                        'path' => $fullPath,
-                        'cid' => 'logo_id'
-                    ];
-                    $logoUrl = 'cid:logo_id';
-                } else {
-                    // Final fallback to URL if file not readable for some reason
-                    $logoUrl = getBaseUrl() . '/' . $cleanPath;
+                // If on Localhost, URL doesn't work for external email clients (Gmail).
+                // So we MUST embed it, even though it adds an attachment icon.
+                if ($isLocal) {
+                    $basePath = defined('BASE_PATH') ? BASE_PATH : realpath(__DIR__ . '/../');
+                    $fullPath = '';
+                    
+                    if (file_exists($basePath . '/' . $cleanPath)) {
+                        $fullPath = $basePath . '/' . $cleanPath;
+                    } elseif (file_exists($basePath . '/assets/images/' . $cleanPath)) {
+                        $fullPath = $basePath . '/assets/images/' . $cleanPath;
+                    } elseif (file_exists($basePath . '/assets/images/uploads/' . $cleanPath)) {
+                        $fullPath = $basePath . '/assets/images/uploads/' . $cleanPath;
+                    }
+                    
+                    if ($fullPath && file_exists($fullPath)) {
+                        $this->embeddedImages['logo'] = [
+                            'path' => $fullPath,
+                            'cid' => 'logo_id'
+                        ];
+                        $logoUrl = 'cid:logo_id';
+                    }
                 }
             }
+            
             error_log("Email logo URL set to: $logoUrl");
             $logoHtml = "<img src='$logoUrl' alt='$logoText' style='max-height: 60px; width: auto; display: block; margin: 0 auto; outline: none; border: none; text-decoration: none;'>";
         }
