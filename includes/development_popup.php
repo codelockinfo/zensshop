@@ -125,11 +125,15 @@ async function handleDevSubscribe(e) {
     e.preventDefault();
     
     // Trigger GTM event for tracking
+    console.log('Pushing formSubmit event to dataLayer');
     if (typeof window.dataLayer !== 'undefined') {
         window.dataLayer.push({
             'event': 'formSubmit',
             'formId': 'dev-subscribe-form'
         });
+        console.log('formSubmit event pushed successfully');
+    } else {
+        console.log('dataLayer not found!');
     }
     
     const form = e.target;
