@@ -14,16 +14,20 @@ $notification = new Notification();
 if (isset($_POST['action']) && $_POST['action'] === 'mark_read' && isset($_POST['id'])) {
     $storeId = $_SESSION['store_id'] ?? null;
     $notification->markAsRead(intval($_POST['id']), $storeId);
-    header("Location: " . $_SERVER['PHP_SELF']);
-    exit;
+    if (!isset($_POST['ajax'])) {
+        header("Location: " . $_SERVER['PHP_SELF']);
+        exit;
+    }
 }
 
 // Handle mark all as read
 if (isset($_POST['action']) && $_POST['action'] === 'mark_all_read') {
     $storeId = $_SESSION['store_id'] ?? null;
     $notification->markAllAsRead($storeId);
-    header("Location: " . $_SERVER['PHP_SELF']);
-    exit;
+    if (!isset($_POST['ajax'])) {
+        header("Location: " . $_SERVER['PHP_SELF']);
+        exit;
+    }
 }
 
 // Handle delete action
@@ -32,8 +36,10 @@ if (isset($_POST['action']) && $_POST['action'] === 'delete' && isset($_POST['id
     $storeId = $_SESSION['store_id'] ?? null;
     $db->execute("DELETE FROM admin_notifications WHERE id = ? AND store_id = ?", [$id, $storeId]);
     $_SESSION['success'] = "Notification deleted successfully.";
-    header("Location: " . $_SERVER['PHP_SELF']);
-    exit;
+    if (!isset($_POST['ajax'])) {
+        header("Location: " . $_SERVER['PHP_SELF']);
+        exit;
+    }
 }
 
 // Pagination
@@ -49,6 +55,10 @@ $params = [$storeId];
 
 if ($filter === 'unread') {
     $whereClause .= " AND is_read = 0";
+} elseif ($filter === 'cancel') {
+    $whereClause .= " AND (type = 'cancel' OR title LIKE '%Cancellation%')";
+} elseif ($filter === 'refund') {
+    $whereClause .= " AND (type = 'refund' OR title LIKE '%Refund%')";
 } elseif ($filter !== 'all') {
     $whereClause .= " AND type = ?";
     $params[] = $filter;
@@ -67,6 +77,27 @@ $notifications = $db->fetchAll(
 // Get unread count
 $unreadCount = $notification->getUnreadCount($storeId);
 
+// Ajax Handler
+if ((isset($_GET['ajax']) && $_GET['ajax'] == '1') || (isset($_POST['ajax']) && $_POST['ajax'] == '1')) {
+    ob_start();
+    renderNotificationsHtml($notifications, $totalPages, $page, $filter);
+    $html = ob_get_clean();
+    
+    if (isset($_POST['ajax'])) {
+        header('Content-Type: application/json');
+        echo json_encode([
+            'success' => true,
+            'message' => $_SESSION['success'] ?? 'Action completed',
+            'html' => $html,
+            'unreadCount' => $unreadCount
+        ]);
+        unset($_SESSION['success']);
+    } else {
+        echo $html;
+    }
+    exit;
+}
+
 $pageTitle = 'Notifications';
 require_once __DIR__ . '/../includes/admin-header.php';
 
@@ -78,13 +109,13 @@ unset($_SESSION['success']);
     <div class="flex justify-between items-center mb-6">
         <div>
             <h1 class="text-2xl font-bold">Notifications</h1>
-            <p class="text-gray-600 text-sm mt-1">
+            <p class="text-gray-600 text-sm mt-1" id="unread-count-display">
                 <?php echo $unreadCount; ?> unread notification<?php echo $unreadCount !== 1 ? 's' : ''; ?>
             </p>
         </div>
-        <div class="flex gap-2">
+        <div class="flex gap-2" id="mark-all-read-container">
             <?php if ($unreadCount > 0): ?>
-                <form method="POST" class="inline">
+                <form method="POST" class="inline" onsubmit="return handleAjaxForm(event, this)">
                     <input type="hidden" name="action" value="mark_all_read">
                     <button type="submit" class="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 transition">
                         <i class="fas fa-check-double mr-2"></i>Mark All as Read
@@ -102,23 +133,37 @@ unset($_SESSION['success']);
 
     <!-- Filters -->
     <div class="mb-4 flex gap-2">
-        <a href="?filter=all" class="px-4 py-2 rounded <?php echo $filter === 'all' ? 'bg-blue-600 text-white' : 'bg-white text-gray-700 hover:bg-gray-50'; ?>">
+        <a href="?filter=all" data-filter="all" class="filter-btn ajax-link px-4 py-2 rounded <?php echo $filter === 'all' ? 'bg-blue-600 text-white' : 'bg-white text-gray-700 hover:bg-gray-50'; ?>">
             All
         </a>
-        <a href="?filter=unread" class="px-4 py-2 rounded <?php echo $filter === 'unread' ? 'bg-blue-600 text-white' : 'bg-white text-gray-700 hover:bg-gray-50'; ?>">
+        <a href="?filter=unread" data-filter="unread" class="filter-btn ajax-link px-4 py-2 rounded <?php echo $filter === 'unread' ? 'bg-blue-600 text-white' : 'bg-white text-gray-700 hover:bg-gray-50'; ?>">
             Unread
         </a>
-        <a href="?filter=order" class="px-4 py-2 rounded <?php echo $filter === 'order' ? 'bg-blue-600 text-white' : 'bg-white text-gray-700 hover:bg-gray-50'; ?>">
+        <a href="?filter=order" data-filter="order" class="filter-btn ajax-link px-4 py-2 rounded <?php echo $filter === 'order' ? 'bg-blue-600 text-white' : 'bg-white text-gray-700 hover:bg-gray-50'; ?>">
             <i class="fas fa-shopping-cart mr-1"></i> Orders
         </a>
-        <a href="?filter=customer" class="px-4 py-2 rounded <?php echo $filter === 'customer' ? 'bg-blue-600 text-white' : 'bg-white text-gray-700 hover:bg-gray-50'; ?>">
+        <a href="?filter=customer" data-filter="customer" class="filter-btn ajax-link px-4 py-2 rounded <?php echo $filter === 'customer' ? 'bg-blue-600 text-white' : 'bg-white text-gray-700 hover:bg-gray-50'; ?>">
             <i class="fas fa-user-plus mr-1"></i> Customers
         </a>
-        <a href="?filter=subscriber" class="px-4 py-2 rounded <?php echo $filter === 'subscriber' ? 'bg-blue-600 text-white' : 'bg-white text-gray-700 hover:bg-gray-50'; ?>">
+        <a href="?filter=subscriber" data-filter="subscriber" class="filter-btn ajax-link px-4 py-2 rounded <?php echo $filter === 'subscriber' ? 'bg-blue-600 text-white' : 'bg-white text-gray-700 hover:bg-gray-50'; ?>">
             <i class="fas fa-envelope mr-1"></i> Subscribers
+        </a>
+        <a href="?filter=cancel" data-filter="cancel" class="filter-btn ajax-link px-4 py-2 rounded <?php echo $filter === 'cancel' ? 'bg-blue-600 text-white' : 'bg-white text-gray-700 hover:bg-gray-50'; ?>">
+            <i class="fas fa-ban mr-1"></i> Cancel
+        </a>
+        <a href="?filter=refund" data-filter="refund" class="filter-btn ajax-link px-4 py-2 rounded <?php echo $filter === 'refund' ? 'bg-blue-600 text-white' : 'bg-white text-gray-700 hover:bg-gray-50'; ?>">
+            <i class="fas fa-undo mr-1"></i> Refund
         </a>
     </div>
 
+    <div id="notifications-container">
+        <?php renderNotificationsHtml($notifications, $totalPages, $page, $filter); ?>
+    </div>
+</div>
+
+<?php
+function renderNotificationsHtml($notifications, $totalPages, $page, $filter) {
+    ?>
     <!-- Notifications List -->
     <div class="bg-white rounded shadow overflow-hidden">
         <?php if (empty($notifications)): ?>
@@ -130,17 +175,31 @@ unset($_SESSION['success']);
             <div class="divide-y divide-gray-200">
                 <?php foreach ($notifications as $notif): ?>
                     <?php
+                    // Determine display type (handle legacy 'order' type for cancels/refunds)
+                    $displayType = $notif['type'];
+                    if ($notif['type'] === 'order') {
+                        if (stripos($notif['title'], 'Cancellation') !== false) {
+                            $displayType = 'cancel';
+                        } elseif (stripos($notif['title'], 'Refund') !== false) {
+                            $displayType = 'refund';
+                        }
+                    }
+
                     $iconClass = [
                         'order' => 'fas fa-shopping-cart',
                         'customer' => 'fas fa-user-plus',
                         'subscriber' => 'fas fa-envelope',
-                    ][$notif['type']] ?? 'fas fa-bell';
+                        'cancel' => 'fas fa-ban',
+                        'refund' => 'fas fa-undo',
+                    ][$displayType] ?? 'fas fa-bell';
                     
                     $colorClass = [
                         'order' => 'bg-green-500',
                         'customer' => 'bg-blue-500',
                         'subscriber' => 'bg-purple-500',
-                    ][$notif['type']] ?? 'bg-gray-500';
+                        'cancel' => 'bg-red-500',
+                        'refund' => 'bg-orange-500',
+                    ][$displayType] ?? 'bg-gray-500';
                     
                     $isUnread = $notif['is_read'] == 0;
                     ?>
@@ -179,7 +238,7 @@ unset($_SESSION['success']);
                                     </div>
                                     
                                     <!-- Actions -->
-                                    <div class="flex items-center gap-2 ml-4">
+                                    <div class="flex items-center gap-10 ml-4">
                                         <?php 
                                         if ($notif['link']): 
                                             $finalLink = $notif['link'];
@@ -195,7 +254,7 @@ unset($_SESSION['success']);
                                         <?php endif; ?>
                                         
                                         <?php if ($isUnread): ?>
-                                            <form method="POST" class="inline">
+                                            <form method="POST" class="inline" onsubmit="return handleAjaxForm(event, this)">
                                                 <input type="hidden" name="action" value="mark_read">
                                                 <input type="hidden" name="id" value="<?php echo $notif['id']; ?>">
                                                 <button type="submit" class="text-gray-600 hover:text-gray-800" title="Mark as read">
@@ -204,7 +263,7 @@ unset($_SESSION['success']);
                                             </form>
                                         <?php endif; ?>
                                         
-                                        <form method="POST" class="inline">
+                                        <form method="POST" class="inline" onsubmit="return handleAjaxForm(event, this)">
                                             <input type="hidden" name="action" value="delete">
                                             <input type="hidden" name="id" value="<?php echo $notif['id']; ?>">
                                             <button type="submit" class="text-red-600 hover:text-red-800" title="Delete">
@@ -227,23 +286,132 @@ unset($_SESSION['success']);
             <nav class="flex gap-2">
                 <?php if ($page > 1): ?>
                     <a href="?page=<?php echo $page - 1; ?>&filter=<?php echo $filter; ?>" 
-                       class="px-4 py-2 border rounded hover:bg-gray-50">Previous</a>
+                       class="pagination-link ajax-link px-4 py-2 border rounded hover:bg-gray-50">Previous</a>
                 <?php endif; ?>
 
                 <?php for ($i = max(1, $page - 2); $i <= min($totalPages, $page + 2); $i++): ?>
                     <a href="?page=<?php echo $i; ?>&filter=<?php echo $filter; ?>" 
-                       class="px-4 py-2 border rounded <?php echo $i === $page ? 'bg-blue-600 text-white' : 'hover:bg-gray-50'; ?>">
+                       class="pagination-link ajax-link px-4 py-2 border rounded <?php echo $i === $page ? 'bg-blue-600 text-white' : 'hover:bg-gray-50'; ?>">
                         <?php echo $i; ?>
                     </a>
                 <?php endfor; ?>
 
                 <?php if ($page < $totalPages): ?>
                     <a href="?page=<?php echo $page + 1; ?>&filter=<?php echo $filter; ?>" 
-                       class="px-4 py-2 border rounded hover:bg-gray-50">Next</a>
+                       class="pagination-link ajax-link px-4 py-2 border rounded hover:bg-gray-50">Next</a>
                 <?php endif; ?>
             </nav>
         </div>
     <?php endif; ?>
-</div>
+    <?php
+}
+?>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const container = document.getElementById('notifications-container');
+    
+    // Use body delegate
+    document.body.addEventListener('click', function(e) {
+        const link = e.target.closest('a.ajax-link');
+        if (link) {
+            e.preventDefault();
+            loadNotifications(link.href);
+        }
+    });
+
+    function loadNotifications(url) {
+        const fetchUrl = new URL(url);
+        fetchUrl.searchParams.set('ajax', '1');
+        
+        container.style.opacity = '0.5';
+        
+        fetch(fetchUrl)
+            .then(response => response.text())
+            .then(html => {
+                container.innerHTML = html;
+                container.style.opacity = '1';
+                
+                window.history.pushState({}, '', url);
+                updateFilterStyles(new URL(url).searchParams.get('filter') || 'all');
+            })
+            .catch(err => {
+                console.error('Error:', err);
+                container.style.opacity = '1';
+            });
+    }
+
+    function updateFilterStyles(activeFilter) {
+        document.querySelectorAll('.filter-btn').forEach(btn => {
+            if (btn.dataset.filter === activeFilter) {
+                btn.classList.remove('bg-white', 'text-gray-700', 'hover:bg-gray-50');
+                btn.classList.add('bg-blue-600', 'text-white');
+            } else {
+                 btn.classList.add('bg-white', 'text-gray-700', 'hover:bg-gray-50');
+                 btn.classList.remove('bg-blue-600', 'text-white');
+            }
+        });
+    }
+    
+    window.addEventListener('popstate', function() {
+        location.reload(); 
+    });
+});
+
+async function handleAjaxForm(e, form) {
+    e.preventDefault();
+    const btn = form.querySelector('button[type="submit"]');
+    let originalText = '';
+    
+    if (btn) {
+        originalText = btn.innerHTML;
+        btn.disabled = true;
+        // Keep icon if exist
+        if(btn.querySelector('i')) {
+             // btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i>';
+        }
+    }
+    
+    const formData = new FormData(form);
+    formData.append('ajax', '1');
+    
+    try {
+        const response = await fetch(window.location.href, {
+            method: 'POST',
+            body: formData
+        });
+        const data = await response.json();
+        
+        if (data.success) {
+            document.getElementById('notifications-container').innerHTML = data.html;
+            
+            // Update Unread Count
+            const unreadDisplay = document.getElementById('unread-count-display');
+            if (unreadDisplay) {
+                unreadDisplay.innerText = data.unreadCount + " unread notification" + (data.unreadCount !== 1 ? 's' : '');
+            }
+            
+            // Hide Mark All button if 0
+            const markAllContainer = document.getElementById('mark-all-read-container');
+            if (markAllContainer && data.unreadCount === 0) {
+                markAllContainer.style.display = 'none';
+            }
+            
+            // Show notification
+            if (typeof showNotification === 'function') {
+                 showNotification('success', data.message);
+            }
+        }
+    } catch (err) {
+        console.error(err);
+    } finally {
+         if (btn && document.contains(btn)) {
+            btn.disabled = false;
+            // btn.innerHTML = originalText; 
+        }
+    }
+    return false;
+}
+</script>
 
 <?php require_once __DIR__ . '/../includes/admin-footer.php'; ?>

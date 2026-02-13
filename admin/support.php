@@ -15,7 +15,9 @@ if (isset($_POST['action']) && $_POST['action'] === 'reply' && isset($_POST['id'
     $id = intval($_POST['id']);
     $reply = trim($_POST['reply'] ?? '');
     
-    if (!empty($reply)) {
+    if (empty($reply)) {
+        // Error handling if needed
+    } else {
         $message = $db->fetchOne("SELECT * FROM support_messages WHERE id = ?", [$id]);
         
         if ($message) {
@@ -53,8 +55,10 @@ if (isset($_POST['action']) && $_POST['action'] === 'reply' && isset($_POST['id'
         }
     }
     
-    header("Location: " . $_SERVER['PHP_SELF']);
-    exit;
+    if (!isset($_POST['ajax'])) {
+        header("Location: " . $_SERVER['PHP_SELF']);
+        exit;
+    }
 }
 
 // Handle status change
@@ -68,8 +72,11 @@ if (isset($_POST['action']) && $_POST['action'] === 'change_status' && isset($_P
     }
     $db->execute("UPDATE support_messages SET status = ? WHERE id = ? AND store_id = ?", [$status, $id, $storeId]);
     $_SESSION['success'] = "Status updated successfully.";
-    header("Location: " . $_SERVER['PHP_SELF']);
-    exit;
+    
+    if (!isset($_POST['ajax'])) {
+        header("Location: " . $_SERVER['PHP_SELF']);
+        exit;
+    }
 }
 
 // Handle delete
@@ -82,8 +89,11 @@ if (isset($_POST['action']) && $_POST['action'] === 'delete' && isset($_POST['id
     }
     $db->execute("DELETE FROM support_messages WHERE id = ? AND store_id = ?", [$id, $storeId]);
     $_SESSION['success'] = "Message deleted successfully.";
-    header("Location: " . $_SERVER['PHP_SELF']);
-    exit;
+    
+    if (!isset($_POST['ajax'])) {
+        header("Location: " . $_SERVER['PHP_SELF']);
+        exit;
+    }
 }
 
 // Pagination
@@ -124,6 +134,39 @@ $openCount = $db->fetchOne("SELECT COUNT(*) as count FROM support_messages WHERE
 $repliedCount = $db->fetchOne("SELECT COUNT(*) as count FROM support_messages WHERE store_id = ? AND status = 'replied'", [$storeId])['count'];
 $closedCount = $db->fetchOne("SELECT COUNT(*) as count FROM support_messages WHERE store_id = ? AND status = 'closed'", [$storeId])['count'];
 
+// Absolute Total Count (Fix for Stats)
+$allMessagesCount = $db->fetchOne("SELECT COUNT(*) as count FROM support_messages WHERE store_id = ?", [$storeId])['count'];
+
+// Ajax Handler (GET for Filtering, POST for Actions)
+if ((isset($_GET['ajax']) && $_GET['ajax'] == '1') || (isset($_POST['ajax']) && $_POST['ajax'] == '1')) {
+    
+    // Buffer output
+    ob_start();
+    renderMessagesHtml($messages, $totalPages, $page, $filter);
+    $html = ob_get_clean();
+    
+    // Return structured JSON if POST action, or if requested explicitly
+    if (isset($_POST['ajax'])) {
+        header('Content-Type: application/json');
+        echo json_encode([
+            'success' => true,
+            'message' => $_SESSION['success'] ?? 'Action completed',
+            'html' => $html,
+            'stats' => [
+                'total' => number_format($allMessagesCount),
+                'open' => number_format($openCount),
+                'replied' => number_format($repliedCount),
+                'closed' => number_format($closedCount)
+            ]
+        ]);
+        unset($_SESSION['success']);
+    } else {
+        // Standard GET Html replacement
+        echo $html;
+    }
+    exit;
+}
+
 $pageTitle = 'Support Messages';
 require_once __DIR__ . '/../includes/admin-header.php';
 
@@ -156,39 +199,47 @@ unset($_SESSION['success'], $_SESSION['error']);
     <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
         <div class="bg-white p-4 rounded shadow">
             <div class="text-gray-500 text-sm">Total Messages</div>
-            <div class="text-2xl font-bold"><?php echo number_format($totalCount); ?></div>
+            <div class="text-2xl font-bold" id="stat-total"><?php echo number_format($allMessagesCount); ?></div>
         </div>
         <div class="bg-white p-4 rounded shadow">
             <div class="text-gray-500 text-sm">Open</div>
-            <div class="text-2xl font-bold text-red-600"><?php echo number_format($openCount); ?></div>
+            <div class="text-2xl font-bold text-red-600" id="stat-open"><?php echo number_format($openCount); ?></div>
         </div>
         <div class="bg-white p-4 rounded shadow">
             <div class="text-gray-500 text-sm">Replied</div>
-            <div class="text-2xl font-bold text-blue-600"><?php echo number_format($repliedCount); ?></div>
+            <div class="text-2xl font-bold text-blue-600" id="stat-replied"><?php echo number_format($repliedCount); ?></div>
         </div>
         <div class="bg-white p-4 rounded shadow">
             <div class="text-gray-500 text-sm">Closed</div>
-            <div class="text-2xl font-bold text-green-600"><?php echo number_format($closedCount); ?></div>
+            <div class="text-2xl font-bold text-green-600" id="stat-closed"><?php echo number_format($closedCount); ?></div>
         </div>
     </div>
 
     <!-- Filters -->
     <div class="mb-4 flex gap-2">
-        <a href="?filter=all" class="px-4 py-2 rounded <?php echo $filter === 'all' ? 'bg-blue-600 text-white' : 'bg-white text-gray-700 hover:bg-gray-50'; ?>">
+        <a href="?filter=all" data-filter="all" class="filter-btn ajax-link px-4 py-2 rounded <?php echo $filter === 'all' ? 'bg-blue-600 text-white' : 'bg-white text-gray-700 hover:bg-gray-50'; ?>">
             All
         </a>
-        <a href="?filter=open" class="px-4 py-2 rounded <?php echo $filter === 'open' ? 'bg-blue-600 text-white' : 'bg-white text-gray-700 hover:bg-gray-50'; ?>">
+        <a href="?filter=open" data-filter="open" class="filter-btn ajax-link px-4 py-2 rounded <?php echo $filter === 'open' ? 'bg-blue-600 text-white' : 'bg-white text-gray-700 hover:bg-gray-50'; ?>">
             <i class="fas fa-exclamation-circle mr-1"></i> Open
         </a>
-        <a href="?filter=replied" class="px-4 py-2 rounded <?php echo $filter === 'replied' ? 'bg-blue-600 text-white' : 'bg-white text-gray-700 hover:bg-gray-50'; ?>">
+        <a href="?filter=replied" data-filter="replied" class="filter-btn ajax-link px-4 py-2 rounded <?php echo $filter === 'replied' ? 'bg-blue-600 text-white' : 'bg-white text-gray-700 hover:bg-gray-50'; ?>">
             <i class="fas fa-reply mr-1"></i> Replied
         </a>
-        <a href="?filter=closed" class="px-4 py-2 rounded <?php echo $filter === 'closed' ? 'bg-blue-600 text-white' : 'bg-white text-gray-700 hover:bg-gray-50'; ?>">
+        <a href="?filter=closed" data-filter="closed" class="filter-btn ajax-link px-4 py-2 rounded <?php echo $filter === 'closed' ? 'bg-blue-600 text-white' : 'bg-white text-gray-700 hover:bg-gray-50'; ?>">
             <i class="fas fa-check-circle mr-1"></i> Closed
         </a>
     </div>
 
-    <!-- Messages List -->
+    <!-- Messages List Container -->
+    <div id="messages-container">
+        <?php renderMessagesHtml($messages, $totalPages, $page, $filter); ?>
+    </div>
+</div>
+
+<?php
+function renderMessagesHtml($messages, $totalPages, $page, $filter) {
+    ?>
     <div class="bg-white rounded shadow overflow-hidden">
         <?php if (empty($messages)): ?>
             <div class="p-8 text-center text-gray-500">
@@ -246,7 +297,7 @@ unset($_SESSION['success'], $_SESSION['error']);
                             <?php endif; ?>
 
                             <?php if ($msg['status'] !== 'closed'): ?>
-                                <form method="POST" class="inline">
+                                <form method="POST" class="inline" onsubmit="return handleAjaxForm(event, this)">
                                     <input type="hidden" name="action" value="change_status">
                                     <input type="hidden" name="id" value="<?php echo $msg['id']; ?>">
                                     <input type="hidden" name="status" value="closed">
@@ -256,7 +307,7 @@ unset($_SESSION['success'], $_SESSION['error']);
                                 </form>
                             <?php endif; ?>
 
-                            <form method="POST" class="inline">
+                            <form method="POST" class="inline" onsubmit="return handleAjaxForm(event, this)">
                                 <input type="hidden" name="action" value="delete">
                                 <input type="hidden" name="id" value="<?php echo $msg['id']; ?>">
                                 <button type="submit" class="bg-red-600 text-white px-4 py-2 rounded hover:bg-red-700 text-sm btn-loading">
@@ -267,7 +318,7 @@ unset($_SESSION['success'], $_SESSION['error']);
 
                         <!-- Reply Form (Hidden by default) -->
                         <div id="replyForm<?php echo $msg['id']; ?>" class="hidden mt-4">
-                            <form method="POST" class="bg-white p-4 rounded border">
+                            <form method="POST" class="bg-white p-4 rounded border" onsubmit="return handleAjaxForm(event, this)">
                                 <input type="hidden" name="action" value="reply">
                                 <input type="hidden" name="id" value="<?php echo $msg['id']; ?>">
                                 <label class="block text-sm font-medium text-gray-700 mb-2">Your Reply</label>
@@ -297,26 +348,197 @@ unset($_SESSION['success'], $_SESSION['error']);
             <nav class="flex gap-2">
                 <?php if ($page > 1): ?>
                     <a href="?page=<?php echo $page - 1; ?>&filter=<?php echo $filter; ?>" 
-                       class="px-4 py-2 border rounded hover:bg-gray-50">Previous</a>
+                       class="ajax-link px-4 py-2 border rounded hover:bg-gray-50">Previous</a>
                 <?php endif; ?>
 
                 <?php for ($i = max(1, $page - 2); $i <= min($totalPages, $page + 2); $i++): ?>
                     <a href="?page=<?php echo $i; ?>&filter=<?php echo $filter; ?>" 
-                       class="px-4 py-2 border rounded <?php echo $i === $page ? 'bg-blue-600 text-white' : 'hover:bg-gray-50'; ?>">
+                       class="ajax-link px-4 py-2 border rounded <?php echo $i === $page ? 'bg-blue-600 text-white' : 'hover:bg-gray-50'; ?>">
                         <?php echo $i; ?>
                     </a>
                 <?php endfor; ?>
 
                 <?php if ($page < $totalPages): ?>
                     <a href="?page=<?php echo $page + 1; ?>&filter=<?php echo $filter; ?>" 
-                       class="px-4 py-2 border rounded hover:bg-gray-50">Next</a>
+                       class="ajax-link px-4 py-2 border rounded hover:bg-gray-50">Next</a>
                 <?php endif; ?>
             </nav>
         </div>
     <?php endif; ?>
-</div>
+    <?php
+}
+?>
 
 <script>
+document.addEventListener('DOMContentLoaded', function() {
+    const container = document.getElementById('messages-container');
+    
+    document.addEventListener('click', function(e) {
+        // Handle Ajax Links (Filters & Pagination)
+        const link = e.target.closest('a.ajax-link');
+        if (link) {
+            e.preventDefault();
+            loadMessages(link.href);
+        }
+    });
+
+    function loadMessages(url) {
+        const fetchUrl = new URL(url);
+        fetchUrl.searchParams.set('ajax', '1');
+        
+        container.style.opacity = '0.5';
+        
+        fetch(fetchUrl)
+            .then(response => response.text())
+            .then(html => {
+                container.innerHTML = html;
+                container.style.opacity = '1';
+                
+                // Update URL
+                window.history.pushState({}, '', url);
+                
+                // Update Filter Button Styles
+                updateFilterStyles(new URL(url).searchParams.get('filter') || 'all');
+            })
+            .catch(err => {
+                console.error('Error:', err);
+                container.style.opacity = '1';
+            });
+    }
+
+    function updateFilterStyles(activeFilter) {
+        document.querySelectorAll('.filter-btn').forEach(btn => {
+            if (btn.dataset.filter === activeFilter) {
+                btn.classList.remove('bg-white', 'text-gray-700', 'hover:bg-gray-50');
+                btn.classList.add('bg-blue-600', 'text-white');
+            } else {
+                 btn.classList.add('bg-white', 'text-gray-700', 'hover:bg-gray-50');
+                 btn.classList.remove('bg-blue-600', 'text-white');
+            }
+        });
+    }
+    
+    // Handle Browser Back/Forward
+    window.addEventListener('popstate', function() {
+        location.reload(); // Simple fallback for now
+    });
+});
+
+async function handleAjaxForm(e, form) {
+    e.preventDefault();
+    const btn = form.querySelector('button[type="submit"]');
+    let originalText = '';
+    
+    if (btn) {
+        originalText = btn.innerHTML;
+        btn.disabled = true;
+        btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i>';
+    }
+    
+    const formData = new FormData(form);
+    formData.append('ajax', '1');
+    
+    try {
+        const response = await fetch(window.location.href, {
+            method: 'POST',
+            body: formData
+        });
+        const data = await response.json();
+        
+        if (data.success) {
+            // Update List
+            document.getElementById('messages-container').innerHTML = data.html;
+            
+            // Update Stats
+            if (data.stats) {
+                if(document.getElementById('stat-total')) document.getElementById('stat-total').innerText = data.stats.total;
+                if(document.getElementById('stat-open')) document.getElementById('stat-open').innerText = data.stats.open;
+                if(document.getElementById('stat-replied')) document.getElementById('stat-replied').innerText = data.stats.replied;
+                if(document.getElementById('stat-closed')) document.getElementById('stat-closed').innerText = data.stats.closed;
+            }
+            
+            // Show notification
+            if (typeof showNotification === 'function') {
+                 showNotification('success', data.message);
+            } else {
+                 // Create temporary toast
+                 const toast = document.createElement('div');
+                 toast.className = 'fixed bottom-4 right-4 bg-green-600 text-white px-6 py-3 rounded shadow-lg z-50 animate-bounce';
+                 toast.innerText = data.message;
+                 document.body.appendChild(toast);
+                 setTimeout(() => toast.remove(), 3000);
+            }
+        }
+    } catch (err) {
+        console.error(err);
+        alert('An error occurred during the request.');
+    } finally {
+         if (btn && document.contains(btn)) {
+            btn.disabled = false;
+            btn.innerHTML = originalText;
+            
+            // Should we hide the reply form if success?
+            // The list is re-rendered, so the form is reset anyway from server HTML.
+        }
+    }
+    return false;
+}
+
+document.addEventListener('DOMContentLoaded', function() {
+    const container = document.getElementById('messages-container');
+    
+    // Use body delegate for robustness
+    document.body.addEventListener('click', function(e) {
+        // Handle Ajax Links (Filters & Pagination)
+        const link = e.target.closest('a.ajax-link');
+        if (link) {
+            e.preventDefault(); // STOP reload
+            loadMessages(link.href);
+        }
+    });
+
+    function loadMessages(url) {
+        const fetchUrl = new URL(url);
+        fetchUrl.searchParams.set('ajax', '1');
+        
+        container.style.opacity = '0.5';
+        
+        fetch(fetchUrl)
+            .then(response => response.text())
+            .then(html => {
+                container.innerHTML = html;
+                container.style.opacity = '1';
+                
+                // Update URL (without reload)
+                window.history.pushState({}, '', url);
+                
+                // Update Filter Button Styles
+                updateFilterStyles(new URL(url).searchParams.get('filter') || 'all');
+            })
+            .catch(err => {
+                console.error('Error:', err);
+                container.style.opacity = '1';
+            });
+    }
+
+    function updateFilterStyles(activeFilter) {
+        document.querySelectorAll('.filter-btn').forEach(btn => {
+            if (btn.dataset.filter === activeFilter) {
+                btn.classList.remove('bg-white', 'text-gray-700', 'hover:bg-gray-50');
+                btn.classList.add('bg-blue-600', 'text-white');
+            } else {
+                 btn.classList.add('bg-white', 'text-gray-700', 'hover:bg-gray-50');
+                 btn.classList.remove('bg-blue-600', 'text-white');
+            }
+        });
+    }
+    
+    // Handle Browser Back/Forward
+    window.addEventListener('popstate', function() {
+        location.reload(); // Simple fallback for now
+    });
+});
+
 function showReplyForm(id) {
     document.getElementById('replyForm' + id).classList.remove('hidden');
 }
@@ -325,5 +547,6 @@ function hideReplyForm(id) {
     document.getElementById('replyForm' + id).classList.add('hidden');
 }
 </script>
+
 
 <?php require_once __DIR__ . '/../includes/admin-footer.php'; ?>
