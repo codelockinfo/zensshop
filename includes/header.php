@@ -419,7 +419,7 @@ if (!function_exists('url')) {
     <noscript><link rel="stylesheet" href="<?php echo $baseUrl; ?>/assets/css/fontawesome-custom.css"></noscript>
     
     <!-- TinyMCE Content Styles -->
-    <link rel="stylesheet" href="<?php echo $baseUrl; ?>/assets/css/richtext.css">
+    <link rel="stylesheet" href="<?php echo $baseUrl; ?>/assets/css/richtext1.css">
 
     <style>
         /* GTM Tracking Fix: Ensure clicks on icons register on the button */
