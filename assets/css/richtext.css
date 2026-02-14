@@ -1,0 +1,89 @@
+/* TinyMCE Content Styles - Frontend */
+
+.rich-text-content {
+    line-height: 1.6;
+    overflow-wrap: break-word; /* Handle long text */
+}
+
+/* Base image handling */
+.rich-text-content img {
+    max-width: 100%;
+    height: auto;
+}
+
+/* 
+   Alignment Classes 
+   We limit width to 50% for floating images to guarantee 
+   that text can fit beside them even on smaller screens.
+*/
+img.align-left {
+    float: left;
+    margin: 0 20px 20px 0;
+    max-width: 50%; 
+}
+
+img.align-right {
+    float: right;
+    margin: 0 0 20px 20px;
+    max-width: 50%;
+}
+
+img.align-center {
+    display: block;
+    margin: 20px auto;
+    float: none;
+}
+
+img.align-full {
+    display: block;
+    width: 100%;
+    margin: 20px 0;
+    float: none;
+}
+
+/* Clear floats to prevent layout breakage after content */
+.rich-text-content::after,
+.clearfix::after {
+    content: "";
+    display: table;
+    clear: both;
+}
+
+/* Mobile Responsiveness */
+@media (max-width: 768px) {
+    img.align-left,
+    img.align-right {
+        float: none;
+        display: block;
+        margin: 15px auto;
+        max-width: 100%;
+        width: 100%;
+    }
+    
+    .side-by-side-layout {
+        flex-direction: column;
+    }
+    
+    .side-by-side-layout .image-col,
+    .side-by-side-layout .text-col {
+        max-width: 100%;
+        flex: 0 0 100%;
+    }
+}
+
+/* Side-by-Side Flex Layout (Robust) */
+.side-by-side-layout {
+    display: flex;
+    gap: 20px;
+    margin: 20px 0;
+    align-items: flex-start;
+}
+.side-by-side-layout .image-col {
+    flex: 0 0 40%;
+    max-width: 40%;
+}
+.side-by-side-layout .text-col {
+    flex: 1;
+    min-width: 0;
+    padding-left: 0;
+}

@@ -182,7 +182,7 @@ if (isset($_GET['ajax'])) {
 
                     // Hover Action Buttons
                     echo '<div class="product-actions absolute right-3 top-12 flex flex-col gap-2 mt-2 pr-[10px] md:pr-0 opacity-100 md:opacity-0 md:group-hover:opacity-100 transition-opacity duration-300 z-30">';
-                        echo '<a id="product-card-quick-view-btn" href="' . $baseUrl . '/product?slug=' . urlencode($itemSlug) . '" class="product-action-btn w-10 h-10 bg-white rounded-full flex items-center justify-center hover:bg-black hover:text-white transition shadow-lg quick-view-btn relative group" data-product-id="' . $currentId . '" data-product-slug="' . htmlspecialchars($itemSlug) . '">';
+                        echo '<a id="product-card-quick-view-btn" href="' . $baseUrl . '/product?slug=' . urlencode($itemSlug) . '" class="product-action-btn w-10 h-10 bg-white rounded-full flex items-center justify-center hover:bg-black hover:text-white transition shadow-lg quick-view-btn relative group" data-product-id="' . $currentId . '" data-product-name="' . htmlspecialchars($itemName) . '" data-product-price="' . $finalPrice . '" data-product-slug="' . htmlspecialchars($itemSlug) . '">';
                         echo '<i class="fas fa-eye"></i>';
                         echo '<span class="product-tooltip">Quick View</span>';
                         echo '</a>';

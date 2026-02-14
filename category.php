@@ -120,6 +120,8 @@ if (isset($_GET['ajax'])) {
                             <a id="product-card-quick-view-btn" href="' . $baseUrl . '/product.php?slug=' . urlencode($item['slug'] ?? '') . '" 
                                class="product-action-btn w-10 h-10 bg-white rounded-full flex items-center justify-center hover:bg-black hover:text-white transition shadow-lg quick-view-btn relative group" 
                                data-product-id="' . $item['product_id'] . '"
+                               data-product-name="' . htmlspecialchars($item['name'] ?? '') . '"
+                               data-product-price="' . $finalPrice . '"
                                aria-label="Quick view product"
                                data-product-slug="' . htmlspecialchars($item['slug'] ?? '') . '">
                                 <i class="fas fa-eye" aria-hidden="true"></i>
@@ -316,6 +318,8 @@ if (empty($catImageRaw)) {
                                 <a id="product-card-quick-view-btn" href="<?php echo $baseUrl; ?>/product.php?slug=<?php echo urlencode($item['slug'] ?? ''); ?>" 
                                    class="product-action-btn w-10 h-10 bg-white rounded-full flex items-center justify-center hover:bg-black hover:text-white transition shadow-lg quick-view-btn relative group" 
                                    data-product-id="<?php echo $item['product_id']; ?>"
+                                   data-product-name="<?php echo htmlspecialchars($item['name'] ?? ''); ?>"
+                                   data-product-price="<?php echo $finalPrice; ?>"
                                    aria-label="Quick view product"
                                    data-product-slug="<?php echo htmlspecialchars($item['slug'] ?? ''); ?>">
                                     <i class="fas fa-eye" aria-hidden="true"></i>

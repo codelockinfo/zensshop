@@ -104,6 +104,8 @@ $baseUrl = getBaseUrl();
                     <div class="product-actions absolute right-2 top-12 flex flex-col gap-2 mt-2 opacity-0 group-hover:opacity-100 transition-opacity duration-300 z-30">
                         <button id="product-card-quick-view-btn" type="button" class="product-action-btn w-10 h-10 bg-white rounded-full flex items-center justify-center hover:bg-black hover:text-white transition shadow-lg quick-view-btn relative group" 
                                 data-product-id="<?php echo $currentId; ?>"
+                                data-product-name="<?php echo htmlspecialchars($item['name'] ?? ''); ?>"
+                                data-product-price="<?php echo $finalPrice; ?>"
                                 aria-label="Quick view product"
                                 data-product-slug="<?php echo htmlspecialchars($item['slug'] ?? ''); ?>">
                             <i class="fas fa-eye" aria-hidden="true"></i>

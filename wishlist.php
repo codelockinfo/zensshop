@@ -118,6 +118,8 @@ require_once __DIR__ . '/includes/header.php';
                             <button type="button" 
                                     class="bg-white rounded-full h-9 w-9 shadow-md hover:bg-black hover:text-white transition flex items-center justify-center text-gray-800 quick-view-btn relative group product-action-btn"
                                     data-product-id="<?php echo $item['product_id']; ?>"
+                                    data-product-name="<?php echo htmlspecialchars($item['name'] ?? ''); ?>"
+                                    data-product-price="<?php echo $finalPrice; ?>"
                                     data-product-slug="<?php echo htmlspecialchars($item['slug'] ?? ''); ?>">
                                 <i class="fas fa-eye"></i>
                                 <span class="product-tooltip">Quick View</span>

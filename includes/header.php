@@ -417,6 +417,10 @@ if (!function_exists('url')) {
     <!-- Font Awesome (Local optimized with font-display:swap) -->
     <link rel="stylesheet" href="<?php echo $baseUrl; ?>/assets/css/fontawesome-custom.css" media="print" onload="this.media='all'">
     <noscript><link rel="stylesheet" href="<?php echo $baseUrl; ?>/assets/css/fontawesome-custom.css"></noscript>
+    
+    <!-- TinyMCE Content Styles -->
+    <link rel="stylesheet" href="<?php echo $baseUrl; ?>/assets/css/richtext.css">
+    
     <script>
     // Make BASE_URL available globally for all frontend pages
     const BASE_URL = '<?php echo $baseUrl; ?>';

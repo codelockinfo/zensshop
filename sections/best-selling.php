@@ -101,6 +101,8 @@ if (file_exists($productsConfigPath)) {
                                        class="product-action-btn w-10 h-10 bg-white rounded-full flex items-center justify-center hover:bg-black hover:text-white transition shadow-lg quick-view-btn relative group" 
                                        aria-label="Quick view product"
                                        data-product-id="<?php echo $item['product_id']; ?>"
+                                       data-product-name="<?php echo htmlspecialchars($item['name'] ?? ''); ?>"
+                                       data-product-price="<?php echo $finalPrice; ?>"
                                        data-product-slug="<?php echo htmlspecialchars($item['slug'] ?? ''); ?>">
                                         <i class="fas fa-eye"></i>
                                         <span class="product-tooltip">Quick View</span>

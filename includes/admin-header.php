@@ -104,11 +104,96 @@ $action = $segments[count($segments) - 1] ?? '';  // add, list
         if (typeof tinymce !== 'undefined') {
             // Shared config options
             const sharedConfig = {
-                plugins: 'advlist autolink lists link image charmap preview anchor searchreplace visualblocks code fullscreen insertdatetime media table code help wordcount',
+                plugins: 'advlist autolink lists link image charmap preview anchor searchreplace visualblocks code fullscreen insertdatetime media table code help wordcount quickbars',
                 toolbar: 'undo redo | blocks | bold italic underline strikethrough | fontfamily fontsize | forecolor backcolor | alignleft aligncenter alignright alignjustify | bullist numlist outdent indent | link image media table | removeformat | code fullscreen',
+                
+                // Quick Toolbar (CKEditor-style floating bar on images)
+                quickbars_insert_toolbar: false, // Disable the '+' button on empty lines
+                quickbars_selection_toolbar: 'bold italic | quicklink h2 h3 blockquote', // Text selection toolbar
+                quickbars_image_toolbar: 'layout_img_left layout_img_right | imageoptions', // Image toolbar
+                
+                // Keep these for the full dialog options if needed
+                image_class_list: [
+                    { title: 'None', value: '' },
+                    { title: 'Image Left', value: 'align-left' },
+                    { title: 'Image Right', value: 'align-right' },
+                    { title: 'Image Center', value: 'align-center' },
+                    { title: 'Full Width', value: 'align-full' }
+                ],
+                
+                // Map standard alignment buttons to our custom classes
+                formats: {
+                    alignleft: { selector: 'img', classes: 'align-left' },
+                    aligncenter: { selector: 'img', classes: 'align-center' },
+                    alignright: { selector: 'img', classes: 'align-right' }
+                },
+
                 block_formats: 'Paragraph=p; Heading 1=h1; Heading 2=h2; Heading 3=h3; Heading 4=h4; Heading 5=h5; Heading 6=h6',
                 font_size_formats: "12px 14px 16px 18px 20px 24px 30px 36px 48px",
-                content_style: 'body { font-family: Arial, sans-serif; font-size: 16px; }',
+                content_style: `
+                    body { 
+                        font-family: Arial, sans-serif; 
+                        font-size: 16px; 
+                        line-height: 1.6;
+                        margin: 20px;
+                    }
+                    
+                    /* Force images to allow text wrapping */
+                    img {
+                        max-width: 100%;
+                        height: auto;
+                    }
+                    
+                    img.align-left {
+                        float: left;
+                        margin: 0 20px 20px 0;
+                        max-width: 50%; /* Ensure space for text */
+                    }
+
+                    img.align-right {
+                        float: right;
+                        margin: 0 0 20px 20px;
+                        max-width: 50%; /* Ensure space for text */
+                    }
+
+                    img.align-center {
+                        display: block;
+                        margin: 20px auto;
+                        float: none;
+                    }
+
+                    img.align-full {
+                        display: block;
+                        width: 100%;
+                        margin: 20px 0;
+                        float: none;
+                    }
+                    
+                    /* Crucial: Allow clicking next to floats */
+                    p { min-height: 1.5em; }
+
+                    /* Side-by-Side Flex Layout (Robust) */
+                    .side-by-side-layout {
+                        display: flex;
+                        gap: 20px;
+                        margin: 20px 0;
+                        align-items: flex-start;
+                    }
+                    .side-by-side-layout .image-col {
+                        flex: 0 0 40%;
+                        max-width: 40%;
+                    }
+                    .side-by-side-layout .text-col {
+                        flex: 1;
+                        min-width: 0;
+                    }
+
+                    /* Responsive Preview */
+                    @media (max-width: 768px) {
+                        .side-by-side-layout { flex-direction: column; }
+                        .side-by-side-layout .image-col { max-width: 100%; flex: 0 0 100%; }
+                    }
+                `,
                 images_upload_url: BASE_URL + '/admin/blogs/upload_image.php',
                 convert_urls: false,
                 branding: false,
@@ -116,6 +201,52 @@ $action = $segments[count($segments) - 1] ?? '';  // add, list
                 setup: function (editor) {
                     editor.on('change', function () {
                         editor.save();
+                    });
+
+                    // Helper to create layout
+                    const createLayout = (imgNode, textFirst) => {
+                         const imgSrc = imgNode.getAttribute('src');
+                         const imgAlt = imgNode.getAttribute('alt') || '';
+                         const imgStyle = imgNode.getAttribute('style') || '';
+                         
+                         const imgHtml = `
+                            <div class="image-col">
+                                <img src="${imgSrc}" alt="${imgAlt}" style="${imgStyle} width: 100%; height: auto;">
+                            </div>
+                         `;
+                         const textHtml = `
+                            <div class="text-col">
+                                <p>Type your text here...</p>
+                            </div>
+                         `;
+                         
+                         // Determine order: Text First (Img Right) or Img First (Img Left)
+                         const innerContent = textFirst ? (textHtml + imgHtml) : (imgHtml + textHtml);
+
+                         const layoutHtml = `<div class="side-by-side-layout">${innerContent}</div><p>&nbsp;</p>`;
+                         editor.selection.setContent(layoutHtml);
+                    };
+
+                    // Button 1: Image Left (Text Right)
+                    editor.ui.registry.addButton('layout_img_left', {
+                        tooltip: 'Start Text on Right',
+                        icon: 'table-insert-column-after', 
+                        onAction: function () {
+                            const node = editor.selection.getNode();
+                            if (node && node.nodeName === 'IMG') createLayout(node, false);
+                            else editor.notificationManager.open({ text: 'Select an image first!', type: 'info', timeout: 2000 });
+                        }
+                    });
+
+                    // Button 2: Image Right (Text Left)
+                    editor.ui.registry.addButton('layout_img_right', {
+                        tooltip: 'Start Text on Left',
+                        icon: 'table-insert-column-before', 
+                        onAction: function () {
+                            const node = editor.selection.getNode();
+                            if (node && node.nodeName === 'IMG') createLayout(node, true);
+                            else editor.notificationManager.open({ text: 'Select an image first!', type: 'info', timeout: 2000 });
+                        }
                     });
                 }
             };
