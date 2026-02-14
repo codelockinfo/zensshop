@@ -204,27 +204,58 @@ $action = $segments[count($segments) - 1] ?? '';  // add, list
                     });
 
                     // Helper to create layout
+                    // Helper to create or toggle layout
                     const createLayout = (imgNode, textFirst) => {
-                         const imgSrc = imgNode.getAttribute('src');
-                         const imgAlt = imgNode.getAttribute('alt') || '';
-                         const imgStyle = imgNode.getAttribute('style') || '';
+                         const dom = editor.dom;
+                         // Check if we are already inside a layout
+                         const wrapper = dom.getParent(imgNode, '.side-by-side-layout');
                          
-                         const imgHtml = `
-                            <div class="image-col">
-                                <img src="${imgSrc}" alt="${imgAlt}" style="${imgStyle} width: 100%; height: auto;">
-                            </div>
-                         `;
-                         const textHtml = `
-                            <div class="text-col">
-                                <p>Type your text here...</p>
-                            </div>
-                         `;
-                         
-                         // Determine order: Text First (Img Right) or Img First (Img Left)
-                         const innerContent = textFirst ? (textHtml + imgHtml) : (imgHtml + textHtml);
-
-                         const layoutHtml = `<div class="side-by-side-layout">${innerContent}</div><p>&nbsp;</p>`;
-                         editor.selection.setContent(layoutHtml);
+                         if (wrapper) {
+                             // We are editing an existing layout -> SWAP COLUMNS
+                             const imageCol = wrapper.querySelector('.image-col');
+                             const textCol = wrapper.querySelector('.text-col');
+                             
+                             if (imageCol && textCol) {
+                                 // Clear wrapper content
+                                 while (wrapper.firstChild) {
+                                     wrapper.removeChild(wrapper.firstChild);
+                                 }
+                                 
+                                 if (textFirst) {
+                                     // Text Left, Image Right
+                                     wrapper.appendChild(textCol);
+                                     wrapper.appendChild(imageCol);
+                                 } else {
+                                     // Image Left, Text Right
+                                     wrapper.appendChild(imageCol);
+                                     wrapper.appendChild(textCol);
+                                 }
+                                 
+                                 // Re-select image to keep context
+                                 editor.selection.select(imgNode);
+                             }
+                         } else {
+                             // Create NEW Layout
+                             const imgSrc = imgNode.getAttribute('src');
+                             const imgAlt = imgNode.getAttribute('alt') || '';
+                             const imgStyle = imgNode.getAttribute('style') || '';
+                             
+                             const imgHtml = `
+                                <div class="image-col">
+                                    <img src="${imgSrc}" alt="${imgAlt}" style="${imgStyle} width: 100%; height: auto;">
+                                </div>
+                             `;
+                             const textHtml = `
+                                <div class="text-col">
+                                    <p>Type your text here...</p>
+                                </div>
+                             `;
+                             
+                             const innerContent = textFirst ? (textHtml + imgHtml) : (imgHtml + textHtml);
+                             const layoutHtml = `<div class="side-by-side-layout">${innerContent}</div><p>&nbsp;</p>`;
+                             
+                             editor.selection.setContent(layoutHtml);
+                         }
                     };
 
                     // Button 1: Image Left (Text Right)
