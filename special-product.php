@@ -435,7 +435,12 @@ require_once __DIR__ . '/includes/header.php';
                 </div>
                 
                     <div class="flex items-center gap-4 justify-center lg:justify-start flex-wrap">
-                        <button id="special-add-to-cart-btn" onclick="spAddToCart(<?php echo $productData['product_id']; ?>, this, <?php echo htmlspecialchars(json_encode($firstVariant['variant_attributes'] ?? (object)[])); ?>)" class="bg-[#1a3d32] btn-accent px-6 h-[58px] py-[17px] rounded text-[11px] font-bold tracking-widest uppercase transition transform flex items-center justify-center gap-3 <?php echo $isOutOfStock ? 'opacity-50 cursor-not-allowed' : ''; ?>" data-loading-text="Adding..." <?php echo $isOutOfStock ? 'disabled' : ''; ?>>
+                        <button id="special-add-to-cart-btn" onclick="spAddToCart(<?php echo $productData['product_id']; ?>, this, <?php echo htmlspecialchars(json_encode($firstVariant['variant_attributes'] ?? (object)[])); ?>)" 
+                                data-product-id="<?php echo $productData['product_id']; ?>"
+                                data-product-name="<?php echo htmlspecialchars($productData['name'] ?? ''); ?>"
+                                data-product-price="<?php echo $price; ?>"
+                                data-product-slug="<?php echo htmlspecialchars($productData['slug'] ?? ''); ?>"
+                                class="bg-[#1a3d32] btn-accent px-6 h-[58px] py-[17px] rounded text-[11px] font-bold tracking-widest uppercase transition transform flex items-center justify-center gap-3 <?php echo $isOutOfStock ? 'opacity-50 cursor-not-allowed' : ''; ?>" data-loading-text="Adding..." <?php echo $isOutOfStock ? 'disabled' : ''; ?>>
                             <i class="fas fa-shopping-cart text-[13px]"></i>
                             <span><?php echo $isOutOfStock ? 'Out of Stock' : 'Add to cart'; ?></span>
                         </button>
@@ -605,7 +610,12 @@ require_once __DIR__ . '/includes/header.php';
                             <?php echo $aboutText; ?>
                         </div>
                         <div class="mt-6">
-                             <button id="special-add-to-cart-btn" onclick="spAddToCart(<?php echo $productData['product_id']; ?>, this)" class="btn-accent px-10 py-4 rounded text-lg font-medium tracking-wide uppercase transition shadow-lg hover:shadow-xl <?php echo $isOutOfStock ? 'opacity-50 cursor-not-allowed' : ''; ?>" data-loading-text="Adding..." <?php echo $isOutOfStock ? 'disabled' : ''; ?>>
+                             <button id="special-add-to-cart-btn" onclick="spAddToCart(<?php echo $productData['product_id']; ?>, this)" 
+                                     data-product-id="<?php echo $productData['product_id']; ?>"
+                                     data-product-name="<?php echo htmlspecialchars($productData['name'] ?? ''); ?>"
+                                     data-product-price="<?php echo $price; ?>"
+                                     data-product-slug="<?php echo htmlspecialchars($productData['slug'] ?? ''); ?>"
+                                     class="btn-accent px-10 py-4 rounded text-lg font-medium tracking-wide uppercase transition shadow-lg hover:shadow-xl <?php echo $isOutOfStock ? 'opacity-50 cursor-not-allowed' : ''; ?>" data-loading-text="Adding..." <?php echo $isOutOfStock ? 'disabled' : ''; ?>>
                                 <?php echo $isOutOfStock ? 'Out of Stock' : 'Shop Now'; ?>
                              </button>
                         </div>
@@ -855,7 +865,12 @@ require_once __DIR__ . '/includes/header.php';
                 <button onclick="updateStickyQty(1)" class="w-8 h-full flex-shrink-0 flex items-center justify-center text-gray-600 hover:bg-gray-100 transition select-none">+</button>
             </div>
 
-            <button onclick="stickyAddToCart()" class="bg-[#1a3d32] text-white px-4 py-2.5 md:px-8 rounded-full font-bold hover:bg-black transition flex items-center justify-center gap-2 text-sm md:text-base whitespace-nowrap <?php echo $isOutOfStock ? 'opacity-50 cursor-not-allowed' : ''; ?>" id="sticky-atc-btn" <?php echo $isOutOfStock ? 'disabled' : ''; ?>>
+            <button onclick="stickyAddToCart()" 
+                    data-product-id="<?php echo $productData['product_id']; ?>"
+                    data-product-name="<?php echo htmlspecialchars($productData['name'] ?? ''); ?>"
+                    data-product-price="<?php echo $price; ?>"
+                    data-product-slug="<?php echo htmlspecialchars($productData['slug'] ?? ''); ?>"
+                    class="bg-[#1a3d32] text-white px-4 py-2.5 md:px-8 rounded-full font-bold hover:bg-black transition flex items-center justify-center gap-2 text-sm md:text-base whitespace-nowrap <?php echo $isOutOfStock ? 'opacity-50 cursor-not-allowed' : ''; ?>" id="sticky-atc-btn" <?php echo $isOutOfStock ? 'disabled' : ''; ?>>
                 <i class="fas fa-shopping-cart text-xs md:text-sm"></i>
                 <span><?php echo $isOutOfStock ? 'Out of Stock' : 'Add To Cart'; ?></span>
             </button>
