@@ -149,7 +149,7 @@ $baseUrl = getBaseUrl();
                     $oos = (($item['stock_status'] ?? 'in_stock') === 'out_of_stock' || (isset($item['stock_quantity']) && $item['stock_quantity'] <= 0));
                     ?>
                     <button id="product-card-add-to-cart-btn" onclick='addToCart(<?php echo $currentId; ?>, 1, this, <?php echo htmlspecialchars($attrsJ, ENT_QUOTES, 'UTF-8'); ?>)' 
-                            class="w-full bg-[#1a3d32] text-white px-4 py-2.5 rounded hover:bg-black transition text-xs font-bold flex items-center justify-center gap-2 <?php echo $oos ? 'opacity-50 cursor-not-allowed' : ''; ?>"
+                            class="productAddToCartBtn w-full bg-[#1a3d32] text-white px-4 py-2.5 rounded hover:bg-black transition text-xs font-bold flex items-center justify-center gap-2 <?php echo $oos ? 'opacity-50 cursor-not-allowed' : ''; ?>"
                             <?php echo $oos ? 'disabled' : ''; ?>>
                         <?php if ($oos): ?>
                             <span><?php echo strtoupper(get_stock_status_text($item['stock_status'] ?? 'in_stock', $item['stock_quantity'] ?? 0)); ?></span>

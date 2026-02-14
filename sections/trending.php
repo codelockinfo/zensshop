@@ -104,7 +104,7 @@ if (file_exists($productsConfigPath)) {
                             <i class="fas fa-eye" aria-hidden="true"></i>
                             <span class="product-tooltip">Quick View</span>
                         </a>
-                        <button id="product-card-add-to-cart-btn" class="product-action-btn w-10 h-10 bg-white rounded-full flex items-center justify-center hover:bg-black hover:text-white transition shadow-lg add-to-cart-hover-btn relative group <?php echo ($item['stock_status'] === 'out_of_stock' || $item['stock_quantity'] <= 0) ? 'opacity-50 cursor-not-allowed' : ''; ?>" 
+                        <button id="product-card-add-to-cart-btn" class="productAddToCartBtn product-action-btn w-10 h-10 bg-white rounded-full flex items-center justify-center hover:bg-black hover:text-white transition shadow-lg add-to-cart-hover-btn relative group <?php echo ($item['stock_status'] === 'out_of_stock' || $item['stock_quantity'] <= 0) ? 'opacity-50 cursor-not-allowed' : ''; ?>" 
                                 aria-label="Add product to cart"
                                 data-product-id="<?php echo $item['product_id']; ?>"
                                 data-attributes='<?php echo htmlspecialchars($attributesJson, ENT_QUOTES, 'UTF-8'); ?>'

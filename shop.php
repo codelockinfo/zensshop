@@ -203,7 +203,7 @@ if (isset($_GET['ajax'])) {
                         $attributesJson = json_encode($defaultAttributes);
                         $isOutOfStock = ($item['stock_status'] === 'out_of_stock' || (isset($item['stock_quantity']) && $item['stock_quantity'] <= 0));
 
-                        echo '<button id="product-card-add-to-cart-btn" class="product-action-btn w-10 h-10 bg-white rounded-full flex items-center justify-center hover:bg-black hover:text-white transition shadow-lg add-to-cart-hover-btn relative group ' . ($isOutOfStock ? 'opacity-50 cursor-not-allowed' : '') . '" data-product-id="' . $currentId . '" data-attributes=\'' . htmlspecialchars($attributesJson, ENT_QUOTES, 'UTF-8') . '\' ' . ($isOutOfStock ? 'disabled' : '') . '>';
+                        echo '<button id="product-card-add-to-cart-btn" class="productAddToCartBtn product-action-btn w-10 h-10 bg-white rounded-full flex items-center justify-center hover:bg-black hover:text-white transition shadow-lg add-to-cart-hover-btn relative group ' . ($isOutOfStock ? 'opacity-50 cursor-not-allowed' : '') . '" data-product-id="' . $currentId . '" data-attributes=\'' . htmlspecialchars($attributesJson, ENT_QUOTES, 'UTF-8') . '\' ' . ($isOutOfStock ? 'disabled' : '') . '>';
                         echo '<i class="fas fa-shopping-cart"></i>';
                         echo '<span class="product-tooltip">' . ($isOutOfStock ? get_stock_status_text($item['stock_status'], $item['stock_quantity'] ?? 0) : 'Add to Cart') . '</span>';
                         echo '</button>';
@@ -732,7 +732,8 @@ button.active {
                                 </div>
                                  <?php $isOutOfStock = ($item['stock_status'] === 'out_of_stock' || (isset($item['stock_quantity']) && $item['stock_quantity'] <= 0)); ?>
                                  <button onclick='addToCart(<?php echo $currentId; ?>, 1, this, <?php echo htmlspecialchars($attributesJson, ENT_QUOTES, 'UTF-8'); ?>)' 
-                                        class="bg-primary text-white px-4 py-2 rounded hover:bg-primary-light hover:text-white transition text-sm <?php echo $isOutOfStock ? 'opacity-50 cursor-not-allowed' : ''; ?>"
+                                        id="shopAddToCartBtn"
+                                        class="bg-primary text-white px-4 py-2 rounded hover:bg-primary-light hover:text-white transition text-sm productAddToCartBtn <?php echo $isOutOfStock ? 'opacity-50 cursor-not-allowed' : ''; ?>"
                                         aria-label="Add <?php echo htmlspecialchars($itemName); ?> to cart"
                                         <?php echo $isOutOfStock ? 'disabled' : ''; ?>>
                                     <i class="fas fa-shopping-cart mr-1" aria-hidden="true"></i> <?php echo $isOutOfStock ? get_stock_status_text($item['stock_status'], $item['stock_quantity']) : 'Add to Cart'; ?>

@@ -125,7 +125,7 @@ if (isset($_GET['ajax'])) {
                                 <i class="fas fa-eye" aria-hidden="true"></i>
                                 <span class="product-tooltip">Quick View</span>
                             </a>
-                            <button id="product-card-add-to-cart-btn" class="product-action-btn w-10 h-10 bg-white rounded-full flex items-center justify-center hover:bg-black hover:text-white transition shadow-lg add-to-cart-hover-btn relative group ' . ($isOutOfStock ? 'opacity-50 cursor-not-allowed' : '') . '" 
+                            <button id="product-card-add-to-cart-btn" class="productAddToCartBtn product-action-btn w-10 h-10 bg-white rounded-full flex items-center justify-center hover:bg-black hover:text-white transition shadow-lg add-to-cart-hover-btn relative group ' . ($isOutOfStock ? 'opacity-50 cursor-not-allowed' : '') . '" 
                                     data-product-id="' . $item['product_id'] . '"
                                     aria-label="Add product to cart"
                                     data-attributes=\'' . htmlspecialchars($attributesJson, ENT_QUOTES, 'UTF-8') . '\'
@@ -321,7 +321,7 @@ if (empty($catImageRaw)) {
                                     <i class="fas fa-eye" aria-hidden="true"></i>
                                     <span class="product-tooltip">Quick View</span>
                                 </a>
-                                <button id="product-card-add-to-cart-btn" class="product-action-btn w-10 h-10 bg-white rounded-full flex items-center justify-center hover:bg-black hover:text-white transition shadow-lg add-to-cart-hover-btn relative group <?php echo $isOutOfStock ? 'opacity-50 cursor-not-allowed' : ''; ?>" 
+                                <button id="product-card-add-to-cart-btn" class="productAddToCartBtnproduct-action-btn w-10 h-10 bg-white rounded-full flex items-center justify-center hover:bg-black hover:text-white transition shadow-lg add-to-cart-hover-btn relative group <?php echo $isOutOfStock ? 'opacity-50 cursor-not-allowed' : ''; ?>" 
                                         data-product-id="<?php echo $item['product_id']; ?>"
                                         aria-label="Add product to cart"
                                         data-attributes='<?php echo htmlspecialchars($attributesJson, ENT_QUOTES, 'UTF-8'); ?>'
