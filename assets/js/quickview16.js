@@ -173,11 +173,11 @@ function createQuickViewModal(){if(document.getElementById("quickViewModal"))ret
                             <input type="text" id="qvQuantity" value="1" class="w-full flex-1 text-center border-none focus:ring-0 outline-none focus:outline-none p-0 h-full text-black font-bold text-lg bg-transparent shadow-none" readonly>
                             <button onclick="updateQVQuantity(1)" class="w-8 h-full flex items-center justify-center hover:bg-gray-100 text-black transition text-lg font-medium focus:outline-none">+</button>
                         </div>
-                        <button onclick="addToCartFromQV(${t.product_id||t.id})" class="flex-1 bg-black text-white h-full rounded-full hover:bg-gray-800 transition-all font-bold uppercase flex items-center justify-center gap-2 shadow-lg text-sm">
+                        <button id="qvAddToCartBtn" onclick="addToCartFromQV(${t.product_id||t.id})" class="flex-1 bg-black text-white h-full rounded-full hover:bg-gray-800 transition-all font-bold uppercase flex items-center justify-center gap-2 shadow-lg text-sm">
                             <i class="fas fa-shopping-cart"></i> <span>Add to Cart</span>
                         </button>
                     </div>
-                    <button onclick="buyNowFromQV(${t.product_id||t.id})" class="w-full bg-red-700 text-white h-12 rounded-full hover:bg-red-800 transition-all font-bold uppercase shadow-lg text-sm">
+                    <button id="qvBuyNowBtn" onclick="buyNowFromQV(${t.product_id||t.id})" class="w-full bg-red-700 text-white h-12 rounded-full hover:bg-red-800 transition-all font-bold uppercase shadow-lg text-sm">
                         Buy It Now
                     </button>
                 </div>
