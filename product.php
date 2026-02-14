@@ -613,6 +613,10 @@ $stockLabel = get_stock_status_text($currentStatus, $currentStock, $totalSold);
                             id="productCartAddToCartBtn"
                             class="flex-1 bg-black text-white py-4 px-6 hover:bg-gray-800 transition font-semibold flex items-center justify-center add-to-cart-btn <?php echo $isOutOfStock ? 'opacity-50 cursor-not-allowed' : ''; ?>"
                             data-loading-text="Adding..."
+                            data-product-id="<?php echo $productData['product_id']; ?>"
+                            data-product-name="<?php echo htmlspecialchars($productData['name'] ?? ''); ?>"
+                            data-product-price="<?php echo $price; ?>"
+                            data-product-slug="<?php echo htmlspecialchars($productData['slug'] ?? ''); ?>"
                             <?php echo $isOutOfStock ? 'disabled' : ''; ?>>
                         <?php if ($isOutOfStock): ?>
                             <?php echo $stockLabel; ?>
@@ -625,6 +629,10 @@ $stockLabel = get_stock_status_text($currentStatus, $currentStock, $totalSold);
                             id="productCartBuyNowBtn"
                             class="flex-1 bg-red-700 text-white py-4 px-6 hover:bg-red-600 transition font-semibold buy-now-btn <?php echo $isOutOfStock ? 'opacity-50 cursor-not-allowed' : ''; ?>"
                             data-loading-text="Processing..."
+                            data-product-id="<?php echo $productData['product_id']; ?>"
+                            data-product-name="<?php echo htmlspecialchars($productData['name'] ?? ''); ?>"
+                            data-product-price="<?php echo $price; ?>"
+                            data-product-slug="<?php echo htmlspecialchars($productData['slug'] ?? ''); ?>"
                             <?php echo $isOutOfStock ? 'disabled' : ''; ?>>
                         Buy It Now
                     </button>

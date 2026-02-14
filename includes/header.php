@@ -420,6 +420,20 @@ if (!function_exists('url')) {
     
     <!-- TinyMCE Content Styles -->
     <link rel="stylesheet" href="<?php echo $baseUrl; ?>/assets/css/richtext.css">
+
+    <style>
+        /* GTM Tracking Fix: Ensure clicks on icons register on the button */
+        #product-card-quick-view-btn i,
+        #product-card-add-to-cart-btn i,
+        #qvAddToCartBtn i,
+        #qvBuyNowBtn i,
+        .product-action-btn i,
+        .quick-view-btn i,
+        .add-to-cart-btn i,
+        .buy-now-btn i {
+            pointer-events: none;
+        }
+    </style>
     
     <script>
     // Make BASE_URL available globally for all frontend pages
