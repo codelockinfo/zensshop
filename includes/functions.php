@@ -477,7 +477,12 @@ function renderFrontendMenuItem($item, $landingPagesList = [], $level = 0, $show
                  <!-- Mega Menu Container -->
                  <div class="mega-menu-dropdown absolute top-full left-1/2 transform -translate-x-1/2 pt-3 invisible opacity-0 translate-y-2 group-hover:visible group-hover:opacity-100 group-hover:translate-y-0 transition-all duration-300 ease-out z-50 w-max max-w-screen-xl">
                      <div class="bg-white rounded-lg shadow-xl border border-gray-100 p-6">
-                         <div class="grid grid-cols-6 gap-8 text-left">
+                         <?php 
+                         // Determine column count class dynamically
+                         $childCount = count($children);
+                         $gridCols = ($childCount >= 6) ? 6 : max(1, $childCount);
+                         ?>
+                         <div class="grid grid-cols-<?php echo $gridCols; ?> gap-8 text-left">
                              <?php foreach ($children as $colItem): 
                                  $colHasChildren = !empty($colItem['children']);
                                  $colHasImage = !empty($colItem['image_path']);
