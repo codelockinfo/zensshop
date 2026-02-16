@@ -108,6 +108,9 @@ require_once __DIR__ . '/includes/header.php';
                     <div class="group relative bg-white border border-gray-200 rounded-lg overflow-hidden hover:shadow-lg transition-shadow flex flex-col h-full">
                         <div class="absolute top-2 md:top-4 right-2 md:right-4 z-10 flex flex-col items-center gap-2">
                             <!-- Remove Button -->
+                            <?php 
+                            $finalPrice = !empty($item['sale_price']) ? $item['sale_price'] : $item['price'];
+                            ?>
                             <button onclick="removeFromWishlist(<?php echo $item['product_id']; ?>)" 
                                     class="bg-white rounded-full h-9 w-9 shadow-md hover:bg-black hover:text-white transition flex items-center justify-center text-gray-500 relative group product-action-btn">
                                 <i class="fas fa-times"></i>

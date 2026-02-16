@@ -452,6 +452,12 @@ function renderFrontendMenuItem($item, $landingPagesList = [], $level = 0, $show
 
         // Layout Render
         $parentClass = "relative group";
+        
+        // For Mega Menus, make parent static so dropdown positions relative to main nav container (centered)
+        if ($isMega && $level === 0) {
+            $parentClass = "group static";
+        }
+        
         if($level > 0) $parentClass .= "/sub"; 
 
         if ($level === 0) {
@@ -469,9 +475,9 @@ function renderFrontendMenuItem($item, $landingPagesList = [], $level = 0, $show
                  
                  <?php if ($isMega): ?>
                  <!-- Mega Menu Container -->
-                 <div class="mega-menu-dropdown absolute top-full left-0 pt-3 hidden group-hover:block z-50 transition-all duration-200 w-max max-w-screen-xl" onmouseenter="adjustMegaMenuPosition(this)">
+                 <div class="mega-menu-dropdown absolute top-full left-1/2 transform -translate-x-1/2 pt-3 invisible opacity-0 translate-y-2 group-hover:visible group-hover:opacity-100 group-hover:translate-y-0 transition-all duration-300 ease-out z-50 w-max max-w-screen-xl">
                      <div class="bg-white rounded-lg shadow-xl border border-gray-100 p-6">
-                         <div class="flex gap-8">
+                         <div class="grid grid-cols-6 gap-8 text-left">
                              <?php foreach ($children as $colItem): 
                                  $colHasChildren = !empty($colItem['children']);
                                  $colHasImage = !empty($colItem['image_path']);
@@ -479,11 +485,24 @@ function renderFrontendMenuItem($item, $landingPagesList = [], $level = 0, $show
                                  $colUrl = url($colItem['url']);
                                  $colImage = $colHasImage ? getImageUrl($colItem['image_path']) : '';
                                  $colBadge = $colItem['badge_text'] ?? '';
+                                 
+                                 // SPLIT LOGIC: If this column has > 10 children, we need to split it across multiple grid columns
+                                 $maxSubItems = 10;
+                                 $subItemChunks = [$colItem['children'] ?? []]; // Default: single chunk (all children)
+                                 
+                                 if ($colHasChildren && count($colItem['children']) > $maxSubItems) {
+                                     $subItemChunks = array_chunk($colItem['children'], $maxSubItems);
+                                 }
+                                 
+                                 // Iterate through chunks. The first chunk gets the main Header/Image. 
+                                 // Subsequent chunks are just "continuation" columns.
+                                 foreach ($subItemChunks as $chunkIndex => $chunk):
+                                     $isFirstChunk = ($chunkIndex === 0);
                              ?>
                                  <!-- Mega Menu Column -->
-                                 <div class="flex flex-col space-y-3 min-w-[200px]">
+                                 <div class="flex flex-col space-y-3 min-w-[160px]">
                                      
-                                     <?php if ($colHasImage && !$colHasChildren): ?>
+                                     <?php if ($isFirstChunk && $colHasImage && !$colHasChildren): ?>
                                          <!-- Image Card Column (only for leaf nodes with images) -->
                                           <a href="<?php echo $colUrl; ?>" class="group/card block text-center">
                                             <div class="relative overflow-hidden rounded-lg mb-3 shadow-sm border border-gray-100">
@@ -500,18 +519,24 @@ function renderFrontendMenuItem($item, $landingPagesList = [], $level = 0, $show
                                             </div>
                                           </a>
                                      <?php else: ?>
-                                         <!-- Text List Column (with or without small icon) -->
-                                         <a href="<?php echo $colUrl; ?>" class="font-bold text-gray-900 border-b border-transparent hover:text-red-700 transition inline-block mb-2 text-md font-sans">
-                                             <?php if($colHasImage): ?>
-                                                 <img src="<?php echo $colImage; ?>" alt="" class="inline-block w-5 h-5 mr-2 object-contain">
-                                             <?php endif; ?>
-                                             <?php echo $colLabel; ?>
-                                             <?php if($colBadge): ?> <span class="text-[9px] bg-blue-500 text-white px-1 rounded ml-1 align-top"><?php echo $colBadge; ?></span> <?php endif; ?>
-                                         </a>
+                                         <!-- Text Header (Only for first chunk) -->
+                                         <?php if ($isFirstChunk): ?>
+                                             <a href="<?php echo $colUrl; ?>" class="font-bold text-gray-900 border-b border-transparent hover:text-red-700 transition inline-block mb-2 text-md font-sans">
+                                                 <?php if($colHasImage): ?>
+                                                     <img src="<?php echo $colImage; ?>" alt="" class="inline-block w-5 h-5 mr-2 object-contain">
+                                                 <?php endif; ?>
+                                                 <?php echo $colLabel; ?>
+                                                 <?php if($colBadge): ?> <span class="text-[9px] bg-blue-500 text-white px-1 rounded ml-1 align-top"><?php echo $colBadge; ?></span> <?php endif; ?>
+                                             </a>
+                                         <?php else: ?>
+                                             <!-- Spacer for continuation columns to align with items -->
+                                             <div class="h-[2rem]"></div> 
+                                         <?php endif; ?>
                                          
-                                         <?php if($colHasChildren): ?>
+                                         <!-- Sub Items List -->
+                                         <?php if(!empty($chunk)): ?>
                                              <ul class="space-y-2">
-                                                 <?php foreach($colItem['children'] as $subItem): 
+                                                 <?php foreach($chunk as $subItem): 
                                                       $subBadge = $subItem['badge_text'] ?? '';
                                                  ?>
                                                      <li>
@@ -526,20 +551,39 @@ function renderFrontendMenuItem($item, $landingPagesList = [], $level = 0, $show
                                      <?php endif; ?>
                                      
                                  </div>
-                             <?php endforeach; ?>
+                             <?php endforeach; // End chunks loop ?>
+                             <?php endforeach; // End children loop ?>
                          </div>
                      </div>
                  </div>
                  
                  <?php else: ?>
                  <!-- Standard Single Dropdown (Level 0 -> Level 1) -->
-                 <div class="absolute top-full left-0 pt-3 hidden group-hover:block z-50 min-w-[200px]">
+                 <?php 
+                 $limit = 10;
+                 if (count($children) > $limit): 
+                     $chunks = array_chunk($children, $limit);
+                 ?>
+                 <div class="absolute top-full left-0 pt-3 invisible opacity-0 translate-y-2 group-hover:visible group-hover:opacity-100 group-hover:translate-y-0 transition-all duration-300 ease-out z-50 w-max max-w-screen-xl">
+                     <div class="bg-white rounded-lg shadow-lg border border-gray-100 py-2 flex flex-row">
+                         <?php foreach ($chunks as $index => $chunk): ?>
+                             <div class="flex flex-col w-64 <?php echo $index > 0 ? 'border-gray-100' : ''; ?>">
+                                 <?php foreach ($chunk as $child): 
+                                      renderFrontendMenuItem($child, [], $level + 1, false);
+                                 endforeach; ?>
+                             </div>
+                         <?php endforeach; ?>
+                     </div>
+                 </div>
+                 <?php else: ?>
+                 <div class="absolute top-full left-0 pt-3 invisible opacity-0 translate-y-2 group-hover:visible group-hover:opacity-100 group-hover:translate-y-0 transition-all duration-300 ease-out z-50 w-64">
                      <div class="bg-white rounded-lg shadow-lg border border-gray-100 py-2 flex flex-col">
                         <?php foreach ($children as $child): 
                              renderFrontendMenuItem($child, [], $level + 1, false);
                         endforeach; ?>
                      </div>
                  </div>
+                 <?php endif; ?>
                  <?php endif; ?>
             </div>
             <?php
@@ -553,7 +597,7 @@ function renderFrontendMenuItem($item, $landingPagesList = [], $level = 0, $show
                     <i class="fas fa-chevron-right text-xs"></i>
                  </a>
                  <!-- Flyout -->
-                 <div class="absolute top-0 left-full pl-1 hidden group-hover/sub:block z-50 min-w-[180px]">
+                 <div class="absolute top-0 left-full pl-1 invisible opacity-0 -translate-x-2 group-hover/sub:visible group-hover/sub:opacity-100 group-hover/sub:translate-x-0 transition-all duration-300 ease-out z-50 w-64">
                      <div class="bg-white rounded-lg py-1 shadow-lg border border-gray-100">
                          <?php foreach ($children as $child): 
                               renderFrontendMenuItem($child, [], $level + 1, $showImages);

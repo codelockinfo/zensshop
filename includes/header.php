@@ -484,6 +484,8 @@ if (!function_exists('url')) {
         });
     }
     
+    /* 
+    // DISABLED: Conflict with new CSS-based centering
     // Auto-adjust all mega menus on window resize and hover
     window.addEventListener('resize', () => {
         document.querySelectorAll('.mega-menu-dropdown').forEach(menu => {
@@ -503,6 +505,7 @@ if (!function_exists('url')) {
             });
         });
     });
+    */
     </script>
     <style>
     /* Multi-level Dropdown Support */
