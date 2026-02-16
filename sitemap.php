@@ -20,11 +20,22 @@ $staticPages = [
     '' => ['priority' => '1.0', 'freq' => 'weekly'],
     'shop' => ['priority' => '0.9', 'freq' => 'daily'],
     'about' => ['priority' => '0.8', 'freq' => 'monthly'],
-    'contact' => ['priority' => '0.8', 'freq' => 'monthly'],
+    'support' => ['priority' => '0.8', 'freq' => 'monthly'],
     'login' => ['priority' => '0.6', 'freq' => 'monthly'],
     'register' => ['priority' => '0.6', 'freq' => 'monthly'],
     'wishlist' => ['priority' => '0.5', 'freq' => 'weekly'],
     'cart' => ['priority' => '0.5', 'freq' => 'weekly'],
+    'special-product' => ['priority' => '0.5', 'freq' => 'weekly'],
+    'account' => ['priority' => '0.5', 'freq' => 'weekly'],
+    'blog' => ['priority' => '0.5', 'freq' => 'weekly'],
+    'blog/:slug' => ['priority' => '0.5', 'freq' => 'weekly'],
+    'login' => ['priority' => '0.6', 'freq' => 'monthly'],
+    'register' => ['priority' => '0.6', 'freq' => 'monthly'],
+    'privacy-policy' => ['priority' => '0.6', 'freq' => 'monthly'],
+    'terms-conditions' => ['priority' => '0.6', 'freq' => 'monthly'],
+    'shipping-policy' => ['priority' => '0.5', 'freq' => 'monthly'],
+    'return-refund-policy' => ['priority' => '0.5', 'freq' => 'monthly'],
+    'return-policy' => ['priority' => '0.5', 'freq' => 'monthly'],
 ];
 
 foreach ($staticPages as $path => $meta) {
