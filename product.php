@@ -780,14 +780,18 @@ $stockLabel = get_stock_status_text($currentStatus, $currentStock, $totalSold);
                     </button>
                     <div id="shipping-content" class="max-h-0 overflow-hidden transition-all duration-500 ease-in-out text-gray-700 text-sm">
                         <div class="pb-4">
-                            <?php if (!empty($productData['shipping_policy'])): ?>
-                                <div class="prose prose-sm max-w-none text-[15px]">
-                                    <?php echo $productData['shipping_policy']; ?>
-                                </div>
-                            <?php else: ?>
-                                <p>We offer free shipping on all orders over <?php echo format_price(150, $productData['currency'] ?? 'USD'); ?>. Standard shipping takes 3-5 business days. International shipping may take 7-14 business days.</p>
-                                <p class="mt-2">Returns are accepted within 30 days of purchase. Items must be unworn and in original packaging.</p>
-                            <?php endif; ?>
+                            <div class="prose prose-sm max-w-none text-[15px]">
+                                <?php 
+                                $shippingPolicy = $productData['shipping_policy'] ?? '';
+                                if (empty($shippingPolicy)) {
+                                    $shippingPolicy = $settings->get('default_shipping_policy', '');
+                                }
+                                if (empty($shippingPolicy)) {
+                                    $shippingPolicy = '<p>We offer free shipping on all orders over ' . format_price(150, $productData['currency'] ?? 'USD') . '. Standard shipping takes 3-5 business days. International shipping may take 7-14 business days.</p><p class="mt-2">Returns are accepted within 30 days of purchase. Items must be unworn and in original packaging.</p>';
+                                }
+                                echo $shippingPolicy;
+                                ?>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -800,14 +804,18 @@ $stockLabel = get_stock_status_text($currentStatus, $currentStock, $totalSold);
                     </button>
                     <div id="returns-content" class="max-h-0 overflow-hidden transition-all duration-500 ease-in-out text-gray-700 text-sm">
                         <div class="pb-4">
-                            <?php if (!empty($productData['return_policy'])): ?>
-                                <div class="prose prose-sm max-w-none text-[15px]">
-                                    <?php echo $productData['return_policy']; ?>
-                                </div>
-                            <?php else: ?>
-                                <p>We accept returns within 30 days of purchase. Items must be in original condition with tags attached.</p>
-                                <p class="mt-2">To initiate a return, please contact our customer service team or visit your account page.</p>
-                            <?php endif; ?>
+                            <div class="prose prose-sm max-w-none text-[15px]">
+                                <?php 
+                                $returnPolicy = $productData['return_policy'] ?? '';
+                                if (empty($returnPolicy)) {
+                                    $returnPolicy = $settings->get('default_return_policy', '');
+                                }
+                                if (empty($returnPolicy)) {
+                                    $returnPolicy = '<p>We accept returns within 30 days of purchase. Items must be in original condition with tags attached.</p><p class="mt-2">To initiate a return, please contact our customer service team or visit your account page.</p>';
+                                }
+                                echo $returnPolicy;
+                                ?>
+                            </div>
                         </div>
                     </div>
                 </div>

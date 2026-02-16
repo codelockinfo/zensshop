@@ -298,6 +298,15 @@ $action = $segments[count($segments) - 1] ?? '';  // add, list
                 height: 350,
                 menubar: false
             });
+
+            // Initialize "Small" editors (System Settings Defaults)
+            tinymce.init({
+                ...sharedConfig,
+                selector: '.rich-text-small',
+                height: 200,
+                menubar: false,
+                statusbar: true
+            });
         }
     });
     </script>

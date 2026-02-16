@@ -365,6 +365,38 @@ $variants = $variantsData['variants'] ?? [];
                     <label class="admin-form-label">Description</label>
                     <div class="text-gray-700 prose prose-sm max-w-none"><?php echo $productData['description'] ?? 'No description available'; ?></div>
                 </div>
+                
+                <div>
+                    <label class="admin-form-label">Highlights</label>
+                    <div class="space-y-2">
+                        <?php 
+                        $highlights = json_decode($productData['highlights'] ?? '[]', true);
+                        if (!empty($highlights)):
+                            foreach ($highlights as $h): ?>
+                        <div class="flex items-center text-gray-700">
+                            <i class="<?php echo htmlspecialchars($h['icon'] ?: 'fas fa-check'); ?> mr-2 text-blue-500"></i>
+                            <span><?php echo htmlspecialchars($h['text']); ?></span>
+                        </div>
+                        <?php endforeach; 
+                        else: ?>
+                        <p class="text-gray-500 italic text-sm">No highlights added.</p>
+                        <?php endif; ?>
+                    </div>
+                </div>
+
+                <div>
+                    <label class="admin-form-label">Shipping Policy</label>
+                    <div class="text-gray-700 prose prose-sm max-w-none border-l-4 border-gray-100 pl-3">
+                        <?php echo !empty($productData['shipping_policy']) ? $productData['shipping_policy'] : '<span class="text-gray-500 italic text-sm">Default shipping policy applies.</span>'; ?>
+                    </div>
+                </div>
+
+                <div>
+                    <label class="admin-form-label">Return Policy</label>
+                    <div class="text-gray-700 prose prose-sm max-w-none border-l-4 border-gray-100 pl-3">
+                        <?php echo !empty($productData['return_policy']) ? $productData['return_policy'] : '<span class="text-gray-500 italic text-sm">Default return policy applies.</span>'; ?>
+                    </div>
+                </div>
             </div>
         </div>
         

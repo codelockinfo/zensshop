@@ -728,7 +728,7 @@ unset($_SESSION['error']);
                     <label class="block text-sm font-medium text-gray-700 mb-2">Pickup Message (HTML/Rich Text)</label>
                     <input type="hidden" name="group_pickup_message" value="product">
                     <textarea name="setting_pickup_message" rows="4"
-                           class="w-full px-4 py-2 border rounded focus:ring-2 focus:ring-indigo-500 rich-text-editor"><?php echo htmlspecialchars($settings->get('pickup_message', 'Pickup available at Shop location. Usually ready in 24 hours')); ?></textarea>
+                           class="w-full px-4 py-2 border rounded focus:ring-2 focus:ring-indigo-500 rich-text-small"><?php echo htmlspecialchars($settings->get('pickup_message', 'Pickup available at Shop location. Usually ready in 24 hours')); ?></textarea>
                 </div>
 
                 <!-- Pickup Icon -->
@@ -758,6 +758,31 @@ unset($_SESSION['error']);
                     <input type="text" name="setting_pickup_link_url" 
                            value="<?php echo htmlspecialchars($settings->get('pickup_link_url', '#')); ?>" 
                            class="w-full px-4 py-2 border rounded focus:ring-2 focus:ring-indigo-500">
+                </div>
+
+                <!-- Default Policies -->
+                <div class="md:col-span-2 border-t pt-4 mt-4">
+                    <h3 class="text-lg font-bold text-gray-800 mb-3 flex items-center">
+                        <i class="fas fa-scroll mr-2 text-indigo-600"></i>
+                        Default Policies
+                    </h3>
+                    <p class="text-xs text-gray-500 mb-4">These values will be shown when a product does not have a specific policy defined.</p>
+                    
+                    <div class="grid grid-cols-1 gap-4">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Default Shipping Policy</label>
+                            <input type="hidden" name="group_default_shipping_policy" value="product">
+                            <textarea name="setting_default_shipping_policy" rows="3"
+                                   class="w-full px-4 py-2 border rounded focus:ring-2 focus:ring-indigo-500 rich-text-small"><?php echo htmlspecialchars($settings->get('default_shipping_policy', '')); ?></textarea>
+                        </div>
+                        
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Default Return Policy</label>
+                            <input type="hidden" name="group_default_return_policy" value="product">
+                            <textarea name="setting_default_return_policy" rows="3"
+                                   class="w-full px-4 py-2 border rounded focus:ring-2 focus:ring-indigo-500 rich-text-small"><?php echo htmlspecialchars($settings->get('default_return_policy', '')); ?></textarea>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
