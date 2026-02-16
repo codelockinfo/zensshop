@@ -77,6 +77,7 @@ if (isset($_GET['ajax'])) {
             $price = $item['sale_price'] ?? $item['price'];
             $originalPrice = $item['sale_price'] ? $item['price'] : null;
             $discount = $originalPrice ? round((($originalPrice - $price) / $originalPrice) * 100) : 0;
+            $finalPrice = $price;
             $currentId = !empty($item['product_id']) ? $item['product_id'] : $item['id'];
             $inWishlist = in_array($currentId, $wishlistIds);
 
@@ -277,6 +278,7 @@ if (empty($catImageRaw)) {
                         $price = $item['sale_price'] ?? $item['price'];
                         $originalPrice = $item['sale_price'] ? $item['price'] : null;
                         $discount = $originalPrice ? round((($originalPrice - $price) / $originalPrice) * 100) : 0;
+                        $finalPrice = $price;
                         $currentId = !empty($item['product_id']) ? $item['product_id'] : $item['id'];
                         $inWishlist = in_array($currentId, $wishlistIds);
 

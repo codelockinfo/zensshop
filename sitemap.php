@@ -28,7 +28,6 @@ $staticPages = [
     'special-product' => ['priority' => '0.5', 'freq' => 'weekly'],
     'account' => ['priority' => '0.5', 'freq' => 'weekly'],
     'blog' => ['priority' => '0.5', 'freq' => 'weekly'],
-    'blog/:slug' => ['priority' => '0.5', 'freq' => 'weekly'],
     'login' => ['priority' => '0.6', 'freq' => 'monthly'],
     'register' => ['priority' => '0.6', 'freq' => 'monthly'],
     'privacy-policy' => ['priority' => '0.6', 'freq' => 'monthly'],
@@ -36,6 +35,8 @@ $staticPages = [
     'shipping-policy' => ['priority' => '0.5', 'freq' => 'monthly'],
     'return-refund-policy' => ['priority' => '0.5', 'freq' => 'monthly'],
     'return-policy' => ['priority' => '0.5', 'freq' => 'monthly'],
+    'category' => ['priority' => '0.5', 'freq' => 'monthly'],
+    'collections' => ['priority' => '0.5', 'freq' => 'monthly'],
 ];
 
 foreach ($staticPages as $path => $meta) {
@@ -85,7 +86,7 @@ try {
     $blogs = $db->fetchAll("SELECT slug, updated_at FROM blogs WHERE status = 'published'");
     foreach ($blogs as $blog) {
         echo '<url>';
-        echo '<loc>' . htmlspecialchars($baseUrl . '/blog/' . $blog['slug']) . '</loc>';
+        echo '<loc>' . htmlspecialchars($baseUrl . '/blog?slug=' . $blog['slug']) . '</loc>';
         $lastMod = !empty($blog['updated_at']) ? date('Y-m-d', strtotime($blog['updated_at'])) : date('Y-m-d');
         echo '<lastmod>' . $lastMod . '</lastmod>';
         echo '<changefreq>weekly</changefreq>';
@@ -100,10 +101,10 @@ try {
 // Get published pages
 try {
     // Assuming 'pages' table exists (admin/pages.php exists)
-    $cmsPages = $db->fetchAll("SELECT slug, updated_at FROM pages WHERE status = 'published'");
+    $cmsPages = $db->fetchAll("SELECT slug, updated_at FROM pages WHERE status = 'active'");
     foreach ($cmsPages as $page) {
         echo '<url>';
-        echo '<loc>' . htmlspecialchars($baseUrl . '/page/' . $page['slug']) . '</loc>';
+        echo '<loc>' . htmlspecialchars($baseUrl . '/' . $page['slug']) . '</loc>';
         $lastMod = !empty($page['updated_at']) ? date('Y-m-d', strtotime($page['updated_at'])) : date('Y-m-d');
         echo '<lastmod>' . $lastMod . '</lastmod>';
         echo '<changefreq>monthly</changefreq>';
