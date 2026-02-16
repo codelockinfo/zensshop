@@ -159,7 +159,7 @@ class Email {
     /**
      * Send order confirmation email
      */
-    public function sendOrderConfirmation($to, $orderNumber, $customerName, $totalAmount, $items) {
+    public function sendOrderConfirmation($to, $orderNumber, $customerName, $totalAmount, $items, $orderDetails = []) {
         $subject = "Order Confirmation - Order #$orderNumber";
         
         $itemsHtml = '';
@@ -200,7 +200,27 @@ class Email {
             </table>
             
             <div style='text-align: right; margin-top: 20px; border-top: 2px solid #e5e7eb; padding-top: 20px;'>
-                 <p style='font-size: 14px; margin: 0; color: #6b7280;'>Total Amount</p>
+                 " . (!empty($orderDetails) ? "
+                 <p style='margin: 5px 0; font-size: 14px;'>
+                    <span style='color: #6b7280; margin-right: 20px;'>Subtotal (Excl. Tax):</span>
+                    <span style='font-weight: 500; display: inline-block; min-width: 80px;'>₹" . number_format($orderDetails['subtotal'] ?? 0, 2) . "</span>
+                 </p>
+                 <p style='margin: 5px 0; font-size: 14px;'>
+                    <span style='color: #6b7280; margin-right: 20px;'>Shipping/Delivery:</span>
+                    <span style='font-weight: 500; display: inline-block; min-width: 80px;'>₹" . number_format($orderDetails['shipping_amount'] ?? 0, 2) . "</span>
+                 </p>
+                 " . (($orderDetails['discount_amount'] ?? 0) > 0 ? "
+                 <p style='margin: 5px 0; font-size: 14px; color: #dc2626;'>
+                    <span style='margin-right: 20px;'>Discount:</span>
+                    <span style='font-weight: 500; display: inline-block; min-width: 80px;'>-₹" . number_format($orderDetails['discount_amount'], 2) . "</span>
+                 </p>" : "") . "
+                 <p style='margin: 5px 0; font-size: 14px;'>
+                    <span style='color: #6b7280; margin-right: 20px;'>Total Tax:</span>
+                    <span style='font-weight: 500; display: inline-block; min-width: 80px;'>₹" . number_format($orderDetails['tax_amount'] ?? 0, 2) . "</span>
+                 </p>
+                 <div style='height: 1px; background: #e5e7eb; margin: 10px 0 10px auto; width: 250px;'></div>
+                 " : "") . "
+                 <p style='font-size: 14px; margin: 0; color: #6b7280;'>Grand Total</p>
                  <p style='font-size: 24px; font-weight: bold; color: #111827; margin: 5px 0;'>₹" . number_format($totalAmount, 2) . "</p>
             </div>
             

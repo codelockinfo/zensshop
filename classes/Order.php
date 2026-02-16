@@ -356,7 +356,13 @@ class Order {
             require_once __DIR__ . '/Settings.php';
             Settings::loadEmailConfig($storeId);
             $email = new Email($storeId);
-            $email->sendOrderConfirmation($data['customer_email'], $orderNumber, $data['customer_name'], $totalAmount, $data['items']);
+            $emailOrderDetails = [
+                'subtotal' => $subtotal,
+                'shipping_amount' => $shippingAmount,
+                'discount_amount' => $discountAmount,
+                'tax_amount' => $taxAmount
+            ];
+            $email->sendOrderConfirmation($data['customer_email'], $orderNumber, $data['customer_name'], $totalAmount, $data['items'], $emailOrderDetails);
         } catch (Exception $e) { error_log("Failed to send order confirmation email: " . $e->getMessage()); }
         
         return [
