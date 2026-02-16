@@ -573,15 +573,34 @@ function updateCartUI() {
     const currency = (cartData.length > 0 && cartData[0].currency) || 'USD';
     
     if (sideCartFooter) {
+
+        const cartItemsJson = JSON.stringify(cartData.map(item => ({
+            id: item.product_id,
+            name: item.name,
+            price: item.price,
+            quantity: item.quantity,
+            variant: item.variant_attributes
+        }))).replace(/"/g, '&quot;');
+
         sideCartFooter.innerHTML = `
             <div class="flex justify-between items-center mb-4">
                 <span class="text-lg font-semibold">Total:</span>
                 <span class="text-xl font-bold" id="cartTotal">${formatCurrency(total, currency)}</span>
             </div>
-            <a href="${baseUrl}/cart" class="block w-full bg-primary text-white text-center py-3 rounded-lg hover:bg-primary-light hover:text-white transition mb-2">
+            <a href="${baseUrl}/cart" 
+               id="viewCartBtn"
+               data-cart-total="${total}"
+               data-cart-currency="${currency}"
+               data-cart-items="${cartItemsJson}"
+               class="block w-full bg-primary text-white text-center py-3 rounded-lg hover:bg-primary-light hover:text-white transition mb-2">
                 View Cart
             </a>
-            <a href="${baseUrl}/checkout" class="block w-full bg-black text-white text-center py-3 rounded-lg hover:text-white hover:bg-gray-800 transition">
+            <a href="${baseUrl}/checkout" 
+               id="checkoutBtn"
+               data-cart-total="${total}"
+               data-cart-currency="${currency}"
+               data-cart-items="${cartItemsJson}"
+               class="block w-full bg-black text-white text-center py-3 rounded-lg hover:text-white hover:bg-gray-800 transition">
                 Checkout
             </a>
          `;

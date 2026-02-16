@@ -539,6 +539,7 @@ if (!function_exists('url')) {
     <!-- End Google Tag Manager (noscript) -->
     <?php endif; ?>
     
+    <?php if (!isset($isCheckout) || !$isCheckout): ?>
     <!-- Top Bar -->
     <div class="block bg-black text-white text-sm py-2" style="padding: 12px 0;">
         <div class="container mx-auto px-4 flex justify-between items-center">
@@ -1416,3 +1417,4 @@ if (!empty($headerMenuItems)) {
         }
     });
     </script>
+    <?php endif; ?>

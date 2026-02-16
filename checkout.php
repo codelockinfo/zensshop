@@ -235,6 +235,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['place_order']) && emp
 ob_end_clean();
 
 $pageTitle = 'Checkout';
+$isCheckout = true;
 require_once __DIR__ . '/includes/header.php';
 
 // Re-fetch settings locally to ensure variables exist if header doesn't pass them
@@ -633,7 +634,10 @@ nav.bg-white.sticky.top-0 {
                                     <input type="text" id="discountInput" 
                                            placeholder="Discount code" 
                                            class="w-full sm:flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary">
-                                    <button type="button" id="btnApplyDiscount" class="w-full sm:w-auto px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition font-semibold">
+                                    <button type="button" id="btnApplyDiscount" 
+                                            data-order-amount="<?php echo $cartTotal; ?>"
+                                            data-coupon-code=""
+                                            class="w-full sm:w-auto px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition font-semibold">
                                         Apply
                                     </button>
                                 </div>
@@ -689,8 +693,24 @@ nav.bg-white.sticky.top-0 {
                         <!-- Payment Method Selection -->
                         <input type="hidden" name="payment_method" value="credit_card">
                         
+
                         <!-- Pay Now Button -->
-                        <button type="button" id="razorpayPayButton" class="w-full bg-blue-600 text-white py-4 px-6 rounded-lg hover:bg-blue-700 transition font-semibold mb-4">
+
+
+                        <!-- Pay Now Button -->
+                        <?php 
+                            $totalQuantity = 0;
+                            foreach ($cartItems as $item) {
+                                $totalQuantity += ($item['quantity'] ?? 1);
+                            }
+                        ?>
+                        <button type="button" id="razorpayPayButton" 
+                                data-order-amount="<?php echo $total; ?>"
+                                data-discount-amount="<?php echo $discountAmount; ?>"
+                                data-city="<?php echo htmlspecialchars($_POST['city'] ?? ($customer['shipping_address']['city'] ?? '')); ?>"
+                                data-total-quantity="<?php echo $totalQuantity; ?>"
+                                data-customer-id="<?php echo $customer['customer_id'] ?? ''; ?>"
+                                class="w-full bg-blue-600 text-white py-4 px-6 rounded-lg hover:bg-blue-700 transition font-semibold mb-4">
                             Pay Now
                         </button>
                         <!-- Honeypot Field (Hidden from users, visible to bots) -->
@@ -790,6 +810,8 @@ document.addEventListener('DOMContentLoaded', () => {
     recalculateTaxes();
 });
 
+
+
 function updateShipping() {
     const deliveryTypeInput = document.querySelector('input[name="delivery_type"]:checked');
     const deliveryType = deliveryTypeInput ? deliveryTypeInput.value : 'delivery';
@@ -804,7 +826,41 @@ function updateShipping() {
     
     if (shippingEl) shippingEl.innerText = '₹' + shipping.toFixed(2);
     if (totalEl) totalEl.innerText = '₹' + total.toFixed(2);
+
+    // Update Pay Button Attributes for Tracking
+    const payBtn = document.getElementById('razorpayPayButton');
+    const cityInput = document.querySelector('input[name="city"]');
+    if (payBtn) {
+        payBtn.setAttribute('data-order-amount', total.toFixed(2));
+        payBtn.setAttribute('data-discount-amount', window.currentDiscountAmount.toFixed(2));
+        if (cityInput) {
+             payBtn.setAttribute('data-city', cityInput.value);
+        }
+        // Clean up old attributes if present
+        payBtn.removeAttribute('data-currency');
+    }
 }
+
+// Listen for input changes to update tracking attributes immediately
+document.addEventListener('DOMContentLoaded', function() {
+    // City Update
+    const cityInput = document.querySelector('input[name="city"]');
+    const payBtn = document.getElementById('razorpayPayButton');
+    if (cityInput && payBtn) {
+        cityInput.addEventListener('input', function() {
+            payBtn.setAttribute('data-city', this.value);
+        });
+    }
+
+    // Discount Code Update
+    const discountInput = document.getElementById('discountInput');
+    const applyBtn = document.getElementById('btnApplyDiscount');
+    if (discountInput && applyBtn) {
+        discountInput.addEventListener('input', function() {
+            applyBtn.setAttribute('data-coupon-code', this.value);
+        });
+    }
+});
 
 
     

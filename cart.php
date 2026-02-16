@@ -180,7 +180,23 @@ foreach ($cartItems as $item) {
                             <span id="cartTotal"><?php echo format_price($cartTotal + $taxTotal, $cartCurrency); ?></span>
                         </div>
                     </div>
+                    <?php 
+                        $cartDataForTracking = array_map(function($item) {
+                            return [
+                                'id' => $item['product_id'],
+                                'name' => $item['name'],
+                                'price' => $item['price'],
+                                'quantity' => $item['quantity'],
+                                'variant' => $item['variant_attributes'] ?? []
+                            ];
+                        }, $cartItems);
+                        $cartTrackingJson = htmlspecialchars(json_encode($cartDataForTracking), ENT_QUOTES, 'UTF-8');
+                    ?>
                     <a href="<?php echo url('checkout'); ?>" 
+                       id="cartPageCheckoutBtn"
+                       data-cart-total="<?php echo $cartTotal; ?>"
+                       data-cart-currency="<?php echo $cartCurrency; ?>"
+                       data-cart-items="<?php echo $cartTrackingJson; ?>"
                        class="block w-full bg-black text-white text-center py-3 rounded-lg hover:text-white hover:bg-gray-800 transition mb-4 font-bold">
                         Proceed to Checkout
                     </a>
