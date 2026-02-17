@@ -13,6 +13,60 @@ $wishlist = new Wishlist();
 $product = new Product();
 $db = Database::getInstance();
 
+// Load Settings
+require_once __DIR__ . '/classes/Settings.php';
+$settingsObj = new Settings();
+
+// Fetch Content Settings
+$pageHeading = $settingsObj->get('wishlist_heading', 'Wishlist');
+$pageSubheading = $settingsObj->get('wishlist_subheading', 'Explore your saved items, blending quality and style for a refined living experience.');
+
+// Fetch Global Styles
+$globalStylesJson = $settingsObj->get('global_card_styles', '{}');
+$globalStyles = json_decode($globalStylesJson, true);
+
+// Fetch Wishlist Styles
+$stylesJson = $settingsObj->get('wishlist_styles', '[]');
+$styles = json_decode($stylesJson, true);
+
+// Extract Styles with Defaults (Global -> Wishlist Override)
+$w_page_bg_color = $styles['page_bg_color'] ?? '#ffffff';
+$w_card_bg_color = $styles['card_bg_color'] ?? $globalStyles['card_bg_color'] ?? '#ffffff';
+$w_card_title_color = $styles['card_title_color'] ?? $globalStyles['card_title_color'] ?? '#1f2937';
+$w_price_color = $styles['price_color'] ?? $globalStyles['price_color'] ?? '#1a3d32';
+$w_stock_status_color = $styles['stock_status_color'] ?? '#ef4444';
+
+// Use Global Action Button styles as base for specific buttons if not set
+$g_btn_bg = $globalStyles['btn_bg_color'] ?? '#ffffff';
+$g_btn_icon = $globalStyles['btn_icon_color'] ?? '#000000';
+$g_btn_hover_bg = $globalStyles['btn_hover_bg_color'] ?? '#000000';
+$g_btn_hover_icon = $globalStyles['btn_hover_icon_color'] ?? '#ffffff';
+
+// Global ATC Button
+$g_atc_bg = $globalStyles['atc_btn_bg_color'] ?? '#1a3d32';
+$g_atc_text = $globalStyles['atc_btn_text_color'] ?? '#ffffff';
+$g_atc_hover_bg = $globalStyles['atc_btn_hover_bg_color'] ?? '#000000';
+$g_atc_hover_text = $globalStyles['atc_btn_hover_text_color'] ?? '#ffffff';
+
+// Add to Cart Button (Wishlist) - Default to Global ATC if set, else fallback
+$w_btn_bg_color = $styles['btn_bg_color'] ?? $g_atc_bg;
+$w_btn_text_color = $styles['btn_text_color'] ?? $g_atc_text; 
+$w_btn_hover_bg_color = $styles['btn_hover_bg_color'] ?? $g_atc_hover_bg;
+$w_btn_hover_text_color = $styles['btn_hover_text_color'] ?? $g_atc_hover_text;
+
+$w_remove_bg = $styles['remove_btn_bg_color'] ?? $g_btn_bg;
+$w_remove_icon = $styles['remove_btn_icon_color'] ?? $g_btn_icon;
+$w_remove_hover_bg = $styles['remove_btn_hover_bg_color'] ?? $g_btn_hover_bg;
+$w_remove_hover_icon = $styles['remove_btn_hover_icon_color'] ?? $g_btn_hover_icon;
+
+$w_qv_bg = $styles['quick_view_bg_color'] ?? $g_btn_bg;
+$w_qv_icon = $styles['quick_view_icon_color'] ?? $g_btn_icon;
+$w_qv_hover_bg = $styles['quick_view_hover_bg_color'] ?? $g_btn_hover_bg;
+$w_qv_hover_icon = $styles['quick_view_hover_icon_color'] ?? $g_btn_hover_icon;
+
+$w_tooltip_bg = $styles['tooltip_bg_color'] ?? $globalStyles['tooltip_bg_color'] ?? '#000000';
+$w_tooltip_text = $styles['tooltip_text_color'] ?? $globalStyles['tooltip_text_color'] ?? '#ffffff';
+
 
 
 // Get wishlist items
@@ -89,7 +143,12 @@ require_once __DIR__ . '/includes/header.php';
             <span class="text-gray-900">Wishlist</span>
         </nav>
 
-        <h1 class="text-2xl md:text-4xl font-heading font-bold text-center mb-5 md:mb-12">Wishlist</h1>
+        <h1 class="text-2xl md:text-4xl font-heading font-bold text-center mb-2"><?php echo htmlspecialchars($pageHeading); ?></h1>
+        <?php if (!empty($pageSubheading)): ?>
+        <p class="text-center text-gray-600 mb-8 md:mb-12 max-w-2xl mx-auto"><?php echo htmlspecialchars($pageSubheading); ?></p>
+        <?php else: ?>
+        <div class="mb-5 md:mb-12"></div>
+        <?php endif; ?>
         
         <?php if (empty($wishlistItems)): ?>
             <!-- Empty Wishlist -->
@@ -105,21 +164,21 @@ require_once __DIR__ . '/includes/header.php';
             <!-- Wishlist Items -->
             <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-16">
                 <?php foreach ($wishlistItems as $item): ?>
-                    <div class="group relative bg-white border border-gray-200 rounded-lg overflow-hidden hover:shadow-lg transition-shadow flex flex-col h-full">
+                    <div class="wishlist-card group relative bg-white border border-gray-200 rounded-lg overflow-hidden hover:shadow-lg transition-shadow flex flex-col h-full">
                         <div class="absolute top-2 md:top-4 right-2 md:right-4 z-10 flex flex-col items-center gap-2">
                             <!-- Remove Button -->
                             <?php 
                             $finalPrice = !empty($item['sale_price']) ? $item['sale_price'] : $item['price'];
                             ?>
                             <button onclick="removeFromWishlist(<?php echo $item['product_id']; ?>)" 
-                                    class="bg-white rounded-full h-9 w-9 shadow-md hover:bg-black hover:text-white transition flex items-center justify-center text-gray-500 relative group product-action-btn">
+                                    class="wishlist-remove-btn bg-white rounded-full h-9 w-9 shadow-md hover:bg-black hover:text-white transition flex items-center justify-center text-gray-500 relative group product-action-btn">
                                 <i class="fas fa-times"></i>
                                 <span class="product-tooltip">Remove from wishlist</span>
                             </button>
                             
                             <!-- Quick View Button -->
                             <button type="button" 
-                                    class="bg-white rounded-full h-9 w-9 shadow-md hover:bg-black hover:text-white transition flex items-center justify-center text-gray-800 quick-view-btn relative group product-action-btn opacity-0 group-hover:opacity-100 transition-opacity duration-300"
+                                    class="wishlist-qv-btn bg-white rounded-full h-9 w-9 shadow-md hover:bg-black hover:text-white transition flex items-center justify-center text-gray-800 quick-view-btn relative group product-action-btn opacity-0 group-hover:opacity-100 transition-opacity duration-300"
                                     data-product-id="<?php echo $item['product_id']; ?>"
                                     data-product-name="<?php echo htmlspecialchars($item['name'] ?? ''); ?>"
                                     data-product-price="<?php echo $finalPrice; ?>"
@@ -168,7 +227,7 @@ require_once __DIR__ . '/includes/header.php';
                                 $displayPrice = !empty($item['sale_price']) ? $item['sale_price'] : $item['price'];
                                 $originalPrice = (!empty($item['sale_price']) && $item['sale_price'] < $item['price']) ? $item['price'] : null;
                                 ?>
-                                <span class="text-base font-bold <?php echo $originalPrice ? 'text-[#1a3d32]' : 'text-primary'; ?>">
+                                <span class="product-price text-base font-bold <?php echo $originalPrice ? '' : 'text-primary'; ?>">
                                     <?php echo format_price($displayPrice, $item['currency'] ?? 'USD'); ?>
                                 </span>
                                 <?php if ($originalPrice): ?>
@@ -196,10 +255,10 @@ require_once __DIR__ . '/includes/header.php';
                             ?>
                             <button onclick='addToCart(<?php echo $item['product_id']; ?>, 1, this, <?php echo htmlspecialchars($attributesJson, ENT_QUOTES, 'UTF-8'); ?>)'
                                     id="wishlistAddToCartBtn"
-                                    class="productAddToCartBtn w-full bg-[#1a3d32] text-white px-4 py-2.5 rounded hover:bg-black transition text-xs font-bold flex items-center justify-center gap-2 <?php echo $isOutOfStock ? 'opacity-50 cursor-not-allowed' : ''; ?>"
+                                    class="wishlist-atc-btn productAddToCartBtn w-full text-white px-4 py-2.5 rounded hover:bg-black transition text-xs font-bold flex items-center justify-center gap-2 <?php echo $isOutOfStock ? 'opacity-50 cursor-not-allowed' : ''; ?>"
                                     <?php echo $isOutOfStock ? 'disabled' : ''; ?>>
                                 <?php if ($isOutOfStock): ?>
-                                    <span><?php echo strtoupper(get_stock_status_text($item['stock_status'] ?? 'in_stock', $item['stock_quantity'] ?? 0)); ?></span>
+                                    <span class="stock-text"><?php echo strtoupper(get_stock_status_text($item['stock_status'] ?? 'in_stock', $item['stock_quantity'] ?? 0)); ?></span>
                                 <?php else: ?>
                                     <i class="fas fa-shopping-cart text-[10px]"></i>
                                     <span>ADD TO CART</span>
@@ -294,6 +353,69 @@ require_once __DIR__ . '/includes/header.php';
     </div>
 </div>
 
+<style>
+    /* Wishlist Dynamic Styles */
+    body { background-color: <?php echo htmlspecialchars($w_page_bg_color); ?> !important; }
+    
+    /* Card Styles */
+    .wishlist-card { 
+        background-color: <?php echo htmlspecialchars($w_card_bg_color); ?> !important;
+        border-color: <?php echo ($w_card_bg_color == '#ffffff') ? '#e5e7eb' : 'transparent'; ?>;
+    }
+    
+    .wishlist-card h3 a { color: <?php echo htmlspecialchars($w_card_title_color); ?> !important; }
+    .wishlist-card .product-price { color: <?php echo htmlspecialchars($w_price_color); ?> !important; }
+    .wishlist-card .stock-text { color: <?php echo htmlspecialchars($w_stock_status_color); ?> !important; }
+    
+    /* Add to Cart Button */
+    .wishlist-atc-btn {
+        background-color: <?php echo htmlspecialchars($w_btn_bg_color); ?> !important;
+        color: <?php echo htmlspecialchars($w_btn_text_color); ?> !important;
+    }
+    .wishlist-atc-btn:hover {
+        background-color: <?php echo htmlspecialchars($w_btn_hover_bg_color); ?> !important;
+        color: <?php echo htmlspecialchars($w_btn_hover_text_color); ?> !important;
+    }
+    .wishlist-atc-btn i, .wishlist-atc-btn span {
+         color: inherit !important;
+    }
+    
+    /* Remove Button */
+    .wishlist-remove-btn {
+        background-color: <?php echo htmlspecialchars($w_remove_bg); ?> !important;
+        color: <?php echo htmlspecialchars($w_remove_icon); ?> !important;
+    }
+    .wishlist-remove-btn:hover {
+        background-color: <?php echo htmlspecialchars($w_remove_hover_bg); ?> !important;
+        color: <?php echo htmlspecialchars($w_remove_hover_icon); ?> !important;
+    }
+    .wishlist-remove-btn i {
+        color: inherit !important;
+    }
+
+    /* Quick View Button */
+    .wishlist-qv-btn {
+        background-color: <?php echo htmlspecialchars($w_qv_bg); ?> !important;
+        color: <?php echo htmlspecialchars($w_qv_icon); ?> !important;
+    }
+    .wishlist-qv-btn:hover {
+        background-color: <?php echo htmlspecialchars($w_qv_hover_bg); ?> !important;
+        color: <?php echo htmlspecialchars($w_qv_hover_icon); ?> !important;
+    }
+    .wishlist-qv-btn i {
+        color: inherit !important;
+    }
+    
+    /* Tooltip Styles */
+    .product-tooltip {
+        background-color: <?php echo htmlspecialchars($w_tooltip_bg); ?> !important;
+        color: <?php echo htmlspecialchars($w_tooltip_text); ?> !important;
+    }
+    .product-tooltip::after {
+        border-top-color: <?php echo htmlspecialchars($w_tooltip_bg); ?> !important;
+    }
+</style>
+
 <script>
 // Skeleton Loader Handling
 document.addEventListener('DOMContentLoaded', function() {
@@ -384,5 +506,3 @@ document.addEventListener('DOMContentLoaded', function() {
 </script>
 
 <?php require_once __DIR__ . '/includes/footer.php'; ?>
-
-

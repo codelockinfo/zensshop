@@ -1,0 +1,485 @@
+<?php
+ob_start();
+require_once __DIR__ . '/../classes/Database.php';
+require_once __DIR__ . '/../classes/Settings.php';
+require_once __DIR__ . '/../classes/Auth.php';
+require_once __DIR__ . '/../includes/functions.php'; 
+
+$baseUrl = getBaseUrl();
+$auth = new Auth();
+$auth->requireLogin();
+if (!$auth->isAdmin()) {
+    header('Location: ' . $baseUrl . '/admin/login.php');
+    exit;
+}
+
+$db = Database::getInstance();
+$settingsObj = new Settings();
+$success = '';
+$error = '';
+
+// Handle Form Submission
+if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    $styles = [
+        'bg_color' => $_POST['bg_color'] ?? '#ffffff', // Section BG? Maybe not needed for card but good for defaults
+        'card_bg_color' => $_POST['card_bg_color'] ?? '#ffffff',
+        'card_title_color' => $_POST['card_title_color'] ?? '#1F2937',
+        'price_color' => $_POST['price_color'] ?? '#1a3d32',
+        'compare_price_color' => $_POST['compare_price_color'] ?? '#9ca3af',
+        'badge_bg_color' => $_POST['badge_bg_color'] ?? '#ef4444',
+        'badge_text_color' => $_POST['badge_text_color'] ?? '#ffffff',
+        
+        // Action Buttons
+        'btn_bg_color' => $_POST['btn_bg_color'] ?? '#ffffff',
+        'btn_icon_color' => $_POST['btn_icon_color'] ?? '#000000',
+        'btn_hover_bg_color' => $_POST['btn_hover_bg_color'] ?? '#000000',
+        'btn_hover_icon_color' => $_POST['btn_hover_icon_color'] ?? '#ffffff',
+        'btn_active_bg_color' => $_POST['btn_active_bg_color'] ?? '#000000',
+        'btn_active_icon_color' => $_POST['btn_active_icon_color'] ?? '#ffffff',
+        
+        // Add to Cart Button (Specific)
+        'atc_btn_bg_color' => $_POST['atc_btn_bg_color'] ?? '#1a3d32',
+        'atc_btn_text_color' => $_POST['atc_btn_text_color'] ?? '#ffffff',
+        'atc_btn_hover_bg_color' => $_POST['atc_btn_hover_bg_color'] ?? '#000000',
+        'atc_btn_hover_text_color' => $_POST['atc_btn_hover_text_color'] ?? '#ffffff',
+        
+        // Tooltips
+        'tooltip_bg_color' => $_POST['tooltip_bg_color'] ?? '#000000',
+        'tooltip_text_color' => $_POST['tooltip_text_color'] ?? '#ffffff'
+    ];
+
+    if ($settingsObj->set('global_card_styles', json_encode($styles), 'appearance')) {
+        $success = "Global product card settings updated successfully!";
+    } else {
+        $error = "Failed to save settings.";
+    }
+}
+
+// Fetch Current Settings
+$savedStylesJson = $settingsObj->get('global_card_styles', '{}');
+$savedStyles = json_decode($savedStylesJson, true);
+
+// Defaults (matching Best Selling defaults)
+$s_card_bg_color = $savedStyles['card_bg_color'] ?? '#ffffff';
+$s_card_title_color = $savedStyles['card_title_color'] ?? '#1F2937';
+$s_price_color = $savedStyles['price_color'] ?? '#1a3d32';
+$s_compare_price_color = $savedStyles['compare_price_color'] ?? '#9ca3af';
+$s_badge_bg_color = $savedStyles['badge_bg_color'] ?? '#ef4444';
+$s_badge_text_color = $savedStyles['badge_text_color'] ?? '#ffffff';
+
+$s_btn_bg_color = $savedStyles['btn_bg_color'] ?? '#ffffff';
+$s_btn_icon_color = $savedStyles['btn_icon_color'] ?? '#000000';
+$s_btn_hover_bg_color = $savedStyles['btn_hover_bg_color'] ?? '#000000';
+$s_btn_hover_icon_color = $savedStyles['btn_hover_icon_color'] ?? '#ffffff';
+$s_btn_active_bg_color = $savedStyles['btn_active_bg_color'] ?? '#000000';
+$s_btn_active_icon_color = $savedStyles['btn_active_icon_color'] ?? '#ffffff';
+
+$s_atc_btn_bg_color = $savedStyles['atc_btn_bg_color'] ?? '#1a3d32';
+$s_atc_btn_text_color = $savedStyles['atc_btn_text_color'] ?? '#ffffff';
+$s_atc_btn_hover_bg_color = $savedStyles['atc_btn_hover_bg_color'] ?? '#000000';
+$s_atc_btn_hover_text_color = $savedStyles['atc_btn_hover_text_color'] ?? '#ffffff';
+
+$s_tooltip_bg_color = $savedStyles['tooltip_bg_color'] ?? '#000000';
+$s_tooltip_text_color = $savedStyles['tooltip_text_color'] ?? '#ffffff';
+
+$pageTitle = 'Global Card Design';
+require_once __DIR__ . '/../includes/admin-header.php';
+?>
+
+<div class="container mx-auto">
+    <!-- Sticky Header -->
+    <div class="mb-6 flex justify-between items-end sticky top-0 bg-[#f7f8fc] py-4 z-50 pt-0">
+        <div>
+            <h1 class="text-2xl font-bold text-gray-800 pt-4 pl-2">Global Card Design</h1>
+            <p class="text-sm text-gray-500 mt-1 pl-2">
+                <a href="<?php echo url('admin/dashboard.php'); ?>" class="hover:text-blue-600">Dashboard</a> > 
+                <a href="<?php echo url('admin/settings.php'); ?>" class="hover:text-blue-600">Settings</a> > 
+                Global Card Design
+            </p>
+        </div>
+        <div class="flex items-center gap-3">
+             <button type="button" onclick="window.location.href='<?php echo url('admin/dashboard.php'); ?>'" class="px-5 py-2.5 border border-gray-300 rounded-lg hover:bg-gray-50 bg-white text-gray-700 font-medium transition-colors">Cancel</button>
+            <button type="submit" form="settingsForm" class="bg-blue-600 text-white px-6 py-2.5 rounded-lg font-bold hover:bg-blue-700 transition shadow-sm flex items-center gap-2">
+                <i class="fas fa-save"></i> Save Changes
+            </button>
+        </div>
+    </div>
+
+    <div class="px-6">
+        <?php if ($success): ?>
+            <div class="bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded relative mb-4">
+                <?php echo htmlspecialchars($success); ?>
+            </div>
+        <?php endif; ?>
+        <?php if ($error): ?>
+            <div class="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative mb-4">
+                <?php echo htmlspecialchars($error); ?>
+            </div>
+        <?php endif; ?>
+
+        <form method="POST" id="settingsForm">
+            <div class="bg-white rounded-lg shadow-sm border border-gray-200 mb-8 overflow-hidden">
+                <div class="bg-gray-50 px-6 py-4 border-b border-gray-200">
+                    <h2 class="text-xl font-semibold text-gray-800">Global Product Card Style</h2>
+                    <p class="text-sm text-gray-500">Define the default appearance for product cards across the store (Best Selling, Trending, Wishlist, etc.).</p>
+                </div>
+                
+                <div class="p-6 grid grid-cols-1 md:grid-cols-3 gap-6">
+                    <div>
+                        <label class="block text-sm font-semibold text-gray-700 mb-2">Card Background</label>
+                        <div class="flex items-center gap-3">
+                            <input type="color" name="card_bg_color" value="<?php echo htmlspecialchars($s_card_bg_color); ?>" class="h-10 w-16 border rounded cursor-pointer p-0.5" oninput="this.nextElementSibling.value = this.value">
+                            <input type="text" value="<?php echo htmlspecialchars($s_card_bg_color); ?>" class="flex-1 border rounded p-2 text-sm uppercase" oninput="this.previousElementSibling.value = this.value">
+                        </div>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-semibold text-gray-700 mb-2">Product Title Color</label>
+                        <div class="flex items-center gap-3">
+                            <input type="color" name="card_title_color" value="<?php echo htmlspecialchars($s_card_title_color); ?>" class="h-10 w-16 border rounded cursor-pointer p-0.5" oninput="this.nextElementSibling.value = this.value">
+                            <input type="text" value="<?php echo htmlspecialchars($s_card_title_color); ?>" class="flex-1 border rounded p-2 text-sm uppercase" oninput="this.previousElementSibling.value = this.value">
+                        </div>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-semibold text-gray-700 mb-2">Price Color</label>
+                        <div class="flex items-center gap-3">
+                            <input type="color" name="price_color" value="<?php echo htmlspecialchars($s_price_color); ?>" class="h-10 w-16 border rounded cursor-pointer p-0.5" oninput="this.nextElementSibling.value = this.value">
+                            <input type="text" value="<?php echo htmlspecialchars($s_price_color); ?>" class="flex-1 border rounded p-2 text-sm uppercase" oninput="this.previousElementSibling.value = this.value">
+                        </div>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-semibold text-gray-700 mb-2">Compare Price Color</label>
+                        <div class="flex items-center gap-3">
+                            <input type="color" name="compare_price_color" value="<?php echo htmlspecialchars($s_compare_price_color); ?>" class="h-10 w-16 border rounded cursor-pointer p-0.5" oninput="this.nextElementSibling.value = this.value">
+                            <input type="text" value="<?php echo htmlspecialchars($s_compare_price_color); ?>" class="flex-1 border rounded p-2 text-sm uppercase" oninput="this.previousElementSibling.value = this.value">
+                        </div>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-semibold text-gray-700 mb-2">Discount Badge Background</label>
+                        <div class="flex items-center gap-3">
+                            <input type="color" name="badge_bg_color" value="<?php echo htmlspecialchars($s_badge_bg_color); ?>" class="h-10 w-16 border rounded cursor-pointer p-0.5" oninput="this.nextElementSibling.value = this.value">
+                            <input type="text" value="<?php echo htmlspecialchars($s_badge_bg_color); ?>" class="flex-1 border rounded p-2 text-sm uppercase" oninput="this.previousElementSibling.value = this.value">
+                        </div>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-semibold text-gray-700 mb-2">Discount Badge Text</label>
+                        <div class="flex items-center gap-3">
+                            <input type="color" name="badge_text_color" value="<?php echo htmlspecialchars($s_badge_text_color); ?>" class="h-10 w-16 border rounded cursor-pointer p-0.5" oninput="this.nextElementSibling.value = this.value">
+                            <input type="text" value="<?php echo htmlspecialchars($s_badge_text_color); ?>" class="flex-1 border rounded p-2 text-sm uppercase" oninput="this.previousElementSibling.value = this.value">
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Action Buttons Subsection -->
+                <div class="px-6 pb-6">
+                    <div class="mb-4 pt-4 border-t border-gray-100">
+                        <h3 class="font-semibold text-gray-800">Action Buttons</h3>
+                        <p class="text-xs text-gray-500">Customize Wishlist, Quick View, and Add to Cart buttons.</p>
+                    </div>
+                    
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <!-- Normal State -->
+                        <div>
+                            <label class="block text-sm font-semibold text-gray-700 mb-2">Action Button Background (Normal)</label>
+                            <div class="flex items-center gap-3">
+                                <input type="color" name="btn_bg_color" value="<?php echo htmlspecialchars($s_btn_bg_color); ?>" class="h-10 w-16 border rounded cursor-pointer p-0.5" oninput="this.nextElementSibling.value = this.value">
+                                <input type="text" value="<?php echo htmlspecialchars($s_btn_bg_color); ?>" class="flex-1 border rounded p-2 text-sm uppercase" oninput="this.previousElementSibling.value = this.value">
+                            </div>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-semibold text-gray-700 mb-2">Action Button Icon (Normal)</label>
+                            <div class="flex items-center gap-3">
+                                <input type="color" name="btn_icon_color" value="<?php echo htmlspecialchars($s_btn_icon_color); ?>" class="h-10 w-16 border rounded cursor-pointer p-0.5" oninput="this.nextElementSibling.value = this.value">
+                                <input type="text" value="<?php echo htmlspecialchars($s_btn_icon_color); ?>" class="flex-1 border rounded p-2 text-sm uppercase" oninput="this.previousElementSibling.value = this.value">
+                            </div>
+                        </div>
+                        
+                        <!-- Hover State -->
+                        <div>
+                            <label class="block text-sm font-semibold text-gray-700 mb-2">Action Button Background (Hover)</label>
+                            <div class="flex items-center gap-3">
+                                <input type="color" name="btn_hover_bg_color" value="<?php echo htmlspecialchars($s_btn_hover_bg_color); ?>" class="h-10 w-16 border rounded cursor-pointer p-0.5" oninput="this.nextElementSibling.value = this.value">
+                                <input type="text" value="<?php echo htmlspecialchars($s_btn_hover_bg_color); ?>" class="flex-1 border rounded p-2 text-sm uppercase" oninput="this.previousElementSibling.value = this.value">
+                            </div>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-semibold text-gray-700 mb-2">Action Button Icon (Hover)</label>
+                            <div class="flex items-center gap-3">
+                                <input type="color" name="btn_hover_icon_color" value="<?php echo htmlspecialchars($s_btn_hover_icon_color); ?>" class="h-10 w-16 border rounded cursor-pointer p-0.5" oninput="this.nextElementSibling.value = this.value">
+                                <input type="text" value="<?php echo htmlspecialchars($s_btn_hover_icon_color); ?>" class="flex-1 border rounded p-2 text-sm uppercase" oninput="this.previousElementSibling.value = this.value">
+                            </div>
+                        </div>
+
+                        <!-- Active State -->
+                        <div>
+                            <label class="block text-sm font-semibold text-gray-700 mb-2">Action Button Background (Active/Filled)</label>
+                            <div class="flex items-center gap-3">
+                                <input type="color" name="btn_active_bg_color" value="<?php echo htmlspecialchars($s_btn_active_bg_color); ?>" class="h-10 w-16 border rounded cursor-pointer p-0.5" oninput="this.nextElementSibling.value = this.value">
+                                <input type="text" value="<?php echo htmlspecialchars($s_btn_active_bg_color); ?>" class="flex-1 border rounded p-2 text-sm uppercase" oninput="this.previousElementSibling.value = this.value">
+                            </div>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-semibold text-gray-700 mb-2">Action Button Icon (Active/Filled)</label>
+                            <div class="flex items-center gap-3">
+                                <input type="color" name="btn_active_icon_color" value="<?php echo htmlspecialchars($s_btn_active_icon_color); ?>" class="h-10 w-16 border rounded cursor-pointer p-0.5" oninput="this.nextElementSibling.value = this.value">
+                                <input type="text" value="<?php echo htmlspecialchars($s_btn_active_icon_color); ?>" class="flex-1 border rounded p-2 text-sm uppercase" oninput="this.previousElementSibling.value = this.value">
+                            </div>
+                        </div>
+                        
+                        <!-- Tooltip -->
+                        <div>
+                            <label class="block text-sm font-semibold text-gray-700 mb-2">Tooltip Background</label>
+                            <div class="flex items-center gap-3">
+                                <input type="color" name="tooltip_bg_color" value="<?php echo htmlspecialchars($s_tooltip_bg_color); ?>" class="h-10 w-16 border rounded cursor-pointer p-0.5" oninput="this.nextElementSibling.value = this.value">
+                                <input type="text" value="<?php echo htmlspecialchars($s_tooltip_bg_color); ?>" class="flex-1 border rounded p-2 text-sm uppercase" oninput="this.previousElementSibling.value = this.value">
+                            </div>
+
+                <!-- Add to Cart Button Subsection -->
+                <div class="px-6 pb-6">
+                    <div class="mb-4 pt-4 border-t border-gray-100">
+                        <h3 class="font-semibold text-gray-800">Add to Cart Button</h3>
+                        <p class="text-xs text-gray-500">Specific styling for the main Add to Cart button (e.g. on Wishlist).</p>
+                    </div>
+                    
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <!-- Normal State -->
+                        <div>
+                            <label class="block text-sm font-semibold text-gray-700 mb-2">Button Background</label>
+                            <div class="flex items-center gap-3">
+                                <input type="color" name="atc_btn_bg_color" value="<?php echo htmlspecialchars($s_atc_btn_bg_color); ?>" class="h-10 w-16 border rounded cursor-pointer p-0.5" oninput="this.nextElementSibling.value = this.value">
+                                <input type="text" value="<?php echo htmlspecialchars($s_atc_btn_bg_color); ?>" class="flex-1 border rounded p-2 text-sm uppercase" oninput="this.previousElementSibling.value = this.value">
+                            </div>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-semibold text-gray-700 mb-2">Button Text/Icon Color</label>
+                            <div class="flex items-center gap-3">
+                                <input type="color" name="atc_btn_text_color" value="<?php echo htmlspecialchars($s_atc_btn_text_color); ?>" class="h-10 w-16 border rounded cursor-pointer p-0.5" oninput="this.nextElementSibling.value = this.value">
+                                <input type="text" value="<?php echo htmlspecialchars($s_atc_btn_text_color); ?>" class="flex-1 border rounded p-2 text-sm uppercase" oninput="this.previousElementSibling.value = this.value">
+                            </div>
+                        </div>
+                        
+                        <!-- Hover State -->
+                        <div>
+                            <label class="block text-sm font-semibold text-gray-700 mb-2">Hover Background</label>
+                            <div class="flex items-center gap-3">
+                                <input type="color" name="atc_btn_hover_bg_color" value="<?php echo htmlspecialchars($s_atc_btn_hover_bg_color); ?>" class="h-10 w-16 border rounded cursor-pointer p-0.5" oninput="this.nextElementSibling.value = this.value">
+                                <input type="text" value="<?php echo htmlspecialchars($s_atc_btn_hover_bg_color); ?>" class="flex-1 border rounded p-2 text-sm uppercase" oninput="this.previousElementSibling.value = this.value">
+                            </div>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-semibold text-gray-700 mb-2">Hover Text/Icon Color</label>
+                            <div class="flex items-center gap-3">
+                                <input type="color" name="atc_btn_hover_text_color" value="<?php echo htmlspecialchars($s_atc_btn_hover_text_color); ?>" class="h-10 w-16 border rounded cursor-pointer p-0.5" oninput="this.nextElementSibling.value = this.value">
+                                <input type="text" value="<?php echo htmlspecialchars($s_atc_btn_hover_text_color); ?>" class="flex-1 border rounded p-2 text-sm uppercase" oninput="this.previousElementSibling.value = this.value">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </form>
+    </div>
+
+    <!-- Update the main container to have padding-bottom to avoid overlap with sticky footer -->
+    <div style="padding-bottom: 450px;"></div>
+
+    <!-- Sticky Preview Footer -->
+    <div class="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.1)] z-40 transition-transform duration-300" id="previewFooter" style="transform: translateY(0);">
+        
+        <!-- Toggle Handle -->
+        <div class="absolute -top-10 left-1/2 -translate-x-1/2 bg-white border border-gray-200 border-b-0 rounded-t-lg px-4 py-2 cursor-pointer shadow-sm flex items-center gap-2" onclick="togglePreview()">
+            <span class="text-sm font-semibold text-gray-600">Live Preview</span>
+            <i class="fas fa-chevron-down transition-transform" id="previewToggleIcon"></i>
+        </div>
+
+        <div class="container mx-auto px-6 py-6" id="previewContent">
+            <div class="flex flex-col md:flex-row gap-8 items-start">
+                
+                <!-- Preview Controls/Info -->
+                <div class="w-full md:w-1/4">
+                    <h3 class="text-lg font-bold text-gray-800 mb-2">Card Preview</h3>
+                    <p class="text-sm text-gray-500 mb-4">See how your changes look in real-time. This preview uses your current form selections.</p>
+                    
+                    <div class="bg-gray-50 p-4 rounded text-xs text-gray-600 space-y-2">
+                        <p><span class="font-semibold">Note:</span> Hover effects are interactive in this preview.</p>
+                        <p>Adjust settings above to see instant updates.</p>
+                    </div>
+                </div>
+
+                <!-- Card Preview Area -->
+                <div class="w-full md:w-3/4 flex justify-center md:justify-start gap-8 overflow-x-auto pb-4">
+                    
+                    <!-- Standard Card Preview -->
+                    <div id="previewCard" class="w-64 flex-shrink-0 bg-white rounded-lg shadow-sm border border-gray-100 overflow-hidden relative group transition-all duration-300">
+                        <div class="relative overflow-hidden h-64 bg-gray-100">
+                            <!-- Discount Badge -->
+                            <span id="prevBadge" class="absolute top-2 left-2 px-2 py-1 text-xs font-bold rounded">-20%</span>
+                            
+                            <!-- Wishlist Button -->
+                            <button id="prevWishlistBtn" class="absolute top-2 right-2 w-8 h-8 rounded-full flex items-center justify-center transition shadow-sm z-20">
+                                <i class="far fa-heart"></i>
+                            </button>
+                            
+                            <!-- Quick View Button -->
+                            <div class="absolute top-12 right-2 flex flex-col gap-2 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+                                <button id="prevQvBtn" class="w-8 h-8 rounded-full flex items-center justify-center transition shadow-sm">
+                                    <i class="fas fa-eye"></i>
+                                </button>
+                                <button id="prevAtcBtnIcon" class="w-8 h-8 rounded-full flex items-center justify-center transition shadow-sm">
+                                    <i class="fas fa-shopping-cart"></i>
+                                </button>
+                            </div>
+
+                            <img src="https://placehold.co/400x400/f3f4f6/a3a3a3?text=Product" class="w-full h-full object-cover">
+                        </div>
+                        
+                        <div class="p-4">
+                            <h3 id="prevTitle" class="text-sm font-semibold mb-1 truncate">Sample Product Title</h3>
+                            <div class="flex items-center gap-2 mb-3">
+                                <span id="prevPrice" class="font-bold">$199.00</span>
+                                <span id="prevComparePrice" class="text-sm line-through">$249.00</span>
+                            </div>
+                            
+                            <!-- Rating Stars (Static Gold) -->
+                            <div class="flex text-yellow-400 text-xs mb-3">
+                                <i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i>
+                            </div>
+
+                            <!-- Main ATC Button (Simulating Wishlist layout or special layouts) -->
+                            <button id="prevMainAtcBtn" class="w-full py-2 rounded text-xs font-bold flex items-center justify-center gap-2 transition-all">
+                                <i class="fas fa-shopping-cart"></i> ADD TO CART
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <!-- Wishlist Style Preview (Explicitly using ATC Button styles) -->
+                    <div id="previewCardWishlist" class="w-64 flex-shrink-0 bg-white rounded-lg shadow-sm border border-gray-100 overflow-hidden relative group transition-all duration-300">
+                         <div class="relative overflow-hidden h-64 bg-gray-100">
+                            <!-- Remove Button -->
+                            <button id="prevRemoveBtn" class="absolute top-2 right-2 w-8 h-8 rounded-full flex items-center justify-center transition shadow-sm z-20">
+                                <i class="fas fa-times"></i>
+                            </button>
+                             <img src="https://placehold.co/400x400/f3f4f6/a3a3a3?text=Wishlist+Item" class="w-full h-full object-cover">
+                        </div>
+                         <div class="p-4 flex flex-col h-[160px]"> <!-- Fixed height for alignment -->
+                            <h3 id="prevTitleW" class="text-sm font-semibold mb-1 truncate">Wishlist Product</h3>
+                            <div class="flex items-center gap-2 mb-3">
+                                <span id="prevPriceW" class="font-bold">$199.00</span>
+                            </div>
+                            
+                            <div class="mt-auto">
+                                <button id="prevMainAtcBtnW" class="w-full py-2.5 rounded text-xs font-bold flex items-center justify-center gap-2 transition-all">
+                                    <i class="fas fa-shopping-cart"></i> ADD TO CART
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function togglePreview() {
+            const footer = document.getElementById('previewFooter');
+            const icon = document.getElementById('previewToggleIcon');
+            const content = document.getElementById('previewContent');
+            
+            if (footer.style.transform === 'translateY(0px)' || footer.style.transform === '') {
+                 footer.style.transform = 'translateY(' + content.offsetHeight + 'px)';
+                 icon.style.transform = 'rotate(180deg)';
+            } else {
+                 footer.style.transform = 'translateY(0)';
+                 icon.style.transform = 'rotate(0deg)';
+            }
+        }
+
+        function updatePreview() {
+            // Get values
+            const cardBg = document.querySelector('input[name="card_bg_color"]').value;
+            const titleColor = document.querySelector('input[name="card_title_color"]').value;
+            const priceColor = document.querySelector('input[name="price_color"]').value;
+            const compareColor = document.querySelector('input[name="compare_price_color"]').value;
+            const badgeBg = document.querySelector('input[name="badge_bg_color"]').value;
+            const badgeText = document.querySelector('input[name="badge_text_color"]').value;
+            
+            const btnBg = document.querySelector('input[name="btn_bg_color"]').value;
+            const btnIcon = document.querySelector('input[name="btn_icon_color"]').value;
+            const btnHoverBg = document.querySelector('input[name="btn_hover_bg_color"]').value;
+            const btnHoverIcon = document.querySelector('input[name="btn_hover_icon_color"]').value;
+            
+            const atcBg = document.querySelector('input[name="atc_btn_bg_color"]').value;
+            const atcText = document.querySelector('input[name="atc_btn_text_color"]').value;
+            const atcHoverBg = document.querySelector('input[name="atc_btn_hover_bg_color"]').value;
+            const atcHoverText = document.querySelector('input[name="atc_btn_hover_text_color"]').value;
+
+            // Apply to Cards
+            [document.getElementById('previewCard'), document.getElementById('previewCardWishlist')].forEach(card => {
+                card.style.backgroundColor = cardBg;
+                card.style.borderColor = (cardBg === '#ffffff' || cardBg === '#fff' || cardBg.toLowerCase() === '#ffffff') ? '#e5e7eb' : 'transparent';
+            });
+
+            // Text
+            document.getElementById('prevTitle').style.color = titleColor;
+            document.getElementById('prevTitleW').style.color = titleColor;
+            document.getElementById('prevPrice').style.color = priceColor;
+            document.getElementById('prevPriceW').style.color = priceColor;
+            document.getElementById('prevComparePrice').style.color = compareColor;
+
+            // Badge
+            const badge = document.getElementById('prevBadge');
+            badge.style.backgroundColor = badgeBg;
+            badge.style.color = badgeText;
+
+            // Action Buttons (Wishlist, QV)
+            const actionBtns = [
+                document.getElementById('prevWishlistBtn'),
+                document.getElementById('prevQvBtn'),
+                document.getElementById('prevAtcBtnIcon'),
+                document.getElementById('prevRemoveBtn')
+            ];
+
+            actionBtns.forEach(btn => {
+                if(!btn) return;
+                // Normal State
+                btn.style.backgroundColor = btnBg;
+                btn.style.color = btnIcon;
+                
+                // Hover Events
+                btn.onmouseenter = () => {
+                   btn.style.backgroundColor = btnHoverBg;
+                   btn.style.color = btnHoverIcon;
+                };
+                btn.onmouseleave = () => {
+                   btn.style.backgroundColor = btnBg;
+                   btn.style.color = btnIcon;
+                };
+            });
+
+            // Main ATC Buttons
+            const atcBtns = [document.getElementById('prevMainAtcBtn'), document.getElementById('prevMainAtcBtnW')];
+            atcBtns.forEach(btn => {
+                btn.style.backgroundColor = atcBg;
+                btn.style.color = atcText;
+                
+                btn.onmouseenter = () => {
+                    btn.style.backgroundColor = atcHoverBg;
+                    btn.style.color = atcHoverText;
+                };
+                btn.onmouseleave = () => {
+                    btn.style.backgroundColor = atcBg;
+                    btn.style.color = atcText;
+                };
+            });
+        }
+
+        // Attach listeners
+        document.querySelectorAll('input[type="color"], input[type="text"]').forEach(input => {
+            input.addEventListener('input', updatePreview);
+            input.addEventListener('change', updatePreview);
+        });
+
+        // Initial call
+        updatePreview();
+    </script>
+</div>
+<?php require_once __DIR__ . '/../includes/admin-footer.php'; ?>

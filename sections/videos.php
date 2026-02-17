@@ -3,6 +3,7 @@
 require_once __DIR__ . '/../config/constants.php';
 require_once __DIR__ . '/../classes/Database.php';
 require_once __DIR__ . '/../includes/functions.php';
+require_once __DIR__ . '/../classes/Settings.php';
 
 $baseUrl = getBaseUrl();
 $db = Database::getInstance();
@@ -27,19 +28,47 @@ if (file_exists($videoConfigPath)) {
     $sectionSubheading = $conf['subheading'] ?? $sectionSubheading;
 } elseif (!empty($videos)) {
     $sectionHeading = $videos[0]['heading'] ?? $sectionHeading;
+    $sectionHeading = $videos[0]['heading'] ?? $sectionHeading;
     $sectionSubheading = $videos[0]['subheading'] ?? $sectionSubheading;
 }
+
+// Fetch Styles
+$settingsObj = new Settings();
+$stylesJson = $settingsObj->get('video_styles', '{"bg_color":"#ffffff","heading_color":"#1f2937","subheading_color":"#4b5563","arrow_bg_color":"#ffffff","arrow_icon_color":"#1f2937"}');
+$styles = json_decode($stylesJson, true);
+$sectionId = 'video-section-' . rand(1000, 9999);
 ?>
 
-<section class="bg-white py-5 relative group/section" id="uniqueVideoSection">
+<style>
+    #<?php echo $sectionId; ?> {
+        background-color: <?php echo $styles['bg_color']; ?>;
+    }
+    #<?php echo $sectionId; ?> .section-heading {
+        color: <?php echo $styles['heading_color']; ?>;
+    }
+    #<?php echo $sectionId; ?> .section-subheading {
+        color: <?php echo $styles['subheading_color']; ?>;
+    }
+    #<?php echo $sectionId; ?> .custom-arrow {
+        background-color: <?php echo $styles['arrow_bg_color']; ?>;
+        color: <?php echo $styles['arrow_icon_color']; ?>;
+    }
+    #<?php echo $sectionId; ?> .custom-arrow:hover {
+        background-color: <?php echo $styles['arrow_bg_color']; ?>;
+        color: <?php echo $styles['arrow_icon_color']; ?>;
+        opacity: 0.8;
+    }
+</style>
+
+<section class="py-5 relative group/section" id="<?php echo $sectionId; ?>">
     <div class="container mx-auto px-4">
         <!-- Section Header -->
         <div class="text-center mb-10">
             <?php if (!empty($sectionHeading)): ?>
-                <h2 class="text-3xl md:text-4xl font-bold font-heading text-gray-900 mb-3"><?php echo htmlspecialchars($sectionHeading); ?></h2>
+                <h2 class="text-3xl md:text-4xl font-bold font-heading mb-3 section-heading"><?php echo htmlspecialchars($sectionHeading); ?></h2>
             <?php endif; ?>
             <?php if (!empty($sectionSubheading)): ?>
-                <p class="text-gray-600 text-base md:text-lg"><?php echo htmlspecialchars($sectionSubheading); ?></p>
+                <p class="text-base md:text-lg section-subheading"><?php echo htmlspecialchars($sectionSubheading); ?></p>
             <?php endif; ?>
         </div>
         
@@ -54,10 +83,10 @@ if (file_exists($videoConfigPath)) {
             }
             if (count($videos) > 1 && $showVideoArrows): 
             ?>
-            <button id="videoSectionPrev" type="button" style="z-index: 11 !important;" class="absolute left-4 top-1/2 -translate-y-1/2 z-50 bg-white/90 shadow-xl rounded-full w-12 h-12 flex items-center justify-center text-gray-800 hover:text-primary hover:bg-white transition focus:outline-none backdrop-blur-sm cursor-pointer border border-white flex">
+            <button id="videoSectionPrev" type="button" style="z-index: 11 !important;" class="absolute left-4 top-1/2 -translate-y-1/2 z-50 shadow-xl rounded-full w-12 h-12 flex items-center justify-center transition focus:outline-none backdrop-blur-sm cursor-pointer border border-white flex custom-arrow">
                 <i class="fas fa-chevron-left"></i>
             </button>
-            <button id="videoSectionNext" style="z-index: 11 !important;" type="button" class="absolute right-4 top-1/2 -translate-y-1/2 z-50 bg-white/90 shadow-xl rounded-full w-12 h-12 flex items-center justify-center text-gray-800 hover:text-primary hover:bg-white transition focus:outline-none backdrop-blur-sm cursor-pointer border border-white flex">
+            <button id="videoSectionNext" style="z-index: 11 !important;" type="button" class="absolute right-4 top-1/2 -translate-y-1/2 z-50 shadow-xl rounded-full w-12 h-12 flex items-center justify-center transition focus:outline-none backdrop-blur-sm cursor-pointer border border-white flex custom-arrow">
                 <i class="fas fa-chevron-right"></i>
             </button>
             <?php endif; ?>

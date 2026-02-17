@@ -66,7 +66,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             'footer_show_amex' => isset($_POST['footer_show_amex']) ? '1' : '0',
             'footer_show_paypal' => isset($_POST['footer_show_paypal']) ? '1' : '0',
             'footer_show_discover' => isset($_POST['footer_show_discover']) ? '1' : '0',
+            'footer_show_paypal' => isset($_POST['footer_show_paypal']) ? '1' : '0',
+            'footer_show_discover' => isset($_POST['footer_show_discover']) ? '1' : '0',
             'footer_payment_icons_json' => '[]', // Default, will be updated below
+            'footer_bg_color' => $_POST['footer_bg_color'] ?? '#ffffff',
+            'footer_text_color' => $_POST['footer_text_color'] ?? '#000000',
         ];
 
         // 2. Handle Image Upload
@@ -178,7 +182,10 @@ $defaults = [
     'footer_show_amex' => '1',
     'footer_show_paypal' => '1',
     'footer_show_discover' => '1',
+    'footer_show_discover' => '1',
     'footer_payment_icons_json' => '[]',
+    'footer_bg_color' => '#ffffff',
+    'footer_text_color' => '#000000',
 ];
 $settings = array_merge($defaults, $currentSettings);
 $socialLinks = json_decode($settings['footer_social_json'], true) ?: [];
@@ -252,6 +259,28 @@ require_once __DIR__ . '/../includes/admin-header.php';
                     
                     <input type="file" id="footerLogoInput" name="footer_logo_image" accept="image/*" class="hidden" onchange="previewFooterLogo(this)">
                     <p class="text-xs text-gray-500 mt-1">Recommended: PNG or SVG format, transparent background</p>
+                </div>
+            </div>
+            </div>
+        </div>
+
+        <!-- Visual Styling Section -->
+        <div class="bg-gray-50 p-4 rounded border border-gray-200">
+            <h3 class="font-bold text-lg mb-4 border-b pb-2">Visual Styling</h3>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div>
+                    <label class="block text-sm font-semibold mb-2">Footer Background</label>
+                    <div class="flex items-center gap-2">
+                        <input type="color" name="footer_bg_color" value="<?php echo htmlspecialchars($settings['footer_bg_color']); ?>" class="h-10 w-16 cursor-pointer border rounded" oninput="this.nextElementSibling.value = this.value">
+                        <input type="text" value="<?php echo htmlspecialchars($settings['footer_bg_color']); ?>" class="flex-1 border p-2 rounded text-sm" oninput="this.previousElementSibling.value = this.value">
+                    </div>
+                </div>
+                <div>
+                    <label class="block text-sm font-semibold mb-2">Footer Text Color</label>
+                    <div class="flex items-center gap-2">
+                        <input type="color" name="footer_text_color" value="<?php echo htmlspecialchars($settings['footer_text_color']); ?>" class="h-10 w-16 cursor-pointer border rounded" oninput="this.nextElementSibling.value = this.value">
+                        <input type="text" value="<?php echo htmlspecialchars($settings['footer_text_color']); ?>" class="flex-1 border p-2 rounded text-sm" oninput="this.previousElementSibling.value = this.value">
+                    </div>
                 </div>
             </div>
         </div>

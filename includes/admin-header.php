@@ -597,6 +597,14 @@ $currentPage = basename($_SERVER['PHP_SELF']);
     <!-- Sub Menu -->
     <div class="sidebar-submenu mt-2 space-y-1 <?php echo $isSettingsPage ? '' : 'hidden'; ?>">
 
+
+        <a href="<?php echo url('admin/global_product_card_settings.php'); ?>"
+           class="flex items-center space-x-2 py-1 px-4 text-sm <?php echo ($currentPage === 'global_product_card_settings.php' || strpos($_SERVER['REQUEST_URI'], 'global_product_card_settings') !== false) ? 'bg-gray-700' : ''; ?>"
+           title="Global Card Design">
+            <i class="fas fa-palette text-xs"></i>
+            <span>Global Card Design</span>
+        </a>
+
         <a href="<?php echo url('admin/special-page'); ?>"
            class="flex items-center space-x-2 py-1 px-4 text-sm <?php echo ($currentPage === 'settings' || strpos($_SERVER['REQUEST_URI'], 'special-page') !== false) ? 'bg-gray-700' : ''; ?>"
            title="Product Page">
@@ -680,6 +688,13 @@ $currentPage = basename($_SERVER['PHP_SELF']);
            title="Footer Info">
             <i class="fas fa-gem text-xs"></i>
             <span>Footer Info</span>
+        </a>
+
+        <a href="<?php echo url('admin/wishlist_settings'); ?>"
+           class="flex items-center space-x-2 py-1 px-4 text-sm <?php echo ($currentPage === 'wishlist_settings.php' || strpos($_SERVER['REQUEST_URI'], 'admin/wishlist_settings') !== false) ? 'bg-gray-700' : ''; ?>"
+           title="Wishlist Settings">
+            <i class="fas fa-heart text-xs"></i>
+            <span>Wishlist Settings</span>
         </a>
 
         <a href="<?php echo url('admin/menu'); ?>"

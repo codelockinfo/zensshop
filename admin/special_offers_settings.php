@@ -2,6 +2,7 @@
 require_once __DIR__ . '/../classes/Database.php';
 require_once __DIR__ . '/../classes/Auth.php';
 require_once __DIR__ . '/../includes/functions.php';
+require_once __DIR__ . '/../classes/Settings.php';
 
 $auth = new Auth();
 $auth->requireLogin();
@@ -27,6 +28,21 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             'show_section' => $show_section
         ];
         file_put_contents(__DIR__ . '/special_offers_config.json', json_encode($offersConfig));
+
+        // Save Color Settings
+        $settingsObj = new Settings();
+        $styles = [
+            'bg_color' => $_POST['bg_color'] ?? '#ffffff',
+            'heading_color' => $_POST['heading_color'] ?? '#111827',
+            'subheading_color' => $_POST['subheading_color'] ?? '#4b5563',
+            'card_overlay_opacity' => $_POST['card_overlay_opacity'] ?? '40',
+            'card_text_color' => $_POST['card_text_color'] ?? '#ffffff',
+            'button_text_color' => $_POST['button_text_color'] ?? '#ffffff',
+            'button_border_color' => $_POST['button_border_color'] ?? '#ffffff',
+            'button_hover_bg' => $_POST['button_hover_bg'] ?? '#ffffff',
+            'button_hover_text' => $_POST['button_hover_text'] ?? '#000000'
+        ];
+        $settingsObj->set('special_offers_styles', json_encode($styles), 'homepage');
         
         // Also update existing rows in DB for backward compatibility
         $storeId = $_SESSION['store_id'] ?? null;
@@ -189,15 +205,40 @@ $sectionSettings = [
 
 // Fetch Offers
 $offers = $db->fetchAll("SELECT * FROM special_offers WHERE store_id = ? ORDER BY display_order ASC, created_at DESC", [$storeId]);
+
+// Fetch Style Settings
+$settingsObj = new Settings();
+$savedStylesJson = $settingsObj->get('special_offers_styles', '{"bg_color":"#ffffff","heading_color":"#111827","subheading_color":"#4b5563","card_overlay_opacity":"40","card_text_color":"#ffffff","button_text_color":"#ffffff","button_border_color":"#ffffff","button_hover_bg":"#ffffff","button_hover_text":"#000000"}');
+$savedStyles = json_decode($savedStylesJson, true);
+
+// Style Defaults
+$s_bg_color = $savedStyles['bg_color'] ?? '#ffffff';
+$s_heading_color = $savedStyles['heading_color'] ?? '#111827';
+$s_subheading_color = $savedStyles['subheading_color'] ?? '#4b5563';
+$s_card_overlay_opacity = $savedStyles['card_overlay_opacity'] ?? '40';
+$s_card_text_color = $savedStyles['card_text_color'] ?? '#ffffff';
+$s_button_text_color = $savedStyles['button_text_color'] ?? '#ffffff';
+$s_button_border_color = $savedStyles['button_border_color'] ?? '#ffffff';
+$s_button_hover_bg = $savedStyles['button_hover_bg'] ?? '#ffffff';
+$s_button_hover_text = $savedStyles['button_hover_text'] ?? '#000000';
 ?>
 
-<div class="container mx-auto p-6">
-    <div class="flex justify-between items-center mb-6">
-        <h1 class="text-2xl font-bold text-gray-800">Special Offers Settings</h1>
-        <button onclick="openModal()" class="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition">
-            <i class="fas fa-plus mr-2"></i> Add New Offer
-        </button>
-    </div>
+<div class="p-6 pl-0">
+    <form method="POST" enctype="multipart/form-data">
+        <input type="hidden" name="action" value="save_settings">
+
+        <!-- Top Action Bar -->
+        <div class="flex justify-between items-center mb-6 bg-white p-4 rounded-lg shadow-sm border border-gray-200 sticky top-0 z-10">
+            <div class="flex items-center gap-4">
+                <h1 class="text-2xl font-bold text-gray-800">Special Offers Settings</h1>
+                <button type="submit" class="bg-blue-600 text-white px-6 py-2.5 rounded-lg font-bold hover:bg-blue-700 transition flex items-center shadow-sm btn-loading">
+                    <i class="fas fa-save mr-2"></i> Save Changes
+                </button>
+            </div>
+            <button type="button" onclick="openModal()" class="bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 transition text-sm font-semibold">
+                <i class="fas fa-plus mr-2"></i> Add New Offer
+            </button>
+        </div>
 
     <?php if ($success): ?>
         <div class="bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded relative mb-4" role="alert">
@@ -211,11 +252,91 @@ $offers = $db->fetchAll("SELECT * FROM special_offers WHERE store_id = ? ORDER B
         </div>
     <?php endif; ?>
 
+    <!-- Visual Style Settings -->
+    <div class="bg-white rounded-lg shadow-sm border border-gray-200 mb-8 overflow-hidden transform transition hover:shadow-md">
+        <div class="bg-gray-50 px-6 py-4 border-b border-gray-200">
+            <h2 class="text-xl font-semibold text-gray-800">Visual Style</h2>
+            <p class="text-sm text-gray-500">Customize the appearance of the Special Offers section.</p>
+        </div>
+        <div class="p-6">
+            <h3 class="font-bold text-gray-700 mb-4 text-sm uppercase tracking-wider border-b pb-2">Section Colors</h3>
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
+                <div>
+                    <label class="block text-sm font-semibold text-gray-700 mb-2">Section Background</label>
+                    <div class="flex items-center gap-3">
+                        <input type="color" name="bg_color" value="<?php echo htmlspecialchars($s_bg_color); ?>" class="h-10 w-16 border rounded cursor-pointer p-0.5" oninput="this.nextElementSibling.value = this.value">
+                        <input type="text" value="<?php echo htmlspecialchars($s_bg_color); ?>" class="flex-1 border rounded p-2 text-sm uppercase" oninput="this.previousElementSibling.value = this.value">
+                    </div>
+                </div>
+                <div>
+                    <label class="block text-sm font-semibold text-gray-700 mb-2">Heading Color</label>
+                    <div class="flex items-center gap-3">
+                        <input type="color" name="heading_color" value="<?php echo htmlspecialchars($s_heading_color); ?>" class="h-10 w-16 border rounded cursor-pointer p-0.5" oninput="this.nextElementSibling.value = this.value">
+                        <input type="text" value="<?php echo htmlspecialchars($s_heading_color); ?>" class="flex-1 border rounded p-2 text-sm uppercase" oninput="this.previousElementSibling.value = this.value">
+                    </div>
+                </div>
+                <div>
+                    <label class="block text-sm font-semibold text-gray-700 mb-2">Subheading Color</label>
+                    <div class="flex items-center gap-3">
+                        <input type="color" name="subheading_color" value="<?php echo htmlspecialchars($s_subheading_color); ?>" class="h-10 w-16 border rounded cursor-pointer p-0.5" oninput="this.nextElementSibling.value = this.value">
+                        <input type="text" value="<?php echo htmlspecialchars($s_subheading_color); ?>" class="flex-1 border rounded p-2 text-sm uppercase" oninput="this.previousElementSibling.value = this.value">
+                    </div>
+                </div>
+            </div>
+
+            <h3 class="font-bold text-gray-700 mb-4 text-sm uppercase tracking-wider border-b pb-2">Card Style</h3>
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
+                <div>
+                    <label class="block text-sm font-semibold text-gray-700 mb-2">Overlay Opacity (%)</label>
+                    <input type="number" name="card_overlay_opacity" value="<?php echo htmlspecialchars($s_card_overlay_opacity); ?>" min="0" max="100" class="w-full border rounded p-2">
+                </div>
+                <div>
+                    <label class="block text-sm font-semibold text-gray-700 mb-2">Card Text Color</label>
+                    <div class="flex items-center gap-3">
+                        <input type="color" name="card_text_color" value="<?php echo htmlspecialchars($s_card_text_color); ?>" class="h-10 w-16 border rounded cursor-pointer p-0.5" oninput="this.nextElementSibling.value = this.value">
+                        <input type="text" value="<?php echo htmlspecialchars($s_card_text_color); ?>" class="flex-1 border rounded p-2 text-sm uppercase" oninput="this.previousElementSibling.value = this.value">
+                    </div>
+                </div>
+            </div>
+
+            <h3 class="font-bold text-gray-700 mb-4 text-sm uppercase tracking-wider border-b pb-2">Button Style</h3>
+            <div class="grid grid-cols-1 md:grid-cols-4 gap-6">
+                 <div>
+                    <label class="block text-sm font-semibold text-gray-700 mb-2">Button Text</label>
+                    <div class="flex items-center gap-3">
+                        <input type="color" name="button_text_color" value="<?php echo htmlspecialchars($s_button_text_color); ?>" class="h-10 w-16 border rounded cursor-pointer p-0.5" oninput="this.nextElementSibling.value = this.value">
+                        <input type="text" value="<?php echo htmlspecialchars($s_button_text_color); ?>" class="flex-1 border rounded p-2 text-sm uppercase" oninput="this.previousElementSibling.value = this.value">
+                    </div>
+                </div>
+                <div>
+                    <label class="block text-sm font-semibold text-gray-700 mb-2">Button Border</label>
+                    <div class="flex items-center gap-3">
+                        <input type="color" name="button_border_color" value="<?php echo htmlspecialchars($s_button_border_color); ?>" class="h-10 w-16 border rounded cursor-pointer p-0.5" oninput="this.nextElementSibling.value = this.value">
+                        <input type="text" value="<?php echo htmlspecialchars($s_button_border_color); ?>" class="flex-1 border rounded p-2 text-sm uppercase" oninput="this.previousElementSibling.value = this.value">
+                    </div>
+                </div>
+                <div>
+                    <label class="block text-sm font-semibold text-gray-700 mb-2">Hover Background</label>
+                    <div class="flex items-center gap-3">
+                        <input type="color" name="button_hover_bg" value="<?php echo htmlspecialchars($s_button_hover_bg); ?>" class="h-10 w-16 border rounded cursor-pointer p-0.5" oninput="this.nextElementSibling.value = this.value">
+                        <input type="text" value="<?php echo htmlspecialchars($s_button_hover_bg); ?>" class="flex-1 border rounded p-2 text-sm uppercase" oninput="this.previousElementSibling.value = this.value">
+                    </div>
+                </div>
+                <div>
+                    <label class="block text-sm font-semibold text-gray-700 mb-2">Hover Text</label>
+                    <div class="flex items-center gap-3">
+                        <input type="color" name="button_hover_text" value="<?php echo htmlspecialchars($s_button_hover_text); ?>" class="h-10 w-16 border rounded cursor-pointer p-0.5" oninput="this.nextElementSibling.value = this.value">
+                        <input type="text" value="<?php echo htmlspecialchars($s_button_hover_text); ?>" class="flex-1 border rounded p-2 text-sm uppercase" oninput="this.previousElementSibling.value = this.value">
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <!-- Section Settings Card -->
     <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-6 mb-8 transform transition hover:shadow-md">
         <h3 class="text-lg font-bold text-gray-700 mb-4 border-b pb-2">Section Configuration</h3>
-        <form method="POST" class="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <input type="hidden" name="action" value="save_settings">
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
             
             <div class="col-span-1">
                 <label class="block text-sm font-bold text-gray-700 mb-2">Section Heading</label>
@@ -257,12 +378,9 @@ $offers = $db->fetchAll("SELECT * FROM special_offers WHERE store_id = ? ORDER B
                 </div>
             </div>
             
-            <div class="col-span-1 md:col-span-2 flex justify-end mt-2">
-                <button type="submit" class="bg-gray-800 text-white px-6 py-2.5 rounded-lg hover:bg-black transition flex items-center shadow-lg btn-loading">
-                    <i class="fas fa-save mr-2"></i> Update Settings
-                </button>
-            </div>
-        </form>
+        </div>
+    </div>
+    </form>
     </div>
 
     <!-- Offers List -->

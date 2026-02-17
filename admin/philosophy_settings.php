@@ -124,15 +124,15 @@ require_once __DIR__ . '/../includes/admin-header.php';
                 <div>
                     <label class="block text-sm font-bold mb-2">Background Color</label>
                     <div class="flex items-center">
-                        <input type="color" name="background_color" value="<?php echo htmlspecialchars($data['background_color'] ?? '#384135'); ?>" class="h-10 w-12 p-1 border rounded mr-2 cursor-pointer">
-                        <input type="text" value="<?php echo htmlspecialchars($data['background_color'] ?? '#384135'); ?>" class="w-full border p-2 rounded text-sm uppercase" readonly>
+                        <input type="color" name="background_color" value="<?php echo htmlspecialchars($data['background_color'] ?? '#384135'); ?>" class="h-10 w-12 p-1 border rounded mr-2 cursor-pointer" oninput="this.nextElementSibling.value = this.value">
+                        <input type="text" value="<?php echo htmlspecialchars($data['background_color'] ?? '#384135'); ?>" class="w-full border p-2 rounded text-sm uppercase" oninput="this.previousElementSibling.value = this.value">
                     </div>
                 </div>
                 <div>
                      <label class="block text-sm font-bold mb-2">Text Color</label>
                     <div class="flex items-center">
-                        <input type="color" name="text_color" value="<?php echo htmlspecialchars($data['text_color'] ?? '#eee4d3'); ?>" class="h-10 w-12 p-1 border rounded mr-2 cursor-pointer">
-                        <input type="text" value="<?php echo htmlspecialchars($data['text_color'] ?? '#eee4d3'); ?>" class="w-full border p-2 rounded text-sm uppercase" readonly>
+                        <input type="color" name="text_color" value="<?php echo htmlspecialchars($data['text_color'] ?? '#eee4d3'); ?>" class="h-10 w-12 p-1 border rounded mr-2 cursor-pointer" oninput="this.nextElementSibling.value = this.value">
+                        <input type="text" value="<?php echo htmlspecialchars($data['text_color'] ?? '#eee4d3'); ?>" class="w-full border p-2 rounded text-sm uppercase" oninput="this.previousElementSibling.value = this.value">
                     </div>
                 </div>
             </div>

@@ -4,6 +4,7 @@ session_start();
 require_once __DIR__ . '/../classes/Database.php';
 require_once __DIR__ . '/../classes/Auth.php';
 require_once __DIR__ . '/../includes/functions.php';
+require_once __DIR__ . '/../classes/Settings.php';
 
 $auth = new Auth();
 $auth->requireLogin();
@@ -68,6 +69,19 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $newsletterConfig = ['show_section' => $show_section];
         file_put_contents(__DIR__ . '/newsletter_config.json', json_encode($newsletterConfig));
 
+        // Save Visual Styles
+        $settingsObj = new Settings();
+        $newsletter_styles = [
+            'bg_overlay_opacity' => $_POST['bg_overlay_opacity'] ?? '10',
+            'heading_color' => $_POST['heading_color'] ?? '#111827',
+            'subheading_color' => $_POST['subheading_color'] ?? '#4b5563',
+            'button_bg_color' => $_POST['button_bg_color'] ?? '#000000',
+            'button_text_color' => $_POST['button_text_color'] ?? '#ffffff',
+            'card_bg_color' => $_POST['card_bg_color'] ?? '#ffffff',
+            'input_bg_color' => $_POST['input_bg_color'] ?? '#ffffff'
+        ];
+        $settingsObj->set('newsletter_styles', json_encode($newsletter_styles), 'homepage');
+
         $_SESSION['flash_success'] = "Newsletter section updated successfully!";
         header("Location: " . $baseUrl . '/admin/newsletter');
         exit;
@@ -101,6 +115,19 @@ if (file_exists($newsletterConfigPath)) {
     $config = json_decode(file_get_contents($newsletterConfigPath), true);
     $showSection = isset($config['show_section']) ? $config['show_section'] : true;
 }
+
+// Fetch Style Settings
+$settingsObj = new Settings();
+$savedStylesJson = $settingsObj->get('newsletter_styles', '{"bg_overlay_opacity":"10","heading_color":"#111827","subheading_color":"#4b5563","button_bg_color":"#000000","button_text_color":"#ffffff"}');
+$savedStyles = json_decode($savedStylesJson, true);
+
+$s_overlay = $savedStyles['bg_overlay_opacity'] ?? '10';
+$s_heading_color = $savedStyles['heading_color'] ?? '#111827';
+$s_subheading_color = $savedStyles['subheading_color'] ?? '#4b5563';
+$s_btn_bg = $savedStyles['button_bg_color'] ?? '#000000';
+$s_btn_text = $savedStyles['button_text_color'] ?? '#ffffff';
+$s_card_bg = $savedStyles['card_bg_color'] ?? '#ffffff';
+$s_input_bg = $savedStyles['input_bg_color'] ?? '#ffffff';
 
 $pageTitle = 'Newsletter Settings';
 require_once __DIR__ . '/../includes/admin-header.php';
@@ -231,6 +258,60 @@ require_once __DIR__ . '/../includes/admin-header.php';
                      <label class="block text-sm font-bold mb-2">Footer / Privacy Text (Rich Text)</label>
                      <textarea name="footer_content" class="rich-text-editor w-full border p-2 rounded h-64"><?php echo htmlspecialchars($data['footer_content'] ?? ''); ?></textarea>
                      <p class="text-xs text-gray-500 mt-1">Use this editor to add text, links, images, tables, and style them as needed. This content appears after the footer.</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Visual Style Settings -->
+        <div class="bg-white p-6 rounded shadow-md max-w-full mb-6 mt-6 border border-gray-200">
+            <h3 class="font-bold text-xl text-gray-700 mb-4 border-b pb-2">Visual Styling</h3>
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                <div>
+                    <label class="block text-sm font-bold mb-2">Overlay Opacity (%)</label>
+                    <input type="number" name="bg_overlay_opacity" min="0" max="100" value="<?php echo htmlspecialchars($s_overlay); ?>" class="w-full border p-2 rounded">
+                    <p class="text-xs text-gray-500 mt-1">0 = transparent, 100 = black opaque</p>
+                </div>
+                <div>
+                    <label class="block text-sm font-bold mb-2">Card Background</label>
+                    <div class="flex items-center gap-2">
+                        <input type="color" name="card_bg_color" value="<?php echo htmlspecialchars($s_card_bg); ?>" class="h-10 w-16 cursor-pointer border rounded" oninput="this.nextElementSibling.value = this.value">
+                        <input type="text" value="<?php echo htmlspecialchars($s_card_bg); ?>" class="flex-1 border p-2 rounded text-sm" oninput="this.previousElementSibling.value = this.value">
+                    </div>
+                </div>
+                <div>
+                    <label class="block text-sm font-bold mb-2">Heading Color</label>
+                    <div class="flex items-center gap-2">
+                        <input type="color" name="heading_color" value="<?php echo htmlspecialchars($s_heading_color); ?>" class="h-10 w-16 cursor-pointer border rounded" oninput="this.nextElementSibling.value = this.value">
+                        <input type="text" value="<?php echo htmlspecialchars($s_heading_color); ?>" class="flex-1 border p-2 rounded text-sm" oninput="this.previousElementSibling.value = this.value">
+                    </div>
+                </div>
+                <div>
+                    <label class="block text-sm font-bold mb-2">Subheading Color</label>
+                    <div class="flex items-center gap-2">
+                        <input type="color" name="subheading_color" value="<?php echo htmlspecialchars($s_subheading_color); ?>" class="h-10 w-16 cursor-pointer border rounded" oninput="this.nextElementSibling.value = this.value">
+                        <input type="text" value="<?php echo htmlspecialchars($s_subheading_color); ?>" class="flex-1 border p-2 rounded text-sm" oninput="this.previousElementSibling.value = this.value">
+                    </div>
+                </div>
+                <div>
+                    <label class="block text-sm font-bold mb-2">Button Background</label>
+                    <div class="flex items-center gap-2">
+                        <input type="color" name="button_bg_color" value="<?php echo htmlspecialchars($s_btn_bg); ?>" class="h-10 w-16 cursor-pointer border rounded" oninput="this.nextElementSibling.value = this.value">
+                        <input type="text" value="<?php echo htmlspecialchars($s_btn_bg); ?>" class="flex-1 border p-2 rounded text-sm" oninput="this.previousElementSibling.value = this.value">
+                    </div>
+                </div>
+                <div>
+                    <label class="block text-sm font-bold mb-2">Input Background</label>
+                    <div class="flex items-center gap-2">
+                        <input type="color" name="input_bg_color" value="<?php echo htmlspecialchars($s_input_bg); ?>" class="h-10 w-16 cursor-pointer border rounded" oninput="this.nextElementSibling.value = this.value">
+                        <input type="text" value="<?php echo htmlspecialchars($s_input_bg); ?>" class="flex-1 border p-2 rounded text-sm" oninput="this.previousElementSibling.value = this.value">
+                    </div>
+                </div>
+                <div>
+                    <label class="block text-sm font-bold mb-2">Button Text Color</label>
+                    <div class="flex items-center gap-2">
+                        <input type="color" name="button_text_color" value="<?php echo htmlspecialchars($s_btn_text); ?>" class="h-10 w-16 cursor-pointer border rounded" oninput="this.nextElementSibling.value = this.value">
+                        <input type="text" value="<?php echo htmlspecialchars($s_btn_text); ?>" class="flex-1 border p-2 rounded text-sm" oninput="this.previousElementSibling.value = this.value">
+                    </div>
                 </div>
             </div>
         </div>

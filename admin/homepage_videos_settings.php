@@ -4,6 +4,7 @@ session_start();
 require_once __DIR__ . '/../classes/Database.php';
 require_once __DIR__ . '/../classes/Auth.php';
 require_once __DIR__ . '/../includes/functions.php';
+require_once __DIR__ . '/../classes/Settings.php';
 
 $auth = new Auth();
 $auth->requireLogin();
@@ -47,7 +48,19 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 'heading' => $heading,
                 'subheading' => $subheading
             ];
+
             file_put_contents(__DIR__ . '/video_config.json', json_encode($videoConfig));
+
+            // Save Visual Styles
+            $settingsObj = new Settings();
+            $video_styles = [
+                'bg_color' => $_POST['bg_color'] ?? '#ffffff',
+                'heading_color' => $_POST['heading_color'] ?? '#1f2937',
+                'subheading_color' => $_POST['subheading_color'] ?? '#4b5563',
+                'arrow_bg_color' => $_POST['arrow_bg_color'] ?? '#ffffff',
+                'arrow_icon_color' => $_POST['arrow_icon_color'] ?? '#1f2937'
+            ];
+            $settingsObj->set('video_styles', json_encode($video_styles), 'homepage');
 
             $uploadDir = __DIR__ . '/../assets/uploads/videos/';
             if (!is_dir($uploadDir)) mkdir($uploadDir, 0777, true);
@@ -227,17 +240,74 @@ require_once __DIR__ . '/../includes/admin-header.php';
         $section_subheading = $sectionSettings['subheading'] ?? 'Watch our latest stories.';
     }
     
-    // For the form fields below
     $sectionSettings = [
         'heading' => $section_heading,
         'subheading' => $section_subheading
     ];
+
+    // Fetch Style Settings
+    $settingsObj = new Settings();
+    $savedStylesJson = $settingsObj->get('video_styles', '{"bg_color":"#ffffff","heading_color":"#1f2937","subheading_color":"#4b5563","arrow_bg_color":"#ffffff","arrow_icon_color":"#1f2937"}');
+    $savedStyles = json_decode($savedStylesJson, true);
+
+    $s_bg_color = $savedStyles['bg_color'] ?? '#ffffff';
+    $s_heading_color = $savedStyles['heading_color'] ?? '#1f2937';
+    $s_subheading_color = $savedStyles['subheading_color'] ?? '#4b5563';
+    $s_arrow_bg_color = $savedStyles['arrow_bg_color'] ?? '#ffffff';
+    $s_arrow_icon_color = $savedStyles['arrow_icon_color'] ?? '#1f2937';
     ?>
 
     <form method="POST" enctype="multipart/form-data" id="videoForm" class="space-y-6">
         <input type="hidden" name="check_submit" value="1">
 
         <!-- Section Settings Card -->
+        
+        <!-- Visual Style Settings -->
+        <div class="bg-white rounded-lg shadow-sm border border-gray-200 mb-8 overflow-hidden">
+            <div class="bg-gray-50 px-6 py-4 border-b border-gray-200">
+                <h2 class="text-xl font-semibold text-gray-800">Visual Style</h2>
+                <p class="text-sm text-gray-500">Customize the colors for the Videos section.</p>
+            </div>
+            <div class="p-6 grid grid-cols-1 md:grid-cols-3 gap-6">
+                <div>
+                    <label class="block text-sm font-semibold text-gray-700 mb-2">Background Color</label>
+                    <div class="flex items-center gap-3">
+                        <input type="color" name="bg_color" value="<?php echo htmlspecialchars($s_bg_color); ?>" class="h-10 w-16 border rounded cursor-pointer p-0.5" oninput="this.nextElementSibling.value = this.value">
+                        <input type="text" value="<?php echo htmlspecialchars($s_bg_color); ?>" class="flex-1 border rounded p-2 text-sm uppercase" oninput="this.previousElementSibling.value = this.value">
+                    </div>
+                </div>
+                <div>
+                    <label class="block text-sm font-semibold text-gray-700 mb-2">Heading Color</label>
+                    <div class="flex items-center gap-3">
+                        <input type="color" name="heading_color" value="<?php echo htmlspecialchars($s_heading_color); ?>" class="h-10 w-16 border rounded cursor-pointer p-0.5" oninput="this.nextElementSibling.value = this.value">
+                        <input type="text" value="<?php echo htmlspecialchars($s_heading_color); ?>" class="flex-1 border rounded p-2 text-sm uppercase" oninput="this.previousElementSibling.value = this.value">
+                    </div>
+                </div>
+                <div>
+                    <label class="block text-sm font-semibold text-gray-700 mb-2">Subheading Color</label>
+                    <div class="flex items-center gap-3">
+                        <input type="color" name="subheading_color" value="<?php echo htmlspecialchars($s_subheading_color); ?>" class="h-10 w-16 border rounded cursor-pointer p-0.5" oninput="this.nextElementSibling.value = this.value">
+                        <input type="text" value="<?php echo htmlspecialchars($s_subheading_color); ?>" class="flex-1 border rounded p-2 text-sm uppercase" oninput="this.previousElementSibling.value = this.value">
+                    </div>
+                </div>
+                <div>
+                    <label class="block text-sm font-semibold text-gray-700 mb-2">Slider Arrow Background</label>
+                    <div class="flex items-center gap-3">
+                        <input type="color" name="arrow_bg_color" value="<?php echo htmlspecialchars($s_arrow_bg_color); ?>" class="h-10 w-16 border rounded cursor-pointer p-0.5" oninput="this.nextElementSibling.value = this.value">
+                        <input type="text" value="<?php echo htmlspecialchars($s_arrow_bg_color); ?>" class="flex-1 border rounded p-2 text-sm uppercase" oninput="this.previousElementSibling.value = this.value">
+                    </div>
+                </div>
+                <div>
+                    <label class="block text-sm font-semibold text-gray-700 mb-2">Slider Arrow Icon</label>
+                    <div class="flex items-center gap-3">
+                        <input type="color" name="arrow_icon_color" value="<?php echo htmlspecialchars($s_arrow_icon_color); ?>" class="h-10 w-16 border rounded cursor-pointer p-0.5" oninput="this.nextElementSibling.value = this.value">
+                        <input type="text" value="<?php echo htmlspecialchars($s_arrow_icon_color); ?>" class="flex-1 border rounded p-2 text-sm uppercase" oninput="this.previousElementSibling.value = this.value">
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Section Configuration (Visibility & Headers) -->
         <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-6 mb-8 transform transition hover:shadow-md">
             <h3 class="text-lg font-bold text-gray-700 mb-4 border-b pb-2">Section Configuration</h3>
              <div class="col-span-1 md:col-span-2 pt-4 mt-2 mb-2 grid grid-cols-1 md:grid-cols-2 gap-6">

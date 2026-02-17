@@ -1,7 +1,9 @@
 <?php
 require_once __DIR__ . '/../classes/Product.php';
 require_once __DIR__ . '/../includes/functions.php';
+require_once __DIR__ . '/../includes/functions.php';
 require_once __DIR__ . '/../classes/Wishlist.php';
+require_once __DIR__ . '/../classes/Settings.php';
 
 $baseUrl = getBaseUrl();
 $db = Database::getInstance();
@@ -40,12 +42,135 @@ if (file_exists($productsConfigPath)) {
 // Fallback logic removed per user request
 ?>
 
-<?php if (!empty($products)): ?>
-<section id="trending-section" class="py-5 md:py-14 bg-white">
+<?php if (!empty($products)): 
+    // Fetch Global Styles
+    $settingsObj = new Settings();
+    $globalStylesJson = $settingsObj->get('global_card_styles', '{}');
+    $globalStyles = json_decode($globalStylesJson, true);
+    
+    // Fetch Section Styles
+    $stylesJson = $settingsObj->get('trending_styles', '{}'); 
+    $styles = json_decode($stylesJson, true);
+    
+    // Defaults (Global -> specific override if not empty)
+    // Helper to get style with fallback
+    function getStyleTrending($key, $local, $global, $default) {
+        return !empty($local[$key]) ? $local[$key] : (!empty($global[$key]) ? $global[$key] : $default);
+    }
+    
+    // Define styles
+    $bg_color = getStyleTrending('bg_color', $styles, $globalStyles, '#ffffff');
+    $heading_color = getStyleTrending('heading_color', $styles, $globalStyles, '#1f2937');
+    $subheading_color = getStyleTrending('subheading_color', $styles, $globalStyles, '#4b5563');
+    
+    $card_bg_color = getStyleTrending('card_bg_color', $styles, $globalStyles, '#ffffff');
+    $card_title_color = getStyleTrending('card_title_color', $styles, $globalStyles, '#1F2937');
+    $price_color = getStyleTrending('price_color', $styles, $globalStyles, '#1a3d32');
+    $compare_price_color = getStyleTrending('compare_price_color', $styles, $globalStyles, '#9ca3af');
+    
+    $badge_bg_color = getStyleTrending('badge_bg_color', $styles, $globalStyles, '#ef4444');
+    $badge_text_color = getStyleTrending('badge_text_color', $styles, $globalStyles, '#ffffff');
+    
+    $arrow_bg_color = getStyleTrending('arrow_bg_color', $styles, $globalStyles, '#ffffff');
+    $arrow_icon_color = getStyleTrending('arrow_icon_color', $styles, $globalStyles, '#1f2937');
+    
+    $btn_bg_color = getStyleTrending('btn_bg_color', $styles, $globalStyles, '#ffffff');
+    $btn_icon_color = getStyleTrending('btn_icon_color', $styles, $globalStyles, '#000000');
+    $btn_hover_bg_color = getStyleTrending('btn_hover_bg_color', $styles, $globalStyles, '#000000');
+    $btn_hover_icon_color = getStyleTrending('btn_hover_icon_color', $styles, $globalStyles, '#ffffff');
+    $btn_active_bg_color = getStyleTrending('btn_active_bg_color', $styles, $globalStyles, '#000000');
+    $btn_active_icon_color = getStyleTrending('btn_active_icon_color', $styles, $globalStyles, '#ffffff');
+    
+    $tooltip_bg_color = getStyleTrending('tooltip_bg_color', $styles, $globalStyles, '#000000');
+    $tooltip_text_color = getStyleTrending('tooltip_text_color', $styles, $globalStyles, '#ffffff');
+
+    $sectionId = 'trending-section-' . rand(1000, 9999);
+?>
+
+<style>
+    #<?php echo $sectionId; ?> {
+        background-color: <?php echo $bg_color; ?>;
+    }
+    #<?php echo $sectionId; ?> .section-heading {
+        color: <?php echo $heading_color; ?>;
+    }
+    #<?php echo $sectionId; ?> .section-subheading {
+        color: <?php echo $subheading_color; ?>;
+    }
+    #<?php echo $sectionId; ?> .product-price {
+        color: <?php echo $price_color; ?>;
+    }
+    #<?php echo $sectionId; ?> .product-compare-price {
+        color: <?php echo $compare_price_color; ?>;
+    }
+    #<?php echo $sectionId; ?> .discount-badge {
+        background-color: <?php echo $badge_bg_color; ?> !important;
+        color: <?php echo $badge_text_color; ?> !important;
+    }
+    #<?php echo $sectionId; ?> .custom-arrow {
+        background-color: <?php echo $arrow_bg_color; ?>;
+        color: <?php echo $arrow_icon_color; ?>;
+    }
+    #<?php echo $sectionId; ?> .custom-arrow:hover {
+        background-color: <?php echo $arrow_bg_color; ?>;
+        color: <?php echo $arrow_icon_color; ?>;
+        opacity: 0.8;
+    }
+
+    /* Action Buttons (Wishlist, Quick View, Add to Cart) */
+    #<?php echo $sectionId; ?> .product-action-btn,
+    #<?php echo $sectionId; ?> .wishlist-btn {
+        background-color: <?php echo $btn_bg_color; ?> !important;
+        color: <?php echo $btn_icon_color; ?> !important;
+        border: 1px solid transparent; 
+    }
+
+    #<?php echo $sectionId; ?> .product-action-btn:hover,
+    #<?php echo $sectionId; ?> .wishlist-btn:hover {
+        background-color: <?php echo $btn_hover_bg_color; ?> !important;
+        color: <?php echo $btn_hover_icon_color; ?> !important;
+    }
+
+    /* Active Wishlist Button */
+    #<?php echo $sectionId; ?> .wishlist-btn.bg-black {
+        background-color: <?php echo $btn_active_bg_color; ?> !important;
+        color: <?php echo $btn_active_icon_color; ?> !important;
+    }
+    
+    #<?php echo $sectionId; ?> .wishlist-btn.bg-black:hover {
+        background-color: <?php echo $btn_active_bg_color; ?> !important;
+        color: <?php echo $btn_active_icon_color; ?> !important;
+        opacity: 0.9;
+    }
+    
+    /* Tooltip Colors */
+    #<?php echo $sectionId; ?> .product-tooltip {
+        background-color: <?php echo $tooltip_bg_color; ?> !important;
+        color: <?php echo $tooltip_text_color; ?> !important;
+    }
+
+    /* Tooltip Arrow */
+    #<?php echo $sectionId; ?> .product-tooltip::after {
+        border-top-color: <?php echo $tooltip_bg_color; ?> !important;
+    }
+
+    /* Product Card Background */
+    #<?php echo $sectionId; ?> .product-card {
+        background-color: <?php echo $card_bg_color; ?> !important;
+    }
+    
+    /* Product Title Color */
+    #<?php echo $sectionId; ?> .product-card h3 a,
+    #<?php echo $sectionId; ?> .product-card h3 {
+        color: <?php echo $card_title_color; ?> !important;
+    }
+</style>
+
+<section id="<?php echo $sectionId; ?>" class="py-5 md:py-14">
     <div class="container mx-auto px-4">
         <div class="text-center mb-10">
-            <h2 class="text-2xl md:text-3xl font-heading font-bold mb-4"><?php echo htmlspecialchars($sectionHeading); ?></h2>
-            <p class="text-gray-600 text-sm md:text-md max-w-2xl mx-auto"><?php echo htmlspecialchars($sectionSubheading); ?></p>
+            <h2 class="text-2xl md:text-3xl font-heading font-bold mb-4 section-heading"><?php echo htmlspecialchars($sectionHeading); ?></h2>
+            <p class="text-sm md:text-md max-w-2xl mx-auto section-subheading"><?php echo htmlspecialchars($sectionSubheading); ?></p>
         </div>
         
         <!-- Product Slider Container -->
@@ -78,7 +203,7 @@ if (file_exists($productsConfigPath)) {
                     
                     <!-- Discount Badge -->
                     <?php if ($discount > 0): ?>
-                    <span class="absolute top-2 left-2 bg-red-500 text-white px-2 py-1 text-xs font-bold rounded">-<?php echo $discount; ?>%</span>
+                    <span class="absolute top-2 left-2 px-2 py-1 text-xs font-bold rounded discount-badge">-<?php echo $discount; ?>%</span>
                     <?php endif; ?>
                     
                     <!-- Wishlist Icon (Always Visible) -->
@@ -139,9 +264,9 @@ if (file_exists($productsConfigPath)) {
                     </div>
                     <div class="flex items-center justify-between">
                         <div class="flex items-center gap-2">
-                        <p class="text-md font-bold <?php echo $discount > 0 ? 'text-[#1a3d32]' : 'text-[var(--color-primary)]'; ?>"><?php echo format_price($price, $item['currency'] ?? 'USD'); ?></p>
+                        <p class="text-md font-bold product-price"><?php echo format_price($price, $item['currency'] ?? 'USD'); ?></p>
                             <?php if ($originalPrice): ?>
-                            <span class="text-gray-400 line-through text-sm block"><?php echo format_price($originalPrice, $item['currency'] ?? 'USD'); ?></span>
+                            <span class="text-gray-400 line-through text-sm block product-compare-price"><?php echo format_price($originalPrice, $item['currency'] ?? 'USD'); ?></span>
                             <?php endif; ?>
                         </div>
                     </div>

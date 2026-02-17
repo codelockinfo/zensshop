@@ -69,6 +69,18 @@ $topbarLinks = json_decode($topbarLinksRaw, true) ?: [
     ['label' => 'Our Store', 'url' => 'store']
 ];
 
+// Fetch Header Visual Styles
+$headerBg = $settingsObj->get('header_bg_color', '#ffffff');
+$headerText = $settingsObj->get('header_text_color', '#000000');
+$submenuBg = $settingsObj->get('submenu_bg_color', '#ffffff');
+$submenuText = $settingsObj->get('submenu_text_color', '#000000');
+$submenuHover = $settingsObj->get('submenu_hover_color', '#6b7280');
+$submenuItemHoverBg = $settingsObj->get('submenu_item_hover_bg_color', '#f9fafb');
+$topbarBg = $settingsObj->get('topbar_bg_color', '#000000');
+$topbarText = $settingsObj->get('topbar_text_color', '#ffffff');
+$topbarArrow = $settingsObj->get('topbar_arrow_color', '#9ca3af');
+
+
 
 // Get base URL using the centralized function
 $baseUrl = getBaseUrl();
@@ -412,6 +424,129 @@ if (!function_exists('url')) {
     <noscript>
         <link rel="stylesheet" href="<?php echo $baseUrl; ?>/assets/css/main7.css">
     </noscript>
+    
+    <!-- Dynamic Header Styles -->
+    <style>
+        /* Header Background & Text */
+        nav.header-shadow {
+            background-color: <?php echo $headerBg; ?> !important;
+        }
+        nav.header-shadow a, 
+        nav.header-shadow button,
+        nav.header-shadow .text-black,
+        nav.header-shadow .header-icon {
+            color: <?php echo $headerText; ?> !important;
+        }
+        
+        /* Submenu Background & Text */
+        .mega-menu-dropdown .bg-white,
+        .absolute .bg-white {
+            background-color: <?php echo $submenuBg; ?> !important;
+        }
+        
+        /* Submenu Links */
+        .mega-menu-dropdown a,
+        .absolute .bg-white a,
+        nav .absolute a {
+            color: <?php echo $submenuText; ?> !important;
+        }
+        
+        /* Submenu Hover */
+        .mega-menu-dropdown a:hover,
+        .absolute .bg-white a:hover,
+        nav .absolute a:hover {
+            color: <?php echo $submenuHover; ?> !important;
+        }
+
+        /* Border tweaks for seamless look if colors change */
+        .mega-menu-dropdown .border-gray-100,
+        .absolute .border-gray-100 {
+            border-color: <?php echo $submenuBg; ?> !important; 
+        }
+        
+        /* Hover bg for submenus if needed, though usually text color change is enough. 
+           We'll respect the existing hover:bg-gray-50 but might need to adjust if bg is dark.
+           For now, let's leave bg hover as is or make it transparent if conflict.
+        */
+        
+        /* MOBILE MENU STYLING */
+        
+        /* MOBILE MENU STYLING */
+        
+        /* 1. Mobile Menu Header (The 'Menu' bar with close button) maps to Main Header Styles */
+        #mobile-menu-main .bg-black,
+        [id^="mobile-menu-sub-"] .bg-black {
+            background-color: <?php echo $headerBg; ?> !important;
+            color: <?php echo $headerText; ?> !important;
+            border-bottom: 1px solid rgba(0,0,0,0.1); /* Subtle divider */
+        }
+        #mobile-menu-main .bg-black span,
+        #mobile-menu-main .bg-black button,
+        [id^="mobile-menu-sub-"] .bg-black span,
+        [id^="mobile-menu-sub-"] .bg-black button,
+        [id^="mobile-menu-sub-"] .bg-black i {
+            color: <?php echo $headerText; ?> !important;
+        }
+
+        /* 2. Mobile Menu Body (The list of links) maps to Submenu Styles */
+        #mobile-menu-main,
+        #mobile-menu-main .bg-white,
+        [id^="mobile-menu-sub-"],
+        [id^="mobile-menu-sub-"] .bg-white {
+            background-color: <?php echo $submenuBg; ?> !important;
+        }
+        
+        /* Links in Mobile Menu */
+        #mobile-menu-main a,
+        #mobile-menu-main button,
+        [id^="mobile-menu-sub-"] a,
+        [id^="mobile-menu-sub-"] button {
+             color: <?php echo $submenuText; ?> !important;
+        }
+        
+        /* Borders between items */
+        #mobile-menu-main .border-gray-100,
+        #mobile-menu-main .border-b,
+        [id^="mobile-menu-sub-"] .border-gray-100,
+        [id^="mobile-menu-sub-"] .border-b {
+            border-color: rgba(100, 100, 100, 0.1) !important;
+        }
+        
+        /* Mobile Menu Hover/Active Background State */
+        #mobile-menu-main a:hover,
+        #mobile-menu-main button:hover,
+        [id^="mobile-menu-sub-"] a:hover,
+        [id^="mobile-menu-sub-"] button:hover,
+        #mobile-menu-main a:active,
+        #mobile-menu-main button:active,
+        [id^="mobile-menu-sub-"] a:active,
+        [id^="mobile-menu-sub-"] button:active,
+        /* Specific override for the utility class used in PHP */
+        #mobile-menu-main .hover\:bg-gray-50:hover, 
+        [id^="mobile-menu-sub-"] .hover\:bg-gray-50:hover {
+            color: <?php echo $submenuHover; ?> !important;
+            background-color: <?php echo $submenuItemHoverBg; ?> !important;
+        }
+            color: <?php echo $submenuHover; ?> !important;
+            background-color: <?php echo $submenuItemHoverBg; ?> !important;
+        }
+
+        /* Top Bar Styling */
+        .block.bg-black {
+            background-color: <?php echo $topbarBg; ?> !important;
+            color: <?php echo $topbarText; ?> !important;
+        }
+        .block.bg-black a {
+             color: <?php echo $topbarText; ?> !important;
+        }
+        .block.bg-black .top-bar-arrow {
+            color: <?php echo $topbarArrow; ?> !important;
+        }
+        .block.bg-black .top-bar-arrow:hover {
+            color: <?php echo $topbarText; ?> !important; /* On hover match text color or keep separate? distinct hover color not requested, assuming text color */
+            opacity: 0.8;
+        }
+    </style>
 
     
     <!-- Font Awesome (Local optimized with font-display:swap) -->

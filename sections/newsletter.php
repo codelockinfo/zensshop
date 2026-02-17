@@ -8,6 +8,13 @@ $data = $db->fetchOne("SELECT * FROM section_newsletter LIMIT 1");
 
 if (!$data) return;
 
+// Fetch Styles
+require_once __DIR__ . '/../classes/Settings.php';
+$settingsObj = new Settings();
+$stylesJson = $settingsObj->get('newsletter_styles', '{"bg_overlay_opacity":"10","heading_color":"#111827","subheading_color":"#4b5563","button_bg_color":"#000000","button_text_color":"#ffffff"}');
+$styles = json_decode($stylesJson, true);
+$sectionId = 'newsletter-' . rand(1000, 9999);
+
 $bgImage = $data['background_image'] ? getBaseUrl() . '/' . $data['background_image'] : '';
 $heading = $data['heading'] ?? 'Join our family';
 $subheading = $data['subheading'] ?? 'Promotions, new products and sales. Directly to your inbox.';
@@ -18,25 +25,51 @@ $footer = $data['footer_content'] ?? '';
 $bgStyle = $bgImage ? "background-image: url('{$bgImage}');" : "background-color: #f3f4f6;";
 ?>
 
-<section class="py-20 md:py-24 bg-cover bg-center bg-no-repeat relative flex items-center justify-center min-h-[400px]" style="<?php echo $bgStyle; ?>">
+<style>
+    #<?php echo $sectionId; ?> .newsletter-overlay {
+        background-color: rgba(0, 0, 0, <?php echo ($styles['bg_overlay_opacity'] / 100); ?>);
+    }
+    #<?php echo $sectionId; ?> .newsletter-heading {
+        color: <?php echo $styles['heading_color']; ?>;
+    }
+    #<?php echo $sectionId; ?> .newsletter-subheading {
+        color: <?php echo $styles['subheading_color']; ?>;
+    }
+    #<?php echo $sectionId; ?> .newsletter-btn {
+        background-color: <?php echo $styles['button_bg_color']; ?> !important;
+        color: <?php echo $styles['button_text_color']; ?> !important;
+    }
+    /* Hover state for button: slightly lighten or darken */
+    #<?php echo $sectionId; ?> .newsletter-btn:hover {
+        opacity: 0.9;
+    }
+    #<?php echo $sectionId; ?> .newsletter-card {
+        background-color: <?php echo $styles['card_bg_color'] ?? '#ffffff'; ?>;
+    }
+    #<?php echo $sectionId; ?> .newsletter-input {
+        background-color: <?php echo $styles['input_bg_color'] ?? '#ffffff'; ?> !important;
+    }
+</style>
+
+<section id="<?php echo $sectionId; ?>" class="py-20 md:py-24 bg-cover bg-center bg-no-repeat relative flex items-center justify-center min-h-[400px]" style="<?php echo $bgStyle; ?>">
     <!-- Overlay if image is used -->
     <?php if($bgImage): ?>
-    <div class="absolute inset-0 bg-black bg-opacity-10 backdrop-blur-[2px]"></div>
+    <div class="absolute inset-0 newsletter-overlay backdrop-blur-[2px]"></div>
     <?php endif; ?>
 
-    <div class="bg-white rounded-xl shadow-2xl p-8 md:p-10 max-w-2xl w-full mx-4 relative z-10 text-center">
-        <h2 class="text-3xl font-bold mb-3 text-gray-900"><?php echo htmlspecialchars($heading); ?></h2>
+    <div class="newsletter-card rounded-xl shadow-2xl p-8 md:p-10 max-w-2xl w-full mx-4 relative z-10 text-center">
+        <h2 class="text-3xl font-bold mb-3 newsletter-heading"><?php echo htmlspecialchars($heading); ?></h2>
         
         <?php if($subheading): ?>
-        <p class="text-gray-600 mb-8"><?php echo htmlspecialchars($subheading); ?></p>
+        <p class="mb-8 newsletter-subheading"><?php echo htmlspecialchars($subheading); ?></p>
         <?php endif; ?>
 
         <form id="globalNewsletterForm" method="POST" class="flex flex-col md:flex-row gap-3 mb-6">
             <input type="email" name="email" id="newsletterEmail" placeholder="Your email address..." 
-                class="flex-grow border border-gray-300 rounded px-4 py-3 focus:outline-none focus:ring-2 focus:ring-black focus:border-transparent" 
+                class="newsletter-input flex-grow border border-gray-300 rounded px-4 py-3 focus:outline-none focus:ring-2 focus:ring-black focus:border-transparent" 
                 required>
             <button type="submit" id="newsletterSubmit"
-                class="bg-black text-white font-bold px-8 py-3 rounded hover:bg-gray-800 transition transform hover:scale-105">
+                class="font-bold px-8 py-3 rounded transform hover:scale-105 transition newsletter-btn">
                 <?php echo htmlspecialchars($btnText); ?>
             </button>
         </form>

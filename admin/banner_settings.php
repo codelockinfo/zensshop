@@ -2,6 +2,7 @@
 require_once __DIR__ . '/../classes/Database.php';
 require_once __DIR__ . '/../classes/Auth.php';
 require_once __DIR__ . '/../includes/functions.php';
+require_once __DIR__ . '/../classes/Settings.php';
 
 $auth = new Auth();
 $auth->requireLogin();
@@ -130,11 +131,27 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     elseif ($action === 'update_settings') {
         $show_arrows = isset($_POST['show_arrows']) ? true : false;
         $show_section = isset($_POST['show_section']) ? true : false;
+        $hide_text_mobile = isset($_POST['hide_text_mobile']) ? true : false;
+        
         $config = [
             'show_arrows' => $show_arrows,
-            'show_section' => $show_section
+            'show_section' => $show_section,
+            'hide_text_mobile' => $hide_text_mobile
         ];
         file_put_contents(__DIR__ . '/banner_config.json', json_encode($config));
+
+        // Save Visual Styles
+        $settingsObj = new Settings();
+        $banner_styles = [
+            'heading_color' => $_POST['heading_color'] ?? '#ffffff',
+            'subheading_color' => $_POST['subheading_color'] ?? '#f3f4f6',
+            'button_bg_color' => $_POST['button_bg_color'] ?? '#ffffff',
+            'button_text_color' => $_POST['button_text_color'] ?? '#000000',
+            'arrow_bg_color' => $_POST['arrow_bg_color'] ?? '#ffffff',
+            'arrow_icon_color' => $_POST['arrow_icon_color'] ?? '#1f2937'
+        ];
+        $settingsObj->set('banner_styles', json_encode($banner_styles), 'homepage');
+
         $_SESSION['flash_success'] = "Settings updated successfully!";
         header("Location: " . url('admin/banner'));
         exit;
@@ -169,7 +186,22 @@ if (file_exists($bannerConfigPath)) {
     $config = json_decode(file_get_contents($bannerConfigPath), true);
     $showArrows = isset($config['show_arrows']) ? $config['show_arrows'] : true;
     $showSection = isset($config['show_section']) ? $config['show_section'] : true;
+    $hideTextMobile = isset($config['hide_text_mobile']) ? $config['hide_text_mobile'] : false;
+} else {
+    $hideTextMobile = false; // Default
 }
+
+// Fetch Style Settings
+$settingsObj = new Settings();
+$savedStylesJson = $settingsObj->get('banner_styles', '{"heading_color":"#ffffff","subheading_color":"#f3f4f6","button_bg_color":"#ffffff","button_text_color":"#000000","arrow_bg_color":"#ffffff","arrow_icon_color":"#1f2937"}');
+$savedStyles = json_decode($savedStylesJson, true);
+
+$s_heading_color = $savedStyles['heading_color'] ?? '#ffffff';
+$s_subheading_color = $savedStyles['subheading_color'] ?? '#f3f4f6';
+$s_btn_bg = $savedStyles['button_bg_color'] ?? '#ffffff';
+$s_btn_text = $savedStyles['button_text_color'] ?? '#000000';
+$s_arrow_bg = $savedStyles['arrow_bg_color'] ?? '#ffffff';
+$s_arrow_icon = $savedStyles['arrow_icon_color'] ?? '#1f2937';
 ?>
 
 <div class="container mx-auto p-6">
@@ -183,6 +215,18 @@ if (file_exists($bannerConfigPath)) {
             <i class="fas fa-plus mr-2"></i> Add New Banner
         </button>
     </div>
+
+    <?php if ($success): ?>
+        <div class="bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded relative mb-4" role="alert">
+            <span class="block sm:inline"><?php echo htmlspecialchars($success); ?></span>
+        </div>
+    <?php endif; ?>
+
+    <?php if ($error): ?>
+        <div class="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative mb-4" role="alert">
+            <span class="block sm:inline"><?php echo htmlspecialchars($error); ?></span>
+        </div>
+    <?php endif; ?>
 
     <!-- Visibility Settings Card -->
     <div class="bg-white rounded-lg shadow-sm border border-gray-200 mb-8 overflow-hidden">
@@ -211,7 +255,7 @@ if (file_exists($bannerConfigPath)) {
                 </div>
                 
                 <!-- Hero Section Visibility Toggle -->
-                <div class="flex items-center justify-between border-t border-gray-100 pt-4">
+                <div class="flex items-center justify-between border-t border-gray-100 pt-4 mb-4">
                     <div class="flex items-center gap-4">
                         <div class="p-3 bg-blue-50 rounded-lg text-blue-600">
                             <i class="fas fa-eye text-lg"></i>
@@ -226,21 +270,81 @@ if (file_exists($bannerConfigPath)) {
                         <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
                     </label>
                 </div>
+                
+                <!-- Mobile Text Visibility Toggle -->
+                <div class="flex items-center justify-between border-t border-gray-100 pt-4">
+                    <div class="flex items-center gap-4">
+                        <div class="p-3 bg-purple-50 rounded-lg text-purple-600">
+                            <i class="fas fa-mobile-alt text-lg"></i>
+                        </div>
+                        <div>
+                            <h3 class="font-bold text-gray-800">Hide Text on Mobile</h3>
+                            <p class="text-sm text-gray-500">Hide heading and subheading on mobile devices</p>
+                        </div>
+                    </div>
+                    <label class="relative inline-flex items-center cursor-pointer">
+                        <input type="checkbox" name="hide_text_mobile" class="sr-only peer" onchange="this.form.submit()" <?php echo $hideTextMobile ? 'checked' : ''; ?>>
+                        <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-purple-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-purple-600"></div>
+                    </label>
+                </div>
+                
+                <!-- Visual Styles -->
+                <div class="mt-8 border-t border-gray-200 pt-6">
+                     <h3 class="font-bold text-gray-800 mb-4">Visual Styling</h3>
+                     <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                        <div>
+                            <label class="block text-sm font-bold mb-2">Heading Color</label>
+                            <div class="flex items-center gap-2">
+                                <input type="color" name="heading_color" value="<?php echo htmlspecialchars($s_heading_color); ?>" class="h-10 w-16 cursor-pointer border rounded" oninput="this.nextElementSibling.value = this.value">
+                                <input type="text" value="<?php echo htmlspecialchars($s_heading_color); ?>" class="flex-1 border p-2 rounded text-sm uppercase" oninput="this.previousElementSibling.value = this.value">
+                            </div>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-bold mb-2">Subheading Color</label>
+                            <div class="flex items-center gap-2">
+                                <input type="color" name="subheading_color" value="<?php echo htmlspecialchars($s_subheading_color); ?>" class="h-10 w-16 cursor-pointer border rounded" oninput="this.nextElementSibling.value = this.value">
+                                <input type="text" value="<?php echo htmlspecialchars($s_subheading_color); ?>" class="flex-1 border p-2 rounded text-sm uppercase" oninput="this.previousElementSibling.value = this.value">
+                            </div>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-bold mb-2">Button Background</label>
+                            <div class="flex items-center gap-2">
+                                <input type="color" name="button_bg_color" value="<?php echo htmlspecialchars($s_btn_bg); ?>" class="h-10 w-16 cursor-pointer border rounded" oninput="this.nextElementSibling.value = this.value">
+                                <input type="text" value="<?php echo htmlspecialchars($s_btn_bg); ?>" class="flex-1 border p-2 rounded text-sm uppercase" oninput="this.previousElementSibling.value = this.value">
+                            </div>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-bold mb-2">Button Text Color</label>
+                            <div class="flex items-center gap-2">
+                                <input type="color" name="button_text_color" value="<?php echo htmlspecialchars($s_btn_text); ?>" class="h-10 w-16 cursor-pointer border rounded" oninput="this.nextElementSibling.value = this.value">
+                                <input type="text" value="<?php echo htmlspecialchars($s_btn_text); ?>" class="flex-1 border p-2 rounded text-sm uppercase" oninput="this.previousElementSibling.value = this.value">
+                            </div>
+                        </div>
+                         <div>
+                            <label class="block text-sm font-bold mb-2">Arrow Background</label>
+                            <div class="flex items-center gap-2">
+                                <input type="color" name="arrow_bg_color" value="<?php echo htmlspecialchars($s_arrow_bg); ?>" class="h-10 w-16 cursor-pointer border rounded" oninput="this.nextElementSibling.value = this.value">
+                                <input type="text" value="<?php echo htmlspecialchars($s_arrow_bg); ?>" class="flex-1 border p-2 rounded text-sm uppercase" oninput="this.previousElementSibling.value = this.value">
+                            </div>
+                        </div>
+                         <div>
+                            <label class="block text-sm font-bold mb-2">Arrow Icon Color</label>
+                            <div class="flex items-center gap-2">
+                                <input type="color" name="arrow_icon_color" value="<?php echo htmlspecialchars($s_arrow_icon); ?>" class="h-10 w-16 cursor-pointer border rounded" oninput="this.nextElementSibling.value = this.value">
+                                <input type="text" value="<?php echo htmlspecialchars($s_arrow_icon); ?>" class="flex-1 border p-2 rounded text-sm uppercase" oninput="this.previousElementSibling.value = this.value">
+                            </div>
+                        </div>
+                     </div>
+                     <div class="text-right mt-4">
+                         <button type="submit" class="bg-indigo-600 text-white px-4 py-2 rounded hover:bg-indigo-700 transition shadow-sm font-bold">Save Styles</button>
+                     </div>
+                </div>
+
             </form>
         </div>
     </div>
 
-    <?php if ($success): ?>
-        <div class="bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded relative mb-4" role="alert">
-            <span class="block sm:inline"><?php echo htmlspecialchars($success); ?></span>
-        </div>
-    <?php endif; ?>
 
-    <?php if ($error): ?>
-        <div class="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative mb-4" role="alert">
-            <span class="block sm:inline"><?php echo htmlspecialchars($error); ?></span>
-        </div>
-    <?php endif; ?>
 
     <!-- Banners List -->
     <div class="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden">

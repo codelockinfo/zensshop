@@ -53,7 +53,33 @@ function renderFooterLinkRecursive($item, $baseUrl) {
     }
     echo "</li>";
 }
+
+// Fetch Footer Visual Styles
+$footerBg = $getFooterSetting('footer_bg_color', '#ffffff');
+$footerText = $getFooterSetting('footer_text_color', '#000000');
 ?>
+    <style>
+        footer.bg-white {
+            background-color: <?php echo $footerBg; ?> !important;
+            color: <?php echo $footerText; ?> !important;
+        }
+        footer .text-black,
+        footer .text-gray-700,
+        footer .text-gray-900,
+        footer a {
+             color: <?php echo $footerText; ?> !important;
+        }
+        /* Hover effect for links - slightly lighter/darker or opacity */
+        footer a:hover {
+            opacity: 0.8;
+        }
+        
+        /* Specific overrides if needed */
+        footer .bg-black {
+             /* Social icons hover or buttons might need checks, but usually OK */
+        }
+    </style>
+
     <!-- Footer -->
     <footer class="bg-white text-black relative">
         <div class="container footer-block mx-auto px-4 pt-20">
