@@ -9,6 +9,7 @@ class Delhivery {
     private $token;
     private $isTest;
     private $baseUrl;
+    private $expressUrl;
     private $settings;
 
     public function __construct($token = null, $storeId = null) {
@@ -57,6 +58,7 @@ class Delhivery {
         $this->token = trim($rawToken);
         $this->isTest = ($mode === 'test');
         $this->baseUrl = ($mode === 'live') ? 'https://track.delhivery.com' : 'https://staging-express.delhivery.com';
+        $this->expressUrl = ($mode === 'live') ? 'https://track.delhivery.com' : 'https://staging-express.delhivery.com';
     }
 
     public function getToken() {
@@ -111,7 +113,7 @@ class Delhivery {
      * @param array $orderData Must contain shipments array and pickup_location
      */
     public function createShipment($orderData) {
-        $url = $this->baseUrl . '/api/cmu/create.json';
+        $url = $this->expressUrl . '/api/cmu/create.json';
         
         // Ensure data is structured correctly for Delhivery
         $payload = [
@@ -196,7 +198,9 @@ class Delhivery {
                     'return_add' => trim(preg_replace('/\s+/', ' ', ($shippingAddr['street'] ?? '') . ' ' . ($shippingAddr['address_line1'] ?? '') . ' ' . ($shippingAddr['address_line2'] ?? '')))
                 ]
             ],
-            'pickup_location' => $warehouseName
+            'pickup_location' => [
+                'name' => $warehouseName
+            ]
         ];
         
         // Add extra details if available from first item
@@ -215,7 +219,8 @@ class Delhivery {
             return ['success' => true, 'waybill' => $waybill];
         }
 
-        $errorMsg = $result['rmk'] ?? $result['packages'][0]['remarks'][0] ?? $result['message'] ?? 'Failed to create shipment';
+        // Prioritize specific package remarks over generic 'rmk'
+        $errorMsg = $result['packages'][0]['remarks'][0] ?? $result['rmk'] ?? $result['message'] ?? 'Failed to create shipment';
         return [
             'success' => false, 
             'message' => "Delhivery Error: $errorMsg (Warehouse: $warehouseName)",
@@ -238,7 +243,7 @@ class Delhivery {
      * @param int $count Number of waybills to fetch
      */
     public function fetchWaybills($count = 1) {
-        $url = $this->baseUrl . "/api/k/v1/waybill/fetch/?count=$count";
+        $url = $this->expressUrl . "/api/k/v1/waybill/fetch/?count=$count";
         return $this->makeRequest($url, 'GET');
     }
 
@@ -247,7 +252,7 @@ class Delhivery {
      * @param array $data Packaging details to update
      */
     public function updateShipment($data) {
-        $url = $this->baseUrl . '/api/p/edit/';
+        $url = $this->expressUrl . '/api/p/edit/';
         return $this->makeRequest($url, 'POST', $data);
     }
 
@@ -257,7 +262,7 @@ class Delhivery {
      * @param string $ewaybillNumber
      */
     public function updateEwaybill($waybill, $ewaybillNumber) {
-        $url = $this->baseUrl . '/api/p/edit/';
+        $url = $this->expressUrl . '/api/p/edit/';
         $payload = [
             'waybill' => $waybill,
             'ewaybill' => $ewaybillNumber
@@ -271,7 +276,7 @@ class Delhivery {
      */
     public function calculateShippingCost($params) {
         $query = http_build_query($params);
-        $url = $this->baseUrl . "/api/k/v1/invoice/shipping_charge/?$query";
+        $url = $this->expressUrl . "/api/k/v1/invoice/shipping_charge/?$query";
         return $this->makeRequest($url, 'GET');
     }
 
@@ -280,7 +285,7 @@ class Delhivery {
      * @param string $waybill
      */
     public function generateLabel($waybill) {
-        $url = $this->baseUrl . "/api/p/packing_slip?wbw=$waybill";
+        $url = $this->expressUrl . "/api/p/packing_slip?wbw=$waybill";
         return $this->makeRequest($url, 'GET');
     }
 
@@ -289,7 +294,7 @@ class Delhivery {
      * @param array $data Contains pickup_time, pickup_date, pickup_location, expected_package_count
      */
     public function createPickupRequest($data) {
-        $url = $this->baseUrl . '/api/pickup/request/creation/json/';
+        $url = $this->expressUrl . '/api/pickup/request/creation/json/';
         return $this->makeRequest($url, 'POST', $data);
     }
 
@@ -298,7 +303,7 @@ class Delhivery {
      * @param array $data Warehouse details
      */
     public function createWarehouse($data) {
-        $url = $this->baseUrl . '/api/backend/clientwarehouse/create/';
+        $url = $this->expressUrl . '/api/backend/clientwarehouse/create/';
         return $this->makeRequest($url, 'POST', $data);
     }
 
@@ -307,7 +312,7 @@ class Delhivery {
      * @param array $data Warehouse details (must include name or identifier)
      */
     public function updateWarehouse($data) {
-        $url = $this->baseUrl . '/api/backend/clientwarehouse/edit/';
+        $url = $this->expressUrl . '/api/backend/clientwarehouse/edit/';
         return $this->makeRequest($url, 'POST', $data);
     }
 
@@ -329,7 +334,7 @@ class Delhivery {
     public function cancel($waybill) {
         if (empty($waybill)) return ['success' => false, 'message' => 'Waybill required'];
 
-        $url = $this->baseUrl . '/api/p/edit';
+        $url = $this->expressUrl . '/api/p/edit';
         $payload = [
             'waybill' => $waybill,
             'cancellation' => 'true'
