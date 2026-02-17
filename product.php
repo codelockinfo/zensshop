@@ -672,6 +672,7 @@ $stockLabel = get_stock_status_text($currentStatus, $currentStock, $totalSold);
                     </button>
                 </div>
                 
+
                 <!-- Pickup Information -->
                 <?php if ($settings->get('pickup_enable', '1') == '1'): ?>
                 <div class="bg-gray-50 p-4 rounded-lg">

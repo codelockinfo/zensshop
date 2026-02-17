@@ -153,6 +153,15 @@ try {
     $order = new Order();
     $createdOrderId = $order->create($orderData);
     
+    // Auto-create Delhivery Shipment
+    try {
+        require_once __DIR__ . '/../../classes/Delhivery.php';
+        $delhivery = new Delhivery();
+        $delhivery->autoCreateShipment($createdOrderId['id']);
+    } catch (Exception $e) {
+        error_log("Failed to auto-create Delhivery shipment for order " . $createdOrderId['order_number'] . ": " . $e->getMessage());
+    }
+
     // Clear cart
     $cart->clear();
     

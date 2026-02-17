@@ -268,7 +268,108 @@ require_once __DIR__ . '/../../includes/admin-header.php';
     </div>
 
     <!-- Right Column - Order Summary -->
+    <!-- Right Column - Order Summary -->
     <div class="lg:col-span-1 space-y-6">
+        <!-- Delhivery Shipping Card -->
+        <div class="admin-card">
+            <h2 class="text-xl font-semibold mb-4 flex items-center">
+                <i class="fas fa-truck mr-2 text-orange-600"></i>
+                Shipping & Logistics
+            </h2>
+            
+            <?php if (empty($orderData['tracking_number'])): ?>
+                <div class="p-4 bg-gray-50 rounded-lg border border-dashed border-gray-300 text-center">
+                    <p class="text-sm text-gray-500 mb-4">No shipment created yet for this order.</p>
+                    <button onclick="handleDelhiveryAction('create_shipment')" id="createShipmentBtn" 
+                            class="w-full bg-orange-600 text-white py-2 rounded font-semibold hover:bg-orange-700 transition flex items-center justify-center">
+                        <i class="fas fa-plus-circle mr-2"></i> Create Delhivery Shipment
+                    </button>
+                </div>
+            <?php else: ?>
+                <div class="space-y-4">
+                    <div>
+                        <p class="text-xs font-bold text-gray-400 uppercase">Waybill / Tracking No.</p>
+                        <p class="text-lg font-mono font-bold text-blue-600"><?php echo htmlspecialchars($orderData['tracking_number']); ?></p>
+                    </div>
+                    
+                    <div id="trackingStatusContainer" class="p-3 bg-blue-50 rounded border border-blue-100 text-sm">
+                        <i class="fas fa-sync fa-spin mr-2"></i> Fetching status...
+                    </div>
+
+                    <div class="flex flex-col gap-2">
+                        <button onclick="handleDelhiveryAction('track_shipment')" 
+                                class="w-full bg-blue-600 text-white py-2 rounded text-sm font-semibold hover:bg-blue-700 transition">
+                            <i class="fas fa-search-location mr-2"></i> Track Live Status
+                        </button>
+                        <button onclick="handleDelhiveryAction('cancel_shipment')" 
+                                class="w-full bg-white border border-red-200 text-red-600 py-2 rounded text-sm font-semibold hover:bg-red-50 transition">
+                            <i class="fas fa-times-circle mr-2"></i> Cancel Shipment
+                        </button>
+                    </div>
+                </div>
+            <?php endif; ?>
+        </div>
+
+        <script>
+        async function handleDelhiveryAction(action) {
+            const btn = event.currentTarget;
+            const originalContent = btn.innerHTML;
+            
+            if (action === 'cancel_shipment' && !confirm('Are you sure you want to cancel this shipment?')) return;
+            
+            btn.disabled = true;
+            btn.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i> Processing...';
+
+            try {
+                const response = await fetch('<?php echo $baseUrl; ?>/admin/api/delhivery_actions.php', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ action, order_number: '<?php echo $orderData['order_number']; ?>' })
+                });
+                
+                const data = await response.json();
+                if (data.success) {
+                    if (action === 'track_shipment') {
+                        // Display tracking data in console instead of alert
+                        console.log('Delhivery Live Tracking Data:', data.data);
+                    } else {
+                        location.reload();
+                    }
+                } else {
+                    console.error('Delhivery Action Failed:', data.message || 'Action failed');
+                }
+            } catch (error) {
+                console.error('Delhivery Network Error:', error);
+            } finally {
+                btn.disabled = false;
+                btn.innerHTML = originalContent;
+            }
+        }
+
+        <?php if (!empty($orderData['tracking_number'])): ?>
+        // Auto-fetch basic status
+        document.addEventListener('DOMContentLoaded', async () => {
+            const statusDiv = document.getElementById('trackingStatusContainer');
+            try {
+                const response = await fetch('<?php echo $baseUrl; ?>/admin/api/delhivery_actions.php', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ action: 'track_shipment', order_number: '<?php echo $orderData['order_number']; ?>' })
+                });
+                const data = await response.json();
+                if (data.success && data.data.ShipmentData && data.data.ShipmentData[0]) {
+                    const ship = data.data.ShipmentData[0].Shipment;
+                    statusDiv.innerHTML = `<span class="font-bold text-blue-800">${ship.Status.Status || 'Active'}</span><br><span class="text-xs text-gray-500">${ship.Status.Instructions || ''}</span>`;
+                } else {
+                    statusDiv.innerHTML = '<span class="text-gray-500">Status unavailable</span>';
+                }
+            } catch (e) {
+                statusDiv.innerHTML = '<span class="text-red-500">Failed to load status</span>';
+            }
+        });
+        <?php endif; ?>
+        </script>
+
         <div class="admin-card">
             <h2 class="text-xl font-semibold mb-4">Order Summary</h2>
             
@@ -460,13 +561,12 @@ async function handleRequestAction(event, requestId, status, type = '') {
         if (data.success) {
             location.reload();
         } else {
-            alert(data.message || 'Error updating request');
+            console.error('Request Action Failed:', data.message || 'Error updating request');
             btns.forEach(b => b.disabled = false);
             btn.innerHTML = originalContent;
         }
     } catch (e) {
-        console.error(e);
-        alert('Failed to connect to server');
+        console.error('Network Error in handleRequestAction:', e);
         btns.forEach(b => b.disabled = false);
         btn.innerHTML = originalContent;
     }

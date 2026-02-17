@@ -802,6 +802,9 @@ unset($_SESSION['error']);
                     'razorpay_key_secret' => ['label' => 'Razorpay Key Secret', 'placeholder' => '...', 'type' => 'password'],
                     'razorpay_mode' => ['label' => 'Razorpay Mode', 'placeholder' => 'test or live'],
                     'google_client_id' => ['label' => 'Google Client ID', 'placeholder' => '...-apps.googleusercontent.com'],
+                    'delhivery_api_token' => ['label' => 'Delhivery API Token', 'placeholder' => 'Enter your Delhivery Token', 'type' => 'password', 'group' => 'api'],
+                    'delhivery_mode' => ['label' => 'Delhivery Mode', 'placeholder' => 'test or live (Staging or Production)', 'group' => 'api'],
+                    'delhivery_warehouse_name' => ['label' => 'Delhivery Warehouse Name', 'placeholder' => 'e.g. PRIMARY', 'group' => 'api'],
                 ];
                 foreach ($apiFields as $key => $field): 
                      $val = $settings->get($key, '');
@@ -857,6 +860,27 @@ unset($_SESSION['error']);
                         <li>Enable Google+ API</li>
                         <li>Create OAuth 2.0 Client ID</li>
                     </ol>
+                </div>
+
+                <!-- Delhivery Info -->
+                <div class="p-4 bg-orange-50 rounded border border-orange-200 md:col-span-2">
+                    <h3 class="font-semibold text-orange-900 mb-2 flex items-center">
+                        <i class="fas fa-truck mr-2"></i>
+                        Delhivery Delivery Setup
+                    </h3>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <ol class="text-sm text-orange-800 space-y-1 list-decimal list-inside">
+                            <li>Login to <a href="https://one.delhivery.com" target="_blank" class="underline">Delhivery One</a></li>
+                            <li>Go to Settings → Developer Portal</li>
+                            <li>Get your <b>API Token</b></li>
+                            <li>Use <b>test</b> mode for Staging and <b>live</b> for Production</li>
+                        </ol>
+                        <ul class="text-sm text-orange-800 space-y-1 list-disc list-inside">
+                            <li><b>Warehouse Name:</b> Must match exactly what you created in Delhivery panel.</li>
+                            <li>Staging URL: <code>staging-express.delhivery.com</code></li>
+                            <li>Production URL: <code>track.delhivery.com</code></li>
+                        </ul>
+                    </div>
                 </div>
             </div>
         </div>

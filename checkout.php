@@ -216,6 +216,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['place_order']) && emp
         $orderId = $orderResponse['id'];
         $orderNumber = $orderResponse['order_number'];
         
+        // Auto-create Delhivery Shipment
+        try {
+            require_once __DIR__ . '/classes/Delhivery.php';
+            $delhivery = new Delhivery();
+            $delhivery->autoCreateShipment($orderId);
+        } catch (Exception $e) {
+            error_log("Failed to auto-create Delhivery shipment for order " . $orderNumber . ": " . $e->getMessage());
+        }
+
         // Clear cart
         $cart->clear();
         
@@ -531,7 +540,7 @@ nav.bg-white.sticky.top-0 {
                             <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                                 <div>
                                     <label class="block text-sm font-semibold mb-2 text-gray-700">City</label>
-                                    <input type="text" name="city" required
+                                    <input type="text" name="city" id="cityInput" required
                                            pattern="[a-zA-Z\s]+"
                                            title="Please enter a valid city name (letters only)"
                                            onkeypress="return (event.charCode >= 65 && event.charCode <= 90) || (event.charCode >= 97 && event.charCode <= 122) || event.charCode === 32"
@@ -553,13 +562,14 @@ nav.bg-white.sticky.top-0 {
                             <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                                 <div>
                                     <label class="block text-sm font-semibold mb-2 text-gray-700">ZIP Code</label>
-                                    <input type="text" name="zip" required
+                                    <input type="text" name="zip" id="zipInput" required
                                            pattern="[0-9\s-]{6}"
                                            title="Please enter a valid 6-digit ZIP code"
                                            onkeypress="return (event.charCode >= 48 && event.charCode <= 57) || event.charCode === 45 || event.charCode === 32"
                                            maxlength="6"
                                            value="<?php echo htmlspecialchars($_POST['zip'] ?? ''); ?>"
                                            class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent">
+                                    <div id="zipStatus" class="mt-2 text-xs"></div>
                                 </div>
                                 <div>
                                     <label class="block text-sm font-semibold mb-2 text-gray-700">Country</label>
@@ -843,9 +853,79 @@ function updateShipping() {
 
 // Listen for input changes to update tracking attributes immediately
 document.addEventListener('DOMContentLoaded', function() {
-    // City Update
-    const cityInput = document.querySelector('input[name="city"]');
+    // Pincode Serviceability Check
+    const zipInput = document.getElementById('zipInput');
+    const cityInput = document.getElementById('cityInput');
+    const stateInput = document.getElementById('customerStateInput');
+    const zipStatus = document.getElementById('zipStatus');
     const payBtn = document.getElementById('razorpayPayButton');
+
+    if (zipInput) {
+        zipInput.addEventListener('input', async function() {
+            const pincode = this.value.trim().replace(/\s/g, '');
+            if (pincode.length === 6 && /^[0-9]+$/.test(pincode)) {
+                zipStatus.innerHTML = '<i class="fas fa-spinner fa-spin mr-1"></i> Checking serviceability...';
+                zipStatus.className = 'mt-2 text-xs text-blue-600';
+                
+                try {
+                    const response = await fetch('<?php echo $baseUrl; ?>/api/pincode_serviceability.php?pincode=' + pincode);
+                    const data = await response.json();
+                    
+                    if (data.success && data.is_serviceable) {
+                        zipStatus.innerHTML = '<i class="fas fa-check-circle mr-1"></i> Delivery available to ' + data.city;
+                        zipStatus.className = 'mt-2 text-xs text-green-600';
+                        
+                        // Auto-fill City and State
+                        if (cityInput) {
+                            cityInput.value = data.city;
+                            // Trigger input event for tracking attributes
+                            cityInput.dispatchEvent(new Event('input'));
+                        }
+                        if (stateInput) {
+                            stateInput.value = data.state;
+                            // Trigger recalculate taxes if state changed
+                            recalculateTaxes();
+                        }
+                        
+                        payBtn.disabled = false;
+                        payBtn.classList.remove('opacity-50', 'cursor-not-allowed');
+                    } else {
+                        const errorMsg = data.message || 'Sorry, we do not deliver to this pincode yet.';
+                        zipStatus.innerHTML = '<i class="fas fa-times-circle mr-1"></i> ' + errorMsg;
+                        zipStatus.className = 'mt-2 text-xs text-red-600';
+                        
+                        // Only disable if user is asking for delivery
+                        const deliveryTypeInput = document.querySelector('input[name="delivery_type"]:checked');
+                        const deliveryType = deliveryTypeInput ? deliveryTypeInput.value : 'delivery';
+                        if (deliveryType === 'delivery') {
+                            payBtn.disabled = true;
+                            payBtn.classList.add('opacity-50', 'cursor-not-allowed');
+                        }
+                    }
+                } catch (error) {
+                    zipStatus.innerHTML = '<i class="fas fa-exclamation-triangle mr-1"></i> Error checking serviceability';
+                    zipStatus.className = 'mt-2 text-xs text-orange-600';
+                }
+            } else {
+                zipStatus.innerHTML = '';
+            }
+        });
+        
+        // Ensure buttons are re-enabled if user switches to pickup after a bad pincode
+        document.querySelectorAll('input[name="delivery_type"]').forEach(radio => {
+            radio.addEventListener('change', function() {
+                if (this.value === 'pickup') {
+                    payBtn.disabled = false;
+                    payBtn.classList.remove('opacity-50', 'cursor-not-allowed');
+                } else {
+                    // Re-trigger zip check logic if switching back to delivery
+                    zipInput.dispatchEvent(new Event('input'));
+                }
+            });
+        });
+    }
+
+    // City Update logic already exists below, but we'll ensure it works with our new cityInput ID
     if (cityInput && payBtn) {
         cityInput.addEventListener('input', function() {
             payBtn.setAttribute('data-city', this.value);

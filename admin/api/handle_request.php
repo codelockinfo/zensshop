@@ -41,6 +41,17 @@ try {
     if ($status === 'approved') {
         $newOrderStatus = ($request['type'] === 'refund' || $type === 'refund') ? 'returned' : 'cancelled';
         $db->execute("UPDATE orders SET order_status = ? WHERE id = ?", [$newOrderStatus, $request['order_id']]);
+
+        // AUTOMATIC DELHIVERY CANCELLATION
+        // If order is being cancelled and has a tracking number, stop the shipment
+        if ($newOrderStatus === 'cancelled') {
+            $orderData = $db->fetchOne("SELECT tracking_number, store_id FROM orders WHERE id = ?", [$request['order_id']]);
+            if (!empty($orderData['tracking_number'])) {
+                require_once __DIR__ . '/../../classes/Delhivery.php';
+                $delhivery = new Delhivery(null, $orderData['store_id']);
+                $delhivery->cancel($orderData['tracking_number']);
+            }
+        }
     } elseif ($status === 'rejected') {
         // If cancellation was rejected, revert to previous status
         if ($request['type'] === 'cancel' && !empty($request['previous_status'])) {
