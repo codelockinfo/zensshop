@@ -30,18 +30,44 @@ require_once __DIR__ . '/includes/header.php';
 ?>
 
 <?php
-// Get Colors
-$blogBg = $settingsObj->get('blog_bg_color', '#f9fafb');
-$blogText = $settingsObj->get('blog_text_color', '#1f2937');
-$blogHeadingColor = $settingsObj->get('blog_heading_color', '#111827');
+// Load Consolidated Settings
+$blogStylingJson = $settingsObj->get('blog_page_styling', '');
+$blogStyling = !empty($blogStylingJson) ? json_decode($blogStylingJson, true) : [];
+
+// Fallback to individual keys if JSON is empty
+if (empty($blogStyling)) {
+    $blogStyling = [
+        'blog_heading' => $settingsObj->get('blog_heading', 'Our Blogs'),
+        'blog_subheading' => $settingsObj->get('blog_subheading', 'Latest news, updates, and stories from our team.'),
+        'blog_heading_color' => $settingsObj->get('blog_heading_color', '#111827'),
+        'blog_subheading_color' => $settingsObj->get('blog_subheading_color', '#4b5563'),
+        'blog_page_bg_color' => $settingsObj->get('blog_page_bg_color', '#f9fafb'),
+        'blog_card_bg_color' => $settingsObj->get('blog_card_bg_color', '#ffffff'),
+        'blog_date_color' => $settingsObj->get('blog_date_color', '#6b7280'),
+        'blog_title_color' => $settingsObj->get('blog_title_color', '#111827'),
+        'blog_desc_color' => $settingsObj->get('blog_desc_color', '#4b5563'),
+        'blog_read_more_color' => $settingsObj->get('blog_read_more_color', '#2563eb')
+    ];
+}
+
+$blogBg = $blogStyling['blog_page_bg_color'] ?? '#f9fafb';
+$blogHeadingColor = $blogStyling['blog_heading_color'] ?? '#111827';
+$blogSubheadingColor = $blogStyling['blog_subheading_color'] ?? '#4b5563';
+
+// Card Colors
+$cardBg = $blogStyling['blog_card_bg_color'] ?? '#ffffff';
+$dateColor = $blogStyling['blog_date_color'] ?? '#6b7280';
+$titleColor = $blogStyling['blog_title_color'] ?? '#111827';
+$descColor = $blogStyling['blog_desc_color'] ?? '#4b5563';
+$readMoreColor = $blogStyling['blog_read_more_color'] ?? '#2563eb';
 ?>
 <div style="background-color: <?php echo $blogBg; ?>;" class="py-12 min-h-screen">
     <div class="container mx-auto px-4">
         <h1 class="text-4xl font-serif text-center mb-4" style="color: <?php echo $blogHeadingColor; ?>;">
             <?php echo htmlspecialchars($settingsObj->get('blog_heading', 'Our Blog')); ?>
         </h1>
-        <p class="text-center mb-12 max-w-2xl mx-auto" style="color: <?php echo $blogText; ?>;">
-            <?php echo htmlspecialchars($settingsObj->get('blog_description', 'Latest news, updates, and stories from our team.')); ?>
+        <p class="text-center mb-12 max-w-2xl mx-auto" style="color: <?php echo $blogSubheadingColor; ?>;">
+            <?php echo htmlspecialchars($settingsObj->get('blog_subheading', 'Latest news, updates, and stories from our team.')); ?>
         </p>
 
         <?php if (empty($blogs)): ?>
@@ -53,7 +79,7 @@ $blogHeadingColor = $settingsObj->get('blog_heading_color', '#111827');
             <!-- Skeleton Loaders for Blog Cards -->
             <div id="blog-skeleton" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
                 <?php for ($i = 0; $i < min(6, count($blogs)); $i++): ?>
-                <div class="bg-white rounded-xl shadow-sm overflow-hidden animate-pulse">
+                <div class="rounded-xl shadow-sm overflow-hidden animate-pulse" style="background-color: <?php echo $cardBg; ?>;">
                     <div class="aspect-video bg-gradient-to-r from-gray-200 via-gray-300 to-gray-200 relative overflow-hidden">
                         <div class="absolute inset-0 bg-gradient-to-r from-transparent via-white to-transparent opacity-50 animate-shimmer"></div>
                     </div>
@@ -71,7 +97,7 @@ $blogHeadingColor = $settingsObj->get('blog_heading_color', '#111827');
             <!-- Actual Blog Cards -->
             <div id="blog-cards" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8" style="display: none;">
                 <?php foreach ($blogs as $blog): ?>
-                    <article class="bg-white rounded-xl shadow-sm hover:shadow-md transition-shadow overflow-hidden group flex flex-col h-full">
+                    <article class="rounded-xl shadow-sm hover:shadow-md transition-shadow overflow-hidden group flex flex-col h-full" style="background-color: <?php echo $cardBg; ?>;">
                         <a href="<?php echo $baseUrl; ?>/blog?slug=<?php echo htmlspecialchars($blog['slug']); ?>" class="block relative overflow-hidden aspect-video">
                             <?php if ($blog['image']): ?>
                                 <img src="<?php echo $baseUrl . '/' . $blog['image']; ?>" 
@@ -87,24 +113,24 @@ $blogHeadingColor = $settingsObj->get('blog_heading_color', '#111827');
                         </a>
                         
                         <div class="p-6 flex-1 flex flex-col">
-                            <div class="text-xs text-gray-500 mb-2 font-medium uppercase tracking-wider">
+                            <div class="text-xs mb-2 font-medium uppercase tracking-wider" style="color: <?php echo $dateColor; ?>;">
                                 <?php echo date('F j, Y', strtotime($blog['created_at'])); ?>
                             </div>
                             
                             <h2 class="text-xl font-bold mb-3 line-clamp-2">
-                                <a href="<?php echo $baseUrl; ?>/blog?slug=<?php echo htmlspecialchars($blog['slug']); ?>" class="text-gray-900 group-hover:text-primary transition">
+                                <a href="<?php echo $baseUrl; ?>/blog?slug=<?php echo htmlspecialchars($blog['slug']); ?>" class="transition hover:opacity-80" style="color: <?php echo $titleColor; ?>;">
                                     <?php echo htmlspecialchars($blog['title']); ?>
                                 </a>
                             </h2>
                             
-                            <div class="text-gray-600 mb-4 line-clamp-3 text-sm flex-1">
+                            <div class="mb-4 line-clamp-3 text-sm flex-1" style="color: <?php echo $descColor; ?>;">
                                 <?php 
                                     $plainText = strip_tags($blog['content']);
                                     echo substr($plainText, 0, 150) . (strlen($plainText) > 150 ? '...' : ''); 
                                 ?>
                             </div>
                             
-                            <a href="<?php echo $baseUrl; ?>/blog?slug=<?php echo htmlspecialchars($blog['slug']); ?>" class="inline-flex items-center text-primary font-semibold text-sm hover:underline mt-auto">
+                            <a href="<?php echo $baseUrl; ?>/blog?slug=<?php echo htmlspecialchars($blog['slug']); ?>" class="inline-flex items-center font-semibold text-sm hover:underline mt-auto" style="color: <?php echo $readMoreColor; ?>;">
                                 Read Article <i class="fas fa-arrow-right ml-2 text-xs transition-transform group-hover:translate-x-1"></i>
                             </a>
                         </div>

@@ -446,9 +446,10 @@ require_once __DIR__ . '/includes/header.php';
     <section class="relative bg-gray-200 py-20 md:py-32">
         <div class="container mx-auto px-4">
             <div class="text-center">
-                <nav class="text-sm text-gray-600 mb-4">
-                    <a href="<?php echo $baseUrl; ?>/" class="hover:text-primary">Home</a> > 
-                    <span class="text-gray-900"><?php echo htmlspecialchars($category['name'] ?? 'Shop'); ?></span>
+                <nav class="breadcrumb-nav text-sm mb-4">
+                    <a href="<?php echo $baseUrl; ?>/">Home</a>
+                    <span>></span>
+                    <span><?php echo htmlspecialchars($category['name'] ?? 'Shop'); ?></span>
                 </nav>
                 <h1 class="text-2xl md:text-4xl font-heading font-bold mb-4"><?php echo htmlspecialchars($category['name'] ?? 'Shop'); ?></h1>
                 <p class="text-sm text-gray-600 max-w-2xl mx-auto">

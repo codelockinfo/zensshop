@@ -82,6 +82,10 @@ $topbarBg = $settingsObj->get('topbar_bg_color', '#000000');
 $topbarText = $settingsObj->get('topbar_text_color', '#ffffff');
 $topbarArrow = $settingsObj->get('topbar_arrow_color', '#9ca3af');
 
+// Fetch Breadcrumb Settings
+$breadcrumbText = $settingsObj->get('breadcrumb_text_color', '#6b7280');
+$breadcrumbHover = $settingsObj->get('breadcrumb_hover_color', '#111827');
+
 
 
 // Get base URL using the centralized function
@@ -303,6 +307,16 @@ $gs_tooltip_text = getGlobalStyle('tooltip_text_color', $globalCardStyles, '#fff
         .product-card .product-tooltip::after {
             border-color: transparent !important;
             border-left-color: var(--tooltip-bg) !important;
+        }
+
+        /* Breadcrumb Styles */
+        nav.breadcrumb-nav, 
+        nav.breadcrumb-nav a, 
+        nav.breadcrumb-nav span { 
+            color: <?php echo $breadcrumbText; ?> !important; 
+        }
+        nav.breadcrumb-nav a:hover { 
+            color: <?php echo $breadcrumbHover; ?> !important; 
         }
     </style>
     

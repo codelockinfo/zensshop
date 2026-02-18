@@ -174,7 +174,7 @@ require_once __DIR__ . '/includes/header.php';
 
     <div id="mainWishlistContent" class="hidden">
         <!-- Breadcrumb -->
-        <nav class="text-sm text-gray-600 mb-8 mt-4 md:mt-0">
+        <nav class="breadcrumb-nav text-sm text-gray-600 mb-8 mt-4 md:mt-0">
             <a href="<?php echo $baseUrl; ?>/" class="hover:text-primary">Home</a>
             <span class="mx-2">></span>
             <span class="text-gray-900">Wishlist</span>

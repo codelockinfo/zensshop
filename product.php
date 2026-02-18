@@ -323,14 +323,16 @@ $p_hover_text = $productStyles['btn_hover_text_color'] ?? '#ffffff';
 <section id="product-main-section" class=" md:py-12">
     <div class="container mx-auto px-4">
         <!-- Breadcrumbs -->
-        <nav class="text-sm text-gray-600 mb-6 pt-3 mt-5">
-            <a href="<?php echo $baseUrl; ?>/" class="hover:text-primary">Home</a> > 
+        <nav class="breadcrumb-nav text-sm mb-6 pt-3 mt-5">
+            <a href="<?php echo $baseUrl; ?>/">Home</a>
+            <span>></span>
             <?php if ($primaryCategory): ?>
-            <a href="<?php echo $baseUrl; ?>/shop?category=<?php echo urlencode($primaryCategory['slug']); ?>" class="hover:text-primary">
+            <a href="<?php echo $baseUrl; ?>/shop?category=<?php echo urlencode($primaryCategory['slug']); ?>">
                 <?php echo htmlspecialchars($primaryCategory['name']); ?>
-            </a> > 
+            </a>
+            <span>></span>
             <?php endif; ?>
-            <span class="text-gray-900"><?php echo htmlspecialchars($productData['name'] ?? 'Product'); ?></span>
+            <span><?php echo htmlspecialchars($productData['name'] ?? 'Product'); ?></span>
         </nav>
         
         <!-- Product Skeleton -->

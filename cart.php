@@ -18,6 +18,113 @@ foreach ($cartItems as $item) {
 }
 ?>
 
+<?php
+// Load Cart Page Styling (Consolidated)
+$cartStylingJson = $settingsObj->get('cart_page_styling', '');
+$cartStyling = !empty($cartStylingJson) ? json_decode($cartStylingJson, true) : [];
+
+// Helper function locally for cart page
+function getCartStyle($key, $default, $settingsObj, $cartStyling) {
+    if (isset($cartStyling[$key])) return $cartStyling[$key];
+    return $settingsObj->get($key, $default);
+}
+
+$cp_bg_color = getCartStyle('cart_page_bg_color', '#f9fafb', $settingsObj, $cartStyling);
+$cp_header_color = getCartStyle('cart_page_header_text_color', '#111827', $settingsObj, $cartStyling);
+$cp_header_hover = getCartStyle('cart_page_header_text_hover_color', '#3b82f6', $settingsObj, $cartStyling);
+$cp_price_color = getCartStyle('cart_page_price_color', '#1f2937', $settingsObj, $cartStyling);
+$cp_qty_color = getCartStyle('cart_page_qty_color', '#374151', $settingsObj, $cartStyling);
+$cp_trash_color = getCartStyle('cart_page_trash_color', '#ef4444', $settingsObj, $cartStyling);
+$cp_trash_hover = getCartStyle('cart_page_trash_hover_color', '#b91c1c', $settingsObj, $cartStyling);
+$cp_total_color = getCartStyle('cart_page_total_color', '#111827', $settingsObj, $cartStyling);
+
+$cp_checkout_bg = getCartStyle('cart_page_checkout_btn_bg', '#000000', $settingsObj, $cartStyling);
+$cp_checkout_text = getCartStyle('cart_page_checkout_btn_text', '#ffffff', $settingsObj, $cartStyling);
+$cp_checkout_hover_bg = getCartStyle('cart_page_checkout_btn_hover_bg', '#1f2937', $settingsObj, $cartStyling);
+$cp_checkout_hover_text = getCartStyle('cart_page_checkout_btn_hover_text', '#ffffff', $settingsObj, $cartStyling);
+
+$cp_continue_bg = getCartStyle('cart_page_continue_btn_bg', '#e5e7eb', $settingsObj, $cartStyling);
+$cp_continue_text = getCartStyle('cart_page_continue_btn_text', '#374151', $settingsObj, $cartStyling);
+$cp_continue_hover_bg = getCartStyle('cart_page_continue_btn_hover_bg', '#d1d5db', $settingsObj, $cartStyling);
+$cp_continue_hover_text = getCartStyle('cart_page_continue_btn_hover_text', '#111827', $settingsObj, $cartStyling);
+?>
+<style>
+    /* Cart Page Background */
+    section.py-16.bg-gray-50 {
+        background-color: <?php echo $cp_bg_color; ?> !important;
+    }
+    
+    /* Cart Page Item Title */
+    .cart-item h3 a {
+        color: <?php echo $cp_header_color; ?> !important;
+    }
+    .cart-item h3 a:hover {
+        color: <?php echo $cp_header_hover; ?> !important;
+    }
+    
+    /* Cart Page Price */
+    .cart-item p.text-gray-600, .cart-item .item-price {
+        color: <?php echo $cp_price_color; ?> !important;
+    }
+    
+    /* Cart Page Line Total & Quantity */
+    .item-total span, .item-quantity {
+        color: <?php echo $cp_qty_color; ?> !important;
+    }
+    
+    /* Cart Page Trash Icon */
+    .cart-item button i.fa-trash {
+        color: <?php echo $cp_trash_color; ?> !important;
+    }
+    .cart-item button:hover i.fa-trash {
+        color: <?php echo $cp_trash_hover; ?> !important;
+    }
+    
+    /* Cart Page Total */
+    #cartTotal {
+        color: <?php echo $cp_total_color; ?> !important;
+    }
+    
+    /* Cart Page Checkout Button */
+    #cartPageCheckoutBtn {
+        background-color: <?php echo $cp_checkout_bg; ?> !important;
+        color: <?php echo $cp_checkout_text; ?> !important;
+    }
+    #cartPageCheckoutBtn:hover {
+        background-color: <?php echo $cp_checkout_hover_bg; ?> !important;
+        color: <?php echo $cp_checkout_hover_text; ?> !important;
+    }
+    
+    /* Cart Page Continue Shopping Button */
+    #cartPageContinueBtn {
+        background-color: <?php echo $cp_continue_bg; ?> !important;
+        color: <?php echo $cp_continue_text; ?> !important;
+        border: none !important;
+    }
+    #cartPageContinueBtn:hover {
+        background-color: <?php echo $cp_continue_hover_bg; ?> !important;
+        color: <?php echo $cp_continue_hover_text; ?> !important;
+    }
+
+    /* Cart Page Product Card Background */
+    <?php
+    $cp_card_bg = getCartStyle('cart_page_card_bg_color', '#ffffff', $settingsObj, $cartStyling);
+    ?>
+    .cart-page-product-card {
+        background-color: <?php echo $cp_card_bg; ?> !important;
+    }
+
+    /* Cart Page Order Summary Background */
+    <?php
+    $cp_summary_bg = getCartStyle('cart_page_summary_bg_color', '#ffffff', $settingsObj, $cartStyling);
+    $cp_summary_border = getCartStyle('cart_page_summary_border_color', '#e5e7eb', $settingsObj, $cartStyling);
+    ?>
+    .cart-page-summary {
+        background-color: <?php echo $cp_summary_bg; ?> !important;
+        border: 1px solid <?php echo $cp_summary_border; ?> !important;
+    }
+</style>
+
 <section class="py-16 md:py-24 bg-gray-50 min-h-screen">
     <div class="container mx-auto px-4">
         <h1 class="text-4xl font-heading font-bold mb-8">Shopping Cart</h1>
@@ -80,7 +187,7 @@ foreach ($cartItems as $item) {
                     $attributesEscaped = htmlspecialchars($attributesJson, ENT_QUOTES, 'UTF-8');
                 ?>
                 <div class="cart-item-wrapper" data-product-id="<?php echo $item['product_id']; ?>" data-attributes='<?php echo $attributesEscaped; ?>'>
-                    <div class="bg-white rounded-lg p-6 flex flex-col md:flex-row items-start md:items-center space-y-4 md:space-y-0 md:space-x-6 cart-item" data-product-id="<?php echo $item['product_id']; ?>">
+                    <div class="bg-white rounded-lg p-6 flex flex-col md:flex-row items-start md:items-center space-y-4 md:space-y-0 md:space-x-6 cart-item cart-page-product-card" data-product-id="<?php echo $item['product_id']; ?>">
                         <a href="<?php echo $productUrl; ?>">
                             <img src="<?php echo getImageUrl($item['image'] ?? ''); ?>" 
                                  alt="<?php echo htmlspecialchars($item['name']); ?>" 
@@ -160,7 +267,7 @@ foreach ($cartItems as $item) {
             
             <!-- Cart Summary -->
             <div class="lg:col-span-1">
-                <div class="bg-white rounded-lg p-6 sticky top-20">
+                <div class="bg-white rounded-lg p-6 sticky top-20 cart-page-summary">
                     <h2 class="text-2xl font-bold mb-6">Order Summary</h2>
                     <div class="space-y-4 mb-6">
                         <div class="flex justify-between">
@@ -201,6 +308,7 @@ foreach ($cartItems as $item) {
                         Proceed to Checkout
                     </a>
                     <a href="<?php echo $baseUrl; ?>/shop" 
+                       id="cartPageContinueBtn"
                        class="block w-full text-center py-3 border border-gray-300 rounded-lg hover:bg-gray-50 transition bg-primary text-white hover:font-bold">
                         Continue Shopping
                     </a>

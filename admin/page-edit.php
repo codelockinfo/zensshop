@@ -66,7 +66,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             'heading' => $_POST['banner_heading'] ?? '',
             'subheading' => $_POST['banner_subheading'] ?? '',
             'btn_text' => $_POST['banner_btn_text'] ?? '',
-            'btn_link' => $_POST['banner_btn_link'] ?? ''
+            'btn_link' => $_POST['banner_btn_link'] ?? '',
+            'bg_color' => $_POST['banner_bg_color'] ?? '#ffffff',
+            'text_color' => $_POST['banner_text_color'] ?? '#000000',
+            'heading_color' => $_POST['banner_heading_color'] ?? '#000000',
+            'subheading_color' => $_POST['banner_subheading_color'] ?? '#666666',
+            'btn_bg_color' => $_POST['banner_btn_bg_color'] ?? '#ffffff',
+            'btn_text_color' => $_POST['banner_btn_text_color'] ?? '#000000',
+            'btn_hover_bg_color' => $_POST['banner_btn_hover_bg_color'] ?? '#f3f4f6',
+            'btn_hover_text_color' => $_POST['banner_btn_hover_text_color'] ?? '#000000'
         ],
         'seo' => [
             'meta_title' => $_POST['meta_title'] ?? '',
@@ -74,7 +82,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         ],
         'settings' => [
             'content_alignment' => $_POST['content_alignment'] ?? 'left',
-            'layout' => $_POST['content_layout'] ?? 'standard'
+            'layout' => $_POST['content_layout'] ?? 'standard',
+            'page_bg_color' => $_POST['page_bg_color'] ?? '#ffffff'
         ]
     ];
     
@@ -193,6 +202,7 @@ require_once __DIR__ . '/../includes/admin-header.php';
                 </select>
             </div>
 
+
             <div class="bg-gray-50 p-4 rounded border">
                 <label class="block text-sm font-bold mb-2">URL Slug</label>
                 <input type="text" name="slug" id="pageSlug" value="<?php echo htmlspecialchars($page['slug'] ?? ''); ?>" class="w-full border p-2 rounded bg-white" placeholder="Auto-generated if empty">
@@ -281,6 +291,82 @@ require_once __DIR__ . '/../includes/admin-header.php';
                 <div class="mb-3">
                     <label class="block text-xs font-bold mb-1">Button Link</label>
                     <input type="text" name="banner_btn_link" value="<?php echo htmlspecialchars($contentData['banner']['btn_link'] ?? ''); ?>" class="w-full border p-2 rounded text-sm bg-white">
+                </div>
+
+                <div class="grid grid-cols-2 gap-2 mb-3">
+                    <div>
+                        <label class="block text-xs font-bold mb-1">Background Color</label>
+                        <div class="flex items-center gap-1">
+                            <input type="color" name="banner_bg_color" value="<?php echo htmlspecialchars($contentData['banner']['bg_color'] ?? '#ffffff'); ?>" class="h-8 w-8 rounded cursor-pointer border-0 p-0 shadow-sm">
+                            <input type="text" oninput="this.previousElementSibling.value = this.value" value="<?php echo htmlspecialchars($contentData['banner']['bg_color'] ?? '#ffffff'); ?>" class="w-full border p-1 rounded text-xs">
+                        </div>
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold mb-1">Text Color</label>
+                        <div class="flex items-center gap-1">
+                            <input type="color" name="banner_text_color" value="<?php echo htmlspecialchars($contentData['banner']['text_color'] ?? '#000000'); ?>" class="h-8 w-8 rounded cursor-pointer border-0 p-0 shadow-sm">
+                            <input type="text" oninput="this.previousElementSibling.value = this.value" value="<?php echo htmlspecialchars($contentData['banner']['text_color'] ?? '#000000'); ?>" class="w-full border p-1 rounded text-xs">
+                        </div>
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-2 gap-2 mb-3">
+                    <div>
+                        <label class="block text-xs font-bold mb-1">Heading Color</label>
+                         <div class="flex items-center gap-1">
+                            <input type="color" name="banner_heading_color" value="<?php echo htmlspecialchars($contentData['banner']['heading_color'] ?? '#000000'); ?>" class="h-8 w-8 rounded cursor-pointer border-0 p-0 shadow-sm">
+                            <input type="text" oninput="this.previousElementSibling.value = this.value" value="<?php echo htmlspecialchars($contentData['banner']['heading_color'] ?? '#000000'); ?>" class="w-full border p-1 rounded text-xs">
+                        </div>
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold mb-1">Subheading Color</label>
+                        <div class="flex items-center gap-1">
+                            <input type="color" name="banner_subheading_color" value="<?php echo htmlspecialchars($contentData['banner']['subheading_color'] ?? '#666666'); ?>" class="h-8 w-8 rounded cursor-pointer border-0 p-0 shadow-sm">
+                            <input type="text" oninput="this.previousElementSibling.value = this.value" value="<?php echo htmlspecialchars($contentData['banner']['subheading_color'] ?? '#666666'); ?>" class="w-full border p-1 rounded text-xs">
+                        </div>
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-2 gap-2 mb-3">
+                    <div>
+                        <label class="block text-xs font-bold mb-1">Button BG Color</label>
+                        <div class="flex items-center gap-1">
+                            <input type="color" name="banner_btn_bg_color" value="<?php echo htmlspecialchars($contentData['banner']['btn_bg_color'] ?? '#ffffff'); ?>" class="h-8 w-8 rounded cursor-pointer border-0 p-0 shadow-sm">
+                            <input type="text" oninput="this.previousElementSibling.value = this.value" value="<?php echo htmlspecialchars($contentData['banner']['btn_bg_color'] ?? '#ffffff'); ?>" class="w-full border p-1 rounded text-xs">
+                        </div>
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold mb-1">Button Text Color</label>
+                        <div class="flex items-center gap-1">
+                            <input type="color" name="banner_btn_text_color" value="<?php echo htmlspecialchars($contentData['banner']['btn_text_color'] ?? '#000000'); ?>" class="h-8 w-8 rounded cursor-pointer border-0 p-0 shadow-sm">
+                            <input type="text" oninput="this.previousElementSibling.value = this.value" value="<?php echo htmlspecialchars($contentData['banner']['btn_text_color'] ?? '#000000'); ?>" class="w-full border p-1 rounded text-xs">
+                        </div>
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-2 gap-2 mb-3">
+                    <div>
+                        <label class="block text-xs font-bold mb-1">Hover BG Color</label>
+                        <div class="flex items-center gap-1">
+                            <input type="color" name="banner_btn_hover_bg_color" value="<?php echo htmlspecialchars($contentData['banner']['btn_hover_bg_color'] ?? '#f3f4f6'); ?>" class="h-8 w-8 rounded cursor-pointer border-0 p-0 shadow-sm">
+                            <input type="text" oninput="this.previousElementSibling.value = this.value" value="<?php echo htmlspecialchars($contentData['banner']['btn_hover_bg_color'] ?? '#f3f4f6'); ?>" class="w-full border p-1 rounded text-xs">
+                        </div>
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold mb-1">Hover Text Color</label>
+                        <div class="flex items-center gap-1">
+                            <input type="color" name="banner_btn_hover_text_color" value="<?php echo htmlspecialchars($contentData['banner']['btn_hover_text_color'] ?? '#000000'); ?>" class="h-8 w-8 rounded cursor-pointer border-0 p-0 shadow-sm">
+                            <input type="text" oninput="this.previousElementSibling.value = this.value" value="<?php echo htmlspecialchars($contentData['banner']['btn_hover_text_color'] ?? '#000000'); ?>" class="w-full border p-1 rounded text-xs">
+                        </div>
+                    </div>
+                </div>
+
+                <div class="mt-4 border-t pt-4">
+                    <label class="block text-xs font-bold mb-1">Page Background Color</label>
+                    <div class="flex items-center gap-1">
+                        <input type="color" name="page_bg_color" value="<?php echo htmlspecialchars($contentData['settings']['page_bg_color'] ?? '#ffffff'); ?>" class="h-8 w-8 rounded cursor-pointer border-0 p-0 shadow-sm">
+                        <input type="text" oninput="this.previousElementSibling.value = this.value" value="<?php echo htmlspecialchars($contentData['settings']['page_bg_color'] ?? '#ffffff'); ?>" class="w-full border p-1 rounded text-xs uppercase" readonly>
+                    </div>
                 </div>
             </div>
 

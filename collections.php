@@ -66,6 +66,12 @@ $s_btn_hover_text = $styles['btn_hover_text_color'] ?? '#ffffff';
         <div id="mainCollectionsContent" class="hidden">
             <!-- Page Header -->
             <div class="text-center mb-12">
+                <!-- Breadcrumbs -->
+                <nav class="breadcrumb-nav text-sm mb-4">
+                    <a href="<?php echo htmlspecialchars($baseUrl); ?>/">Home</a>
+                    <span>></span>
+                    <span>Collections</span>
+                </nav>
                 <h1 class="text-3xl md:text-4xl font-heading font-bold mb-4" style="color: <?php echo $s_heading_color; ?> !important;"><?php echo htmlspecialchars($settings->get('collections_heading', 'Collections Lists')); ?></h1>
                 <p class="text-md max-w-3xl mx-auto" style="color: <?php echo $s_subheading_color; ?> !important;">
                     <?php echo htmlspecialchars($settings->get('collections_description', 'Explore our thoughtfully curated collections')); ?>

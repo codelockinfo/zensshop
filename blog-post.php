@@ -34,11 +34,38 @@ $metaDescription = substr($plainText, 0, $limit) . (strlen($plainText) > $limit 
 require_once __DIR__ . '/includes/header.php';
 ?>
 
-<div class="bg-white min-h-screen">
+<?php
+// Decode Blog Settings
+$blogSettings = [
+    'banner' => [
+        'bg_color' => '#ffffff',
+        'text_color' => '#ffffff',
+        'heading_color' => '#ffffff',
+        'subheading_color' => '#ffffff',
+        'btn_text' => '',
+        'btn_link' => '',
+        'btn_bg_color' => '#ffffff',
+        'btn_text_color' => '#000000',
+        'btn_hover_bg_color' => '#f3f4f6',
+        'btn_hover_text_color' => '#000000'
+    ],
+    'page_bg_color' => '#ffffff'
+];
+
+if (!empty($blog['settings'])) {
+    $decodedSettings = json_decode($blog['settings'], true);
+    if (is_array($decodedSettings)) {
+        $blogSettings = array_merge($blogSettings, $decodedSettings);
+    }
+}
+$banner = $blogSettings['banner'];
+?>
+
+<div class="min-h-screen" style="background-color: <?php echo $blogSettings['page_bg_color'] ?? '#ffffff'; ?>;">
     <?php if ($blog['image']): ?>
     <!-- Full Width Banner -->
     <!-- Skeleton Loader for Banner -->
-    <div id="blog-banner-skeleton" class="relative w-full h-[400px] md:h-[500px] bg-gradient-to-r from-gray-200 via-gray-300 to-gray-200 animate-pulse">
+    <div id="blog-banner-skeleton" class="relative w-full h-[400px] md:h-[500px] animate-pulse" style="background-color: <?php echo $banner['bg_color'] ?? '#e5e7eb'; ?>;">
         <div class="absolute inset-0 bg-gradient-to-r from-transparent via-white to-transparent opacity-50 animate-shimmer"></div>
         <div class="absolute inset-0 flex items-center justify-center">
             <div class="text-center space-y-4 px-4">
@@ -49,10 +76,10 @@ require_once __DIR__ . '/includes/header.php';
         </div>
     </div>
     
-    <div id="blog-banner" class="relative w-full h-[400px] md:h-[500px]" style="display: none;">
+    <div id="blog-banner" class="relative w-full h-[400px] md:h-[500px]" style="display: none; background-color: <?php echo $banner['bg_color'] ?? '#ffffff'; ?>;">
         <img src="<?php echo $baseUrl . '/' . $blog['image']; ?>" alt="<?php echo htmlspecialchars($blog['title']); ?>" class="w-full h-full object-cover" onload="hideBlogBannerSkeleton()">
         <div class="absolute inset-0 bg-black bg-opacity-50 flex items-center justify-center">
-            <div class="text-center text-white px-4 max-w-4xl">
+            <div class="text-center px-4 max-w-4xl" style="color: <?php echo $banner['text_color'] ?? '#ffffff'; ?>;">
                 <!-- Breadcrumb -->
                 <nav class="text-sm md:text-base mb-4 opacity-90 font-light">
                     <a href="<?php echo $baseUrl; ?>" class="hover:underline">Home</a>
@@ -63,32 +90,74 @@ require_once __DIR__ . '/includes/header.php';
                 </nav>
                 
                 <!-- Title -->
-                <h1 class="text-3xl md:text-5xl font-serif font-bold mb-4 leading-tight text-white">
+                <h1 class="text-3xl md:text-5xl font-serif font-bold mb-4 leading-tight" style="color: <?php echo $banner['heading_color'] ?? '#ffffff'; ?>;">
                     <?php echo htmlspecialchars($blog['title']); ?>
                 </h1>
                 
                 <!-- Date -->
-                <div class="text-sm md:text-base font-medium uppercase tracking-widest opacity-80">
+                <div class="text-sm md:text-base font-medium uppercase tracking-widest opacity-80" style="color: <?php echo $banner['subheading_color'] ?? '#ffffff'; ?>;">
                     <?php echo date('F d, Y', strtotime($blog['created_at'])); ?>
                 </div>
+
+                <?php if (!empty($banner['btn_text']) && !empty($banner['btn_link'])): 
+                    $btnId = 'blog-btn-' . uniqid();
+                ?>
+                <style>
+                    #<?php echo $btnId; ?> {
+                        background-color: <?php echo $banner['btn_bg_color'] ?? '#ffffff'; ?>;
+                        color: <?php echo $banner['btn_text_color'] ?? '#000000'; ?>;
+                    }
+                    #<?php echo $btnId; ?>:hover {
+                        background-color: <?php echo $banner['btn_hover_bg_color'] ?? '#f3f4f6'; ?>;
+                        color: <?php echo $banner['btn_hover_text_color'] ?? '#000000'; ?>;
+                        transform: translateY(-0.2rem);
+                    }
+                </style>
+                <div class="mt-8">
+                    <a id="<?php echo $btnId; ?>" href="<?php echo htmlspecialchars($banner['btn_link']); ?>" class="inline-block px-8 py-3 rounded font-bold transition transform shadow-lg">
+                        <?php echo htmlspecialchars($banner['btn_text']); ?>
+                    </a>
+                </div>
+                <?php endif; ?>
             </div>
         </div>
     </div>
     <?php else: ?>
     <!-- Fallback if no image -->
-    <div class="bg-gray-100 py-20 text-center">
+    <div class="py-20 text-center" style="background-color: <?php echo $banner['bg_color'] ?? '#f9fafb'; ?>;">
          <div class="container mx-auto px-4">
-            <nav class="text-sm text-gray-500 mb-4">
-                <a href="<?php echo $baseUrl; ?>" class="hover:text-black">Home</a>
+            <nav class="breadcrumb-nav text-sm mb-4 opacity-70" style="color: <?php echo $banner['text_color'] ?? '#6b7280'; ?>;">
+                <a href="<?php echo $baseUrl; ?>" class="hover:underline">Home</a>
                 <span class="mx-2">&gt;</span>
-                <a href="<?php echo $baseUrl; ?>/blog.php" class="hover:text-black">Blog</a>
+                <a href="<?php echo $baseUrl; ?>/blog.php" class="hover:underline">Blog</a>
                 <span class="mx-2">&gt;</span>
                 <span><?php echo htmlspecialchars($blog['title']); ?></span>
             </nav>
-            <h1 class="text-4xl font-serif font-bold text-gray-900 mb-2"><?php echo htmlspecialchars($blog['title']); ?></h1>
-            <div class="text-sm font-bold text-gray-400 uppercase tracking-widest">
+            <h1 class="text-4xl font-serif font-bold mb-2" style="color: <?php echo $banner['heading_color'] ?? '#111827'; ?>;"><?php echo htmlspecialchars($blog['title']); ?></h1>
+            <div class="text-sm font-bold uppercase tracking-widest opacity-60" style="color: <?php echo $banner['subheading_color'] ?? '#6b7280'; ?>;">
                 <?php echo date('F d, Y', strtotime($blog['created_at'])); ?>
             </div>
+
+            <?php if (!empty($banner['btn_text']) && !empty($banner['btn_link'])): 
+                $btnId = 'blog-btn-' . uniqid();
+            ?>
+            <style>
+                #<?php echo $btnId; ?> {
+                    background-color: <?php echo $banner['btn_bg_color'] ?? '#ffffff'; ?>;
+                    color: <?php echo $banner['btn_text_color'] ?? '#000000'; ?>;
+                    border: 1px solid <?php echo $banner['btn_text_color'] ?? '#000000'; ?>;
+                }
+                #<?php echo $btnId; ?>:hover {
+                    background-color: <?php echo $banner['btn_hover_bg_color'] ?? '#f3f4f6'; ?>;
+                    color: <?php echo $banner['btn_hover_text_color'] ?? '#000000'; ?>;
+                }
+            </style>
+            <div class="mt-6">
+                <a id="<?php echo $btnId; ?>" href="<?php echo htmlspecialchars($banner['btn_link']); ?>" class="inline-block px-6 py-2 rounded-full font-bold transition transform">
+                    <?php echo htmlspecialchars($banner['btn_text']); ?>
+                </a>
+            </div>
+            <?php endif; ?>
          </div>
     </div>
     <?php endif; ?>
@@ -102,7 +171,7 @@ require_once __DIR__ . '/includes/header.php';
         $containerClass = 'max-w-full';
     }
     ?>
-    <div class="container mx-auto px-4 <?php echo $containerClass; ?> mb-16">
+    <div class="container mx-auto px-4 <?php echo $containerClass; ?> py-12 mb-16">
         <article class="prose prose-lg prose-blue mx-auto max-w-none text-gray-700 leading-relaxed font-sans ck-content">
             <?php echo $blog['content']; // Output raw HTML content ?>
         </article>

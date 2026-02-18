@@ -579,6 +579,7 @@ $isSettingsPage = strpos($_SERVER['PHP_SELF'], 'settings') !== false
                || strpos($_SERVER['PHP_SELF'], 'collection_settings') !== false
                || strpos($_SERVER['PHP_SELF'], 'shop_settings') !== false
                || strpos($_SERVER['PHP_SELF'], 'product_settings') !== false
+               || strpos($_SERVER['PHP_SELF'], 'cart_settings') !== false
                || strpos($_SERVER['PHP_SELF'], 'pages') !== false
                || strpos($_SERVER['PHP_SELF'], 'page-edit') !== false
                || strpos($_SERVER['REQUEST_URI'], 'admin/blogs') !== false;
@@ -713,6 +714,20 @@ $currentPage = basename($_SERVER['PHP_SELF']);
            title="Shop Settings">
             <i class="fas fa-shopping-bag text-xs"></i>
             <span>Shop Settings</span>
+        </a>
+
+        <a href="<?php echo url('admin/cart_settings.php'); ?>"
+           class="flex items-center space-x-2 py-1 px-4 text-sm <?php echo ($currentPage === 'cart_settings.php' || strpos($_SERVER['REQUEST_URI'], 'admin/cart_settings') !== false) ? 'bg-gray-700' : ''; ?>"
+           title="Cart Settings">
+            <i class="fas fa-shopping-cart text-xs"></i>
+            <span>Cart Settings</span>
+        </a>
+
+        <a href="<?php echo url('admin/checkout_settings.php'); ?>"
+           class="flex items-center space-x-2 py-1 px-4 text-sm <?php echo ($currentPage === 'checkout_settings.php' || strpos($_SERVER['REQUEST_URI'], 'admin/checkout_settings') !== false) ? 'bg-gray-700' : ''; ?>"
+           title="Checkout Settings">
+            <i class="fas fa-credit-card text-xs"></i>
+            <span>Checkout Settings</span>
         </a>
 
         <a href="<?php echo url('admin/menu'); ?>"

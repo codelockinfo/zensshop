@@ -523,79 +523,38 @@ unset($_SESSION['error']);
                     </div>
                 <?php endforeach; ?>
 
-                <!-- Collections Page Settings -->
-                <div class="md:col-span-2 grid grid-cols-1 md:grid-cols-2 gap-6 pt-4 border-t mt-4">
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-2">Collections Page Heading</label>
-                        <input type="hidden" name="group_collections_heading" value="general">
-                        <input type="text" name="setting_collections_heading" 
-                               value="<?php echo htmlspecialchars($settings->get('collections_heading', 'Collections List')); ?>" 
-                               class="w-full px-4 py-2 border rounded focus:ring-2 focus:ring-blue-500">
-                    </div>
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-2">Collections Page Description</label>
-                        <input type="hidden" name="group_collections_description" value="general">
-                        <textarea name="setting_collections_description" rows="2"
-                                  class="w-full px-4 py-2 border rounded focus:ring-2 focus:ring-blue-500"><?php echo htmlspecialchars($settings->get('collections_description', 'Explore our thoughtfully curated collections')); ?></textarea>
-                    </div>
-                </div>
 
-                <!-- Blog Feature Toggle -->
-                <div class="md:col-span-2">
-                    <label class="flex items-center space-x-3 cursor-pointer">
-                        <input type="hidden" name="setting_enable_blog" value="0">
-                        <input type="checkbox" name="setting_enable_blog" value="1" 
-                               <?php echo $settings->get('enable_blog', '1') == '1' ? 'checked' : ''; ?> 
-                               class="w-5 h-5 text-blue-600 rounded focus:ring-blue-500">
-                        <span class="text-sm font-medium text-gray-700">Enable Blog Feature</span>
-                    </label>
-                    <p class="text-xs text-gray-500 mt-1 ml-8">If disabled, blog pages will be hidden from the frontend and sidebar.</p>
-                </div>
-                
-                <!-- Blog Configuration -->
-                <div class="md:col-span-2 grid grid-cols-1 md:grid-cols-2 gap-6 pt-4 border-t">
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-2">Blog Heading</label>
-                        <input type="hidden" name="group_blog_heading" value="general">
-                        <input type="text" name="setting_blog_heading" 
-                               value="<?php echo htmlspecialchars($settings->get('blog_heading', 'Our Blog')); ?>" 
-                               class="w-full px-4 py-2 border rounded focus:ring-2 focus:ring-blue-500">
-                    </div>
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-2">Blog Description</label>
-                        <input type="hidden" name="group_blog_description" value="general">
-                        <textarea name="setting_blog_description" rows="1"
-                                  class="w-full px-4 py-2 border rounded focus:ring-2 focus:ring-blue-500"><?php echo htmlspecialchars($settings->get('blog_description', 'Latest news, updates, and stories from our team.')); ?></textarea>
-                    </div>
-                </div>
 
-                <!-- Blog Colors -->
+                <!-- Breadcrumb Styles -->
                 <div class="md:col-span-2 pt-4 border-t mt-4">
-                    <label class="block text-sm font-medium text-gray-700 mb-2">Blog Section Colors</label>
-                    <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
-                        <?php 
-                        $blogColors = [
-                            'blog_bg_color' => ['label' => 'Background', 'default' => '#f9fafb'],
-                            'blog_heading_color' => ['label' => 'Heading', 'default' => '#111827'],
-                            'blog_text_color' => ['label' => 'Text', 'default' => '#1f2937'],
-                            'blog_accent_color' => ['label' => 'Accent', 'default' => '#2563eb']
-                        ];
-                        foreach ($blogColors as $key => $color): 
-                        ?>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Breadcrumb Styles</label>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                         <div>
-                            <span class="text-xs text-gray-500 block mb-1"><?php echo $color['label']; ?></span>
-                            <input type="hidden" name="group_<?php echo $key; ?>" value="blog">
+                            <span class="text-xs text-gray-500 block mb-1">Text Color</span>
+                            <input type="hidden" name="group_breadcrumb_text_color" value="general">
                             <div class="flex items-center">
-                                <input type="color" name="setting_<?php echo $key; ?>" 
-                                       value="<?php echo htmlspecialchars($settings->get($key, $color['default'])); ?>" 
+                                <input type="color" name="setting_breadcrumb_text_color" 
+                                       value="<?php echo htmlspecialchars($settings->get('breadcrumb_text_color', '#6b7280')); ?>" 
                                        class="h-8 w-8 p-0 border-0 rounded mr-2 cursor-pointer">
-                                <input type="text" name="setting_<?php echo $key; ?>_text" 
-                                       value="<?php echo htmlspecialchars($settings->get($key, $color['default'])); ?>" 
-                                       onchange="this.previousElementSibling.value = this.value"
+                                <input type="text" 
+                                       value="<?php echo htmlspecialchars($settings->get('breadcrumb_text_color', '#6b7280')); ?>" 
+                                       onchange="this.previousElementSibling.value = this.value; this.previousElementSibling.dispatchEvent(new Event('input'));"
                                        class="w-full border border-gray-300 px-2 py-1 rounded text-xs text-gray-600 bg-gray-50 uppercase">
                             </div>
                         </div>
-                        <?php endforeach; ?>
+                        <div>
+                            <span class="text-xs text-gray-500 block mb-1">Text Hover Color</span>
+                            <input type="hidden" name="group_breadcrumb_hover_color" value="general">
+                            <div class="flex items-center">
+                                <input type="color" name="setting_breadcrumb_hover_color" 
+                                       value="<?php echo htmlspecialchars($settings->get('breadcrumb_hover_color', '#111827')); ?>" 
+                                       class="h-8 w-8 p-0 border-0 rounded mr-2 cursor-pointer">
+                                <input type="text" 
+                                       value="<?php echo htmlspecialchars($settings->get('breadcrumb_hover_color', '#111827')); ?>" 
+                                       onchange="this.previousElementSibling.value = this.value; this.previousElementSibling.dispatchEvent(new Event('input'));"
+                                       class="w-full border border-gray-300 px-2 py-1 rounded text-xs text-gray-600 bg-gray-50 uppercase">
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>

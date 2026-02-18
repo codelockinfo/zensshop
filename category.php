@@ -224,10 +224,12 @@ if (empty($catImageRaw)) {
 
         <div id="mainCategoryContent" class="hidden">
             <!-- Breadcrumbs -->
-            <nav class="text-sm text-gray-600 mb-8">
-                <a href="<?php echo url(''); ?>" class="hover:text-primary">Home</a> > 
-                <a href="<?php echo url('collections.php'); ?>" class="hover:text-primary">Collections</a> > 
-                <span class="text-gray-900"><?php echo htmlspecialchars($category['name']); ?></span>
+            <nav class="breadcrumb-nav text-sm mb-8">
+                <a href="<?php echo url(''); ?>">Home</a>
+                <span>></span> 
+                <a href="<?php echo url('collections.php'); ?>">Collections</a>
+                <span>></span> 
+                <span><?php echo htmlspecialchars($category['name']); ?></span>
             </nav>
 
             <!-- Category Hero Section -->

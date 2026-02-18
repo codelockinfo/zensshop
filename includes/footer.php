@@ -81,6 +81,13 @@ $footerHover = $getFooterSetting('footer_hover_color', '#000000');
             opacity: 1 !important;
         }
         
+        /* Prevent H3 title color change on hover */
+        footer .group:hover h3,
+        footer .group:hover h3.nav-link {
+            color: <?php echo $footerText; ?> !important;
+        }
+
+        
         /* Social icons hover */
         footer .footer-social-icon:hover {
             background-color: <?php echo $footerHover; ?> !important;
@@ -88,6 +95,110 @@ $footerHover = $getFooterSetting('footer_hover_color', '#000000');
         }
         footer .footer-social-icon:hover i {
             color: <?php echo $footerBg; ?> !important;
+        }
+        
+        /* Cart Drawer Styles */
+        <?php
+        // Load Cart Styling (Consolidated)
+        $cartStylingJson = $settingsObj->get('cart_page_styling', '');
+        $cartStyling = !empty($cartStylingJson) ? json_decode($cartStylingJson, true) : [];
+
+        // Helper function locally for cart drawer/page
+        if (!function_exists('getCartStyle')) {
+            function getCartStyle($key, $default, $settingsObj, $cartStyling) {
+                if (isset($cartStyling[$key])) return $cartStyling[$key];
+                return $settingsObj->get($key, $default);
+            }
+        }
+
+        // Fetch Cart Drawer Settings
+        $cd_bg_color = getCartStyle('cart_drawer_bg_color', '#ffffff', $settingsObj, $cartStyling);
+        $cd_header_color = getCartStyle('cart_drawer_header_text_color', '#111827', $settingsObj, $cartStyling);
+        $cd_header_hover = getCartStyle('cart_drawer_header_text_hover_color', '#3b82f6', $settingsObj, $cartStyling);
+        $cd_price_color = getCartStyle('cart_drawer_price_color', '#1f2937', $settingsObj, $cartStyling);
+        $cd_qty_color = getCartStyle('cart_drawer_qty_color', '#374151', $settingsObj, $cartStyling);
+        $cd_trash_color = getCartStyle('cart_drawer_trash_color', '#ef4444', $settingsObj, $cartStyling);
+        $cd_trash_hover = getCartStyle('cart_drawer_trash_hover_color', '#b91c1c', $settingsObj, $cartStyling);
+        $cd_total_color = getCartStyle('cart_drawer_total_color', '#111827', $settingsObj, $cartStyling);
+        $cd_divider_color = getCartStyle('cart_drawer_divider_color', '#e5e7eb', $settingsObj, $cartStyling);
+        $cd_close_icon_color = getCartStyle('cart_drawer_close_icon_color', '#9ca3af', $settingsObj, $cartStyling);
+        
+        $cd_view_bg = getCartStyle('cart_drawer_view_btn_bg', '#3b82f6', $settingsObj, $cartStyling);
+        $cd_view_text = getCartStyle('cart_drawer_view_btn_text', '#ffffff', $settingsObj, $cartStyling);
+        $cd_view_hover_bg = getCartStyle('cart_drawer_view_btn_hover_bg', '#2563eb', $settingsObj, $cartStyling);
+        $cd_view_hover_text = getCartStyle('cart_drawer_view_btn_hover_text', '#ffffff', $settingsObj, $cartStyling);
+        
+        $cd_checkout_bg = getCartStyle('cart_drawer_checkout_btn_bg', '#000000', $settingsObj, $cartStyling);
+        $cd_checkout_text = getCartStyle('cart_drawer_checkout_btn_text', '#ffffff', $settingsObj, $cartStyling);
+        $cd_checkout_hover_bg = getCartStyle('cart_drawer_checkout_btn_hover_bg', '#1f2937', $settingsObj, $cartStyling);
+        $cd_checkout_hover_text = getCartStyle('cart_drawer_checkout_btn_hover_text', '#ffffff', $settingsObj, $cartStyling);
+        ?>
+        
+        /* Cart Drawer Divider */
+        #sideCart .border-b, #sideCart .border-t {
+            border-color: <?php echo $cd_divider_color; ?> !important;
+        }
+
+        /* Cart Drawer Close Icon */
+        #sideCart button i.fa-times, #sideCart .fa-times {
+            color: <?php echo $cd_close_icon_color; ?> !important;
+        }
+
+        /* Cart Drawer Background */
+        #sideCart {
+             background-color: <?php echo $cd_bg_color; ?> !important;
+        }
+
+        /* Cart Drawer Header Text */
+        #sideCart .side-cart-item h4 a {
+            color: <?php echo $cd_header_color; ?> !important;
+        }
+        #sideCart .side-cart-item h4 a:hover {
+            color: <?php echo $cd_header_hover; ?> !important;
+        }
+        
+        /* Cart Drawer Price */
+        #sideCart .side-cart-item p.text-gray-600,
+        #sideCart .side-cart-item .text-right p.font-semibold {
+            color: <?php echo $cd_price_color; ?> !important;
+        }
+        
+        /* Cart Drawer Quantity */
+        #sideCart .side-cart-item .border.rounded span {
+            color: <?php echo $cd_qty_color; ?> !important;
+        }
+        
+        /* Cart Drawer Trash Icon */
+        #sideCart .side-cart-item button.text-red-500 {
+            color: <?php echo $cd_trash_color; ?> !important;
+        }
+        #sideCart .side-cart-item button.text-red-500:hover {
+            color: <?php echo $cd_trash_hover; ?> !important;
+        }
+        
+        /* Cart Drawer Total */
+        #sideCartFooter span.text-xl.font-bold, #sideCartFooter span.text-lg.font-semibold {
+            color: <?php echo $cd_total_color; ?> !important;
+        }
+        
+        /* Cart Drawer View Cart Button */
+        #viewCartBtn {
+            background-color: <?php echo $cd_view_bg; ?> !important;
+            color: <?php echo $cd_view_text; ?> !important;
+        }
+        #viewCartBtn:hover {
+            background-color: <?php echo $cd_view_hover_bg; ?> !important;
+            color: <?php echo $cd_view_hover_text; ?> !important;
+        }
+        
+        /* Cart Drawer Checkout Button */
+        #checkoutBtn {
+            background-color: <?php echo $cd_checkout_bg; ?> !important;
+            color: <?php echo $cd_checkout_text; ?> !important;
+        }
+        #checkoutBtn:hover {
+            background-color: <?php echo $cd_checkout_hover_bg; ?> !important;
+            color: <?php echo $cd_checkout_hover_text; ?> !important;
         }
     </style>
 
@@ -307,10 +418,10 @@ $footerHover = $getFooterSetting('footer_hover_color', '#000000');
                     <span class="text-lg font-semibold">Total:</span>
                     <span class="text-xl font-bold" id="cartTotal">₹0.00</span>
                 </div>
-                <a href="<?php echo url('cart'); ?>" class="block w-full bg-primary text-white text-center py-3 rounded-lg hover:bg-primary-light hover:text-white transition mb-2">
+                <a href="<?php echo url('cart'); ?>" id="viewCartBtn" class="block w-full bg-primary text-white text-center py-3 rounded-lg hover:bg-primary-light hover:text-white transition mb-2">
                             View Cart
                         </a>
-                <a href="<?php echo url('checkout'); ?>" class="block w-full bg-black text-white text-center py-3 rounded-lg hover:text-white hover:bg-gray-800 transition">
+                <a href="<?php echo url('checkout'); ?>" id="checkoutBtn" class="block w-full bg-black text-white text-center py-3 rounded-lg hover:text-white hover:bg-gray-800 transition">
                     Checkout
                 </a>
             </div>
