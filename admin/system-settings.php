@@ -832,6 +832,7 @@ unset($_SESSION['error']);
                         'delhivery_api_token' => ['label' => 'Delhivery API Token', 'placeholder' => 'Enter your Delhivery Token', 'type' => 'password', 'group' => 'api'],
                         'delhivery_mode' => ['label' => 'Delhivery Mode', 'placeholder' => 'test or live (Use live for real shipments)', 'group' => 'api'],
                         'delhivery_warehouse_name' => ['label' => 'Delhivery Warehouse Name (Pickup Location Name)', 'placeholder' => 'Must match Warehouse Name in Delhivery One', 'group' => 'api'],
+                        'delhivery_source_pincode' => ['label' => 'Warehouse Pincode', 'placeholder' => 'e.g. 395006 (Required for shipping calculation)', 'group' => 'api'],
                     ];
                     foreach ($delhiveryFields as $key => $field): 
                          $val = $settings->get($key, '');

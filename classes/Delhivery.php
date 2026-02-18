@@ -58,7 +58,7 @@ class Delhivery {
         $this->token = trim($rawToken);
         $this->isTest = ($mode === 'test');
         $this->baseUrl = ($mode === 'live') ? 'https://track.delhivery.com' : 'https://staging-express.delhivery.com';
-        $this->expressUrl = ($mode === 'live') ? 'https://track.delhivery.com' : 'https://staging-express.delhivery.com';
+        $this->expressUrl = $this->baseUrl;
     }
 
     public function getToken() {
@@ -155,7 +155,7 @@ class Delhivery {
 
         $shippingAddr = json_decode($orderData['shipping_address'] ?? '[]', true);
         $storeId = $orderData['store_id'] ?? null;
-        $warehouseName = $this->settings->get('delhivery_warehouse_name', 'PRIMARY', $storeId);
+        $warehouseName = trim($this->settings->get('delhivery_warehouse_name', 'PRIMARY', $storeId));
         
         // Prepare items description
         $items = $orderData['items'] ?? [];
@@ -174,8 +174,12 @@ class Delhivery {
         $codAmount = $isCOD ? $orderData['total_amount'] : '0';
 
         $payload = [
+            'client' => $warehouseName,
+            'client_name' => $warehouseName,
             'shipments' => [
                 [
+                    'client' => $warehouseName,
+                    'client_name' => $warehouseName,
                     'name' => substr($orderData['customer_name'], 0, 30),
                     'add' => trim(preg_replace('/\s+/', ' ', ($shippingAddr['street'] ?? '') . ' ' . ($shippingAddr['address_line1'] ?? '') . ' ' . ($shippingAddr['address_line2'] ?? ''))),
                     'pin' => $shippingAddr['zip'] ?? $shippingAddr['postal_code'] ?? '',
@@ -395,7 +399,7 @@ class Delhivery {
             error_log("Delhivery Invalid JSON: " . $response);
             return [
                 'success' => false, 
-                'message' => "Invalid JSON response from Delhivery", 
+                'message' => "Invalid JSON from Delhivery: " . strip_tags(substr($response, 0, 500)),
                 'raw' => $response
             ];
         }

@@ -54,7 +54,7 @@ if (empty($cartItems)) {
 $error = '';
 $success = false;
 $orderId = null;
-$shippingAmount = 5.00; // Default shipping
+$shippingAmount = 0.00; // Default shipping
 $discountAmount = 0;
 $discountCode = '';
 
@@ -170,6 +170,16 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['place_order']) && emp
         $phoneCode = sanitize_input($_POST['phone_code'] ?? '+1');
         $phoneNumber = sanitize_input(trim($_POST['phone'] ?? ''));
         $fullPhone = $phoneCode . ' ' . $phoneNumber;
+        
+        // Dynamic Shipping Cost Calculation
+        if (($_POST['delivery_type'] ?? '') !== 'pickup') {
+            require_once __DIR__ . '/includes/shipping_helper.php';
+            // Validate serviceability and get cost
+            // If API fails or pincode invalid, it throws exception which is caught by main try-catch
+            $shippingAmount = getDelhiveryShippingCost(trim($_POST['zip']), $paymentMethod);
+        } else {
+            $shippingAmount = 0;
+        }
         
         // Prepare order data with sanitization
         $orderData = [
@@ -872,6 +882,13 @@ document.addEventListener('DOMContentLoaded', function() {
                     const data = await response.json();
                     
                     if (data.success && data.is_serviceable) {
+                        
+                        // Update Shipping if calculated
+                        if (data.shipping_cost !== undefined) {
+                            window.defaultShipping = parseFloat(data.shipping_cost);
+                            updateShipping();
+                        }
+
                         zipStatus.innerHTML = '<i class="fas fa-check-circle mr-1"></i> Delivery available to ' + data.city;
                         zipStatus.className = 'mt-2 text-xs text-green-600';
                         

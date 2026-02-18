@@ -169,7 +169,7 @@ foreach ($cartItems as $item) {
                         </div>
                         <div class="flex justify-between">
                             <span>Shipping</span>
-                            <span><?php echo format_price(0, $cartCurrency); ?></span>
+                            <span class="text-sm text-gray-500">Calculated at checkout</span>
                         </div>
                         <div class="flex justify-between">
                             <span>Tax (Estimated)</span>
