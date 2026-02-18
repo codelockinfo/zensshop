@@ -51,7 +51,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     }
     
     // Handle File Uploads
-    $uploadFiles = ['setting_favicon_png', 'setting_favicon_ico', 'setting_all_category_banner', 'setting_email_logo', 'setting_og_image'];
+    $uploadFiles = ['setting_favicon_png', 'setting_favicon_ico', 'setting_email_logo', 'setting_og_image'];
     $uploadErrors = [];
     
     foreach ($uploadFiles as $fileKey) {
@@ -94,7 +94,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             
             // Determing prefix
             if ($fileKey === 'setting_favicon_ico') $prefix = 'favicon';
-            elseif ($fileKey === 'setting_all_category_banner') $prefix = 'banner_all_cat';
             elseif ($fileKey === 'setting_email_logo') $prefix = 'email_logo';
             elseif ($fileKey === 'setting_og_image') $prefix = 'og_social';
             else $prefix = 'favicon_browser';
@@ -119,9 +118,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 if (move_uploaded_file($_FILES[$fileKey]['tmp_name'], $uploadDir . $fileName)) {
                     // FIX: Store partial path so getImageUrl finds it in assets/images/ not uploads
                     $_POST[$fileKey] = 'assets/images/' . $fileName;
-                    if ($fileKey === 'setting_all_category_banner') {
-                        $_POST['group_' . str_replace('setting_', '', $fileKey)] = 'general';
-                    } elseif ($fileKey === 'setting_email_logo') {
+                    if ($fileKey === 'setting_email_logo') {
                         $_POST['group_' . str_replace('setting_', '', $fileKey)] = 'email';
                     } else {
                         $_POST['group_' . str_replace('setting_', '', $fileKey)] = 'seo';
@@ -525,55 +522,6 @@ unset($_SESSION['error']);
                                placeholder="<?php echo $field['placeholder']; ?>">
                     </div>
                 <?php endforeach; ?>
-                
-                <!-- All Category Banner -->
-                <div class="md:col-span-2 border-t pt-4 mt-4">
-                    <label class="block text-sm font-medium text-gray-700 mb-2">All Category Banner</label>
-                    <p class="text-xs text-gray-500 mb-2">This banner will appear on the "All Categories" shop page.</p>
-                    
-                    <?php $allCatBanner = $settings->get('all_category_banner'); ?>
-                    <div class="flex items-center space-x-4">
-                        <div class="relative group cursor-pointer w-full h-32 border-2 <?php echo !empty($allCatBanner) ? 'border-gray-200' : 'border-dashed border-gray-300'; ?> rounded-lg overflow-hidden flex items-center justify-center bg-gray-50 hover:bg-gray-100 transition" onclick="document.getElementById('allCatBannerInput').click()">
-                            
-                            <input type="file" id="allCatBannerInput" name="setting_all_category_banner" class="hidden" onchange="previewBanner(this, 'previewAllCatBanner')">
-                            <input type="hidden" name="group_all_category_banner" value="general">
-                            
-                                <div id="previewAllCatBanner" class="w-full h-full flex items-center justify-center">
-                                    <?php if($allCatBanner): ?>
-                                        <img src="<?php echo getImageUrl($allCatBanner); ?>" class="w-full h-full object-cover">
-                                        <div class="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-40 transition flex items-center justify-center">
-                                         <i class="fas fa-camera text-white text-3xl opacity-0 group-hover:opacity-100 transition"></i>
-                                    </div>
-                                <?php else: ?>
-                                    <div class="text-center text-gray-400">
-                                        <i class="fas fa-image text-4xl mb-2"></i>
-                                        <p class="text-sm">Click to upload banner</p>
-                                    </div>
-                                <?php endif; ?>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <script>
-                function previewBanner(input, containerId) {
-                    if (input.files && input.files[0]) {
-                        var reader = new FileReader();
-                        reader.onload = function(e) {
-                            const container = document.getElementById(containerId);
-                            container.innerHTML = `
-                                <img src="${e.target.result}" class="w-full h-full object-cover">
-                                <div class="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-40 transition flex items-center justify-center">
-                                     <i class="fas fa-camera text-white text-3xl opacity-0 group-hover:opacity-100 transition"></i>
-                                </div>
-                            `;
-                            container.parentElement.classList.remove('border-dashed', 'border-gray-300');
-                            container.parentElement.classList.add('border-gray-200');
-                        }
-                        reader.readAsDataURL(input.files[0]);
-                    }
-                }
-                </script>
 
                 <!-- Collections Page Settings -->
                 <div class="md:col-span-2 grid grid-cols-1 md:grid-cols-2 gap-6 pt-4 border-t mt-4">

@@ -59,11 +59,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             'header_icon_cart' => isset($_POST['icon_cart']) ? '1' : '0',
             'header_bg_color' => $_POST['header_bg_color'] ?? '#ffffff',
             'header_text_color' => $_POST['header_text_color'] ?? '#000000',
+            'header_hover_color' => $_POST['header_hover_color'] ?? '#000000',
+            'header_hover_bg_color' => $_POST['header_hover_bg_color'] ?? 'transparent',
             'submenu_bg_color' => $_POST['submenu_bg_color'] ?? '#ffffff',
             'submenu_text_color' => $_POST['submenu_text_color'] ?? '#000000',
-            'submenu_hover_color' => $_POST['submenu_hover_color'] ?? '#6b7280',
-            'submenu_hover_color' => $_POST['submenu_hover_color'] ?? '#6b7280',
-            'submenu_item_hover_bg_color' => $_POST['submenu_item_hover_bg_color'] ?? '#f9fafb',
+            'submenu_hover_text_color' => $_POST['submenu_hover_text_color'] ?? '#6b7280',
+            'submenu_hover_bg_color' => $_POST['submenu_hover_bg_color'] ?? '#f0f0f0',
             'topbar_bg_color' => $_POST['topbar_bg_color'] ?? '#000000',
             'topbar_text_color' => $_POST['topbar_text_color'] ?? '#ffffff',
             'topbar_arrow_color' => $_POST['topbar_arrow_color'] ?? '#9ca3af',
@@ -143,11 +144,12 @@ $iconCart = $db->fetchOne("SELECT setting_value FROM site_settings WHERE setting
 // Fetch Visual Styles
 $headerBg = $db->fetchOne("SELECT setting_value FROM site_settings WHERE setting_key = 'header_bg_color' AND store_id = ?", [$storeId])['setting_value'] ?? '#ffffff';
 $headerText = $db->fetchOne("SELECT setting_value FROM site_settings WHERE setting_key = 'header_text_color' AND store_id = ?", [$storeId])['setting_value'] ?? '#000000';
+$headerHover = $db->fetchOne("SELECT setting_value FROM site_settings WHERE setting_key = 'header_hover_color' AND store_id = ?", [$storeId])['setting_value'] ?? '#000000';
+$headerHoverBg = $db->fetchOne("SELECT setting_value FROM site_settings WHERE setting_key = 'header_hover_bg_color' AND store_id = ?", [$storeId])['setting_value'] ?? 'transparent';
 $submenuBg = $db->fetchOne("SELECT setting_value FROM site_settings WHERE setting_key = 'submenu_bg_color' AND store_id = ?", [$storeId])['setting_value'] ?? '#ffffff';
 $submenuText = $db->fetchOne("SELECT setting_value FROM site_settings WHERE setting_key = 'submenu_text_color' AND store_id = ?", [$storeId])['setting_value'] ?? '#000000';
-$submenuHover = $db->fetchOne("SELECT setting_value FROM site_settings WHERE setting_key = 'submenu_hover_color' AND store_id = ?", [$storeId])['setting_value'] ?? '#6b7280';
-$submenuHover = $db->fetchOne("SELECT setting_value FROM site_settings WHERE setting_key = 'submenu_hover_color' AND store_id = ?", [$storeId])['setting_value'] ?? '#6b7280';
-$submenuItemHoverBg = $db->fetchOne("SELECT setting_value FROM site_settings WHERE setting_key = 'submenu_item_hover_bg_color' AND store_id = ?", [$storeId])['setting_value'] ?? '#f9fafb';
+$submenuHoverText = $db->fetchOne("SELECT setting_value FROM site_settings WHERE setting_key = 'submenu_hover_text_color' AND store_id = ?", [$storeId])['setting_value'] ?? '#6b7280';
+$submenuHoverBg = $db->fetchOne("SELECT setting_value FROM site_settings WHERE setting_key = 'submenu_hover_bg_color' AND store_id = ?", [$storeId])['setting_value'] ?? '#f0f0f0';
 $topbarBg = $db->fetchOne("SELECT setting_value FROM site_settings WHERE setting_key = 'topbar_bg_color' AND store_id = ?", [$storeId])['setting_value'] ?? '#000000';
 $topbarText = $db->fetchOne("SELECT setting_value FROM site_settings WHERE setting_key = 'topbar_text_color' AND store_id = ?", [$storeId])['setting_value'] ?? '#ffffff';
 $topbarArrow = $db->fetchOne("SELECT setting_value FROM site_settings WHERE setting_key = 'topbar_arrow_color' AND store_id = ?", [$storeId])['setting_value'] ?? '#9ca3af';
@@ -263,7 +265,20 @@ require_once __DIR__ . '/../includes/admin-header.php';
                         <input type="text" value="<?php echo htmlspecialchars($headerText); ?>" class="flex-1 border p-2 rounded text-sm" oninput="this.previousElementSibling.value = this.value">
                     </div>
                 </div>
-                <div></div>
+                <div>
+                    <label class="block text-sm font-semibold mb-2">Header Hover Text Color</label>
+                    <div class="flex items-center gap-2">
+                        <input type="color" name="header_hover_color" value="<?php echo htmlspecialchars($headerHover); ?>" class="h-10 w-16 cursor-pointer border rounded" oninput="this.nextElementSibling.value = this.value">
+                        <input type="text" value="<?php echo htmlspecialchars($headerHover); ?>" class="flex-1 border p-2 rounded text-sm" oninput="this.previousElementSibling.value = this.value">
+                    </div>
+                </div>
+                <div>
+                    <label class="block text-sm font-semibold mb-2">Header Hover Background</label>
+                    <div class="flex items-center gap-2">
+                        <input type="color" name="header_hover_bg_color" value="<?php echo htmlspecialchars($headerHoverBg); ?>" class="h-10 w-16 cursor-pointer border rounded" oninput="this.nextElementSibling.value = this.value">
+                        <input type="text" value="<?php echo htmlspecialchars($headerHoverBg); ?>" class="flex-1 border p-2 rounded text-sm" oninput="this.previousElementSibling.value = this.value">
+                    </div>
+                </div>
 
                 <!-- Submenu Colors -->
                 <div>
@@ -283,15 +298,15 @@ require_once __DIR__ . '/../includes/admin-header.php';
                 <div>
                     <label class="block text-sm font-semibold mb-2">Submenu Hover Text Color</label>
                     <div class="flex items-center gap-2">
-                        <input type="color" name="submenu_hover_color" value="<?php echo htmlspecialchars($submenuHover); ?>" class="h-10 w-16 cursor-pointer border rounded" oninput="this.nextElementSibling.value = this.value">
-                        <input type="text" value="<?php echo htmlspecialchars($submenuHover); ?>" class="flex-1 border p-2 rounded text-sm" oninput="this.previousElementSibling.value = this.value">
+                        <input type="color" name="submenu_hover_text_color" value="<?php echo htmlspecialchars($submenuHoverText); ?>" class="h-10 w-16 cursor-pointer border rounded" oninput="this.nextElementSibling.value = this.value">
+                        <input type="text" value="<?php echo htmlspecialchars($submenuHoverText); ?>" class="flex-1 border p-2 rounded text-sm" oninput="this.previousElementSibling.value = this.value">
                     </div>
                 </div>
                 <div>
-                    <label class="block text-sm font-semibold mb-2">Item Hover/Active Background</label>
+                    <label class="block text-sm font-semibold mb-2">Submenu Hover Background</label>
                     <div class="flex items-center gap-2">
-                        <input type="color" name="submenu_item_hover_bg_color" value="<?php echo htmlspecialchars($submenuItemHoverBg); ?>" class="h-10 w-16 cursor-pointer border rounded" oninput="this.nextElementSibling.value = this.value">
-                        <input type="text" value="<?php echo htmlspecialchars($submenuItemHoverBg); ?>" class="flex-1 border p-2 rounded text-sm" oninput="this.previousElementSibling.value = this.value">
+                        <input type="color" name="submenu_hover_bg_color" value="<?php echo htmlspecialchars($submenuHoverBg); ?>" class="h-10 w-16 cursor-pointer border rounded" oninput="this.nextElementSibling.value = this.value">
+                        <input type="text" value="<?php echo htmlspecialchars($submenuHoverBg); ?>" class="flex-1 border p-2 rounded text-sm" oninput="this.previousElementSibling.value = this.value">
                     </div>
                 </div>
                 

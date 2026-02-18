@@ -71,6 +71,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             'footer_payment_icons_json' => '[]', // Default, will be updated below
             'footer_bg_color' => $_POST['footer_bg_color'] ?? '#ffffff',
             'footer_text_color' => $_POST['footer_text_color'] ?? '#000000',
+            'footer_hover_color' => $_POST['footer_hover_color'] ?? '#000000',
         ];
 
         // 2. Handle Image Upload
@@ -186,6 +187,7 @@ $defaults = [
     'footer_payment_icons_json' => '[]',
     'footer_bg_color' => '#ffffff',
     'footer_text_color' => '#000000',
+    'footer_hover_color' => '#000000',
 ];
 $settings = array_merge($defaults, $currentSettings);
 $socialLinks = json_decode($settings['footer_social_json'], true) ?: [];
@@ -280,6 +282,13 @@ require_once __DIR__ . '/../includes/admin-header.php';
                     <div class="flex items-center gap-2">
                         <input type="color" name="footer_text_color" value="<?php echo htmlspecialchars($settings['footer_text_color']); ?>" class="h-10 w-16 cursor-pointer border rounded" oninput="this.nextElementSibling.value = this.value">
                         <input type="text" value="<?php echo htmlspecialchars($settings['footer_text_color']); ?>" class="flex-1 border p-2 rounded text-sm" oninput="this.previousElementSibling.value = this.value">
+                    </div>
+                </div>
+                <div>
+                    <label class="block text-sm font-semibold mb-2">Footer Hover Color</label>
+                    <div class="flex items-center gap-2">
+                        <input type="color" name="footer_hover_color" value="<?php echo htmlspecialchars($settings['footer_hover_color']); ?>" class="h-10 w-16 cursor-pointer border rounded" oninput="this.nextElementSibling.value = this.value">
+                        <input type="text" value="<?php echo htmlspecialchars($settings['footer_hover_color']); ?>" class="flex-1 border p-2 rounded text-sm" oninput="this.previousElementSibling.value = this.value">
                     </div>
                 </div>
             </div>

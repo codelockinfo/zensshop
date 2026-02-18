@@ -53,50 +53,56 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
     // Save Visual Styles (Best Selling)
     $settingsObj = new Settings();
+    $currentBSStyles = json_decode($settingsObj->get('best_selling_styles', '{}'), true);
     $bs_styles = [
         'bg_color' => $_POST['bs_bg_color'] ?? '#ffffff',
         'heading_color' => $_POST['bs_heading_color'] ?? '#1f2937',
         'subheading_color' => $_POST['bs_subheading_color'] ?? '#4b5563',
-        'price_color' => $_POST['bs_price_color'] ?? '#1a3d32',
-        'compare_price_color' => $_POST['bs_compare_price_color'] ?? '#9ca3af',
         'arrow_bg_color' => $_POST['bs_arrow_bg_color'] ?? '#ffffff',
         'arrow_icon_color' => $_POST['bs_arrow_icon_color'] ?? '#1f2937',
-        'card_bg_color' => $_POST['bs_card_bg_color'] ?? '#ffffff',
-        'card_title_color' => $_POST['bs_card_title_color'] ?? '#1F2937',
-        'badge_bg_color' => $_POST['bs_badge_bg_color'] ?? '#ef4444',
-        'badge_text_color' => $_POST['bs_badge_text_color'] ?? '#ffffff',
-        'btn_bg_color' => $_POST['bs_btn_bg_color'] ?? '#ffffff',
-        'btn_icon_color' => $_POST['bs_btn_icon_color'] ?? '#000000',
-        'btn_hover_bg_color' => $_POST['bs_btn_hover_bg_color'] ?? '#000000',
-        'btn_hover_icon_color' => $_POST['bs_btn_hover_icon_color'] ?? '#ffffff',
-        'btn_active_bg_color' => $_POST['bs_btn_active_bg_color'] ?? '#000000',
-        'btn_active_icon_color' => $_POST['bs_btn_active_icon_color'] ?? '#ffffff',
-        'tooltip_bg_color' => $_POST['bs_tooltip_bg_color'] ?? '#000000',
-        'tooltip_text_color' => $_POST['bs_tooltip_text_color'] ?? '#ffffff'
+        
+        // Preserve card styles
+        'price_color' => $currentBSStyles['price_color'] ?? '#1a3d32',
+        'compare_price_color' => $currentBSStyles['compare_price_color'] ?? '#9ca3af',
+        'card_bg_color' => $currentBSStyles['card_bg_color'] ?? '#ffffff',
+        'card_title_color' => $currentBSStyles['card_title_color'] ?? '#1F2937',
+        'badge_bg_color' => $currentBSStyles['badge_bg_color'] ?? '#ef4444',
+        'badge_text_color' => $currentBSStyles['badge_text_color'] ?? '#ffffff',
+        'btn_bg_color' => $currentBSStyles['btn_bg_color'] ?? '#ffffff',
+        'btn_icon_color' => $currentBSStyles['btn_icon_color'] ?? '#000000',
+        'btn_hover_bg_color' => $currentBSStyles['btn_hover_bg_color'] ?? '#000000',
+        'btn_hover_icon_color' => $currentBSStyles['btn_hover_icon_color'] ?? '#ffffff',
+        'btn_active_bg_color' => $currentBSStyles['btn_active_bg_color'] ?? '#000000',
+        'btn_active_icon_color' => $currentBSStyles['btn_active_icon_color'] ?? '#ffffff',
+        'tooltip_bg_color' => $currentBSStyles['tooltip_bg_color'] ?? '#000000',
+        'tooltip_text_color' => $currentBSStyles['tooltip_text_color'] ?? '#ffffff'
     ];
     $settingsObj->set('best_selling_styles', json_encode($bs_styles), 'homepage');
 
     // Save Visual Styles (Trending)
+    $currentTRStyles = json_decode($settingsObj->get('trending_styles', '{}'), true);
     $tr_styles = [
         'bg_color' => $_POST['tr_bg_color'] ?? '#ffffff',
         'heading_color' => $_POST['tr_heading_color'] ?? '#1f2937',
         'subheading_color' => $_POST['tr_subheading_color'] ?? '#4b5563',
-        'price_color' => $_POST['tr_price_color'] ?? '#1a3d32',
-        'compare_price_color' => $_POST['tr_compare_price_color'] ?? '#9ca3af',
         'arrow_bg_color' => $_POST['tr_arrow_bg_color'] ?? '#ffffff',
         'arrow_icon_color' => $_POST['tr_arrow_icon_color'] ?? '#1f2937',
-        'card_bg_color' => $_POST['tr_card_bg_color'] ?? '#ffffff',
-        'card_title_color' => $_POST['tr_card_title_color'] ?? '#1F2937',
-        'badge_bg_color' => $_POST['tr_badge_bg_color'] ?? '#ef4444',
-        'badge_text_color' => $_POST['tr_badge_text_color'] ?? '#ffffff',
-        'btn_bg_color' => $_POST['tr_btn_bg_color'] ?? '#ffffff',
-        'btn_icon_color' => $_POST['tr_btn_icon_color'] ?? '#000000',
-        'btn_hover_bg_color' => $_POST['tr_btn_hover_bg_color'] ?? '#000000',
-        'btn_hover_icon_color' => $_POST['tr_btn_hover_icon_color'] ?? '#ffffff',
-        'btn_active_bg_color' => $_POST['tr_btn_active_bg_color'] ?? '#000000',
-        'btn_active_icon_color' => $_POST['tr_btn_active_icon_color'] ?? '#ffffff',
-        'tooltip_bg_color' => $_POST['tr_tooltip_bg_color'] ?? '#000000',
-        'tooltip_text_color' => $_POST['tr_tooltip_text_color'] ?? '#ffffff'
+        
+        // Preserve card styles
+        'price_color' => $currentTRStyles['price_color'] ?? '#1a3d32',
+        'compare_price_color' => $currentTRStyles['compare_price_color'] ?? '#9ca3af',
+        'card_bg_color' => $currentTRStyles['card_bg_color'] ?? '#ffffff',
+        'card_title_color' => $currentTRStyles['card_title_color'] ?? '#1F2937',
+        'badge_bg_color' => $currentTRStyles['badge_bg_color'] ?? '#ef4444',
+        'badge_text_color' => $currentTRStyles['badge_text_color'] ?? '#ffffff',
+        'btn_bg_color' => $currentTRStyles['btn_bg_color'] ?? '#ffffff',
+        'btn_icon_color' => $currentTRStyles['btn_icon_color'] ?? '#000000',
+        'btn_hover_bg_color' => $currentTRStyles['btn_hover_bg_color'] ?? '#000000',
+        'btn_hover_icon_color' => $currentTRStyles['btn_hover_icon_color'] ?? '#ffffff',
+        'btn_active_bg_color' => $currentTRStyles['btn_active_bg_color'] ?? '#000000',
+        'btn_active_icon_color' => $currentTRStyles['btn_active_icon_color'] ?? '#ffffff',
+        'tooltip_bg_color' => $currentTRStyles['tooltip_bg_color'] ?? '#000000',
+        'tooltip_text_color' => $currentTRStyles['tooltip_text_color'] ?? '#ffffff'
     ];
     $settingsObj->set('trending_styles', json_encode($tr_styles), 'homepage');
 
@@ -355,48 +361,6 @@ require_once __DIR__ . '/../includes/admin-header.php';
                     </div>
                 </div>
                 <div>
-                    <label class="block text-sm font-semibold text-gray-700 mb-2">Card Background</label>
-                    <div class="flex items-center gap-3">
-                        <input type="color" name="bs_card_bg_color" value="<?php echo htmlspecialchars($bs_s_card_bg_color); ?>" class="h-10 w-16 border rounded cursor-pointer p-0.5" oninput="this.nextElementSibling.value = this.value">
-                        <input type="text" value="<?php echo htmlspecialchars($bs_s_card_bg_color); ?>" class="flex-1 border rounded p-2 text-sm uppercase" oninput="this.previousElementSibling.value = this.value">
-                    </div>
-                </div>
-                <div>
-                    <label class="block text-sm font-semibold text-gray-700 mb-2">Product Title Color</label>
-                    <div class="flex items-center gap-3">
-                        <input type="color" name="bs_card_title_color" value="<?php echo htmlspecialchars($bs_s_card_title_color); ?>" class="h-10 w-16 border rounded cursor-pointer p-0.5" oninput="this.nextElementSibling.value = this.value">
-                        <input type="text" value="<?php echo htmlspecialchars($bs_s_card_title_color); ?>" class="flex-1 border rounded p-2 text-sm uppercase" oninput="this.previousElementSibling.value = this.value">
-                    </div>
-                </div>
-                <div>
-                    <label class="block text-sm font-semibold text-gray-700 mb-2">Price Color</label>
-                    <div class="flex items-center gap-3">
-                        <input type="color" name="bs_price_color" value="<?php echo htmlspecialchars($bs_s_price_color); ?>" class="h-10 w-16 border rounded cursor-pointer p-0.5" oninput="this.nextElementSibling.value = this.value">
-                        <input type="text" value="<?php echo htmlspecialchars($bs_s_price_color); ?>" class="flex-1 border rounded p-2 text-sm uppercase" oninput="this.previousElementSibling.value = this.value">
-                    </div>
-                </div>
-                <div>
-                    <label class="block text-sm font-semibold text-gray-700 mb-2">Compare Price Color</label>
-                    <div class="flex items-center gap-3">
-                        <input type="color" name="bs_compare_price_color" value="<?php echo htmlspecialchars($bs_s_compare_price_color); ?>" class="h-10 w-16 border rounded cursor-pointer p-0.5" oninput="this.nextElementSibling.value = this.value">
-                        <input type="text" value="<?php echo htmlspecialchars($bs_s_compare_price_color); ?>" class="flex-1 border rounded p-2 text-sm uppercase" oninput="this.previousElementSibling.value = this.value">
-                    </div>
-                </div>
-                <div>
-                    <label class="block text-sm font-semibold text-gray-700 mb-2">Discount Badge Background</label>
-                    <div class="flex items-center gap-3">
-                        <input type="color" name="bs_badge_bg_color" value="<?php echo htmlspecialchars($bs_s_badge_bg_color); ?>" class="h-10 w-16 border rounded cursor-pointer p-0.5" oninput="this.nextElementSibling.value = this.value">
-                        <input type="text" value="<?php echo htmlspecialchars($bs_s_badge_bg_color); ?>" class="flex-1 border rounded p-2 text-sm uppercase" oninput="this.previousElementSibling.value = this.value">
-                    </div>
-                </div>
-                <div>
-                    <label class="block text-sm font-semibold text-gray-700 mb-2">Discount Badge Text</label>
-                    <div class="flex items-center gap-3">
-                        <input type="color" name="bs_badge_text_color" value="<?php echo htmlspecialchars($bs_s_badge_text_color); ?>" class="h-10 w-16 border rounded cursor-pointer p-0.5" oninput="this.nextElementSibling.value = this.value">
-                        <input type="text" value="<?php echo htmlspecialchars($bs_s_badge_text_color); ?>" class="flex-1 border rounded p-2 text-sm uppercase" oninput="this.previousElementSibling.value = this.value">
-                    </div>
-                </div>
-                <div>
                     <label class="block text-sm font-semibold text-gray-700 mb-2">Slider Arrow Background</label>
                     <div class="flex items-center gap-3">
                         <input type="color" name="bs_arrow_bg_color" value="<?php echo htmlspecialchars($bs_s_arrow_bg_color); ?>" class="h-10 w-16 border rounded cursor-pointer p-0.5" oninput="this.nextElementSibling.value = this.value">
@@ -411,79 +375,6 @@ require_once __DIR__ . '/../includes/admin-header.php';
                     </div>
                 </div>
             </div>
-            
-            <!-- Action Buttons Subsection -->
-            <div class="px-6 pb-6">
-                <div class="mb-4 pt-4 border-t border-gray-100">
-                    <h3 class="font-semibold text-gray-800">Action Buttons</h3>
-                    <p class="text-xs text-gray-500">Customize Wishlist, Quick View, and Add to Cart buttons.</p>
-                </div>
-                
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    <!-- Normal State -->
-                    <div>
-                        <label class="block text-sm font-semibold text-gray-700 mb-2">Action Button Background (Normal)</label>
-                        <div class="flex items-center gap-3">
-                            <input type="color" name="bs_btn_bg_color" value="<?php echo htmlspecialchars($bs_s_btn_bg_color); ?>" class="h-10 w-16 border rounded cursor-pointer p-0.5" oninput="this.nextElementSibling.value = this.value">
-                            <input type="text" value="<?php echo htmlspecialchars($bs_s_btn_bg_color); ?>" class="flex-1 border rounded p-2 text-sm uppercase" oninput="this.previousElementSibling.value = this.value">
-                        </div>
-                    </div>
-                    <div>
-                        <label class="block text-sm font-semibold text-gray-700 mb-2">Action Button Icon (Normal)</label>
-                        <div class="flex items-center gap-3">
-                            <input type="color" name="bs_btn_icon_color" value="<?php echo htmlspecialchars($bs_s_btn_icon_color); ?>" class="h-10 w-16 border rounded cursor-pointer p-0.5" oninput="this.nextElementSibling.value = this.value">
-                            <input type="text" value="<?php echo htmlspecialchars($bs_s_btn_icon_color); ?>" class="flex-1 border rounded p-2 text-sm uppercase" oninput="this.previousElementSibling.value = this.value">
-                        </div>
-                    </div>
-                    
-                    <!-- Hover State -->
-                    <div>
-                        <label class="block text-sm font-semibold text-gray-700 mb-2">Action Button Background (Hover)</label>
-                        <div class="flex items-center gap-3">
-                            <input type="color" name="bs_btn_hover_bg_color" value="<?php echo htmlspecialchars($bs_s_btn_hover_bg_color); ?>" class="h-10 w-16 border rounded cursor-pointer p-0.5" oninput="this.nextElementSibling.value = this.value">
-                            <input type="text" value="<?php echo htmlspecialchars($bs_s_btn_hover_bg_color); ?>" class="flex-1 border rounded p-2 text-sm uppercase" oninput="this.previousElementSibling.value = this.value">
-                        </div>
-                    </div>
-                    <div>
-                        <label class="block text-sm font-semibold text-gray-700 mb-2">Action Button Icon (Hover)</label>
-                        <div class="flex items-center gap-3">
-                            <input type="color" name="bs_btn_hover_icon_color" value="<?php echo htmlspecialchars($bs_s_btn_hover_icon_color); ?>" class="h-10 w-16 border rounded cursor-pointer p-0.5" oninput="this.nextElementSibling.value = this.value">
-                            <input type="text" value="<?php echo htmlspecialchars($bs_s_btn_hover_icon_color); ?>" class="flex-1 border rounded p-2 text-sm uppercase" oninput="this.previousElementSibling.value = this.value">
-                        </div>
-                    </div>
-
-                    <!-- Active State -->
-                    <div>
-                        <label class="block text-sm font-semibold text-gray-700 mb-2">Action Button Background (Active/Filled)</label>
-                        <div class="flex items-center gap-3">
-                            <input type="color" name="bs_btn_active_bg_color" value="<?php echo htmlspecialchars($bs_s_btn_active_bg_color); ?>" class="h-10 w-16 border rounded cursor-pointer p-0.5" oninput="this.nextElementSibling.value = this.value">
-                            <input type="text" value="<?php echo htmlspecialchars($bs_s_btn_active_bg_color); ?>" class="flex-1 border rounded p-2 text-sm uppercase" oninput="this.previousElementSibling.value = this.value">
-                        </div>
-                    </div>
-                    <div>
-                        <label class="block text-sm font-semibold text-gray-700 mb-2">Action Button Icon (Active/Filled)</label>
-                        <div class="flex items-center gap-3">
-                            <input type="color" name="bs_btn_active_icon_color" value="<?php echo htmlspecialchars($bs_s_btn_active_icon_color); ?>" class="h-10 w-16 border rounded cursor-pointer p-0.5" oninput="this.nextElementSibling.value = this.value">
-                            <input type="text" value="<?php echo htmlspecialchars($bs_s_btn_active_icon_color); ?>" class="flex-1 border rounded p-2 text-sm uppercase" oninput="this.previousElementSibling.value = this.value">
-                        </div>
-                    </div>
-                    
-                    <!-- Tooltip -->
-                    <div>
-                        <label class="block text-sm font-semibold text-gray-700 mb-2">Tooltip Background</label>
-                        <div class="flex items-center gap-3">
-                            <input type="color" name="bs_tooltip_bg_color" value="<?php echo htmlspecialchars($bs_s_tooltip_bg_color); ?>" class="h-10 w-16 border rounded cursor-pointer p-0.5" oninput="this.nextElementSibling.value = this.value">
-                            <input type="text" value="<?php echo htmlspecialchars($bs_s_tooltip_bg_color); ?>" class="flex-1 border rounded p-2 text-sm uppercase" oninput="this.previousElementSibling.value = this.value">
-                        </div>
-                    </div>
-                    <div>
-                        <label class="block text-sm font-semibold text-gray-700 mb-2">Tooltip Text Color</label>
-                        <div class="flex items-center gap-3">
-                            <input type="color" name="bs_tooltip_text_color" value="<?php echo htmlspecialchars($bs_s_tooltip_text_color); ?>" class="h-10 w-16 border rounded cursor-pointer p-0.5" oninput="this.nextElementSibling.value = this.value">
-                            <input type="text" value="<?php echo htmlspecialchars($bs_s_tooltip_text_color); ?>" class="flex-1 border rounded p-2 text-sm uppercase" oninput="this.previousElementSibling.value = this.value">
-                        </div>
-                    </div>
-                </div>
         </div>
 
         <!-- Visual Style Settings - Trending -->
@@ -515,48 +406,6 @@ require_once __DIR__ . '/../includes/admin-header.php';
                     </div>
                 </div>
                 <div>
-                    <label class="block text-sm font-semibold text-gray-700 mb-2">Card Background</label>
-                    <div class="flex items-center gap-3">
-                        <input type="color" name="tr_card_bg_color" value="<?php echo htmlspecialchars($tr_s_card_bg_color); ?>" class="h-10 w-16 border rounded cursor-pointer p-0.5" oninput="this.nextElementSibling.value = this.value">
-                        <input type="text" value="<?php echo htmlspecialchars($tr_s_card_bg_color); ?>" class="flex-1 border rounded p-2 text-sm uppercase" oninput="this.previousElementSibling.value = this.value">
-                    </div>
-                </div>
-                <div>
-                    <label class="block text-sm font-semibold text-gray-700 mb-2">Product Title Color</label>
-                    <div class="flex items-center gap-3">
-                        <input type="color" name="tr_card_title_color" value="<?php echo htmlspecialchars($tr_s_card_title_color); ?>" class="h-10 w-16 border rounded cursor-pointer p-0.5" oninput="this.nextElementSibling.value = this.value">
-                        <input type="text" value="<?php echo htmlspecialchars($tr_s_card_title_color); ?>" class="flex-1 border rounded p-2 text-sm uppercase" oninput="this.previousElementSibling.value = this.value">
-                    </div>
-                </div>
-                <div>
-                    <label class="block text-sm font-semibold text-gray-700 mb-2">Price Color</label>
-                    <div class="flex items-center gap-3">
-                        <input type="color" name="tr_price_color" value="<?php echo htmlspecialchars($tr_s_price_color); ?>" class="h-10 w-16 border rounded cursor-pointer p-0.5" oninput="this.nextElementSibling.value = this.value">
-                        <input type="text" value="<?php echo htmlspecialchars($tr_s_price_color); ?>" class="flex-1 border rounded p-2 text-sm uppercase" oninput="this.previousElementSibling.value = this.value">
-                    </div>
-                </div>
-                <div>
-                    <label class="block text-sm font-semibold text-gray-700 mb-2">Compare Price Color</label>
-                    <div class="flex items-center gap-3">
-                        <input type="color" name="tr_compare_price_color" value="<?php echo htmlspecialchars($tr_s_compare_price_color); ?>" class="h-10 w-16 border rounded cursor-pointer p-0.5" oninput="this.nextElementSibling.value = this.value">
-                        <input type="text" value="<?php echo htmlspecialchars($tr_s_compare_price_color); ?>" class="flex-1 border rounded p-2 text-sm uppercase" oninput="this.previousElementSibling.value = this.value">
-                    </div>
-                </div>
-                <div>
-                    <label class="block text-sm font-semibold text-gray-700 mb-2">Discount Badge Background</label>
-                    <div class="flex items-center gap-3">
-                        <input type="color" name="tr_badge_bg_color" value="<?php echo htmlspecialchars($tr_s_badge_bg_color); ?>" class="h-10 w-16 border rounded cursor-pointer p-0.5" oninput="this.nextElementSibling.value = this.value">
-                        <input type="text" value="<?php echo htmlspecialchars($tr_s_badge_bg_color); ?>" class="flex-1 border rounded p-2 text-sm uppercase" oninput="this.previousElementSibling.value = this.value">
-                    </div>
-                </div>
-                <div>
-                    <label class="block text-sm font-semibold text-gray-700 mb-2">Discount Badge Text</label>
-                    <div class="flex items-center gap-3">
-                        <input type="color" name="tr_badge_text_color" value="<?php echo htmlspecialchars($tr_s_badge_text_color); ?>" class="h-10 w-16 border rounded cursor-pointer p-0.5" oninput="this.nextElementSibling.value = this.value">
-                        <input type="text" value="<?php echo htmlspecialchars($tr_s_badge_text_color); ?>" class="flex-1 border rounded p-2 text-sm uppercase" oninput="this.previousElementSibling.value = this.value">
-                    </div>
-                </div>
-                <div>
                     <label class="block text-sm font-semibold text-gray-700 mb-2">Slider Arrow Background</label>
                     <div class="flex items-center gap-3">
                         <input type="color" name="tr_arrow_bg_color" value="<?php echo htmlspecialchars($tr_s_arrow_bg_color); ?>" class="h-10 w-16 border rounded cursor-pointer p-0.5" oninput="this.nextElementSibling.value = this.value">
@@ -571,79 +420,6 @@ require_once __DIR__ . '/../includes/admin-header.php';
                     </div>
                 </div>
             </div>
-            
-             <!-- Action Buttons Subsection -->
-            <div class="px-6 pb-6">
-                <div class="mb-4 pt-4 border-t border-gray-100">
-                    <h3 class="font-semibold text-gray-800">Action Buttons</h3>
-                    <p class="text-xs text-gray-500">Customize Wishlist, Quick View, and Add to Cart buttons.</p>
-                </div>
-                
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    <!-- Normal State -->
-                    <div>
-                        <label class="block text-sm font-semibold text-gray-700 mb-2">Action Button Background (Normal)</label>
-                        <div class="flex items-center gap-3">
-                            <input type="color" name="tr_btn_bg_color" value="<?php echo htmlspecialchars($tr_s_btn_bg_color); ?>" class="h-10 w-16 border rounded cursor-pointer p-0.5" oninput="this.nextElementSibling.value = this.value">
-                            <input type="text" value="<?php echo htmlspecialchars($tr_s_btn_bg_color); ?>" class="flex-1 border rounded p-2 text-sm uppercase" oninput="this.previousElementSibling.value = this.value">
-                        </div>
-                    </div>
-                    <div>
-                        <label class="block text-sm font-semibold text-gray-700 mb-2">Action Button Icon (Normal)</label>
-                        <div class="flex items-center gap-3">
-                            <input type="color" name="tr_btn_icon_color" value="<?php echo htmlspecialchars($tr_s_btn_icon_color); ?>" class="h-10 w-16 border rounded cursor-pointer p-0.5" oninput="this.nextElementSibling.value = this.value">
-                            <input type="text" value="<?php echo htmlspecialchars($tr_s_btn_icon_color); ?>" class="flex-1 border rounded p-2 text-sm uppercase" oninput="this.previousElementSibling.value = this.value">
-                        </div>
-                    </div>
-                    
-                    <!-- Hover State -->
-                    <div>
-                        <label class="block text-sm font-semibold text-gray-700 mb-2">Action Button Background (Hover)</label>
-                        <div class="flex items-center gap-3">
-                            <input type="color" name="tr_btn_hover_bg_color" value="<?php echo htmlspecialchars($tr_s_btn_hover_bg_color); ?>" class="h-10 w-16 border rounded cursor-pointer p-0.5" oninput="this.nextElementSibling.value = this.value">
-                            <input type="text" value="<?php echo htmlspecialchars($tr_s_btn_hover_bg_color); ?>" class="flex-1 border rounded p-2 text-sm uppercase" oninput="this.previousElementSibling.value = this.value">
-                        </div>
-                    </div>
-                    <div>
-                        <label class="block text-sm font-semibold text-gray-700 mb-2">Action Button Icon (Hover)</label>
-                        <div class="flex items-center gap-3">
-                            <input type="color" name="tr_btn_hover_icon_color" value="<?php echo htmlspecialchars($tr_s_btn_hover_icon_color); ?>" class="h-10 w-16 border rounded cursor-pointer p-0.5" oninput="this.nextElementSibling.value = this.value">
-                            <input type="text" value="<?php echo htmlspecialchars($tr_s_btn_hover_icon_color); ?>" class="flex-1 border rounded p-2 text-sm uppercase" oninput="this.previousElementSibling.value = this.value">
-                        </div>
-                    </div>
-
-                    <!-- Active State -->
-                    <div>
-                        <label class="block text-sm font-semibold text-gray-700 mb-2">Action Button Background (Active/Filled)</label>
-                        <div class="flex items-center gap-3">
-                            <input type="color" name="tr_btn_active_bg_color" value="<?php echo htmlspecialchars($tr_s_btn_active_bg_color); ?>" class="h-10 w-16 border rounded cursor-pointer p-0.5" oninput="this.nextElementSibling.value = this.value">
-                            <input type="text" value="<?php echo htmlspecialchars($tr_s_btn_active_bg_color); ?>" class="flex-1 border rounded p-2 text-sm uppercase" oninput="this.previousElementSibling.value = this.value">
-                        </div>
-                    </div>
-                    <div>
-                        <label class="block text-sm font-semibold text-gray-700 mb-2">Action Button Icon (Active/Filled)</label>
-                        <div class="flex items-center gap-3">
-                            <input type="color" name="tr_btn_active_icon_color" value="<?php echo htmlspecialchars($tr_s_btn_active_icon_color); ?>" class="h-10 w-16 border rounded cursor-pointer p-0.5" oninput="this.nextElementSibling.value = this.value">
-                            <input type="text" value="<?php echo htmlspecialchars($tr_s_btn_active_icon_color); ?>" class="flex-1 border rounded p-2 text-sm uppercase" oninput="this.previousElementSibling.value = this.value">
-                        </div>
-                    </div>
-
-                    <!-- Tooltip -->
-                    <div>
-                        <label class="block text-sm font-semibold text-gray-700 mb-2">Tooltip Background</label>
-                        <div class="flex items-center gap-3">
-                            <input type="color" name="tr_tooltip_bg_color" value="<?php echo htmlspecialchars($tr_s_tooltip_bg_color); ?>" class="h-10 w-16 border rounded cursor-pointer p-0.5" oninput="this.nextElementSibling.value = this.value">
-                            <input type="text" value="<?php echo htmlspecialchars($tr_s_tooltip_bg_color); ?>" class="flex-1 border rounded p-2 text-sm uppercase" oninput="this.previousElementSibling.value = this.value">
-                        </div>
-                    </div>
-                    <div>
-                        <label class="block text-sm font-semibold text-gray-700 mb-2">Tooltip Text Color</label>
-                        <div class="flex items-center gap-3">
-                            <input type="color" name="tr_tooltip_text_color" value="<?php echo htmlspecialchars($tr_s_tooltip_text_color); ?>" class="h-10 w-16 border rounded cursor-pointer p-0.5" oninput="this.nextElementSibling.value = this.value">
-                            <input type="text" value="<?php echo htmlspecialchars($tr_s_tooltip_text_color); ?>" class="flex-1 border rounded p-2 text-sm uppercase" oninput="this.previousElementSibling.value = this.value">
-                        </div>
-                    </div>
-                </div>
         </div>
         
         <!-- Visibility Settings -->

@@ -18,7 +18,7 @@ $section_text = $settingsObj->get('footer_features_section_text', '#000000');
 $count = count($footerFeatures);
 ?>
 
-<section class="py-12 border-t border-gray-100" style="background-color: <?php echo htmlspecialchars($section_bg); ?>; color: <?php echo htmlspecialchars($section_text); ?>;">
+<section class="py-12" style="background-color: <?php echo htmlspecialchars($section_bg); ?>; color: <?php echo htmlspecialchars($section_text); ?>;">
     <div class="container mx-auto px-4">
         
         <!-- Grid Layout (Fixed Width Cards) -->

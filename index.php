@@ -276,7 +276,7 @@ if (empty($banners)) {
         </button>
         
         <!-- Slide Indicators -->
-        <div class="absolute bottom-4 left-1/2 transform -translate-x-1/2 z-50 flex items-center space-x-2">
+        <div class="absolute bottom-4 left-1/2 transform -translate-x-1/2 z-20 flex items-center space-x-2">
             <?php foreach ($banners as $index => $banner): ?>
                 <button class="hero-indicator <?php echo $index === 0 ? 'active' : ''; ?>" aria-label="Go to slide <?php echo $index + 1; ?>" data-slide="<?php echo $index; ?>"></button>
             <?php endforeach; ?>
@@ -821,7 +821,7 @@ document.addEventListener('DOMContentLoaded', function() {
 <!-- Footer Features Skeleton -->
 <?php if ($showFooterFeatures): ?>
 <div id="footer-features-section" class="section-loading">
-    <section class="py-12 border-t border-gray-100" style="background-color: <?php echo htmlspecialchars($ffBgColor); ?>;">
+    <section class="py-12" style="background-color: <?php echo htmlspecialchars($ffBgColor); ?>;">
         <div class="container mx-auto px-4">
             <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6 text-center">
                 <?php for($i=0; $i<4; $i++): ?>

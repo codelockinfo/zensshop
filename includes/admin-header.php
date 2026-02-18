@@ -575,6 +575,10 @@ $isSettingsPage = strpos($_SERVER['PHP_SELF'], 'settings') !== false
                || strpos($_SERVER['PHP_SELF'], 'homepage_categories_settings') !== false
                || strpos($_SERVER['PHP_SELF'], 'homepage_products_settings') !== false
                || strpos($_SERVER['PHP_SELF'], 'homepage_videos_settings') !== false
+               || strpos($_SERVER['PHP_SELF'], 'wishlist_settings') !== false
+               || strpos($_SERVER['PHP_SELF'], 'collection_settings') !== false
+               || strpos($_SERVER['PHP_SELF'], 'shop_settings') !== false
+               || strpos($_SERVER['PHP_SELF'], 'product_settings') !== false
                || strpos($_SERVER['PHP_SELF'], 'pages') !== false
                || strpos($_SERVER['PHP_SELF'], 'page-edit') !== false
                || strpos($_SERVER['REQUEST_URI'], 'admin/blogs') !== false;
@@ -605,8 +609,8 @@ $currentPage = basename($_SERVER['PHP_SELF']);
             <span>Global Card Design</span>
         </a>
 
-        <a href="<?php echo url('admin/special-page'); ?>"
-           class="flex items-center space-x-2 py-1 px-4 text-sm <?php echo ($currentPage === 'settings' || strpos($_SERVER['REQUEST_URI'], 'special-page') !== false) ? 'bg-gray-700' : ''; ?>"
+        <a href="<?php echo url('admin/product_settings.php'); ?>"
+           class="flex items-center space-x-2 py-1 px-4 text-sm <?php echo ($currentPage === 'product_settings.php' || strpos($_SERVER['REQUEST_URI'], 'product_settings') !== false) ? 'bg-gray-700' : ''; ?>"
            title="Product Page">
             <i class="fas fa-gem text-xs"></i>
             <span>Product Page</span>
@@ -695,6 +699,20 @@ $currentPage = basename($_SERVER['PHP_SELF']);
            title="Wishlist Settings">
             <i class="fas fa-heart text-xs"></i>
             <span>Wishlist Settings</span>
+        </a>
+
+        <a href="<?php echo url('admin/collection_settings.php'); ?>"
+           class="flex items-center space-x-2 py-1 px-4 text-sm <?php echo ($currentPage === 'collection_settings.php' || strpos($_SERVER['REQUEST_URI'], 'admin/collection_settings') !== false) ? 'bg-gray-700' : ''; ?>"
+           title="Collections Settings">
+            <i class="fas fa-layer-group text-xs"></i>
+            <span>Collections Settings</span>
+        </a>
+
+        <a href="<?php echo url('admin/shop_settings.php'); ?>"
+           class="flex items-center space-x-2 py-1 px-4 text-sm <?php echo ($currentPage === 'shop_settings.php' || strpos($_SERVER['REQUEST_URI'], 'admin/shop_settings') !== false) ? 'bg-gray-700' : ''; ?>"
+           title="Shop Settings">
+            <i class="fas fa-shopping-bag text-xs"></i>
+            <span>Shop Settings</span>
         </a>
 
         <a href="<?php echo url('admin/menu'); ?>"

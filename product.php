@@ -210,12 +210,117 @@ $totalSold = (int)($productData['total_sales'] ?? 0);
 $isOutOfStock = ($currentStatus === 'out_of_stock' || $currentStock <= 0);
 $stockLabel = get_stock_status_text($currentStatus, $currentStock, $totalSold);
 
-// Related products are now handled via AJAX
+// Product Page Styles
+$productStylesJson = $settings->get('product_page_styles', '[]');
+$productStyles = json_decode($productStylesJson, true);
 
-// Product Options and Variants (already fetched above)
+$p_page_bg = $productStyles['page_bg_color'] ?? '#ffffff';
+$p_sale_color = $productStyles['sale_price_color'] ?? '#1a3d32';
+$p_reg_color = $productStyles['reg_price_color'] ?? '#9ca3af';
+$p_variant_bg = $productStyles['variant_bg_color'] ?? '#1a3d32';
+$p_variant_text = $productStyles['variant_text_color'] ?? '#ffffff';
+$p_atc_bg = $productStyles['atc_btn_color'] ?? '#000000';
+$p_atc_text = $productStyles['atc_btn_text_color'] ?? '#ffffff';
+$p_buy_bg = $productStyles['buy_now_btn_color'] ?? '#b91c1c';
+$p_buy_text = $productStyles['buy_now_btn_text_color'] ?? '#ffffff';
+$p_action_color = $productStyles['action_links_color'] ?? '#4b5563';
+$p_info_bg = $productStyles['info_box_bg_color'] ?? '#f9fafb';
+$p_info_text = $productStyles['info_box_text_color'] ?? '#374151';
+$p_border_color = $productStyles['border_color'] ?? '#e5e7eb';
+$p_divider_color = $productStyles['divider_color'] ?? '#e5e7eb';
+$p_in_stock_color = $productStyles['in_stock_color'] ?? '#1a3d32';
+$p_out_stock_color = $productStyles['out_stock_color'] ?? '#b91c1c';
+
+$p_hover_bg = $productStyles['btn_hover_bg_color'] ?? '#000000';
+$p_hover_text = $productStyles['btn_hover_text_color'] ?? '#ffffff';
 ?>
 
-<section class=" md:py-12 bg-white">
+<style>
+    #product-main-section {
+        background-color: <?php echo $p_page_bg; ?> !important;
+    }
+    
+    /* Price Styles */
+    .product-sale-price, #sticky-price { color: <?php echo $p_sale_color; ?> !important; }
+    .product-reg-price, #sticky-original-price { color: <?php echo $p_reg_color; ?> !important; }
+    
+    /* Button Styles */
+    #productCartAddToCartBtn, #sticky-atc-btn {
+        background-color: <?php echo $p_atc_bg; ?> !important;
+        color: <?php echo $p_atc_text; ?> !important;
+    }
+    #productCartBuyNowBtn {
+        background-color: <?php echo $p_buy_bg; ?> !important;
+        color: <?php echo $p_buy_text; ?> !important;
+    }
+    
+    /* Hover Overrides */
+    #product-main-section button.bg-primary:hover,
+    #product-main-section button.bg-black:hover,
+    #product-main-section .bg-red-600:hover,
+    #product-main-section button[onclick*="addToCart"]:hover,
+    #product-main-section button[onclick*="buyNow"]:hover,
+    #sticky-atc-btn:hover {
+        background-color: <?php echo $p_hover_bg; ?> !important;
+        color: <?php echo $p_hover_text; ?> !important;
+    }
+    
+    /* Variant Styles */
+    .variant-option-btn.active {
+        background-color: <?php echo $p_variant_bg; ?> !important;
+        color: <?php echo $p_variant_text; ?> !important;
+        border-color: <?php echo $p_variant_bg; ?> !important;
+    }
+    
+    /* Action Links */
+    .action-link-item, .action-link-item button, .action-link-item a {
+        color: <?php echo $p_action_color; ?> !important;
+    }
+    
+    /* Style for wishlist and other action buttons hover */
+    #product-main-section .product-action-btn:hover {
+        border-color: <?php echo $p_hover_bg; ?> !important;
+        color: <?php echo $p_hover_bg; ?> !important;
+    }
+    
+    /* Info Box */
+    .product-info-box {
+        background-color: <?php echo $p_info_bg; ?> !important;
+        color: <?php echo $p_info_text; ?> !important;
+    }
+
+    /* Dividers & Borders */
+    #product-main-section .border-t, 
+    #product-main-section .border-b,
+    #product-main-section .divide-y > * {
+        border-color: <?php echo $p_divider_color; ?> !important;
+    }
+    
+    .product-border-item,
+    #product-main-section .variant-btn,
+    #product-main-section .quantity-selector,
+    #product-main-section select,
+    #product-main-section input:not([type="hidden"]),
+    #product-main-section textarea,
+    #product-main-section .border {
+        border-color: <?php echo $p_border_color; ?> !important;
+    }
+
+    #product-main-section .border-2 {
+        border-color: <?php echo $p_border_color; ?> !important;
+    }
+
+    /* Stock Colors */
+    .product-in-stock { color: <?php echo $p_in_stock_color; ?> !important; }
+    .product-out-stock { color: <?php echo $p_out_stock_color; ?> !important; }
+
+    /* Sticky Bar Background */
+    #sticky-bar {
+        background-color: <?php echo $p_page_bg; ?> !important;
+    }
+</style>
+
+<section id="product-main-section" class=" md:py-12">
     <div class="container mx-auto px-4">
         <!-- Breadcrumbs -->
         <nav class="text-sm text-gray-600 mb-6 pt-3 mt-5">
@@ -465,8 +570,8 @@ $stockLabel = get_stock_status_text($currentStatus, $currentStock, $totalSold);
                 
                 <!-- Price -->
                 <div class="mb-6">
-                    <span id="original-price" class="text-2xl text-gray-400 line-through mr-2 <?php echo !$originalPrice ? 'hidden' : ''; ?>"><?php echo format_price($originalPrice ?: 0, $productData['currency'] ?? 'USD'); ?></span>
-                    <span id="product-price" class="text-2xl font-bold text-[#1a3d32]"><?php echo format_price($price, $productData['currency'] ?? 'USD'); ?></span>
+                    <span id="original-price" class="product-reg-price compare-price text-2xl line-through mr-2 <?php echo !$originalPrice ? 'hidden' : ''; ?>"><?php echo format_price($originalPrice ?: 0, $productData['currency'] ?? 'USD'); ?></span>
+                    <span id="product-price" class="product-sale-price product-price text-2xl font-bold"><?php echo format_price($price, $productData['currency'] ?? 'USD'); ?></span>
                 </div>
                 
                 <!-- Description with Read More -->
@@ -549,7 +654,7 @@ $stockLabel = get_stock_status_text($currentStatus, $currentStock, $totalSold);
                             <?php foreach ($optionValues as $value): ?>
                                 <button type="button" 
                                         onclick="selectVariantOption('<?php echo htmlspecialchars($optionName); ?>', '<?php echo htmlspecialchars($value); ?>', this)"
-                                        class="variant-btn px-4 py-2 border-2 rounded transition border-gray-300 hover:border-primary">
+                                        class="variant-btn variant-option-btn px-4 py-2 border-2 rounded transition border-gray-300 hover:border-primary">
                                     <?php echo htmlspecialchars($value); ?>
                                 </button>
                             <?php endforeach; ?>
@@ -565,7 +670,7 @@ $stockLabel = get_stock_status_text($currentStatus, $currentStock, $totalSold);
                         <div class="flex flex-wrap gap-2">
                             <?php foreach (['Standard'] as $size): ?>
                             <button type="button" 
-                                    class="px-6 py-2 border-2 rounded border-primary bg-primary text-white">
+                                    class="variant-option-btn active px-6 py-2 border-2 rounded border-primary bg-primary text-white">
                                 <?php echo $size; ?>
                             </button>
                             <?php endforeach; ?>
@@ -598,7 +703,7 @@ $stockLabel = get_stock_status_text($currentStatus, $currentStock, $totalSold);
                 <!-- Quantity Selector - Premium Non-clickable Style -->
                 <div class="flex items-center gap-4 mb-6">
                     <label class="font-semibold text-gray-900">Quantity:</label>
-                    <div class="flex items-center border border-gray-300 rounded-md w-28 h-10 overflow-hidden bg-white">
+                    <div class="flex items-center border border-gray-300 rounded-md w-28 h-10 overflow-hidden bg-white quantity-selector">
                         <button onclick="updateProductQuantity(-1)" class="w-10 h-full flex-shrink-0 flex items-center justify-center text-gray-600 hover:text-black hover:bg-gray-100 transition select-none">-</button>
                         <div class="flex-1 h-full grid place-items-center">
                             <span id="productQuantityDisplay" class="text-gray-900 font-bold text-base select-none">1</span>
@@ -640,7 +745,7 @@ $stockLabel = get_stock_status_text($currentStatus, $currentStock, $totalSold);
                 
                 <!-- Availability Status (Dynamic) -->
                 <div class="mb-6 flex items-center space-x-2">
-                    <span id="stock-count-display" class="text-sm font-bold <?php echo ($currentStatus === 'in_stock' && $currentStock > 0) ? 'text-primary' : (($currentStatus === 'in_stock' && $currentStock < 0) ? 'text-orange-600' : 'text-red-600'); ?>">
+                    <span id="stock-count-display" class="text-sm font-bold <?php echo ($currentStatus === 'in_stock' && $currentStock > 0) ? 'product-in-stock' : (($currentStatus === 'in_stock' && $currentStock < 0) ? 'text-orange-600' : 'product-out-stock'); ?>">
                         <?php 
                         $currentLabel = get_stock_status_text($currentStatus, $currentStock, $totalSold);
                         if ($currentLabel === 'Out of Stock') {
@@ -657,31 +762,36 @@ $stockLabel = get_stock_status_text($currentStatus, $currentStock, $totalSold);
                 </div>
                 
                 <!-- Additional Links -->
-                <div class="flex flex-wrap gap-4 text-sm mb-6">
-                    <button onclick="toggleProductWishlist(<?php echo $productData['product_id'] ?? $productData['id']; ?>, this)" class="text-gray-600 hover:text-primary transition flex items-center wishlist-btn" data-product-id="<?php echo $productData['product_id'] ?? $productData['id']; ?>">
-                        <?php if (in_array($productData['product_id'] ?? $productData['id'], $wishlistIds)): ?>
-                            <i class="fas fa-heart mr-1"></i> Remove from Wishlist
-                        <?php else: ?>
-                            <i class="far fa-heart mr-1"></i> Add to Wishlist
-                        <?php endif; ?>
-                    </button>
-                    <!-- <a href="#" class="text-gray-600 hover:text-primary transition"><i class="fas fa-exchange-alt mr-1"></i>Compare colors</a> -->
-                    <a href="javascript:void(0)" onclick="toggleAskQuestionModal(true, '<?php echo addslashes($productData['name']); ?>')" class="text-gray-600 hover:text-primary transition flex items-center font-medium"><i class="fas fa-question-circle mr-1 text-primary"></i>Ask a question</a>
-                    <button onclick="sharePage('<?php echo addslashes($productData['name']); ?>', 'Check out this product!', window.location.href)" class="text-gray-600 hover:text-primary transition flex items-center">
-                        <i class="fas fa-share-alt mr-1"></i>Share
-                    </button>
+                 <div class="flex flex-wrap gap-4 text-sm mb-6">
+                    <div class="action-link-item">
+                        <button onclick="toggleProductWishlist(<?php echo $productData['product_id'] ?? $productData['id']; ?>, this)" class="hover:text-primary transition flex items-center wishlist-btn" data-product-id="<?php echo $productData['product_id'] ?? $productData['id']; ?>">
+                            <?php if (in_array($productData['product_id'] ?? $productData['id'], $wishlistIds)): ?>
+                                <i class="fas fa-heart mr-1"></i> Remove from Wishlist
+                            <?php else: ?>
+                                <i class="far fa-heart mr-1"></i> Add to Wishlist
+                            <?php endif; ?>
+                        </button>
+                    </div>
+                    <div class="action-link-item">
+                        <a href="javascript:void(0)" onclick="toggleAskQuestionModal(true, '<?php echo addslashes($productData['name']); ?>')" class="hover:text-primary transition flex items-center font-medium"><i class="fas fa-question-circle mr-1 text-primary"></i>Ask a question</a>
+                    </div>
+                    <div class="action-link-item">
+                        <button onclick="sharePage('<?php echo addslashes($productData['name']); ?>', 'Check out this product!', window.location.href)" class="hover:text-primary transition flex items-center">
+                            <i class="fas fa-share-alt mr-1"></i>Share
+                        </button>
+                    </div>
                 </div>
                 
                 <!-- Pickup Information -->
                 <?php if ($settings->get('pickup_enable', '1') == '1'): ?>
-                <div class="bg-gray-50 p-4 rounded-lg">
-                    <div class="text-sm text-gray-700 flex items-start">
+                <div class="product-info-box p-4 rounded-lg">
+                    <div class="text-sm flex items-start">
                         <i class="<?php echo htmlspecialchars($settings->get('pickup_icon', 'fas fa-store')); ?> mr-2 text-primary mt-1 flex-shrink-0"></i>
-                        <div class="prose prose-sm max-w-none">
+                        <div class="prose prose-sm max-w-none" style="color: inherit;">
                             <?php echo $settings->get('pickup_message', 'Pickup available at Shop location. Usually ready in 24 hours'); ?>
                         </div>
                     </div>
-                    <a href="<?php echo htmlspecialchars($settings->get('pickup_link_url', '#')); ?>" class="text-sm text-primary hover:underline mt-1 inline-block">
+                    <a href="<?php echo htmlspecialchars($settings->get('pickup_link_url', '#')); ?>" class="text-sm text-primary hover:underline mt-1 inline-block" style="color: inherit; opacity: 0.8;">
                         <?php echo htmlspecialchars($settings->get('pickup_link_text', 'View store information')); ?>
                     </a>
                 </div>
@@ -852,7 +962,7 @@ $stockLabel = get_stock_status_text($currentStatus, $currentStock, $totalSold);
                 </div>
             </div>
             
-            <button onclick="openReviewModal()" class="bg-white border-2 border-gray-300 px-6 py-2 rounded-lg hover:border-primary transition mb-6 text-sm">
+            <button onclick="openReviewModal()" class="product-border-item bg-white border-2 px-6 py-2 rounded-lg hover:border-primary transition mb-6 text-sm">
                 Write A Review
             </button>
             
@@ -860,7 +970,7 @@ $stockLabel = get_stock_status_text($currentStatus, $currentStock, $totalSold);
             <div class="space-y-6">
                 <div class="flex items-center justify-between mb-4">
                     <h3 class="font-semibold">Most Recent</h3>
-                    <select class="border rounded px-3 py-2 text-sm" id="reviewSort" onchange="loadReviews()">
+                    <select class="product-border-item border rounded px-3 py-2 text-sm" id="reviewSort" onchange="loadReviews()">
                         <option value="recent">Most Recent</option>
                         <option value="oldest">Oldest First</option>
                         <option value="highest">Highest Rating</option>
@@ -1116,10 +1226,10 @@ function updateVariantDisplay() {
             
             if (matchingVariant.stock_status !== 'out_of_stock' && stock > 0) {
                 stockElement.textContent = 'In Stock';
-                stockElement.className = 'text-primary capitalize';
+                stockElement.className = 'product-in-stock capitalize';
                 if (stockCountDisplay) {
                     stockCountDisplay.innerHTML = `<i class="fas fa-check-circle mr-1"></i> ${stock} items available`;
-                    stockCountDisplay.className = 'text-sm font-bold text-primary';
+                    stockCountDisplay.className = 'text-sm font-bold product-in-stock';
                 }
                 updateButtons(false);
                 
@@ -1133,7 +1243,7 @@ function updateVariantDisplay() {
                     stockElement.textContent = 'Out of Stock';
                     if (stockCountDisplay) {
                         stockCountDisplay.innerHTML = `<i class="fas fa-times-circle mr-1"></i> Out of Stock`;
-                        stockCountDisplay.className = 'text-sm font-bold text-red-600';
+                        stockCountDisplay.className = 'text-sm font-bold product-out-stock';
                     }
                 } else if (stock < 0) {
                     stockElement.textContent = 'In Stock'; // Or Backorder? 
@@ -1146,10 +1256,10 @@ function updateVariantDisplay() {
                     stockElement.textContent = label;
                     if (stockCountDisplay) {
                         stockCountDisplay.innerHTML = `<i class="fas fa-times-circle mr-1"></i> ${label}`;
-                        stockCountDisplay.className = 'text-sm font-bold text-red-600';
+                        stockCountDisplay.className = 'text-sm font-bold product-out-stock';
                     }
                 }
-                stockElement.className = 'text-red-600 capitalize';
+                stockElement.className = 'product-out-stock capitalize';
                 updateButtons(true, stockElement.textContent);
             }
         }
@@ -1196,13 +1306,13 @@ function updateVariantDisplay() {
             if (stockCountDisplay) {
                 if (defaultStock > 0 && defaultStatus !== 'out_of_stock') {
                     stockCountDisplay.innerHTML = `<i class="fas fa-check-circle mr-1"></i> ${defaultStock} items available`;
-                    stockCountDisplay.className = 'text-sm font-bold text-primary';
+                    stockCountDisplay.className = 'text-sm font-bold product-in-stock';
                 } else if (defaultStock < 0) {
                     stockCountDisplay.innerHTML = `<i class="fas fa-exclamation-circle mr-1"></i> Backorder (${Math.abs(defaultStock)} pending)`;
                     stockCountDisplay.className = 'text-sm font-bold text-orange-600';
                 } else {
                     stockCountDisplay.innerHTML = `<i class="fas fa-times-circle mr-1"></i> Out of Stock`;
-                    stockCountDisplay.className = 'text-sm font-bold text-primary';
+                    stockCountDisplay.className = 'text-sm font-bold product-out-stock';
                 }
             }
 
@@ -1849,7 +1959,7 @@ document.addEventListener('DOMContentLoaded', function() {
             </div>
             
             <!-- Quantity - Balanced grid centering -->
-            <div class="hidden md:flex items-center border border-gray-300 rounded-md w-28 h-10 overflow-hidden bg-white">
+            <div class="hidden md:flex items-center border border-gray-300 rounded-md w-28 h-10 overflow-hidden bg-white quantity-selector">
                 <button onclick="updateStickyQty(-1)" class="w-10 h-full flex-shrink-0 flex items-center justify-center text-gray-600 hover:text-black hover:bg-gray-100 transition select-none">-</button>
                 <div class="flex-1 h-full grid place-items-center">
                     <span id="sticky-qty-display" class="text-gray-900 font-semibold text-base select-none">1</span>

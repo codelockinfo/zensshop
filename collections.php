@@ -15,7 +15,33 @@ $categories = $db->fetchAll(
 );
 ?>
 
-<section class="py-16 md:py-24 bg-white min-h-screen">
+<?php 
+$stylesJson = $settings->get('collections_styles', '[]');
+$styles = json_decode($stylesJson, true);
+$s_page_bg = $styles['page_bg_color'] ?? '#ffffff';
+$s_heading_color = $styles['heading_color'] ?? '#1f2937';
+$s_subheading_color = $styles['subheading_color'] ?? '#4b5563';
+$s_btn_bg = $styles['btn_bg_color'] ?? '#ffffff';
+$s_btn_text = $styles['btn_text_color'] ?? '#111827';
+$s_btn_hover_bg = $styles['btn_hover_bg_color'] ?? '#000000';
+$s_btn_hover_text = $styles['btn_hover_text_color'] ?? '#ffffff';
+?>
+
+<style>
+    .collection-card-btn {
+        background-color: <?php echo $s_btn_bg; ?> !important;
+        color: <?php echo $s_btn_text; ?> !important;
+        transition: all 0.3s ease !important;
+    }
+    .group:hover .collection-card-btn,
+    .group:hover .collection-card-btn h3,
+    .group:hover .collection-card-btn span {
+        background-color: <?php echo $s_btn_hover_bg; ?> !important;
+        color: <?php echo $s_btn_hover_text; ?> !important;
+    }
+</style>
+
+<section class="py-16 md:py-24 min-h-screen" style="background-color: <?php echo $s_page_bg; ?> !important;">
     <div class="container mx-auto px-4">
         
         <!-- Collections Skeleton -->
@@ -40,9 +66,9 @@ $categories = $db->fetchAll(
         <div id="mainCollectionsContent" class="hidden">
             <!-- Page Header -->
             <div class="text-center mb-12">
-                <h1 class="text-3xl md:text-4xl font-heading font-bold mb-4"><?php echo htmlspecialchars($settings->get('collections_heading', 'Collections List')); ?></h1>
-                <p class="text-gray-600 text-md max-w-3xl mx-auto">
-                    <?php echo htmlspecialchars($settings->get('collections_description', 'Explore our thoughtfully curated collections: Sweaters, Handbags, Denim, and more—each perfect for enhancing every style on every special occasion and daily wear.')); ?>
+                <h1 class="text-3xl md:text-4xl font-heading font-bold mb-4" style="color: <?php echo $s_heading_color; ?> !important;"><?php echo htmlspecialchars($settings->get('collections_heading', 'Collections Lists')); ?></h1>
+                <p class="text-md max-w-3xl mx-auto" style="color: <?php echo $s_subheading_color; ?> !important;">
+                    <?php echo htmlspecialchars($settings->get('collections_description', 'Explore our thoughtfully curated collections')); ?>
                 </p>
             </div>
             
@@ -64,7 +90,7 @@ $categories = $db->fetchAll(
                             $categoryImage = $baseUrl . '/' . ltrim($category['image'], '/');
                         }
                     } else {
-                        $categoryImage = 'data:image/svg+xml;base64,' . base64_encode('<svg width="400" height="500" viewBox="0 0 400 500" xmlns="http://www.w3.org/2000/svg"><rect width="400" height="500" fill="#F3F4F6"/><circle cx="200" cy="200" r="50" fill="#9B7A8A"/><path d="M100 350C100 300 150 250 200 250C250 250 300 300 300 350" fill="#9B7A8A"/></svg>');
+                        $categoryImage = 'https://placehold.co/600x800?text=' . urlencode($category['name']);
                     }
                     $categoryUrl = $baseUrl . '/shop?category=' . urlencode($category['slug']);
                 ?>
@@ -74,13 +100,13 @@ $categories = $db->fetchAll(
                              alt="<?php echo htmlspecialchars($category['name']); ?>"
                              class="w-full h-full object-contain group-hover:scale-110 transition-transform duration-500"
                              onerror="this.src='https://placehold.co/600x600?text=Category+Image'">
-                        <div class="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-10 transition-all duration-300"></div>
                         <!-- Collection Name Overlay Button -->
                         <div class="absolute bottom-0 left-0 right-0 p-4 flex items-center justify-center">
-                            <div class="bg-white px-6 py-3 w-full max-w-[85%]" style="border-radius: 50px;">
-                                <h3 class="text-center text-md font-semibold text-gray-900">
+                            <div class="collection-card-btn px-6 py-3 w-full max-w-[85%] shadow-md" style="border-radius: 50px; text-align:center;">
+                                <!-- <h3 class="text-center text-md font-semibold">
                                     <?php echo htmlspecialchars($category['name']); ?>
-                                </h3>
+                                </h3> -->
+                                <p><?php echo htmlspecialchars($category['name']); ?></p>
                             </div>
                         </div>
                     </div>

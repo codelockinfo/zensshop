@@ -57,11 +57,13 @@ function renderFooterLinkRecursive($item, $baseUrl) {
 // Fetch Footer Visual Styles
 $footerBg = $getFooterSetting('footer_bg_color', '#ffffff');
 $footerText = $getFooterSetting('footer_text_color', '#000000');
+$footerHover = $getFooterSetting('footer_hover_color', '#000000');
 ?>
     <style>
         footer.bg-white {
             background-color: <?php echo $footerBg; ?> !important;
             color: <?php echo $footerText; ?> !important;
+            border-top: none !important;
         }
         footer .text-black,
         footer .text-gray-700,
@@ -69,14 +71,23 @@ $footerText = $getFooterSetting('footer_text_color', '#000000');
         footer a {
              color: <?php echo $footerText; ?> !important;
         }
-        /* Hover effect for links - slightly lighter/darker or opacity */
-        footer a:hover {
-            opacity: 0.8;
+        /* Hover effect for links */
+        footer a:hover,
+        footer a:hover *,
+        footer .group:hover *,
+        footer .group:hover span,
+        footer .group:hover i {
+            color: <?php echo $footerHover; ?> !important;
+            opacity: 1 !important;
         }
         
-        /* Specific overrides if needed */
-        footer .bg-black {
-             /* Social icons hover or buttons might need checks, but usually OK */
+        /* Social icons hover */
+        footer .footer-social-icon:hover {
+            background-color: <?php echo $footerHover; ?> !important;
+            border-color: <?php echo $footerHover; ?> !important;
+        }
+        footer .footer-social-icon:hover i {
+            color: <?php echo $footerBg; ?> !important;
         }
     </style>
 
@@ -143,7 +154,7 @@ $footerText = $getFooterSetting('footer_text_color', '#000000');
                         foreach ($socialLinks as $soc):
                             if (!empty($soc['url'])):
                         ?>
-                        <a href="<?php echo htmlspecialchars($soc['url']); ?>" class="relative w-8 h-8 rounded-full border border-gray-300 flex items-center justify-center hover:bg-black hover:text-white transition group">
+                        <a href="<?php echo htmlspecialchars($soc['url']); ?>" class="footer-social-icon relative w-8 h-8 rounded-full border border-gray-300 flex items-center justify-center transition group">
                             <i class="<?php echo htmlspecialchars($soc['icon']); ?>"></i>
                         </a>
                         <?php endif; endforeach; ?>
@@ -183,7 +194,7 @@ $footerText = $getFooterSetting('footer_text_color', '#000000');
                                  elseif(strpos($lbl,'twit')!==false || strpos($lbl,'x')!==false) $icon='twitter';
                                  elseif(strpos($lbl,'pin')!==false) $icon='pinterest-p';
                              ?>
-                             <a href="<?php echo htmlspecialchars($item['url']); ?>" class="footer-social-icon relative group w-10 h-10 rounded-full border border-gray-300 bg-white flex items-center justify-center hover:text-white transition">
+                             <a href="<?php echo htmlspecialchars($item['url']); ?>" class="footer-social-icon relative group w-10 h-10 rounded-full border border-gray-300 bg-white flex items-center justify-center transition">
                                 <i class="fab fa-<?php echo $icon; ?> text-base text-gray-700"></i>
                              </a>
                              <?php endforeach; ?>
@@ -360,7 +371,7 @@ $footerText = $getFooterSetting('footer_text_color', '#000000');
     <script src="<?php echo $baseUrl; ?>/assets/js/main6.js?v=2" defer></script>
     <script src="<?php echo $baseUrl; ?>/assets/js/cart18.js?v=1" defer></script>
     <script src="<?php echo $baseUrl; ?>/assets/js/product-cards7.js?v=2" defer></script>
-    <script src="<?php echo $baseUrl; ?>/assets/js/wishlist9.js?v=3" defer></script>
+    <script src="<?php echo $baseUrl; ?>/assets/js/wishlist10.js?v=3" defer></script>
     <script src="<?php echo $baseUrl; ?>/assets/js/notification1.js?v=2" defer></script>
     <script src="<?php echo $baseUrl; ?>/assets/js/quickview18.js?v=2" defer></script>
     <script src="<?php echo $baseUrl; ?>/assets/js/add-to-cart3.js?v=2" defer></script>

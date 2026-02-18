@@ -74,8 +74,10 @@ $headerBg = $settingsObj->get('header_bg_color', '#ffffff');
 $headerText = $settingsObj->get('header_text_color', '#000000');
 $submenuBg = $settingsObj->get('submenu_bg_color', '#ffffff');
 $submenuText = $settingsObj->get('submenu_text_color', '#000000');
-$submenuHover = $settingsObj->get('submenu_hover_color', '#6b7280');
-$submenuItemHoverBg = $settingsObj->get('submenu_item_hover_bg_color', '#f9fafb');
+$submenuHoverText = $settingsObj->get('submenu_hover_text_color', '#6b7280');
+$submenuHoverBg = $settingsObj->get('submenu_hover_bg_color', '#f0f0f0');
+$headerHover = $settingsObj->get('header_hover_color', '#000000');
+$headerHoverBg = $settingsObj->get('header_hover_bg_color', 'transparent');
 $topbarBg = $settingsObj->get('topbar_bg_color', '#000000');
 $topbarText = $settingsObj->get('topbar_text_color', '#ffffff');
 $topbarArrow = $settingsObj->get('topbar_arrow_color', '#9ca3af');
@@ -120,6 +122,189 @@ if (!function_exists('url')) {
     })(window,document,'script','dataLayer','<?php echo htmlspecialchars($gtmId); ?>');</script>
     <!-- End Google Tag Manager -->
     <?php endif; ?>
+    
+<?php
+// Fetch Global Product Card Styles
+$globalCardStylesJson = $settingsObj->get('global_card_styles', '{}');
+$globalCardStyles = json_decode($globalCardStylesJson, true);
+
+// Utility for styles
+if (!function_exists('getGlobalStyle')) {
+    function getGlobalStyle($key, $global, $default) {
+        return !empty($global[$key]) ? $global[$key] : $default;
+    }
+}
+
+// Assign variables for CSS
+$gs_card_bg = getGlobalStyle('card_bg_color', $globalCardStyles, '#ffffff');
+$gs_card_title = getGlobalStyle('card_title_color', $globalCardStyles, '#1f2937');
+$gs_price = getGlobalStyle('price_color', $globalCardStyles, '#1a3d32');
+$gs_compare_price = getGlobalStyle('compare_price_color', $globalCardStyles, '#9ca3af');
+$gs_badge_bg = getGlobalStyle('badge_bg_color', $globalCardStyles, '#ef4444');
+$gs_badge_text = getGlobalStyle('badge_text_color', $globalCardStyles, '#ffffff');
+$gs_btn_bg = getGlobalStyle('btn_bg_color', $globalCardStyles, '#ffffff');
+$gs_btn_icon = getGlobalStyle('btn_icon_color', $globalCardStyles, '#000000');
+$gs_btn_hover_bg = getGlobalStyle('btn_hover_bg_color', $globalCardStyles, '#000000');
+$gs_btn_hover_icon = getGlobalStyle('btn_hover_icon_color', $globalCardStyles, '#ffffff');
+$gs_btn_active_bg = getGlobalStyle('btn_active_bg_color', $globalCardStyles, '#000000');
+$gs_btn_active_icon = getGlobalStyle('btn_active_icon_color', $globalCardStyles, '#ffffff');
+$gs_atc_bg = getGlobalStyle('atc_btn_bg_color', $globalCardStyles, '#000000');
+$gs_atc_text = getGlobalStyle('atc_btn_text_color', $globalCardStyles, '#ffffff');
+$gs_atc_hover_bg = getGlobalStyle('atc_btn_hover_bg_color', $globalCardStyles, '#000000');
+$gs_atc_hover_text = getGlobalStyle('atc_btn_hover_text_color', $globalCardStyles, '#ffffff');
+$gs_tooltip_bg = getGlobalStyle('tooltip_bg_color', $globalCardStyles, '#000000');
+$gs_tooltip_text = getGlobalStyle('tooltip_text_color', $globalCardStyles, '#ffffff');
+?>
+    <!-- Dynamic Product Card Styles -->
+    <style>
+        :root {
+            --card-bg: <?php echo $gs_card_bg; ?>;
+            --card-title: <?php echo $gs_card_title; ?>;
+            --price-color: <?php echo $gs_price; ?>;
+            --compare-price: <?php echo $gs_compare_price; ?>;
+            --badge-bg: <?php echo $gs_badge_bg; ?>;
+            --badge-text: <?php echo $gs_badge_text; ?>;
+            --btn-bg: <?php echo $gs_btn_bg; ?>;
+            --btn-icon: <?php echo $gs_btn_icon; ?>;
+            --btn-hover-bg: <?php echo $gs_btn_hover_bg; ?>;
+            --btn-hover-icon: <?php echo $gs_btn_hover_icon; ?>;
+            --btn-active-bg: <?php echo $gs_btn_active_bg; ?>;
+            --btn-active-icon: <?php echo $gs_btn_active_icon; ?>;
+            --atc-bg: <?php echo $gs_atc_bg; ?>;
+            --atc-text: <?php echo $gs_atc_text; ?>;
+            --atc-hover-bg: <?php echo $gs_atc_hover_bg; ?>;
+            --atc-hover-text: <?php echo $gs_atc_hover_text; ?>;
+            --tooltip-bg: <?php echo $gs_tooltip_bg; ?>;
+            --tooltip-text: <?php echo $gs_tooltip_text; ?>;
+        }
+
+        /* Standard Product Card Styling */
+        .product-card {
+            background-color: var(--card-bg) !important;
+            border: none !important;
+        }
+        .product-card .card-title, 
+        .product-card .card-title a,
+        .product-card h3,
+        .product-card h3 a {
+            color: var(--card-title) !important;
+        }
+        .product-card .product-price,
+        .product-card .current-price,
+        .product-price {
+            color: var(--price-color) !important;
+        }
+        .product-card .compare-price,
+        .compare-price {
+            color: var(--compare-price) !important;
+        }
+        .product-card .discount-badge,
+        .product-card .badge-discount {
+            background-color: var(--badge-bg) !important;
+            color: var(--badge-text) !important;
+        }
+        .product-card .product-action-btn,
+        .product-card .action-btn,
+        .product-card .wishlist-btn,
+        .product-card .quick-view-btn,
+        .product-card .wishlist-remove-btn,
+        .product-card .wishlist-qv-btn,
+        .product-card .add-to-cart-hover-btn {
+            background-color: var(--btn-bg) !important;
+            color: var(--btn-icon) !important;
+        }
+        .product-card .product-action-btn i,
+        .product-card .action-btn i,
+        .product-card .wishlist-btn i,
+        .product-card .quick-view-btn i,
+        .product-card .wishlist-remove-btn i,
+        .product-card .wishlist-qv-btn i,
+        .product-card .add-to-cart-hover-btn i,
+        .product-card .product-action-btn span,
+        .product-card .action-btn span {
+            color: inherit !important;
+        }
+        .product-card .product-action-btn:hover,
+        .product-card .action-btn:hover,
+        .product-card .wishlist-btn:hover,
+        .product-card .quick-view-btn:hover,
+        .product-card .wishlist-remove-btn:hover,
+        .product-card .wishlist-qv-btn:hover,
+        .product-card .add-to-cart-hover-btn:hover {
+            background-color: var(--btn-hover-bg) !important;
+            color: var(--btn-hover-icon) !important;
+        }
+        
+        /* Specific override for Wishlist button */
+        .product-card .wishlist-btn {
+            background-color: var(--btn-bg) !important;
+            color: var(--btn-icon) !important;
+            border: none !important;
+        }
+        .product-card .wishlist-btn:hover {
+            background-color: var(--btn-hover-bg) !important;
+            color: var(--btn-hover-icon) !important;
+        }
+        
+        /* Wishlist Active State */
+        .product-card .wishlist-btn.bg-black,
+        .product-card .wishlist-btn.wishlist-active {
+            background-color: var(--btn-active-bg) !important;
+            color: var(--btn-active-icon) !important;
+        }
+        /* Ensure the icon remains visible in both states */
+        .product-card .wishlist-btn i {
+            color: inherit !important;
+        }
+
+        .product-card .atc-btn,
+        .product-card .productAddToCartBtn,
+        .product-card #shopAddToCartBtn,
+        .product-card .wishlist-atc-btn {
+            background-color: var(--atc-bg) !important;
+            color: var(--atc-text) !important;
+            border-color: var(--atc-bg) !important;
+            transition: all 0.3s ease;
+        }
+        .product-card .atc-btn i,
+        .product-card .productAddToCartBtn i,
+        .product-card #shopAddToCartBtn i,
+        .product-card .wishlist-atc-btn i,
+        .product-card .atc-btn span,
+        .product-card .productAddToCartBtn span,
+        .product-card #shopAddToCartBtn span,
+        .product-card .wishlist-atc-btn span {
+            color: inherit !important;
+        }
+        .product-card .atc-btn:hover,
+        .product-card .productAddToCartBtn:hover,
+        .product-card #shopAddToCartBtn:hover,
+        .product-card .wishlist-atc-btn:hover {
+            background-color: var(--atc-hover-bg) !important;
+            color: var(--atc-hover-text) !important;
+            border-color: var(--atc-hover-bg) !important;
+        }
+
+        /* Specific override for Add to Cart icon in the hover row */
+        .product-card .add-to-cart-hover-btn {
+            background-color: var(--btn-bg) !important;
+            color: var(--btn-icon) !important;
+            border: none !important;
+        }
+        .product-card .add-to-cart-hover-btn:hover {
+            background-color: var(--btn-hover-bg) !important;
+            color: var(--btn-hover-icon) !important;
+        }
+
+        .product-card .product-tooltip {
+            background-color: var(--tooltip-bg) !important;
+            color: var(--tooltip-text) !important;
+        }
+        .product-card .product-tooltip::after {
+            border-color: transparent !important;
+            border-left-color: var(--tooltip-bg) !important;
+        }
+    </style>
     
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -431,11 +616,70 @@ if (!function_exists('url')) {
         nav.header-shadow {
             background-color: <?php echo $headerBg; ?> !important;
         }
+        /* Main Hover State for Links & Buttons */
+        nav.header-shadow a:hover, 
+        nav.header-shadow button:hover {
+            color: <?php echo $headerHover; ?> !important;
+            background-color: transparent !important;
+            background: transparent !important;
+            /* Applying padding expansion to everything *except* action icons */
+            padding-left: 8px !important;
+            padding-right: 8px !important;
+        }
+
+        /* Action Icons (Search, Heart, Account, Cart) - No Padding Effect */
+        nav.header-shadow .header-icon:hover {
+            color: <?php echo $headerHover; ?> !important;
+            background-color: transparent !important;
+            background: transparent !important;
+            padding-left: 0 !important;
+            padding-right: 0 !important;
+        }
+
         nav.header-shadow a, 
         nav.header-shadow button,
-        nav.header-shadow .text-black,
-        nav.header-shadow .header-icon {
+        nav.header-shadow .header-icon,
+        nav.header-shadow .text-black {
             color: <?php echo $headerText; ?> !important;
+        }
+        
+        /* Logo State - No Background, with Padding effect */
+        nav.header-shadow .site-logo-link {
+            color: <?php echo $headerText; ?> !important;
+            background: transparent !important;
+            background-color: transparent !important;
+            padding: 0 !important;
+            transition: all 0.3s ease !important;
+        }
+        
+        nav.header-shadow .site-logo-link:hover {
+            padding-left: 8px !important;
+            padding-right: 8px !important;
+        }
+
+        nav.header-shadow .site-logo-link *,
+        nav.header-shadow .site-logo-link *:hover {
+            color: inherit !important;
+            background: transparent !important;
+            background-color: transparent !important;
+        }
+
+        /* Top Bar Styles */
+        .top-bar {
+            background-color: <?php echo $topbarBg; ?> !important;
+            color: <?php echo $topbarText; ?> !important;
+        }
+        .top-bar a, .top-bar span {
+            color: <?php echo $topbarText; ?> !important;
+        }
+        .top-bar-arrow {
+            color: <?php echo $topbarArrow; ?> !important;
+        }
+        .top-bar-arrow:hover {
+            opacity: 0.7 !important;
+        }
+        .top-bar a:hover {
+            opacity: 0.8 !important;
         }
         
         /* Submenu Background & Text */
@@ -455,7 +699,8 @@ if (!function_exists('url')) {
         .mega-menu-dropdown a:hover,
         .absolute .bg-white a:hover,
         nav .absolute a:hover {
-            color: <?php echo $submenuHover; ?> !important;
+            color: <?php echo $submenuHoverText; ?> !important;
+            background-color: transparent !important;
         }
 
         /* Border tweaks for seamless look if colors change */
@@ -516,9 +761,10 @@ if (!function_exists('url')) {
         #mobile-menu-main a:hover,
         #mobile-menu-main button:hover,
         [id^="mobile-menu-sub-"] a:hover,
-        [id^="mobile-menu-sub-"] button:hover,
-        #mobile-menu-main a:active,
-        #mobile-menu-main button:active,
+        [id^="mobile-menu-sub-"] button:hover {
+            color: <?php echo $submenuHoverText; ?> !important;
+            background-color: <?php echo $submenuHoverBg; ?> !important;
+        }
         [id^="mobile-menu-sub-"] a:active,
         [id^="mobile-menu-sub-"] button:active,
         /* Specific override for the utility class used in PHP */
@@ -676,7 +922,7 @@ if (!function_exists('url')) {
     
     <?php if (!isset($isCheckout) || !$isCheckout): ?>
     <!-- Top Bar -->
-    <div class="block bg-black text-white text-sm py-2" style="padding: 12px 0;">
+    <div class="block top-bar text-sm py-2" style="padding: 12px 0;">
         <div class="container mx-auto px-4 flex justify-between items-center">
             <!-- Left side spacer (to balance the right links) -->
             <div class="flex-1 hidden xl:block"></div>
@@ -684,7 +930,7 @@ if (!function_exists('url')) {
             <!-- Centered Slider Section -->
             <div class="flex-1 flex items-center justify-center space-x-6">
                 <!-- Left Arrow -->
-                <button class="top-bar-arrow top-bar-arrow-left flex-shrink-0 text-gray-500 hover:text-white transition" id="topBarPrev" aria-label="Previous">
+                <button class="top-bar-arrow top-bar-arrow-left flex-shrink-0 transition" id="topBarPrev" aria-label="Previous">
                     <i class="fas fa-chevron-left text-xs"></i>
                 </button>
 
@@ -696,7 +942,7 @@ if (!function_exists('url')) {
                             <span>
                                 <?php echo htmlspecialchars($slide['text']); ?>
                                 <?php if (!empty($slide['link'])): ?>
-                                    <a href="<?php echo htmlspecialchars($slide['link']); ?>" class="hover:text-gray-300 transition ml-1 underline underline-offset-4">
+                                    <a href="<?php echo htmlspecialchars($slide['link']); ?>" class="transition ml-1 underline underline-offset-4">
                                         <?php 
                                             if (!empty($slide['link_text'])) {
                                                 echo htmlspecialchars($slide['link_text']);
@@ -716,15 +962,15 @@ if (!function_exists('url')) {
                 </div>
 
                 <!-- Right Arrow -->
-                <button class="top-bar-arrow top-bar-arrow-right flex-shrink-0 text-gray-500 hover:text-white transition" id="topBarNext" aria-label="Next">
+                <button class="top-bar-arrow top-bar-arrow-right flex-shrink-0 transition" id="topBarNext" aria-label="Next">
                     <i class="fas fa-chevron-right text-xs"></i>
                 </button>
             </div>
 
             <!-- Right side links -->
-            <div class="hidden xl:flex flex-1 items-center justify-end space-x-4">
+            <div class="hidden xl:flex flex-1 items-center justify-end space-x-4 text-xs font-semibold">
                 <?php foreach ($topbarLinks as $link): ?>
-                <a href="<?php echo url($link['url']); ?>" class="hover:text-gray-300 transition whitespace-nowrap"><?php echo htmlspecialchars($link['label']); ?></a>
+                <a href="<?php echo url($link['url']); ?>" class="transition whitespace-nowrap"><?php echo htmlspecialchars($link['label']); ?></a>
                 <?php endforeach; ?>
                 <!-- Currency/Region Selector -->
                 <div class="relative ml-4 pl-4 border-l border-gray-700 hidden">
@@ -765,7 +1011,7 @@ if (!function_exists('url')) {
     </div>
     
     <!-- Main Navigation -->
-    <nav class="bg-white sticky top-0 z-50 header-shadow">
+    <nav class="sticky top-0 z-50 header-shadow">
         <div class="container mx-auto px-4">
             <div class="flex items-center justify-between h-20">
                 <!-- Hamburger Menu  -->
@@ -792,7 +1038,7 @@ if (!function_exists('url')) {
                 
                 <!-- Logo (Left on desktop, Centered on mobile/tablet) -->
                 <div class="flex-shrink-0 xl:flex-shrink-0 absolute xl:relative left-1/2 xl:left-auto transform xl:transform-none -translate-x-1/2 xl:translate-x-0">
-                    <a href="<?php echo $baseUrl; ?>/" class="flex items-center">
+                    <a href="<?php echo $baseUrl; ?>/" class="flex items-center site-logo-link">
                         <?php if ($siteLogoType === 'text'): ?>
                             <span class="text-3xl font-heading font-bold text-black"><?php echo htmlspecialchars($siteLogoText); ?></span>
                         <?php else: ?>
@@ -833,7 +1079,7 @@ if (!empty($headerMenuItems)) {
                     
                     <?php if ($showWishlistIcon): ?>
                     <!-- Wishlist - Only visible on xl screens -->
-                    <a href="<?php echo url('wishlist'); ?>" class="hidden xl:block text-gray-800 hover:text-primary transition relative" aria-label="View Wishlist">
+                    <a href="<?php echo url('wishlist'); ?>" class="hidden xl:block text-gray-800 hover:text-primary transition relative header-icon" aria-label="View Wishlist">
                         <i class="fas fa-heart text-xl" aria-hidden="true"></i>
                         <span class="wishlist-count absolute -top-1 -right-1.5 font-medium bg-red-500 text-white text-xs rounded-full w-4 h-4 flex items-center justify-center">
                             <?php 
@@ -861,12 +1107,12 @@ if (!empty($headerMenuItems)) {
                     if ($isCheckoutPage || $isCartPage): ?>
                         <a href="<?php echo url('cart'); ?>" class="text-black hover:text-gray-600 transition relative focus:outline-none header-icon inline-block" aria-label="View Shopping Cart">
                             <i class="fas fa-shopping-cart text-lg" aria-hidden="true"></i>
-                            <span class="absolute -top-2 -right-2 bg-red-500 text-white text-[10px] rounded-full w-5 h-5 flex items-center justify-center cart-count font-bold border-2 border-white"><?php echo $cartCount; ?></span>
+                            <span class="absolute -top-2 -right-2 bg-red-500 text-white text-[10px] rounded-full w-5 h-5 flex items-center justify-center cart-count font-bold"><?php echo $cartCount; ?></span>
                         </a>
                     <?php else: ?>
                         <button class="text-black hover:text-gray-600 transition relative focus:outline-none header-icon" aria-label="Open Shopping Cart Drawer" id="cartBtn">
                             <i class="fas fa-shopping-cart text-lg" aria-hidden="true"></i>
-                            <span class="absolute -top-2 -right-2 bg-red-500 text-white text-[10px] rounded-full w-5 h-5 flex items-center justify-center cart-count font-bold border-2 border-white"><?php echo $cartCount; ?></span>
+                            <span class="absolute -top-2 -right-2 bg-red-500 text-white text-[10px] rounded-full w-5 h-5 flex items-center justify-center cart-count font-bold"><?php echo $cartCount; ?></span>
                         </button>
                     <?php endif; ?>
                     <?php endif; ?>

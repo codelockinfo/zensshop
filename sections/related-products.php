@@ -61,11 +61,23 @@ if (empty($relatedProducts)) {
 }
 
 $baseUrl = getBaseUrl();
+
+$settingsObj = new Settings();
+$productStylesJson = $settingsObj->get('product_page_styles', '[]');
+$productStyles = json_decode($productStylesJson, true);
+
+$showRelated = $productStyles['show_related'] ?? '1';
+$relatedTitle = $productStyles['related_title'] ?? 'People Also Bought';
+$relatedSubtitle = $productStyles['related_subtitle'] ?? "Here's some of our most similar products people are buying. Click to discover trending style.";
+
+if ($showRelated !== '1') {
+    echo ''; exit;
+}
 ?>
 
-<div class="text-center mb-8">
-    <h2 class="text-2xl font-heading font-bold mb-2">People Also Bought</h2>
-    <p class="text-gray-600">Here's some of our most similar products people are buying. Click to discover trending style.</p>
+<div class="text-center mb-8 px-4">
+    <h2 class="text-2xl font-heading font-bold mb-2"><?php echo htmlspecialchars($relatedTitle); ?></h2>
+    <p class="text-gray-600 max-w-2xl mx-auto"><?php echo htmlspecialchars($relatedSubtitle); ?></p>
 </div>
 
 <div class="swiper people-bought-slider pb-12 px-4 md:px-12 relative overflow-hidden">
@@ -94,22 +106,25 @@ $baseUrl = getBaseUrl();
                         -<?php echo $itemDiscount; ?>%
                     </span>
                     <?php endif; ?>
-                    <button id="product-card-wishlist-btn" type="button" class="absolute top-2 right-2 w-10 h-10 rounded-full flex items-center justify-center <?php echo $inWishlist ? 'bg-black text-white' : 'bg-white text-black'; ?> hover:bg-black hover:text-white transition z-20 wishlist-btn"
-                            data-product-id="<?php echo $currentId; ?>"
-                            aria-label="<?php echo $inWishlist ? 'Remove from Wishlist' : 'Add to Wishlist'; ?>"
-                            title="<?php echo $inWishlist ? 'Remove from Wishlist' : 'Add to Wishlist'; ?>">
-                        <i class="<?php echo $inWishlist ? 'fas' : 'far'; ?> fa-heart" aria-hidden="true"></i>
-                    </button>
-                    
-                    <div class="product-actions absolute right-2 top-12 flex flex-col gap-2 mt-2 opacity-0 group-hover:opacity-100 transition-opacity duration-300 z-30">
-                        <button id="product-card-quick-view-btn" type="button" class="product-action-btn w-10 h-10 bg-white rounded-full flex items-center justify-center hover:bg-black hover:text-white transition shadow-lg quick-view-btn relative group" 
-                                data-product-id="<?php echo $currentId; ?>"
-                                data-product-name="<?php echo htmlspecialchars($item['name'] ?? ''); ?>"
-                                data-product-price="<?php echo $finalPrice; ?>"
-                                aria-label="Quick view product"
-                                data-product-slug="<?php echo htmlspecialchars($item['slug'] ?? ''); ?>">
-                            <i class="fas fa-eye" aria-hidden="true"></i>
+                    <div class="absolute top-2 right-2 z-30 flex flex-col items-center gap-2">
+                        <button id="product-card-wishlist-btn" type="button" class="wishlist-btn product-action-btn w-10 h-10 rounded-full flex items-center justify-center relative group transition <?php echo $inWishlist ? 'wishlist-active text-white' : ''; ?>"
+                                 data-product-id="<?php echo $currentId; ?>"
+                                 aria-label="<?php echo $inWishlist ? 'Remove from Wishlist' : 'Add to Wishlist'; ?>"
+                                 title="<?php echo $inWishlist ? 'Remove from Wishlist' : 'Add to Wishlist'; ?>">
+                            <i class="<?php echo $inWishlist ? 'fas' : 'far'; ?> fa-heart" aria-hidden="true"></i>
+                            <span class="product-tooltip"><?php echo $inWishlist ? 'Remove from Wishlist' : 'Add to Wishlist'; ?></span>
                         </button>
+                        
+                        <a id="product-card-quick-view-btn" href="<?php echo $baseUrl; ?>/product?slug=<?php echo urlencode($item['slug'] ?? ''); ?>" 
+                           class="product-action-btn w-10 h-10 rounded-full flex items-center justify-center transition shadow-lg quick-view-btn relative group opacity-100 md:opacity-0 md:group-hover:opacity-100" 
+                           data-product-id="<?php echo $currentId; ?>"
+                           data-product-name="<?php echo htmlspecialchars($item['name'] ?? ''); ?>"
+                           data-product-price="<?php echo $itemPrice; ?>"
+                           aria-label="Quick view product"
+                           data-product-slug="<?php echo htmlspecialchars($item['slug'] ?? ''); ?>">
+                            <i class="fas fa-eye" aria-hidden="true"></i>
+                            <span class="product-tooltip">Quick View</span>
+                        </a>
                     </div>
                 </div>
                 <div class="p-4 flex flex-col flex-1">
@@ -129,11 +144,11 @@ $baseUrl = getBaseUrl();
                         </div>
                     </div>
                     <div class="flex items-center gap-2 mb-4 mt-auto">
-                        <span class="text-base font-bold <?php echo $itemOriginalPrice ? 'text-[#1a3d32]' : 'text-primary'; ?>">
+                        <span class="product-price text-base font-bold">
                             <?php echo format_price($itemPrice, $item['currency'] ?? 'USD'); ?>
                         </span>
                         <?php if ($itemOriginalPrice): ?>
-                            <span class="text-red-500 font-bold line-through text-xs"><?php echo format_price($itemOriginalPrice, $item['currency'] ?? 'USD'); ?></span>
+                            <span class="compare-price font-bold line-through text-xs"><?php echo format_price($itemOriginalPrice, $item['currency'] ?? 'USD'); ?></span>
                         <?php endif; ?>
                     </div>
 

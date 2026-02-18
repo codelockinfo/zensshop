@@ -21,7 +21,7 @@ $error = '';
 // Handle Form Submission
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $styles = [
-        'bg_color' => $_POST['bg_color'] ?? '#ffffff', // Section BG? Maybe not needed for card but good for defaults
+        'bg_color' => $_POST['bg_color'] ?? '#ffffff', 
         'card_bg_color' => $_POST['card_bg_color'] ?? '#ffffff',
         'card_title_color' => $_POST['card_title_color'] ?? '#1F2937',
         'price_color' => $_POST['price_color'] ?? '#1a3d32',
@@ -99,11 +99,46 @@ require_once __DIR__ . '/../includes/admin-header.php';
         </div>
         <div class="flex items-center gap-3">
              <button type="button" onclick="window.location.href='<?php echo url('admin/dashboard.php'); ?>'" class="px-5 py-2.5 border border-gray-300 rounded-lg hover:bg-gray-50 bg-white text-gray-700 font-medium transition-colors">Cancel</button>
-            <button type="submit" form="settingsForm" class="bg-blue-600 text-white px-6 py-2.5 rounded-lg font-bold hover:bg-blue-700 transition shadow-sm flex items-center gap-2">
+            <button type="submit" form="settingsForm" class="bg-blue-600 text-white px-6 py-2.5 rounded-lg font-bold hover:bg-blue-700 transition shadow-sm flex items-center gap-2 btn-loading">
                 <i class="fas fa-save"></i> Save Changes
             </button>
         </div>
     </div>
+
+    <style>
+        .product-tooltip {
+            position: absolute;
+            right: calc(100% + 8px);
+            top: 50%;
+            transform: translateY(-50%);
+            padding: 6px 12px;
+            font-size: 11px;
+            border-radius: 4px;
+            white-space: nowrap;
+            opacity: 0;
+            visibility: hidden;
+            transition: all 0.3s ease;
+            z-index: 100 !important;
+            pointer-events: none;
+            font-weight: 500;
+            background-color: <?php echo $s_tooltip_bg_color; ?>;
+            color: <?php echo $s_tooltip_text_color; ?>;
+        }
+        .product-tooltip::after {
+            content: "";
+            position: absolute;
+            left: 100%;
+            top: 50%;
+            transform: translateY(-50%);
+            border: 5px solid transparent;
+            border-left-color: <?php echo $s_tooltip_bg_color; ?>;
+        }
+        .product-action-btn:hover .product-tooltip,
+        .group:hover .product-tooltip {
+            opacity: 1 !important;
+            visibility: visible !important;
+        }
+    </style>
 
     <div class="px-6">
         <?php if ($success): ?>
@@ -232,6 +267,16 @@ require_once __DIR__ . '/../includes/admin-header.php';
                                 <input type="color" name="tooltip_bg_color" value="<?php echo htmlspecialchars($s_tooltip_bg_color); ?>" class="h-10 w-16 border rounded cursor-pointer p-0.5" oninput="this.nextElementSibling.value = this.value">
                                 <input type="text" value="<?php echo htmlspecialchars($s_tooltip_bg_color); ?>" class="flex-1 border rounded p-2 text-sm uppercase" oninput="this.previousElementSibling.value = this.value">
                             </div>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-semibold text-gray-700 mb-2">Tooltip Text Color</label>
+                            <div class="flex items-center gap-3">
+                                <input type="color" name="tooltip_text_color" value="<?php echo htmlspecialchars($s_tooltip_text_color); ?>" class="h-10 w-16 border rounded cursor-pointer p-0.5" oninput="this.nextElementSibling.value = this.value">
+                                <input type="text" value="<?php echo htmlspecialchars($s_tooltip_text_color); ?>" class="flex-1 border rounded p-2 text-sm uppercase" oninput="this.previousElementSibling.value = this.value">
+                            </div>
+                        </div>
+                    </div>
+                </div>
 
                 <!-- Add to Cart Button Subsection -->
                 <div class="px-6 pb-6">
@@ -314,17 +359,20 @@ require_once __DIR__ . '/../includes/admin-header.php';
                             <span id="prevBadge" class="absolute top-2 left-2 px-2 py-1 text-xs font-bold rounded">-20%</span>
                             
                             <!-- Wishlist Button -->
-                            <button id="prevWishlistBtn" class="absolute top-2 right-2 w-8 h-8 rounded-full flex items-center justify-center transition shadow-sm z-20">
+                            <button id="prevWishlistBtn" class="absolute top-2 right-2 w-8 h-8 rounded-full flex items-center justify-center transition shadow-sm z-20 group relative" type="button">
                                 <i class="far fa-heart"></i>
+                                <span class="product-tooltip">Add to Wishlist</span>
                             </button>
                             
-                            <!-- Quick View Button -->
+                            <!-- Hidden Hover Actions -->
                             <div class="absolute top-12 right-2 flex flex-col gap-2 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-                                <button id="prevQvBtn" class="w-8 h-8 rounded-full flex items-center justify-center transition shadow-sm">
+                                <button id="prevQvBtn" class="w-8 h-8 rounded-full flex items-center justify-center transition shadow-sm group relative" type="button">
                                     <i class="fas fa-eye"></i>
+                                    <span class="product-tooltip">Quick View</span>
                                 </button>
-                                <button id="prevAtcBtnIcon" class="w-8 h-8 rounded-full flex items-center justify-center transition shadow-sm">
+                                <button id="prevAtcBtnIcon" class="w-8 h-8 rounded-full flex items-center justify-center transition shadow-sm group relative" type="button">
                                     <i class="fas fa-shopping-cart"></i>
+                                    <span class="product-tooltip">Add to Cart</span>
                                 </button>
                             </div>
 
@@ -344,7 +392,7 @@ require_once __DIR__ . '/../includes/admin-header.php';
                             </div>
 
                             <!-- Main ATC Button (Simulating Wishlist layout or special layouts) -->
-                            <button id="prevMainAtcBtn" class="w-full py-2 rounded text-xs font-bold flex items-center justify-center gap-2 transition-all">
+                            <button id="prevMainAtcBtn" class="w-full py-2 rounded text-xs font-bold flex items-center justify-center gap-2 transition-all" type="button">
                                 <i class="fas fa-shopping-cart"></i> ADD TO CART
                             </button>
                         </div>
@@ -354,9 +402,12 @@ require_once __DIR__ . '/../includes/admin-header.php';
                     <div id="previewCardWishlist" class="w-64 flex-shrink-0 bg-white rounded-lg shadow-sm border border-gray-100 overflow-hidden relative group transition-all duration-300">
                          <div class="relative overflow-hidden h-64 bg-gray-100">
                             <!-- Remove Button -->
-                            <button id="prevRemoveBtn" class="absolute top-2 right-2 w-8 h-8 rounded-full flex items-center justify-center transition shadow-sm z-20">
-                                <i class="fas fa-times"></i>
-                            </button>
+                            <div class="absolute top-2 right-2 z-20">
+                                <button id="prevRemoveBtn" class="w-8 h-8 rounded-full flex items-center justify-center transition shadow-sm group relative product-action-btn" type="button">
+                                    <i class="fas fa-times"></i>
+                                    <span class="product-tooltip">Remove</span>
+                                </button>
+                            </div>
                              <img src="https://placehold.co/400x400/f3f4f6/a3a3a3?text=Wishlist+Item" class="w-full h-full object-cover">
                         </div>
                          <div class="p-4 flex flex-col h-[160px]"> <!-- Fixed height for alignment -->
@@ -366,7 +417,7 @@ require_once __DIR__ . '/../includes/admin-header.php';
                             </div>
                             
                             <div class="mt-auto">
-                                <button id="prevMainAtcBtnW" class="w-full py-2.5 rounded text-xs font-bold flex items-center justify-center gap-2 transition-all">
+                                <button id="prevMainAtcBtnW" class="w-full py-2.5 rounded text-xs font-bold flex items-center justify-center gap-2 transition-all" type="button">
                                     <i class="fas fa-shopping-cart"></i> ADD TO CART
                                 </button>
                             </div>
@@ -411,6 +462,12 @@ require_once __DIR__ . '/../includes/admin-header.php';
             const atcText = document.querySelector('input[name="atc_btn_text_color"]').value;
             const atcHoverBg = document.querySelector('input[name="atc_btn_hover_bg_color"]').value;
             const atcHoverText = document.querySelector('input[name="atc_btn_hover_text_color"]').value;
+            
+            const tooltipBg = document.querySelector('input[name="tooltip_bg_color"]').value;
+            const tooltipText = document.querySelector('input[name="tooltip_text_color"]').value;
+
+            const activeBg = document.querySelector('input[name="btn_active_bg_color"]').value;
+            const activeIcon = document.querySelector('input[name="btn_active_icon_color"]').value;
 
             // Apply to Cards
             [document.getElementById('previewCard'), document.getElementById('previewCardWishlist')].forEach(card => {
@@ -470,6 +527,24 @@ require_once __DIR__ . '/../includes/admin-header.php';
                     btn.style.color = atcText;
                 };
             });
+
+            // Tooltips
+            const tooltips = document.querySelectorAll('.product-tooltip');
+            tooltips.forEach(tip => {
+                tip.style.backgroundColor = tooltipBg;
+                tip.style.color = tooltipText;
+            });
+            document.documentElement.style.setProperty('--tooltip-bg-preview', tooltipBg);
+            
+            // Shared Style for Tooltip Arrow in Preview
+            if (!document.getElementById('preview-tooltip-style')) {
+                const style = document.createElement('style');
+                style.id = 'preview-tooltip-style';
+                document.head.appendChild(style);
+            }
+            document.getElementById('preview-tooltip-style').innerHTML = `
+                .product-tooltip::after { border-left-color: ${tooltipBg} !important; border-color: transparent !important; border-left-color: ${tooltipBg} !important; }
+            `;
         }
 
         // Attach listeners
