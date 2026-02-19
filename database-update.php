@@ -1512,7 +1512,7 @@ echo "STEP 38: Adding cod_charge column to orders table\n";
 echo "---------------------------------\n";
 
 if (!columnExists($db, 'orders', 'cod_charge')) {
-    executeSql($db, "ALTER TABLE orders ADD COLUMN cod_charge DECIMAL(10,2) DEFAULT 0.00 AFTER tax_amount", "Add cod_charge column to orders", $errors, $success, $EXECUTE);
+    executeSql($db, "ALTER TABLE orders ADD COLUMN cod_charge DECIMAL(10,2) DEFAULT 0.00", "Add cod_charge column to orders", $errors, $success, $EXECUTE);
 }
 
 // ==========================================
@@ -1541,10 +1541,10 @@ if (!columnExists($db, 'products', 'height')) {
 
 // Add total weight and package count to orders
 if (!columnExists($db, 'orders', 'total_weight')) {
-    executeSql($db, "ALTER TABLE orders ADD COLUMN total_weight DECIMAL(10,2) DEFAULT 0.00 AFTER cod_charge", "Add total_weight to orders", $errors, $success, $EXECUTE);
+    executeSql($db, "ALTER TABLE orders ADD COLUMN total_weight DECIMAL(10,2) DEFAULT 0.00", "Add total_weight to orders", $errors, $success, $EXECUTE);
 }
 if (!columnExists($db, 'orders', 'package_count')) {
-    executeSql($db, "ALTER TABLE orders ADD COLUMN package_count INT DEFAULT 1 AFTER total_weight", "Add package_count to orders", $errors, $success, $EXECUTE);
+    executeSql($db, "ALTER TABLE orders ADD COLUMN package_count INT DEFAULT 1", "Add package_count to orders", $errors, $success, $EXECUTE);
 }
 
 echo "\n========================================\n";
