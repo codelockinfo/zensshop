@@ -49,6 +49,8 @@ function executeSql($db, $sql, $description, &$errors, &$success, $execute = fal
         if (stripos($msg, 'Duplicate column') !== false || 
             stripos($msg, 'already exists') !== false ||
             stripos($msg, 'Duplicate foreign key') !== false ||
+            stripos($msg, 'Duplicate key name') !== false ||
+            stripos($msg, 'Can\'t DROP') !== false ||
             stripos($msg, '1826') !== false ||
             stripos($msg, 'Duplicate entry') !== false) {
             echo "Status: ⚠️ EXISTS - " . $msg . "\n\n";
@@ -1501,22 +1503,6 @@ $sql_philosophy = "CREATE TABLE IF NOT EXISTS philosophy_section (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci";
 executeSql($db, $sql_philosophy, "Create/Verify philosophy_section table", $errors, $success, $EXECUTE);
 
-// ==========================================
-// STEP 37: Blog Alert Setting
-// ==========================================
-echo "STEP 37: Adding alert column to blogs table\n";
-echo "---------------------------------\n";
-
-if (!columnExists($db, 'blogs', 'alert')) {
-    executeSql(
-        $db,
-        "ALTER TABLE blogs ADD COLUMN settings LONGTEXT DEFAULT NULL AFTER layout",
-        "Add alert column to blogs",
-        $errors,
-        $success,
-        $EXECUTE
-    );
-}
 
 
 // ==========================================
