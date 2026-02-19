@@ -1523,17 +1523,21 @@ echo "---------------------------------\n";
 
 // Add dimensions to products
 if (!columnExists($db, 'products', 'weight')) {
-    executeSql($db, "ALTER TABLE products ADD COLUMN weight DECIMAL(10,2) DEFAULT 0.00 AFTER price", "Add weight to products", $errors, $success, $EXECUTE);
+    executeSql($db, "ALTER TABLE products ADD COLUMN weight DECIMAL(10,2) DEFAULT 0.00", "Add weight to products", $errors, $success, $EXECUTE);
 }
+
 if (!columnExists($db, 'products', 'length')) {
-    executeSql($db, "ALTER TABLE products ADD COLUMN length DECIMAL(10,2) DEFAULT 0.00 AFTER weight", "Add length to products", $errors, $success, $EXECUTE);
+    executeSql($db, "ALTER TABLE products ADD COLUMN length DECIMAL(10,2) DEFAULT 0.00", "Add length to products", $errors, $success, $EXECUTE);
 }
+
 if (!columnExists($db, 'products', 'width')) {
-    executeSql($db, "ALTER TABLE products ADD COLUMN width DECIMAL(10,2) DEFAULT 0.00 AFTER length", "Add width to products", $errors, $success, $EXECUTE);
+    executeSql($db, "ALTER TABLE products ADD COLUMN width DECIMAL(10,2) DEFAULT 0.00", "Add width to products", $errors, $success, $EXECUTE);
 }
+
 if (!columnExists($db, 'products', 'height')) {
-    executeSql($db, "ALTER TABLE products ADD COLUMN height DECIMAL(10,2) DEFAULT 0.00 AFTER width", "Add height to products", $errors, $success, $EXECUTE);
+    executeSql($db, "ALTER TABLE products ADD COLUMN height DECIMAL(10,2) DEFAULT 0.00", "Add height to products", $errors, $success, $EXECUTE);
 }
+
 
 // Add total weight and package count to orders
 if (!columnExists($db, 'orders', 'total_weight')) {
