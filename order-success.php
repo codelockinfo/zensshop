@@ -41,6 +41,8 @@ $shippingDate = (clone $orderDate)->modify('+6 days')->format('M j');
 $deliveryDate = (clone $orderDate)->modify('+7 days')->format('M j');
 
 $pageTitle = 'Order Confirmation';
+// Treat as checkout page to hide standard header elements
+$isCheckout = true;
 require_once __DIR__ . '/includes/header.php';
 
 // Re-fetch settings locally to ensure variables exist if header doesn't pass them
@@ -49,13 +51,57 @@ $storeId = $orderData['store_id'] ?? null;
 $logoType = $settingsObj->get('footer_logo_type', 'image', $storeId);
 $logoText = $settingsObj->get('footer_logo_text', 'HomeproX', $storeId);
 $logo = $settingsObj->get('footer_logo_image', null, $storeId);
+// Load Success Page Styling (Consolidated)
+$successStylingJson = $settingsObj->get('success_page_styling', '', $storeId);
+$successStyling = !empty($successStylingJson) ? json_decode($successStylingJson, true) : [];
+
+// Helper function locally for success page
+function getSuccessStyle($key, $default, $settingsObj, $successStyling, $storeId) {
+    if (isset($successStyling[$key])) return $successStyling[$key];
+    return $settingsObj->get($key, $default, $storeId);
+}
 ?>
 
 <style>
-/* Hide announcement bar and header on order success page */
+/* Hide announcement bar and header on order success page - Reinforcement */
 .bg-black.text-white.text-sm.py-2,
 nav.bg-white.sticky.top-0 {
     display: none !important;
+}
+
+/* Dynamic Order Success Styles */
+:root {
+    --succ-icon-color: <?php echo getSuccessStyle('success_icon_color', '#8b5cf6', $settingsObj, $successStyling, $storeId); ?>; /* Gradient start or solid */
+    --succ-text-color: <?php echo getSuccessStyle('success_text_color', '#111827', $settingsObj, $successStyling, $storeId); ?>;
+    --succ-sec-text-color: <?php echo getSuccessStyle('success_secondary_text_color', '#374151', $settingsObj, $successStyling, $storeId); ?>;
+    
+    --succ-tl-active: <?php echo getSuccessStyle('success_timeline_active_color', '#8b5cf6', $settingsObj, $successStyling, $storeId); ?>;
+    --succ-tl-comp: <?php echo getSuccessStyle('success_timeline_completed_color', '#10b981', $settingsObj, $successStyling, $storeId); ?>;
+    
+    /* Tracking Steps */
+    --succ-step1: <?php echo getSuccessStyle('success_step1_color', '#10b981', $settingsObj, $successStyling, $storeId); ?>;
+    --succ-step2: <?php echo getSuccessStyle('success_step2_color', '#8b5cf6', $settingsObj, $successStyling, $storeId); ?>;
+    --succ-step3: <?php echo getSuccessStyle('success_step3_color', '#f59e0b', $settingsObj, $successStyling, $storeId); ?>;
+    --succ-step4: <?php echo getSuccessStyle('success_step4_color', '#10b981', $settingsObj, $successStyling, $storeId); ?>;
+    
+    /* Button 1 (Invoice) */
+    --succ-btn1-bg: <?php echo getSuccessStyle('success_btn1_bg', '#dc2626', $settingsObj, $successStyling, $storeId); ?>;
+    --succ-btn1-text: <?php echo getSuccessStyle('success_btn1_text', '#ffffff', $settingsObj, $successStyling, $storeId); ?>;
+    --succ-btn1-hover-bg: <?php echo getSuccessStyle('success_btn1_hover_bg', '#b91c1c', $settingsObj, $successStyling, $storeId); ?>;
+    --succ-btn1-hover-text: <?php echo getSuccessStyle('success_btn1_hover_text', '#ffffff', $settingsObj, $successStyling, $storeId); ?>;
+    
+    /* Button 2 (Continue Shopping) */
+    --succ-btn2-bg: <?php echo getSuccessStyle('success_btn2_bg', '#000000', $settingsObj, $successStyling, $storeId); ?>;
+    --succ-btn2-text: <?php echo getSuccessStyle('success_btn2_text', '#ffffff', $settingsObj, $successStyling, $storeId); ?>;
+    --succ-btn2-hover-bg: <?php echo getSuccessStyle('success_btn2_hover_bg', '#1f2937', $settingsObj, $successStyling, $storeId); ?>;
+    --succ-btn2-hover-text: <?php echo getSuccessStyle('success_btn2_hover_text', '#ffffff', $settingsObj, $successStyling, $storeId); ?>;
+    
+    /* Button 3 (Browse Products) - Bordered */
+    --succ-btn3-bg: <?php echo getSuccessStyle('success_btn3_bg', '#ffffff', $settingsObj, $successStyling, $storeId); ?>;
+    --succ-btn3-text: <?php echo getSuccessStyle('success_btn3_text', '#111827', $settingsObj, $successStyling, $storeId); ?>;
+    --succ-btn3-hover-bg: <?php echo getSuccessStyle('success_btn3_hover_bg', '#f9fafb', $settingsObj, $successStyling, $storeId); ?>;
+    --succ-btn3-hover-text: <?php echo getSuccessStyle('success_btn3_hover_text', '#111827', $settingsObj, $successStyling, $storeId); ?>;
+    --succ-btn3-border: <?php echo getSuccessStyle('success_btn3_border', '#d1d5db', $settingsObj, $successStyling, $storeId); ?>;
 }
 
     .order-timeline {
@@ -91,26 +137,103 @@ nav.bg-white.sticky.top-0 {
         z-index: 1;
     }
     
-    .timeline-item.active::before {
-        background: #8b5cf6;
-        border-color: #8b5cf6;
+    /* Step 1: Confirmed */
+    .timeline-item:nth-child(1).active::before,
+    .timeline-item:nth-child(1).completed::before {
+        background: var(--succ-step1) !important;
+        border-color: var(--succ-step1) !important;
     }
-    
-    .timeline-item.completed::before {
-        background: #10b981;
-        border-color: #10b981;
+    .timeline-item:nth-child(1).active i,
+    .timeline-item:nth-child(1).completed i {
+        color: var(--succ-step1) !important;
+    }
+
+    /* Step 2: On its way */
+    .timeline-item:nth-child(2).active::before,
+    .timeline-item:nth-child(2).completed::before {
+        background: var(--succ-step2) !important;
+        border-color: var(--succ-step2) !important;
+    }
+    .timeline-item:nth-child(2).active i,
+    .timeline-item:nth-child(2).completed i {
+        color: var(--succ-step2) !important;
+    }
+
+    /* Step 3: Out for delivery */
+    .timeline-item:nth-child(3).active::before,
+    .timeline-item:nth-child(3).completed::before {
+        background: var(--succ-step3) !important;
+        border-color: var(--succ-step3) !important;
+    }
+    .timeline-item:nth-child(3).active i,
+    .timeline-item:nth-child(3).completed i {
+        color: var(--succ-step3) !important;
+    }
+
+    /* Step 4: Delivered */
+    .timeline-item:nth-child(4).active::before,
+    .timeline-item:nth-child(4).completed::before {
+        background: var(--succ-step4) !important;
+        border-color: var(--succ-step4) !important;
+    }
+    .timeline-item:nth-child(4).active i,
+    .timeline-item:nth-child(4).completed i {
+        color: var(--succ-step4) !important;
     }
     
     .order-success-icon {
         width: 3rem;
         height: 3rem;
-        background: linear-gradient(135deg, #8b5cf6 0%, #6366f1 100%);
+        background: var(--succ-icon-color) !important; /* Override gradient with single color if set, or we can handle gradient in admin later */
+        /* If user wants gradient, they might lose it here if we force a color. 
+           But admin input is type='color' so it creates a single color. 
+           To keep premium feel, we might want to default to a gradient if not set? 
+           The settingsObj->get returns a hex code, so it will be a solid color. 
+        */
         border-radius: 50%;
         display: flex;
         align-items: center;
         justify-content: center;
         color: white;
         font-size: 1.5rem;
+    }
+    
+    /* Text Colors */
+    .success-main-text { color: var(--succ-text-color) !important; }
+    .success-sec-text { color: var(--succ-sec-text-color) !important; }
+    
+    /* Button 1 */
+    .success-btn1 {
+        background-color: var(--succ-btn1-bg) !important;
+        color: var(--succ-btn1-text) !important;
+        transition: all 0.3s ease;
+    }
+    .success-btn1:hover {
+        background-color: var(--succ-btn1-hover-bg) !important;
+        color: var(--succ-btn1-hover-text) !important;
+    }
+    
+    /* Button 2 */
+    .success-btn2 {
+        background-color: var(--succ-btn2-bg) !important;
+        color: var(--succ-btn2-text) !important;
+        transition: all 0.3s ease;
+    }
+    .success-btn2:hover {
+        background-color: var(--succ-btn2-hover-bg) !important;
+        color: var(--succ-btn2-hover-text) !important;
+    }
+    
+    /* Button 3 */
+    .success-btn3 {
+        background-color: var(--succ-btn3-bg) !important;
+        color: var(--succ-btn3-text) !important;
+        border: 1px solid var(--succ-btn3-border) !important;
+        transition: all 0.3s ease;
+    }
+    .success-btn3:hover {
+        background-color: var(--succ-btn3-hover-bg) !important;
+        color: var(--succ-btn3-hover-text) !important;
     }
 </style>
 
@@ -141,9 +264,9 @@ nav.bg-white.sticky.top-0 {
                         </div>
                         <div>
                             <div class="flex items-center space-x-2 mb-2">
-                                <h1 class="text-2xl font-bold text-gray-900">Order #<?php echo htmlspecialchars($orderData['order_number']); ?></h1>
+                                <h1 class="text-2xl font-bold text-gray-900 success-main-text">Order #<?php echo htmlspecialchars($orderData['order_number']); ?></h1>
                             </div>
-                            <p class="text-xl text-gray-700">Thank you <?php echo htmlspecialchars($customerFirstName); ?>!</p>
+                            <p class="text-xl text-gray-700 success-sec-text">Thank you <?php echo htmlspecialchars($customerFirstName); ?>!</p>
                         </div>
                     </div>
                     
@@ -360,16 +483,15 @@ nav.bg-white.sticky.top-0 {
                         <div class="mt-6 space-y-3">
                             <a href="<?php echo url('invoice.php?order_number=' . $orderData['order_number']); ?>" 
                                target="_blank"
-                               class="block w-full bg-red-600 text-white text-center py-3 rounded-lg hover:bg-red-700 transition font-medium hover:text-white">
+                               class="block w-full text-center py-3 rounded-lg font-medium success-btn1">
                                 <i class="fas fa-file-invoice mr-2"></i>Download Invoice
                             </a>
                             <a href="<?php echo url('/shop'); ?>" 
-                               style="color: #ffffff !important;"
-                               class="block w-full bg-black text-white text-center py-3 rounded-lg hover:bg-gray-800 transition font-medium">
+                               class="block w-full text-center py-3 rounded-lg font-medium success-btn2">
                                 Continue Shopping
                             </a>
                             <a href="<?php echo url('/shop'); ?>" 
-                               class="block w-full bg-white border border-gray-300 text-gray-900 text-center py-3 rounded-lg hover:bg-gray-50 transition font-medium">
+                               class="block w-full text-center py-3 rounded-lg font-medium success-btn3">
                                 Browse Products
                             </a>
                         </div>

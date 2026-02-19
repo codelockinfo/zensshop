@@ -2,6 +2,7 @@
 require_once __DIR__ . '/../classes/Database.php';
 require_once __DIR__ . '/../classes/Product.php';
 require_once __DIR__ . '/../includes/functions.php';
+require_once __DIR__ . '/../classes/Settings.php';
 
 $baseUrl = getBaseUrl();
 $db = Database::getInstance();
@@ -39,11 +40,41 @@ $totalCategories = count($homeCategories);
 $displayCategories = array_slice($homeCategories, 0, 6);
 ?>
 
-<section class="py-16 md:py-14 bg-white">
+<?php
+// Fetch Styles
+$settingsObj = new Settings();
+$stylesJson = $settingsObj->get('homepage_categories_styles', '{"bg_color":"#ffffff","heading_color":"#1f2937","subheading_color":"#4b5563","text_color":"#1f2937","button_bg_color":"#000000","button_text_color":"#ffffff"}');
+$styles = json_decode($stylesJson, true);
+$sectionId = 'cat-section-' . rand(1000, 9999);
+?>
+
+<style>
+    #<?php echo $sectionId; ?> {
+        background-color: <?php echo $styles['bg_color']; ?>;
+    }
+    #<?php echo $sectionId; ?> .cat-heading {
+        color: <?php echo $styles['heading_color']; ?>;
+    }
+    #<?php echo $sectionId; ?> .cat-subheading {
+        color: <?php echo $styles['subheading_color']; ?>;
+    }
+    #<?php echo $sectionId; ?> .cat-item-title {
+        color: <?php echo $styles['text_color']; ?>;
+    }
+    #<?php echo $sectionId; ?> .cat-button {
+        background-color: <?php echo $styles['button_bg_color']; ?>;
+        color: <?php echo $styles['button_text_color']; ?>;
+    }
+    #<?php echo $sectionId; ?> .cat-button:hover {
+        opacity: 0.9;
+    }
+</style>
+
+<section id="<?php echo $sectionId; ?>" class="py-16 md:py-14">
     <div class="container mx-auto px-4">
         <div class="text-center mb-12">
-            <h2 class="text-2xl md:text-3xl font-heading font-bold mb-4"><?php echo htmlspecialchars($heading); ?></h2>
-            <p class="text-gray-600 text-sm md:text-md max-w-2xl mx-auto"><?php echo htmlspecialchars($subheading); ?></p>
+            <h2 class="text-2xl md:text-3xl font-heading font-bold mb-4 cat-heading"><?php echo htmlspecialchars($heading); ?></h2>
+            <p class="text-sm md:text-md max-w-2xl mx-auto cat-subheading"><?php echo htmlspecialchars($subheading); ?></p>
         </div>
         
         <div class="flex flex-wrap justify-center gap-6">
@@ -62,14 +93,14 @@ $displayCategories = array_slice($homeCategories, 0, 6);
                          class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-300"
                          onerror="this.src='https://placehold.co/600x600?text=Category+Image'">
                 </div>
-                <h3 class="text-sm md:text-md font-semibold text-gray-800 group-hover:text-primary transition"><?php echo htmlspecialchars($category['title']); ?></h3>
+                <h3 class="text-sm md:text-md font-semibold group-hover:text-primary transition cat-item-title"><?php echo htmlspecialchars($category['title']); ?></h3>
             </a>
             <?php endforeach; ?>
         </div>
 
         <?php if ($totalCategories > 6): ?>
         <div class="text-center mt-10">
-            <a href="<?php echo $baseUrl; ?>/collections" class="inline-block bg-black text-white px-8 py-3 rounded-full hover:bg-gray-800 hover:text-white transition font-semibold text-sm">
+            <a href="<?php echo $baseUrl; ?>/collections" class="inline-block px-8 py-3 rounded-full hover:bg-gray-800 transition font-semibold text-sm cat-button">
                 View More Collections
             </a>
         </div>

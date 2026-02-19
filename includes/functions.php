@@ -348,7 +348,7 @@ function renderFrontendMenuItem($item, $landingPagesList = [], $level = 0, $show
                     <!-- Optional Overlay -->
                     <div class="absolute inset-0 bg-black bg-opacity-0 group-hover/card:bg-opacity-10 transition-all"></div>
                 </div>
-                <div class="inline-block bg-white border border-gray-200 rounded-full px-4 py-1 text-sm font-semibold text-gray-900 group-hover/card:bg-red-50 group-hover/card:text-red-700 transition shadow-sm">
+                <div class="inline-block bg-white border border-gray-200 rounded-full px-4 py-1 text-sm font-semibold text-gray-900 group-hover/card:text-red-700 transition shadow-sm">
                     <?php echo $label; ?> <?php echo $badgeHtml; ?>
                 </div>
             </a>
@@ -597,7 +597,7 @@ function renderFrontendMenuItem($item, $landingPagesList = [], $level = 0, $show
             // Deep Level Flyout (Level > 0)
              ?>
              <div class="<?php echo $parentClass; ?> w-full">
-                 <a href="<?php echo $itemUrl; ?>" class="px-4 py-2 text-gray-700 hover:text-red-700 hover:bg-gray-50 transition relative flex items-center justify-between w-full">
+                 <a href="<?php echo $itemUrl; ?>" class="px-4 py-2 text-gray-700 hover:text-red-700 transition relative flex items-center justify-between w-full">
                     <span><?php echo $displayLabel; ?></span>
                     <i class="fas fa-chevron-right text-xs"></i>
                  </a>
@@ -628,7 +628,7 @@ function renderFrontendMenuItem($item, $landingPagesList = [], $level = 0, $show
             <?php
          } else {
              ?>
-             <a href="<?php echo $itemUrl; ?>" class="block px-4 py-2 text-sm text-gray-700 hover:text-red-700 transition hover:bg-gray-50 flex items-center group/link font-sans">
+             <a href="<?php echo $itemUrl; ?>" class="block px-4 py-2 text-sm text-gray-700 hover:text-red-700 transition flex items-center group/link font-sans">
                 <span class="inline-block group-hover/link:translate-x-2 transition-transform duration-300"><?php echo $displayLabel; ?></span>
             </a>
             <?php

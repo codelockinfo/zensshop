@@ -6,7 +6,7 @@ function createQuickViewModal(){if(document.getElementById("quickViewModal"))ret
         <!-- Modal Panel Container -->
         <div class="fixed inset-0 z-10 overflow-hidden flex items-center justify-center p-4 sm:p-6" id="quickViewWrapper">
             <!-- Panel -->
-            <div class="relative transform rounded-lg bg-white text-left shadow-xl transition-all w-full max-w-5xl h-[85vh] flex flex-col opacity-0 scale-95 duration-300" id="quickViewPanel">
+            <div class="relative transform rounded-lg text-left shadow-xl transition-all w-full max-w-5xl h-[85vh] flex flex-col opacity-0 scale-95 duration-300" id="quickViewPanel">
                 
                 <!-- Close Button -->
                 <div class="absolute right-4 top-4 z-20">
@@ -117,22 +117,22 @@ function createQuickViewModal(){if(document.getElementById("quickViewModal"))ret
                  </div>
                  <div class="flex flex-wrap gap-2">
                      ${opt.values.map((e,i)=>`
-                         <button type="button" class="px-5 py-2 border rounded-md text-sm font-medium transition qv-variant-btn min-w-[3rem] ${0===i?"bg-[#154D35] text-white border-[#154D35]":"bg-white text-gray-700 border-gray-300 hover:border-gray-400"}" 
+                         <button type="button" class="px-5 py-2 border rounded-md text-sm font-medium transition qv-variant-btn min-w-[3rem] ${0===i?"bg-[#154D35] text-white border-[#154D35]":"bg-transparent text-gray-700 border-gray-300 hover:border-gray-400"}" 
                                  onclick="selectQVVariant(this, '${opt.name.replace(/'/g,"\\'")}', '${e.replace(/'/g,"\\'")}')"
                                  data-option="${opt.name}" data-value="${e}">${e}</button>
                      `).join("")}
                  </div>
              </div>`});let m=t.in_wishlist?"fas":"far",g=t.in_wishlist?"Remove from Wishlist":"Add to Wishlist";if(e.innerHTML=`
-        <div class="h-full grid grid-cols-1 md:grid-cols-2 bg-white">
-            <div class="p-6 md:p-8 bg-white md:border-r border-gray-100 flex flex-col justify-between overflow-hidden relative max-h-[500px]">
+        <div class="h-full grid grid-cols-1 md:grid-cols-2 bg-transparent">
+            <div class="p-6 md:p-8 bg-transparent md:border-r border-gray-100 flex flex-col justify-between overflow-hidden relative max-h-[500px]">
                 <div class="relative flex-1 flex flex-col items-center justify-center w-full min-h-0">
                     ${r}
                 </div>
                 ${o}
             </div>
 
-            <div class="p-6 md:p-8 h-full overflow-y-auto custom-scrollbar bg-white relative">
-                <h2 class="text-2xl md:text-3xl font-heading font-bold text-gray-900 mb-2 pr-8">${t.name}</h2>
+            <div class="p-6 md:p-8 h-full overflow-y-auto custom-scrollbar bg-transparent relative">
+                <h2 id="qvTitle" class="text-2xl md:text-3xl font-heading font-bold text-gray-900 mb-2 pr-8 truncate-3-lines">${t.name}</h2>
                 <div class="flex flex-wrap items-center gap-4 mb-4 text-sm">
                     <div class="flex items-center gap-1">
                         <div class="flex text-yellow-400">${u}</div>
@@ -149,7 +149,7 @@ function createQuickViewModal(){if(document.getElementById("quickViewModal"))ret
                     </span>
                 </div>
 
-                <p class="text-gray-600 text-sm mb-6 leading-relaxed">
+                <p id="qvDesc" class="text-gray-600 text-sm mb-6 leading-relaxed">
                     ${t.short_description || (t.description ? (t.description.length > 150 ? t.description.substring(0,150) + "..." : t.description) : "No description available.")}
                 </p>
 
@@ -168,7 +168,7 @@ function createQuickViewModal(){if(document.getElementById("quickViewModal"))ret
 
                 <div class="flex flex-col gap-3 mb-6">
                     <div class="flex gap-3 h-12">
-                        <div class="flex items-center border border-black rounded-full w-28 h-full shrink-0 overflow-hidden">
+                        <div id="qvQuantityContainer" class="flex items-center border border-black rounded-full w-28 h-full shrink-0 overflow-hidden">
                             <button onclick="updateQVQuantity(-1)" class="w-8 h-full flex items-center justify-center hover:bg-gray-100 text-black transition text-lg font-medium focus:outline-none">-</button>
                             <input type="text" id="qvQuantity" value="1" class="w-full flex-1 text-center border-none focus:ring-0 outline-none focus:outline-none p-0 h-full text-black font-bold text-lg bg-transparent shadow-none" readonly>
                             <button onclick="updateQVQuantity(1)" class="w-8 h-full flex items-center justify-center hover:bg-gray-100 text-black transition text-lg font-medium focus:outline-none">+</button>
@@ -197,7 +197,7 @@ function createQuickViewModal(){if(document.getElementById("quickViewModal"))ret
                     ${renderStockCountHTML(t.stock_status,t.stock_quantity,t.total_sales)}
                 </div>
                 
-                <div class="flex gap-4 text-gray-500 mb-6 font-medium">
+                <div id="qvActionsContainer" class="flex gap-4 text-gray-500 mb-6 font-medium">
                     <button class="hover:text-black flex items-center gap-1 transition wishlist-btn quick-view text-xs md:text-sm" 
                             data-product-id="${t.product_id||t.id}">
                         <i class="${m} fa-heart"></i> ${g}
@@ -210,7 +210,7 @@ function createQuickViewModal(){if(document.getElementById("quickViewModal"))ret
                     </button>
                 </div>
 
-                <div class="border-t border-gray-100 pt-4 space-y-2 text-sm text-gray-600 bg-gray-50 p-4 rounded-lg">
+                <div id="qvPolicyBox" class="border-t border-gray-100 pt-4 space-y-2 text-sm text-gray-600 bg-gray-50 p-4 rounded-lg">
                     <div class="flex items-center gap-2 text-primary">
                          <i class="fas fa-box"></i>
                          <span class="font-medium">Pickup available at Shop location. Usually ready in 24 hours</span>

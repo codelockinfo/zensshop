@@ -268,6 +268,15 @@ $subtotal = $cartTotal;
 $finalShipping = isset($_POST['delivery_type']) && $_POST['delivery_type'] === 'pickup' ? 0 : $shippingAmount;
 $tax = 0;
 $total = $subtotal + $finalShipping - $discountAmount + $tax;
+// Load Checkout Page Styling (Consolidated)
+$checkoutStylingJson = $settingsObj->get('checkout_page_styling', '');
+$checkoutStyling = !empty($checkoutStylingJson) ? json_decode($checkoutStylingJson, true) : [];
+
+// Helper function locally for checkout page
+function getCheckoutStyle($key, $default, $settingsObj, $checkoutStyling) {
+    if (isset($checkoutStyling[$key])) return $checkoutStyling[$key];
+    return $settingsObj->get($key, $default);
+}
 ?>
 
 <style>
@@ -275,6 +284,84 @@ $total = $subtotal + $finalShipping - $discountAmount + $tax;
 .bg-black.text-white.text-sm.py-2,
 nav.bg-white.sticky.top-0 {
     display: none !important;
+}
+
+/* Dynamic Checkout Styles */
+:root {
+    --checkout-prog-active-bg: <?php echo getCheckoutStyle('checkout_progress_active_bg', '#2563eb', $settingsObj, $checkoutStyling); ?>;
+    --checkout-prog-active-text: <?php echo getCheckoutStyle('checkout_progress_active_text', '#ffffff', $settingsObj, $checkoutStyling); ?>;
+    --checkout-prog-inactive-bg: <?php echo getCheckoutStyle('checkout_progress_inactive_bg', '#e5e7eb', $settingsObj, $checkoutStyling); ?>;
+    --checkout-prog-inactive-text: <?php echo getCheckoutStyle('checkout_progress_inactive_text', '#374151', $settingsObj, $checkoutStyling); ?>;
+    
+    --checkout-welcome-bg: <?php echo getCheckoutStyle('checkout_welcome_bg', '#eff6ff', $settingsObj, $checkoutStyling); ?>;
+    --checkout-welcome-text: <?php echo getCheckoutStyle('checkout_welcome_text', '#1e40af', $settingsObj, $checkoutStyling); ?>;
+    --checkout-welcome-border: <?php echo getCheckoutStyle('checkout_welcome_border', '#dbeafe', $settingsObj, $checkoutStyling); ?>;
+    
+    --checkout-heading-color: <?php echo getCheckoutStyle('checkout_heading_color', '#111827', $settingsObj, $checkoutStyling); ?>;
+    --checkout-label-color: <?php echo getCheckoutStyle('checkout_label_color', '#374151', $settingsObj, $checkoutStyling); ?>;
+    
+    --checkout-input-border: <?php echo getCheckoutStyle('checkout_input_border', '#d1d5db', $settingsObj, $checkoutStyling); ?>;
+    --checkout-input-focus: <?php echo getCheckoutStyle('checkout_input_focus', '#3b82f6', $settingsObj, $checkoutStyling); ?>;
+    --checkout-input-text: <?php echo getCheckoutStyle('checkout_input_text_color', '#111827', $settingsObj, $checkoutStyling); ?>;
+    
+    --checkout-summary-bg: <?php echo getCheckoutStyle('checkout_summary_bg', '#ffffff', $settingsObj, $checkoutStyling); ?>;
+    --checkout-summary-border: <?php echo getCheckoutStyle('checkout_summary_border', '#ffffff', $settingsObj, $checkoutStyling); ?>;
+    --checkout-summary-text: <?php echo getCheckoutStyle('checkout_summary_text', '#111827', $settingsObj, $checkoutStyling); ?>;
+    
+    --checkout-pay-bg: <?php echo getCheckoutStyle('checkout_pay_btn_bg', '#2563eb', $settingsObj, $checkoutStyling); ?>;
+    --checkout-pay-text: <?php echo getCheckoutStyle('checkout_pay_btn_text', '#ffffff', $settingsObj, $checkoutStyling); ?>;
+    --checkout-pay-hover: <?php echo getCheckoutStyle('checkout_pay_btn_hover_bg', '#1d4ed8', $settingsObj, $checkoutStyling); ?>;
+}
+
+.checkout-step-active {
+    background-color: var(--checkout-prog-active-bg) !important;
+    color: var(--checkout-prog-active-text) !important;
+}
+/* For completed/inactive steps, we might want different styling */
+/* Current design has 'completed' as primary color. Let's map inactive settings to 'other' steps if needed, 
+   but for now let's just use it generic or for future steps */
+.checkout-step-inactive {
+    background-color: var(--checkout-prog-inactive-bg) !important;
+    color: var(--checkout-prog-inactive-text) !important;
+}
+
+.checkout-welcome {
+    background-color: var(--checkout-welcome-bg) !important;
+    border-color: var(--checkout-welcome-border) !important;
+}
+.checkout-welcome-text {
+    color: var(--checkout-welcome-text) !important;
+}
+
+.checkout-heading {
+    color: var(--checkout-heading-color) !important;
+}
+.checkout-label {
+    color: var(--checkout-label-color) !important;
+}
+.checkout-input {
+    border-color: var(--checkout-input-border) !important;
+    color: var(--checkout-input-text) !important;
+}
+.checkout-input:focus {
+    border-color: var(--checkout-input-focus) !important;
+    box-shadow: 0 0 0 2px var(--checkout-input-focus) !important;
+}
+
+.checkout-summary {
+    background-color: var(--checkout-summary-bg) !important;
+    border: 1px solid var(--checkout-summary-border) !important;
+}
+.checkout-summary-text {
+    color: var(--checkout-summary-text) !important;
+}
+
+.checkout-pay-btn {
+    background-color: var(--checkout-pay-bg) !important;
+    color: var(--checkout-pay-text) !important;
+}
+.checkout-pay-btn:hover {
+    background-color: var(--checkout-pay-hover) !important;
 }
 </style>
 
@@ -314,7 +401,7 @@ nav.bg-white.sticky.top-0 {
                 
                 <!-- Checkout Step -->
                 <div class="flex items-center">
-                    <div class="w-6 h-6 md:w-8 md:h-8 rounded-full bg-blue-600 text-white flex items-center justify-center font-semibold text-xs md:text-sm">
+                    <div class="w-6 h-6 md:w-8 md:h-8 rounded-full bg-blue-600 text-white flex items-center justify-center font-semibold text-xs md:text-sm checkout-step-active">
                         3
                     </div>
                     <span class="ml-2 font-semibold text-blue-600 text-xs md:text-base">Checkout</span>
@@ -377,23 +464,23 @@ nav.bg-white.sticky.top-0 {
                                 <a href="<?php echo url('cart'); ?>" class="text-gray-400 hover:text-black transition-colors" title="Back to Cart">
                                     <i class="fas fa-chevron-left text-xl"></i>
                                 </a>
-                                <h1 class="text-3xl font-bold text-gray-900">Checkout</h1>
+                                <h1 class="text-3xl font-bold text-gray-900 checkout-heading">Checkout</h1>
                             </div>
                         </div>
 
                         <?php if ($customer): ?>
-                            <div class="bg-blue-50 border border-blue-100 rounded-xl p-4 mb-8 flex items-center space-x-3">
+                            <div class="bg-blue-50 border border-blue-100 rounded-xl p-4 mb-8 flex items-center space-x-3 checkout-welcome">
                                 <div class="w-10 h-10 bg-blue-600 rounded-full flex items-center justify-center text-white">
                                     <i class="fas fa-user"></i>
                                 </div>
                                 <div>
-                                    <p class="text-sm text-blue-800">Welcome back, <span class="font-bold"><?php echo htmlspecialchars($customer['name']); ?></span>! </p>
-                                    <p class="text-xs text-blue-600 font-medium italic">Happy ordering! ✨</p>
+                                    <p class="text-sm text-blue-800 checkout-welcome-text">Welcome back, <span class="font-bold"><?php echo htmlspecialchars($customer['name']); ?></span>! </p>
+                                    <p class="text-xs text-blue-600 font-medium italic checkout-welcome-text">Happy ordering! ✨</p>
                                 </div>
                             </div>
                         <?php endif; ?>
 
-                        <h2 class="text-xl font-semibold text-gray-800 mb-6 flex items-center">
+                        <h2 class="text-xl font-semibold text-gray-800 mb-6 flex items-center checkout-heading">
                             <i class="fas fa-shipping-fast mr-3 text-gray-400"></i>
                             Shipping Information
                         </h2>
@@ -425,7 +512,7 @@ nav.bg-white.sticky.top-0 {
                                        title="Please enter a valid name (letters only)"
                                        onkeypress="return (event.charCode >= 65 && event.charCode <= 90) || (event.charCode >= 97 && event.charCode <= 122) || event.charCode === 32 || event.charCode === 46 || event.charCode === 45"
                                        value="<?php echo htmlspecialchars($_POST['customer_name'] ?? ($customer['name'] ?? '')); ?>"
-                                       class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent">
+                                       class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent checkout-input">
                             </div>
                             
                             <div>
@@ -434,13 +521,13 @@ nav.bg-white.sticky.top-0 {
                                        pattern="[a-z0-9._%+-]+@[a-z0-9.-]+\.[a-z]{2,}$"
                                        title="Please enter a valid email address (e.g., user@example.com)"
                                        value="<?php echo htmlspecialchars($_POST['customer_email'] ?? ($customer['email'] ?? '')); ?>"
-                                       class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent">
+                                       class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent checkout-input">
                             </div>
                             
                             <div>
                                 <label class="block text-sm font-semibold mb-2 text-gray-700">Phone number</label>
                                 <div class="flex relative w-full">
-                                    <select name="phone_code" id="phoneCodeSelect" class="px-3 py-3 border border-gray-300 rounded-l-lg focus:outline-none focus:ring-2 focus:ring-primary bg-gray-50 appearance-none cursor-pointer" style="min-width: 90px;">
+                                    <select name="phone_code" id="phoneCodeSelect" class="px-3 py-3 border border-gray-300 rounded-l-lg focus:outline-none focus:ring-2 focus:ring-primary bg-gray-50 appearance-none cursor-pointer checkout-input" style="min-width: 90px;">
                                         <?php
                                         // Comprehensive phone country codes with lengths
                                         // Format: [Flag, Code, ISO, Length]
@@ -511,7 +598,7 @@ nav.bg-white.sticky.top-0 {
                                            title="Please enter a valid 10-digit mobile number"
                                            onkeypress="return event.charCode >= 48 && event.charCode <= 57"
                                            maxlength="10"
-                                           class="flex-1 min-w-0 px-4 py-3 border border-gray-300 border-l-0 rounded-r-lg focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent">
+                                           class="flex-1 min-w-0 px-4 py-3 border border-gray-300 border-l-0 rounded-r-lg focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent checkout-input">
                                 </div>
                                 <script>
                                     document.addEventListener('DOMContentLoaded', function() {
@@ -544,7 +631,7 @@ nav.bg-white.sticky.top-0 {
                                 <label class="block text-sm font-semibold mb-2 text-gray-700">Address</label>
                                 <input type="text" name="address" required minlength="5"
                                        value="<?php echo htmlspecialchars($_POST['address'] ?? ''); ?>"
-                                       class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent">
+                                       class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent checkout-input">
                             </div>
                             
                             <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -555,7 +642,7 @@ nav.bg-white.sticky.top-0 {
                                            title="Please enter a valid city name (letters only)"
                                            onkeypress="return (event.charCode >= 65 && event.charCode <= 90) || (event.charCode >= 97 && event.charCode <= 122) || event.charCode === 32"
                                            value="<?php echo htmlspecialchars($_POST['city'] ?? ''); ?>"
-                                           class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent">
+                                           class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent checkout-input">
                                 </div>
                                 <div>
                                     <label class="block text-sm font-semibold mb-2 text-gray-700">State</label>
@@ -564,7 +651,7 @@ nav.bg-white.sticky.top-0 {
                                            title="Please enter a valid state name (letters only)"
                                            onkeypress="return (event.charCode >= 65 && event.charCode <= 90) || (event.charCode >= 97 && event.charCode <= 122) || event.charCode === 32"
                                            value="<?php echo htmlspecialchars($_POST['state'] ?? $customer['shipping_address']['state'] ?? ''); ?>"
-                                           class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent"
+                                           class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent checkout-input"
                                            onblur="recalculateTaxes()">
                                 </div>
                             </div>
@@ -590,7 +677,7 @@ nav.bg-white.sticky.top-0 {
                                            title="Please enter a valid country name (letters only)"
                                            onkeypress="return (event.charCode >= 65 && event.charCode <= 90) || (event.charCode >= 97 && event.charCode <= 122) || event.charCode === 32"
                                            placeholder="Enter country name"
-                                           class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent">
+                                           class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent checkout-input">
 
                                 </div>
                             </div>
@@ -600,8 +687,8 @@ nav.bg-white.sticky.top-0 {
                 
                 <!-- Right Section: Review Cart -->
                 <div class="lg:col-span-1">
-                    <div class="bg-white rounded-lg p-6 sticky top-4">
-                        <h2 class="text-xl font-bold mb-6">Review your cart</h2>
+                    <div class="bg-white rounded-lg p-6 sticky top-4 checkout-summary">
+                        <h2 class="text-xl font-bold mb-6 checkout-heading">Review your cart</h2>
                         
                         <!-- Cart Items -->
                         <div class="space-y-4 mb-6">
@@ -730,7 +817,7 @@ nav.bg-white.sticky.top-0 {
                                 data-city="<?php echo htmlspecialchars($_POST['city'] ?? ($customer['shipping_address']['city'] ?? '')); ?>"
                                 data-total-quantity="<?php echo $totalQuantity; ?>"
                                 data-customer-id="<?php echo $customer['customer_id'] ?? ''; ?>"
-                                class="w-full bg-blue-600 text-white py-4 px-6 rounded-lg hover:bg-blue-700 transition font-semibold mb-4">
+                                class="w-full bg-blue-600 text-white py-4 px-6 rounded-lg hover:bg-blue-700 transition font-semibold mb-4 checkout-pay-btn">
                             Pay Now
                         </button>
                         <!-- Honeypot Field (Hidden from users, visible to bots) -->

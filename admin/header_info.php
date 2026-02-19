@@ -57,6 +57,17 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             'header_icon_user' => isset($_POST['icon_user']) ? '1' : '0',
             'header_icon_wishlist' => isset($_POST['icon_wishlist']) ? '1' : '0',
             'header_icon_cart' => isset($_POST['icon_cart']) ? '1' : '0',
+            'header_bg_color' => $_POST['header_bg_color'] ?? '#ffffff',
+            'header_text_color' => $_POST['header_text_color'] ?? '#000000',
+            'header_hover_color' => $_POST['header_hover_color'] ?? '#000000',
+            'header_hover_bg_color' => $_POST['header_hover_bg_color'] ?? 'transparent',
+            'submenu_bg_color' => $_POST['submenu_bg_color'] ?? '#ffffff',
+            'submenu_text_color' => $_POST['submenu_text_color'] ?? '#000000',
+            'submenu_hover_text_color' => $_POST['submenu_hover_text_color'] ?? '#6b7280',
+            'submenu_hover_bg_color' => $_POST['submenu_hover_bg_color'] ?? '#f0f0f0',
+            'topbar_bg_color' => $_POST['topbar_bg_color'] ?? '#000000',
+            'topbar_text_color' => $_POST['topbar_text_color'] ?? '#ffffff',
+            'topbar_arrow_color' => $_POST['topbar_arrow_color'] ?? '#9ca3af',
         ];
         
         foreach ($iconSettings as $key => $value) {
@@ -129,6 +140,19 @@ $iconSearch = $db->fetchOne("SELECT setting_value FROM site_settings WHERE setti
 $iconUser = $db->fetchOne("SELECT setting_value FROM site_settings WHERE setting_key = 'header_icon_user' AND store_id = ?", [$storeId])['setting_value'] ?? '1';
 $iconWishlist = $db->fetchOne("SELECT setting_value FROM site_settings WHERE setting_key = 'header_icon_wishlist' AND store_id = ?", [$storeId])['setting_value'] ?? '1';
 $iconCart = $db->fetchOne("SELECT setting_value FROM site_settings WHERE setting_key = 'header_icon_cart' AND store_id = ?", [$storeId])['setting_value'] ?? '1';
+
+// Fetch Visual Styles
+$headerBg = $db->fetchOne("SELECT setting_value FROM site_settings WHERE setting_key = 'header_bg_color' AND store_id = ?", [$storeId])['setting_value'] ?? '#ffffff';
+$headerText = $db->fetchOne("SELECT setting_value FROM site_settings WHERE setting_key = 'header_text_color' AND store_id = ?", [$storeId])['setting_value'] ?? '#000000';
+$headerHover = $db->fetchOne("SELECT setting_value FROM site_settings WHERE setting_key = 'header_hover_color' AND store_id = ?", [$storeId])['setting_value'] ?? '#000000';
+$headerHoverBg = $db->fetchOne("SELECT setting_value FROM site_settings WHERE setting_key = 'header_hover_bg_color' AND store_id = ?", [$storeId])['setting_value'] ?? 'transparent';
+$submenuBg = $db->fetchOne("SELECT setting_value FROM site_settings WHERE setting_key = 'submenu_bg_color' AND store_id = ?", [$storeId])['setting_value'] ?? '#ffffff';
+$submenuText = $db->fetchOne("SELECT setting_value FROM site_settings WHERE setting_key = 'submenu_text_color' AND store_id = ?", [$storeId])['setting_value'] ?? '#000000';
+$submenuHoverText = $db->fetchOne("SELECT setting_value FROM site_settings WHERE setting_key = 'submenu_hover_text_color' AND store_id = ?", [$storeId])['setting_value'] ?? '#6b7280';
+$submenuHoverBg = $db->fetchOne("SELECT setting_value FROM site_settings WHERE setting_key = 'submenu_hover_bg_color' AND store_id = ?", [$storeId])['setting_value'] ?? '#f0f0f0';
+$topbarBg = $db->fetchOne("SELECT setting_value FROM site_settings WHERE setting_key = 'topbar_bg_color' AND store_id = ?", [$storeId])['setting_value'] ?? '#000000';
+$topbarText = $db->fetchOne("SELECT setting_value FROM site_settings WHERE setting_key = 'topbar_text_color' AND store_id = ?", [$storeId])['setting_value'] ?? '#ffffff';
+$topbarArrow = $db->fetchOne("SELECT setting_value FROM site_settings WHERE setting_key = 'topbar_arrow_color' AND store_id = ?", [$storeId])['setting_value'] ?? '#9ca3af';
 
 // Fetch Top Bar Settings
 $topbarSlidesRow = $db->fetchOne("SELECT setting_value FROM site_settings WHERE setting_key = 'topbar_slides' AND store_id = ?", [$storeId]);
@@ -218,6 +242,101 @@ require_once __DIR__ . '/../includes/admin-header.php';
 
                     <input type="file" id="logoInput" name="logo" accept="image/*" class="hidden" onchange="previewLogo(this)">
                     <p class="text-xs text-gray-500 mt-2">Recommended: PNG or SVG format, transparent background</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Visual Styling Section -->
+        <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-6 mb-6">
+            <h2 class="text-lg font-bold text-gray-800 mb-4 border-b pb-2">Visual Styling</h2>
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                <!-- Header Colors -->
+                <div>
+                    <label class="block text-sm font-semibold mb-2">Header Background</label>
+                    <div class="flex items-center gap-2">
+                        <input type="color" name="header_bg_color" value="<?php echo htmlspecialchars($headerBg); ?>" class="h-10 w-16 cursor-pointer border rounded" oninput="this.nextElementSibling.value = this.value">
+                        <input type="text" value="<?php echo htmlspecialchars($headerBg); ?>" class="flex-1 border p-2 rounded text-sm" oninput="this.previousElementSibling.value = this.value">
+                    </div>
+                </div>
+                <div>
+                    <label class="block text-sm font-semibold mb-2">Header Text Color</label>
+                    <div class="flex items-center gap-2">
+                        <input type="color" name="header_text_color" value="<?php echo htmlspecialchars($headerText); ?>" class="h-10 w-16 cursor-pointer border rounded" oninput="this.nextElementSibling.value = this.value">
+                        <input type="text" value="<?php echo htmlspecialchars($headerText); ?>" class="flex-1 border p-2 rounded text-sm" oninput="this.previousElementSibling.value = this.value">
+                    </div>
+                </div>
+                <div>
+                    <label class="block text-sm font-semibold mb-2">Header Hover Text Color</label>
+                    <div class="flex items-center gap-2">
+                        <input type="color" name="header_hover_color" value="<?php echo htmlspecialchars($headerHover); ?>" class="h-10 w-16 cursor-pointer border rounded" oninput="this.nextElementSibling.value = this.value">
+                        <input type="text" value="<?php echo htmlspecialchars($headerHover); ?>" class="flex-1 border p-2 rounded text-sm" oninput="this.previousElementSibling.value = this.value">
+                    </div>
+                </div>
+                <div>
+                    <label class="block text-sm font-semibold mb-2">Header Hover Background</label>
+                    <div class="flex items-center gap-2">
+                        <input type="color" name="header_hover_bg_color" value="<?php echo htmlspecialchars($headerHoverBg); ?>" class="h-10 w-16 cursor-pointer border rounded" oninput="this.nextElementSibling.value = this.value">
+                        <input type="text" value="<?php echo htmlspecialchars($headerHoverBg); ?>" class="flex-1 border p-2 rounded text-sm" oninput="this.previousElementSibling.value = this.value">
+                    </div>
+                </div>
+
+                <!-- Submenu Colors -->
+                <div>
+                    <label class="block text-sm font-semibold mb-2">Submenu Background</label>
+                    <div class="flex items-center gap-2">
+                        <input type="color" name="submenu_bg_color" value="<?php echo htmlspecialchars($submenuBg); ?>" class="h-10 w-16 cursor-pointer border rounded" oninput="this.nextElementSibling.value = this.value">
+                        <input type="text" value="<?php echo htmlspecialchars($submenuBg); ?>" class="flex-1 border p-2 rounded text-sm" oninput="this.previousElementSibling.value = this.value">
+                    </div>
+                </div>
+                <div>
+                    <label class="block text-sm font-semibold mb-2">Submenu Text Color</label>
+                    <div class="flex items-center gap-2">
+                        <input type="color" name="submenu_text_color" value="<?php echo htmlspecialchars($submenuText); ?>" class="h-10 w-16 cursor-pointer border rounded" oninput="this.nextElementSibling.value = this.value">
+                        <input type="text" value="<?php echo htmlspecialchars($submenuText); ?>" class="flex-1 border p-2 rounded text-sm" oninput="this.previousElementSibling.value = this.value">
+                    </div>
+                </div>
+                <div>
+                    <label class="block text-sm font-semibold mb-2">Submenu Hover Text Color</label>
+                    <div class="flex items-center gap-2">
+                        <input type="color" name="submenu_hover_text_color" value="<?php echo htmlspecialchars($submenuHoverText); ?>" class="h-10 w-16 cursor-pointer border rounded" oninput="this.nextElementSibling.value = this.value">
+                        <input type="text" value="<?php echo htmlspecialchars($submenuHoverText); ?>" class="flex-1 border p-2 rounded text-sm" oninput="this.previousElementSibling.value = this.value">
+                    </div>
+                </div>
+                <div>
+                    <label class="block text-sm font-semibold mb-2">Submenu Hover Background</label>
+                    <div class="flex items-center gap-2">
+                        <input type="color" name="submenu_hover_bg_color" value="<?php echo htmlspecialchars($submenuHoverBg); ?>" class="h-10 w-16 cursor-pointer border rounded" oninput="this.nextElementSibling.value = this.value">
+                        <input type="text" value="<?php echo htmlspecialchars($submenuHoverBg); ?>" class="flex-1 border p-2 rounded text-sm" oninput="this.previousElementSibling.value = this.value">
+                    </div>
+                </div>
+                
+                <!-- Topbar Colors -->
+                <div>
+                    <label class="block text-sm font-semibold mb-2">Note: Announcement Bar</label>
+                </div>
+                <div></div>
+                <div></div>
+                
+                <div>
+                    <label class="block text-sm font-semibold mb-2">Announcement Bar Background</label>
+                    <div class="flex items-center gap-2">
+                        <input type="color" name="topbar_bg_color" value="<?php echo htmlspecialchars($topbarBg); ?>" class="h-10 w-16 cursor-pointer border rounded" oninput="this.nextElementSibling.value = this.value">
+                        <input type="text" value="<?php echo htmlspecialchars($topbarBg); ?>" class="flex-1 border p-2 rounded text-sm" oninput="this.previousElementSibling.value = this.value">
+                    </div>
+                </div>
+                <div>
+                    <label class="block text-sm font-semibold mb-2">Announcement Bar Text Color</label>
+                    <div class="flex items-center gap-2">
+                        <input type="color" name="topbar_text_color" value="<?php echo htmlspecialchars($topbarText); ?>" class="h-10 w-16 cursor-pointer border rounded" oninput="this.nextElementSibling.value = this.value">
+                        <input type="text" value="<?php echo htmlspecialchars($topbarText); ?>" class="flex-1 border p-2 rounded text-sm" oninput="this.previousElementSibling.value = this.value">
+                    </div>
+                </div>
+                <div>
+                    <label class="block text-sm font-semibold mb-2">Announcement Arrow Color</label>
+                    <div class="flex items-center gap-2">
+                        <input type="color" name="topbar_arrow_color" value="<?php echo htmlspecialchars($topbarArrow); ?>" class="h-10 w-16 cursor-pointer border rounded" oninput="this.nextElementSibling.value = this.value">
+                        <input type="text" value="<?php echo htmlspecialchars($topbarArrow); ?>" class="flex-1 border p-2 rounded text-sm" oninput="this.previousElementSibling.value = this.value">
+                    </div>
                 </div>
             </div>
         </div>

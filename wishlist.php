@@ -13,6 +13,60 @@ $wishlist = new Wishlist();
 $product = new Product();
 $db = Database::getInstance();
 
+// Load Settings
+require_once __DIR__ . '/classes/Settings.php';
+$settingsObj = new Settings();
+
+// Fetch Content Settings
+$pageHeading = $settingsObj->get('wishlist_heading', 'Wishlist');
+$pageSubheading = $settingsObj->get('wishlist_subheading', 'Explore your saved items, blending quality and style for a refined living experience.');
+
+// Fetch Global Styles
+$globalStylesJson = $settingsObj->get('global_card_styles', '{}');
+$globalStyles = json_decode($globalStylesJson, true);
+
+// Fetch Wishlist Styles
+$stylesJson = $settingsObj->get('wishlist_styles', '[]');
+$styles = json_decode($stylesJson, true);
+
+// Extract Styles with Defaults (Global -> Wishlist Override)
+$w_page_bg_color = $styles['page_bg_color'] ?? '#ffffff';
+$w_card_bg_color = $styles['card_bg_color'] ?? $globalStyles['card_bg_color'] ?? '#ffffff';
+$w_card_title_color = $styles['card_title_color'] ?? $globalStyles['card_title_color'] ?? '#1f2937';
+$w_price_color = $styles['price_color'] ?? $globalStyles['price_color'] ?? '#1a3d32';
+$w_stock_status_color = $styles['stock_status_color'] ?? '#ef4444';
+
+// Use Global Action Button styles as base for specific buttons if not set
+$g_btn_bg = $globalStyles['btn_bg_color'] ?? '#ffffff';
+$g_btn_icon = $globalStyles['btn_icon_color'] ?? '#000000';
+$g_btn_hover_bg = $globalStyles['btn_hover_bg_color'] ?? '#000000';
+$g_btn_hover_icon = $globalStyles['btn_hover_icon_color'] ?? '#ffffff';
+
+// Global ATC Button
+$g_atc_bg = $globalStyles['atc_btn_bg_color'] ?? '#1a3d32';
+$g_atc_text = $globalStyles['atc_btn_text_color'] ?? '#ffffff';
+$g_atc_hover_bg = $globalStyles['atc_btn_hover_bg_color'] ?? '#000000';
+$g_atc_hover_text = $globalStyles['atc_btn_hover_text_color'] ?? '#ffffff';
+
+// Add to Cart Button (Wishlist) - Default to Global ATC if set, else fallback
+$w_btn_bg_color = $styles['btn_bg_color'] ?? $g_atc_bg;
+$w_btn_text_color = $styles['btn_text_color'] ?? $g_atc_text; 
+$w_btn_hover_bg_color = $styles['btn_hover_bg_color'] ?? $g_atc_hover_bg;
+$w_btn_hover_text_color = $styles['btn_hover_text_color'] ?? $g_atc_hover_text;
+
+$w_remove_bg = $styles['remove_btn_bg_color'] ?? $g_btn_bg;
+$w_remove_icon = $styles['remove_btn_icon_color'] ?? $g_btn_icon;
+$w_remove_hover_bg = $styles['remove_btn_hover_bg_color'] ?? $g_btn_hover_bg;
+$w_remove_hover_icon = $styles['remove_btn_hover_icon_color'] ?? $g_btn_hover_icon;
+
+$w_qv_bg = $styles['quick_view_bg_color'] ?? $g_btn_bg;
+$w_qv_icon = $styles['quick_view_icon_color'] ?? $g_btn_icon;
+$w_qv_hover_bg = $styles['quick_view_hover_bg_color'] ?? $g_btn_hover_bg;
+$w_qv_hover_icon = $styles['quick_view_hover_icon_color'] ?? $g_btn_hover_icon;
+
+$w_tooltip_bg = $styles['tooltip_bg_color'] ?? $globalStyles['tooltip_bg_color'] ?? '#000000';
+$w_tooltip_text = $styles['tooltip_text_color'] ?? $globalStyles['tooltip_text_color'] ?? '#ffffff';
+
 
 
 // Get wishlist items
@@ -38,6 +92,43 @@ if (isset($_COOKIE['recently_viewed'])) {
 $pageTitle = 'Wishlist';
 require_once __DIR__ . '/includes/header.php';
 ?>
+
+<style>
+    body {
+        background-color: <?php echo $w_page_bg_color; ?> !important;
+    }
+    .wishlist-card, .recently-viewed-card {
+        background-color: <?php echo $w_card_bg_color; ?> !important;
+    }
+    .wishlist-card h3, .recently-viewed-card h3 {
+        color: <?php echo $w_card_title_color; ?> !important;
+    }
+    .wishlist-card .product-price, .recently-viewed-card .product-price {
+        color: <?php echo $w_price_color; ?> !important;
+    }
+    .wishlist-atc-btn {
+        background-color: <?php echo $w_btn_bg_color; ?> !important;
+        color: <?php echo $w_btn_text_color; ?> !important;
+    }
+    .wishlist-atc-btn:hover {
+        background-color: <?php echo $w_btn_hover_bg_color; ?> !important;
+        color: <?php echo $w_btn_hover_text_color; ?> !important;
+    }
+    /* Specific Action Buttons */
+    .wishlist-remove-btn, .wishlist-qv-btn, .wishlist-btn.product-action-btn:not(.wishlist-active) {
+        background-color: <?php echo $g_btn_bg; ?> !important;
+        color: <?php echo $g_btn_icon; ?> !important;
+    }
+    .wishlist-remove-btn:hover, .wishlist-qv-btn:hover, .wishlist-btn.product-action-btn:not(.wishlist-active):hover {
+        background-color: <?php echo $g_btn_hover_bg; ?> !important;
+        color: <?php echo $g_btn_hover_icon; ?> !important;
+    }
+    /* Active State */
+    .wishlist-active {
+        background-color: var(--btn-active-bg) !important;
+        color: var(--btn-active-icon) !important;
+    }
+</style>
 
 <!-- Breadcrumb and Wishlist Section -->
 <div class="container mx-auto px-4 py-4 md:py-12">
@@ -83,13 +174,18 @@ require_once __DIR__ . '/includes/header.php';
 
     <div id="mainWishlistContent" class="hidden">
         <!-- Breadcrumb -->
-        <nav class="text-sm text-gray-600 mb-8 mt-4 md:mt-0">
+        <nav class="breadcrumb-nav text-sm text-gray-600 mb-8 mt-4 md:mt-0">
             <a href="<?php echo $baseUrl; ?>/" class="hover:text-primary">Home</a>
             <span class="mx-2">></span>
             <span class="text-gray-900">Wishlist</span>
         </nav>
 
-        <h1 class="text-2xl md:text-4xl font-heading font-bold text-center mb-5 md:mb-12">Wishlist</h1>
+        <h1 class="text-2xl md:text-4xl font-heading font-bold text-center mb-2" style="color: <?php echo $styles['heading_color'] ?? '#1f2937'; ?>;"><?php echo htmlspecialchars($pageHeading); ?></h1>
+        <?php if (!empty($pageSubheading)): ?>
+        <p class="text-center mb-8 md:mb-12 max-w-2xl mx-auto" style="color: <?php echo $styles['subheading_color'] ?? '#4b5563'; ?>;"><?php echo htmlspecialchars($pageSubheading); ?></p>
+        <?php else: ?>
+        <div class="mb-5 md:mb-12"></div>
+        <?php endif; ?>
         
         <?php if (empty($wishlistItems)): ?>
             <!-- Empty Wishlist -->
@@ -105,21 +201,20 @@ require_once __DIR__ . '/includes/header.php';
             <!-- Wishlist Items -->
             <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-16">
                 <?php foreach ($wishlistItems as $item): ?>
-                    <div class="group relative bg-white border border-gray-200 rounded-lg overflow-hidden hover:shadow-lg transition-shadow flex flex-col h-full">
-                        <div class="absolute top-2 md:top-4 right-2 md:right-4 z-10 flex flex-col items-center gap-2">
+                    <div class="product-card wishlist-card group relative rounded-lg overflow-hidden hover:shadow-lg transition-shadow flex flex-col h-full" style="background-color: <?php echo $w_card_bg_color; ?>;">
+                        <div class="absolute top-2 right-2 z-30 flex flex-col items-center gap-2">
                             <!-- Remove Button -->
                             <?php 
                             $finalPrice = !empty($item['sale_price']) ? $item['sale_price'] : $item['price'];
                             ?>
                             <button onclick="removeFromWishlist(<?php echo $item['product_id']; ?>)" 
-                                    class="bg-white rounded-full h-9 w-9 shadow-md hover:bg-black hover:text-white transition flex items-center justify-center text-gray-500 relative group product-action-btn">
+                                    class="wishlist-remove-btn w-10 h-10 rounded-full shadow-md transition flex items-center justify-center relative group product-action-btn">
                                 <i class="fas fa-times"></i>
-                                <span class="product-tooltip">Remove from wishlist</span>
+                                <span class="product-tooltip">Remove</span>
                             </button>
                             
-                            <!-- Quick View Button -->
                             <button type="button" 
-                                    class="bg-white rounded-full h-9 w-9 shadow-md hover:bg-black hover:text-white transition flex items-center justify-center text-gray-800 quick-view-btn relative group product-action-btn opacity-0 group-hover:opacity-100 transition-opacity duration-300"
+                                    class="wishlist-qv-btn w-10 h-10 rounded-full shadow-md transition flex items-center justify-center quick-view-btn relative group product-action-btn opacity-100 md:opacity-0 md:group-hover:opacity-100"
                                     data-product-id="<?php echo $item['product_id']; ?>"
                                     data-product-name="<?php echo htmlspecialchars($item['name'] ?? ''); ?>"
                                     data-product-price="<?php echo $finalPrice; ?>"
@@ -143,12 +238,11 @@ require_once __DIR__ . '/includes/header.php';
                         </a>
                         
                         <!-- Product Info -->
-                        <div class="p-4 flex flex-col flex-1">
-                            <h3 class="text-sm font-semibold text-gray-800 mb-2 overflow-hidden" style="display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; min-height: 3rem; line-height: 1.5rem;" title="<?php echo htmlspecialchars($item['name'] ?? 'Product'); ?>">
-                                    <a href="<?php echo $baseUrl; ?>/product?slug=<?php echo htmlspecialchars($item['slug'] ?? ''); ?>"  
-                                   class="hover:text-primary transition">
-                                        <?php echo htmlspecialchars($item['name'] ?? 'Product'); ?>
-                                    </a>
+                        <div class="p-4 flex flex-col flex-grow">
+                            <h3 class="font-semibold text-gray-800 mb-2 card-title" style="display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; min-height: 3rem;">
+                                <a href="<?php echo url('product?slug=' . urlencode($item['slug'] ?? '')); ?>" class="hover:text-primary transition">
+                                    <?php echo htmlspecialchars($item['name'] ?? 'Product'); ?>
+                                </a>
                             </h3>
                             
                             <!-- Rating -->
@@ -163,27 +257,23 @@ require_once __DIR__ . '/includes/header.php';
                                 </div>
                             </div>
                             
-                            <div class="flex items-center gap-2 mb-4 mt-auto">
-                                <?php 
-                                $displayPrice = !empty($item['sale_price']) ? $item['sale_price'] : $item['price'];
-                                $originalPrice = (!empty($item['sale_price']) && $item['sale_price'] < $item['price']) ? $item['price'] : null;
-                                ?>
-                                <span class="text-base font-bold <?php echo $originalPrice ? 'text-[#1a3d32]' : 'text-primary'; ?>">
-                                    <?php echo format_price($displayPrice, $item['currency'] ?? 'USD'); ?>
-                                </span>
-                                <?php if ($originalPrice): ?>
-                                    <span class="text-gray-400 font-bold line-through text-xs"><?php echo format_price($originalPrice, $item['currency'] ?? 'USD'); ?></span>
+                            <div class="flex items-center gap-2 mb-4">
+                                <span class="text-lg font-bold current-price"><?php echo format_price($finalPrice, $item['currency'] ?? 'USD'); ?></span>
+                                <?php if (!empty($item['sale_price'])): ?>
+                                    <span class="text-gray-400 text-sm line-through compare-price"><?php echo format_price($item['price'], $item['currency'] ?? 'USD'); ?></span>
                                 <?php endif; ?>
                             </div>
                                 
                             <!-- Add to Cart Button -->
-                            <?php
-                            // Get default variant attributes
-                            $variantsData = $product->getVariants($item['product_id']);
+                            <?php 
+                            $isOutOfStock = (($item['stock_status'] ?? 'in_stock') === 'out_of_stock' || (isset($item['stock_quantity']) && $item['stock_quantity'] <= 0));
+                            
+                            // Get first variant for default attributes
+                            $vData = $product->getVariants($item['product_id']);
                             $defaultAttributes = [];
-                            if (!empty($variantsData['variants'])) {
-                                $defaultVariant = $variantsData['variants'][0];
-                                foreach ($variantsData['variants'] as $v) {
+                            if (!empty($vData['variants'])) {
+                                $defaultVariant = $vData['variants'][0];
+                                foreach ($vData['variants'] as $v) {
                                     if (!empty($v['is_default'])) {
                                         $defaultVariant = $v;
                                         break;
@@ -192,23 +282,17 @@ require_once __DIR__ . '/includes/header.php';
                                 $defaultAttributes = $defaultVariant['variant_attributes'];
                             }
                             $attributesJson = json_encode($defaultAttributes);
-                            $isOutOfStock = (($item['stock_status'] ?? 'in_stock') === 'out_of_stock' || (isset($item['stock_quantity']) && $item['stock_quantity'] <= 0));
                             ?>
                             <button onclick='addToCart(<?php echo $item['product_id']; ?>, 1, this, <?php echo htmlspecialchars($attributesJson, ENT_QUOTES, 'UTF-8'); ?>)'
-                                    id="wishlistAddToCartBtn"
-                                    class="productAddToCartBtn w-full bg-[#1a3d32] text-white px-4 py-2.5 rounded hover:bg-black transition text-xs font-bold flex items-center justify-center gap-2 <?php echo $isOutOfStock ? 'opacity-50 cursor-not-allowed' : ''; ?>"
+                                    class="w-full py-3 text-[12px] rounded-lg transition flex items-center justify-center gap-2 mt-auto wishlist-atc-btn productAddToCartBtn <?php echo $isOutOfStock ? 'opacity-50 cursor-not-allowed' : ''; ?>"
                                     <?php echo $isOutOfStock ? 'disabled' : ''; ?>>
-                                <?php if ($isOutOfStock): ?>
-                                    <span><?php echo strtoupper(get_stock_status_text($item['stock_status'] ?? 'in_stock', $item['stock_quantity'] ?? 0)); ?></span>
-                                <?php else: ?>
-                                    <i class="fas fa-shopping-cart text-[10px]"></i>
-                                    <span>ADD TO CART</span>
-                                <?php endif; ?>
+                                <i class="fas fa-shopping-cart"></i>
+                                <span><?php echo $isOutOfStock ? get_stock_status_text($item['stock_status'], $item['stock_quantity']) : 'Add to Cart'; ?></span>
                             </button>
-                            </div>
                         </div>
-                    <?php endforeach; ?>
-                </div>
+                    </div>
+                <?php endforeach; ?>
+            </div>
         <?php endif; ?>
         
         <!-- Recently Viewed Section -->
@@ -234,14 +318,28 @@ require_once __DIR__ . '/includes/header.php';
                             }
                         }
                     ?>
-                        <div class="group relative bg-white border border-gray-200 rounded-lg overflow-hidden hover:shadow-lg transition-shadow flex flex-col h-full">
-                            <!-- Wishlist Button -->
-                            <button onclick="toggleWishlist(<?php echo $recentProduct['id']; ?>, this)" 
-                                    class="absolute top-4 right-4 z-10 bg-white rounded-full w-9 h-9 shadow-md hover:bg-black hover:text-white transition <?php echo $isInWishlist ? 'bg-red-500 text-white' : ''; ?>"
-                                    data-product-id="<?php echo $recentProduct['id']; ?>"
-                                    title="<?php echo $isInWishlist ? 'Remove from wishlist' : 'Add to wishlist'; ?>">
-                                <i class="<?php echo $isInWishlist ? 'fas' : 'far'; ?> fa-heart"></i>
-                            </button>
+                        <div class="product-card recently-viewed-card group relative border border-gray-200 rounded-lg overflow-hidden hover:shadow-lg transition-shadow flex flex-col h-full" style="background-color: <?php echo $w_card_bg_color; ?>;">
+                            <div class="absolute top-2 right-2 z-30 flex flex-col items-center gap-2">
+                                <!-- Wishlist Button -->
+                                <button onclick="toggleWishlist(<?php echo $recentProduct['id']; ?>, this)" 
+                                        class="wishlist-btn product-action-btn w-10 h-10 rounded-full shadow-md transition flex items-center justify-center relative group <?php echo $isInWishlist ? 'wishlist-active text-white' : ''; ?>"
+                                        data-product-id="<?php echo $recentProduct['id']; ?>"
+                                        aria-label="<?php echo $isInWishlist ? 'Remove from wishlist' : 'Add to wishlist'; ?>"
+                                        title="<?php echo $isInWishlist ? 'Remove from wishlist' : 'Add to wishlist'; ?>">
+                                    <i class="<?php echo $isInWishlist ? 'fas' : 'far'; ?> fa-heart"></i>
+                                    <span class="product-tooltip"><?php echo $isInWishlist ? 'Remove' : 'Add to wishlist'; ?></span>
+                                </button>
+
+                                <button type="button" 
+                                        class="quick-view-btn product-action-btn w-10 h-10 rounded-full shadow-md transition flex items-center justify-center relative group opacity-100 md:opacity-0 md:group-hover:opacity-100"
+                                        data-product-id="<?php echo $recentProduct['id']; ?>"
+                                        data-product-name="<?php echo htmlspecialchars($recentProduct['name'] ?? ''); ?>"
+                                        data-product-price="<?php echo $displayPrice; ?>"
+                                        data-product-slug="<?php echo htmlspecialchars($recentProduct['slug'] ?? ''); ?>">
+                                    <i class="fas fa-eye"></i>
+                                    <span class="product-tooltip">Quick View</span>
+                                </button>
+                            </div>
                             
                             <!-- Product Image -->
                             <a href="<?php echo $baseUrl; ?>/product?slug=<?php echo htmlspecialchars($recentProduct['slug'] ?? ''); ?>">
@@ -255,12 +353,12 @@ require_once __DIR__ . '/includes/header.php';
                             
                             <!-- Product Info -->
                             <div class="p-4 flex flex-col flex-1">
-                                <h3 class="text-sm font-semibold text-gray-800 mb-2 overflow-hidden" style="display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; min-height: 3rem; line-height: 1.5rem;" title="<?php echo htmlspecialchars($recentProduct['name'] ?? 'Product'); ?>">
-                                    <a href="<?php echo $baseUrl; ?>/product?slug=<?php echo htmlspecialchars($recentProduct['slug'] ?? ''); ?>" 
-                                       class="hover:text-primary transition">
-                                        <?php echo htmlspecialchars($recentProduct['name'] ?? 'Product'); ?>
-                                    </a>
-                                </h3>
+                                <h3 class="font-semibold text-gray-800 mb-2 card-title" style="display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; min-height: 3rem;">
+                                <a href="<?php echo $baseUrl; ?>/product?slug=<?php echo htmlspecialchars($recentProduct['slug'] ?? ''); ?>"  
+                                   class="hover:text-primary transition">
+                                    <?php echo htmlspecialchars($recentProduct['name'] ?? 'Product'); ?>
+                                </a>
+                            </h3>
                                 
                                 <div class="flex items-center mb-3">
                                     <div class="flex text-yellow-400">
@@ -274,17 +372,17 @@ require_once __DIR__ . '/includes/header.php';
                                 </div>
                                 
                                 <div class="flex items-center gap-2 mt-auto">
-                                    <?php 
-                                    $rPrice = !empty($recentProduct['sale_price']) ? $recentProduct['sale_price'] : $recentProduct['price'];
-                                    $rOrgPrice = (!empty($recentProduct['sale_price']) && $recentProduct['sale_price'] < $recentProduct['price']) ? $recentProduct['price'] : null;
-                                    ?>
-                                    <span class="text-base font-bold <?php echo $rOrgPrice ? 'text-[#1a3d32]' : 'text-primary'; ?>">
-                                        <?php echo format_price($rPrice, $recentProduct['currency'] ?? 'USD'); ?>
-                                    </span>
-                                    <?php if ($rOrgPrice): ?>
-                                    <span class="text-gray-400 line-through text-xs"><?php echo format_price($rOrgPrice, $recentProduct['currency'] ?? 'USD'); ?></span>
-                                    <?php endif; ?>
-                                </div>
+                                <?php 
+                                $displayPrice = !empty($recentProduct['sale_price']) ? $recentProduct['sale_price'] : $recentProduct['price'];
+                                $originalPrice = (!empty($recentProduct['sale_price']) && $recentProduct['sale_price'] < $recentProduct['price']) ? $recentProduct['price'] : null;
+                                ?>
+                                <span class="text-lg font-bold product-price">
+                                    <?php echo format_price($displayPrice, $recentProduct['currency'] ?? 'USD'); ?>
+                                </span>
+                                <?php if ($originalPrice): ?>
+                                    <span class="text-gray-400 text-sm line-through compare-price"><?php echo format_price($originalPrice, $recentProduct['currency'] ?? 'USD'); ?></span>
+                                <?php endif; ?>
+                            </div>
                             </div>
                         </div>
                     <?php endforeach; ?>
@@ -334,55 +432,19 @@ document.addEventListener('DOMContentLoaded', function() {
                     <?php if ($isInWishlist): ?>
                         icon.classList.remove('far');
                         icon.classList.add('fas');
-                        btn<?php echo $recentProduct['id']; ?>.classList.add('bg-red-500', 'text-white');
+                        btn<?php echo $recentProduct['id']; ?>.classList.add('wishlist-active', 'text-white');
                     <?php else: ?>
                         icon.classList.remove('fas');
                         icon.classList.add('far');
-                        btn<?php echo $recentProduct['id']; ?>.classList.remove('bg-red-500', 'text-white');
+                        btn<?php echo $recentProduct['id']; ?>.classList.remove('wishlist-active', 'text-white');
                     <?php endif; ?>
                 }
             }
         <?php endforeach; ?>
     <?php endif; ?>
 
-    // Custom tooltip for remove buttons
-    document.querySelectorAll('button[onclick^="removeFromWishlist"]').forEach(btn => {
-        btn.addEventListener('mouseenter', function(e) {
-            const tooltip = document.createElement('div');
-            tooltip.className = 'custom-remove-tooltip';
-            // tooltip.textContent = this.getAttribute('title') || 'Remove from wishlist';
-            // tooltip.style.cssText = `
-            //     position: fixed;
-            //     background: #000;
-            //     color: #fff;
-            //     padding: 6px 12px;
-            //     border-radius: 4px;
-            //     font-size: 12px;
-            //     white-space: nowrap;
-            //     z-index: 10000;
-            //     pointer-events: none;
-            //     font-weight: 500;
-            // `;
-            
-            document.body.appendChild(tooltip);
-            
-            const rect = this.getBoundingClientRect();
-            tooltip.style.top = rect.top + (rect.height / 2) - (tooltip.offsetHeight / 2) + 'px';
-            tooltip.style.left = (rect.left - tooltip.offsetWidth - 8) + 'px';
-            
-            this._tooltip = tooltip;
-        });
-        
-        btn.addEventListener('mouseleave', function() {
-            if (this._tooltip) {
-                this._tooltip.remove();
-                this._tooltip = null;
-            }
-        });
-    });
+    // Standard tooltips are handled by CSS
 });
 </script>
 
 <?php require_once __DIR__ . '/includes/footer.php'; ?>
-
-

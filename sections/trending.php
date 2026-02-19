@@ -2,6 +2,7 @@
 require_once __DIR__ . '/../classes/Product.php';
 require_once __DIR__ . '/../includes/functions.php';
 require_once __DIR__ . '/../classes/Wishlist.php';
+require_once __DIR__ . '/../classes/Settings.php';
 
 $baseUrl = getBaseUrl();
 $db = Database::getInstance();
@@ -40,12 +41,75 @@ if (file_exists($productsConfigPath)) {
 // Fallback logic removed per user request
 ?>
 
-<?php if (!empty($products)): ?>
-<section id="trending-section" class="py-5 md:py-14 bg-white">
+<?php if (!empty($products)): 
+    // Fetch Global Styles
+    $settingsObj = new Settings();
+    $globalStylesJson = $settingsObj->get('global_card_styles', '{}');
+    $globalStyles = json_decode($globalStylesJson, true);
+    
+    // Fetch Section Styles
+    $stylesJson = $settingsObj->get('trending_styles', '{}'); 
+    $styles = json_decode($stylesJson, true);
+    
+    // Defaults (Global -> specific override if not empty)
+    // Helper to get style with fallback
+    function getStyleTrending($key, $local, $global, $default) {
+        return !empty($local[$key]) ? $local[$key] : (!empty($global[$key]) ? $global[$key] : $default);
+    }
+    
+    // Define styles
+    $bg_color = getStyleTrending('bg_color', $styles, $globalStyles, '#ffffff');
+    $heading_color = getStyleTrending('heading_color', $styles, $globalStyles, '#1f2937');
+    $subheading_color = getStyleTrending('subheading_color', $styles, $globalStyles, '#4b5563');
+    
+    $card_bg_color = getStyleTrending('card_bg_color', $styles, $globalStyles, '#ffffff');
+    $card_title_color = getStyleTrending('card_title_color', $styles, $globalStyles, '#1F2937');
+    $price_color = getStyleTrending('price_color', $styles, $globalStyles, '#1a3d32');
+    $compare_price_color = getStyleTrending('compare_price_color', $styles, $globalStyles, '#9ca3af');
+    
+    $badge_bg_color = getStyleTrending('badge_bg_color', $styles, $globalStyles, '#ef4444');
+    $badge_text_color = getStyleTrending('badge_text_color', $styles, $globalStyles, '#ffffff');
+    
+    $arrow_bg_color = getStyleTrending('arrow_bg_color', $styles, $globalStyles, '#ffffff');
+    $arrow_icon_color = getStyleTrending('arrow_icon_color', $styles, $globalStyles, '#1f2937');
+    
+    $btn_bg_color = getStyleTrending('btn_bg_color', $styles, $globalStyles, '#ffffff');
+    $btn_icon_color = getStyleTrending('btn_icon_color', $styles, $globalStyles, '#000000');
+    $btn_hover_bg_color = getStyleTrending('btn_hover_bg_color', $styles, $globalStyles, '#000000');
+    $btn_hover_icon_color = getStyleTrending('btn_hover_icon_color', $styles, $globalStyles, '#ffffff');
+    $btn_active_bg_color = getStyleTrending('btn_active_bg_color', $styles, $globalStyles, '#000000');
+    $btn_active_icon_color = getStyleTrending('btn_active_icon_color', $styles, $globalStyles, '#ffffff');
+    
+    $tooltip_bg_color = getStyleTrending('tooltip_bg_color', $styles, $globalStyles, '#000000');
+    $tooltip_text_color = getStyleTrending('tooltip_text_color', $styles, $globalStyles, '#ffffff');
+
+    $sectionId = 'trending-section-' . rand(1000, 9999);
+?>
+
+<style>
+    #<?php echo $sectionId; ?> {
+        background-color: <?php echo $bg_color; ?>;
+    }
+    #<?php echo $sectionId; ?> .section-heading {
+        color: <?php echo $heading_color; ?>;
+    }
+    #<?php echo $sectionId; ?> .section-subheading {
+        color: <?php echo $subheading_color; ?>;
+    }
+    #<?php echo $sectionId; ?> .custom-arrow {
+        background-color: <?php echo $arrow_bg_color; ?> !important;
+        color: <?php echo $arrow_icon_color; ?> !important;
+    }
+    #<?php echo $sectionId; ?> .custom-arrow:hover {
+        opacity: 0.8;
+    }
+</style>
+
+<section id="<?php echo $sectionId; ?>" class="py-5 md:py-14">
     <div class="container mx-auto px-4">
         <div class="text-center mb-10">
-            <h2 class="text-2xl md:text-3xl font-heading font-bold mb-4"><?php echo htmlspecialchars($sectionHeading); ?></h2>
-            <p class="text-gray-600 text-sm md:text-md max-w-2xl mx-auto"><?php echo htmlspecialchars($sectionSubheading); ?></p>
+            <h2 class="text-2xl md:text-3xl font-heading font-bold mb-4 section-heading"><?php echo htmlspecialchars($sectionHeading); ?></h2>
+            <p class="text-sm md:text-md max-w-2xl mx-auto section-subheading"><?php echo htmlspecialchars($sectionSubheading); ?></p>
         </div>
         
         <!-- Product Slider Container -->
@@ -78,52 +142,50 @@ if (file_exists($productsConfigPath)) {
                     
                     <!-- Discount Badge -->
                     <?php if ($discount > 0): ?>
-                    <span class="absolute top-2 left-2 bg-red-500 text-white px-2 py-1 text-xs font-bold rounded">-<?php echo $discount; ?>%</span>
+                    <span class="absolute top-2 left-2 px-2 py-1 text-xs font-bold rounded discount-badge">-<?php echo $discount; ?>%</span>
                     <?php endif; ?>
                     
-                    <!-- Wishlist Icon (Always Visible) -->
+                    <!-- Action Icons Column -->
                     <?php 
                     $currentId = !empty($item['product_id']) ? $item['product_id'] : $item['id'];
                     $inWishlist = in_array($currentId, $wishlistIds);
                     ?>
                     <div class="absolute top-2 right-2 z-30 flex flex-col items-center gap-2">
-                    <button id="product-card-wishlist-btn" class="w-10 h-10 rounded-full flex items-center justify-center relative group <?php echo $inWishlist ? 'bg-black text-white' : 'bg-white text-black'; ?> hover:bg-black hover:text-white transition wishlist-btn" 
-                            data-product-id="<?php echo $currentId; ?>"
-                            aria-label="<?php echo $inWishlist ? 'Remove from Wishlist' : 'Add to Wishlist'; ?>"
-                            title="<?php echo $inWishlist ? 'Remove from Wishlist' : 'Add to Wishlist'; ?>">
-                        <i class="<?php echo $inWishlist ? 'fas' : 'far'; ?> fa-heart" aria-hidden="true"></i>
-                        <span class="product-tooltip"><?php echo $inWishlist ? 'Remove from Wishlist' : 'Add to Wishlist'; ?></span>
-                    </button>
-                    
-                    <div class="flex flex-col gap-2 opacity-100 md:opacity-0 md:group-hover:opacity-100 transition-opacity duration-300">
+                        <button id="product-card-wishlist-btn" class="w-10 h-10 rounded-full flex items-center justify-center relative group transition wishlist-btn product-action-btn <?php echo $inWishlist ? 'wishlist-active text-white' : ''; ?>" 
+                                data-product-id="<?php echo $currentId; ?>"
+                                aria-label="<?php echo $inWishlist ? 'Remove from Wishlist' : 'Add to Wishlist'; ?>"
+                                title="<?php echo $inWishlist ? 'Remove from Wishlist' : 'Add to Wishlist'; ?>">
+                            <i class="<?php echo $inWishlist ? 'fas' : 'far'; ?> fa-heart" aria-hidden="true"></i>
+                            <span class="product-tooltip"><?php echo $inWishlist ? 'Remove from Wishlist' : 'Add to Wishlist'; ?></span>
+                        </button>
+                        
                         <a id="product-card-quick-view-btn" href="<?php echo $baseUrl; ?>/product?slug=<?php echo urlencode($item['slug'] ?? ''); ?>" 
-                           class="product-action-btn w-10 h-10 bg-white rounded-full flex items-center justify-center hover:bg-black hover:text-white transition shadow-lg quick-view-btn relative group" 
+                           class="product-action-btn w-10 h-10 rounded-full flex items-center justify-center transition shadow-lg quick-view-btn relative group opacity-100 md:opacity-0 md:group-hover:opacity-100" 
+                           aria-label="Quick view product"
                            data-product-id="<?php echo $item['product_id']; ?>"
                            data-product-name="<?php echo htmlspecialchars($item['name'] ?? ''); ?>"
                            data-product-price="<?php echo $finalPrice; ?>"
-                           aria-label="Quick view product"
                            data-product-slug="<?php echo htmlspecialchars($item['slug'] ?? ''); ?>">
-                            <i class="fas fa-eye" aria-hidden="true"></i>
+                            <i class="fas fa-eye"></i>
                             <span class="product-tooltip">Quick View</span>
                         </a>
-                        <button id="product-card-add-to-cart-btn" class="productAddToCartBtn product-action-btn w-10 h-10 bg-white rounded-full flex items-center justify-center hover:bg-black hover:text-white transition shadow-lg add-to-cart-hover-btn relative group <?php echo ($item['stock_status'] === 'out_of_stock' || $item['stock_quantity'] <= 0) ? 'opacity-50 cursor-not-allowed' : ''; ?>" 
+                        <button id="product-card-add-to-cart-btn" class="productAddToCartBtn product-action-btn w-10 h-10 rounded-full flex items-center justify-center transition shadow-lg add-to-cart-hover-btn relative group opacity-100 md:opacity-0 md:group-hover:opacity-100 <?php echo (($item['stock_status'] ?? 'in_stock') === 'out_of_stock' || (isset($item['stock_quantity']) && $item['stock_quantity'] <= 0)) ? 'opacity-50 cursor-not-allowed' : ''; ?>" 
                                 aria-label="Add product to cart"
-                                data-product-id="<?php echo $item['product_id']; ?>"
+                                data-product-id="<?php echo $currentId; ?>"
                                 data-product-name="<?php echo htmlspecialchars($item['name'] ?? ''); ?>"
                                 data-product-price="<?php echo $finalPrice; ?>"
                                 data-product-slug="<?php echo htmlspecialchars($item['slug'] ?? ''); ?>"
                                 data-attributes='<?php echo htmlspecialchars($attributesJson, ENT_QUOTES, 'UTF-8'); ?>'
-                                <?php echo ($item['stock_status'] === 'out_of_stock' || $item['stock_quantity'] <= 0) ? 'disabled' : ''; ?>>
-                            <i class="fas fa-shopping-cart" aria-hidden="true"></i>
-                            <span class="product-tooltip"><?php echo ($item['stock_status'] === 'out_of_stock' || $item['stock_quantity'] <= 0) ? get_stock_status_text($item['stock_status'], $item['stock_quantity']) : 'Add to Cart'; ?></span>
+                                <?php echo (($item['stock_status'] ?? 'in_stock') === 'out_of_stock' || (isset($item['stock_quantity']) && $item['stock_quantity'] <= 0)) ? 'disabled' : ''; ?>>
+                            <i class="fas fa-shopping-cart"></i>
+                            <span class="product-tooltip"><?php echo (($item['stock_status'] ?? 'in_stock') === 'out_of_stock' || (isset($item['stock_quantity']) && $item['stock_quantity'] <= 0)) ? get_stock_status_text($item['stock_status'] ?? 'in_stock', $item['stock_quantity'] ?? 0) : 'Add to Cart'; ?></span>
                         </button>
-                    </div>
                     </div>
                 </div>
                 
                 <div class="p-4">
-                    <h3 class="font-semibold text-sm md:text-base text-gray-800 md:max-w-[250px] max-w-[250px] mb-2 overflow-hidden" style="display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; min-height: 3rem; line-height: 1.5rem;" title="<?php echo htmlspecialchars($item['name']); ?>">
-                        <a class="product-card-view-link" href="<?php echo $baseUrl; ?>/product?slug=<?php echo urlencode($item['slug'] ?? ''); ?>" class="hover:text-primary transition block">
+                    <h3 class="font-semibold text-sm md:text-base md:max-w-[250px] max-w-[250px] mb-2 overflow-hidden" style="display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; min-height: 3rem; line-height: 1.5rem; color: <?php echo $card_title_color; ?> !important;" title="<?php echo htmlspecialchars($item['name']); ?>">
+                        <a class="product-card-view-link" href="<?php echo $baseUrl; ?>/product?slug=<?php echo urlencode($item['slug'] ?? ''); ?>" style="color: inherit;" class="hover:text-primary transition block">
                             <?php echo htmlspecialchars($item['name']); ?>
                         </a>
                     </h3>
@@ -139,9 +201,9 @@ if (file_exists($productsConfigPath)) {
                     </div>
                     <div class="flex items-center justify-between">
                         <div class="flex items-center gap-2">
-                        <p class="text-md font-bold <?php echo $discount > 0 ? 'text-[#1a3d32]' : 'text-[var(--color-primary)]'; ?>"><?php echo format_price($price, $item['currency'] ?? 'USD'); ?></p>
+                        <p class="text-md font-bold product-price" style="color: <?php echo $price_color; ?> !important;"><?php echo format_price($price, $item['currency'] ?? 'USD'); ?></p>
                             <?php if ($originalPrice): ?>
-                            <span class="text-gray-400 line-through text-sm block"><?php echo format_price($originalPrice, $item['currency'] ?? 'USD'); ?></span>
+                            <span class="line-through text-sm block compare-price" style="color: <?php echo $compare_price_color; ?> !important;"><?php echo format_price($originalPrice, $item['currency'] ?? 'USD'); ?></span>
                             <?php endif; ?>
                         </div>
                     </div>

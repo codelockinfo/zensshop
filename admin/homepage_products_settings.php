@@ -5,6 +5,7 @@ require_once __DIR__ . '/../classes/Database.php';
 require_once __DIR__ . '/../classes/Product.php';
 require_once __DIR__ . '/../includes/functions.php'; 
 require_once __DIR__ . '/../classes/Auth.php';
+require_once __DIR__ . '/../classes/Settings.php';
 
 $auth = new Auth(); // Ensure session
 $db = Database::getInstance();
@@ -49,6 +50,61 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         'tr_subheading' => $_POST['tr_subheading'] ?? ''
     ];
     file_put_contents(__DIR__ . '/homepage_products_config.json', json_encode($productsConfig));
+
+    // Save Visual Styles (Best Selling)
+    $settingsObj = new Settings();
+    $currentBSStyles = json_decode($settingsObj->get('best_selling_styles', '{}'), true);
+    $bs_styles = [
+        'bg_color' => $_POST['bs_bg_color'] ?? '#ffffff',
+        'heading_color' => $_POST['bs_heading_color'] ?? '#1f2937',
+        'subheading_color' => $_POST['bs_subheading_color'] ?? '#4b5563',
+        'arrow_bg_color' => $_POST['bs_arrow_bg_color'] ?? '#ffffff',
+        'arrow_icon_color' => $_POST['bs_arrow_icon_color'] ?? '#1f2937',
+        
+        // Preserve card styles
+        'price_color' => $currentBSStyles['price_color'] ?? '#1a3d32',
+        'compare_price_color' => $currentBSStyles['compare_price_color'] ?? '#9ca3af',
+        'card_bg_color' => $currentBSStyles['card_bg_color'] ?? '#ffffff',
+        'card_title_color' => $currentBSStyles['card_title_color'] ?? '#1F2937',
+        'badge_bg_color' => $currentBSStyles['badge_bg_color'] ?? '#ef4444',
+        'badge_text_color' => $currentBSStyles['badge_text_color'] ?? '#ffffff',
+        'btn_bg_color' => $currentBSStyles['btn_bg_color'] ?? '#ffffff',
+        'btn_icon_color' => $currentBSStyles['btn_icon_color'] ?? '#000000',
+        'btn_hover_bg_color' => $currentBSStyles['btn_hover_bg_color'] ?? '#000000',
+        'btn_hover_icon_color' => $currentBSStyles['btn_hover_icon_color'] ?? '#ffffff',
+        'btn_active_bg_color' => $currentBSStyles['btn_active_bg_color'] ?? '#000000',
+        'btn_active_icon_color' => $currentBSStyles['btn_active_icon_color'] ?? '#ffffff',
+        'tooltip_bg_color' => $currentBSStyles['tooltip_bg_color'] ?? '#000000',
+        'tooltip_text_color' => $currentBSStyles['tooltip_text_color'] ?? '#ffffff'
+    ];
+    $settingsObj->set('best_selling_styles', json_encode($bs_styles), 'homepage');
+
+    // Save Visual Styles (Trending)
+    $currentTRStyles = json_decode($settingsObj->get('trending_styles', '{}'), true);
+    $tr_styles = [
+        'bg_color' => $_POST['tr_bg_color'] ?? '#ffffff',
+        'heading_color' => $_POST['tr_heading_color'] ?? '#1f2937',
+        'subheading_color' => $_POST['tr_subheading_color'] ?? '#4b5563',
+        'arrow_bg_color' => $_POST['tr_arrow_bg_color'] ?? '#ffffff',
+        'arrow_icon_color' => $_POST['tr_arrow_icon_color'] ?? '#1f2937',
+        
+        // Preserve card styles
+        'price_color' => $currentTRStyles['price_color'] ?? '#1a3d32',
+        'compare_price_color' => $currentTRStyles['compare_price_color'] ?? '#9ca3af',
+        'card_bg_color' => $currentTRStyles['card_bg_color'] ?? '#ffffff',
+        'card_title_color' => $currentTRStyles['card_title_color'] ?? '#1F2937',
+        'badge_bg_color' => $currentTRStyles['badge_bg_color'] ?? '#ef4444',
+        'badge_text_color' => $currentTRStyles['badge_text_color'] ?? '#ffffff',
+        'btn_bg_color' => $currentTRStyles['btn_bg_color'] ?? '#ffffff',
+        'btn_icon_color' => $currentTRStyles['btn_icon_color'] ?? '#000000',
+        'btn_hover_bg_color' => $currentTRStyles['btn_hover_bg_color'] ?? '#000000',
+        'btn_hover_icon_color' => $currentTRStyles['btn_hover_icon_color'] ?? '#ffffff',
+        'btn_active_bg_color' => $currentTRStyles['btn_active_bg_color'] ?? '#000000',
+        'btn_active_icon_color' => $currentTRStyles['btn_active_icon_color'] ?? '#ffffff',
+        'tooltip_bg_color' => $currentTRStyles['tooltip_bg_color'] ?? '#000000',
+        'tooltip_text_color' => $currentTRStyles['tooltip_text_color'] ?? '#ffffff'
+    ];
+    $settingsObj->set('trending_styles', json_encode($tr_styles), 'homepage');
 
     try {
         // Process Best Selling
@@ -185,7 +241,59 @@ if ($savedConfig !== null) {
     $best_selling_subheading = $bsHeaders['subheading'] ?? $best_selling_subheading;
     $trending_heading = $trHeaders['heading'] ?? $trending_heading;
     $trending_subheading = $trHeaders['subheading'] ?? $trending_subheading;
+    $trending_heading = $trHeaders['heading'] ?? $trending_heading;
+    $trending_subheading = $trHeaders['subheading'] ?? $trending_subheading;
 }
+
+// Fetch Style Settings
+$settingsObj = new Settings();
+$savedBSStylesJson = $settingsObj->get('best_selling_styles', '{"bg_color":"#ffffff","heading_color":"#1f2937","subheading_color":"#4b5563","price_color":"#1a3d32","compare_price_color":"#9ca3af","arrow_bg_color":"#ffffff","arrow_icon_color":"#1f2937","card_bg_color":"#ffffff","card_title_color":"#1F2937","badge_bg_color":"#ef4444","badge_text_color":"#ffffff","btn_bg_color":"#ffffff","btn_icon_color":"#000000","btn_hover_bg_color":"#000000","btn_hover_icon_color":"#ffffff","btn_active_bg_color":"#000000","btn_active_icon_color":"#ffffff","tooltip_bg_color":"#000000","tooltip_text_color":"#ffffff"}');
+$savedBSStyles = json_decode($savedBSStylesJson, true);
+
+$savedTRStylesJson = $settingsObj->get('trending_styles', '{"bg_color":"#ffffff","heading_color":"#1f2937","subheading_color":"#4b5563","price_color":"#1a3d32","compare_price_color":"#9ca3af","arrow_bg_color":"#ffffff","arrow_icon_color":"#1f2937","card_bg_color":"#ffffff","card_title_color":"#1F2937","badge_bg_color":"#ef4444","badge_text_color":"#ffffff","btn_bg_color":"#ffffff","btn_icon_color":"#000000","btn_hover_bg_color":"#000000","btn_hover_icon_color":"#ffffff","btn_active_bg_color":"#000000","btn_active_icon_color":"#ffffff","tooltip_bg_color":"#000000","tooltip_text_color":"#ffffff"}');
+$savedTRStyles = json_decode($savedTRStylesJson, true);
+
+// BS Style Defaults
+$bs_s_bg_color = $savedBSStyles['bg_color'] ?? '#ffffff';
+$bs_s_heading_color = $savedBSStyles['heading_color'] ?? '#1f2937';
+$bs_s_subheading_color = $savedBSStyles['subheading_color'] ?? '#4b5563';
+$bs_s_price_color = $savedBSStyles['price_color'] ?? '#1a3d32';
+$bs_s_compare_price_color = $savedBSStyles['compare_price_color'] ?? '#9ca3af';
+$bs_s_arrow_bg_color = $savedBSStyles['arrow_bg_color'] ?? '#ffffff';
+$bs_s_arrow_icon_color = $savedBSStyles['arrow_icon_color'] ?? '#1f2937';
+$bs_s_card_bg_color = $savedBSStyles['card_bg_color'] ?? '#ffffff';
+$bs_s_card_title_color = $savedBSStyles['card_title_color'] ?? '#1F2937';
+$bs_s_badge_bg_color = $savedBSStyles['badge_bg_color'] ?? '#ef4444';
+$bs_s_badge_text_color = $savedBSStyles['badge_text_color'] ?? '#ffffff';
+$bs_s_btn_bg_color = $savedBSStyles['btn_bg_color'] ?? '#ffffff';
+$bs_s_btn_icon_color = $savedBSStyles['btn_icon_color'] ?? '#000000';
+$bs_s_btn_hover_bg_color = $savedBSStyles['btn_hover_bg_color'] ?? '#000000';
+$bs_s_btn_hover_icon_color = $savedBSStyles['btn_hover_icon_color'] ?? '#ffffff';
+$bs_s_btn_active_bg_color = $savedBSStyles['btn_active_bg_color'] ?? '#000000';
+$bs_s_btn_active_icon_color = $savedBSStyles['btn_active_icon_color'] ?? '#ffffff';
+$bs_s_tooltip_bg_color = $savedBSStyles['tooltip_bg_color'] ?? '#000000';
+$bs_s_tooltip_text_color = $savedBSStyles['tooltip_text_color'] ?? '#ffffff';
+
+// TR Style Defaults
+$tr_s_bg_color = $savedTRStyles['bg_color'] ?? '#ffffff';
+$tr_s_heading_color = $savedTRStyles['heading_color'] ?? '#1f2937';
+$tr_s_subheading_color = $savedTRStyles['subheading_color'] ?? '#4b5563';
+$tr_s_price_color = $savedTRStyles['price_color'] ?? '#1a3d32';
+$tr_s_compare_price_color = $savedTRStyles['compare_price_color'] ?? '#9ca3af';
+$tr_s_arrow_bg_color = $savedTRStyles['arrow_bg_color'] ?? '#ffffff';
+$tr_s_arrow_icon_color = $savedTRStyles['arrow_icon_color'] ?? '#1f2937';
+$tr_s_card_bg_color = $savedTRStyles['card_bg_color'] ?? '#ffffff';
+$tr_s_card_title_color = $savedTRStyles['card_title_color'] ?? '#1F2937';
+$tr_s_badge_bg_color = $savedTRStyles['badge_bg_color'] ?? '#ef4444';
+$tr_s_badge_text_color = $savedTRStyles['badge_text_color'] ?? '#ffffff';
+$tr_s_btn_bg_color = $savedTRStyles['btn_bg_color'] ?? '#ffffff';
+$tr_s_btn_icon_color = $savedTRStyles['btn_icon_color'] ?? '#000000';
+$tr_s_btn_hover_bg_color = $savedTRStyles['btn_hover_bg_color'] ?? '#000000';
+$tr_s_btn_hover_icon_color = $savedTRStyles['btn_hover_icon_color'] ?? '#ffffff';
+$tr_s_btn_active_bg_color = $savedTRStyles['btn_active_bg_color'] ?? '#000000';
+$tr_s_btn_active_icon_color = $savedTRStyles['btn_active_icon_color'] ?? '#ffffff';
+$tr_s_tooltip_bg_color = $savedTRStyles['tooltip_bg_color'] ?? '#000000';
+$tr_s_tooltip_text_color = $savedTRStyles['tooltip_text_color'] ?? '#ffffff';
 
 // START HTML OUTPUT
 $pageTitle = 'Homepage Products';
@@ -223,6 +331,96 @@ require_once __DIR__ . '/../includes/admin-header.php';
     </div>
 
     <form method="POST" id="settingsForm">
+
+        <!-- Visual Style Settings - Best Selling -->
+        <div class="bg-white rounded-lg shadow-sm border border-gray-200 mb-8 overflow-hidden">
+            <div class="bg-gray-50 px-6 py-4 border-b border-gray-200">
+                <h2 class="text-xl font-semibold text-gray-800">Best Selling Visual Style</h2>
+                <p class="text-sm text-gray-500">Customize the colors for the Best Selling section.</p>
+            </div>
+            <div class="p-6 grid grid-cols-1 md:grid-cols-3 gap-6">
+                <div>
+                    <label class="block text-sm font-semibold text-gray-700 mb-2">Background Color</label>
+                    <div class="flex items-center gap-3">
+                        <input type="color" name="bs_bg_color" value="<?php echo htmlspecialchars($bs_s_bg_color); ?>" class="h-10 w-16 border rounded cursor-pointer p-0.5" oninput="this.nextElementSibling.value = this.value">
+                        <input type="text" value="<?php echo htmlspecialchars($bs_s_bg_color); ?>" class="flex-1 border rounded p-2 text-sm uppercase" oninput="this.previousElementSibling.value = this.value">
+                    </div>
+                </div>
+                <div>
+                    <label class="block text-sm font-semibold text-gray-700 mb-2">Heading Color</label>
+                    <div class="flex items-center gap-3">
+                        <input type="color" name="bs_heading_color" value="<?php echo htmlspecialchars($bs_s_heading_color); ?>" class="h-10 w-16 border rounded cursor-pointer p-0.5" oninput="this.nextElementSibling.value = this.value">
+                        <input type="text" value="<?php echo htmlspecialchars($bs_s_heading_color); ?>" class="flex-1 border rounded p-2 text-sm uppercase" oninput="this.previousElementSibling.value = this.value">
+                    </div>
+                </div>
+                <div>
+                    <label class="block text-sm font-semibold text-gray-700 mb-2">Subheading Color</label>
+                    <div class="flex items-center gap-3">
+                        <input type="color" name="bs_subheading_color" value="<?php echo htmlspecialchars($bs_s_subheading_color); ?>" class="h-10 w-16 border rounded cursor-pointer p-0.5" oninput="this.nextElementSibling.value = this.value">
+                        <input type="text" value="<?php echo htmlspecialchars($bs_s_subheading_color); ?>" class="flex-1 border rounded p-2 text-sm uppercase" oninput="this.previousElementSibling.value = this.value">
+                    </div>
+                </div>
+                <div>
+                    <label class="block text-sm font-semibold text-gray-700 mb-2">Slider Arrow Background</label>
+                    <div class="flex items-center gap-3">
+                        <input type="color" name="bs_arrow_bg_color" value="<?php echo htmlspecialchars($bs_s_arrow_bg_color); ?>" class="h-10 w-16 border rounded cursor-pointer p-0.5" oninput="this.nextElementSibling.value = this.value">
+                        <input type="text" value="<?php echo htmlspecialchars($bs_s_arrow_bg_color); ?>" class="flex-1 border rounded p-2 text-sm uppercase" oninput="this.previousElementSibling.value = this.value">
+                    </div>
+                </div>
+                <div>
+                    <label class="block text-sm font-semibold text-gray-700 mb-2">Slider Arrow Icon</label>
+                    <div class="flex items-center gap-3">
+                        <input type="color" name="bs_arrow_icon_color" value="<?php echo htmlspecialchars($bs_s_arrow_icon_color); ?>" class="h-10 w-16 border rounded cursor-pointer p-0.5" oninput="this.nextElementSibling.value = this.value">
+                        <input type="text" value="<?php echo htmlspecialchars($bs_s_arrow_icon_color); ?>" class="flex-1 border rounded p-2 text-sm uppercase" oninput="this.previousElementSibling.value = this.value">
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Visual Style Settings - Trending -->
+        <div class="bg-white rounded-lg shadow-sm border border-gray-200 mb-8 overflow-hidden">
+            <div class="bg-gray-50 px-6 py-4 border-b border-gray-200">
+                <h2 class="text-xl font-semibold text-gray-800">Trending Visual Style</h2>
+                <p class="text-sm text-gray-500">Customize the colors for the Trending section.</p>
+            </div>
+            <div class="p-6 grid grid-cols-1 md:grid-cols-3 gap-6">
+                <div>
+                    <label class="block text-sm font-semibold text-gray-700 mb-2">Background Color</label>
+                    <div class="flex items-center gap-3">
+                        <input type="color" name="tr_bg_color" value="<?php echo htmlspecialchars($tr_s_bg_color); ?>" class="h-10 w-16 border rounded cursor-pointer p-0.5" oninput="this.nextElementSibling.value = this.value">
+                        <input type="text" value="<?php echo htmlspecialchars($tr_s_bg_color); ?>" class="flex-1 border rounded p-2 text-sm uppercase" oninput="this.previousElementSibling.value = this.value">
+                    </div>
+                </div>
+                <div>
+                    <label class="block text-sm font-semibold text-gray-700 mb-2">Heading Color</label>
+                    <div class="flex items-center gap-3">
+                        <input type="color" name="tr_heading_color" value="<?php echo htmlspecialchars($tr_s_heading_color); ?>" class="h-10 w-16 border rounded cursor-pointer p-0.5" oninput="this.nextElementSibling.value = this.value">
+                        <input type="text" value="<?php echo htmlspecialchars($tr_s_heading_color); ?>" class="flex-1 border rounded p-2 text-sm uppercase" oninput="this.previousElementSibling.value = this.value">
+                    </div>
+                </div>
+                <div>
+                    <label class="block text-sm font-semibold text-gray-700 mb-2">Subheading Color</label>
+                    <div class="flex items-center gap-3">
+                        <input type="color" name="tr_subheading_color" value="<?php echo htmlspecialchars($tr_s_subheading_color); ?>" class="h-10 w-16 border rounded cursor-pointer p-0.5" oninput="this.nextElementSibling.value = this.value">
+                        <input type="text" value="<?php echo htmlspecialchars($tr_s_subheading_color); ?>" class="flex-1 border rounded p-2 text-sm uppercase" oninput="this.previousElementSibling.value = this.value">
+                    </div>
+                </div>
+                <div>
+                    <label class="block text-sm font-semibold text-gray-700 mb-2">Slider Arrow Background</label>
+                    <div class="flex items-center gap-3">
+                        <input type="color" name="tr_arrow_bg_color" value="<?php echo htmlspecialchars($tr_s_arrow_bg_color); ?>" class="h-10 w-16 border rounded cursor-pointer p-0.5" oninput="this.nextElementSibling.value = this.value">
+                        <input type="text" value="<?php echo htmlspecialchars($tr_s_arrow_bg_color); ?>" class="flex-1 border rounded p-2 text-sm uppercase" oninput="this.previousElementSibling.value = this.value">
+                    </div>
+                </div>
+                 <div>
+                    <label class="block text-sm font-semibold text-gray-700 mb-2">Slider Arrow Icon</label>
+                    <div class="flex items-center gap-3">
+                        <input type="color" name="tr_arrow_icon_color" value="<?php echo htmlspecialchars($tr_s_arrow_icon_color); ?>" class="h-10 w-16 border rounded cursor-pointer p-0.5" oninput="this.nextElementSibling.value = this.value">
+                        <input type="text" value="<?php echo htmlspecialchars($tr_s_arrow_icon_color); ?>" class="flex-1 border rounded p-2 text-sm uppercase" oninput="this.previousElementSibling.value = this.value">
+                    </div>
+                </div>
+            </div>
+        </div>
         
         <!-- Visibility Settings -->
         <div class="bg-white rounded-lg shadow-sm border border-gray-200 mb-8 overflow-hidden">
@@ -230,67 +428,77 @@ require_once __DIR__ . '/../includes/admin-header.php';
                 <h2 class="text-xl font-semibold text-gray-800">Visibility Settings</h2>
                 <p class="text-sm text-gray-500">Control usage and visibility of product sections.</p>
             </div>
-            <div class="p-6 space-y-4">
-                <!-- Best Selling Section Visibility -->
-                <div class="flex items-center justify-between pb-4 border-b border-gray-100">
-                    <div class="flex items-center gap-4">
-                        <div class="p-3 bg-blue-50 rounded-lg text-blue-600">
-                            <i class="fas fa-eye text-lg"></i>
+            <div class="p-6 grid grid-cols-1 md:grid-cols-2 gap-6">
+                <!-- Best Selling Column -->
+                <div class="space-y-4 md:border-r md:border-gray-200 md:pr-6">
+                    <h3 class="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-4">Best Selling Section</h3>
+                    
+                    <!-- Best Selling Section Visibility -->
+                    <div class="flex items-center justify-between pb-4 border-b border-gray-100">
+                        <div class="flex items-center gap-4">
+                            <div class="p-3 bg-blue-50 rounded-lg text-blue-600">
+                                <i class="fas fa-eye text-lg"></i>
+                            </div>
+                            <div>
+                                <h3 class="font-bold text-gray-800">Show Section</h3>
+                                <p class="text-sm text-gray-500">Toggle visibility</p>
+                            </div>
                         </div>
-                        <div>
-                            <h3 class="font-bold text-gray-800">Show Best Selling Section</h3>
-                            <p class="text-sm text-gray-500">Toggle visibility of the Best Selling Products section</p>
-                        </div>
+                        <label class="relative inline-flex items-center cursor-pointer">
+                            <input type="checkbox" name="show_best_selling_section" class="sr-only peer" <?php echo $showBSSection ? 'checked' : ''; ?>>
+                            <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
+                        </label>
                     </div>
-                    <label class="relative inline-flex items-center cursor-pointer">
-                        <input type="checkbox" name="show_best_selling_section" class="sr-only peer" <?php echo $showBSSection ? 'checked' : ''; ?>>
-                        <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
-                    </label>
-                </div>
-                
-                <!-- Best Selling Arrows -->
-                <div class="flex items-center justify-between pb-4 border-b border-gray-100 pl-16">
-                    <div class="flex items-center gap-4">
-                        <div>
-                            <div class="text-gray-700 font-medium">Show Slider Arrows</div>
-                            <div class="text-xs text-gray-500">Navigation arrows for Best Selling</div>
+                    
+                    <!-- Best Selling Arrows -->
+                    <div class="flex items-center justify-between pb-4">
+                        <div class="flex items-center gap-4">
+                            <div class="pl-14">
+                                <div class="text-gray-700 font-medium">Show Slider Arrows</div>
+                                <div class="text-xs text-gray-500">Navigation arrows</div>
+                            </div>
                         </div>
+                        <label class="relative inline-flex items-center cursor-pointer">
+                            <input type="checkbox" name="show_best_selling_arrows" class="sr-only peer" <?php echo $showBSArrows ? 'checked' : ''; ?>>
+                            <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
+                        </label>
                     </div>
-                    <label class="relative inline-flex items-center cursor-pointer">
-                        <input type="checkbox" name="show_best_selling_arrows" class="sr-only peer" <?php echo $showBSArrows ? 'checked' : ''; ?>>
-                        <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
-                    </label>
-                </div>
-
-                <!-- Trending Section Visibility -->
-                <div class="flex items-center justify-between pb-4 border-b border-gray-100 pt-4">
-                    <div class="flex items-center gap-4">
-                        <div class="p-3 bg-purple-50 rounded-lg text-purple-600">
-                            <i class="fas fa-eye text-lg"></i>
-                        </div>
-                        <div>
-                            <h3 class="font-bold text-gray-800">Show Trending Section</h3>
-                            <p class="text-sm text-gray-500">Toggle visibility of the Trending Products section</p>
-                        </div>
-                    </div>
-                    <label class="relative inline-flex items-center cursor-pointer">
-                        <input type="checkbox" name="show_trending_section" class="sr-only peer" <?php echo $showTRSection ? 'checked' : ''; ?>>
-                        <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-purple-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-purple-600"></div>
-                    </label>
                 </div>
 
-                <!-- Trending Arrows -->
-                <div class="flex items-center justify-between pb-2 pl-16">
-                     <div class="flex items-center gap-4">
-                        <div>
-                            <div class="text-gray-700 font-medium">Show Slider Arrows</div>
-                            <div class="text-xs text-gray-500">Navigation arrows for Trending</div>
+                <!-- Trending Column -->
+                <div class="space-y-4">
+                    <h3 class="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-4">Trending Section</h3>
+
+                    <!-- Trending Section Visibility -->
+                    <div class="flex items-center justify-between pb-4 border-b border-gray-100">
+                        <div class="flex items-center gap-4">
+                            <div class="p-3 bg-purple-50 rounded-lg text-purple-600">
+                                <i class="fas fa-eye text-lg"></i>
+                            </div>
+                            <div>
+                                <h3 class="font-bold text-gray-800">Show Section</h3>
+                                <p class="text-sm text-gray-500">Toggle visibility</p>
+                            </div>
                         </div>
+                        <label class="relative inline-flex items-center cursor-pointer">
+                            <input type="checkbox" name="show_trending_section" class="sr-only peer" <?php echo $showTRSection ? 'checked' : ''; ?>>
+                            <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-purple-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-purple-600"></div>
+                        </label>
                     </div>
-                    <label class="relative inline-flex items-center cursor-pointer">
-                        <input type="checkbox" name="show_trending_arrows" class="sr-only peer" <?php echo $showTRArrows ? 'checked' : ''; ?>>
-                        <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-purple-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-purple-600"></div>
-                    </label>
+
+                    <!-- Trending Arrows -->
+                    <div class="flex items-center justify-between pb-4">
+                         <div class="flex items-center gap-4">
+                            <div class="pl-14">
+                                <div class="text-gray-700 font-medium">Show Slider Arrows</div>
+                                <div class="text-xs text-gray-500">Navigation arrows</div>
+                            </div>
+                        </div>
+                        <label class="relative inline-flex items-center cursor-pointer">
+                            <input type="checkbox" name="show_trending_arrows" class="sr-only peer" <?php echo $showTRArrows ? 'checked' : ''; ?>>
+                            <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-purple-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-purple-600"></div>
+                        </label>
+                    </div>
                 </div>
             </div>
         </div>
@@ -640,7 +848,7 @@ document.getElementById('settingsForm').addEventListener('submit', function(e) {
     
     // Note: Global 'btn-loading' listener in admin-footer.php handles showing the loader.
     
-     fetch(`${BASE_URL}/admin/products?ajax=1`, {
+     fetch(`${BASE_URL}/admin/homepage_products_settings.php?ajax=1`, {
         method: 'POST',
         body: formData,
         headers: { 'X-Requested-With': 'XMLHttpRequest' }

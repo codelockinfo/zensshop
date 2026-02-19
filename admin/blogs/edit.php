@@ -44,6 +44,30 @@ if ($id) {
     }
 }
 
+// Initialize settings
+$blogSettings = [
+    'banner' => [
+        'bg_color' => '#ffffff',
+        'text_color' => '#ffffff',
+        'heading_color' => '#ffffff',
+        'subheading_color' => '#ffffff',
+        'btn_text' => '',
+        'btn_link' => '',
+        'btn_bg_color' => '#ffffff',
+        'btn_text_color' => '#000000',
+        'btn_hover_bg_color' => '#f3f4f6',
+        'btn_hover_text_color' => '#000000'
+    ],
+    'page_bg_color' => '#ffffff'
+];
+
+if ($blog && !empty($blog['settings'])) {
+    $decodedSettings = json_decode($blog['settings'], true);
+    if (is_array($decodedSettings)) {
+        $blogSettings = array_merge($blogSettings, $decodedSettings);
+    }
+}
+
 $error = '';
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
@@ -73,10 +97,27 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         }
 
         try {
+            $newSettings = [
+                'banner' => [
+                    'bg_color' => $_POST['banner_bg_color'] ?? '#ffffff',
+                    'text_color' => $_POST['banner_text_color'] ?? '#ffffff',
+                    'heading_color' => $_POST['banner_heading_color'] ?? '#ffffff',
+                    'subheading_color' => $_POST['banner_subheading_color'] ?? '#ffffff',
+                    'btn_text' => $_POST['banner_btn_text'] ?? '',
+                    'btn_link' => $_POST['banner_btn_link'] ?? '',
+                    'btn_bg_color' => $_POST['banner_btn_bg_color'] ?? '#ffffff',
+                    'btn_text_color' => $_POST['banner_btn_text_color'] ?? '#000000',
+                    'btn_hover_bg_color' => $_POST['banner_btn_hover_bg_color'] ?? '#f3f4f6',
+                    'btn_hover_text_color' => $_POST['banner_btn_hover_text_color'] ?? '#000000'
+                ],
+                'page_bg_color' => $_POST['page_bg_color'] ?? '#ffffff'
+            ];
+            $jsonSettings = json_encode($newSettings);
+            $layout = $_POST['layout'] ?? 'standard';
+
             if ($id) {
-                $layout = $_POST['layout'] ?? 'standard';
-                $db->execute("UPDATE blogs SET title=?, slug=?, content=?, image=?, status=?, layout=?, updated_at=NOW() WHERE id=? AND store_id=?", 
-                    [$title, $slug, $content, $imagePath, $status, $layout, $id, $storeId]);
+                $db->execute("UPDATE blogs SET title=?, slug=?, content=?, image=?, status=?, layout=?, settings=?, updated_at=NOW() WHERE id=? AND store_id=?", 
+                    [$title, $slug, $content, $imagePath, $status, $layout, $jsonSettings, $id, $storeId]);
                 $_SESSION['flash_success'] = "Blog updated successfully.";
             } else {
                 // Generate unique 10-digit blog_id
@@ -85,9 +126,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     $exists = $db->fetchOne("SELECT id FROM blogs WHERE blog_id = ?", [$blogId]);
                 } while ($exists);
 
-                $layout = $_POST['layout'] ?? 'standard';
-                $db->execute("INSERT INTO blogs (store_id, blog_id, title, slug, content, image, status, layout, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, NOW())", 
-                    [$storeId, $blogId, $title, $slug, $content, $imagePath, $status, $layout]);
+                $db->execute("INSERT INTO blogs (store_id, blog_id, title, slug, content, image, status, layout, settings, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, NOW())", 
+                    [$storeId, $blogId, $title, $slug, $content, $imagePath, $status, $layout, $jsonSettings]);
                 $_SESSION['flash_success'] = "Blog created successfully.";
             }
             header("Location: $baseUrl/admin/blogs/manage");
@@ -173,12 +213,13 @@ require_once __DIR__ . '/../../includes/admin-header.php';
                     <?php endif; ?>
                 </div>
 
-                <!-- Featured Image -->
+                <!-- Featured Image & Banner Styling -->
                 <div class="bg-gray-50 p-5 rounded-lg border border-gray-200 shadow-sm">
-                    <h3 class="font-bold mb-4 text-gray-800 border-b pb-2">Featured Image</h3>
+                    <h3 class="font-bold mb-4 text-gray-800 border-b pb-2">Featured Image & Banner</h3>
                     
                     <div class="space-y-4">
                         <div class="w-full">
+                             <label class="block text-xs font-bold mb-2 uppercase text-gray-500">Banner Image</label>
                              <div class="relative group cursor-pointer w-full h-48 border-2 <?php echo !empty($blog['image']) ? 'border-gray-200' : 'border-dashed border-gray-300'; ?> rounded-lg overflow-hidden flex items-center justify-center bg-white hover:bg-gray-50 transition" onclick="document.getElementById('imageInput').click()">
                                  
                                  <input type="file" id="imageInput" name="image" class="hidden" accept="image/*" onchange="previewImage(this, 'previewContainer')">
@@ -198,6 +239,71 @@ require_once __DIR__ . '/../../includes/admin-header.php';
                                          </div>
                                      <?php endif; ?>
                                  </div>
+                             </div>
+                        </div>
+
+                        <div class="space-y-4 pt-4 border-t">
+                             <div class="grid grid-cols-2 gap-3">
+                                <div>
+                                    <label class="block text-xs font-bold mb-1">Text Color</label>
+                                    <div class="flex items-center gap-1">
+                                        <input type="color" name="banner_text_color" value="<?php echo htmlspecialchars($blogSettings['banner']['text_color'] ?? '#ffffff'); ?>" class="h-8 w-8 rounded cursor-pointer border-0 p-0 shadow-sm">
+                                        <input type="text" oninput="this.previousElementSibling.value = this.value" value="<?php echo htmlspecialchars($blogSettings['banner']['text_color'] ?? '#ffffff'); ?>" class="w-full border p-1 rounded text-xs uppercase" readonly>
+                                    </div>
+                                </div>
+                                <div>
+                                    <label class="block text-xs font-bold mb-1">Heading Color</label>
+                                    <div class="flex items-center gap-1">
+                                        <input type="color" name="banner_heading_color" value="<?php echo htmlspecialchars($blogSettings['banner']['heading_color'] ?? '#ffffff'); ?>" class="h-8 w-8 rounded cursor-pointer border-0 p-0 shadow-sm">
+                                        <input type="text" oninput="this.previousElementSibling.value = this.value" value="<?php echo htmlspecialchars($blogSettings['banner']['heading_color'] ?? '#ffffff'); ?>" class="w-full border p-1 rounded text-xs uppercase" readonly>
+                                    </div>
+                                </div>
+                                <div>
+                                    <label class="block text-xs font-bold mb-1">Subheading Color</label>
+                                    <div class="flex items-center gap-1">
+                                        <input type="color" name="banner_subheading_color" value="<?php echo htmlspecialchars($blogSettings['banner']['subheading_color'] ?? '#ffffff'); ?>" class="h-8 w-8 rounded cursor-pointer border-0 p-0 shadow-sm">
+                                        <input type="text" oninput="this.previousElementSibling.value = this.value" value="<?php echo htmlspecialchars($blogSettings['banner']['subheading_color'] ?? '#ffffff'); ?>" class="w-full border p-1 rounded text-xs uppercase" readonly>
+                                    </div>
+                                </div>
+                             </div>
+
+                             <div>
+                                <label class="block text-xs font-bold mb-1">Banner Background Color</label>
+                                <div class="flex items-center gap-1">
+                                    <input type="color" name="banner_bg_color" value="<?php echo htmlspecialchars($blogSettings['banner']['bg_color'] ?? '#ffffff'); ?>" class="h-8 w-8 rounded cursor-pointer border-0 p-0 shadow-sm">
+                                    <input type="text" oninput="this.previousElementSibling.value = this.value" value="<?php echo htmlspecialchars($blogSettings['banner']['bg_color'] ?? '#ffffff'); ?>" class="w-full border p-1 rounded text-xs uppercase" readonly>
+                                </div>
+                                <p class="text-[10px] text-gray-400 mt-1">Used if banner image is not uploaded.</p>
+                             </div>
+
+                             <div class="grid grid-cols-2 gap-3">
+                                <div>
+                                    <label class="block text-xs font-bold mb-1">Btn Text</label>
+                                    <input type="text" name="banner_btn_text" value="<?php echo htmlspecialchars($blogSettings['banner']['btn_text'] ?? ''); ?>" class="w-full border p-1.5 rounded text-xs" placeholder="e.g. Read More">
+                                </div>
+                                <div>
+                                    <label class="block text-xs font-bold mb-1">Btn Link</label>
+                                    <input type="text" name="banner_btn_link" value="<?php echo htmlspecialchars($blogSettings['banner']['btn_link'] ?? ''); ?>" class="w-full border p-1.5 rounded text-xs" placeholder="e.g. #buy">
+                                </div>
+                             </div>
+
+                             <div class="grid grid-cols-2 gap-3">
+                                <div>
+                                    <label class="block text-xs font-bold mb-1">Btn BG</label>
+                                    <input type="color" name="banner_btn_bg_color" value="<?php echo htmlspecialchars($blogSettings['banner']['btn_bg_color'] ?? '#ffffff'); ?>" class="w-full h-8 rounded cursor-pointer">
+                                </div>
+                                <div>
+                                    <label class="block text-xs font-bold mb-1">Btn Text</label>
+                                    <input type="color" name="banner_btn_text_color" value="<?php echo htmlspecialchars($blogSettings['banner']['btn_text_color'] ?? '#000000'); ?>" class="w-full h-8 rounded cursor-pointer">
+                                </div>
+                             </div>
+
+                             <div class="pt-2 border-t mt-4">
+                                <label class="block text-xs font-bold mb-1">Page Background Color</label>
+                                <div class="flex items-center gap-1">
+                                    <input type="color" name="page_bg_color" value="<?php echo htmlspecialchars($blogSettings['page_bg_color'] ?? '#ffffff'); ?>" class="h-8 w-8 rounded cursor-pointer border-0 p-0 shadow-sm">
+                                    <input type="text" oninput="this.previousElementSibling.value = this.value" value="<?php echo htmlspecialchars($blogSettings['page_bg_color'] ?? '#ffffff'); ?>" class="w-full border p-1 rounded text-xs uppercase" readonly>
+                                </div>
                              </div>
                         </div>
                     </div>

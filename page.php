@@ -60,7 +60,7 @@ require_once __DIR__ . '/includes/header.php';
 ?>
 
 <!-- Custom Page Layout -->
-<div class="custom-page-wrapper">
+<div class="custom-page-wrapper" style="background-color: <?php echo $contentData['settings']['page_bg_color'] ?? '#ffffff'; ?>;">
     
     <?php if (!empty($banner['image'])): ?>
     <!-- Skeleton Loader for Banner -->
@@ -75,20 +75,37 @@ require_once __DIR__ . '/includes/header.php';
         </div>
     </div>
     
-    <div id="page-banner" class="relative w-full h-[300px] md:h-[400px] bg-gray-200" style="display: none;">
+    <div id="page-banner" class="relative w-full h-[300px] md:h-[400px]" style="display: none; background-color: <?php echo $banner['bg_color'] ?? '#f3f4f6'; ?>;">
         <img src="<?php echo getBaseUrl() . '/' . $banner['image']; ?>" alt="Banner" class="w-full h-full object-cover" onload="hidePageBannerSkeleton()">
         <div class="absolute inset-0 bg-black bg-opacity-40 flex items-center justify-center">
-            <div class="text-center text-white px-4">
+            <div class="text-center px-4" style="color: <?php echo $banner['text_color'] ?? '#ffffff'; ?>;">
                 <?php if (!empty($banner['heading'])): ?>
-                <h1 class="text-3xl md:text-5xl font-bold mb-4 drop-shadow-lg text-white"><?php echo htmlspecialchars($banner['heading']); ?></h1>
+                <h1 class="text-3xl md:text-5xl font-bold mb-4 drop-shadow-lg" style="color: <?php echo $banner['heading_color'] ?? '#ffffff'; ?>;"><?php echo htmlspecialchars($banner['heading']); ?></h1>
                 <?php endif; ?>
                 
                 <?php if (!empty($banner['subheading'])): ?>
-                <p class="text-lg md:text-xl mb-6 max-w-2xl mx-auto drop-shadow-md"><?php echo nl2br(htmlspecialchars($banner['subheading'])); ?></p>
+                <p class="text-lg md:text-xl mb-6 max-w-2xl mx-auto drop-shadow-md" style="color: <?php echo $banner['subheading_color'] ?? '#ffffff'; ?>;"><?php echo nl2br(htmlspecialchars($banner['subheading'])); ?></p>
                 <?php endif; ?>
                 
-                <?php if (!empty($banner['btn_text']) && !empty($banner['btn_link'])): ?>
-                <a href="<?php echo htmlspecialchars($banner['btn_link']); ?>" class="inline-block bg-white text-black font-bold py-3 px-8 rounded hover:bg-gray-100 transition transform hover:-translate-y-1">
+                <?php if (!empty($banner['btn_text']) && !empty($banner['btn_link'])): 
+                    $btnId = 'banner-btn-' . uniqid();
+                    $btnBg = $banner['btn_bg_color'] ?? '#ffffff';
+                    $btnText = $banner['btn_text_color'] ?? '#000000';
+                    $btnHoverBg = $banner['btn_hover_bg_color'] ?? '#f3f4f6';
+                    $btnHoverText = $banner['btn_hover_text_color'] ?? '#000000';
+                ?>
+                <style>
+                    #<?php echo $btnId; ?> {
+                        background-color: <?php echo $btnBg; ?>;
+                        color: <?php echo $btnText; ?>;
+                    }
+                    #<?php echo $btnId; ?>:hover {
+                        background-color: <?php echo $btnHoverBg; ?>;
+                        color: <?php echo $btnHoverText; ?>;
+                        transform: translateY(-0.25rem);
+                    }
+                </style>
+                <a id="<?php echo $btnId; ?>" href="<?php echo htmlspecialchars($banner['btn_link']); ?>" class="inline-block font-bold py-3 px-8 rounded transition transform">
                     <?php echo htmlspecialchars($banner['btn_text']); ?>
                 </a>
                 <?php endif; ?>
@@ -97,9 +114,9 @@ require_once __DIR__ . '/includes/header.php';
     </div>
     <?php else: ?>
     <!-- Fallback header if no banner image -->
-    <div class="bg-gray-100 py-12">
+    <div class="py-12" style="background-color: <?php echo $banner['bg_color'] ?? '#f3f4f6'; ?>;">
         <div class="container mx-auto px-4 text-center">
-            <h1 class="text-3xl font-bold"><?php echo htmlspecialchars($page['title']); ?></h1>
+            <h1 class="text-3xl font-bold" style="color: <?php echo $banner['heading_color'] ?? '#111827'; ?>;"><?php echo htmlspecialchars($page['title']); ?></h1>
         </div>
     </div>
     <?php endif; ?>

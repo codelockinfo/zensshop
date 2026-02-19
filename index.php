@@ -15,8 +15,52 @@ function getSectionConfig($file) {
 }
 
 // 1. Banner
-$bannerConf = getSectionConfig('banner_config.json');
+$bannerConfigPath = __DIR__ . '/admin/banner_config.json';
+$bannerConf = file_exists($bannerConfigPath) ? json_decode(file_get_contents($bannerConfigPath), true) : [];
 $showBanner = $bannerConf['show_section'] ?? true;
+$bannerHideTextMobile = $bannerConf['hide_text_mobile'] ?? false;
+
+// Fetch Banner Styles
+$bannerStylesJson = $settingsObj->get('banner_styles', '{"heading_color":"#ffffff","subheading_color":"#f3f4f6","button_bg_color":"#ffffff","button_text_color":"#000000","arrow_bg_color":"#ffffff","arrow_icon_color":"#1f2937"}');
+$bannerStyles = json_decode($bannerStylesJson, true);
+
+// Fetch Best Selling Styles for Skeleton
+$bsStylesJson = $settingsObj->get('best_selling_styles', '{"bg_color":"#ffffff"}');
+$bsStyles = json_decode($bsStylesJson, true);
+$bsBgColor = $bsStyles['bg_color'] ?? '#ffffff';
+
+// Fetch Trending Styles for Skeleton
+$trStylesJson = $settingsObj->get('trending_styles', '{"bg_color":"#ffffff"}');
+$trStyles = json_decode($trStylesJson, true);
+$trBgColor = $trStyles['bg_color'] ?? '#ffffff';
+
+// Fetch Special Offers Styles for Skeleton
+$soStylesJson = $settingsObj->get('special_offers_styles', '{"bg_color":"#f3f4f6"}'); // Default gray-100 is f3f4f6
+$soStyles = json_decode($soStylesJson, true);
+$soBgColor = $soStyles['bg_color'] ?? '#f3f4f6';
+
+// Fetch Newsletter Styles for Skeleton
+$nlStylesJson = $settingsObj->get('newsletter_styles', '{"bg_color":"#f3f4f6"}');
+$nlStyles = json_decode($nlStylesJson, true);
+$nlBgColor = $nlStyles['bg_color'] ?? '#f3f4f6';
+
+// Fetch Videos Styles for Skeleton
+$vidStylesJson = $settingsObj->get('video_section_styles', '{"bg_color":"#ffffff"}');
+$vidStyles = json_decode($vidStylesJson, true);
+$vidBgColor = $vidStyles['bg_color'] ?? '#ffffff';
+
+// Fetch Philosophy Styles for Skeleton (From DB) - Now moved query up
+$philRow = $db->fetchOne("SELECT active, background_color FROM philosophy_section WHERE store_id = ? LIMIT 1", [CURRENT_STORE_ID]);
+$showPhilosophy = $philRow ? ($philRow['active'] == 1) : true;
+$philBgColor = $philRow['background_color'] ?? '#384135';
+
+// Fetch Features Styles for Skeleton
+// Features uses straightforward settings, not JSON
+$featBgColor = $settingsObj->get('features_section_bg', '#ffffff');
+
+// Fetch Footer Features Styles for Skeleton
+// Footer Features uses straightforward settings, not JSON
+$ffBgColor = $settingsObj->get('footer_features_section_bg', '#ffffff');
 
 // 2. Categories
 $catConf = getSectionConfig('category_config.json');
@@ -35,13 +79,18 @@ $showOffers = $offerConf['show_section'] ?? true;
 $vidConf = getSectionConfig('video_config.json');
 $showVideos = $vidConf['show_section'] ?? true;
 
+// Fetch Categories Styles for Skeleton
+$catStylesJson = $settingsObj->get('homepage_categories_styles', '{"bg_color":"#ffffff"}');
+$catStyles = json_decode($catStylesJson, true);
+$catBgColor = $catStyles['bg_color'] ?? '#ffffff';
+
 // 6. Newsletter
 $newsConf = getSectionConfig('newsletter_config.json');
 $showNewsletter = $newsConf['show_section'] ?? true;
 
-// 7. Philosophy (DB)
-$philRow = $db->fetchOne("SELECT active FROM philosophy_section WHERE store_id = ? LIMIT 1", [CURRENT_STORE_ID]);
-$showPhilosophy = $philRow ? ($philRow['active'] == 1) : true;
+// 7. Philosophy (DB) - Fetched above
+// $philRow fetching moved up
+// $showPhilosophy calculated above
 
 // 8. Features (Settings)
 $showFeatures = $settingsObj->get('features_section_visibility', '1') == '1';
@@ -64,6 +113,45 @@ $showFooterFeatures = $settingsObj->get('footer_features_section_visibility', '1
         </div>
     </div>
 </div>
+
+</div>
+
+<style>
+    /* Banner Dynamic Styles */
+    #hero-section .banner-heading {
+        color: <?php echo $bannerStyles['heading_color']; ?> !important;
+    }
+    #hero-section .banner-subheading {
+        color: <?php echo $bannerStyles['subheading_color']; ?> !important;
+    }
+    #hero-section .banner-btn {
+        background-color: <?php echo $bannerStyles['button_bg_color']; ?> !important;
+        color: <?php echo $bannerStyles['button_text_color']; ?> !important;
+        border-color: <?php echo $bannerStyles['button_bg_color']; ?> !important;
+    }
+    #hero-section .banner-btn:hover {
+        opacity: 0.9;
+    }
+    #hero-section .hero-prev,
+    #hero-section .hero-next {
+        background-color: <?php echo $bannerStyles['arrow_bg_color']; ?> !important;
+        color: <?php echo $bannerStyles['arrow_icon_color']; ?> !important;
+        border-color: <?php echo $bannerStyles['arrow_bg_color']; ?> !important;
+    }
+     #hero-section .hero-prev:hover,
+    #hero-section .hero-next:hover {
+        opacity: 0.9 !important;
+    }
+    
+    <?php if($bannerHideTextMobile): ?>
+    @media (max-width: 768px) {
+        #hero-section .banner-heading,
+        #hero-section .banner-subheading {
+            display: none !important;
+        }
+    }
+    <?php endif; ?>
+</style>
 
 <section id="hero-section" class="relative overflow-hidden" style="display: none;">
 <?php
@@ -144,26 +232,26 @@ if (empty($banners)) {
                         
                         <div class="absolute inset-0 bg-black bg-opacity-30"></div>
                         <div class="container mx-auto px-4 h-full flex items-center relative z-10">
-                            <div class="max-w-md text-white">
+                            <div class="max-w-md text-white banner-text-content">
                                 <?php if (!empty($banner['subheading'])): ?>
-                                    <p class="text-md md:text-lg uppercase tracking-wider mb-2"><?php echo htmlspecialchars($banner['subheading']); ?></p>
+                                    <p class="text-md md:text-lg uppercase tracking-wider mb-2 banner-subheading"><?php echo htmlspecialchars($banner['subheading']); ?></p>
                                 <?php endif; ?>
                                 
                                 <?php if (!empty($banner['heading'])): ?>
-                                    <h1 class="text-4xl md:text-5xl font-heading font-bold mb-6"><?php echo htmlspecialchars($banner['heading']); ?></h1>
+                                    <h1 class="text-4xl md:text-5xl font-heading font-bold mb-6 banner-heading"><?php echo htmlspecialchars($banner['heading']); ?></h1>
                                 <?php endif; ?>
                                 
                                 <?php if (!empty($banner['button_text'])): ?>
                                     <!-- Desktop Button -->
                                     <?php if($desktopLink): ?>
-                                    <a href="<?php echo htmlspecialchars($desktopLink); ?>" class="hidden md:inline-block border border-white px-8 py-3 hover:bg-white hover:text-black transition banner-btn relative z-10">
+                                    <a href="<?php echo htmlspecialchars($desktopLink); ?>" class="hidden md:inline-block border border-white px-8 py-3 hover:bg-white hover:text-black transition relative z-10 banner-btn">
                                         <?php echo htmlspecialchars($banner['button_text']); ?>
                                     </a>
                                     <?php endif; ?>
         
                                     <!-- Mobile Button -->
                                     <?php if($mobileLink): ?>
-                                    <a href="<?php echo htmlspecialchars($mobileLink); ?>" class="md:hidden inline-block border border-white px-8 py-3 hover:bg-white hover:text-black transition banner-btn relative z-10">
+                                    <a href="<?php echo htmlspecialchars($mobileLink); ?>" class="md:hidden inline-block border border-white px-8 py-3 hover:bg-white hover:text-black transition relative z-10 banner-btn">
                                         <?php echo htmlspecialchars($banner['button_text']); ?>
                                     </a>
                                     <?php endif; ?>
@@ -177,13 +265,7 @@ if (empty($banners)) {
         
         <!-- Navigation Arrows -->
         <?php 
-        $bannerConfigPath = __DIR__ . '/admin/banner_config.json';
-        $showArrows = true;
-        if (file_exists($bannerConfigPath)) {
-            $config = json_decode(file_get_contents($bannerConfigPath), true);
-            $showArrows = isset($config['show_arrows']) ? $config['show_arrows'] : true;
-        }
-        
+        $showArrows = $bannerConf['show_arrows'] ?? true;
         if (count($banners) > 1 && $showArrows): 
         ?>
         <button class="hero-prev absolute left-2 md:left-4 top-1/2 transform -translate-y-1/2 bg-white/75 hover:bg-white rounded-full w-10 h-10 md:w-12 md:h-12 flex items-center justify-center text-black z-10 transition shadow-lg border border-white backdrop-blur-sm" aria-label="Previous slide" style="display: flex !important; opacity: 1 !important;">
@@ -194,7 +276,7 @@ if (empty($banners)) {
         </button>
         
         <!-- Slide Indicators -->
-        <div class="absolute bottom-4 left-1/2 transform -translate-x-1/2 z-50 flex items-center space-x-2">
+        <div class="absolute bottom-4 left-1/2 transform -translate-x-1/2 z-20 flex items-center space-x-2">
             <?php foreach ($banners as $index => $banner): ?>
                 <button class="hero-indicator <?php echo $index === 0 ? 'active' : ''; ?>" aria-label="Go to slide <?php echo $index + 1; ?>" data-slide="<?php echo $index; ?>"></button>
             <?php endforeach; ?>
@@ -515,7 +597,7 @@ document.addEventListener('DOMContentLoaded', function() {
 <!-- Categories Skeleton -->
 <?php if ($showCategories): ?>
 <div id="categories-section" class="section-loading">
-    <section class="py-16 bg-white">
+    <section class="py-16" style="background-color: <?php echo htmlspecialchars($catBgColor); ?>;">
         <div class="container mx-auto px-4">
             <div class="text-center mb-12">
                 <div class="h-8 bg-gray-200 rounded w-64 mx-auto mb-4 relative overflow-hidden">
@@ -545,7 +627,7 @@ document.addEventListener('DOMContentLoaded', function() {
 <!-- Best Selling Skeleton -->
 <?php if ($showBest): ?>
 <div id="best-selling-section" class="section-loading">
-    <section class="py-14 bg-white">
+    <section class="py-14" style="background-color: <?php echo htmlspecialchars($bsBgColor); ?>;">
         <div class="container mx-auto px-4">
             <div class="text-center mb-12">
                 <div class="h-8 bg-gray-200 rounded w-64 mx-auto mb-4 relative overflow-hidden">
@@ -581,7 +663,7 @@ document.addEventListener('DOMContentLoaded', function() {
 <!-- Special Offers Skeleton -->
 <?php if ($showOffers): ?>
 <div id="special-offers-section" class="section-loading">
-    <section class="py-14 bg-white">
+    <section class="py-14" style="background-color: <?php echo htmlspecialchars($soBgColor); ?>;">
         <div class="container mx-auto px-4">
             <div class="text-center mb-10">
                 <div class="h-10 bg-gray-200 rounded w-72 mx-auto mb-3 relative overflow-hidden">
@@ -606,7 +688,7 @@ document.addEventListener('DOMContentLoaded', function() {
 <!-- Videos Skeleton -->
 <?php if ($showVideos): ?>
 <div id="videos-section" class="section-loading">
-    <section class="py-10 bg-white">
+    <section class="py-10" style="background-color: <?php echo htmlspecialchars($vidBgColor); ?>;">
         <div class="container mx-auto px-4">
             <div class="text-center mb-10">
                 <div class="h-10 bg-gray-200 rounded w-64 mx-auto mb-3 relative overflow-hidden">
@@ -631,7 +713,7 @@ document.addEventListener('DOMContentLoaded', function() {
 <!-- Trending Skeleton -->
 <?php if ($showTrend): ?>
 <div id="trending-section" class="section-loading">
-    <section class="py-14 bg-white">
+    <section class="py-14" style="background-color: <?php echo htmlspecialchars($trBgColor); ?>;">
         <div class="container mx-auto px-4">
             <div class="text-center mb-10">
                 <div class="h-8 bg-gray-200 rounded w-64 mx-auto mb-4 relative overflow-hidden">
@@ -667,7 +749,7 @@ document.addEventListener('DOMContentLoaded', function() {
 <!-- Philosophy Skeleton -->
 <?php if ($showPhilosophy): ?>
 <div id="philosophy-section" class="section-loading">
-    <section class="py-20">
+    <section class="py-20" style="background-color: <?php echo htmlspecialchars($philBgColor); ?>;">
         <div class="container mx-auto px-4 text-center">
             <div class="h-10 bg-gray-200 rounded w-3/4 md:w-1/2 mx-auto mb-10 relative overflow-hidden">
                 <div class="absolute inset-0 animate-shimmer"></div>
@@ -689,7 +771,7 @@ document.addEventListener('DOMContentLoaded', function() {
 <!-- Features Skeleton -->
 <?php if ($showFeatures): ?>
 <div id="features-section" class="section-loading">
-    <section class="py-16 bg-white">
+    <section class="py-16" style="background-color: <?php echo htmlspecialchars($featBgColor); ?>;">
         <div class="container mx-auto px-4">
             <div class="grid grid-cols-1 md:grid-cols-3 gap-8 text-center">
                 <?php for($i=0; $i<3; $i++): ?>
@@ -715,7 +797,7 @@ document.addEventListener('DOMContentLoaded', function() {
 <!-- Newsletter Skeleton -->
 <?php if ($showNewsletter): ?>
 <div id="newsletter-section" class="section-loading">
-    <section class="py-20 bg-gray-100">
+    <section class="py-20" style="background-color: <?php echo htmlspecialchars($nlBgColor); ?>;">
         <div class="container mx-auto px-4 flex justify-center">
             <div class="bg-white rounded-xl shadow-lg p-10 max-w-2xl w-full text-center">
                 <div class="h-8 bg-gray-200 rounded w-64 mx-auto mb-4 relative overflow-hidden">
@@ -739,7 +821,7 @@ document.addEventListener('DOMContentLoaded', function() {
 <!-- Footer Features Skeleton -->
 <?php if ($showFooterFeatures): ?>
 <div id="footer-features-section" class="section-loading">
-    <section class="py-12 bg-white border-t border-gray-100">
+    <section class="py-12" style="background-color: <?php echo htmlspecialchars($ffBgColor); ?>;">
         <div class="container mx-auto px-4">
             <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6 text-center">
                 <?php for($i=0; $i<4; $i++): ?>

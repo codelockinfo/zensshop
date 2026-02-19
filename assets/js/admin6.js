@@ -2,7 +2,7 @@
  * Admin Dashboard JavaScript
  */
 
-document.addEventListener('DOMContentLoaded', function () {
+window.initAdminUI = function () {
     // Sidebar toggle
     const sidebarToggle = document.getElementById('sidebarToggle');
     const sidebar = document.getElementById('sidebar');
@@ -192,7 +192,8 @@ document.addEventListener('DOMContentLoaded', function () {
             }
         }
     });
-});
+};
+document.addEventListener('DOMContentLoaded', window.initAdminUI);
 
 // Button Loading State Utility
 function setBtnLoading(btn, isLoading) {

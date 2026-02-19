@@ -1113,6 +1113,7 @@ $sql_blogs = "CREATE TABLE IF NOT EXISTS blogs (
     image VARCHAR(255),
     status ENUM('published', 'draft') DEFAULT 'draft',
     layout VARCHAR(20) DEFAULT 'standard',
+    settings LONGTEXT NULL,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     INDEX idx_store_id (store_id),
@@ -1148,6 +1149,11 @@ try {
 // 4. Add layout column if missing
 if (!columnExists($db, 'blogs', 'layout')) {
     executeSql($db, "ALTER TABLE blogs ADD COLUMN layout VARCHAR(20) DEFAULT 'standard' AFTER status", "Add layout column to blogs", $errors, $success, $EXECUTE);
+}
+
+// 5. Add settings column if missing
+if (!columnExists($db, 'blogs', 'settings')) {
+    executeSql($db, "ALTER TABLE blogs ADD COLUMN settings LONGTEXT NULL AFTER layout", "Add settings column to blogs", $errors, $success, $EXECUTE);
 }
 
 // ==========================================

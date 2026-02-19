@@ -53,7 +53,249 @@ function renderFooterLinkRecursive($item, $baseUrl) {
     }
     echo "</li>";
 }
+
+// Fetch Footer Visual Styles
+// Fetch Footer Visual Styles (Consolidated JSON)
+$fStylesJson = $getFooterSetting('footer_styles', '[]');
+$fStyles = json_decode($fStylesJson, true);
+$footerBg = $fStyles['bg_color'] ?? $getFooterSetting('footer_bg_color', '#ffffff');
+$footerText = $fStyles['text_color'] ?? $getFooterSetting('footer_text_color', '#000000');
+$footerHover = $fStyles['hover_color'] ?? $getFooterSetting('footer_hover_color', '#000000');
+// Fetch Quick View Visual Styles (Nested in product_page_styles)
+$pStylesJson = $settingsObj->get('product_page_styles', '[]');
+$pStyles = json_decode($pStylesJson, true);
+$qvStyles = $pStyles['quickview'] ?? [];
+
+$qv_modal_bg = $qvStyles['modal_bg_color'] ?? '#ffffff';
+$qv_overlay = $qvStyles['overlay_color'] ?? '#6b7280bf';
+$qv_atc_bg = $qvStyles['atc_btn_color'] ?? '#000000';
+$qv_atc_text = $qvStyles['atc_btn_text_color'] ?? '#ffffff';
+$qv_atc_hover_bg = $qvStyles['atc_hover_bg_color'] ?? '#374151';
+$qv_atc_hover_text = $qvStyles['atc_hover_text_color'] ?? '#ffffff';
+$qv_buy_bg = $qvStyles['buy_now_btn_color'] ?? '#b91c1c';
+$qv_buy_text = $qvStyles['buy_now_btn_text_color'] ?? '#ffffff';
+$qv_buy_hover_bg = $qvStyles['buy_now_hover_bg_color'] ?? '#991b1b';
+$qv_buy_hover_text = $qvStyles['buy_now_hover_text_color'] ?? '#ffffff';
+$qv_price_color = $qvStyles['price_color'] ?? '#1a3d32';
+$qv_variant_bg = $qvStyles['variant_bg_color'] ?? '#154D35';
+$qv_variant_text = $qvStyles['variant_text_color'] ?? '#ffffff';
+$qv_qty_border = $qvStyles['qty_border_color'] ?? '#000000';
+$qv_title_color = $qvStyles['title_color'] ?? '#111827';
+$qv_desc_color = $qvStyles['desc_color'] ?? '#4b5563';
+$qv_stock_color = $qvStyles['stock_color'] ?? '#1a3d32';
+$qv_actions_color = $qvStyles['actions_color'] ?? '#6b7280';
+$qv_policy_color = $qvStyles['policy_color'] ?? '#374151';
 ?>
+    <style>
+        footer.bg-white {
+            background-color: <?php echo $footerBg; ?> !important;
+            color: <?php echo $footerText; ?> !important;
+            border-top: none !important;
+        }
+        footer .text-black,
+        footer .text-gray-700,
+        footer .text-gray-900,
+        footer a {
+             color: <?php echo $footerText; ?> !important;
+        }
+        /* Hover effect for links */
+        footer a:hover,
+        footer a:hover *,
+        footer .group:hover *,
+        footer .group:hover span,
+        footer .group:hover i {
+            color: <?php echo $footerHover; ?> !important;
+            opacity: 1 !important;
+        }
+        
+        /* Prevent H3 title color change on hover */
+        footer .group:hover h3,
+        footer .group:hover h3.nav-link {
+            color: <?php echo $footerText; ?> !important;
+        }
+
+        
+        /* Social icons hover */
+        footer .footer-social-icon:hover {
+            background-color: <?php echo $footerHover; ?> !important;
+            border-color: <?php echo $footerHover; ?> !important;
+        }
+        footer .footer-social-icon:hover i {
+            color: <?php echo $footerBg; ?> !important;
+        }
+        
+        /* Cart Drawer Styles */
+        <?php
+        // Load Cart Styling (Consolidated)
+        $cartStylingJson = $settingsObj->get('cart_page_styling', '');
+        $cartStyling = !empty($cartStylingJson) ? json_decode($cartStylingJson, true) : [];
+
+        // Helper function locally for cart drawer/page
+        if (!function_exists('getCartStyle')) {
+            function getCartStyle($key, $default, $settingsObj, $cartStyling) {
+                if (isset($cartStyling[$key])) return $cartStyling[$key];
+                return $settingsObj->get($key, $default);
+            }
+        }
+
+        // Fetch Cart Drawer Settings
+        $cd_bg_color = getCartStyle('cart_drawer_bg_color', '#ffffff', $settingsObj, $cartStyling);
+        $cd_header_color = getCartStyle('cart_drawer_header_text_color', '#111827', $settingsObj, $cartStyling);
+        $cd_header_hover = getCartStyle('cart_drawer_header_text_hover_color', '#3b82f6', $settingsObj, $cartStyling);
+        $cd_price_color = getCartStyle('cart_drawer_price_color', '#1f2937', $settingsObj, $cartStyling);
+        $cd_qty_color = getCartStyle('cart_drawer_qty_color', '#374151', $settingsObj, $cartStyling);
+        $cd_trash_color = getCartStyle('cart_drawer_trash_color', '#ef4444', $settingsObj, $cartStyling);
+        $cd_trash_hover = getCartStyle('cart_drawer_trash_hover_color', '#b91c1c', $settingsObj, $cartStyling);
+        $cd_total_color = getCartStyle('cart_drawer_total_color', '#111827', $settingsObj, $cartStyling);
+        $cd_divider_color = getCartStyle('cart_drawer_divider_color', '#e5e7eb', $settingsObj, $cartStyling);
+        $cd_close_icon_color = getCartStyle('cart_drawer_close_icon_color', '#9ca3af', $settingsObj, $cartStyling);
+        
+        $cd_view_bg = getCartStyle('cart_drawer_view_btn_bg', '#3b82f6', $settingsObj, $cartStyling);
+        $cd_view_text = getCartStyle('cart_drawer_view_btn_text', '#ffffff', $settingsObj, $cartStyling);
+        $cd_view_hover_bg = getCartStyle('cart_drawer_view_btn_hover_bg', '#2563eb', $settingsObj, $cartStyling);
+        $cd_view_hover_text = getCartStyle('cart_drawer_view_btn_hover_text', '#ffffff', $settingsObj, $cartStyling);
+        
+        $cd_checkout_bg = getCartStyle('cart_drawer_checkout_btn_bg', '#000000', $settingsObj, $cartStyling);
+        $cd_checkout_text = getCartStyle('cart_drawer_checkout_btn_text', '#ffffff', $settingsObj, $cartStyling);
+        $cd_checkout_hover_bg = getCartStyle('cart_drawer_checkout_btn_hover_bg', '#1f2937', $settingsObj, $cartStyling);
+        $cd_checkout_hover_text = getCartStyle('cart_drawer_checkout_btn_hover_text', '#ffffff', $settingsObj, $cartStyling);
+        ?>
+        
+        /* Cart Drawer Divider */
+        #sideCart .border-b, #sideCart .border-t {
+            border-color: <?php echo $cd_divider_color; ?> !important;
+        }
+
+        /* Cart Drawer Close Icon */
+        #sideCart button i.fa-times, #sideCart .fa-times {
+            color: <?php echo $cd_close_icon_color; ?> !important;
+        }
+
+        /* Cart Drawer Background */
+        #sideCart {
+             background-color: <?php echo $cd_bg_color; ?> !important;
+        }
+
+        /* Cart Drawer Header Text */
+        #sideCart .side-cart-item h4 a {
+            color: <?php echo $cd_header_color; ?> !important;
+        }
+        #sideCart .side-cart-item h4 a:hover {
+            color: <?php echo $cd_header_hover; ?> !important;
+        }
+        
+        /* Cart Drawer Price */
+        #sideCart .side-cart-item p.text-gray-600,
+        #sideCart .side-cart-item .text-right p.font-semibold {
+            color: <?php echo $cd_price_color; ?> !important;
+        }
+        
+        /* Cart Drawer Quantity */
+        #sideCart .side-cart-item .border.rounded span {
+            color: <?php echo $cd_qty_color; ?> !important;
+        }
+        
+        /* Cart Drawer Trash Icon */
+        #sideCart .side-cart-item button.text-red-500 {
+            color: <?php echo $cd_trash_color; ?> !important;
+        }
+        #sideCart .side-cart-item button.text-red-500:hover {
+            color: <?php echo $cd_trash_hover; ?> !important;
+        }
+        
+        /* Cart Drawer Total */
+        #sideCartFooter span.text-xl.font-bold, #sideCartFooter span.text-lg.font-semibold {
+            color: <?php echo $cd_total_color; ?> !important;
+        }
+        
+        /* Cart Drawer View Cart Button */
+        #viewCartBtn {
+            background-color: <?php echo $cd_view_bg; ?> !important;
+            color: <?php echo $cd_view_text; ?> !important;
+        }
+        #viewCartBtn:hover {
+            background-color: <?php echo $cd_view_hover_bg; ?> !important;
+            color: <?php echo $cd_view_hover_text; ?> !important;
+        }
+        
+        /* Cart Drawer Checkout Button */
+        #checkoutBtn {
+            background-color: <?php echo $cd_checkout_bg; ?> !important;
+            color: <?php echo $cd_checkout_text; ?> !important;
+        }
+        #checkoutBtn:hover {
+            background-color: <?php echo $cd_checkout_hover_bg; ?> !important;
+            color: <?php echo $cd_checkout_hover_text; ?> !important;
+        }
+
+        /* Quick View Styles */
+        #quickViewBackdrop {
+            background-color: <?php echo $qv_overlay; ?> !important;
+        }
+        #quickViewPanel {
+            background-color: <?php echo $qv_modal_bg; ?> !important;
+        }
+        #quickViewContent, #quickViewContent > div, #quickViewPanel div {
+            background-color: transparent !important;
+        }
+        #qvPrice {
+            color: <?php echo $qv_price_color; ?> !important;
+        }
+        #quickViewModal .qv-variant-btn.bg-\[\#154D35\] {
+            background-color: <?php echo $qv_variant_bg; ?> !important;
+            color: <?php echo $qv_variant_text; ?> !important;
+            border-color: <?php echo $qv_variant_bg; ?> !important;
+        }
+        #qvQuantityContainer {
+            border-color: <?php echo $qv_qty_border; ?> !important;
+        }
+        #qvAddToCartBtn {
+            background-color: <?php echo $qv_atc_bg; ?> !important;
+            color: <?php echo $qv_atc_text; ?> !important;
+        }
+        #qvAddToCartBtn:hover {
+            background-color: <?php echo $qv_atc_hover_bg; ?> !important;
+            color: <?php echo $qv_atc_hover_text; ?> !important;
+        }
+        #qvBuyNowBtn {
+            background-color: <?php echo $qv_buy_bg; ?> !important;
+            color: <?php echo $qv_buy_text; ?> !important;
+        }
+        #qvBuyNowBtn:hover {
+            background-color: <?php echo $qv_buy_hover_bg; ?> !important;
+            color: <?php echo $qv_buy_hover_text; ?> !important;
+        }
+        #qvTitle {
+            color: <?php echo $qv_title_color; ?> !important;
+        }
+        .truncate-3-lines {
+            display: -webkit-box;
+            -webkit-line-clamp: 3;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+        }
+        #qvDesc {
+            color: <?php echo $qv_desc_color; ?> !important;
+        }
+        #qvStockCountContainer, #qvStockCountContainer * {
+            color: <?php echo $qv_stock_color; ?> !important;
+        }
+        #qvActionsContainer button, #qvActionsContainer button * {
+            color: <?php echo $qv_actions_color; ?> !important;
+        }
+        #qvPolicyBox, #qvPolicyBox * {
+            color: <?php echo $qv_policy_color; ?> !important;
+        }
+        #qvBuyNowBtn {
+            background-color: <?php echo $qv_buy_bg; ?> !important;
+            color: <?php echo $qv_buy_text; ?> !important;
+        }
+        #qvBuyNowBtn:hover {
+            background-color: <?php echo $qv_buy_hover_bg; ?> !important;
+            color: <?php echo $qv_buy_hover_text; ?> !important;
+        }
+    </style>
+
     <!-- Footer -->
     <footer class="bg-white text-black relative">
         <div class="container footer-block mx-auto px-4 pt-20">
@@ -117,7 +359,7 @@ function renderFooterLinkRecursive($item, $baseUrl) {
                         foreach ($socialLinks as $soc):
                             if (!empty($soc['url'])):
                         ?>
-                        <a href="<?php echo htmlspecialchars($soc['url']); ?>" class="relative w-8 h-8 rounded-full border border-gray-300 flex items-center justify-center hover:bg-black hover:text-white transition group">
+                        <a href="<?php echo htmlspecialchars($soc['url']); ?>" class="footer-social-icon relative w-8 h-8 rounded-full border border-gray-300 flex items-center justify-center transition group">
                             <i class="<?php echo htmlspecialchars($soc['icon']); ?>"></i>
                         </a>
                         <?php endif; endforeach; ?>
@@ -157,7 +399,7 @@ function renderFooterLinkRecursive($item, $baseUrl) {
                                  elseif(strpos($lbl,'twit')!==false || strpos($lbl,'x')!==false) $icon='twitter';
                                  elseif(strpos($lbl,'pin')!==false) $icon='pinterest-p';
                              ?>
-                             <a href="<?php echo htmlspecialchars($item['url']); ?>" class="footer-social-icon relative group w-10 h-10 rounded-full border border-gray-300 bg-white flex items-center justify-center hover:text-white transition">
+                             <a href="<?php echo htmlspecialchars($item['url']); ?>" class="footer-social-icon relative group w-10 h-10 rounded-full border border-gray-300 bg-white flex items-center justify-center transition">
                                 <i class="fab fa-<?php echo $icon; ?> text-base text-gray-700"></i>
                              </a>
                              <?php endforeach; ?>
@@ -270,10 +512,10 @@ function renderFooterLinkRecursive($item, $baseUrl) {
                     <span class="text-lg font-semibold">Total:</span>
                     <span class="text-xl font-bold" id="cartTotal">₹0.00</span>
                 </div>
-                <a href="<?php echo url('cart'); ?>" class="block w-full bg-primary text-white text-center py-3 rounded-lg hover:bg-primary-light hover:text-white transition mb-2">
+                <a href="<?php echo url('cart'); ?>" id="viewCartBtn" class="block w-full bg-primary text-white text-center py-3 rounded-lg hover:bg-primary-light hover:text-white transition mb-2">
                             View Cart
                         </a>
-                <a href="<?php echo url('checkout'); ?>" class="block w-full bg-black text-white text-center py-3 rounded-lg hover:text-white hover:bg-gray-800 transition">
+                <a href="<?php echo url('checkout'); ?>" id="checkoutBtn" class="block w-full bg-black text-white text-center py-3 rounded-lg hover:text-white hover:bg-gray-800 transition">
                     Checkout
                 </a>
             </div>
@@ -334,9 +576,9 @@ function renderFooterLinkRecursive($item, $baseUrl) {
     <script src="<?php echo $baseUrl; ?>/assets/js/main6.js?v=2" defer></script>
     <script src="<?php echo $baseUrl; ?>/assets/js/cart18.js?v=1" defer></script>
     <script src="<?php echo $baseUrl; ?>/assets/js/product-cards7.js?v=2" defer></script>
-    <script src="<?php echo $baseUrl; ?>/assets/js/wishlist9.js?v=3" defer></script>
+    <script src="<?php echo $baseUrl; ?>/assets/js/wishlist10.js?v=3" defer></script>
     <script src="<?php echo $baseUrl; ?>/assets/js/notification1.js?v=2" defer></script>
-    <script src="<?php echo $baseUrl; ?>/assets/js/quickview18.js?v=2" defer></script>
+    <script src="<?php echo $baseUrl; ?>/assets/js/quickview19.js?v=2" defer></script>
     <script src="<?php echo $baseUrl; ?>/assets/js/add-to-cart3.js?v=2" defer></script>
     
     <!-- Remove from Cart Confirmation Script -->

@@ -4,6 +4,7 @@ session_start();
 require_once __DIR__ . '/../classes/Database.php';
 require_once __DIR__ . '/../classes/Auth.php';
 require_once __DIR__ . '/../includes/functions.php';
+require_once __DIR__ . '/../classes/Settings.php';
 
 $auth = new Auth();
 $auth->requireLogin();
@@ -38,6 +39,18 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         'show_section' => $show_section
     ];
     file_put_contents(__DIR__ . '/category_config.json', json_encode($categoryConfig));
+
+    // Save Color Settings (Single Key)
+    $settingsObj = new Settings();
+    $styles = [
+        'bg_color' => $_POST['bg_color'] ?? '#ffffff',
+        'heading_color' => $_POST['heading_color'] ?? '#1f2937',
+        'subheading_color' => $_POST['subheading_color'] ?? '#4b5563',
+        'text_color' => $_POST['text_color'] ?? '#1f2937',
+        'button_bg_color' => $_POST['button_bg_color'] ?? '#000000',
+        'button_text_color' => $_POST['button_text_color'] ?? '#ffffff'
+    ];
+    $settingsObj->set('homepage_categories_styles', json_encode($styles), 'homepage');
 
     // Update all existing rows with the global heading/subheading if titles are empty but heading changed
     if (empty($titles)) {
@@ -153,7 +166,21 @@ if ($savedConfig !== null) {
 } elseif (!empty($categories)) {
     $section_heading = $categories[0]['heading'] ?? $section_heading;
     $section_subheading = $categories[0]['subheading'] ?? $section_subheading;
+    $section_subheading = $categories[0]['subheading'] ?? $section_subheading;
 }
+
+// Fetch Style Settings
+$settingsObj = new Settings();
+$savedStylesJson = $settingsObj->get('homepage_categories_styles', '{"bg_color":"#ffffff","heading_color":"#1f2937","subheading_color":"#4b5563","text_color":"#1f2937","button_bg_color":"#000000","button_text_color":"#ffffff"}');
+$savedStyles = json_decode($savedStylesJson, true);
+
+// Defaults
+$s_bg_color = $savedStyles['bg_color'] ?? '#ffffff';
+$s_heading_color = $savedStyles['heading_color'] ?? '#1f2937';
+$s_subheading_color = $savedStyles['subheading_color'] ?? '#4b5563';
+$s_text_color = $savedStyles['text_color'] ?? '#1f2937';
+$s_button_bg_color = $savedStyles['button_bg_color'] ?? '#000000';
+$s_button_text_color = $savedStyles['button_text_color'] ?? '#ffffff';
 
 // Fetch valid categories for the dropdown
 $validCategories = $db->fetchAll("SELECT id, name, slug FROM categories WHERE status = 'active' AND store_id = ? ORDER BY name ASC", [$storeId]);
@@ -209,6 +236,60 @@ $validCategories = $db->fetchAll("SELECT id, name, slug FROM categories WHERE st
                         <input type="checkbox" name="show_section" class="sr-only peer" <?php echo $showSection ? 'checked' : ''; ?>>
                         <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
                     </label>
+                </div>
+            </div>
+        </div>
+
+        </div>
+
+        <!-- Visual Style Settings -->
+        <div class="bg-white rounded-lg shadow-sm border border-gray-200 mb-8 overflow-hidden">
+            <div class="bg-gray-50 px-6 py-4 border-b border-gray-200">
+                <h2 class="text-xl font-semibold text-gray-800">Visual Style</h2>
+                <p class="text-sm text-gray-500">Customize the colors and appearance of this section.</p>
+            </div>
+            <div class="p-6 grid grid-cols-1 md:grid-cols-3 gap-6">
+                <div>
+                    <label class="block text-sm font-semibold text-gray-700 mb-2">Background Color</label>
+                    <div class="flex items-center gap-3">
+                        <input type="color" name="bg_color" value="<?php echo htmlspecialchars($s_bg_color); ?>" class="h-10 w-16 border rounded cursor-pointer p-0.5" oninput="this.nextElementSibling.value = this.value">
+                        <input type="text" value="<?php echo htmlspecialchars($s_bg_color); ?>" class="flex-1 border rounded p-2 text-sm uppercase" oninput="this.previousElementSibling.value = this.value">
+                    </div>
+                </div>
+                <div>
+                    <label class="block text-sm font-semibold text-gray-700 mb-2">Heading Color</label>
+                    <div class="flex items-center gap-3">
+                        <input type="color" name="heading_color" value="<?php echo htmlspecialchars($s_heading_color); ?>" class="h-10 w-16 border rounded cursor-pointer p-0.5" oninput="this.nextElementSibling.value = this.value">
+                        <input type="text" value="<?php echo htmlspecialchars($s_heading_color); ?>" class="flex-1 border rounded p-2 text-sm uppercase" oninput="this.previousElementSibling.value = this.value">
+                    </div>
+                </div>
+                <div>
+                    <label class="block text-sm font-semibold text-gray-700 mb-2">Subheading Color</label>
+                    <div class="flex items-center gap-3">
+                        <input type="color" name="subheading_color" value="<?php echo htmlspecialchars($s_subheading_color); ?>" class="h-10 w-16 border rounded cursor-pointer p-0.5" oninput="this.nextElementSibling.value = this.value">
+                        <input type="text" value="<?php echo htmlspecialchars($s_subheading_color); ?>" class="flex-1 border rounded p-2 text-sm uppercase" oninput="this.previousElementSibling.value = this.value">
+                    </div>
+                </div>
+                <div>
+                    <label class="block text-sm font-semibold text-gray-700 mb-2">Item Title/Text Color</label>
+                    <div class="flex items-center gap-3">
+                        <input type="color" name="text_color" value="<?php echo htmlspecialchars($s_text_color); ?>" class="h-10 w-16 border rounded cursor-pointer p-0.5" oninput="this.nextElementSibling.value = this.value">
+                        <input type="text" value="<?php echo htmlspecialchars($s_text_color); ?>" class="flex-1 border rounded p-2 text-sm uppercase" oninput="this.previousElementSibling.value = this.value">
+                    </div>
+                </div>
+                <div>
+                    <label class="block text-sm font-semibold text-gray-700 mb-2">Button Background</label>
+                    <div class="flex items-center gap-3">
+                        <input type="color" name="button_bg_color" value="<?php echo htmlspecialchars($s_button_bg_color); ?>" class="h-10 w-16 border rounded cursor-pointer p-0.5" oninput="this.nextElementSibling.value = this.value">
+                        <input type="text" value="<?php echo htmlspecialchars($s_button_bg_color); ?>" class="flex-1 border rounded p-2 text-sm uppercase" oninput="this.previousElementSibling.value = this.value">
+                    </div>
+                </div>
+                <div>
+                    <label class="block text-sm font-semibold text-gray-700 mb-2">Button Text Color</label>
+                    <div class="flex items-center gap-3">
+                        <input type="color" name="button_text_color" value="<?php echo htmlspecialchars($s_button_text_color); ?>" class="h-10 w-16 border rounded cursor-pointer p-0.5" oninput="this.nextElementSibling.value = this.value">
+                        <input type="text" value="<?php echo htmlspecialchars($s_button_text_color); ?>" class="flex-1 border rounded p-2 text-sm uppercase" oninput="this.previousElementSibling.value = this.value">
+                    </div>
                 </div>
             </div>
         </div>
