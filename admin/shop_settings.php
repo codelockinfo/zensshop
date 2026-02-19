@@ -160,50 +160,50 @@ require_once __DIR__ . '/../includes/admin-header.php';
                             <div>
                                 <label class="block text-sm font-semibold text-gray-700 mb-2">Page Background</label>
                                 <div class="flex items-center gap-3">
-                                    <input type="color" name="page_bg_color" value="<?php echo htmlspecialchars($s_page_bg_color); ?>" class="h-10 w-16 border rounded cursor-pointer p-0.5" oninput="this.nextElementSibling.value = this.value">
-                                    <input type="text" value="<?php echo htmlspecialchars($s_page_bg_color); ?>" class="flex-1 border rounded p-2 text-sm uppercase" oninput="this.previousElementSibling.value = this.value">
+                                    <input type="color" name="page_bg_color" value="<?php echo htmlspecialchars($s_page_bg_color); ?>" class="h-10 w-16 border rounded cursor-pointer p-0.5">
+                                    <input type="text" value="<?php echo htmlspecialchars($s_page_bg_color); ?>" class="flex-1 border rounded p-2 text-sm uppercase">
                                 </div>
                             </div>
                             <div>
                                 <label class="block text-sm font-semibold text-gray-700 mb-2">Sidebar Background</label>
                                 <div class="flex items-center gap-3">
-                                    <input type="color" name="sidebar_bg_color" value="<?php echo htmlspecialchars($s_sidebar_bg_color); ?>" class="h-10 w-16 border rounded cursor-pointer p-0.5" oninput="this.nextElementSibling.value = this.value">
-                                    <input type="text" value="<?php echo htmlspecialchars($s_sidebar_bg_color); ?>" class="flex-1 border rounded p-2 text-sm uppercase" oninput="this.previousElementSibling.value = this.value">
+                                    <input type="color" name="sidebar_bg_color" value="<?php echo htmlspecialchars($s_sidebar_bg_color); ?>" class="h-10 w-16 border rounded cursor-pointer p-0.5">
+                                    <input type="text" value="<?php echo htmlspecialchars($s_sidebar_bg_color); ?>" class="flex-1 border rounded p-2 text-sm uppercase">
                                 </div>
                             </div>
                             <div>
                                 <label class="block text-sm font-semibold text-gray-700 mb-2">Sidebar Text Color</label>
                                 <div class="flex items-center gap-3">
-                                    <input type="color" name="sidebar_text_color" value="<?php echo htmlspecialchars($s_sidebar_text_color); ?>" class="h-10 w-16 border rounded cursor-pointer p-0.5" oninput="this.nextElementSibling.value = this.value">
-                                    <input type="text" value="<?php echo htmlspecialchars($s_sidebar_text_color); ?>" class="flex-1 border rounded p-2 text-sm uppercase" oninput="this.previousElementSibling.value = this.value">
+                                    <input type="color" name="sidebar_text_color" value="<?php echo htmlspecialchars($s_sidebar_text_color); ?>" class="h-10 w-16 border rounded cursor-pointer p-0.5">
+                                    <input type="text" value="<?php echo htmlspecialchars($s_sidebar_text_color); ?>" class="flex-1 border rounded p-2 text-sm uppercase">
                                 </div>
                             </div>
                             <div>
                                 <label class="block text-sm font-semibold text-gray-700 mb-2">Input Background (Sidebar)</label>
                                 <div class="flex items-center gap-3">
-                                    <input type="color" name="input_bg_color" value="<?php echo htmlspecialchars($s_input_bg_color); ?>" class="h-10 w-16 border rounded cursor-pointer p-0.5" oninput="this.nextElementSibling.value = this.value">
-                                    <input type="text" value="<?php echo htmlspecialchars($s_input_bg_color); ?>" class="flex-1 border rounded p-2 text-sm uppercase" oninput="this.previousElementSibling.value = this.value">
+                                    <input type="color" name="input_bg_color" value="<?php echo htmlspecialchars($s_input_bg_color); ?>" class="h-10 w-16 border rounded cursor-pointer p-0.5">
+                                    <input type="text" value="<?php echo htmlspecialchars($s_input_bg_color); ?>" class="flex-1 border rounded p-2 text-sm uppercase">
                                 </div>
                             </div>
                             <div>
                                 <label class="block text-sm font-semibold text-gray-700 mb-2">Input Text Color (Sidebar)</label>
                                 <div class="flex items-center gap-3">
-                                    <input type="color" name="input_text_color" value="<?php echo htmlspecialchars($s_input_text_color); ?>" class="h-10 w-16 border rounded cursor-pointer p-0.5" oninput="this.nextElementSibling.value = this.value">
-                                    <input type="text" value="<?php echo htmlspecialchars($s_input_text_color); ?>" class="flex-1 border rounded p-2 text-sm uppercase" oninput="this.previousElementSibling.value = this.value">
+                                    <input type="color" name="input_text_color" value="<?php echo htmlspecialchars($s_input_text_color); ?>" class="h-10 w-16 border rounded cursor-pointer p-0.5">
+                                    <input type="text" value="<?php echo htmlspecialchars($s_input_text_color); ?>" class="flex-1 border rounded p-2 text-sm uppercase">
                                 </div>
                             </div>
                             <div>
                                 <label class="block text-sm font-semibold text-gray-700 mb-2">Sidebar Border Color</label>
                                 <div class="flex items-center gap-3">
-                                    <input type="color" name="sidebar_border_color" value="<?php echo htmlspecialchars($s_sidebar_border_color); ?>" class="h-10 w-16 border rounded cursor-pointer p-0.5" oninput="this.nextElementSibling.value = this.value">
-                                    <input type="text" value="<?php echo htmlspecialchars($s_sidebar_border_color); ?>" class="flex-1 border rounded p-2 text-sm uppercase" oninput="this.previousElementSibling.value = this.value">
+                                    <input type="color" name="sidebar_border_color" value="<?php echo htmlspecialchars($s_sidebar_border_color); ?>" class="h-10 w-16 border rounded cursor-pointer p-0.5">
+                                    <input type="text" value="<?php echo htmlspecialchars($s_sidebar_border_color); ?>" class="flex-1 border rounded p-2 text-sm uppercase">
                                 </div>
                             </div>
                             <div>
                                 <label class="block text-sm font-semibold text-gray-700 mb-2">Sidebar Divider Line</label>
                                 <div class="flex items-center gap-3">
-                                    <input type="color" name="sidebar_divider_color" value="<?php echo htmlspecialchars($s_sidebar_divider_color); ?>" class="h-10 w-16 border rounded cursor-pointer p-0.5" oninput="this.nextElementSibling.value = this.value">
-                                    <input type="text" value="<?php echo htmlspecialchars($s_sidebar_divider_color); ?>" class="flex-1 border rounded p-2 text-sm uppercase" oninput="this.previousElementSibling.value = this.value">
+                                    <input type="color" name="sidebar_divider_color" value="<?php echo htmlspecialchars($s_sidebar_divider_color); ?>" class="h-10 w-16 border rounded cursor-pointer p-0.5">
+                                    <input type="text" value="<?php echo htmlspecialchars($s_sidebar_divider_color); ?>" class="flex-1 border rounded p-2 text-sm uppercase">
                                 </div>
                             </div>
                         </div>
@@ -219,15 +219,15 @@ require_once __DIR__ . '/../includes/admin-header.php';
                             <div>
                                 <label class="block text-sm font-semibold text-gray-700 mb-2">Header Background Color</label>
                                 <div class="flex items-center gap-3">
-                                    <input type="color" name="hero_bg_color" value="<?php echo htmlspecialchars($s_hero_bg_color); ?>" class="h-10 w-16 border rounded cursor-pointer p-0.5" oninput="this.nextElementSibling.value = this.value">
-                                    <input type="text" value="<?php echo htmlspecialchars($s_hero_bg_color); ?>" class="flex-1 border rounded p-2 text-sm uppercase" oninput="this.previousElementSibling.value = this.value">
+                                    <input type="color" name="hero_bg_color" value="<?php echo htmlspecialchars($s_hero_bg_color); ?>" class="h-10 w-16 border rounded cursor-pointer p-0.5">
+                                    <input type="text" value="<?php echo htmlspecialchars($s_hero_bg_color); ?>" class="flex-1 border rounded p-2 text-sm uppercase">
                                 </div>
                             </div>
                             <div>
                                 <label class="block text-sm font-semibold text-gray-700 mb-2">Hero Text Color</label>
                                 <div class="flex items-center gap-3">
-                                    <input type="color" name="hero_text_color" value="<?php echo htmlspecialchars($s_hero_text_color); ?>" class="h-10 w-16 border rounded cursor-pointer p-0.5" oninput="this.nextElementSibling.value = this.value">
-                                    <input type="text" value="<?php echo htmlspecialchars($s_hero_text_color); ?>" class="flex-1 border rounded p-2 text-sm uppercase" oninput="this.previousElementSibling.value = this.value">
+                                    <input type="color" name="hero_text_color" value="<?php echo htmlspecialchars($s_hero_text_color); ?>" class="h-10 w-16 border rounded cursor-pointer p-0.5">
+                                    <input type="text" value="<?php echo htmlspecialchars($s_hero_text_color); ?>" class="flex-1 border rounded p-2 text-sm uppercase">
                                 </div>
                             </div>
                         </div>
@@ -243,29 +243,29 @@ require_once __DIR__ . '/../includes/admin-header.php';
                             <div>
                                 <label class="block text-sm font-semibold text-gray-700 mb-2">Button Background</label>
                                 <div class="flex items-center gap-3">
-                                    <input type="color" name="filter_btn_bg_color" value="<?php echo htmlspecialchars($s_filter_btn_bg_color); ?>" class="h-10 w-16 border rounded cursor-pointer p-0.5" oninput="this.nextElementSibling.value = this.value">
-                                    <input type="text" value="<?php echo htmlspecialchars($s_filter_btn_bg_color); ?>" class="flex-1 border rounded p-2 text-sm uppercase" oninput="this.previousElementSibling.value = this.value">
+                                    <input type="color" name="filter_btn_bg_color" value="<?php echo htmlspecialchars($s_filter_btn_bg_color); ?>" class="h-10 w-16 border rounded cursor-pointer p-0.5">
+                                    <input type="text" value="<?php echo htmlspecialchars($s_filter_btn_bg_color); ?>" class="flex-1 border rounded p-2 text-sm uppercase">
                                 </div>
                             </div>
                             <div>
                                 <label class="block text-sm font-semibold text-gray-700 mb-2">Button Text Color</label>
                                 <div class="flex items-center gap-3">
-                                    <input type="color" name="filter_btn_text_color" value="<?php echo htmlspecialchars($s_filter_btn_text_color); ?>" class="h-10 w-16 border rounded cursor-pointer p-0.5" oninput="this.nextElementSibling.value = this.value">
-                                    <input type="text" value="<?php echo htmlspecialchars($s_filter_btn_text_color); ?>" class="flex-1 border rounded p-2 text-sm uppercase" oninput="this.previousElementSibling.value = this.value">
+                                    <input type="color" name="filter_btn_text_color" value="<?php echo htmlspecialchars($s_filter_btn_text_color); ?>" class="h-10 w-16 border rounded cursor-pointer p-0.5">
+                                    <input type="text" value="<?php echo htmlspecialchars($s_filter_btn_text_color); ?>" class="flex-1 border rounded p-2 text-sm uppercase">
                                 </div>
                             </div>
                             <div>
                                 <label class="block text-sm font-semibold text-gray-700 mb-2">Button Hover Background</label>
                                 <div class="flex items-center gap-3">
-                                    <input type="color" name="filter_btn_hover_bg_color" value="<?php echo htmlspecialchars($s_filter_btn_hover_bg_color); ?>" class="h-10 w-16 border rounded cursor-pointer p-0.5" oninput="this.nextElementSibling.value = this.value">
-                                    <input type="text" value="<?php echo htmlspecialchars($s_filter_btn_hover_bg_color); ?>" class="flex-1 border rounded p-2 text-sm uppercase" oninput="this.previousElementSibling.value = this.value">
+                                    <input type="color" name="filter_btn_hover_bg_color" value="<?php echo htmlspecialchars($s_filter_btn_hover_bg_color); ?>" class="h-10 w-16 border rounded cursor-pointer p-0.5">
+                                    <input type="text" value="<?php echo htmlspecialchars($s_filter_btn_hover_bg_color); ?>" class="flex-1 border rounded p-2 text-sm uppercase">
                                 </div>
                             </div>
                             <div>
                                 <label class="block text-sm font-semibold text-gray-700 mb-2">Button Hover Text</label>
                                 <div class="flex items-center gap-3">
-                                    <input type="color" name="filter_btn_hover_text_color" value="<?php echo htmlspecialchars($s_filter_btn_hover_text_color); ?>" class="h-10 w-16 border rounded cursor-pointer p-0.5" oninput="this.nextElementSibling.value = this.value">
-                                    <input type="text" value="<?php echo htmlspecialchars($s_filter_btn_hover_text_color); ?>" class="flex-1 border rounded p-2 text-sm uppercase" oninput="this.previousElementSibling.value = this.value">
+                                    <input type="color" name="filter_btn_hover_text_color" value="<?php echo htmlspecialchars($s_filter_btn_hover_text_color); ?>" class="h-10 w-16 border rounded cursor-pointer p-0.5">
+                                    <input type="text" value="<?php echo htmlspecialchars($s_filter_btn_hover_text_color); ?>" class="flex-1 border rounded p-2 text-sm uppercase">
                                 </div>
                             </div>
                         </div>
@@ -281,29 +281,29 @@ require_once __DIR__ . '/../includes/admin-header.php';
                             <div>
                                 <label class="block text-sm font-semibold text-gray-700 mb-2">Active View Icon</label>
                                 <div class="flex items-center gap-3">
-                                    <input type="color" name="active_view_btn_color" value="<?php echo htmlspecialchars($s_active_view_btn_color); ?>" class="h-10 w-16 border rounded cursor-pointer p-0.5" oninput="this.nextElementSibling.value = this.value">
-                                    <input type="text" value="<?php echo htmlspecialchars($s_active_view_btn_color); ?>" class="flex-1 border rounded p-2 text-sm uppercase" oninput="this.previousElementSibling.value = this.value">
+                                    <input type="color" name="active_view_btn_color" value="<?php echo htmlspecialchars($s_active_view_btn_color); ?>" class="h-10 w-16 border rounded cursor-pointer p-0.5">
+                                    <input type="text" value="<?php echo htmlspecialchars($s_active_view_btn_color); ?>" class="flex-1 border rounded p-2 text-sm uppercase">
                                 </div>
                             </div>
                             <div>
                                 <label class="block text-sm font-semibold text-gray-700 mb-2">Sort Dropdown Background</label>
                                 <div class="flex items-center gap-3">
-                                    <input type="color" name="sort_dropdown_bg_color" value="<?php echo htmlspecialchars($s_sort_dropdown_bg_color); ?>" class="h-10 w-16 border rounded cursor-pointer p-0.5" oninput="this.nextElementSibling.value = this.value">
-                                    <input type="text" value="<?php echo htmlspecialchars($s_sort_dropdown_bg_color); ?>" class="flex-1 border rounded p-2 text-sm uppercase" oninput="this.previousElementSibling.value = this.value">
+                                    <input type="color" name="sort_dropdown_bg_color" value="<?php echo htmlspecialchars($s_sort_dropdown_bg_color); ?>" class="h-10 w-16 border rounded cursor-pointer p-0.5">
+                                    <input type="text" value="<?php echo htmlspecialchars($s_sort_dropdown_bg_color); ?>" class="flex-1 border rounded p-2 text-sm uppercase">
                                 </div>
                             </div>
                             <div>
                                 <label class="block text-sm font-semibold text-gray-700 mb-2">Sort Dropdown Text</label>
                                 <div class="flex items-center gap-3">
-                                    <input type="color" name="sort_dropdown_text_color" value="<?php echo htmlspecialchars($s_sort_dropdown_text_color); ?>" class="h-10 w-16 border rounded cursor-pointer p-0.5" oninput="this.nextElementSibling.value = this.value">
-                                    <input type="text" value="<?php echo htmlspecialchars($s_sort_dropdown_text_color); ?>" class="flex-1 border rounded p-2 text-sm uppercase" oninput="this.previousElementSibling.value = this.value">
+                                    <input type="color" name="sort_dropdown_text_color" value="<?php echo htmlspecialchars($s_sort_dropdown_text_color); ?>" class="h-10 w-16 border rounded cursor-pointer p-0.5">
+                                    <input type="text" value="<?php echo htmlspecialchars($s_sort_dropdown_text_color); ?>" class="flex-1 border rounded p-2 text-sm uppercase">
                                 </div>
                             </div>
                             <div>
                                 <label class="block text-sm font-semibold text-gray-700 mb-2">Results Count Text Color</label>
                                 <div class="flex items-center gap-3">
-                                    <input type="color" name="results_count_text_color" value="<?php echo htmlspecialchars($s_results_count_text_color); ?>" class="h-10 w-16 border rounded cursor-pointer p-0.5" oninput="this.nextElementSibling.value = this.value">
-                                    <input type="text" value="<?php echo htmlspecialchars($s_results_count_text_color); ?>" class="flex-1 border rounded p-2 text-sm uppercase" oninput="this.previousElementSibling.value = this.value">
+                                    <input type="color" name="results_count_text_color" value="<?php echo htmlspecialchars($s_results_count_text_color); ?>" class="h-10 w-16 border rounded cursor-pointer p-0.5">
+                                    <input type="text" value="<?php echo htmlspecialchars($s_results_count_text_color); ?>" class="flex-1 border rounded p-2 text-sm uppercase">
                                 </div>
                             </div>
                         </div>
@@ -390,32 +390,29 @@ require_once __DIR__ . '/../includes/admin-header.php';
                  </div>
             </div>
         </div>
-
-        </div>
     </form>
-</div>
 
 <script>
-document.addEventListener('DOMContentLoaded', function() {
-    const colorInputs = document.querySelectorAll('input[type="color"]');
-    const textInputs = document.querySelectorAll('input[type="text"]');
+(function() {
+    const container = document.getElementById('ajax-content-inner') || document;
     
-    // Banner Preview Function (needs to be global or accessible)
+    // Banner Preview Function
     window.previewBanner = function(input, containerId) {
         if (input.files && input.files[0]) {
             var reader = new FileReader();
             reader.onload = function(e) {
-                const container = document.getElementById(containerId);
-                container.innerHTML = `
+                const previewContainer = document.getElementById(containerId);
+                if (!previewContainer) return;
+                previewContainer.innerHTML = `
                     <img src="${e.target.result}" class="w-full h-full object-cover">
                     <div class="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-40 transition flex items-center justify-center">
                          <i class="fas fa-camera text-white text-3xl opacity-0 group-hover:opacity-100 transition"></i>
                     </div>
                 `;
-                container.parentElement.classList.remove('border-dashed', 'border-gray-300');
-                container.parentElement.classList.add('border-gray-200');
+                previewContainer.parentElement.classList.remove('border-dashed', 'border-gray-300');
+                previewContainer.parentElement.classList.add('border-gray-200');
 
-                // Also update the hero preview background and overlay
+                // Update Hero Preview
                 const heroPrev = document.getElementById('prevHero');
                 const heroOverlay = document.getElementById('prevHeroOverlay');
                 if (heroPrev) {
@@ -429,17 +426,10 @@ document.addEventListener('DOMContentLoaded', function() {
             reader.readAsDataURL(input.files[0]);
         }
     }
-    
-    const previewEl = document.getElementById('shopPreview');
-    const sidebarEl = document.getElementById('prevSidebar');
-    const filterBtn = document.getElementById('prevFilterBtn');
-    const activeViewBtn = document.getElementById('prevActiveBtn');
-    const sortEl = document.getElementById('prevSort');
-    const styleTag = document.getElementById('previewStyles');
 
     function updatePreview() {
         const settings = {};
-        document.querySelectorAll('form input[name]').forEach(input => {
+        container.querySelectorAll('input[name]').forEach(input => {
             if (input.type === 'color' || input.type === 'text') {
                 settings[input.name] = input.value;
             }
@@ -447,100 +437,103 @@ document.addEventListener('DOMContentLoaded', function() {
 
         // Main Page Background
         const previewEl = document.getElementById('shopPreview');
-        if (previewEl && settings.page_bg_color) {
-            previewEl.style.backgroundColor = settings.page_bg_color;
+        if (previewEl) {
+            previewEl.style.backgroundColor = settings.page_bg_color || '#ffffff';
         }
 
         // Sidebar
         const sidebarEl = document.getElementById('prevSidebar');
         if (sidebarEl) {
-            sidebarEl.style.backgroundColor = settings.sidebar_bg_color;
-            sidebarEl.style.color = settings.sidebar_text_color;
-            sidebarEl.style.borderColor = settings.sidebar_border_color;
+            sidebarEl.style.backgroundColor = settings.sidebar_bg_color || '#ffffff';
+            sidebarEl.style.color = settings.sidebar_text_color || '#1f2937';
+            sidebarEl.style.borderColor = settings.sidebar_border_color || '#e5e7eb';
             
-            // Sub-elements in sidebar
             const divider = sidebarEl.querySelector('.border-b');
-            if (divider) divider.style.borderColor = settings.sidebar_divider_color;
+            if (divider) divider.style.borderColor = settings.sidebar_divider_color || '#e5e7eb';
             
             sidebarEl.querySelectorAll('input').forEach(inp => {
-                inp.style.backgroundColor = settings.input_bg_color;
-                inp.style.color = settings.input_text_color;
+                inp.style.backgroundColor = settings.input_bg_color || '#ffffff';
+                inp.style.color = settings.input_text_color || '#1f2937';
+                inp.style.borderColor = settings.sidebar_border_color || '#e5e7eb';
             });
         }
         
         // Filter Button
         const filterBtn = document.getElementById('prevFilterBtn');
         if (filterBtn) {
-            filterBtn.style.backgroundColor = settings.filter_btn_bg_color;
-            filterBtn.style.color = settings.filter_btn_text_color;
+            filterBtn.style.backgroundColor = settings.filter_btn_bg_color || '#1a3d32';
+            filterBtn.style.color = settings.filter_btn_text_color || '#ffffff';
         }
         
         // Controls
         const activeViewBtn = document.getElementById('prevActiveBtn');
         if (activeViewBtn) {
-            activeViewBtn.style.backgroundColor = settings.active_view_btn_color;
-            activeViewBtn.style.borderColor = settings.active_view_btn_color;
+            activeViewBtn.style.backgroundColor = settings.active_view_btn_color || '#000000';
+            activeViewBtn.style.borderColor = settings.active_view_btn_color || '#000000';
         }
         
         const sortEl = document.getElementById('prevSort');
         if (sortEl) {
-            sortEl.style.backgroundColor = settings.sort_dropdown_bg_color;
-            sortEl.style.color = settings.sort_dropdown_text_color;
+            sortEl.style.backgroundColor = settings.sort_dropdown_bg_color || '#ffffff';
+            sortEl.style.color = settings.sort_dropdown_text_color || '#1f2937';
         }
 
         // Hero Section
         const heroEl = document.getElementById('prevHero');
         if (heroEl) {
-            heroEl.style.backgroundColor = settings.hero_bg_color;
-            heroEl.style.color = settings.hero_text_color;
+            heroEl.style.backgroundColor = settings.hero_bg_color || '#f3f4f6';
+            heroEl.style.color = settings.hero_text_color || '#111827';
             heroEl.querySelectorAll('nav, h1, p, span').forEach(el => {
-                el.style.color = settings.hero_text_color;
+                el.style.color = settings.hero_text_color || '#111827';
             });
         }
 
         // Results Count
         const resultsCountEl = document.getElementById('prevResultsCount');
         if (resultsCountEl) {
-            resultsCountEl.style.color = settings.results_count_text_color;
+            resultsCountEl.style.color = settings.results_count_text_color || '#4b5563';
         }
 
-        // Hover Styles via Style Tag
-        const styleTag = document.getElementById('previewStyles');
-        if (styleTag) {
-            styleTag.innerHTML = `
-                #prevFilterBtn:hover {
-                    background-color: \${settings.filter_btn_hover_bg_color} !important;
-                    color: \${settings.filter_btn_hover_text_color} !important;
-                }
-            `;
+        // Hover Styles
+        let styleTag = document.getElementById('previewStyles');
+        if (!styleTag) {
+            styleTag = document.createElement('style');
+            styleTag.id = 'previewStyles';
+            document.head.appendChild(styleTag);
         }
+        styleTag.innerHTML = `
+            #prevFilterBtn:hover {
+                background-color: ${settings.filter_btn_hover_bg_color || '#000000'} !important;
+                color: ${settings.filter_btn_hover_text_color || '#ffffff'} !important;
+            }
+        `;
     }
 
-    // Attach listeners to ALL relevant inputs
-    document.querySelectorAll('input[type="color"]').forEach(colorInput => {
-        const textInput = colorInput.nextElementSibling;
-        
-        // Update from Color Picker
-        colorInput.addEventListener('input', () => {
-            if (textInput) textInput.value = colorInput.value.toUpperCase();
-            updatePreview();
-        });
-
-        // Update from Text Input
-        if (textInput && textInput.type === 'text') {
-            textInput.addEventListener('input', () => {
-                const val = textInput.value;
-                if (/^#[0-9A-F]{6}$/i.test(val)) {
-                    colorInput.value = val;
-                    updatePreview();
+    // Attach listeners
+    container.querySelectorAll('input').forEach(input => {
+        if (input.type === 'color' || input.type === 'text') {
+            input.addEventListener('input', updatePreview);
+            
+            // Sync logic
+            if (input.type === 'color') {
+                const textInput = input.nextElementSibling;
+                if (textInput && textInput.tagName === 'INPUT') {
+                    input.addEventListener('input', () => {
+                        textInput.value = input.value.toUpperCase();
+                    });
+                    textInput.addEventListener('input', () => {
+                        if (/^#[0-9A-F]{6}$/i.test(textInput.value)) {
+                            input.value = textInput.value;
+                        }
+                    });
                 }
-            });
+            }
         }
     });
 
     // Initial call
     updatePreview();
-});
+})();
 </script>
 
 <?php require_once __DIR__ . '/../includes/admin-footer.php'; ?>

@@ -243,18 +243,14 @@ if (empty($banners)) {
                                 
                                 <?php if (!empty($banner['button_text'])): ?>
                                     <!-- Desktop Button -->
-                                    <?php if($desktopLink): ?>
-                                    <a href="<?php echo htmlspecialchars($desktopLink); ?>" class="hidden md:inline-block border border-white px-8 py-3 hover:bg-white hover:text-black transition relative z-10 banner-btn">
+                                    <a href="<?php echo htmlspecialchars($desktopLink ?: '#'); ?>" class="hidden md:inline-block border border-white px-8 py-3 hover:bg-white hover:text-black transition relative z-10 banner-btn">
                                         <?php echo htmlspecialchars($banner['button_text']); ?>
                                     </a>
-                                    <?php endif; ?>
         
                                     <!-- Mobile Button -->
-                                    <?php if($mobileLink): ?>
-                                    <a href="<?php echo htmlspecialchars($mobileLink); ?>" class="md:hidden inline-block border border-white px-8 py-3 hover:bg-white hover:text-black transition relative z-10 banner-btn">
+                                    <a href="<?php echo htmlspecialchars($mobileLink ?: '#'); ?>" class="md:hidden inline-block border border-white px-8 py-3 hover:bg-white hover:text-black transition relative z-10 banner-btn">
                                         <?php echo htmlspecialchars($banner['button_text']); ?>
                                     </a>
-                                    <?php endif; ?>
                                 <?php endif; ?>
                             </div>
                         </div>

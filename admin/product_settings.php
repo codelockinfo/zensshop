@@ -449,10 +449,11 @@ require_once __DIR__ . '/../includes/admin-header.php';
 </div>
 
 <script>
-document.addEventListener('DOMContentLoaded', function() {
+(function() {
+    const container = document.getElementById('ajax-content-inner') || document;
     function updatePreview() {
         const settings = {};
-        document.querySelectorAll('form input[name], form textarea[name]').forEach(input => {
+        container.querySelectorAll('form input[name], form textarea[name], form select[name]').forEach(input => {
             if (input.type === 'checkbox') {
                 settings[input.name] = input.checked ? '1' : '0';
             } else {
@@ -465,8 +466,11 @@ document.addEventListener('DOMContentLoaded', function() {
         if (previewEl) previewEl.style.backgroundColor = settings.page_bg_color;
         
         // Prices
-        document.getElementById('prevSalePrice').style.color = settings.sale_price_color;
-        document.getElementById('prevRegPrice').style.color = settings.reg_price_color;
+        const salePrice = document.getElementById('prevSalePrice');
+        if (salePrice) salePrice.style.color = settings.sale_price_color;
+        
+        const regPrice = document.getElementById('prevRegPrice');
+        if (regPrice) regPrice.style.color = settings.reg_price_color;
 
         // Variants
         const variantEl = document.getElementById('prevVariant');
@@ -481,10 +485,10 @@ document.addEventListener('DOMContentLoaded', function() {
             atcBtn.style.backgroundColor = settings.atc_btn_color;
             atcBtn.style.color = settings.atc_btn_text_color;
         }
-        const buyBtn = document.getElementById('prevBuyNowBtn');
-        if (buyBtn) {
-            buyBtn.style.backgroundColor = settings.buy_now_btn_color;
-            buyBtn.style.color = settings.buy_now_btn_text_color;
+        const buyNowBtn = document.getElementById('prevBuyNowBtn');
+        if (buyNowBtn) {
+            buyNowBtn.style.backgroundColor = settings.buy_now_btn_color;
+            buyNowBtn.style.color = settings.buy_now_btn_text_color;
         }
 
         // Action Links
@@ -498,48 +502,60 @@ document.addEventListener('DOMContentLoaded', function() {
         }
 
         // Borders & Dividers
-        document.querySelectorAll('.prevDivider').forEach(el => el.style.backgroundColor = settings.divider_color);
-        document.querySelectorAll('.prevBorder').forEach(el => el.style.borderColor = settings.border_color);
+        container.querySelectorAll('.prevDivider').forEach(el => el.style.backgroundColor = settings.divider_color);
+        container.querySelectorAll('.prevBorder').forEach(el => el.style.borderColor = settings.border_color);
 
         // Stock Status
         const stockStatus = document.getElementById('prevStockStatus');
         if (stockStatus) stockStatus.style.color = settings.in_stock_color;
 
         // Visibility Toggles
-        document.getElementById('prevRelatedSection').classList.toggle('hidden', settings.show_related !== '1');
-        document.getElementById('prevRecentSection').classList.toggle('hidden', settings.show_recent !== '1');
+        const relSec = document.getElementById('prevRelatedSection');
+        if (relSec) relSec.classList.toggle('hidden', settings.show_related !== '1');
+        
+        const recSec = document.getElementById('prevRecentSection');
+        if (recSec) recSec.classList.toggle('hidden', settings.show_recent !== '1');
 
         // Texts
-        document.getElementById('prevRelatedTitle').textContent = settings.related_title;
-        document.getElementById('prevRelatedSubtitle').textContent = settings.related_subtitle;
-        document.getElementById('prevRecentTitle').textContent = settings.recent_title;
-        document.getElementById('prevRecentSubtitle').textContent = settings.recent_subtitle;
+        const relTitle = document.getElementById('prevRelatedTitle');
+        if (relTitle) relTitle.textContent = settings.related_title;
+        
+        const relSub = document.getElementById('prevRelatedSubtitle');
+        if (relSub) relSub.textContent = settings.related_subtitle;
+        
+        const recTitle = document.getElementById('prevRecentTitle');
+        if (recTitle) recTitle.textContent = settings.recent_title;
+        
+        const recSub = document.getElementById('prevRecentSubtitle');
+        if (recSub) recSub.textContent = settings.recent_subtitle;
 
         // Hove Styles
         const styleTag = document.getElementById('previewStyles');
-        styleTag.innerHTML = `
-            #prevAtcBtn:hover {
-                background-color: \${settings.atc_hover_bg_color} !important;
-                color: \${settings.atc_hover_text_color} !important;
-            }
-            #prevBuyNowBtn:hover {
-                background-color: \${settings.buy_now_hover_bg_color} !important;
-                color: \${settings.buy_now_hover_text_color} !important;
-            }
-            #productPreview .grid div:hover {
-                border-color: \${settings.atc_hover_bg_color} !important;
-            }
-        `;
+        if (styleTag) {
+            styleTag.innerHTML = `
+                #prevAtcBtn:hover {
+                    background-color: ${settings.atc_hover_bg_color} !important;
+                    color: ${settings.atc_hover_text_color} !important;
+                }
+                #prevBuyNowBtn:hover {
+                    background-color: ${settings.buy_now_hover_bg_color} !important;
+                    color: ${settings.buy_now_hover_text_color} !important;
+                }
+                #productPreview .grid div:hover {
+                    border-color: ${settings.atc_hover_bg_color} !important;
+                }
+            `;
+        }
     }
 
     // Attach listeners
-    document.querySelectorAll('input, textarea').forEach(input => {
+    container.querySelectorAll('input, select, textarea').forEach(input => {
         input.addEventListener('input', updatePreview);
         input.addEventListener('change', updatePreview);
     });
 
     // Color sync
-    document.querySelectorAll('input[type="color"]').forEach(colorInput => {
+    container.querySelectorAll('input[type="color"]').forEach(colorInput => {
         const textInput = colorInput.nextElementSibling;
         colorInput.addEventListener('input', () => {
             if (textInput) textInput.value = colorInput.value.toUpperCase();
@@ -555,7 +571,8 @@ document.addEventListener('DOMContentLoaded', function() {
     });
 
     updatePreview();
-});
+})();
 </script>
 
 <?php require_once __DIR__ . '/../includes/admin-footer.php'; ?>
+```

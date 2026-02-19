@@ -705,10 +705,12 @@ unset($_SESSION['error']);
                 <div class="grid grid-cols-1 gap-4">
                     <?php 
                     $mainApiFields = [
-                        'razorpay_key_id' => ['label' => 'Razorpay Key ID', 'placeholder' => 'rzp_test_...'],
-                        'razorpay_key_secret' => ['label' => 'Razorpay Key Secret', 'placeholder' => '...', 'type' => 'password'],
-                        'razorpay_mode' => ['label' => 'Razorpay Mode', 'placeholder' => 'test or live (Staging or Production)'],
-                        'google_client_id' => ['label' => 'Google Client ID', 'placeholder' => '...-apps.googleusercontent.com'],
+                        'razorpay_mode' => ['label' => 'Razorpay Mode', 'type' => 'select', 'options' => ['test' => 'Test / Sandbox', 'live' => 'Live / Production']],
+                        'razorpay_test_key_id' => ['label' => 'Razorpay Test Key ID', 'placeholder' => 'rzp_test_...'],
+                        'razorpay_test_key_secret' => ['label' => 'Razorpay Test Key Secret', 'placeholder' => '...', 'type' => 'password'],
+                        'razorpay_key_id' => ['label' => 'Razorpay Live Key ID', 'placeholder' => 'rzp_live_...'],
+                        'razorpay_key_secret' => ['label' => 'Razorpay Live Key Secret', 'placeholder' => '...', 'type' => 'password'],
+                        'google_client_id' => ['label' => 'Google Client ID', 'placeholder' => '...-apps.googleusercontent.com', 'type' => 'password'],
                     ];
                     foreach ($mainApiFields as $key => $field): 
                          $val = $settings->get($key, '');
@@ -717,9 +719,24 @@ unset($_SESSION['error']);
                             <label class="block text-sm font-medium text-gray-700 mb-1"><?php echo $field['label']; ?></label>
                             <input type="hidden" name="group_<?php echo $key; ?>" value="api">
                             <div class="relative">
-                                <input type="<?php echo $field['type'] ?? 'text'; ?>" id="<?php echo $key; ?>" name="setting_<?php echo $key; ?>" value="<?php echo htmlspecialchars($val); ?>" class="w-full px-4 py-2 border rounded focus:ring-2 focus:ring-blue-500" placeholder="<?php echo $field['placeholder']; ?>">
-                                <?php if (($field['type'] ?? '') === 'password'): ?>
-                                    <button type="button" onclick="togglePassword('<?php echo $key; ?>')" class="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500"><i class="fas fa-eye" id="eye-<?php echo $key; ?>"></i></button>
+                                <?php if (($field['type'] ?? '') === 'select'): ?>
+                                    <select name="setting_<?php echo $key; ?>" class="w-full px-4 py-2 border rounded focus:ring-2 focus:ring-blue-500 bg-white">
+                                        <?php foreach ($field['options'] as $optVal => $optLabel): ?>
+                                            <option value="<?php echo $optVal; ?>" <?php echo $val == $optVal ? 'selected' : ''; ?>><?php echo $optLabel; ?></option>
+                                        <?php endforeach; ?>
+                                    </select>
+                                <?php else: ?>
+                                    <input type="<?php echo $field['type'] ?? 'text'; ?>" 
+                                           id="<?php echo $key; ?>" 
+                                           name="setting_<?php echo $key; ?>" 
+                                           value="<?php echo htmlspecialchars($val); ?>" 
+                                           class="w-full px-4 py-2 <?php echo ($field['type'] ?? 'text') === 'password' ? 'pr-10' : ''; ?> border rounded focus:ring-2 focus:ring-blue-500" 
+                                           placeholder="<?php echo $field['placeholder'] ?? ''; ?>">
+                                    <?php if (($field['type'] ?? '') === 'password'): ?>
+                                        <button type="button" onclick="togglePassword('<?php echo $key; ?>')" class="absolute right-1 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 p-2 z-10 cursor-pointer">
+                                            <i class="fas fa-eye" id="eye-<?php echo $key; ?>"></i>
+                                        </button>
+                                    <?php endif; ?>
                                 <?php endif; ?>
                             </div>
                         </div>
@@ -736,8 +753,8 @@ unset($_SESSION['error']);
                 <div class="grid grid-cols-1 gap-4">
                     <?php 
                     $delhiveryFields = [
+                        'delhivery_mode' => ['label' => 'Delhivery Mode', 'type' => 'select', 'options' => ['test' => 'Test (Staging)', 'live' => 'Live (Production)'], 'group' => 'api'],
                         'delhivery_api_token' => ['label' => 'Delhivery API Token', 'placeholder' => 'Enter your Delhivery Token', 'type' => 'password', 'group' => 'api'],
-                        'delhivery_mode' => ['label' => 'Delhivery Mode', 'placeholder' => 'test or live (Use live for real shipments)', 'group' => 'api'],
                         'delhivery_warehouse_name' => ['label' => 'Delhivery Warehouse Name (Pickup Location Name)', 'placeholder' => 'Must match Warehouse Name in Delhivery One', 'group' => 'api'],
                         'delhivery_source_pincode' => ['label' => 'Warehouse Pincode', 'placeholder' => 'e.g. 395006 (Required for shipping calculation)', 'group' => 'api'],
                     ];
@@ -748,9 +765,24 @@ unset($_SESSION['error']);
                             <label class="block text-sm font-medium text-gray-700 mb-1"><?php echo $field['label']; ?></label>
                             <input type="hidden" name="group_<?php echo $key; ?>" value="api">
                             <div class="relative">
-                                <input type="<?php echo $field['type'] ?? 'text'; ?>" id="<?php echo $key; ?>" name="setting_<?php echo $key; ?>" value="<?php echo htmlspecialchars($val); ?>" class="w-full px-4 py-2 border rounded focus:ring-2 focus:ring-orange-500" placeholder="<?php echo $field['placeholder']; ?>">
-                                <?php if (($field['type'] ?? '') === 'password'): ?>
-                                    <button type="button" onclick="togglePassword('<?php echo $key; ?>')" class="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500"><i class="fas fa-eye" id="eye-<?php echo $key; ?>"></i></button>
+                                <?php if (($field['type'] ?? '') === 'select'): ?>
+                                    <select name="setting_<?php echo $key; ?>" class="w-full px-4 py-2 border rounded focus:ring-2 focus:ring-orange-500 bg-white">
+                                        <?php foreach ($field['options'] as $optVal => $optLabel): ?>
+                                            <option value="<?php echo $optVal; ?>" <?php echo $val == $optVal ? 'selected' : ''; ?>><?php echo $optLabel; ?></option>
+                                        <?php endforeach; ?>
+                                    </select>
+                                <?php else: ?>
+                                    <input type="<?php echo $field['type'] ?? 'text'; ?>" 
+                                           id="<?php echo $key; ?>" 
+                                           name="setting_<?php echo $key; ?>" 
+                                           value="<?php echo htmlspecialchars($val); ?>" 
+                                           class="w-full px-4 py-2 <?php echo ($field['type'] ?? 'text') === 'password' ? 'pr-10' : ''; ?> border rounded focus:ring-2 focus:ring-orange-500" 
+                                           placeholder="<?php echo $field['placeholder'] ?? ''; ?>">
+                                    <?php if (($field['type'] ?? '') === 'password'): ?>
+                                        <button type="button" onclick="togglePassword('<?php echo $key; ?>')" class="absolute right-1 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 p-2 z-10 cursor-pointer">
+                                            <i class="fas fa-eye" id="eye-<?php echo $key; ?>"></i>
+                                        </button>
+                                    <?php endif; ?>
                                 <?php endif; ?>
                             </div>
                         </div>
@@ -771,6 +803,16 @@ unset($_SESSION['error']);
                         <li>Generate Test/Live keys</li>
                         <li>Copy Key ID and Key Secret</li>
                     </ol>
+
+                    <div class="mt-4 pt-4 border-t border-purple-200">
+                        <p class="text-xs font-bold text-purple-900 uppercase tracking-widest mb-1">Active Configuration:</p>
+                        <div class="flex items-center">
+                            <span class="px-2 py-0.5 rounded text-[10px] font-bold uppercase <?php echo (defined('RAZORPAY_MODE') && RAZORPAY_MODE === 'live') ? 'bg-red-100 text-red-700 border border-red-200' : 'bg-green-100 text-green-700 border border-green-200'; ?>">
+                                <?php echo defined('RAZORPAY_MODE') ? RAZORPAY_MODE : 'test'; ?> Mode
+                            </span>
+                            <span class="ml-2 text-[11px] text-purple-700 italic">Using <?php echo (defined('RAZORPAY_MODE') && RAZORPAY_MODE === 'live') ? 'Production' : 'Test'; ?> keys</span>
+                        </div>
+                    </div>
                 </div>
 
                 <!-- Google Auth Info -->
@@ -799,6 +841,14 @@ unset($_SESSION['error']);
                             <li>Go to Settings → Developer Portal</li>
                             <li>Get your <b>API Token</b></li>
                             <li>Use <b>test</b> mode for Staging and <b>live</b> for Production</li>
+                            <li class="mt-2 text-xs font-bold text-orange-900 uppercase tracking-widest list-none">Active Connection URL:</li>
+                            <li class="text-[11px] font-mono bg-white/50 p-1 px-2 rounded border border-orange-200/50 break-all list-none">
+                                <i class="fas fa-link mr-1"></i>
+                                <?php 
+                                    $dMode = $settings->get('delhivery_mode', 'test');
+                                    echo ($dMode === 'live') ? 'https://track.delhivery.com' : 'https://staging-express.delhivery.com';
+                                ?>
+                            </li>
                         </ol>
                         <ul class="text-sm text-orange-800 space-y-1 list-disc list-inside">
                             <li><b>Warehouse Name:</b> Must match exactly what you created in Delhivery panel.</li>

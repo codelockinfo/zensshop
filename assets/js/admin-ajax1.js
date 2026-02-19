@@ -16,7 +16,7 @@ document.addEventListener('DOMContentLoaded', function () {
             clickedLink.classList.add('pointer-events-none', 'opacity-70');
         }
 
-        fetch(url, {
+        return fetch(url, {
             headers: {
                 'X-Requested-With': 'XMLHttpRequest'
             }
@@ -81,12 +81,18 @@ document.addEventListener('DOMContentLoaded', function () {
         // Admin UI Re-init (Sidebar, toggles, etc.)
         if (window.initAdminUI) window.initAdminUI();
 
+        // Trigger custom event for page-specific scripts
+        document.dispatchEvent(new CustomEvent('adminPageLoaded'));
+
         // Close dropdowns
         document.querySelectorAll('.notification-dropdown-menu').forEach(m => m.classList.add('hidden'));
         
         // Handle scripts in content
         const scripts = contentInner.querySelectorAll('script');
         scripts.forEach(script => {
+            // Skip scripts already handled or part of the AJAX system
+            if (script.hasAttribute('data-no-ajax')) return;
+            
             const newScript = document.createElement('script');
             Array.from(script.attributes).forEach(attr => newScript.setAttribute(attr.name, attr.value));
             
@@ -107,23 +113,46 @@ document.addEventListener('DOMContentLoaded', function () {
         if (!sidebar) return;
         const links = sidebar.querySelectorAll('a');
         
-        let targetUrl;
+        let path;
         try {
-            targetUrl = new URL(url, window.location.origin);
+            path = new URL(url, window.location.origin).pathname;
         } catch(e) {
             return;
         }
 
+        // Standardize path for comparison (remove trailing slashes, .php)
+        const normalizePath = (p) => p.replace(/\.php$/, '').replace(/\/$/, '');
+        const targetPath = normalizePath(path);
+
         links.forEach(link => {
             try {
-                const linkUrl = new URL(link.getAttribute('href'), window.location.origin);
+                const href = link.getAttribute('href');
+                if (!href || href === '#' || href.startsWith('javascript:')) return;
+                
+                const linkPath = normalizePath(new URL(href, window.location.origin).pathname);
                 
                 // Remove active classes
                 link.classList.remove('bg-gray-700');
                 
-                // Exact match first
-                if (targetUrl.pathname === linkUrl.pathname) {
+                // Check for match
+                // 1. Exact match (ignoring extension/slash)
+                // 2. Sub-path match for parent menu items (e.g. /admin/products matches parent Ecommerce)
+                if (targetPath === linkPath || (linkPath !== '' && linkPath !== '/admin' && targetPath.startsWith(linkPath))) {
                     link.classList.add('bg-gray-700');
+                    
+                    // Also ensure parent submenus are expanded
+                    let parentSubmenu = link.closest('.sidebar-submenu');
+                    if (parentSubmenu) {
+                        parentSubmenu.classList.remove('hidden');
+                        const trigger = parentSubmenu.previousElementSibling;
+                        if (trigger && trigger.classList.contains('sidebar-menu-item')) {
+                            const arrow = trigger.querySelector('.fa-chevron-down, .fa-chevron-up');
+                            if (arrow) {
+                                arrow.classList.remove('fa-chevron-down');
+                                arrow.classList.add('fa-chevron-up');
+                            }
+                        }
+                    }
                 }
             } catch(e) {}
         });
@@ -159,5 +188,59 @@ document.addEventListener('DOMContentLoaded', function () {
         } else {
             loadPage(window.location.href, false);
         }
+    });
+
+    // Intercept Form Submissions
+    document.addEventListener('submit', function (e) {
+        const form = e.target.closest('form');
+        if (!form || form.hasAttribute('data-no-ajax')) return;
+
+        // Form submission via AJAX (including file uploads)
+        e.preventDefault();
+        
+        const url = form.getAttribute('action') || window.location.href;
+        const formData = new FormData(form);
+        const submitBtn = form.querySelector('[type="submit"]');
+
+        if (window.setBtnLoading && submitBtn) window.setBtnLoading(submitBtn, true);
+        if (loader) loader.classList.remove('hidden');
+
+        fetch(url, {
+            method: 'POST',
+            body: formData,
+            headers: {
+                'X-Requested-With': 'XMLHttpRequest'
+            }
+        })
+        .then(response => {
+            // Check if it's a redirect after POST
+            if (response.redirected) {
+                return loadPage(response.url);
+            }
+            return response.text();
+        })
+        .then(html => {
+            if (!html) return;
+            
+            const parser = new DOMParser();
+            const doc = parser.parseFromString(html, 'text/html');
+            
+            const newContent = doc.querySelector('#ajax-content-inner');
+            if (newContent && contentInner) {
+                contentInner.innerHTML = newContent.innerHTML;
+                reinitializeScripts();
+                window.scrollTo(0, 0);
+            } else {
+                window.location.reload();
+            }
+        })
+        .catch(error => {
+            console.error('Form Submit Error:', error);
+            form.submit(); // Fallback
+        })
+        .finally(() => {
+            if (window.setBtnLoading && submitBtn) window.setBtnLoading(submitBtn, false);
+            if (loader) loader.classList.add('hidden');
+        });
     });
 });

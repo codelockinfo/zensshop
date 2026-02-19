@@ -240,17 +240,18 @@ require_once __DIR__ . '/../includes/admin-header.php';
 </div>
 
 <script>
-document.addEventListener('DOMContentLoaded', function() {
+(function() {
+    const container = document.getElementById('ajax-content-inner') || document;
     const inputs = {
-        heading: document.querySelector('input[name="heading"]'),
-        subheading: document.querySelector('textarea[name="subheading"]'),
-        headingColor: document.querySelector('input[name="heading_color"]'),
-        subheadingColor: document.querySelector('input[name="subheading_color"]'),
-        pageBg: document.querySelector('input[name="page_bg_color"]'),
-        btnBg: document.querySelector('input[name="btn_bg_color"]'),
-        btnText: document.querySelector('input[name="btn_text_color"]'),
-        btnHoverBg: document.querySelector('input[name="btn_hover_bg_color"]'),
-        btnHoverText: document.querySelector('input[name="btn_hover_text_color"]')
+        heading: container.querySelector('input[name="heading"]'),
+        subheading: container.querySelector('textarea[name="subheading"]'),
+        headingColor: container.querySelector('input[name="heading_color"]'),
+        subheadingColor: container.querySelector('input[name="subheading_color"]'),
+        pageBg: container.querySelector('input[name="page_bg_color"]'),
+        btnBg: container.querySelector('input[name="btn_bg_color"]'),
+        btnText: container.querySelector('input[name="btn_text_color"]'),
+        btnHoverBg: container.querySelector('input[name="btn_hover_bg_color"]'),
+        btnHoverText: container.querySelector('input[name="btn_hover_text_color"]')
     };
 
     const preview = {
@@ -262,31 +263,38 @@ document.addEventListener('DOMContentLoaded', function() {
     };
 
     function updatePreview() {
-        preview.heading.textContent = inputs.heading.value;
-        preview.subheading.textContent = inputs.subheading.value;
-        preview.heading.style.color = inputs.headingColor.value;
-        preview.subheading.style.color = inputs.subheadingColor.value;
-        preview.container.style.backgroundColor = inputs.pageBg.value;
+        if (preview.heading) preview.heading.textContent = inputs.heading.value;
+        if (preview.subheading) preview.subheading.textContent = inputs.subheading.value;
+        if (preview.heading) preview.heading.style.color = inputs.headingColor.value;
+        if (preview.subheading) preview.subheading.style.color = inputs.subheadingColor.value;
+        if (preview.container) preview.container.style.backgroundColor = inputs.pageBg.value;
         
         preview.btns.forEach(btn => {
             btn.style.backgroundColor = inputs.btnBg.value;
             btn.style.color = inputs.btnText.value;
         });
 
-        preview.hoverStyles.innerHTML = `
-            .preview-col-card:hover .preview-col-btn {
-                background-color: ${inputs.btnHoverBg.value} !important;
-                color: ${inputs.btnHoverText.value} !important;
-            }
-        `;
+        if (preview.hoverStyles) {
+            preview.hoverStyles.innerHTML = `
+                .preview-col-card:hover .preview-col-btn {
+                    background-color: ${inputs.btnHoverBg.value} !important;
+                    color: ${inputs.btnHoverText.value} !important;
+                }
+            `;
+        }
     }
 
     Object.values(inputs).forEach(input => {
         if (input) {
             input.addEventListener('input', updatePreview);
+            if(input.nextElementSibling && input.nextElementSibling.tagName === 'INPUT') {
+                input.nextElementSibling.addEventListener('input', updatePreview);
+            }
         }
     });
-});
+
+    updatePreview();
+})();
 </script>
 
 <?php require_once __DIR__ . '/../includes/admin-footer.php'; ?>

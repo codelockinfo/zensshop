@@ -310,13 +310,14 @@ require_once __DIR__ . '/../includes/admin-header.php';
                     </div>
                 </div>
                 
-                <!-- Topbar Colors -->
-                <div>
-                    <label class="block text-sm font-semibold mb-2">Note: Announcement Bar</label>
-                </div>
-                <div></div>
-                <div></div>
                 
+            </div>
+        </div>
+
+        <!-- Announcement Bar Section -->
+        <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-6 mb-6">
+            <h2 class="text-lg font-bold text-gray-800 mb-4 border-b pb-2">Announcement Bar</h2>
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
                 <div>
                     <label class="block text-sm font-semibold mb-2">Announcement Bar Background</label>
                     <div class="flex items-center gap-2">

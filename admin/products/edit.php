@@ -316,7 +316,7 @@ $existingVariants = $product->getVariants($productId);
                     </div>
 
                     <script>
-                    document.addEventListener('DOMContentLoaded', function() {
+                    (function() {
                         const realSelect = document.getElementById('real-category-select');
                         const tagsContainer = document.getElementById('category-tags');
                         const searchInput = document.getElementById('category-search');
@@ -434,7 +434,7 @@ $existingVariants = $product->getVariants($productId);
 
                         // Initial Render
                         renderTags();
-                    });
+                    })();
                     </script>
                 </div>
                 

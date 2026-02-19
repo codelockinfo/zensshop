@@ -1501,6 +1501,16 @@ $sql_philosophy = "CREATE TABLE IF NOT EXISTS philosophy_section (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci";
 executeSql($db, $sql_philosophy, "Create/Verify philosophy_section table", $errors, $success, $EXECUTE);
 
+// ==========================================
+// STEP 37: Blog Alert Setting
+// ==========================================
+echo "STEP 37: Adding alert column to blogs table\n";
+echo "---------------------------------\n";
+
+if (!columnExists($db, 'blogs', 'alert')) {
+    executeSql($db, "ALTER TABLE blogs ADD COLUMN alert LONGTEXT DEFAULT NULL AFTER settings", "Add alert column to blogs", $errors, $success, $EXECUTE);
+}
+
 echo "\n========================================\n";
 echo "SUMMARY:\n";
 echo "========================================\n";

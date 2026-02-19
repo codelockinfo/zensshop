@@ -252,14 +252,24 @@ class Settings {
         $settings = new self();
         
         // Razorpay Configuration
+        $mode = $settings->get('razorpay_mode', 'test');
+        if (!defined('RAZORPAY_MODE')) {
+            define('RAZORPAY_MODE', $mode);
+        }
+
+        if ($mode === 'live') {
+            $keyId = $settings->get('razorpay_key_id', '');
+            $keySecret = $settings->get('razorpay_key_secret', '');
+        } else {
+            $keyId = $settings->get('razorpay_test_key_id', '');
+            $keySecret = $settings->get('razorpay_test_key_secret', '');
+        }
+
         if (!defined('RAZORPAY_KEY_ID')) {
-            define('RAZORPAY_KEY_ID', $settings->get('razorpay_key_id', ''));
+            define('RAZORPAY_KEY_ID', $keyId);
         }
         if (!defined('RAZORPAY_KEY_SECRET')) {
-            define('RAZORPAY_KEY_SECRET', $settings->get('razorpay_key_secret', ''));
-        }
-        if (!defined('RAZORPAY_MODE')) {
-            define('RAZORPAY_MODE', $settings->get('razorpay_mode', 'test'));
+            define('RAZORPAY_KEY_SECRET', $keySecret);
         }
         
         // Google Auth Configuration

@@ -81,7 +81,7 @@ $banner = $blogSettings['banner'];
         <div class="absolute inset-0 bg-black bg-opacity-50 flex items-center justify-center">
             <div class="text-center px-4 max-w-4xl" style="color: <?php echo $banner['text_color'] ?? '#ffffff'; ?>;">
                 <!-- Breadcrumb -->
-                <nav class="text-sm md:text-base mb-4 opacity-90 font-light">
+                <nav class="breadcrumb-nav text-sm md:text-base mb-4 opacity-90 font-light">
                     <a href="<?php echo $baseUrl; ?>" class="hover:underline">Home</a>
                     <span class="mx-2">&gt;</span>
                     <a href="<?php echo $baseUrl; ?>/blog.php" class="hover:underline">Blog</a>
@@ -99,8 +99,9 @@ $banner = $blogSettings['banner'];
                     <?php echo date('F d, Y', strtotime($blog['created_at'])); ?>
                 </div>
 
-                <?php if (!empty($banner['btn_text']) && !empty($banner['btn_link'])): 
+                <?php if (!empty($banner['btn_text'])): 
                     $btnId = 'blog-btn-' . uniqid();
+                    $btnLink = !empty($banner['btn_link']) ? $banner['btn_link'] : '#';
                 ?>
                 <style>
                     #<?php echo $btnId; ?> {
@@ -114,7 +115,7 @@ $banner = $blogSettings['banner'];
                     }
                 </style>
                 <div class="mt-8">
-                    <a id="<?php echo $btnId; ?>" href="<?php echo htmlspecialchars($banner['btn_link']); ?>" class="inline-block px-8 py-3 rounded font-bold transition transform shadow-lg">
+                    <a id="<?php echo $btnId; ?>" href="<?php echo htmlspecialchars($btnLink); ?>" class="inline-block px-8 py-3 rounded font-bold transition transform shadow-lg">
                         <?php echo htmlspecialchars($banner['btn_text']); ?>
                     </a>
                 </div>
@@ -138,8 +139,9 @@ $banner = $blogSettings['banner'];
                 <?php echo date('F d, Y', strtotime($blog['created_at'])); ?>
             </div>
 
-            <?php if (!empty($banner['btn_text']) && !empty($banner['btn_link'])): 
+            <?php if (!empty($banner['btn_text'])): 
                 $btnId = 'blog-btn-' . uniqid();
+                $btnLink = !empty($banner['btn_link']) ? $banner['btn_link'] : '#';
             ?>
             <style>
                 #<?php echo $btnId; ?> {
@@ -153,7 +155,7 @@ $banner = $blogSettings['banner'];
                 }
             </style>
             <div class="mt-6">
-                <a id="<?php echo $btnId; ?>" href="<?php echo htmlspecialchars($banner['btn_link']); ?>" class="inline-block px-6 py-2 rounded-full font-bold transition transform">
+                <a id="<?php echo $btnId; ?>" href="<?php echo htmlspecialchars($btnLink); ?>" class="inline-block px-6 py-2 rounded-full font-bold transition transform">
                     <?php echo htmlspecialchars($banner['btn_text']); ?>
                 </a>
             </div>

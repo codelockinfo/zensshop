@@ -123,15 +123,19 @@ window.initAdminUI = function () {
         const link = menuItem.tagName === 'A' ? menuItem : menuItem.querySelector('a');
 
         if (link) {
-            if (submenu && submenu.classList.contains('sidebar-submenu')) {
-                // Menu with submenu - toggle behavior
-                const arrow = menuItem.querySelector('.fa-chevron-down, .fa-chevron-up');
+            // Use onclick to avoid multiple listener attachments during AJAX re-init
+            link.onclick = function (e) {
+                const href = this.getAttribute('href');
+                const isToggleOnly = !href || href === '#' || href.startsWith('javascript:');
 
-                link.addEventListener('click', function (e) {
-                    e.preventDefault(); // Always prevent navigation
-                    e.stopPropagation(); // Prevent document click closing immediately
+                if (isToggleOnly) {
+                    e.preventDefault();
+                }
 
-                    // Check if sidebar is collapsed
+                // If this item has a submenu, handle the toggle
+                if (submenu && submenu.classList.contains('sidebar-submenu')) {
+                    const arrow = menuItem.querySelector('.fa-chevron-down, .fa-chevron-up');
+
                     if (sidebar.classList.contains('collapsed')) {
                         // Close other floating menus
                         document.querySelectorAll('.sidebar-submenu.floating-menu').forEach(m => {
@@ -141,15 +145,12 @@ window.initAdminUI = function () {
                             }
                         });
 
-                        // Toggle this one
                         if (submenu.classList.contains('floating-menu')) {
                             submenu.classList.remove('floating-menu');
                             submenu.classList.add('hidden');
                         } else {
                             submenu.classList.remove('hidden');
                             submenu.classList.add('floating-menu');
-                            
-                            // Position it
                             const rect = menuItem.getBoundingClientRect();
                             submenu.style.top = rect.top + 'px';
                         }
@@ -169,26 +170,23 @@ window.initAdminUI = function () {
                             }
                         }
                     }
-                });
-
-                // Keep submenu open if on relevant page (only for expanded)
-                const href = link.getAttribute('href');
-                if (href) {
-                    const pathParts = href.split('/');
-                    const menuName = pathParts[pathParts.length - 2]; 
-                    if (window.location.pathname.includes(menuName) && !sidebar.classList.contains('collapsed')) {
-                        submenu.classList.remove('hidden');
-                        if (arrow) {
-                            arrow.classList.remove('fa-chevron-down');
-                            arrow.classList.add('fa-chevron-up');
-                        }
-                    }
                 }
-            } else {
-                // Menu without submenu - allow navigation always
-                link.addEventListener('click', function (e) {
-                    // No prevention needed - allow navigation
-                });
+            };
+            
+            // Initial state check (open if relevant) - only if not collapsed
+            if (submenu && submenu.classList.contains('sidebar-submenu') && !sidebar.classList.contains('collapsed')) {
+                 const href = link.getAttribute('href');
+                 if (href && href !== '#' && !href.startsWith('javascript:')) {
+                     const currentUrl = window.location.pathname;
+                     if (currentUrl.includes(href) || (href.length > 5 && currentUrl.includes(href.split('?')[0]))) {
+                         submenu.classList.remove('hidden');
+                         const arrow = menuItem.querySelector('.fa-chevron-down, .fa-chevron-up');
+                         if (arrow) {
+                             arrow.classList.remove('fa-chevron-down');
+                             arrow.classList.add('fa-chevron-up');
+                         }
+                     }
+                 }
             }
         }
     });

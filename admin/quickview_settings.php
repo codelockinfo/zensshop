@@ -330,36 +330,63 @@ require_once __DIR__ . '/../includes/admin-header.php';
 </div>
 
 <script>
-document.addEventListener('DOMContentLoaded', function() {
-    const inputs = document.querySelectorAll('input');
+(function() {
+    const container = document.getElementById('ajax-content-inner') || document;
+    const inputs = container.querySelectorAll('input');
     function update() {
         const d = {};
         inputs.forEach(i => d[i.name] = i.value);
         
-        document.getElementById('qvPreviewOverlay').style.backgroundColor = d.overlay_color;
-        document.getElementById('qvPreviewModal').style.backgroundColor = d.modal_bg_color;
-        document.getElementById('qvPrevPrice').style.color = d.price_color;
-        document.getElementById('qvPrevQty').style.borderColor = d.qty_border_color;
-        document.getElementById('qvPrevTitle').style.color = d.title_color;
-        document.getElementById('qvPrevDesc').style.color = d.desc_color;
-        document.getElementById('qvPrevStock').style.color = d.stock_color;
-        document.getElementById('qvPrevActions').style.color = d.actions_color;
-        document.getElementById('qvPrevPolicy').style.color = d.policy_color;
-        document.getElementById('qvPrevActions').style.borderColor = d.qty_border_color + '33';
+        const overlay = document.getElementById('qvPreviewOverlay');
+        const modal = document.getElementById('qvPreviewModal');
+        if (!overlay || !modal) return;
+
+        overlay.style.backgroundColor = d.overlay_color;
+        modal.style.backgroundColor = d.modal_bg_color;
+        
+        const price = document.getElementById('qvPrevPrice');
+        if (price) price.style.color = d.price_color;
+        
+        const qty = document.getElementById('qvPrevQty');
+        if (qty) qty.style.borderColor = d.qty_border_color;
+        
+        const title = document.getElementById('qvPrevTitle');
+        if (title) title.style.color = d.title_color;
+        
+        const desc = document.getElementById('qvPrevDesc');
+        if (desc) desc.style.color = d.desc_color;
+        
+        const stock = document.getElementById('qvPrevStock');
+        if (stock) stock.style.color = d.stock_color;
+        
+        const actions = document.getElementById('qvPrevActions');
+        if (actions) {
+            actions.style.color = d.actions_color;
+            actions.style.borderColor = d.qty_border_color + '33';
+        }
+        
+        const policy = document.getElementById('qvPrevPolicy');
+        if (policy) policy.style.color = d.policy_color;
         
         const atc = document.getElementById('qvPrevAtc');
-        atc.style.backgroundColor = d.atc_btn_color;
-        atc.style.color = d.atc_btn_text_color;
+        if (atc) {
+            atc.style.backgroundColor = d.atc_btn_color;
+            atc.style.color = d.atc_btn_text_color;
+        }
         
         const buy = document.getElementById('qvPrevBuy');
-        buy.style.backgroundColor = d.buy_now_btn_color;
-        buy.style.color = d.buy_now_btn_text_color;
+        if (buy) {
+            buy.style.backgroundColor = d.buy_now_btn_color;
+            buy.style.color = d.buy_now_btn_text_color;
+        }
         
         const style = document.getElementById('qvPreviewStyles');
-        style.innerHTML = `
-            #qvPrevAtc:hover { background-color: \${d.atc_hover_bg_color} !important; color: \${d.atc_hover_text_color} !important; }
-            #qvPrevBuy:hover { background-color: \${d.buy_now_hover_bg_color} !important; color: \${d.buy_now_hover_text_color} !important; }
-        `;
+        if (style) {
+            style.innerHTML = `
+                #qvPrevAtc:hover { background-color: ${d.atc_hover_bg_color} !important; color: ${d.atc_hover_text_color} !important; }
+                #qvPrevBuy:hover { background-color: ${d.buy_now_hover_bg_color} !important; color: ${d.buy_now_hover_text_color} !important; }
+            `;
+        }
     }
     inputs.forEach(i => {
         i.addEventListener('input', update);
@@ -367,7 +394,7 @@ document.addEventListener('DOMContentLoaded', function() {
     });
 
     // Color sync
-    document.querySelectorAll('input[type="color"]').forEach(colorInput => {
+    container.querySelectorAll('input[type="color"]').forEach(colorInput => {
         const textInput = colorInput.nextElementSibling;
         colorInput.addEventListener('input', () => {
             if (textInput) textInput.value = colorInput.value.toUpperCase();
@@ -383,7 +410,7 @@ document.addEventListener('DOMContentLoaded', function() {
     });
 
     update();
-});
+})();
 </script>
 
 <?php require_once __DIR__ . '/../includes/admin-footer.php'; ?>

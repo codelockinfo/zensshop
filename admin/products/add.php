@@ -242,7 +242,7 @@ $brands = $brandsResult ? json_decode($brandsResult['setting_value'], true) : []
                     </div>
 
                     <script>
-                    document.addEventListener('DOMContentLoaded', function() {
+                    (function() {
                         const realSelect = document.getElementById('real-category-select');
                         const tagsContainer = document.getElementById('category-tags');
                         const searchInput = document.getElementById('category-search');
@@ -350,7 +350,7 @@ $brands = $brandsResult ? json_decode($brandsResult['setting_value'], true) : []
 
                         // Initial Render
                         renderTags();
-                    });
+                    })();
                     </script>
                 </div>
                 
@@ -472,7 +472,7 @@ $brands = $brandsResult ? json_decode($brandsResult['setting_value'], true) : []
             
             <!-- Generated Variants Table -->
             <div id="variantsTableContainer" class="hidden">
-                <h3 class="text-lg md:text-xl font-semibold mb-3">Generated Variants</h3>
+                <h3 class="text-lg md::text-xl font-semibold mb-3">Generated Variants</h3>
                 <div class="overflow-x-auto">
                     <table class="w-full border-collapse border border-gray-300">
                         <thead>

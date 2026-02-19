@@ -546,23 +546,32 @@ require_once __DIR__ . '/../includes/admin-header.php';
     </form>
 </div>
 
+<style id="cartPreviewStyles">
+    #prevCartViewCartBtn:hover { background-color: <?php echo $s_cart_vbtn_hover_bg; ?> !important; color: <?php echo $s_cart_vbtn_hover_text; ?> !important; }
+    #prevCartCheckoutBtn:hover { background-color: <?php echo $s_cart_cbtn_hover_bg; ?> !important; color: <?php echo $s_cart_cbtn_hover_text; ?> !important; }
+    #prevCartRemoveBtn:hover { color: <?php echo $s_cart_accent_color; ?> !important; opacity: 0.8; }
+    #prevCartSuccessContinue:hover { background-color: <?php echo $s_success_btn_hover_bg; ?> !important; color: <?php echo $s_success_btn_hover_text; ?> !important; }
+</style>
+
 <script>
+(function() {
+    const container = document.getElementById('ajax-content-inner') || document;
+
     // Live Preview Logic for Cart Drawer
     function updateDrawerPreview() {
         const drawer = document.getElementById('preview-cart-drawer');
+        if (!drawer) return;
         const bgInput = document.getElementById('input_cd_bg');
         
         // Background
         if (bgInput) drawer.style.backgroundColor = bgInput.value;
 
-        // Header Title (For both main title and product title in mock)
+        // Header Title
         const headerColorInput = document.getElementById('input_cd_header_color');
         const headerLinks = drawer.querySelectorAll('.preview-item-title');
-        // const mainHeader = drawer.querySelector('.preview-header-item'); // If we want to color the 'Shopping Cart' text too? Usually main headers are standard, but let's stick to product title for now as per label.
         
         if (headerColorInput) {
             headerLinks.forEach(el => el.style.color = headerColorInput.value);
-            // if(mainHeader) mainHeader.style.color = headerColorInput.value; 
         }
 
         // Price
@@ -629,6 +638,7 @@ require_once __DIR__ . '/../includes/admin-header.php';
     // Live Preview Logic for Cart Page
     function updatePagePreview() {
         const pagePreview = document.getElementById('preview-cart-page');
+        if (!pagePreview) return;
         const bgInput = document.getElementById('input_cp_bg');
         
         // Background
@@ -668,7 +678,7 @@ require_once __DIR__ . '/../includes/admin-header.php';
             prices.forEach(el => el.style.color = priceInput.value);
         }
 
-        // Qty & Item Total (using same color setting as per form)
+        // Qty & Item Total
         const qtyInput = document.getElementById('input_cp_qty_color');
         const qties = pagePreview.querySelectorAll('.preview-cp-qty');
         const itemTotals = pagePreview.querySelectorAll('.preview-cp-total');
@@ -711,44 +721,63 @@ require_once __DIR__ . '/../includes/admin-header.php';
     }
 
     // Function to handle bulk listeners
-    function attachListeners() {
-        updateDrawerPreview();
-        updatePagePreview();
+    function updateHovers() {
+        const styleTag = document.getElementById('cartPreviewStyles');
+        if (styleTag) {
+            const settings = {};
+            container.querySelectorAll('input[name]').forEach(input => {
+                settings[input.name] = input.value;
+            });
 
-        const drawerInputs = [
-            'input_cd_bg', 'input_cd_header_color', 'input_cd_price_color', 
-            'input_cd_qty_color', 'input_cd_trash_color', 'input_cd_total_color',
-            'input_cd_divider_color', 'input_cd_close_icon_color',
-            'input_cd_view_bg', 'input_cd_view_text', 'input_cd_check_bg', 'input_cd_check_text'
-        ];
-
-        drawerInputs.forEach(id => {
-            const el = document.getElementById(id);
-            if (el) {
-                el.addEventListener('input', updateDrawerPreview);
-                if(el.nextElementSibling) el.nextElementSibling.addEventListener('input', updateDrawerPreview);
-            }
-        });
-
-        const pageInputs = [
-            'input_cp_bg', 'input_cp_header_color', 'input_cp_price_color', 
-            'input_cp_qty_color', 'input_cp_trash_color', 'input_cp_total_color',
-            'input_cp_check_bg', 'input_cp_check_text',
-            'input_cp_continue_bg', 'input_cp_continue_text',
-            'input_cp_card_bg', 'input_cp_summary_bg', 'input_cp_summary_border'
-        ];
-
-        pageInputs.forEach(id => {
-            const el = document.getElementById(id);
-            if (el) {
-                el.addEventListener('input', updatePagePreview);
-                if(el.nextElementSibling) el.nextElementSibling.addEventListener('input', updatePagePreview);
-            }
-        });
+            styleTag.innerHTML = `
+                /* Cart Drawer Hovers */
+                #preview-cart-drawer .preview-item-title:hover { color: ${settings.setting_cart_drawer_header_text_hover_color} !important; }
+                #preview-cart-drawer .preview-trash-icon:hover { color: ${settings.setting_cart_drawer_trash_hover_color} !important; }
+                #preview-cart-drawer .preview-view-btn:hover { background-color: ${settings.setting_cart_drawer_view_btn_hover_bg} !important; color: ${settings.setting_cart_drawer_view_btn_hover_text} !important; }
+                #preview-cart-drawer .preview-checkout-btn:hover { background-color: ${settings.setting_cart_drawer_checkout_btn_hover_bg} !important; color: ${settings.setting_cart_drawer_checkout_btn_hover_text} !important; }
+                
+                /* Cart Page Hovers */
+                #preview-cart-page .preview-cp-title:hover { color: ${settings.setting_cart_page_header_text_hover_color} !important; }
+                #preview-cart-page .preview-cp-trash:hover { color: ${settings.setting_cart_page_trash_hover_color} !important; }
+                #preview-cart-page .preview-cp-checkout-btn:hover { background-color: ${settings.setting_cart_page_checkout_btn_hover_bg} !important; color: ${settings.setting_cart_page_checkout_btn_hover_text} !important; }
+                #preview-cart-page .preview-cp-continue-btn:hover { background-color: ${settings.setting_cart_page_continue_btn_hover_bg} !important; color: ${settings.setting_cart_page_continue_btn_hover_text} !important; }
+                
+                /* Order Success Hovers */
+                #prevCartSuccessContinue:hover { background-color: ${settings.setting_success_btn_hover_bg} !important; color: ${settings.setting_success_btn_hover_text} !important; }
+            `;
+        }
     }
 
-    // Attach listeners
-    document.addEventListener('DOMContentLoaded', attachListeners);
+    // Combined update function
+    function updateAll() {
+        updateDrawerPreview();
+        updatePagePreview();
+        updateHovers();
+    }
+
+    // Attach listeners to ALL inputs
+    container.querySelectorAll('input').forEach(input => {
+        input.addEventListener('input', updateAll);
+        
+        // Color Sync
+        if (input.type === 'color') {
+            const textInput = input.nextElementSibling;
+            if (textInput && textInput.type === 'text') {
+                input.addEventListener('input', () => {
+                    textInput.value = input.value.toUpperCase();
+                });
+                textInput.addEventListener('input', () => {
+                    if (/^#[0-9A-F]{6}$/i.test(textInput.value)) {
+                        input.value = textInput.value;
+                    }
+                });
+            }
+        }
+    });
+
+    // Initial call
+    updateAll();
+})();
 
 </script>
 

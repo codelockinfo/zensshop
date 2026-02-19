@@ -604,8 +604,32 @@ $currentPage = basename($_SERVER['PHP_SELF']);
     <!-- Sub Menu -->
     <div class="sidebar-submenu mt-2 space-y-1 <?php echo $isSettingsPage ? '' : 'hidden'; ?>">
 
-        <!-- Group 1: System & Content -->
-        <div class="px-4 py-2 text-[10px] uppercase font-bold text-gray-400 tracking-wider">System & Content</div>
+        <!-- Group 1: Header, Footer & Menu -->
+        <div class="px-4 py-2 mt-2 text-[10px] uppercase font-bold text-gray-400 tracking-wider">Header, Footer & Menu</div>
+
+        <a href="<?php echo url('admin/header'); ?>"
+           class="flex items-center space-x-2 py-1 px-4 text-sm <?php echo (strpos($_SERVER['REQUEST_URI'], 'admin/header') !== false) ? 'bg-gray-700' : ''; ?>"
+           title="Header Info">
+            <i class="fas fa-bullhorn text-xs"></i>
+            <span>Header Info</span>
+        </a>
+
+        <a href="<?php echo url('admin/footer'); ?>"
+           class="flex items-center space-x-2 py-1 px-4 text-sm <?php echo (strpos($_SERVER['REQUEST_URI'], 'admin/footer') !== false) ? 'bg-gray-700' : ''; ?>"
+           title="Footer Info">
+            <i class="fas fa-shoe-prints text-xs"></i>
+            <span>Footer Info</span>
+        </a>
+
+        <a href="<?php echo url('admin/menu'); ?>"
+           class="flex items-center space-x-2 py-1 px-4 text-sm <?php echo (strpos($_SERVER['REQUEST_URI'], 'admin/menu') !== false) ? 'bg-gray-700' : ''; ?>"
+           title="Menu Settings">
+            <i class="fas fa-bars text-xs"></i>
+            <span>Menu Settings</span>
+        </a>
+
+        <!-- Group 2: System & Content -->
+        <div class="px-4 py-2 mt-2 text-[10px] uppercase font-bold text-gray-400 tracking-wider">System & Content</div>
 
         <a href="<?php echo url('admin/settings'); ?>"
            class="flex items-center space-x-2 py-1 px-4 text-sm <?php echo (strpos($_SERVER['REQUEST_URI'], 'admin/settings') !== false) ? 'bg-gray-700' : ''; ?>"
@@ -642,14 +666,8 @@ $currentPage = basename($_SERVER['PHP_SELF']);
         <?php endif; ?>
 
         <!-- Group 2: Homepage Sections -->
-        <div class="px-4 py-2 mt-2 text-[10px] uppercase font-bold text-gray-400 tracking-wider">Homepage Sections</div>
+        <div class="px-4 py-2 mt-2 text-[10px] uppercase font-bold text-gray-400 tracking-wider">Homepage</div>
 
-        <a href="<?php echo url('admin/header'); ?>"
-           class="flex items-center space-x-2 py-1 px-4 text-sm <?php echo (strpos($_SERVER['REQUEST_URI'], 'admin/header') !== false) ? 'bg-gray-700' : ''; ?>"
-           title="Header Info">
-            <i class="fas fa-heading text-xs"></i>
-            <span>Header Info</span>
-        </a>
 
         <a href="<?php echo url('admin/banner'); ?>"
            class="flex items-center space-x-2 py-1 px-4 text-sm <?php echo (strpos($_SERVER['REQUEST_URI'], 'admin/banner') !== false) ? 'bg-gray-700' : ''; ?>"
@@ -714,19 +732,6 @@ $currentPage = basename($_SERVER['PHP_SELF']);
             <span>Newsletter</span>
         </a>
 
-        <a href="<?php echo url('admin/footer'); ?>"
-           class="flex items-center space-x-2 py-1 px-4 text-sm <?php echo (strpos($_SERVER['REQUEST_URI'], 'admin/footer') !== false) ? 'bg-gray-700' : ''; ?>"
-           title="Footer Info">
-            <i class="fas fa-shoe-prints text-xs"></i>
-            <span>Footer Info</span>
-        </a>
-
-        <a href="<?php echo url('admin/menu'); ?>"
-           class="flex items-center space-x-2 py-1 px-4 text-sm <?php echo (strpos($_SERVER['REQUEST_URI'], 'admin/menu') !== false) ? 'bg-gray-700' : ''; ?>"
-           title="Menu Settings">
-            <i class="fas fa-bars text-xs"></i>
-            <span>Menu Settings</span>
-        </a>
 
         <!-- Group 3: Styling & Designs -->
         <div class="px-4 py-2 mt-2 text-[10px] uppercase font-bold text-gray-400 tracking-wider">Styling & Designs</div>
@@ -735,7 +740,7 @@ $currentPage = basename($_SERVER['PHP_SELF']);
            class="flex items-center space-x-2 py-1 px-4 text-sm <?php echo (strpos($_SERVER['REQUEST_URI'], 'global_product_card_settings') !== false) ? 'bg-gray-700' : ''; ?>"
            title="Global Card Design">
             <i class="fas fa-palette text-xs"></i>
-            <span>Global Card Design</span>
+            <span>Global Card</span>
         </a>
 
         <a href="<?php echo url('admin/product_settings.php'); ?>"
@@ -756,35 +761,35 @@ $currentPage = basename($_SERVER['PHP_SELF']);
            class="flex items-center space-x-2 py-1 px-4 text-sm <?php echo (strpos($_SERVER['REQUEST_URI'], 'admin/wishlist_settings') !== false) ? 'bg-gray-700' : ''; ?>"
            title="Wishlist Settings">
             <i class="fas fa-heart text-xs"></i>
-            <span>Wishlist Styles</span>
+            <span>Wishlist</span>
         </a>
 
         <a href="<?php echo url('admin/collection_settings.php'); ?>"
            class="flex items-center space-x-2 py-1 px-4 text-sm <?php echo (strpos($_SERVER['REQUEST_URI'], 'admin/collection_settings') !== false) ? 'bg-gray-700' : ''; ?>"
            title="Collections Settings">
             <i class="fas fa-layer-group text-xs"></i>
-            <span>Collections Styles</span>
+            <span>Collections</span>
         </a>
 
         <a href="<?php echo url('admin/shop_settings.php'); ?>"
            class="flex items-center space-x-2 py-1 px-4 text-sm <?php echo (strpos($_SERVER['REQUEST_URI'], 'admin/shop_settings') !== false) ? 'bg-gray-700' : ''; ?>"
            title="Shop Settings">
             <i class="fas fa-shopping-bag text-xs"></i>
-            <span>Shop Styles</span>
+            <span>Shop</span>
         </a>
 
         <a href="<?php echo url('admin/cart_settings.php'); ?>"
            class="flex items-center space-x-2 py-1 px-4 text-sm <?php echo (strpos($_SERVER['REQUEST_URI'], 'admin/cart_settings') !== false) ? 'bg-gray-700' : ''; ?>"
            title="Cart Settings">
             <i class="fas fa-shopping-cart text-xs"></i>
-            <span>Cart Styles</span>
+            <span>Cart</span>
         </a>
 
         <a href="<?php echo url('admin/checkout_settings.php'); ?>"
            class="flex items-center space-x-2 py-1 px-4 text-sm <?php echo (strpos($_SERVER['REQUEST_URI'], 'admin/checkout_settings') !== false) ? 'bg-gray-700' : ''; ?>"
            title="Checkout Settings">
             <i class="fas fa-credit-card text-xs"></i>
-            <span>Checkout Styles</span>
+            <span>Checkout</span>
         </a>
 
     </div>

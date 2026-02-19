@@ -542,9 +542,13 @@ require_once __DIR__ . '/../includes/admin-header.php';
 </div>
 
 <script>
+(function() {
+    const container = document.getElementById('ajax-content-inner') || document;
+
     // Live Preview Logic for Checkout Page
     function updateCheckoutPreview() {
         const preview = document.getElementById('preview-checkout');
+        if (!preview) return;
         
         // Progress Bar
         const progActiveBg = document.getElementById('input_ch_prog_active_bg');
@@ -587,8 +591,6 @@ require_once __DIR__ . '/../includes/admin-header.php';
         if (label && labelColor) label.style.color = labelColor.value;
 
         // Input
-        // Note: Focus ring is hard to show in static inline preview without pseudo states, 
-        // but we can show border.
         const inputBorder = document.getElementById('input_ch_input_border');
         const inputTextColor = document.getElementById('input_ch_input_text_color');
         const input = preview.querySelector('.preview-ch-input');
@@ -625,14 +627,13 @@ require_once __DIR__ . '/../includes/admin-header.php';
     // Live Preview Logic for Success Page
     function updateSuccessPreview() {
         const preview = document.getElementById('preview-success');
+        if (!preview) return;
 
         // Icon
         const iconColor = document.getElementById('input_succ_icon_color');
-        // We'll apply this as background since usually it's a bg-gradient or solid bg for the icon circle
-        // But the input name says "Icon Color". Let's assume it means the background of the circle as per earlier design usage.
         const icon = preview.querySelector('.preview-succ-icon');
         if(icon && iconColor) {
-             icon.style.background = iconColor.value; // Override gradient
+             icon.style.background = iconColor.value;
         }
 
         // Main Text
@@ -693,50 +694,47 @@ require_once __DIR__ . '/../includes/admin-header.php';
     }
 
     // Attach Listeners
-    document.addEventListener('DOMContentLoaded', function() {
-        updateCheckoutPreview();
-        updateSuccessPreview();
+    updateCheckoutPreview();
+    updateSuccessPreview();
 
-        const checkoutInputs = [
-            'input_ch_prog_active_bg', 'input_ch_prog_active_text',
-            'input_ch_prog_inactive_bg', 'input_ch_prog_inactive_text',
-            'input_ch_welcome_bg', 'input_ch_welcome_text', 'input_ch_welcome_border',
-            'input_ch_heading_color', 'input_ch_label_color',
-            'input_ch_heading_color', 'input_ch_label_color',
-            'input_ch_input_border', 'input_ch_input_focus', 'input_ch_input_text_color',
-            'input_ch_summary_bg', 'input_ch_summary_border', 'input_ch_summary_text',
-            'input_ch_pay_bg', 'input_ch_pay_text'
-        ];
+    const checkoutInputs = [
+        'input_ch_prog_active_bg', 'input_ch_prog_active_text',
+        'input_ch_prog_inactive_bg', 'input_ch_prog_inactive_text',
+        'input_ch_welcome_bg', 'input_ch_welcome_text', 'input_ch_welcome_border',
+        'input_ch_heading_color', 'input_ch_label_color',
+        'input_ch_input_border', 'input_ch_input_focus', 'input_ch_input_text_color',
+        'input_ch_summary_bg', 'input_ch_summary_border', 'input_ch_summary_text',
+        'input_ch_pay_bg', 'input_ch_pay_text'
+    ];
 
-        checkoutInputs.forEach(id => {
-            const el = document.getElementById(id);
-            if (el) {
-                el.addEventListener('input', updateCheckoutPreview);
-                // Also update text inputs for colors
-                const nextSibling = el.nextElementSibling;
-                if(nextSibling && nextSibling.tagName === 'INPUT') {
-                    nextSibling.addEventListener('input', updateCheckoutPreview);
-                }
+    checkoutInputs.forEach(id => {
+        const el = document.getElementById(id);
+        if (el) {
+            el.addEventListener('input', updateCheckoutPreview);
+            const nextSibling = el.nextElementSibling;
+            if(nextSibling && nextSibling.tagName === 'INPUT') {
+                nextSibling.addEventListener('input', updateCheckoutPreview);
             }
-        });
-
-        const successInputs = [
-            'input_succ_icon_color', 'input_succ_text_color', 'input_succ_sec_text_color',
-            'input_succ_step1_color', 'input_succ_step2_color', 'input_succ_step3_color', 'input_succ_step4_color',
-            'input_succ_btn1_bg', 'input_succ_btn1_text',
-            'input_succ_btn2_bg', 'input_succ_btn2_text',
-            'input_succ_btn3_bg', 'input_succ_btn3_text', 'input_succ_btn3_border'
-        ];
-
-        successInputs.forEach(id => {
-            const el = document.getElementById(id);
-            if (el) {
-                el.addEventListener('input', updateSuccessPreview);
-                const nextSibling = el.nextElementSibling;
-                if(nextSibling && nextSibling.tagName === 'INPUT') {
-                    nextSibling.addEventListener('input', updateSuccessPreview);
-                }
-            }
-        });
+        }
     });
+
+    const successInputs = [
+        'input_succ_icon_color', 'input_succ_text_color', 'input_succ_sec_text_color',
+        'input_succ_step1_color', 'input_succ_step2_color', 'input_succ_step3_color', 'input_succ_step4_color',
+        'input_succ_btn1_bg', 'input_succ_btn1_text',
+        'input_succ_btn2_bg', 'input_succ_btn2_text',
+        'input_succ_btn3_bg', 'input_succ_btn3_text', 'input_succ_btn3_border'
+    ];
+
+    successInputs.forEach(id => {
+        const el = document.getElementById(id);
+        if (el) {
+            el.addEventListener('input', updateSuccessPreview);
+            const nextSibling = el.nextElementSibling;
+            if(nextSibling && nextSibling.tagName === 'INPUT') {
+                nextSibling.addEventListener('input', updateSuccessPreview);
+            }
+        }
+    });
+})();
 </script>

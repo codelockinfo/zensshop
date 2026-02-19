@@ -403,7 +403,7 @@ require_once __DIR__ . '/includes/header.php';
 
         <div class="container mx-auto px-4 relative z-10">
             <div class="text-center">
-                <nav class="text-sm text-gray-200 mb-4">
+                <nav class="breadcrumb-nav text-sm text-gray-200 mb-4">
                     <a href="<?php echo $baseUrl; ?>/" class="hover:text-white">Home</a> > 
                     <span class="text-white"><?php echo htmlspecialchars($category['name'] ?? ''); ?></span>
                 </nav>
@@ -428,7 +428,7 @@ require_once __DIR__ . '/includes/header.php';
 
         <div class="container mx-auto px-4 relative z-10">
             <div class="text-center">
-                <nav class="text-sm text-gray-200 mb-4">
+                <nav class="breadcrumb-nav text-sm text-gray-200 mb-4">
                     <a href="<?php echo $baseUrl; ?>/" class="hover:text-white">Home</a> > 
                     <span class="text-white"><?php echo htmlspecialchars($displayTitle); ?></span>
                 </nav>
