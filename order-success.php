@@ -463,6 +463,14 @@ nav.bg-white.sticky.top-0 {
                                 <span class="text-gray-900 font-medium"><?php echo format_currency($orderData['tax_amount']); ?></span>
                             </div>
                             <?php endif; ?>
+
+                            <!-- COD Charge -->
+                            <?php if (!empty($orderData['cod_charge']) && $orderData['cod_charge'] > 0): ?>
+                            <div class="flex justify-between text-sm">
+                                <span class="text-gray-600">COD Charges</span>
+                                <span class="text-gray-900 font-medium"><?php echo format_currency($orderData['cod_charge']); ?></span>
+                            </div>
+                            <?php endif; ?>
                             
                             <!-- Total -->
                             <div class="flex justify-between text-lg font-bold pt-4 border-t border-gray-200">
@@ -474,7 +482,15 @@ nav.bg-white.sticky.top-0 {
                         <!-- Payment Info -->
                         <div class="mt-6 pt-6 border-t border-gray-200">
                             <div class="text-xs text-gray-500 space-y-1">
-                                <p><strong>Payment Method:</strong> <?php echo htmlspecialchars($orderData['payment_method'] ?? 'Razorpay'); ?></p>
+                                <?php 
+                                    $paymentMethodDisplay = $orderData['payment_method'] ?? 'Razorpay';
+                                    if ($paymentMethodDisplay === 'cash_on_delivery') {
+                                        $paymentMethodDisplay = 'Cash on Delivery';
+                                    } elseif ($paymentMethodDisplay === 'credit_card' || $paymentMethodDisplay === 'razorpay') {
+                                        $paymentMethodDisplay = 'Online Payment';
+                                    }
+                                ?>
+                                <p><strong>Payment Method:</strong> <?php echo htmlspecialchars(ucwords(str_replace('_', ' ', $paymentMethodDisplay))); ?></p>
                                 <p><strong>Payment Status:</strong> <span class="capitalize text-green-600"><?php echo htmlspecialchars($orderData['payment_status']); ?></span></p>
                             </div>
                         </div>

@@ -400,6 +400,39 @@ $variants = $variantsData['variants'] ?? [];
             </div>
         </div>
         
+        <!-- Logistic Details -->
+        <div class="admin-card">
+            <h2 class="text-xl font-bold mb-4">Logistic Details</h2>
+            <div class="space-y-4">
+                <div class="grid grid-cols-2 gap-4">
+                    <div>
+                        <label class="admin-form-label text-xs uppercase text-gray-400">Weight (kg)</label>
+                        <p class="text-lg font-bold text-gray-900"><?php echo number_format($productData['weight'] ?? 0.5, 2); ?> kg</p>
+                    </div>
+                </div>
+                <div>
+                    <label class="admin-form-label text-xs uppercase text-gray-400">Dimensions (L × W × H)</label>
+                    <p class="text-lg font-semibold text-gray-700">
+                        <?php 
+                        $l = number_format($productData['length'] ?? 10, 1);
+                        $w = number_format($productData['width'] ?? 10, 1);
+                        $h = number_format($productData['height'] ?? 10, 1);
+                        echo "$l × $w × $h cm";
+                        ?>
+                    </p>
+                </div>
+                <div class="bg-blue-50 p-3 rounded border border-dashed border-blue-200">
+                    <label class="text-[10px] font-bold uppercase text-blue-400">Volumetric Weight</label>
+                    <p class="text-lg font-bold text-blue-700">
+                        <?php 
+                        $volWeight = (($productData['length'] ?? 10) * ($productData['width'] ?? 10) * ($productData['height'] ?? 10)) / 5000;
+                        echo number_format($volWeight, 3) . ' kg';
+                        ?>
+                    </p>
+                </div>
+            </div>
+        </div>
+
         <!-- Pricing & Stock -->
         <div class="admin-card">
             <h2 class="text-xl font-bold mb-4">Pricing & Stock</h2>

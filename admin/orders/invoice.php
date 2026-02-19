@@ -227,6 +227,13 @@ $customerAddressStr = implode(', ', array_filter([
                         <span><?php echo formatCurrency($order['tax_amount']); ?></span>
                     </div>
                     <?php endif; ?>
+
+                    <?php if (($order['cod_charge'] ?? 0) > 0): ?>
+                    <div class="flex justify-between text-blue-600">
+                        <span>COD Service Charge</span>
+                        <span><?php echo formatCurrency($order['cod_charge']); ?></span>
+                    </div>
+                    <?php endif; ?>
                     
                     <div class="flex justify-between border-t border-gray-300 pt-3 text-xl font-bold text-gray-800">
                         <span>Grand Total</span>

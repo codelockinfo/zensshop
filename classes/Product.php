@@ -320,8 +320,8 @@ class Product {
                     "INSERT INTO products 
                     (product_id, name, slug, sku, description, short_description, category_id, price, currency, sale_price, 
                      cost_per_item, total_expense, stock_quantity, stock_status, images, featured_image, brand, status, featured, highlights, shipping_policy, return_policy, store_id,
-                     is_taxable, hsn_code, gst_percent) 
-                    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+                     is_taxable, hsn_code, gst_percent, weight, length, width, height) 
+                    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
                     [
                         $customProductId,  // 10-digit random product ID (e.g., 5654148741)
                         $data['name'],
@@ -348,7 +348,11 @@ class Product {
                         $storeId,
                         $data['is_taxable'] ?? 0,
                         $data['hsn_code'] ?? null,
-                        $data['gst_percent'] ?? 0.00
+                        $data['gst_percent'] ?? 0.00,
+                        $data['weight'] ?? 0.00,
+                        $data['length'] ?? 0.00,
+                        $data['width'] ?? 0.00,
+                        $data['height'] ?? 0.00
                     ]
                 );
                 
@@ -414,7 +418,7 @@ class Product {
                 $allowedFields = ['name', 'sku', 'description', 'short_description', 'category_id', 'price', 'currency', 
                                  'sale_price', 'cost_per_item', 'total_expense', 'stock_quantity', 'stock_status', 'images', 'featured_image',
                                  'brand', 'status', 'featured', 'highlights', 'shipping_policy', 'return_policy',
-                                 'is_taxable', 'hsn_code', 'gst_percent'];
+                                 'is_taxable', 'hsn_code', 'gst_percent', 'weight', 'length', 'width', 'height'];
                 
                 foreach ($allowedFields as $field) {
                     if (array_key_exists($field, $data)) {

@@ -705,6 +705,8 @@ unset($_SESSION['error']);
                 <div class="grid grid-cols-1 gap-4">
                     <?php 
                     $mainApiFields = [
+                        'enable_cod' => ['label' => 'Enable Cash on Delivery (COD)', 'type' => 'select', 'options' => ['0' => 'Disabled', '1' => 'Enabled']],
+                        'cod_charge' => ['label' => 'COD Service Charge (₹)', 'placeholder' => 'e.g. 50', 'type' => 'number'],
                         'razorpay_mode' => ['label' => 'Razorpay Mode', 'type' => 'select', 'options' => ['test' => 'Test / Sandbox', 'live' => 'Live / Production']],
                         'razorpay_test_key_id' => ['label' => 'Razorpay Test Key ID', 'placeholder' => 'rzp_test_...'],
                         'razorpay_test_key_secret' => ['label' => 'Razorpay Test Key Secret', 'placeholder' => '...', 'type' => 'password'],

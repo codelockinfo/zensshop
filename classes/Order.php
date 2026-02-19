@@ -125,7 +125,8 @@ class Order {
             $storeId = $_SESSION['store_id'] ?? null;
         }
 
-        $sql = "SELECT oi.*, p.name as product_name, p.featured_image as product_image, p.featured_image, p.images, p.sku as product_sku, p.slug as product_slug
+        $sql = "SELECT oi.*, p.name as product_name, p.featured_image as product_image, p.featured_image, p.images, p.sku as product_sku, p.slug as product_slug,
+                     p.weight, p.length, p.width, p.height
              FROM order_items oi 
              LEFT JOIN products p ON (oi.product_id = p.product_id OR (oi.product_id < 1000000000 AND oi.product_id = p.id))
              WHERE oi.order_num = ?";
@@ -148,6 +149,8 @@ class Order {
         
         // Calculate totals and GST
         $subtotal = 0;
+        $totalWeight = 0;
+        $totalQty = 0;
         $cgstTotal = 0;
         $sgstTotal = 0;
         $igstTotal = 0;
@@ -159,9 +162,9 @@ class Order {
         foreach ($data['items'] as $item) {
             $pId = $item['product_id'];
             
-            // Fetch product GST details
+            // Fetch product GST and Shipping details
             $productInfo = $this->db->fetchOne(
-                "SELECT is_taxable, hsn_code, gst_percent FROM products WHERE (product_id = ? OR id = ?)", 
+                "SELECT is_taxable, hsn_code, gst_percent, weight, length, width, height FROM products WHERE (product_id = ? OR id = ?)", 
                 [$pId, $pId]
             );
             
@@ -180,6 +183,11 @@ class Order {
             $sgstTotal += $gstResult['sgst'];
             $igstTotal += $gstResult['igst'];
             
+            // Calculate Shipping Weight correctly
+            $itemWeight = (float)($productInfo['weight'] ?? 0);
+            $totalWeight += ($itemWeight * (int)$item['quantity']);
+            $totalQty += (int)$item['quantity'];
+            
             $item['hsn_code'] = $hsnCode;
             $item['gst_percent'] = $gstPercent;
             $item['cgst_amount'] = $gstResult['cgst'];
@@ -194,8 +202,9 @@ class Order {
         
         $discountAmount = $data['discount_amount'] ?? 0;
         $shippingAmount = $data['shipping_amount'] ?? 0;
+        $codCharge = $data['cod_charge'] ?? 0;
         $taxAmount = $cgstTotal + $sgstTotal + $igstTotal;
-        $totalAmount = $subtotal - $discountAmount + $shippingAmount + $taxAmount;
+        $totalAmount = $subtotal - $discountAmount + $shippingAmount + $codCharge + $taxAmount;
         $grandTotal = $totalAmount; // This is the final payable amount
         
         // Determine Store ID (Omni-store logic)
@@ -223,9 +232,9 @@ class Order {
             "INSERT INTO orders 
              (order_number, user_id, customer_name, customer_email, customer_phone,
              billing_address, shipping_address, customer_state, subtotal, discount_amount, coupon_code,
-             shipping_amount, tax_amount, cgst_total, sgst_total, igst_total, total_amount, grand_total, payment_method, 
+             shipping_amount, cod_charge, tax_amount, cgst_total, sgst_total, igst_total, total_amount, grand_total, total_weight, package_count, payment_method, 
              payment_status, order_status, razorpay_payment_id, razorpay_order_id, delivery_date, store_id) 
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
             [
                 $orderNumber,
                 $data['user_id'] ?? null,
@@ -239,12 +248,15 @@ class Order {
                 $discountAmount,
                 $data['coupon_code'] ?? null,
                 $shippingAmount,
+                $codCharge,
                 $taxAmount,
                 $cgstTotal,
                 $sgstTotal,
                 $igstTotal,
                 $totalAmount,
                 $grandTotal,
+                $totalWeight ?: 0.50, // Default 0.5kg if nothing set
+                $data['package_count'] ?? 1,
                 $data['payment_method'] ?? null,
                 $data['payment_status'] ?? 'pending',
                 'pending',
@@ -360,7 +372,9 @@ class Order {
                 'subtotal' => $subtotal,
                 'shipping_amount' => $shippingAmount,
                 'discount_amount' => $discountAmount,
-                'tax_amount' => $taxAmount
+                'tax_amount' => $taxAmount,
+                'cod_charge' => $codCharge,
+                'payment_method' => $data['payment_method'] ?? 'Online'
             ];
             $email->sendOrderConfirmation($data['customer_email'], $orderNumber, $data['customer_name'], $totalAmount, $data['items'], $emailOrderDetails);
         } catch (Exception $e) { error_log("Failed to send order confirmation email: " . $e->getMessage()); }
@@ -653,12 +667,13 @@ class Order {
         
         $discountAmount = $order['discount_amount'] ?? 0;
         $shippingAmount = $order['shipping_amount'] ?? 0;
+        $codCharge = $order['cod_charge'] ?? 0;
         $taxAmount = $order['tax_amount'] ?? 0;
-        $totalAmount = $subtotal - $discountAmount + $shippingAmount + $taxAmount;
+        $totalAmount = $subtotal - $discountAmount + $shippingAmount + $codCharge + $taxAmount;
         
         return $this->db->execute(
-            "UPDATE orders SET subtotal = ?, total_amount = ? WHERE id = ? AND store_id = ?",
-            [$subtotal, $totalAmount, $orderId, $storeId]
+            "UPDATE orders SET subtotal = ?, total_amount = ?, grand_total = ? WHERE id = ? AND store_id = ?",
+            [$subtotal, $totalAmount, $totalAmount, $orderId, $storeId]
         );
     }
 }

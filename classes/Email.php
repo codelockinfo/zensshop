@@ -180,6 +180,7 @@ class Email {
                 <h3 style='margin-top: 0; border-bottom: 1px solid #e5e7eb; padding-bottom: 10px; margin-bottom: 15px; font-size: 16px; color: #4b5563;'>Order Details</h3>
                 <p style='margin: 5px 0;'><strong style='min-width: 120px; display: inline-block; color: #6b7280;'>Order Number:</strong> #$orderNumber</p>
                 <p style='margin: 5px 0;'><strong style='min-width: 120px; display: inline-block; color: #6b7280;'>Order Date:</strong> " . date('F d, Y') . "</p>
+                <p style='margin: 5px 0;'><strong style='min-width: 120px; display: inline-block; color: #6b7280;'>Payment Method:</strong> " . ((strtoupper($orderDetails['payment_method'] ?? 'ONLINE') === 'COD' || strtoupper($orderDetails['payment_method'] ?? 'ONLINE') === 'CASH_ON_DELIVERY') ? 'Cash on Delivery' : 'Online Payment') . "</p>
                 <div style='margin-top: 20px; text-align: center;'>
                     <a href='" . (function_exists('url') ? url("invoice?order_number=$orderNumber") : (getBaseUrl() . "/invoice.php?order_number=$orderNumber")) . "' style='padding: 12px 24px; background-color: #000000; color: #ffffff; text-decoration: none; border-radius: 6px; font-weight: bold; display: inline-block;'>Download Invoice</a>
                 </div>
@@ -209,6 +210,11 @@ class Email {
                     <span style='color: #6b7280; margin-right: 20px;'>Shipping/Delivery:</span>
                     <span style='font-weight: 500; display: inline-block; min-width: 80px;'>₹" . number_format($orderDetails['shipping_amount'] ?? 0, 2) . "</span>
                  </p>
+                 " . (($orderDetails['cod_charge'] ?? 0) > 0 ? "
+                 <p style='margin: 5px 0; font-size: 14px;'>
+                    <span style='color: #6b7280; margin-right: 20px;'>COD Charges:</span>
+                    <span style='font-weight: 500; display: inline-block; min-width: 80px;'>₹" . number_format($orderDetails['cod_charge'], 2) . "</span>
+                 </p>" : "") . "
                  " . (($orderDetails['discount_amount'] ?? 0) > 0 ? "
                  <p style='margin: 5px 0; font-size: 14px; color: #dc2626;'>
                     <span style='margin-right: 20px;'>Discount:</span>

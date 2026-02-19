@@ -77,6 +77,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 'is_taxable' => isset($_POST['is_taxable']) ? 1 : 0,
                 'hsn_code' => $_POST['hsn_code'] ?? null,
                 'gst_percent' => $_POST['gst_percent'] ?? 0.00,
+                'weight' => $_POST['weight'] ?? 0.00,
+                'length' => $_POST['length'] ?? 0.00,
+                'width' => $_POST['width'] ?? 0.00,
+                'height' => $_POST['height'] ?? 0.00,
                 'highlights' => $_POST['highlights'] ?? null,
                 'shipping_policy' => $_POST['shipping_policy'] ?? null,
                 'return_policy' => $_POST['return_policy'] ?? null,
@@ -283,7 +287,7 @@ $existingVariants = $product->getVariants($productId);
                     <!-- Custom Multi-Select UI -->
                     <div id="category-multiselect-container" class="relative">
                         <!-- Hidden Select for Form Submission -->
-                        <select name="category_ids[]" id="real-category-select" multiple class="hidden" required>
+                        <select name="category_ids[]" id="real-category-select" multiple class="hidden">
                             <?php 
                             // Ensure clean array of selected IDs
                             $selectedCats = isset($_POST['category_ids']) ? $_POST['category_ids'] : $existingCategoryIds;
@@ -492,7 +496,7 @@ $existingVariants = $product->getVariants($productId);
                         </div>
                         <?php endforeach; ?>
                     </div>
-                    <input type="hidden" name="highlights" id="highlights_json">
+                    <input type="hidden" name="highlights" id="highlights_json" value="<?php echo htmlspecialchars($_POST['highlights'] ?? $productData['highlights'] ?? '[]'); ?>">
                     <p class="text-xs text-gray-500 mt-2">Use Font Awesome classes for icons (e.g., fas fa-truck, fas fa-tag).</p>
                 </div>
 
@@ -577,6 +581,29 @@ $existingVariants = $product->getVariants($productId);
             
             <p class="text-sm text-gray-600">You need to add at least 4 images. Pay attention to the quality of the pictures you add, comply with the background color standards. Pictures must be in certain dimensions. Notice that the product shows all the details.</p>
             <input type="hidden" name="images" id="imagesInput" value="<?php echo htmlspecialchars(json_encode($existingImages)); ?>">
+        </div>
+
+        <div class="admin-card">
+            <h2 class="text-xl font-bold mb-4">Shipping Dimensions</h2>
+            <div class="admin-form-group">
+                <label class="admin-form-label">Weight (kg) *</label>
+                <input type="number" name="weight" step="0.01" value="<?php echo htmlspecialchars($_POST['weight'] ?? $productData['weight'] ?? '0.50'); ?>" class="admin-form-input" placeholder="0.50">
+            </div>
+            <div class="grid grid-cols-3 gap-4">
+                <div class="admin-form-group">
+                    <label class="admin-form-label">Length (cm)</label>
+                    <input type="number" name="length" step="0.01" value="<?php echo htmlspecialchars($_POST['length'] ?? $productData['length'] ?? '10.00'); ?>" class="admin-form-input" placeholder="10">
+                </div>
+                <div class="admin-form-group">
+                    <label class="admin-form-label">Width (cm)</label>
+                    <input type="number" name="width" step="0.01" value="<?php echo htmlspecialchars($_POST['width'] ?? $productData['width'] ?? '10.00'); ?>" class="admin-form-input" placeholder="10">
+                </div>
+                <div class="admin-form-group">
+                    <label class="admin-form-label">Height (cm)</label>
+                    <input type="number" name="height" step="0.01" value="<?php echo htmlspecialchars($_POST['height'] ?? $productData['height'] ?? '10.00'); ?>" class="admin-form-input" placeholder="10">
+                </div>
+            </div>
+            <p class="text-xs text-gray-500">Weight and dimensions are crucial for accurate shipping cost calculation and labels.</p>
         </div>
         
         <div class="admin-card" id="variants_section">
@@ -868,6 +895,23 @@ function removeHighlightRow(btn, editorId) {
 }
 
 document.getElementById('productForm').addEventListener('submit', function(e) {
+    // Validate Category
+    const catSelect = document.getElementById('real-category-select');
+    let hasCategory = false;
+    for (let j = 0; j < catSelect.options.length; j++) {
+        if (catSelect.options[j].selected) {
+            hasCategory = true;
+            break;
+        }
+    }
+    
+    if (!hasCategory) {
+        e.preventDefault();
+        // Scroll to category section
+        document.getElementById('category-multiselect-container').scrollIntoView({ behavior: 'smooth', block: 'center' });
+        return;
+    }
+
     // Prevent double-submission
     const submitBtns = [document.getElementById('topSubmitBtn'), document.getElementById('bottomSubmitBtn')];
     submitBtns.forEach(btn => {
@@ -897,7 +941,7 @@ document.getElementById('productForm').addEventListener('submit', function(e) {
     document.getElementById('highlights_json').value = JSON.stringify(highlights);
 });
 </script>
-<script src="<?php echo $baseUrl; ?>/assets/js/admin-image-upload8.js?v=<?php echo time(); ?>"></script>
+<script src="<?php echo $baseUrl; ?>/assets/js/admin-image-upload9.js?v=<?php echo time(); ?>"></script>
 <script src="<?php echo $baseUrl; ?>/assets/js/product-variants6.js"></script>
 <script>
 // Initialize with existing images

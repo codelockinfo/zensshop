@@ -1508,7 +1508,53 @@ echo "STEP 37: Adding alert column to blogs table\n";
 echo "---------------------------------\n";
 
 if (!columnExists($db, 'blogs', 'alert')) {
-    executeSql($db, "ALTER TABLE blogs ADD COLUMN alert LONGTEXT DEFAULT NULL AFTER settings", "Add alert column to blogs", $errors, $success, $EXECUTE);
+    executeSql(
+        $db,
+        "ALTER TABLE blogs ADD COLUMN settings LONGTEXT DEFAULT NULL AFTER layout",
+        "Add alert column to blogs",
+        $errors,
+        $success,
+        $EXECUTE
+    );
+}
+
+
+// ==========================================
+// STEP 38: COD Charge Column
+// ==========================================
+echo "STEP 38: Adding cod_charge column to orders table\n";
+echo "---------------------------------\n";
+
+if (!columnExists($db, 'orders', 'cod_charge')) {
+    executeSql($db, "ALTER TABLE orders ADD COLUMN cod_charge DECIMAL(10,2) DEFAULT 0.00 AFTER tax_amount", "Add cod_charge column to orders", $errors, $success, $EXECUTE);
+}
+
+// ==========================================
+// STEP 39: Product Dimensions & Order Shipping Data
+// ==========================================
+echo "STEP 39: Adding shipping dimensions and weight columns\n";
+echo "---------------------------------\n";
+
+// Add dimensions to products
+if (!columnExists($db, 'products', 'weight')) {
+    executeSql($db, "ALTER TABLE products ADD COLUMN weight DECIMAL(10,2) DEFAULT 0.00 AFTER price", "Add weight to products", $errors, $success, $EXECUTE);
+}
+if (!columnExists($db, 'products', 'length')) {
+    executeSql($db, "ALTER TABLE products ADD COLUMN length DECIMAL(10,2) DEFAULT 0.00 AFTER weight", "Add length to products", $errors, $success, $EXECUTE);
+}
+if (!columnExists($db, 'products', 'width')) {
+    executeSql($db, "ALTER TABLE products ADD COLUMN width DECIMAL(10,2) DEFAULT 0.00 AFTER length", "Add width to products", $errors, $success, $EXECUTE);
+}
+if (!columnExists($db, 'products', 'height')) {
+    executeSql($db, "ALTER TABLE products ADD COLUMN height DECIMAL(10,2) DEFAULT 0.00 AFTER width", "Add height to products", $errors, $success, $EXECUTE);
+}
+
+// Add total weight and package count to orders
+if (!columnExists($db, 'orders', 'total_weight')) {
+    executeSql($db, "ALTER TABLE orders ADD COLUMN total_weight DECIMAL(10,2) DEFAULT 0.00 AFTER cod_charge", "Add total_weight to orders", $errors, $success, $EXECUTE);
+}
+if (!columnExists($db, 'orders', 'package_count')) {
+    executeSql($db, "ALTER TABLE orders ADD COLUMN package_count INT DEFAULT 1 AFTER total_weight", "Add package_count to orders", $errors, $success, $EXECUTE);
 }
 
 echo "\n========================================\n";

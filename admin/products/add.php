@@ -53,6 +53,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 'is_taxable' => isset($_POST['is_taxable']) ? 1 : 0,
                 'hsn_code' => $_POST['hsn_code'] ?? null,
                 'gst_percent' => $_POST['gst_percent'] ?? 0.00,
+                'weight' => $_POST['weight'] ?? 0.00,
+                'length' => $_POST['length'] ?? 0.00,
+                'width' => $_POST['width'] ?? 0.00,
+                'height' => $_POST['height'] ?? 0.00,
                 'highlights' => $_POST['highlights'] ?? null,
                 'shipping_policy' => $_POST['shipping_policy'] ?? null,
                 'return_policy' => $_POST['return_policy'] ?? null,
@@ -212,23 +216,27 @@ $brands = $brandsResult ? json_decode($brandsResult['setting_value'], true) : []
                     <!-- Custom Multi-Select UI -->
                     <div id="category-multiselect-container" class="relative">
                         <!-- Hidden Select for Form Submission -->
-                        <select name="category_ids[]" id="real-category-select" multiple class="hidden" required>
+                        <!-- Hidden Select for Form Submission -->
+                        <select name="category_ids[]" id="real-category-select" multiple class="hidden">
                             <?php 
+                            // Ensure clean array of selected IDs
                             $selectedCats = $_POST['category_ids'] ?? [];
-                            foreach ($categories as $cat): 
+                            $selectedCats = array_map('strval', $selectedCats); // Standardize to string for JS comparison
+                            
+                            // Re-render options for fallback
+                            foreach ($categories as $cat) {
+                                $isSelected = in_array((string)$cat['id'], $selectedCats);
+                                echo '<option value="' . htmlspecialchars($cat['id']) . '" ' . ($isSelected ? 'selected' : '') . '>' . htmlspecialchars($cat['name']) . '</option>';
+                            }
                             ?>
-                            <option value="<?php echo $cat['id']; ?>" <?php echo in_array($cat['id'], $selectedCats) ? 'selected' : ''; ?>>
-                                <?php echo htmlspecialchars($cat['name']); ?>
-                            </option>
-                            <?php endforeach; ?>
                         </select>
 
                         <!-- Visual Input -->
                         <div class="admin-form-input min-h-[42px] flex flex-wrap gap-2 p-2 focus-within:ring-2 focus-within:ring-blue-500 cursor-text bg-white" 
                              onclick="document.getElementById('category-search').focus()">
                              
-                            <!-- Selected Tags Container -->
-                            <div id="category-tags" class="contents"></div>
+                            <!-- Selected Tags Container - Removed 'contents' class for stability -->
+                            <div id="category-tags" class="flex flex-wrap gap-2 items-center"></div>
                             
                             <!-- Search Input -->
                             <input type="text" id="category-search" placeholder="Select category..." 
@@ -249,6 +257,17 @@ $brands = $brandsResult ? json_decode($brandsResult['setting_value'], true) : []
                         const dropdown = document.getElementById('category-dropdown');
                         const container = document.getElementById('category-multiselect-container');
                         
+                        // Pass PHP data directly to JS to avoid DOM parsing issues
+                        const categoriesData = <?php echo json_encode($categories); ?>;
+                        const selectedIds = <?php echo json_encode(array_values($selectedCats)); ?>.map(String);
+                        
+                        // Initialize options state
+                        let allOptions = categoriesData.map(cat => ({
+                            value: String(cat.id),
+                            text: cat.name,
+                            selected: selectedIds.includes(String(cat.id))
+                        }));
+                        
                         function escapeHtml(text) {
                             if (!text) return text;
                             return text.toString()
@@ -258,13 +277,6 @@ $brands = $brandsResult ? json_decode($brandsResult['setting_value'], true) : []
                                 .replace(/"/g, "&quot;")
                                 .replace(/'/g, "&#039;");
                         }
-                        
-                        // Parse options from the real select
-                        let allOptions = Array.from(realSelect.options).map(opt => ({
-                            value: opt.value,
-                            text: opt.text.trim(),
-                            selected: opt.selected
-                        }));
 
                         function renderTags() {
                             tagsContainer.innerHTML = '';
@@ -272,9 +284,9 @@ $brands = $brandsResult ? json_decode($brandsResult['setting_value'], true) : []
                             
                             selected.forEach(opt => {
                                 const tag = document.createElement('span');
-                                // Use inline styles for colors to avoid generic class conflicts
+                                // Use inline styles for colors to avoid generic class conflicts (like .alert auto-hide)
                                 tag.className = 'text-xs font-semibold px-2 py-1 rounded flex items-center gap-1 select-none border border-blue-200';
-                                tag.style.backgroundColor = '#e0f2fe';
+                                tag.style.backgroundColor = '#e0f2fe'; // Safe Sky Blue
                                 tag.style.color = '#0369a1';
                                 
                                 tag.innerHTML = `
@@ -292,7 +304,7 @@ $brands = $brandsResult ? json_decode($brandsResult['setting_value'], true) : []
 
                         function renderDropdown(filter = '') {
                             dropdown.innerHTML = '';
-                            // Filter OUT selected options (User request)
+                            // Filter OUT selected options
                             const filtered = allOptions.filter(o => !o.selected && o.text.toLowerCase().includes(filter.toLowerCase()));
                             
                             if (filtered.length === 0) {
@@ -318,13 +330,19 @@ $brands = $brandsResult ? json_decode($brandsResult['setting_value'], true) : []
 
                         // Attach to window so onclick attribute works
                         window.toggleCategory = function(val) {
+                            // Find in our JS state
                             const opt = allOptions.find(o => o.value === val);
                             if (opt) {
                                 opt.selected = !opt.selected;
                                 
-                                // Sync with real select
-                                const realOpt = Array.from(realSelect.options).find(o => o.value === val);
-                                if(realOpt) realOpt.selected = opt.selected;
+                                // Sync with real hidden select for form submission
+                                // We iterate options to match value
+                                for (let i = 0; i < realSelect.options.length; i++) {
+                                    if (realSelect.options[i].value === val) {
+                                        realSelect.options[i].selected = opt.selected;
+                                        break;
+                                    }
+                                }
                                 
                                 renderTags();
                                 renderDropdown(searchInput.value);
@@ -387,7 +405,7 @@ $brands = $brandsResult ? json_decode($brandsResult['setting_value'], true) : []
                                 <input type="text" name="highlight_icons[]" placeholder="Icon (e.g. fas fa-truck)" class="admin-form-input text-sm">
                             </div>
                             <div class="flex-1">
-                                <div class="admin-form-input text-sm highlight-text-editor" contenteditable="true" style="min-height: 38px; cursor: text;"></div>
+                                <div id="highlight_text_init_1" class="admin-form-input text-sm highlight-text-editor" contenteditable="true" style="min-height: 38px; cursor: text;"></div>
                             </div>
                             <button type="button" onclick="this.parentElement.remove()" class="text-red-500 px-2 mt-2">
                                 <i class="fas fa-trash"></i>
@@ -451,6 +469,30 @@ $brands = $brandsResult ? json_decode($brandsResult['setting_value'], true) : []
             
             <p class="text-sm text-gray-600">You need to add at least 4 images. Pay attention to the quality of the pictures you add, comply with the background color standards. Pictures must be in certain dimensions. Notice that the product shows all the details.</p>
             <input type="hidden" name="images" id="imagesInput" value="">
+            <input type="hidden" name="highlights" id="highlights_json" value="<?php echo htmlspecialchars($_POST['highlights'] ?? '[]'); ?>">
+        </div>
+
+        <div class="admin-card">
+            <h2 class="text-lg md:text-xl font-bold mb-4">Shipping Dimensions</h2>
+            <div class="admin-form-group">
+                <label class="admin-form-label">Weight (kg) *</label>
+                <input type="number" name="weight" step="0.01" value="<?php echo htmlspecialchars($_POST['weight'] ?? '0.50'); ?>" class="admin-form-input" placeholder="0.50">
+            </div>
+            <div class="grid grid-cols-3 gap-4">
+                <div class="admin-form-group">
+                    <label class="admin-form-label">Length (cm)</label>
+                    <input type="number" name="length" step="0.01" value="<?php echo htmlspecialchars($_POST['length'] ?? '10.00'); ?>" class="admin-form-input" placeholder="10">
+                </div>
+                <div class="admin-form-group">
+                    <label class="admin-form-label">Width (cm)</label>
+                    <input type="number" name="width" step="0.01" value="<?php echo htmlspecialchars($_POST['width'] ?? '10.00'); ?>" class="admin-form-input" placeholder="10">
+                </div>
+                <div class="admin-form-group">
+                    <label class="admin-form-label">Height (cm)</label>
+                    <input type="number" name="height" step="0.01" value="<?php echo htmlspecialchars($_POST['height'] ?? '10.00'); ?>" class="admin-form-input" placeholder="10">
+                </div>
+            </div>
+            <p class="text-xs text-gray-500">Weight and dimensions are crucial for accurate shipping cost calculation and labels.</p>
         </div>
         
         <div class="admin-card" id="variants_section">
@@ -734,6 +776,23 @@ function removeHighlightRow(btn, editorId) {
 }
 
 document.getElementById('productForm').addEventListener('submit', function(e) {
+    // Validate Category
+    const catSelect = document.getElementById('real-category-select');
+    let hasCategory = false;
+    for (let j = 0; j < catSelect.options.length; j++) {
+        if (catSelect.options[j].selected) {
+            hasCategory = true;
+            break;  
+        }
+    }
+    
+    if (!hasCategory) {
+        e.preventDefault();
+        // Scroll to category section
+        document.getElementById('category-multiselect-container').scrollIntoView({ behavior: 'smooth', block: 'center' });
+        return;
+    }
+
     // Prevent double-submission
     const submitBtns = [document.getElementById('topSubmitBtn'), document.getElementById('bottomSubmitBtn')];
     submitBtns.forEach(btn => {
@@ -778,7 +837,7 @@ function checkStockStatus(input) {
     }
 }
 </script>
-<script src="<?php echo $baseUrl; ?>/assets/js/admin-image-upload8.js?v=<?php echo time(); ?>"></script>
+<script src="<?php echo $baseUrl; ?>/assets/js/admin-image-upload9.js?v=<?php echo time(); ?>"></script>
 <script src="<?php echo $baseUrl; ?>/assets/js/product-variants6.js"></script>
 
 <!-- Brand Management Modal -->

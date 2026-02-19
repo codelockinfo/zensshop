@@ -180,6 +180,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['place_order']) && emp
         } else {
             $shippingAmount = 0;
         }
+
+        // COD Charge
+        $codCharge = 0;
+        if ($paymentMethod === 'cash_on_delivery') {
+            require_once __DIR__ . '/classes/Settings.php';
+            $stManager = new Settings();
+            $codCharge = (float)$stManager->get('cod_charge', 0);
+        }
         
         // Prepare order data with sanitization
         $orderData = [
@@ -205,10 +213,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['place_order']) && emp
             'discount_amount' => $discountAmount,
             'coupon_code' => $discountCode,
             'shipping_amount' => ($_POST['delivery_type'] ?? '') === 'pickup' ? 0 : $shippingAmount,
+            'cod_charge' => $codCharge,
             'tax_amount' => 0,
             'payment_method' => $paymentMethod
         ];
-        
         // Prepare order items from cart
         foreach ($cartItems as $item) {
             $orderData['items'][] = [
@@ -267,7 +275,12 @@ $logo = $settingsObj->get('footer_logo_image', null);
 $subtotal = $cartTotal;
 $finalShipping = isset($_POST['delivery_type']) && $_POST['delivery_type'] === 'pickup' ? 0 : $shippingAmount;
 $tax = 0;
-$total = $subtotal + $finalShipping - $discountAmount + $tax;
+$isCodEnabled = (int)$settingsObj->get('enable_cod', 0);
+$codChargeValue = (float)$settingsObj->get('cod_charge', 0);
+$selectedPaymentMethod = $_POST['payment_method'] ?? 'credit_card'; // Default to online
+$codAdjustment = ($selectedPaymentMethod === 'cash_on_delivery') ? $codChargeValue : 0;
+
+$total = $subtotal + $finalShipping - $discountAmount + $tax + $codAdjustment;
 // Load Checkout Page Styling (Consolidated)
 $checkoutStylingJson = $settingsObj->get('checkout_page_styling', '');
 $checkoutStyling = !empty($checkoutStylingJson) ? json_decode($checkoutStylingJson, true) : [];
@@ -454,7 +467,7 @@ nav.bg-white.sticky.top-0 {
         </script>
         <?php endif; ?>
 
-        <form method="POST" action="<?php echo url('checkout'); ?>" class="max-w-6xl mx-auto">
+        <form id="checkoutForm" method="POST" action="<?php echo url('checkout'); ?>" class="max-w-6xl mx-auto">
             <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
                 <!-- Left Section: Shipping Information -->
                 <div class="lg:col-span-2">
@@ -778,6 +791,10 @@ nav.bg-white.sticky.top-0 {
                                 <span class="text-gray-600">Discount</span>
                                 <span class="font-semibold text-gray-600" id="summaryDiscountAmount">-<?php echo format_currency($discountAmount); ?></span>
                             </div>
+                            <div class="flex justify-between text-sm <?php echo $codAdjustment > 0 ? '' : 'hidden'; ?>" id="codChargeRow">
+                                <span class="text-gray-600">COD Service Charge</span>
+                                <span class="font-semibold" id="summaryCodCharge"><?php echo format_currency($codAdjustment); ?></span>
+                            </div>
                             <div class="flex justify-between text-lg font-bold pt-2 border-t">
                                 <span>Total</span>
                                 <span id="summaryTotal"><?php echo format_currency($total); ?></span>
@@ -798,7 +815,38 @@ nav.bg-white.sticky.top-0 {
                         <?php endif; ?>
                          
                         <!-- Payment Method Selection -->
-                        <input type="hidden" name="payment_method" value="credit_card">
+                        <div class="mb-6">
+                            <h3 class="text-sm font-bold text-gray-700 mb-3 uppercase tracking-wider">Payment Method</h3>
+                            <div class="space-y-3">
+                                <label class="flex items-center p-3 border rounded-lg cursor-pointer hover:bg-gray-50 transition-all group <?php echo $selectedPaymentMethod !== 'cash_on_delivery' ? 'border-blue-500 bg-blue-50' : 'border-gray-200'; ?>" id="payment_online_label">
+                                    <input type="radio" name="payment_method" value="credit_card" class="hidden payment-method-radio" <?php echo $selectedPaymentMethod !== 'cash_on_delivery' ? 'checked' : ''; ?> onchange="updatePaymentMethodUI()">
+                                    <div class="w-5 h-5 border-2 rounded-full mr-3 flex items-center justify-center <?php echo $selectedPaymentMethod !== 'cash_on_delivery' ? 'border-blue-600 bg-blue-600' : 'border-gray-300'; ?>">
+                                        <div class="w-2 h-2 bg-white rounded-full"></div>
+                                    </div>
+                                    <div class="flex-1">
+                                        <span class="font-semibold <?php echo $selectedPaymentMethod !== 'cash_on_delivery' ? 'text-blue-700' : 'text-gray-700'; ?>">Pay Online</span>
+                                        <p class="text-xs text-gray-500">Razorpay, UPI, Cards</p>
+                                    </div>
+                                    <i class="fas fa-credit-card <?php echo $selectedPaymentMethod !== 'cash_on_delivery' ? 'text-blue-600' : 'text-gray-400'; ?>"></i>
+                                </label>
+
+                                <?php if ($isCodEnabled): ?>
+                                <label class="flex items-center p-3 border rounded-lg cursor-pointer hover:bg-gray-50 transition-all group <?php echo $selectedPaymentMethod === 'cash_on_delivery' ? 'border-blue-500 bg-blue-50' : 'border-gray-200'; ?>" id="payment_cod_label">
+                                    <input type="radio" name="payment_method" value="cash_on_delivery" class="hidden payment-method-radio" <?php echo $selectedPaymentMethod === 'cash_on_delivery' ? 'checked' : ''; ?> onchange="updatePaymentMethodUI()">
+                                    <div class="w-5 h-5 border-2 rounded-full mr-3 flex items-center justify-center <?php echo $selectedPaymentMethod === 'cash_on_delivery' ? 'border-blue-600 bg-blue-600' : 'border-gray-300'; ?>">
+                                        <div class="w-2 h-2 bg-white rounded-full"></div>
+                                    </div>
+                                    <div class="flex-1">
+                                        <span class="font-semibold <?php echo $selectedPaymentMethod === 'cash_on_delivery' ? 'text-blue-700' : 'text-gray-700'; ?>">Cash on Delivery (COD)</span>
+                                        <?php if ($codChargeValue > 0): ?>
+                                            <p class="text-xs text-blue-600 font-medium">+ <?php echo format_currency($codChargeValue); ?> service charge</p>
+                                        <?php endif; ?>
+                                    </div>
+                                    <i class="fas fa-money-bill-wave <?php echo $selectedPaymentMethod === 'cash_on_delivery' ? 'text-blue-600' : 'text-gray-400'; ?>"></i>
+                                </label>
+                                <?php endif; ?>
+                            </div>
+                        </div>
                         
 
                         <!-- Pay Now Button -->
@@ -817,8 +865,14 @@ nav.bg-white.sticky.top-0 {
                                 data-city="<?php echo htmlspecialchars($_POST['city'] ?? ($customer['shipping_address']['city'] ?? '')); ?>"
                                 data-total-quantity="<?php echo $totalQuantity; ?>"
                                 data-customer-id="<?php echo $customer['customer_id'] ?? ''; ?>"
-                                class="w-full bg-blue-600 text-white py-4 px-6 rounded-lg hover:bg-blue-700 transition font-semibold mb-4 checkout-pay-btn">
+                                class="w-full bg-blue-600 text-white py-4 px-6 rounded-lg hover:bg-blue-700 transition font-semibold mb-4 checkout-pay-btn <?php echo $selectedPaymentMethod === 'cash_on_delivery' ? 'hidden' : ''; ?>">
                             Pay Now
+                        </button>
+
+                        <button type="submit" id="codPlaceOrderButton" 
+                                name="place_order" value="1"
+                                class="w-full bg-green-600 text-white py-4 px-6 rounded-lg hover:bg-green-700 transition font-semibold mb-4 checkout-pay-btn <?php echo $selectedPaymentMethod !== 'cash_on_delivery' ? 'hidden' : ''; ?>">
+                            Place Order (COD)
                         </button>
                         <!-- Honeypot Field (Hidden from users, visible to bots) -->
                         <div style="display:none; opacity:0; visibility:hidden; position:absolute; left:-9999px;">
@@ -875,6 +929,8 @@ window.currentDiscountAmount = <?php echo $discountAmount; ?>;
 window.currentDiscountCode = '<?php echo $discountCode; ?>';
 window.defaultShipping = <?php echo $shippingAmount; ?>;
 window.currentTaxAmount = 0;
+window.codChargeValue = <?php echo $codChargeValue; ?>;
+window.systemCodEnabled = <?php echo $isCodEnabled ? 'true' : 'false'; ?>;
 
 async function recalculateTaxes() {
     const state = document.getElementById('customerStateInput').value.trim();
@@ -923,9 +979,14 @@ function updateShipping() {
     const deliveryTypeInput = document.querySelector('input[name="delivery_type"]:checked');
     const deliveryType = deliveryTypeInput ? deliveryTypeInput.value : 'delivery';
     
+    const paymentMethodInput = document.querySelector('input[name="payment_method"]:checked');
+    const paymentMethod = paymentMethodInput ? paymentMethodInput.value : 'credit_card';
+    
     const shipping = deliveryType === 'pickup' ? 0 : window.defaultShipping;
+    const codCharge = (paymentMethod === 'cash_on_delivery') ? window.codChargeValue : 0;
+    
     // Ensure total doesn't go negative
-    const total = Math.max(0, window.cartTotal + shipping + window.currentTaxAmount - window.currentDiscountAmount);
+    const total = Math.max(0, window.cartTotal + shipping + window.currentTaxAmount - window.currentDiscountAmount + codCharge);
     
     // Update DOM
     const shippingEl = document.getElementById('summaryShipping');
@@ -933,6 +994,16 @@ function updateShipping() {
     
     if (shippingEl) shippingEl.innerText = '₹' + shipping.toFixed(2);
     if (totalEl) totalEl.innerText = '₹' + total.toFixed(2);
+
+    // Update COD Charge Row
+    const codRow = document.getElementById('codChargeRow');
+    const codSummaryVal = document.getElementById('summaryCodCharge');
+    if (codCharge > 0) {
+        codRow.classList.remove('hidden');
+        if (codSummaryVal) codSummaryVal.innerText = '₹' + codCharge.toFixed(2);
+    } else {
+        codRow.classList.add('hidden');
+    }
 
     // Update Pay Button Attributes for Tracking
     const payBtn = document.getElementById('razorpayPayButton');
@@ -943,10 +1014,65 @@ function updateShipping() {
         if (cityInput) {
              payBtn.setAttribute('data-city', cityInput.value);
         }
-        // Clean up old attributes if present
-        payBtn.removeAttribute('data-currency');
     }
 }
+
+function enablePaymentButtons(enable) {
+    const payBtn = document.getElementById('razorpayPayButton');
+    const codBtn = document.getElementById('codPlaceOrderButton');
+    [payBtn, codBtn].forEach(btn => {
+        if (!btn) return;
+        btn.disabled = !enable;
+        if (enable) {
+            btn.classList.remove('opacity-50', 'cursor-not-allowed');
+        } else {
+            btn.classList.add('opacity-50', 'cursor-not-allowed');
+        }
+    });
+}
+
+function updatePaymentMethodUI() {
+    const radios = document.querySelectorAll('.payment-method-radio');
+    radios.forEach(radio => {
+        const labelId = radio.value === 'cash_on_delivery' ? 'payment_cod_label' : 'payment_online_label';
+        const label = document.getElementById(labelId);
+        const icon = label.querySelector('i');
+        const text = label.querySelector('span');
+        const circle = label.querySelector('.rounded-full');
+
+        if (radio.checked) {
+            label.classList.add('border-blue-500', 'bg-blue-50');
+            label.classList.remove('border-gray-200');
+            icon.classList.add('text-blue-600');
+            icon.classList.remove('text-gray-400');
+            text.classList.add('text-blue-700');
+            text.classList.remove('text-gray-700');
+            circle.classList.add('border-blue-600', 'bg-blue-600');
+            circle.classList.remove('border-gray-300');
+            
+            // Toggle Buttons
+            if (radio.value === 'cash_on_delivery') {
+                document.getElementById('razorpayPayButton').classList.add('hidden');
+                document.getElementById('codPlaceOrderButton').classList.remove('hidden');
+            } else {
+                document.getElementById('razorpayPayButton').classList.remove('hidden');
+                document.getElementById('codPlaceOrderButton').classList.add('hidden');
+            }
+        } else {
+            label.classList.remove('border-blue-500', 'bg-blue-50');
+            label.classList.add('border-gray-200');
+            icon.classList.remove('text-blue-600');
+            icon.classList.add('text-gray-400');
+            text.classList.remove('text-blue-700');
+            text.classList.add('text-gray-700');
+            circle.classList.remove('border-blue-600', 'bg-blue-600');
+            circle.classList.add('border-gray-300');
+        }
+    });
+
+    updateShipping();
+}
+
 
 // Listen for input changes to update tracking attributes immediately
 document.addEventListener('DOMContentLoaded', function() {
@@ -976,6 +1102,32 @@ document.addEventListener('DOMContentLoaded', function() {
                             updateShipping();
                         }
 
+                        // Handle COD Row Visibility
+                        const codLabel = document.getElementById('payment_cod_label');
+                        if (codLabel) {
+                            // If system COD is enabled, we keep the option visible
+                            // to avoid confusing the merchant/customer if the courier API 
+                            // returns false due to test mode or specific account limits.
+                            // Priority 1: System-wide COD toggle from API response
+                            // Priority 2: Initial system toggle from page load (fallback)
+                            const isCodAllowedBySystem = data.system_cod_enabled !== undefined ? !!data.system_cod_enabled : window.systemCodEnabled;
+                            
+                            if (isCodAllowedBySystem) {
+                                codLabel.classList.remove('hidden');
+                            } else {
+                                codLabel.classList.add('hidden');
+                                // If COD was selected but now disabled, switch to online
+                                const codRadio = codLabel.querySelector('input');
+                                if (codRadio && codRadio.checked) {
+                                    const onlineRadio = document.querySelector('input[name="payment_method"][value="credit_card"]');
+                                    if (onlineRadio) {
+                                        onlineRadio.checked = true;
+                                        updatePaymentMethodUI();
+                                    }
+                                }
+                            }
+                        }
+
                         zipStatus.innerHTML = '<i class="fas fa-check-circle mr-1"></i> Delivery available to ' + data.city;
                         zipStatus.className = 'mt-2 text-xs text-green-600';
                         
@@ -991,8 +1143,7 @@ document.addEventListener('DOMContentLoaded', function() {
                             recalculateTaxes();
                         }
                         
-                        payBtn.disabled = false;
-                        payBtn.classList.remove('opacity-50', 'cursor-not-allowed');
+                        enablePaymentButtons(true);
                     } else {
                         const errorMsg = data.message || 'Sorry, we do not deliver to this pincode yet.';
                         zipStatus.innerHTML = '<i class="fas fa-times-circle mr-1"></i> ' + errorMsg;
@@ -1002,8 +1153,7 @@ document.addEventListener('DOMContentLoaded', function() {
                         const deliveryTypeInput = document.querySelector('input[name="delivery_type"]:checked');
                         const deliveryType = deliveryTypeInput ? deliveryTypeInput.value : 'delivery';
                         if (deliveryType === 'delivery') {
-                            payBtn.disabled = true;
-                            payBtn.classList.add('opacity-50', 'cursor-not-allowed');
+                            enablePaymentButtons(false);
                         }
                     }
                 } catch (error) {
@@ -1019,8 +1169,7 @@ document.addEventListener('DOMContentLoaded', function() {
         document.querySelectorAll('input[name="delivery_type"]').forEach(radio => {
             radio.addEventListener('change', function() {
                 if (this.value === 'pickup') {
-                    payBtn.disabled = false;
-                    payBtn.classList.remove('opacity-50', 'cursor-not-allowed');
+                    enablePaymentButtons(true);
                 } else {
                     // Re-trigger zip check logic if switching back to delivery
                     zipInput.dispatchEvent(new Event('input'));
@@ -1062,16 +1211,18 @@ function setBtnLoading(btn, isLoading) {
         if (!btn.dataset.originalText) {
             btn.dataset.originalText = btn.innerHTML;
         }
-        btn.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>Processing...';
+        // "Louder" button state: Pulsing, distinct text, spinner
+        btn.innerHTML = '<i class="fas fa-circle-notch fa-spin mr-2"></i>Processing Order...';
         btn.disabled = true;
-        btn.classList.add('opacity-75', 'cursor-not-allowed');
+        btn.classList.add('opacity-90', 'cursor-not-allowed', 'animate-pulse');
+        
     } else {
         // Restore original text
         if (btn.dataset.originalText) {
             btn.innerHTML = btn.dataset.originalText;
         }
         btn.disabled = false;
-        btn.classList.remove('opacity-75', 'cursor-not-allowed');
+        btn.classList.remove('opacity-90', 'cursor-not-allowed', 'animate-pulse');
     }
 }
 
@@ -1271,10 +1422,6 @@ document.getElementById('razorpayPayButton').addEventListener('click', async fun
             key: orderData.razorpay_key,
             amount: orderData.amount,
             currency: orderData.currency,
-            name: '<?php echo htmlspecialchars($logoText ?: SITE_NAME, ENT_QUOTES, 'UTF-8'); ?>',
-            <?php if ($logoType == 'image' && !empty($logo)): ?>
-            image: '<?php echo getImageUrl($logo); ?>',
-            <?php endif; ?>
             description: 'Order Payment',
             order_id: orderData.order_id,
             handler: async function(response) {
@@ -1512,5 +1659,17 @@ function handleDiscount(action) {
     padding-right: 2rem;
 }
 </style>
+
+<script>
+// Handle form submission for COD button loading
+document.getElementById('checkoutForm').addEventListener('submit', function(e) {
+    const codBtn = document.getElementById('codPlaceOrderButton');
+    // Only show loading if COD button is visible
+    if (codBtn && !codBtn.classList.contains('hidden')) {
+        setBtnLoading(codBtn, true);
+    }
+});
+</script>
+
 
 

@@ -168,6 +168,13 @@ $customerAddressStr = implode(', ', array_filter([
                     <span class="text-gray-500 font-medium">Delivery Status:</span>
                     <span class="px-2 py-1 rounded bg-blue-100 text-blue-800 text-xs font-bold uppercase"><?php echo str_replace('_', ' ', $order['order_status']); ?></span>
                 </div>
+                <div class="flex justify-between border-b pb-2">
+                    <span class="text-gray-500 font-medium">Payment Method:</span>
+                    <span class="text-gray-800 font-medium"><?php 
+                        $pm = strtoupper($order['payment_method'] ?? 'ONLINE');
+                        echo ($pm === 'COD' || $pm === 'CASH_ON_DELIVERY') ? 'Cash on Delivery' : 'Online Payment'; 
+                    ?></span>
+                </div>
                 <?php if (!empty($order['delivery_date'])): ?>
                 <div class="flex justify-between border-b pb-2">
                     <span class="text-gray-500 font-medium">Delivery Date:</span>
@@ -293,8 +300,9 @@ $customerAddressStr = implode(', ', array_filter([
                         $subtotal = ($order['subtotal'] > 0) ? $order['subtotal'] : $calculatedSubtotal;
                         $taxTotal = ($order['tax_amount'] > 0) ? $order['tax_amount'] : $calculatedTaxTotal;
                         $shipping = $order['shipping_amount'] ?? 0;
+                        $codCharge = $order['cod_charge'] ?? 0;
                         $discount = $order['discount_amount'] ?? 0;
-                        $grandTotal = ($order['grand_total'] > 0) ? $order['grand_total'] : ($subtotal + $taxTotal + $shipping - $discount);
+                        $grandTotal = ($order['grand_total'] > 0) ? $order['grand_total'] : ($subtotal + $taxTotal + $shipping + $codCharge - $discount);
                     ?>
                     <div class="flex justify-between text-sm">
                         <span class="text-gray-500">Subtotal (Excl. Tax)</span>
@@ -304,6 +312,12 @@ $customerAddressStr = implode(', ', array_filter([
                     <div class="flex justify-between text-sm">
                         <span class="text-gray-500">Shipping/Delivery</span>
                         <span class="text-gray-800"><?php echo formatCurrency($shipping); ?></span>
+                    </div>
+                    <?php endif; ?>
+                    <?php if ($codCharge > 0): ?>
+                    <div class="flex justify-between text-sm">
+                        <span class="text-gray-500">COD Charges</span>
+                        <span class="text-gray-800"><?php echo formatCurrency($codCharge); ?></span>
                     </div>
                     <?php endif; ?>
                     <?php if ($discount > 0): ?>

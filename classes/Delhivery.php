@@ -89,10 +89,11 @@ class Delhivery {
                 return ['success' => true, 'is_serviceable' => false, 'message' => 'Service temporarily unavailable (Embargo)'];
             }
 
+            error_log("Delhivery Pincode Data for $pincode: " . json_encode($postalData));
             return [
                 'success' => true,
                 'is_serviceable' => true,
-                'cod' => (($postalData['cod'] ?? '') === 'Y' || ($postalData['cash'] ?? '') === 'Y'),
+                'cod' => (($postalData['cod'] ?? '') === 'Y' || ($postalData['cash'] ?? '') === 'Y' || ($postalData['is_cod'] ?? '') === 'Y'),
                 'prepaid' => (($postalData['prepaid'] ?? $postalData['pre_paid'] ?? '') === 'Y'),
                 'repl' => (($postalData['repl'] ?? '') === 'Y' || ($postalData['pickup'] ?? '') === 'Y'),
                 'city' => $postalData['city'] ?? '',
@@ -191,7 +192,10 @@ class Delhivery {
                     'payment_mode' => $paymentMode,
                     'total_amount' => number_format((float)$orderData['total_amount'], 2, '.', ''),
                     'cod_amount' => number_format((float)$codAmount, 2, '.', ''),
-                    'weight' => '0.5', // Default weight in Kg
+                    'weight' => number_format((float)($orderData['total_weight'] ?: 0.5), 2, '.', ''),
+                    'length' => number_format((float)($items[0]['length'] ?? 10), 2, '.', ''),
+                    'width' => number_format((float)($items[0]['width'] ?? 10), 2, '.', ''),
+                    'height' => number_format((float)($items[0]['height'] ?? 10), 2, '.', ''),
                     'products_desc' => $productsDesc,
                     'quantity' => (string)$totalQty,
                     'order_date' => date('Y-m-d H:i:s', strtotime($orderData['created_at'] ?? 'now')),
@@ -399,8 +403,7 @@ class Delhivery {
             error_log("Delhivery Invalid JSON: " . $response);
             return [
                 'success' => false, 
-                'message' => "Invalid JSON from Delhivery: " . strip_tags(substr($response, 0, 500)),
-                'raw' => $response
+                'message' => "Invalid JSON response from Delhivery: " . $response
             ];
         }
 

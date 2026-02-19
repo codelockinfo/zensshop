@@ -3,7 +3,11 @@
  */
 
 document.addEventListener('DOMContentLoaded', function() {
-    initializeImageUpload();
+    try {
+        initializeImageUpload();
+    } catch (e) {
+        console.error("Error initializing image upload:", e);
+    }
     
     // Inject Toast CSS
     const style = document.createElement('style');
@@ -86,6 +90,7 @@ function initializeImageUpload() {
     // Rescan the DOM to bind events
     const existingBoxes = document.querySelectorAll('.image-upload-box');
     existingBoxes.forEach(box => {
+        if (!box) return;
         const index = parseInt(box.getAttribute('data-index'));
         if (!isNaN(index)) {
              bindBoxEvents(box);
@@ -97,142 +102,151 @@ function initializeImageUpload() {
 }
 
 function bindBoxEvents(box) {
-    const fileInput = box.querySelector('.image-file-input');
-    const placeholder = box.querySelector('.upload-placeholder');
-    const preview = box.querySelector('.image-preview');
-    const removeBtn = box.querySelector('.remove-image-btn');
-    const handle = box.querySelector('.move-handle');
+    if (!box) return;
 
-    box.setAttribute('draggable', 'true');
+    try {
+        const fileInput = box.querySelector('.image-file-input');
+        const placeholder = box.querySelector('.upload-placeholder');
+        const preview = box.querySelector('.image-preview');
+        const removeBtn = box.querySelector('.remove-image-btn');
+        const handle = box.querySelector('.move-handle');
 
-    // CLICK: Browse (Only if not clicking handle or delete)
-    box.addEventListener('click', function(e) {
-        // Don't open file dialog if clicking remove button or the move handle
-        if (e.target !== removeBtn && !e.target.closest('.remove-image-btn') && !e.target.closest('.move-handle')) {
-            fileInput.click();
-        }
-    });
-    
-    // CHANGE: File Selected via Dialog
-    fileInput.addEventListener('change', function(e) {
-        handleFiles(e.target.files, box, placeholder, preview, removeBtn);
-    });
-    
-    // REMOVE: Click X
-    removeBtn.addEventListener('click', function(e) {
-        e.stopPropagation();
-        removeImage(box, placeholder, preview, removeBtn);
-    });
-
-    // --- DRAG & DROP EVENTS ---
-
-    // 1. Drag Start (Only for internal reordering)
-    box.addEventListener('dragstart', function(e) {
-        // Prevent drag if clicking remove button
-        if (e.target.closest('.remove-image-btn')) {
-            e.preventDefault();
+        if (!fileInput || !placeholder || !preview || !removeBtn) {
+            console.warn("Missing elements in image box", box);
             return;
         }
 
-        // If user wants ONLY handle to initiate drag, uncomment this:
-        // if (!e.target.closest('.move-handle')) { 
-        //    if(!e.dataTransfer.files.length) { // Allow file drag
-        //       // prevent default internal drag if not handle? 
-        //       // Actually better to allow whole box drag but handle is visual cue.
-        //    }
-        // }
-        
-        // Mark as internal drag
-        draggedElement = box;
-        e.dataTransfer.effectAllowed = 'move';
-        e.dataTransfer.setData('text/plain', box.getAttribute('data-index')); // Payload
-        box.classList.add('opacity-50');
-    });
+        box.setAttribute('draggable', 'true');
 
-    // 2. Drag End
-    box.addEventListener('dragend', function(e) {
-        box.classList.remove('opacity-50');
-        draggedElement = null;
-        document.querySelectorAll('.image-upload-box').forEach(b => b.classList.remove('border-blue-500', 'border-2', 'bg-blue-50'));
-        updateImagesInput();
-    });
-
-    // 3. Drag Over (Allow Drop)
-    box.addEventListener('dragover', function(e) {
-        e.preventDefault(); // allow drop
-        e.stopPropagation();
-        
-        // Visual Feedback
-        box.classList.add('border-blue-500', 'border-2', 'bg-blue-50');
-        
-        if (draggedElement) {
-            e.dataTransfer.dropEffect = 'move';
-        } else {
-            // Assume file
-            e.dataTransfer.dropEffect = 'copy';
-        }
-    });
-
-    // 4. Drag Enter
-    box.addEventListener('dragenter', function(e) {
-        e.preventDefault();
-        e.stopPropagation();
-        box.classList.add('border-blue-500', 'border-2', 'bg-blue-50');
-    });
-
-    // 5. Drag Leave
-    box.addEventListener('dragleave', function(e) {
-        e.preventDefault();
-        e.stopPropagation();
-        
-        // Detect if leaving the box entirely (not just into a child)
-        if (e.relatedTarget && !box.contains(e.relatedTarget) && e.relatedTarget !== box) {
-            box.classList.remove('border-blue-500', 'border-2', 'bg-blue-50');
-        }
-    });
-
-    // 6. DROP (The Core Logic)
-    box.addEventListener('drop', function(e) {
-        e.preventDefault();
-        e.stopPropagation();
-        box.classList.remove('border-blue-500', 'border-2', 'bg-blue-50');
-
-        const dt = e.dataTransfer;
-        
-        console.log('Drop detected.');
-
-        if (dt && dt.files && dt.files.length > 0) {
-            console.log('File dropped:', dt.files[0].name);
-            handleFiles(dt.files, box, placeholder, preview, removeBtn);
-            // reset drag state just in case
-            if(draggedElement) draggedElement = null; 
-            return; 
-        }
-
-        // PRIORITY 2: INTERNAL REORDER
-        if (draggedElement) {
-            if (draggedElement !== box) {
-                const container = document.getElementById('imageUploadArea');
-                const boxes = Array.from(container.querySelectorAll('.image-upload-box'));
-                const fromIndex = boxes.indexOf(draggedElement);
-                const toIndex = boxes.indexOf(box);
-
-                if (fromIndex < toIndex) {
-                    container.insertBefore(draggedElement, box.nextSibling);
-                } else {
-                    container.insertBefore(draggedElement, box);
-                }
-                updateImagesInput();
+        // CLICK: Browse (Only if not clicking handle or delete)
+        box.addEventListener('click', function(e) {
+            // Don't open file dialog if clicking remove button or the move handle
+            if (e.target !== removeBtn && !e.target.closest('.remove-image-btn') && !e.target.closest('.move-handle')) {
+                fileInput.click();
             }
-            // Cleanup
-            draggedElement.classList.remove('opacity-50');
+        });
+        
+        // CHANGE: File Selected via Dialog
+        fileInput.addEventListener('change', function(e) {
+            handleFiles(e.target.files, box, placeholder, preview, removeBtn);
+        });
+        
+        // REMOVE: Click X
+        removeBtn.addEventListener('click', function(e) {
+            e.stopPropagation();
+            removeImage(box, placeholder, preview, removeBtn);
+        });
+
+        // --- DRAG & DROP EVENTS ---
+
+        // 1. Drag Start (Only for internal reordering)
+        box.addEventListener('dragstart', function(e) {
+            // Prevent drag if clicking remove button
+            if (e.target.closest('.remove-image-btn')) {
+                e.preventDefault();
+                return;
+            }
+
+            // Mark as internal drag
+            draggedElement = box;
+            e.dataTransfer.effectAllowed = 'move';
+            e.dataTransfer.setData('text/plain', box.getAttribute('data-index')); // Payload
+            box.classList.add('opacity-50');
+        });
+
+        // 2. Drag End
+        box.addEventListener('dragend', function(e) {
+            box.classList.remove('opacity-50');
             draggedElement = null;
-        }
-    });
+            document.querySelectorAll('.image-upload-box').forEach(b => b.classList.remove('border-blue-500', 'border-2', 'bg-blue-50'));
+            updateImagesInput();
+        });
+
+        // 3. Drag Over (Allow Drop)
+        box.addEventListener('dragover', function(e) {
+            e.preventDefault(); // allow drop
+            e.stopPropagation();
+            
+            // Visual Feedback
+            box.classList.add('border-blue-500', 'border-2', 'bg-blue-50');
+            
+            if (draggedElement) {
+                e.dataTransfer.dropEffect = 'move';
+            } else {
+                // Assume file
+                e.dataTransfer.dropEffect = 'copy';
+            }
+        });
+
+        // 4. Drag Enter
+        box.addEventListener('dragenter', function(e) {
+            e.preventDefault();
+            e.stopPropagation();
+            box.classList.add('border-blue-500', 'border-2', 'bg-blue-50');
+        });
+
+        // 5. Drag Leave
+        box.addEventListener('dragleave', function(e) {
+            e.preventDefault();
+            e.stopPropagation();
+            
+            // Detect if leaving the box entirely (not just into a child)
+            if (e.relatedTarget && !box.contains(e.relatedTarget) && e.relatedTarget !== box) {
+                box.classList.remove('border-blue-500', 'border-2', 'bg-blue-50');
+            }
+        });
+
+        // 6. DROP (The Core Logic)
+        box.addEventListener('drop', function(e) {
+            e.preventDefault();
+            e.stopPropagation();
+            box.classList.remove('border-blue-500', 'border-2', 'bg-blue-50');
+
+            const dt = e.dataTransfer;
+            
+            console.log('Drop detected.');
+
+            if (dt && dt.files && dt.files.length > 0) {
+                console.log('File dropped:', dt.files[0].name);
+                handleFiles(dt.files, box, placeholder, preview, removeBtn);
+                // reset drag state just in case
+                if(draggedElement) draggedElement = null; 
+                return; 
+            }
+
+            // PRIORITY 2: INTERNAL REORDER
+            if (draggedElement) {
+                if (draggedElement !== box && draggedElement.parentNode === box.parentNode) {
+                    const container = document.getElementById('imageUploadArea');
+                    const boxes = Array.from(container.querySelectorAll('.image-upload-box'));
+                    const fromIndex = boxes.indexOf(draggedElement);
+                    const toIndex = boxes.indexOf(box);
+
+                    // Robust insertBefore with null check
+                    if (fromIndex < toIndex) {
+                        // Inserting after (nextSibling might be null, which allows append)
+                        container.insertBefore(draggedElement, box.nextSibling);
+                    } else {
+                        // Inserting before (box is valid node)
+                        container.insertBefore(draggedElement, box);
+                    }
+                    updateImagesInput();
+                } else {
+                    console.warn("Invalid drop target or dragged element lost");
+                }
+                
+                // Cleanup
+                draggedElement.classList.remove('opacity-50');
+                draggedElement = null;
+            }
+        });
+    } catch (err) {
+        console.error("Error binding box events:", err);
+    }
 }
 
 function handleFiles(files, box, placeholder, preview, removeBtn) {
-    if (files.length === 0) return;
+    if (!files || files.length === 0) return;
     const file = files[0];
     
     // Validate Image/Video Type
@@ -256,7 +270,6 @@ function handleFiles(files, box, placeholder, preview, removeBtn) {
         baseUrl = BASE_URL;
     } else {
         // Fallback: try to guess from current path
-        // url: /zensshop/admin/products/add.php -> base: /zensshop
         const parts = window.location.pathname.split('/admin/');
         if (parts.length > 1) {
             baseUrl = parts[0];
@@ -345,7 +358,7 @@ function updateImagesInput() {
                 const img = box.querySelector('.image-preview img');
                 const video = box.querySelector('.image-preview video');
                 
-                if (!box.querySelector('.image-preview').classList.contains('hidden')) {
+                if (box.querySelector('.image-preview') && !box.querySelector('.image-preview').classList.contains('hidden')) {
                     if (img) {
                         path = img.getAttribute('src');
                     } else if (video) {
@@ -373,7 +386,10 @@ function removeImageBox(btn) {
 
 function addMoreImage() {
     const container = document.getElementById('imageUploadArea');
+    if (!container) return;
+    
     // Ensure index is unique
+    if (typeof window.nextImageIndex === 'undefined') window.nextImageIndex = 0;
     const index = window.nextImageIndex++; 
     
     const boxHtml = `

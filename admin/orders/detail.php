@@ -278,8 +278,18 @@ require_once __DIR__ . '/../../includes/admin-header.php';
             </h2>
             
             <?php if (empty($orderData['tracking_number'])): ?>
-                <div class="p-4 bg-gray-50 rounded-lg border border-dashed border-gray-300 text-center">
-                    <p class="text-sm text-gray-500 mb-4">No shipment created yet for this order.</p>
+                <div class="p-4 bg-gray-50 rounded-lg border border-dashed border-gray-300">
+                    <p class="text-sm text-gray-500 mb-4 text-center">No shipment created yet for this order.</p>
+                    <div class="grid grid-cols-2 gap-4 border-b border-dashed pb-3 mb-4">
+                        <div>
+                            <p class="text-[10px] font-bold text-gray-400 uppercase">Est. Weight</p>
+                            <p class="text-xs font-bold text-gray-700"><?php echo number_format($orderData['total_weight'] ?? 0.5, 2); ?> kg</p>
+                        </div>
+                        <div>
+                            <p class="text-[10px] font-bold text-gray-400 uppercase">Packages</p>
+                            <p class="text-xs font-bold text-gray-700"><?php echo (int)($orderData['package_count'] ?? 1); ?></p>
+                        </div>
+                    </div>
                     <button onclick="handleDelhiveryAction('create_shipment')" id="createShipmentBtn" 
                             class="w-full bg-orange-600 text-white py-2 rounded font-semibold hover:bg-orange-700 transition flex items-center justify-center">
                         <i class="fas fa-plus-circle mr-2"></i> Create Delhivery Shipment
@@ -290,6 +300,17 @@ require_once __DIR__ . '/../../includes/admin-header.php';
                     <div>
                         <p class="text-xs font-bold text-gray-400 uppercase">Waybill / Tracking No.</p>
                         <p class="text-lg font-mono font-bold text-blue-600"><?php echo htmlspecialchars($orderData['tracking_number']); ?></p>
+                    </div>
+
+                    <div class="grid grid-cols-2 gap-4 border-t pt-2 mt-2">
+                        <div>
+                            <p class="text-xs font-bold text-gray-400 uppercase">Total Weight</p>
+                            <p class="text-sm font-bold text-gray-700"><?php echo number_format($orderData['total_weight'] ?? 0.5, 2); ?> kg</p>
+                        </div>
+                        <div>
+                            <p class="text-xs font-bold text-gray-400 uppercase">Packages</p>
+                            <p class="text-sm font-bold text-gray-700"><?php echo (int)($orderData['package_count'] ?? 1); ?></p>
+                        </div>
                     </div>
                     
                     <div id="trackingStatusContainer" class="p-3 bg-blue-50 rounded border border-blue-100 text-sm">
@@ -402,6 +423,14 @@ require_once __DIR__ . '/../../includes/admin-header.php';
                         ?>
                     </span>
                 </div>
+
+                <!-- COD Charge -->
+                <?php if (($orderData['cod_charge'] ?? 0) > 0): ?>
+                <div class="flex justify-between text-sm">
+                    <span class="text-gray-600">COD Service Charge</span>
+                    <span class="text-gray-900 font-medium"><?php echo format_currency($orderData['cod_charge']); ?></span>
+                </div>
+                <?php endif; ?>
                 
                 <!-- Tax Breakup -->
                 <?php if (($orderData['cgst_total'] ?? 0) > 0): ?>
