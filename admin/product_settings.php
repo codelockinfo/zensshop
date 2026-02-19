@@ -20,7 +20,7 @@ $styles = json_decode($stylesJson, true);
 // Handle Form Submission
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     try {
-        $newStyles = [
+        $pageStyles = [
             'page_bg_color' => $_POST['page_bg_color'] ?? '#ffffff',
             'info_box_bg_color' => $_POST['info_box_bg_color'] ?? '#f9fafb',
             'info_box_text_color' => $_POST['info_box_text_color'] ?? '#374151',
@@ -37,8 +37,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             'divider_color' => $_POST['divider_color'] ?? '#e5e7eb',
             'in_stock_color' => $_POST['in_stock_color'] ?? '#1a3d32',
             'out_stock_color' => $_POST['out_stock_color'] ?? '#b91c1c',
-            'btn_hover_bg_color' => $_POST['btn_hover_bg_color'] ?? '#000000',
-            'btn_hover_text_color' => $_POST['btn_hover_text_color'] ?? '#ffffff',
+            'atc_hover_bg_color' => $_POST['atc_hover_bg_color'] ?? '#000000',
+            'atc_hover_text_color' => $_POST['atc_hover_text_color'] ?? '#ffffff',
+            'buy_now_hover_bg_color' => $_POST['buy_now_hover_bg_color'] ?? '#991b1b',
+            'buy_now_hover_text_color' => $_POST['buy_now_hover_text_color'] ?? '#ffffff',
             
             // Related Products Section
             'show_related' => isset($_POST['show_related']) ? '1' : '0',
@@ -51,7 +53,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             'recent_subtitle' => $_POST['recent_subtitle'] ?? "Explore your recently viewed items, blending quality and style for a refined living experience.",
         ];
         
-        $settingsObj->set('product_page_styles', json_encode($newStyles), 'product');
+        // Merge with existing to preserve 'quickview' sub-key
+        $updatedStyles = array_merge($styles, $pageStyles);
+        
+        $settingsObj->set('product_page_styles', json_encode($updatedStyles), 'product');
         
         $_SESSION['flash_success'] = "Product page settings updated successfully!";
         header("Location: " . $baseUrl . '/admin/product_settings.php');
@@ -85,8 +90,10 @@ $s_border_color = $styles['border_color'] ?? '#e5e7eb';
 $s_divider_color = $styles['divider_color'] ?? '#e5e7eb';
 $s_in_stock_color = $styles['in_stock_color'] ?? '#1a3d32';
 $s_out_stock_color = $styles['out_stock_color'] ?? '#b91c1c';
-$s_btn_hover_bg_color = $styles['btn_hover_bg_color'] ?? '#000000';
-$s_btn_hover_text_color = $styles['btn_hover_text_color'] ?? '#ffffff';
+$s_atc_hover_bg_color = $styles['atc_hover_bg_color'] ?? '#000000';
+$s_atc_hover_text_color = $styles['atc_hover_text_color'] ?? '#ffffff';
+$s_buy_now_hover_bg_color = $styles['buy_now_hover_bg_color'] ?? '#991b1b';
+$s_buy_now_hover_text_color = $styles['buy_now_hover_text_color'] ?? '#ffffff';
 
 $s_show_related = $styles['show_related'] ?? '1';
 $s_related_title = $styles['related_title'] ?? 'People Also Bought';
@@ -110,7 +117,7 @@ require_once __DIR__ . '/../includes/admin-header.php';
                     <p class="text-xs text-gray-500 mt-0.5">Customize the appearance and sections of the product detail page.</p>
                 </div>
                 <div class="flex items-center gap-4">
-                    <button type="submit" class="bg-blue-600 text-white px-8 py-2.5 rounded-lg font-bold hover:bg-blue-700 transition shadow-lg flex items-center gap-2">
+                    <button type="submit" class="bg-blue-600 text-white px-8 py-2.5 rounded-lg font-bold hover:bg-blue-700 transition shadow-lg flex items-center gap-2 btn-loading">
                         <i class="fas fa-save"></i> Save Settings
                     </button>
                 </div>
@@ -246,17 +253,31 @@ require_once __DIR__ . '/../includes/admin-header.php';
                                 </div>
                             </div>
                             <div>
-                                <label class="block text-sm font-semibold text-gray-700 mb-2">Button Hover Background</label>
+                                <label class="block text-sm font-semibold text-gray-700 mb-2">Add to Cart Hover BG</label>
                                 <div class="flex items-center gap-3">
-                                    <input type="color" name="btn_hover_bg_color" value="<?php echo htmlspecialchars($s_btn_hover_bg_color); ?>" class="h-10 w-16 border rounded cursor-pointer p-0.5" oninput="this.nextElementSibling.value = this.value">
-                                    <input type="text" value="<?php echo htmlspecialchars($s_btn_hover_bg_color); ?>" class="flex-1 border rounded p-2 text-sm uppercase" oninput="this.previousElementSibling.value = this.value">
+                                    <input type="color" name="atc_hover_bg_color" value="<?php echo htmlspecialchars($s_atc_hover_bg_color); ?>" class="h-10 w-16 border rounded cursor-pointer p-0.5" oninput="this.nextElementSibling.value = this.value">
+                                    <input type="text" value="<?php echo htmlspecialchars($s_atc_hover_bg_color); ?>" class="flex-1 border rounded p-2 text-sm uppercase" oninput="this.previousElementSibling.value = this.value">
                                 </div>
                             </div>
                              <div>
-                                <label class="block text-sm font-semibold text-gray-700 mb-2">Button Hover Text Color</label>
+                                <label class="block text-sm font-semibold text-gray-700 mb-2">Add to Cart Hover Text</label>
                                 <div class="flex items-center gap-3">
-                                    <input type="color" name="btn_hover_text_color" value="<?php echo htmlspecialchars($s_btn_hover_text_color); ?>" class="h-10 w-16 border rounded cursor-pointer p-0.5" oninput="this.nextElementSibling.value = this.value">
-                                    <input type="text" value="<?php echo htmlspecialchars($s_btn_hover_text_color); ?>" class="flex-1 border rounded p-2 text-sm uppercase" oninput="this.previousElementSibling.value = this.value">
+                                    <input type="color" name="atc_hover_text_color" value="<?php echo htmlspecialchars($s_atc_hover_text_color); ?>" class="h-10 w-16 border rounded cursor-pointer p-0.5" oninput="this.nextElementSibling.value = this.value">
+                                    <input type="text" value="<?php echo htmlspecialchars($s_atc_hover_text_color); ?>" class="flex-1 border rounded p-2 text-sm uppercase" oninput="this.previousElementSibling.value = this.value">
+                                </div>
+                            </div>
+                            <div>
+                                <label class="block text-sm font-semibold text-gray-700 mb-2">Buy Now Hover BG</label>
+                                <div class="flex items-center gap-3">
+                                    <input type="color" name="buy_now_hover_bg_color" value="<?php echo htmlspecialchars($s_buy_now_hover_bg_color); ?>" class="h-10 w-16 border rounded cursor-pointer p-0.5" oninput="this.nextElementSibling.value = this.value">
+                                    <input type="text" value="<?php echo htmlspecialchars($s_buy_now_hover_bg_color); ?>" class="flex-1 border rounded p-2 text-sm uppercase" oninput="this.previousElementSibling.value = this.value">
+                                </div>
+                            </div>
+                             <div>
+                                <label class="block text-sm font-semibold text-gray-700 mb-2">Buy Now Hover Text</label>
+                                <div class="flex items-center gap-3">
+                                    <input type="color" name="buy_now_hover_text_color" value="<?php echo htmlspecialchars($s_buy_now_hover_text_color); ?>" class="h-10 w-16 border rounded cursor-pointer p-0.5" oninput="this.nextElementSibling.value = this.value">
+                                    <input type="text" value="<?php echo htmlspecialchars($s_buy_now_hover_text_color); ?>" class="flex-1 border rounded p-2 text-sm uppercase" oninput="this.previousElementSibling.value = this.value">
                                 </div>
                             </div>
                         </div>
@@ -411,11 +432,15 @@ require_once __DIR__ . '/../includes/admin-header.php';
 
                 <style id="previewStyles">
                     #prevAtcBtn:hover {
-                        background-color: <?php echo $s_btn_hover_bg_color; ?> !important;
-                        color: <?php echo $s_btn_hover_text_color; ?> !important;
+                        background-color: <?php echo $s_atc_hover_bg_color; ?> !important;
+                        color: <?php echo $s_atc_hover_text_color; ?> !important;
+                    }
+                    #prevBuyNowBtn:hover {
+                        background-color: <?php echo $s_buy_now_hover_bg_color; ?> !important;
+                        color: <?php echo $s_buy_now_hover_text_color; ?> !important;
                     }
                     #productPreview .grid div:hover {
-                        border-color: <?php echo $s_btn_hover_bg_color; ?> !important;
+                        border-color: <?php echo $s_atc_hover_bg_color; ?> !important;
                     }
                 </style>
             </div>
@@ -494,11 +519,15 @@ document.addEventListener('DOMContentLoaded', function() {
         const styleTag = document.getElementById('previewStyles');
         styleTag.innerHTML = `
             #prevAtcBtn:hover {
-                background-color: \${settings.btn_hover_bg_color} !important;
-                color: \${settings.btn_hover_text_color} !important;
+                background-color: \${settings.atc_hover_bg_color} !important;
+                color: \${settings.atc_hover_text_color} !important;
+            }
+            #prevBuyNowBtn:hover {
+                background-color: \${settings.buy_now_hover_bg_color} !important;
+                color: \${settings.buy_now_hover_text_color} !important;
             }
             #productPreview .grid div:hover {
-                border-color: \${settings.btn_hover_bg_color} !important;
+                border-color: \${settings.atc_hover_bg_color} !important;
             }
         `;
     }

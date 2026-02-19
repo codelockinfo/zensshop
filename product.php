@@ -231,8 +231,10 @@ $p_divider_color = $productStyles['divider_color'] ?? '#e5e7eb';
 $p_in_stock_color = $productStyles['in_stock_color'] ?? '#1a3d32';
 $p_out_stock_color = $productStyles['out_stock_color'] ?? '#b91c1c';
 
-$p_hover_bg = $productStyles['btn_hover_bg_color'] ?? '#000000';
-$p_hover_text = $productStyles['btn_hover_text_color'] ?? '#ffffff';
+$p_atc_hover_bg = $productStyles['atc_hover_bg_color'] ?? '#000000';
+$p_atc_hover_text = $productStyles['atc_hover_text_color'] ?? '#ffffff';
+$p_buy_hover_bg = $productStyles['buy_now_hover_bg_color'] ?? '#991b1b';
+$p_buy_hover_text = $productStyles['buy_now_hover_text_color'] ?? '#ffffff';
 ?>
 
 <style>
@@ -255,14 +257,13 @@ $p_hover_text = $productStyles['btn_hover_text_color'] ?? '#ffffff';
     }
     
     /* Hover Overrides */
-    #product-main-section button.bg-primary:hover,
-    #product-main-section button.bg-black:hover,
-    #product-main-section .bg-red-600:hover,
-    #product-main-section button[onclick*="addToCart"]:hover,
-    #product-main-section button[onclick*="buyNow"]:hover,
-    #sticky-atc-btn:hover {
-        background-color: <?php echo $p_hover_bg; ?> !important;
-        color: <?php echo $p_hover_text; ?> !important;
+    #productCartAddToCartBtn:hover, #sticky-atc-btn:hover {
+        background-color: <?php echo $p_atc_hover_bg; ?> !important;
+        color: <?php echo $p_atc_hover_text; ?> !important;
+    }
+    #productCartBuyNowBtn:hover {
+        background-color: <?php echo $p_buy_hover_bg; ?> !important;
+        color: <?php echo $p_buy_hover_text; ?> !important;
     }
     
     /* Variant Styles */
@@ -786,7 +787,7 @@ $p_hover_text = $productStyles['btn_hover_text_color'] ?? '#ffffff';
                 
                 <!-- Pickup Information -->
                 <?php if ($settings->get('pickup_enable', '1') == '1'): ?>
-                <div class="product-info-box p-4 rounded-lg">
+                <div class="product-info-box p-4 rounded-lg flex">
                     <div class="text-sm flex items-start">
                         <i class="<?php echo htmlspecialchars($settings->get('pickup_icon', 'fas fa-store')); ?> mr-2 text-primary mt-1 flex-shrink-0"></i>
                         <div class="prose prose-sm max-w-none" style="color: inherit;">

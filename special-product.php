@@ -164,7 +164,7 @@ $customSchema = $seoGrp['custom_schema'] ?? '';
 if (!empty($customSchema)) {
     $replacements = [
         '{{description}}' => preg_replace('/\s+/', ' ', strip_tags($heroDescription)),
-        '{{url}}' => $baseUrl . '/special-product.php?page=' . $pageSlug,
+        '{{url}}' => $baseUrl . '/' . $pageSlug,
         '{{image}}' => $mainImage,
         '{{currency}}' => $productData['currency'] ?? 'USD',
         '{{brand}}' => $settingsObj->get('site_name', 'CookPro'),
@@ -187,7 +187,7 @@ if (!empty($customSchema)) {
         "@type" => "Product",
         "name" => $productData['name'],
         "description" => $metaDescription ?: strip_tags($heroDescription),
-        "url" => $baseUrl . '/special-product.php?page=' . $pageSlug,
+        "url" => $baseUrl . '/' . $pageSlug,
         "image" => [$mainImage],
         "brand" => ["@type" => "Brand", "name" => "CookPro"],
         "offers" => [
@@ -195,7 +195,7 @@ if (!empty($customSchema)) {
             "price" => (float)$price,
             "priceCurrency" => $productData['currency'] ?? 'USD',
             "availability" => (isset($productData['quantity']) && $productData['quantity'] <= 0) ? 'https://schema.org/OutOfStock' : 'https://schema.org/InStock',
-            "url" => $baseUrl . '/special-product.php?page=' . $pageSlug,
+            "url" => $baseUrl . '/' . $pageSlug,
             "priceValidUntil" => date('Y-m-d', strtotime('+1 year'))
         ]
     ];

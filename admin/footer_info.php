@@ -69,12 +69,20 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             'footer_show_paypal' => isset($_POST['footer_show_paypal']) ? '1' : '0',
             'footer_show_discover' => isset($_POST['footer_show_discover']) ? '1' : '0',
             'footer_payment_icons_json' => '[]', // Default, will be updated below
-            'footer_bg_color' => $_POST['footer_bg_color'] ?? '#ffffff',
-            'footer_text_color' => $_POST['footer_text_color'] ?? '#000000',
-            'footer_hover_color' => $_POST['footer_hover_color'] ?? '#000000',
         ];
 
-        // 2. Handle Image Upload
+        // 5. Group Style Settings into JSON
+        $footerStyles = [
+            'bg_color' => $_POST['footer_bg_color'] ?? '#ffffff',
+            'text_color' => $_POST['footer_text_color'] ?? '#000000',
+            'hover_color' => $_POST['hover_color'] ?? $_POST['footer_hover_color'] ?? '#000000',
+        ];
+        $settings['footer_styles'] = json_encode($footerStyles);
+        
+        // Remove individual color fields so they aren't saved as separate keys
+        unset($settings['footer_bg_color'], $settings['footer_text_color'], $settings['footer_hover_color']);
+
+        // 6. Save to Database (Key-Value Store)
         if (!empty($_FILES['footer_logo_image']['name'])) {
             // FIX: Use assets/images/uploads to match getImageUrl() expectation
             $uploadDir = __DIR__ . '/../assets/images/uploads/';
@@ -183,13 +191,23 @@ $defaults = [
     'footer_show_amex' => '1',
     'footer_show_paypal' => '1',
     'footer_show_discover' => '1',
-    'footer_show_discover' => '1',
     'footer_payment_icons_json' => '[]',
     'footer_bg_color' => '#ffffff',
     'footer_text_color' => '#000000',
     'footer_hover_color' => '#000000',
 ];
 $settings = array_merge($defaults, $currentSettings);
+
+// Decode Style Array
+if (isset($settings['footer_styles'])) {
+    $stylesArr = json_decode($settings['footer_styles'], true);
+    if ($stylesArr) {
+        $settings['footer_bg_color'] = $stylesArr['bg_color'] ?? $settings['footer_bg_color'];
+        $settings['footer_text_color'] = $stylesArr['text_color'] ?? $settings['footer_text_color'];
+        $settings['footer_hover_color'] = $stylesArr['hover_color'] ?? $settings['footer_hover_color'];
+    }
+}
+
 $socialLinks = json_decode($settings['footer_social_json'], true) ?: [];
 $paymentIcons = json_decode($settings['footer_payment_icons_json'], true) ?: [];
 

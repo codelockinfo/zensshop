@@ -1,4 +1,5 @@
     <?php if ($currentUser): ?>
+            </div>
         </main>
     </div>
     
@@ -25,11 +26,12 @@
         </div>
     </div>
     
-    <script src="<?php echo isset($baseUrl) ? $baseUrl : getBaseUrl(); ?>/assets/js/admin5.js"></script>
+    <script src="<?php echo isset($baseUrl) ? $baseUrl : getBaseUrl(); ?>/assets/js/admin6.js"></script>
     <script src="<?php echo isset($baseUrl) ? $baseUrl : getBaseUrl(); ?>/assets/js/admin-confirm.js"></script>
     <script src="<?php echo isset($baseUrl) ? $baseUrl : getBaseUrl(); ?>/assets/js/admin-search1.js"></script>
     <script src="<?php echo isset($baseUrl) ? $baseUrl : getBaseUrl(); ?>/assets/js/admin-notifications4.js"></script>
     <script src="<?php echo isset($baseUrl) ? $baseUrl : getBaseUrl(); ?>/assets/js/admin-support3.js"></script>
+    <script src="<?php echo isset($baseUrl) ? $baseUrl : getBaseUrl(); ?>/assets/js/admin-ajax.js"></script>
     <?php endif; ?>
     <script>
     // Global function to show loading state on buttons
@@ -92,7 +94,7 @@ document.addEventListener('submit', function(e) {
     });
 
     // Auto-dismiss alerts
-    document.addEventListener('DOMContentLoaded', function() {
+    window.initAlertDismissal = function() {
         // Target explicit alerts and common message patterns
         const alertSelector = '.admin-alert, [role="alert"], .bg-green-100.border, .bg-red-100.border';
         const alerts = document.querySelectorAll(alertSelector);
@@ -109,7 +111,8 @@ document.addEventListener('submit', function(e) {
                 }, 5000); // 5 seconds
             }
         });
-    });
+    };
+    document.addEventListener('DOMContentLoaded', window.initAlertDismissal);
     </script>
 </body>
 </html>
