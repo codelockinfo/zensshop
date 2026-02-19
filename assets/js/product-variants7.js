@@ -1,6 +1,11 @@
-let variantOptions = [];
-let generatedVariants = [];
-const commonOptionNames = ["Size", "Color", "Material", "Style", "Pattern"];
+var variantOptions = window.variantOptions || [];
+var generatedVariants = window.generatedVariants || [];
+var commonOptionNames = window.commonOptionNames || ["Size", "Color", "Material", "Style", "Pattern"];
+
+// Assign back to window to ensure global availability
+window.variantOptions = variantOptions;
+window.generatedVariants = generatedVariants;
+window.commonOptionNames = commonOptionNames;
 
 function addVariantOption() {
     if (variantOptions.length >= 2) {
@@ -571,6 +576,5 @@ function initializeVariantsFromData(data) {
     }
 }
 
-document.addEventListener("DOMContentLoaded", function() {
-    updateAddButtonVisibility();
-});
+document.addEventListener("DOMContentLoaded", updateAddButtonVisibility);
+document.addEventListener("adminPageLoaded", updateAddButtonVisibility);

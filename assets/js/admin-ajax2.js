@@ -32,6 +32,15 @@ document.addEventListener('DOMContentLoaded', function () {
                 // 1. Update Title
                 document.title = doc.title;
                 
+                // 1.5. Clean up TinyMCE BEFORE replacing content
+                if (typeof tinymce !== 'undefined') {
+                    try {
+                        tinymce.remove();
+                    } catch (e) {
+                        console.warn("TinyMCE cleanup error:", e);
+                    }
+                }
+                
                 // 2. Extract and Update Main Content
                 const newContent = doc.querySelector('#ajax-content-inner');
                 if (newContent && contentInner) {
@@ -81,9 +90,6 @@ document.addEventListener('DOMContentLoaded', function () {
         // Admin UI Re-init (Sidebar, toggles, etc.)
         if (window.initAdminUI) window.initAdminUI();
 
-        // Trigger custom event for page-specific scripts
-        document.dispatchEvent(new CustomEvent('adminPageLoaded'));
-
         // Close dropdowns
         document.querySelectorAll('.notification-dropdown-menu').forEach(m => m.classList.add('hidden'));
         
@@ -104,6 +110,9 @@ document.addEventListener('DOMContentLoaded', function () {
             
             script.parentNode.replaceChild(newScript, script);
         });
+
+        // Trigger custom event for page-specific scripts AFTER they are re-executed
+        document.dispatchEvent(new CustomEvent('adminPageLoaded'));
         
         // Re-dismiss alerts if any
         if (window.initAlertDismissal) window.initAlertDismissal();

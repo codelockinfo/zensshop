@@ -2,51 +2,60 @@
  * Admin Image Upload with Drag and Drop & Reordering - Robust Version
  */
 
-document.addEventListener('DOMContentLoaded', function() {
+function setupImageUploadListeners() {
     try {
         initializeImageUpload();
     } catch (e) {
         console.error("Error initializing image upload:", e);
     }
     
-    // Inject Toast CSS
-    const style = document.createElement('style');
-    style.innerHTML = `
-        .admin-toast {
-            position: fixed;
-            top: 20px;
-            right: 20px;
-            padding: 1rem 1.5rem;
-            border-radius: 0.5rem;
-            color: white;
-            font-weight: 500;
-            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-            z-index: 9999;
-            transform: translateX(100%);
-            opacity: 0;
-            transition: all 0.3s ease-in-out;
-            display: flex;
-            align-items: center;
-            gap: 0.75rem;
-        }
-        .admin-toast.show {
-            transform: translateX(0);
-            opacity: 1;
-        }
-        .admin-toast.error { background-color: #ef4444; }
-        .admin-toast.success { background-color: #10b981; }
-        .admin-toast.info { background-color: #3b82f6; }
-    `;
-    document.head.appendChild(style);
+    // Inject Toast CSS if not already there
+    if (!document.getElementById('admin-toast-styles')) {
+        const style = document.createElement('style');
+        style.id = 'admin-toast-styles';
+        style.innerHTML = `
+            .admin-toast {
+                position: fixed;
+                top: 20px;
+                right: 20px;
+                padding: 1rem 1.5rem;
+                border-radius: 0.5rem;
+                color: white;
+                font-weight: 500;
+                box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+                z-index: 9999;
+                transform: translateX(100%);
+                opacity: 0;
+                transition: all 0.3s ease-in-out;
+                display: flex;
+                align-items: center;
+                gap: 0.75rem;
+            }
+            .admin-toast.show {
+                transform: translateX(0);
+                opacity: 1;
+            }
+            .admin-toast.error { background-color: #ef4444; }
+            .admin-toast.success { background-color: #10b981; }
+            .admin-toast.info { background-color: #3b82f6; }
+        `;
+        document.head.appendChild(style);
+    }
 
     // Global prevention of default file opening
-    window.addEventListener('dragover', function(e) {
-        e.preventDefault();
-    }, false);
-    window.addEventListener('drop', function(e) {
-        e.preventDefault();
-    }, false);
-});
+    if (!window.imageDragHandlersBound) {
+        window.addEventListener('dragover', function(e) {
+            e.preventDefault();
+        }, false);
+        window.addEventListener('drop', function(e) {
+            e.preventDefault();
+        }, false);
+        window.imageDragHandlersBound = true;
+    }
+}
+
+document.addEventListener('DOMContentLoaded', setupImageUploadListeners);
+document.addEventListener('adminPageLoaded', setupImageUploadListeners);
 
 // Toast Notification Utility
 function showToast(message, type = 'info', duration = 3000) {
@@ -76,7 +85,8 @@ function showToast(message, type = 'info', duration = 3000) {
     }, duration);
 }
 
-let draggedElement = null;
+var draggedElement = window.draggedElement || null;
+window.draggedElement = draggedElement;
 
 function initializeImageUpload() {
     const imagesInput = document.getElementById('imagesInput');

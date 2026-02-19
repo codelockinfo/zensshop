@@ -81,9 +81,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 'length' => $_POST['length'] ?? 0.00,
                 'width' => $_POST['width'] ?? 0.00,
                 'height' => $_POST['height'] ?? 0.00,
-                'highlights' => $_POST['highlights'] ?? null,
-                'shipping_policy' => $_POST['shipping_policy'] ?? null,
-                'return_policy' => $_POST['return_policy'] ?? null,
+                'highlights' => $_POST['highlights'] ?? $productData['highlights'] ?? null,
+                'shipping_policy' => $_POST['shipping_policy'] ?? $productData['shipping_policy'] ?? null,
+                'return_policy' => $_POST['return_policy'] ?? $productData['return_policy'] ?? null,
                 'images' => []
             ];
         
@@ -150,12 +150,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 // Update product first
                 $product->update($productId, $data);
                 
-                // Handle variants: always delete existing and save new ones (even if empty)
-                $product->deleteVariants($productId);
-                
-                // Save new variants if provided
-                if (!empty($data['variants']) && is_array($data['variants'])) {
-                    $product->saveVariants($productId, $data['variants']);
+                // Handle variants if data provided
+                if (isset($data['variants'])) {
+                    $product->deleteVariants($productId);
+                    if (!empty($data['variants']) && is_array($data['variants'])) {
+                        $product->saveVariants($productId, $data['variants']);
+                    }
                 }
                 
                 return true;
@@ -247,13 +247,12 @@ $existingVariants = $product->getVariants($productId);
 </div>
 <?php endif; ?>
 
+<form id="productForm" method="POST" action="" enctype="multipart/form-data">
 <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
     <!-- Left Column -->
     <div class="space-y-6">
         <div class="admin-card">
             <h2 class="text-xl font-bold mb-4">Product Information</h2>
-            
-            <form id="productForm" method="POST" action="" enctype="multipart/form-data">
                 <div class="admin-form-group">
                     <label class="admin-form-label">Product name *</label>
                     <input type="text" 
@@ -838,11 +837,10 @@ $existingVariants = $product->getVariants($productId);
                 Cancel
             </a>
         </div>
-            </form>
     </div>
 </div>
+</form>
 
-</script>
 
 <script>
 // Inline mini editor for highlights (looks like a text field)
@@ -895,6 +893,8 @@ function removeHighlightRow(btn, editorId) {
 }
 
 document.getElementById('productForm').addEventListener('submit', function(e) {
+
+    
     // Validate Category
     const catSelect = document.getElementById('real-category-select');
     let hasCategory = false;
@@ -927,25 +927,67 @@ document.getElementById('productForm').addEventListener('submit', function(e) {
         tinymce.triggerSave();
     }
 
-    const icons = Array.from(document.querySelectorAll('input[name="highlight_icons[]"]')).map(i => i.value);
-    const editors = Array.from(document.querySelectorAll('.highlight-text-editor'));
-    
-    const highlights = [];
-    for(let i=0; i<icons.length; i++) {
-        const editorId = editors[i].id;
-        const content = (editorId && tinymce.get(editorId)) ? tinymce.get(editorId).getContent() : editors[i].innerHTML;
-        if(icons[i] || content) {
-            highlights.push({ icon: icons[i], text: content });
+    try {
+        const icons = Array.from(document.querySelectorAll('input[name="highlight_icons[]"]')).map(i => i.value);
+        const highlights = [];
+        document.querySelectorAll('.highlight-text-editor').forEach((editor, index) => {
+            // Assuming 'data-id' and 'data-placeholder' might be added or are conceptual
+            // For now, we'll use the editor's actual ID and a generic placeholder if not present
+            const id = editor.id; // Use actual ID
+            const placeholder = editor.getAttribute('data-placeholder') || `Highlight ${index + 1}`; // Fallback placeholder
+            const content = typeof tinymce !== 'undefined' && tinymce.get(editor.id) ? tinymce.get(editor.id).getContent() : editor.innerHTML;
+            
+            // Combine icon and content as per original logic, but with new structure
+            if (icons[index] || content) {
+                highlights.push({ icon: icons[index], text: content });
+            }
+        });
+        
+        if (typeof updateVariantsDataInput === 'function') {
+            updateVariantsDataInput();
         }
+        if (typeof updateImagesInput === 'function') {
+            updateImagesInput();
+        }
+
+        // Explicitly sync variants and images one last time
+        if (typeof updateVariantsDataInput === 'function') {
+            updateVariantsDataInput();
+        }
+        if (typeof updateImagesInput === 'function') {
+            updateImagesInput();
+        }
+    } catch (err) {
+        console.error("Submission Error:", err);
+        // Re-enable buttons so user can try again
+        submitBtns.forEach(btn => {
+            if (btn) {
+                btn.disabled = false;
+                const span = btn.querySelector('span');
+                if (span) span.textContent = 'Save Changes';
+            }
+        });
+        // We don't preventDefault here because we want to see if the browser can submit anyway, 
+        // OR we should alert the user.
+        alert("An error occurred while preparing the form: " + err.message);
+        e.preventDefault();
     }
-    document.getElementById('highlights_json').value = JSON.stringify(highlights);
 });
 </script>
-<script src="<?php echo $baseUrl; ?>/assets/js/admin-image-upload9.js?v=<?php echo time(); ?>"></script>
-<script src="<?php echo $baseUrl; ?>/assets/js/product-variants6.js"></script>
+<script src="<?php echo $baseUrl; ?>/assets/js/admin-image-upload10.js?v=<?php echo time(); ?>"></script>
+<script src="<?php echo $baseUrl; ?>/assets/js/product-variants7.js"></script>
 <script>
 // Initialize with existing images
-document.addEventListener('DOMContentLoaded', function() {
+function initProductEditPage(retryCount = 0) {
+    // Check if external scripts are loaded
+    if (typeof initializeVariantsFromData !== 'function' || typeof initializeImageUpload !== 'function') {
+        if (retryCount < 20) { // Try for 2 seconds
+            setTimeout(() => initProductEditPage(retryCount + 1), 100);
+            return;
+        }
+        console.error("External scripts failed to load in time.");
+    }
+
     const existingImages = <?php echo json_encode($existingImages); ?>;
     const imagesInput = document.getElementById('imagesInput');
     
@@ -953,106 +995,36 @@ document.addEventListener('DOMContentLoaded', function() {
         imagesInput.value = JSON.stringify(existingImages);
     }
     
+    // Initialize image upload module
+    if (typeof initializeImageUpload === 'function') {
+        initializeImageUpload();
+    }
+
     // Initialize variants with existing data
     const existingVariants = <?php echo json_encode($existingVariants); ?>;
     if (existingVariants && existingVariants.options && existingVariants.options.length > 0) {
-        initializeVariantsFromData(existingVariants);
-    }
-});
-
-/**
- * Initialize variants from existing data
- */
-function initializeVariantsFromData(variantsData) {
-    // Clear any existing options
-    variantOptions = [];
-    generatedVariants = [];
-    
-    // Add variant options
-    variantsData.options.forEach((option, index) => {
-        // Add the option card
-        addVariantOption();
-        
-        // Wait for DOM to update
-        setTimeout(() => {
-            const card = document.querySelector(`[data-option-index="${index}"]`);
-            if (card) {
-                // Set option name
-                const nameSelect = card.querySelector('select[id$="_name"]');
-                const nameInput = card.querySelector('input[id$="_name_custom"]');
-                
-                if (commonOptionNames.includes(option.option_name)) {
-                    if (nameSelect) {
-                        nameSelect.value = option.option_name;
-                        updateVariantOptionName(index);
-                    }
-                } else {
-                    if (nameInput) {
-                        nameInput.value = option.option_name;
-                        updateVariantOptionName(index);
-                    }
-                }
-                
-                // Add tags for option values
-                const tagContainer = card.querySelector(`[id$="_tags"]`);
-                
-                if (option.option_values && Array.isArray(option.option_values)) {
-                    option.option_values.forEach(value => {
-                        if (tagContainer && value) {
-                            // Use the same escapeHtml function from product-variants2.js
-                            const escapedValue = value.replace(/"/g, '&quot;').replace(/'/g, '&#39;');
-                            const escapedValueForOnClick = value.replace(/'/g, "\\'");
-                            const tagHtml = `
-                                <span class="tag-item" data-value="${escapedValue}">
-                                    <span class="tag-text">${escapedValue}</span>
-                                    <button type="button" class="tag-remove" onclick="removeTag(${index}, '${escapedValueForOnClick}')">
-                                        <i class="fas fa-times"></i>
-                                    </button>
-                                </span>
-                            `;
-                            tagContainer.insertAdjacentHTML('beforeend', tagHtml);
-                        }
-                    });
-                    
-                    // Update variant options array
-                    if (variantOptions[index]) {
-                        variantOptions[index].name = option.option_name;
-                        variantOptions[index].values = option.option_values || [];
-                    }
-                }
-            }
-        }, 100 * (index + 1));
-    });
-    
-    // After all options are loaded, generate variants and populate with existing data
-    setTimeout(() => {
-        generateVariants();
-        
-        // Populate existing variant data
-        if (variantsData.variants && variantsData.variants.length > 0) {
-            variantsData.variants.forEach((existingVariant, idx) => {
-                // Find matching variant in generated variants
-                const matchingVariant = generatedVariants.find(v => {
-                    return JSON.stringify(v.attributes) === JSON.stringify(existingVariant.variant_attributes);
-                });
-                
-                if (matchingVariant) {
-                    matchingVariant.sku = existingVariant.sku || '';
-                    matchingVariant.price = existingVariant.price || '';
-                    matchingVariant.sale_price = existingVariant.sale_price || '';
-                    matchingVariant.stock_quantity = existingVariant.stock_quantity || 0;
-                    matchingVariant.stock_status = existingVariant.stock_status || 'in_stock';
-                    matchingVariant.image = existingVariant.image || '';
-                    matchingVariant.is_default = existingVariant.is_default || 0;
-                }
-            });
-            
-            // Re-render table with populated data
-            renderVariantsTable();
-            updateVariantsDataInput();
+        if (typeof initializeVariantsFromData === 'function') {
+            initializeVariantsFromData(existingVariants);
+        } else {
+            console.error("initializeVariantsFromData not found!");
         }
-    }, 500);
+    }
+
+    // Re-initialize highlight editors
+    if (typeof initHighlightEditor === 'function') {
+        document.querySelectorAll('.highlight-text-editor').forEach(el => {
+            if (typeof tinymce !== 'undefined' && !tinymce.get(el.id)) {
+                initHighlightEditor(el);
+            }
+        });
+    }
 }
+
+document.addEventListener('DOMContentLoaded', () => initProductEditPage());
+document.addEventListener('adminPageLoaded', () => initProductEditPage());
+
+// Call immediately in case this script is being re-executed by AJAX
+initProductEditPage();
 </script>
 
 <!-- Brand Management Modal -->

@@ -103,7 +103,7 @@ $action = $segments[count($segments) - 1] ?? '';  // add, list
     // Global TinyMCE 6 Initialization
     window.initTinyMCE = function() {
         if (typeof tinymce !== 'undefined') {
-            tinymce.remove('.rich-text-editor, .rich-text-full, .rich-text-small');
+            tinymce.remove('.rich-text-editor, .rich-text-full, .rich-text-small, .highlight-text-editor');
             // Shared config options
             const sharedConfig = {
                 plugins: 'advlist autolink lists link image charmap preview anchor searchreplace visualblocks code fullscreen insertdatetime media table code help wordcount quickbars',

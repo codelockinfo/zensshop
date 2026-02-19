@@ -176,13 +176,12 @@ $brands = $brandsResult ? json_decode($brandsResult['setting_value'], true) : []
 </div>
 <?php endif; ?>
 
+<form id="productForm" method="POST" action="" enctype="multipart/form-data">
 <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
     <!-- Left Column -->
     <div class="space-y-6">
         <div class="admin-card">
             <h2 class="text-lg md:text-xl font-bold mb-4">Product Information</h2>
-            
-            <form id="productForm" method="POST" action="" enctype="multipart/form-data">
                 <div class="admin-form-group">
                     <label class="admin-form-label">Product name *</label>
                     <input type="text" 
@@ -714,9 +713,9 @@ $brands = $brandsResult ? json_decode($brandsResult['setting_value'], true) : []
                 Reset
             </button>
         </div>
-            </form>
     </div>
 </div>
+</form>
 
 <script>
 // BASE_URL is already declared in admin-header.php, so check if it exists first
@@ -810,19 +809,42 @@ document.getElementById('productForm').addEventListener('submit', function(e) {
         tinymce.triggerSave();
     }
 
-    const icons = Array.from(document.querySelectorAll('input[name="highlight_icons[]"]')).map(i => i.value);
-    const editors = Array.from(document.querySelectorAll('.highlight-text-editor'));
-    
-    const highlights = [];
-    for(let i=0; i<icons.length; i++) {
-        // For inline editors, we must use tinymce.get().getContent() 
-        const editorId = editors[i].id;
-        const content = (editorId && tinymce.get(editorId)) ? tinymce.get(editorId).getContent() : editors[i].innerHTML;
-        if(icons[i] || content) {
-            highlights.push({ icon: icons[i], text: content });
+    try {
+        const icons = Array.from(document.querySelectorAll('input[name="highlight_icons[]"]')).map(i => i.value);
+        const editors = Array.from(document.querySelectorAll('.highlight-text-editor'));
+        
+        const highlights = [];
+        for(let i=0; i<icons.length; i++) {
+            const editorId = editors[i].id;
+            const content = (editorId && tinymce.get(editorId)) ? tinymce.get(editorId).getContent() : editors[i].innerHTML;
+            if(icons[i] || content) {
+                highlights.push({ icon: icons[i], text: content });
+            }
         }
+        document.getElementById('highlights_json').value = JSON.stringify(highlights);
+
+        // Explicitly sync variants and images one last time
+        if (typeof updateVariantsDataInput === 'function') {
+            updateVariantsDataInput();
+        }
+        if (typeof updateImagesInput === 'function') {
+            updateImagesInput();
+        }
+    } catch (err) {
+        console.error("Submission Error:", err);
+        // Re-enable buttons so user can try again
+        submitBtns.forEach(btn => {
+            if (btn) {
+                btn.disabled = false;
+                const span = btn.querySelector('span');
+                if (span) span.textContent = 'Save Product';
+                const icon = btn.querySelector('i');
+                if (icon) icon.className = 'fas fa-save mr-2';
+            }
+        });
+        alert("An error occurred while preparing the form: " + err.message);
+        e.preventDefault();
     }
-    document.getElementById('highlights_json').value = JSON.stringify(highlights);
 });
 
 function checkStockStatus(input) {
@@ -837,8 +859,8 @@ function checkStockStatus(input) {
     }
 }
 </script>
-<script src="<?php echo $baseUrl; ?>/assets/js/admin-image-upload9.js?v=<?php echo time(); ?>"></script>
-<script src="<?php echo $baseUrl; ?>/assets/js/product-variants6.js"></script>
+<script src="<?php echo $baseUrl; ?>/assets/js/admin-image-upload10.js?v=<?php echo time(); ?>"></script>
+<script src="<?php echo $baseUrl; ?>/assets/js/product-variants7.js"></script>
 
 <!-- Brand Management Modal -->
 <div id="brandModal" class="hidden fixed inset-0 bg-black/50 z-[100] flex items-center justify-center p-4">
