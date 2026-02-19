@@ -20,7 +20,7 @@ if (!$auth->isLoggedIn()) {
 
 $db = Database::getInstance();
 $query = trim($_GET['q'] ?? '');
-$storeId = $_SESSION['store_id'] ?? null;
+$storeId = (!empty($_GET['store_id'])) ? $_GET['store_id'] : ($_SESSION['store_id'] ?? null);
 
 if (empty($query) || strlen($query) < 2) {
     echo json_encode([
@@ -43,12 +43,12 @@ $results = [
 try {
     // Search Products (by name, SKU, ID)
     $products = $db->fetchAll(
-        "SELECT id, name, sku, price, status, featured_image 
+        "SELECT id, product_id, name, sku, price, status, featured_image 
          FROM products 
-         WHERE store_id = ? AND (name LIKE ? OR sku LIKE ? OR id = ?)
+         WHERE store_id = ? AND (name LIKE ? OR sku LIKE ? OR id = ? OR product_id LIKE ?)
          ORDER BY name ASC 
          LIMIT 5",
-        [$storeId, $searchTerm, $searchTerm, is_numeric($query) ? (int)$query : -1]
+        [$storeId, $searchTerm, $searchTerm, is_numeric($query) ? (int)$query : -1, $searchTerm]
     );
     
     foreach ($products as $product) {
@@ -59,7 +59,7 @@ try {
             'price' => $product['price'],
             'status' => $product['status'],
             'image' => !empty($product['featured_image']) ? getImageUrl($product['featured_image']) : ($baseUrl . '/assets/images/default-product.svg'),
-            'url' => url("admin/products/edit.php?id={$product['id']}")
+            'url' => url("admin/products/view.php?product_id={$product['product_id']}")
         ];
     }
     
@@ -122,22 +122,26 @@ try {
     // First check if customers table exists
     try {
         $customers = $db->fetchAll(
-            "SELECT id, name, email, phone, created_at 
+            "SELECT id, customer_id, name, email, phone, created_at 
              FROM customers 
-             WHERE store_id = ? AND (name LIKE ? OR email LIKE ? OR phone LIKE ? OR id = ?)
+             WHERE store_id = ? AND (name LIKE ? OR email LIKE ? OR phone LIKE ? OR id = ? OR customer_id LIKE ?)
              ORDER BY name ASC 
              LIMIT 5",
-            [$storeId, $searchTerm, $searchTerm, $searchTerm, is_numeric($query) ? (int)$query : -1]
+            [$storeId, $searchTerm, $searchTerm, $searchTerm, is_numeric($query) ? (int)$query : -1, $searchTerm]
         );
         
         foreach ($customers as $customer) {
+            // Use public customer_id for URL if available, otherwise fallback to internal id
+            $urlId = !empty($customer['customer_id']) ? $customer['customer_id'] : $customer['id'];
+            
             $results['customers'][] = [
-                'id' => $customer['id'],
+                'id' => $customer['id'], // Keep internal ID for consistency
+                'customer_id' => $customer['customer_id'], // Expose public ID
                 'name' => $customer['name'],
                 'email' => $customer['email'],
                 'phone' => $customer['phone'] ?? '',
                 'created_at' => $customer['created_at'],
-                'url' => url("admin/customers/view.php?id={$customer['id']}")
+                'url' => url("admin/customers/view.php?id={$urlId}")
             ];
         }
     } catch (Exception $e) {

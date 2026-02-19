@@ -69,37 +69,67 @@ $products = $db->fetchAll($sql, $params);
 </div>
 
 <script>
-document.addEventListener('DOMContentLoaded', function() {
+window.initProductSearch = function() {
     const searchInput = document.getElementById('searchInput');
     const tableRows = document.querySelectorAll('tbody tr');
+    
+    if (!searchInput) return;
 
-    searchInput.addEventListener('input', function(e) {
-        const query = e.target.value.toLowerCase();
-        
+    function filterRows(query) {
+        let visibleCount = 0;
         tableRows.forEach(row => {
+            if (row.id === 'noDataMessage') return; // Skip the message row itself
+            
             const text = row.innerText.toLowerCase();
-            if (text.includes(query)) {
+            const sku = (row.dataset.sku || '').toLowerCase();
+            const productId = (row.dataset.productId || '').toLowerCase();
+            
+            if (query === '' || text.includes(query) || sku.includes(query) || productId.includes(query)) {
                 row.style.display = '';
+                visibleCount++;
             } else {
                 row.style.display = 'none';
             }
         });
+
+        // Show/hide "No data match" message
+        const noDataMessage = document.getElementById('noDataMessage');
+        if (noDataMessage) {
+            if (visibleCount === 0) {
+                noDataMessage.classList.remove('hidden');
+            } else {
+                noDataMessage.classList.add('hidden');
+            }
+        }
+    }
+
+    // Initial filter if search param exists
+    if (searchInput.value.trim() !== '') {
+        filterRows(searchInput.value.trim().toLowerCase());
+    }
+
+    searchInput.addEventListener('input', function(e) {
+        const query = e.target.value.toLowerCase().trim();
+        filterRows(query);
         
-        // Update URL without reload for bookmarks/refresh
+        // Update URL without reload
         const newUrl = new URL(window.location);
         if (query) {
             newUrl.searchParams.set('search', query);
         } else {
             newUrl.searchParams.delete('search');
         }
-        window.history.pushState({}, '', newUrl);
+        window.history.replaceState({}, '', newUrl);
     });
-});
+};
+
+document.addEventListener('DOMContentLoaded', window.initProductSearch);
+document.addEventListener('adminPageLoaded', window.initProductSearch);
 </script>
 
-<div class="admin-card overflow-x-auto">
-    <table class="admin-table">
-        <thead>
+<div class="admin-card overflow-x-auto admin-card-list">
+    <table class="admin-table ">
+        <thead class="list-header">
             <tr>
                 <th class="sortable cursor-pointer hover:bg-gray-100" data-column="row_number">
                     <div class="flex items-center justify-between">
@@ -166,7 +196,9 @@ document.addEventListener('DOMContentLoaded', function() {
             <?php foreach ($products as $index => $item): 
                 $mainImage = getProductImage($item);
             ?>
-            <tr data-row-number="<?php echo $index + 1; ?>">
+            <tr data-row-number="<?php echo $index + 1; ?>" 
+                data-sku="<?php echo htmlspecialchars($item['sku'] ?? ''); ?>" 
+                data-product-id="<?php echo htmlspecialchars($item['product_id'] ?? ''); ?>">
                 <td><?php echo $index + 1; ?></td>
                 <td>
                     <div class="flex items-center space-x-3">
@@ -237,6 +269,12 @@ document.addEventListener('DOMContentLoaded', function() {
                 </td>
             </tr>
             <?php endforeach; ?>
+            <tr id="noDataMessage" class="hidden">
+                <td colspan="9" class="text-center py-8 text-gray-500">
+                    <i class="fas fa-search mb-2 text-2xl block"></i>
+                    No data match
+                </td>
+            </tr>
         </tbody>
     </table>
 </div>
@@ -272,8 +310,9 @@ function deleteProduct(id) {
 }
 
 // Table sorting functionality
-document.addEventListener('DOMContentLoaded', function() {
+window.initProductSort = function() {
     const table = document.querySelector('.admin-table');
+    if (!table) return;
     const headers = table.querySelectorAll('th.sortable');
     let currentSort = { column: null, direction: 'asc' };
     
@@ -305,11 +344,15 @@ document.addEventListener('DOMContentLoaded', function() {
             const upArrow = this.querySelector('.fa-caret-up');
             const downArrow = this.querySelector('.fa-caret-down');
             if (currentSort.direction === 'asc') {
-                upArrow.classList.remove('text-gray-400');
-                upArrow.classList.add('text-blue-600');
+                if (upArrow) {
+                    upArrow.classList.remove('text-gray-400');
+                    upArrow.classList.add('text-blue-600');
+                }
             } else {
-                downArrow.classList.remove('text-gray-400');
-                downArrow.classList.add('text-blue-600');
+                if (downArrow) {
+                    downArrow.classList.remove('text-gray-400');
+                    downArrow.classList.add('text-blue-600');
+                }
             }
             
             // Sort rows
@@ -345,10 +388,21 @@ document.addEventListener('DOMContentLoaded', function() {
             });
             
             // Re-append sorted rows
-            rows.forEach(row => tbody.appendChild(row));
+            rows.forEach(row => {
+                if (row.id !== 'noDataMessage') {
+                    tbody.appendChild(row);
+                }
+            });
+            
+            // Ensure noDataMessage is always at the bottom
+            const noDataMessage = document.getElementById('noDataMessage');
+            if (noDataMessage) tbody.appendChild(noDataMessage);
         });
     });
-});
+};
+
+document.addEventListener('DOMContentLoaded', window.initProductSort);
+document.addEventListener('adminPageLoaded', window.initProductSort);
 </script>
 
 <?php require_once __DIR__ . '/../../includes/admin-footer.php'; ?>

@@ -86,6 +86,27 @@ $topbarArrow = $settingsObj->get('topbar_arrow_color', '#9ca3af');
 $breadcrumbText = $settingsObj->get('breadcrumb_text_color', '#6b7280');
 $breadcrumbHover = $settingsObj->get('breadcrumb_hover_color', '#111827');
 
+// Fetch Search Section Settings
+$searchSectionSettingsJson = $settingsObj->get('search_section_settings', '{}');
+$searchSectionSettings = json_decode($searchSectionSettingsJson, true);
+
+$ss_heading_text = $searchSectionSettings['heading_text'] ?? 'Search Our Site';
+$ss_trending_text = $searchSectionSettings['trending_text'] ?? 'Trending Search';
+$ss_popular_heading = $searchSectionSettings['popular_heading_text'] ?? 'Popular Products';
+$ss_overlay_bg = $searchSectionSettings['overlay_bg_color'] ?? '#ffffff';
+$ss_heading_color = $searchSectionSettings['heading_color'] ?? '#000000';
+$ss_text_color = $searchSectionSettings['general_text_color'] ?? '#374151';
+$ss_input_text_color = $searchSectionSettings['input_text_color'] ?? '#000000';
+$ss_card_bg = $searchSectionSettings['card_bg_color'] ?? '#ffffff';
+$ss_card_border = $searchSectionSettings['card_border_color'] ?? '#e5e7eb';
+$ss_card_heading = $searchSectionSettings['card_heading_color'] ?? '#111827';
+$ss_sale_price_color = $searchSectionSettings['card_sale_price_color'] ?? '#1a3d32';
+$ss_compare_price_color = $searchSectionSettings['card_compare_price_color'] ?? '#9ca3af';
+$ss_view_all_bg = $searchSectionSettings['view_all_bg_color'] ?? '#000000';
+$ss_view_all_text = $searchSectionSettings['view_all_text_color'] ?? '#ffffff';
+$ss_view_all_hover_bg = $searchSectionSettings['view_all_hover_bg_color'] ?? '#333333';
+$ss_view_all_hover_text = $searchSectionSettings['view_all_hover_text_color'] ?? '#ffffff';
+
 
 
 // Get base URL using the centralized function
@@ -317,6 +338,41 @@ $gs_tooltip_text = getGlobalStyle('tooltip_text_color', $globalCardStyles, '#fff
         }
         nav.breadcrumb-nav a:hover { 
             color: <?php echo $breadcrumbHover; ?> !important; 
+        }
+
+        /* Search Overlay Dynamic Styles */
+        #searchOverlay {
+            background-color: <?php echo $ss_overlay_bg; ?> !important;
+        }
+        #searchOverlay h2, #searchOverlay h3 {
+            color: <?php echo $ss_heading_color; ?> !important;
+        }
+        #searchOverlay, #searchOverlay .text-gray-600, #searchOverlay .text-gray-400 {
+            color: <?php echo $ss_text_color; ?> !important;
+        }
+        #headerSearchInput {
+            color: <?php echo $ss_input_text_color; ?> !important;
+        }
+        .search-product-card {
+            background-color: <?php echo $ss_card_bg; ?> !important;
+            border-color: <?php echo $ss_card_border; ?> !important;
+        }
+        .search-product-card h4 {
+            color: <?php echo $ss_card_heading; ?> !important;
+        }
+        .search-product-card .price-val, .search-product-card .sale-price {
+            color: <?php echo $ss_sale_price_color; ?> !important;
+        }
+        .search-product-card .compare-price {
+            color: <?php echo $ss_compare_price_color; ?> !important;
+        }
+        .view-all-search-results {
+            background-color: <?php echo $ss_view_all_bg; ?> !important;
+            color: <?php echo $ss_view_all_text; ?> !important;
+        }
+        .view-all-search-results:hover {
+            background-color: <?php echo $ss_view_all_hover_bg; ?> !important;
+            color: <?php echo $ss_view_all_hover_text; ?> !important;
         }
     </style>
     
@@ -1366,14 +1422,15 @@ if (!empty($headerMenuItems)) {
         </button>
 
         <div class="container mx-auto px-4 pt-20 pb-12 relative max-w-6xl">
-            <h2 class="text-3xl font-serif text-center mb-8">Search Our Site</h2>
+            <h2 class="text-3xl font-serif text-center mb-8"><?php echo htmlspecialchars($ss_heading_text); ?></h2>
             
             <div class="max-w-3xl mx-auto relative mb-12">
                 <form action="<?php echo url('shop'); ?>" method="GET" class="relative group border border-gray-300 rounded-full focus-within:border-black transition-colors px-4" onclick="document.getElementById('headerSearchInput').focus()">
                     <input type="text" name="search" id="headerSearchInput" placeholder="I'm looking for..." 
-                           class="w-full px-4 py-3 text-lg font-light bg-transparent text-left text-black focus:outline-none placeholder-gray-400"
+                           class="w-full px-4 py-3 text-lg font-light bg-transparent text-left focus:outline-none placeholder-gray-400"
+                           style="color: <?php echo $ss_text_color; ?>;"
                            autocomplete="off">
-                    <button type="submit" id="headerSearchSubmitBtn" class="absolute right-4 top-1/2 -translate-y-1/2 text-black p-2">
+                    <button type="submit" id="headerSearchSubmitBtn" class="absolute right-4 top-1/2 -translate-y-1/2 p-2" style="color: <?php echo $ss_text_color; ?>;">
                         <i class="fas fa-search text-xl"></i>
                     </button>
                     <button type="button" id="headerSearchClearBtn" class="hidden absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 hover:text-black p-2 transition-colors">
@@ -1384,7 +1441,7 @@ if (!empty($headerMenuItems)) {
 
             <!-- Trending Search (Always Visible) -->
             <div class="mb-12 text-center hidden md:block">
-                <h3 class="text-lg font-serif mb-6 text-gray-900">Trending Search</h3>
+                <h3 class="text-lg font-serif mb-6"><?php echo htmlspecialchars($ss_trending_text); ?></h3>
                 <div class="flex flex-wrap justify-center gap-3">
                     <?php
                     // Fetch random categories for Trending Search
@@ -1396,13 +1453,14 @@ if (!empty($headerMenuItems)) {
                     foreach ($trendingCats as $tc): 
                     ?>
                         <a href="<?php echo url('shop?category=' . $tc['slug']); ?>" 
-                           class="px-6 py-2 rounded-full border border-gray-200 text-gray-600 hover:border-black hover:text-black transition text-sm">
+                           class="px-6 py-2 rounded-full border border-gray-200 hover:border-black hover:text-black transition text-sm"
+                           style="color: <?php echo $ss_text_color; ?>;">
                             <?php echo htmlspecialchars($tc['name']); ?>
                         </a>
                     <?php endforeach; ?>
                     <?php if(empty($trendingCats)): ?>
-                        <a href="<?php echo url('shop'); ?>" class="px-6 py-2 rounded-full border border-gray-200 text-gray-600 hover:border-black hover:text-black transition text-sm">All Products</a>
-                        <a href="<?php echo url('shop?sort=best_selling'); ?>" class="px-6 py-2 rounded-full border border-gray-200 text-gray-600 hover:border-black hover:text-black transition text-sm">Best Sellers</a>
+                        <a href="<?php echo url('shop'); ?>" class="px-6 py-2 rounded-full border border-gray-200 hover:border-black hover:text-black transition text-sm" style="color: <?php echo $ss_text_color; ?>;">All Products</a>
+                        <a href="<?php echo url('shop?sort=best_selling'); ?>" class="px-6 py-2 rounded-full border border-gray-200 hover:border-black hover:text-black transition text-sm" style="color: <?php echo $ss_text_color; ?>;">Best Sellers</a>
                     <?php endif; ?>
                 </div>
             </div>
@@ -1411,7 +1469,7 @@ if (!empty($headerMenuItems)) {
             <div id="searchPopularContent" class="animate-fade-in">
                 <!-- Popular Products -->
                 <div>
-                    <h3 class="text-lg font-serif mb-8 text-gray-900 text-center">Popular Products</h3>
+                    <h3 class="text-lg font-serif mb-8 text-center"><?php echo htmlspecialchars($ss_popular_heading); ?></h3>
                     
                     <!-- Popular Products Slider -->
                     <div class="relative group/slider">
@@ -1431,19 +1489,19 @@ if (!empty($headerMenuItems)) {
                                     $currencySymbol = defined('CURRENCY_SYMBOL') ? CURRENCY_SYMBOL : '₹';
                                 ?>
                                 <div class="min-w-[200px] w-[200px] flex-shrink-0">
-                                    <a href="<?php echo url('product?slug=' . $pp['slug']); ?>" class="block h-full bg-white border border-gray-100 rounded-lg shadow-sm hover:shadow-md transition p-3">
+                                    <a href="<?php echo url('product?slug=' . $pp['slug']); ?>" class="search-product-card block h-full border border-gray-100 rounded-lg shadow-sm hover:shadow-md transition p-3">
                                         <div class="relative overflow-hidden rounded-lg mb-3 aspect-[3/4]">
                                             <img src="<?php echo htmlspecialchars($ppImg); ?>" 
                                                  alt="<?php echo htmlspecialchars($pp['name']); ?>" 
                                                  class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500">
                                         </div>
-                                        <h4 class="font-medium text-gray-900 text-sm mb-1 truncate group-hover:text-primary transition"><?php echo htmlspecialchars($pp['name']); ?></h4>
+                                        <h4 class="font-medium text-sm mb-1 truncate group-hover:text-primary transition"><?php echo htmlspecialchars($pp['name']); ?></h4>
                                         <div class="flex items-center gap-2 text-sm">
                                             <?php if ($ppOldPrice): ?>
-                                                <span class="text-gray-400 line-through"><?php echo format_price($ppOldPrice); ?></span>
-                                                <span class="text-[#1a3d32] font-semibold"><?php echo format_price($ppPrice); ?></span>
+                                                <span class="compare-price line-through text-xs opacity-70"><?php echo format_price($ppOldPrice); ?></span>
+                                                <span class="price-val font-semibold"><?php echo format_price($ppPrice); ?></span>
                                             <?php else: ?>
-                                                <span class="text-gray-900 font-semibold"><?php echo format_price($ppPrice); ?></span>
+                                                <span class="price-val font-semibold"><?php echo format_price($ppPrice); ?></span>
                                             <?php endif; ?>
                                         </div>
                                         <div class="flex text-yellow-400 text-xs mt-1">
@@ -1712,8 +1770,19 @@ if (!empty($headerMenuItems)) {
                                         <div id="searchResultsSlider" class="flex transition-transform duration-500 ease-out will-change-transform gap-4">`;
                                 
                                 data.products.forEach(p => {
-                                    // ... (Existing inner loop logic)
-                                    const price = parseFloat(p.sale_price || p.price);
+                                    const actualPrice = parseFloat(p.sale_price || p.price);
+                                    const hasSale = p.sale_price && parseFloat(p.sale_price) < parseFloat(p.price);
+                                    let priceHtml = '';
+                                    if (hasSale) {
+                                        priceHtml = `
+                                            <span class="compare-price line-through text-xs opacity-70">${formatPrice(p.price)}</span>
+                                            <span class="price-val font-semibold text-sm">${formatPrice(p.sale_price)}</span>
+                                        `;
+                                    } else {
+                                        priceHtml = `<span class="price-val font-semibold text-sm">${formatPrice(p.price)}</span>`;
+                                    }
+
+
                                     let imgSrc = '';
                                     if (p.images) { try { const imgs = JSON.parse(p.images); imgSrc = imgs[0] || ''; } catch(e) {} }
                                     if (!imgSrc && p.featured_image) imgSrc = p.featured_image;
@@ -1729,13 +1798,13 @@ if (!empty($headerMenuItems)) {
 
                                     html += `
                                         <div class="min-w-[200px] w-[200px] flex-shrink-0">
-                                            <a href="${baseUrl}/product?slug=${p.slug}" class="block h-full bg-white border border-gray-100 rounded-lg shadow-sm hover:shadow-md transition p-3 group">
+                                            <a href="${baseUrl}/product?slug=${p.slug}" class="search-product-card block h-full border border-gray-100 rounded-lg shadow-sm hover:shadow-md transition p-3 group">
                                                 <div class="relative overflow-hidden rounded-lg mb-3 aspect-[3/4]">
                                                     <img src="${imgSrc}" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" onerror="this.src='${baseUrl}/assets/images/placeholder.png'">
                                                 </div>
-                                                <h4 class="font-medium text-gray-900 text-sm mb-1 truncate group-hover:text-primary transition">${p.name}</h4>
+                                                <h4 class="font-medium text-sm mb-1 truncate group-hover:text-primary transition">${p.name}</h4>
                                                 <div class="flex items-center gap-2 mb-1">
-                                                    <span class="text-gray-900 font-semibold text-sm">${formatPrice(price)}</span>
+                                                    ${priceHtml}
                                                 </div>
                                                 <div class="flex text-yellow-400 text-xs mt-1">
                                                     ${ratingHtml}
@@ -1761,7 +1830,7 @@ if (!empty($headerMenuItems)) {
                                 // View All Link
                                 html += `
                                     <div class="text-center mt-8">
-                                        <a href="${baseUrl}/shop.php?search=${encodeURIComponent(query)}" class="inline-block px-8 py-3 bg-black text-white hover:bg-gray-800 transition rounded-full text-sm font-medium hover:font-bold hover:text-white">
+                                        <a href="${baseUrl}/shop.php?search=${encodeURIComponent(query)}" class="view-all-search-results inline-block px-8 py-3 bg-black text-white hover:bg-gray-800 transition rounded-full text-sm font-medium hover:font-bold hover:text-white">
                                             View All Results
                                         </a>
                                     </div>

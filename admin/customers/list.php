@@ -87,11 +87,12 @@ $customers = $customer->getAllCustomers($filters);
             </select>
             <form method="GET" action="" class="flex items-center flex-wrap space-x-2 text-sm md:text-base w-full md:w-auto" id="searchForm">
                 <input type="text" 
+                       id="searchInput"
                        name="search"
                        placeholder="Search here..." 
                        value="<?php echo htmlspecialchars($search); ?>"
                        class="border rounded px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm md:text-base w-full md:w-auto"
-                       onkeypress="if(event.key === 'Enter') { document.getElementById('searchForm').submit(); }">
+                       onkeypress="if(event.key === 'Enter'){event.preventDefault(); return false;}">
                 <?php if ($status): ?>
                 <input type="hidden" name="status" value="<?php echo htmlspecialchars($status); ?>">
                 <?php endif; ?>
@@ -100,9 +101,9 @@ $customers = $customer->getAllCustomers($filters);
     </div>
 </div>
 
-<div class="admin-card overflow-x-auto">
+<div class="admin-card overflow-x-auto admin-card-list">
     <table class="admin-table">
-        <thead>
+        <thead class="list-header">
             <tr>
                 <th class="sortable cursor-pointer hover:bg-gray-100" data-column="row_number">
                     <div class="flex items-center justify-between">
@@ -164,7 +165,9 @@ $customers = $customer->getAllCustomers($filters);
             </tr>
             <?php else: ?>
             <?php foreach ($customers as $index => $item): ?>
-            <tr data-row-number="<?php echo $index + 1; ?>">
+            <tr data-row-number="<?php echo $index + 1; ?>"
+                data-email="<?php echo htmlspecialchars($item['email'] ?? ''); ?>"
+                data-customer-id="<?php echo htmlspecialchars($item['id'] ?? ''); ?>">
                 <td><?php echo $index + 1; ?></td>
                 <td>
                     <div class="flex items-center space-x-3">
@@ -217,14 +220,21 @@ $customers = $customer->getAllCustomers($filters);
             </tr>
             <?php endforeach; ?>
             <?php endif; ?>
+            <tr id="noDataMessage" class="hidden">
+                <td colspan="9" class="text-center py-8 text-gray-500">
+                    <i class="fas fa-search mb-2 text-2xl block"></i>
+                    No data match
+                </td>
+            </tr>
         </tbody>
     </table>
 </div>
 
 <script>
 // Table sorting functionality
-document.addEventListener('DOMContentLoaded', function() {
+window.initCustomerSort = function() {
     const table = document.querySelector('.admin-table');
+    if (!table) return;
     const headers = table.querySelectorAll('th.sortable');
     let currentSort = { column: null, direction: 'asc' };
     
@@ -261,11 +271,15 @@ document.addEventListener('DOMContentLoaded', function() {
             const upArrow = this.querySelector('.fa-caret-up');
             const downArrow = this.querySelector('.fa-caret-down');
             if (currentSort.direction === 'asc') {
-                upArrow.classList.remove('text-gray-400');
-                upArrow.classList.add('text-blue-600');
+                if (upArrow) {
+                    upArrow.classList.remove('text-gray-400');
+                    upArrow.classList.add('text-blue-600');
+                }
             } else {
-                downArrow.classList.remove('text-gray-400');
-                downArrow.classList.add('text-blue-600');
+                if (downArrow) {
+                    downArrow.classList.remove('text-gray-400');
+                    downArrow.classList.add('text-blue-600');
+                }
             }
             
             // Sort rows
@@ -297,11 +311,76 @@ document.addEventListener('DOMContentLoaded', function() {
             });
             
             // Re-append sorted rows
-            rows.forEach(row => tbody.appendChild(row));
+            rows.forEach(row => {
+                if (row.id !== 'noDataMessage') {
+                    tbody.appendChild(row);
+                }
+            });
+            
+            // Ensure noDataMessage is always at the bottom
+            const noDataMessage = document.getElementById('noDataMessage');
+            if (noDataMessage) tbody.appendChild(noDataMessage);
         });
     });
-});
+};
+
+document.addEventListener('DOMContentLoaded', window.initCustomerSort);
+document.addEventListener('adminPageLoaded', window.initCustomerSort);
+</script>
+
+<script>
+window.initCustomerSearch = function() {
+    const searchInput = document.getElementById('searchInput');
+    const tableRows = document.querySelectorAll('tbody tr');
+
+    // Make search work as user types
+    if (searchInput) {
+        searchInput.addEventListener('input', function(e) {
+            const query = e.target.value.toLowerCase().trim();
+            let visibleCount = 0;
+            
+            tableRows.forEach(row => {
+                if (row.id === 'noDataMessage') return;
+                
+                // Search in all visible text plus data attributes
+                const text = row.innerText.toLowerCase();
+                const email = (row.dataset.email || '').toLowerCase();
+                const customerId = (row.dataset.customerId || '').toLowerCase();
+                
+                if (query === '' || text.includes(query) || email.includes(query) || customerId.includes(query)) {
+                    row.style.display = '';
+                    visibleCount++;
+                } else {
+                    row.style.display = 'none';
+                }
+            });
+
+            // Show/hide "No data match" message
+            const noDataMessage = document.getElementById('noDataMessage');
+            if (noDataMessage) {
+                if (visibleCount === 0) {
+                    noDataMessage.classList.remove('hidden');
+                } else {
+                    noDataMessage.classList.add('hidden');
+                }
+            }
+            
+            // Update URL without reload for bookmarks/refresh
+            const newUrl = new URL(window.location);
+            if (query) {
+                newUrl.searchParams.set('search', query);
+            } else {
+                newUrl.searchParams.delete('search');
+            }
+            window.history.replaceState({}, '', newUrl);
+        });
+    }
+};
+
+document.addEventListener('DOMContentLoaded', window.initCustomerSearch);
+document.addEventListener('adminPageLoaded', window.initCustomerSearch);
 </script>
 
 <?php require_once __DIR__ . '/../../includes/admin-footer.php'; ?>
+
 

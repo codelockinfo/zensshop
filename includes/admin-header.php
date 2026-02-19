@@ -92,12 +92,13 @@ $action = $segments[count($segments) - 1] ?? '';  // add, list
     <link rel="stylesheet" href="<?php echo $baseUrl; ?>/assets/css/fontawesome-custom.css">
     
     <!-- Custom CSS -->
-    <link rel="stylesheet" href="<?php echo $baseUrl; ?>/assets/css/admin3.css">
+    <link rel="stylesheet" href="<?php echo $baseUrl; ?>/assets/css/admin4.css">
     <!-- TinyMCE 6 -->
     <script src="https://cdn.jsdelivr.net/npm/tinymce@6/tinymce.min.js"></script>
     <script>
     // Make BASE_URL available globally for all admin pages
     const BASE_URL = '<?php echo $baseUrl; ?>';
+    const STORE_ID = '<?php echo $h_storeId ?? ''; ?>';
     
     // Global TinyMCE 6 Initialization
     window.initTinyMCE = function() {
@@ -341,6 +342,14 @@ $action = $segments[count($segments) - 1] ?? '';  // add, list
         </div>
         
         <div class="flex items-center space-x-4">
+            <!-- View Store Link -->
+            <a href="<?php echo $baseUrl; ?>" target="_blank" class="text-gray-600 hover:text-blue-600 flex items-center gap-2 transition-colors duration-200" title="View Store">
+                <div class="w-8 h-8 rounded-full bg-gray-100 flex items-center justify-center hover:bg-blue-50 transition-colors">
+                    <i class="fas fa-external-link-alt text-gray-500 hover:text-blue-600"></i>
+                </div>
+                <span class="hidden lg:inline text-sm font-medium">View Store</span>
+            </a>
+
             <!-- Search Container -->
             <div class="relative admin-search-container">
                 <button class="text-gray-600 hover:text-gray-800" id="adminSearchToggle">
@@ -582,6 +591,7 @@ $isSettingsPage = strpos($_SERVER['PHP_SELF'], 'settings') !== false
                || strpos($_SERVER['PHP_SELF'], 'shop_settings') !== false
                || strpos($_SERVER['PHP_SELF'], 'product_settings') !== false
                || strpos($_SERVER['PHP_SELF'], 'cart_settings') !== false
+               || strpos($_SERVER['PHP_SELF'], 'search_settings') !== false
                || strpos($_SERVER['PHP_SELF'], 'pages') !== false
                || strpos($_SERVER['PHP_SELF'], 'page-edit') !== false
                || strpos($_SERVER['REQUEST_URI'], 'admin/blogs') !== false
@@ -790,6 +800,13 @@ $currentPage = basename($_SERVER['PHP_SELF']);
            title="Checkout Settings">
             <i class="fas fa-credit-card text-xs"></i>
             <span>Checkout</span>
+        </a>
+
+        <a href="<?php echo url('admin/search_settings.php'); ?>"
+           class="flex items-center space-x-2 py-1 px-4 text-sm <?php echo (strpos($_SERVER['REQUEST_URI'], 'admin/search_settings') !== false) ? 'bg-gray-700' : ''; ?>"
+           title="Search Section Styling">
+            <i class="fas fa-search text-xs"></i>
+            <span>Search</span>
         </a>
 
     </div>

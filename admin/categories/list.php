@@ -36,28 +36,33 @@ $categories = $db->fetchAll("SELECT * FROM categories WHERE store_id = ? ORDER B
 </div>
 
 <script>
-document.addEventListener('DOMContentLoaded', function() {
+window.initCategorySearch = function() {
     const searchInput = document.getElementById('categorySearch');
     const tableRows = document.querySelectorAll('.admin-table tbody tr');
 
-    searchInput.addEventListener('input', function(e) {
-        const searchTerm = e.target.value.toLowerCase();
+    if (searchInput) {
+        searchInput.addEventListener('input', function(e) {
+            const searchTerm = e.target.value.toLowerCase();
 
-        tableRows.forEach(row => {
-            const text = row.innerText.toLowerCase();
-            if (text.includes(searchTerm)) {
-                row.style.display = '';
-            } else {
-                row.style.display = 'none';
-            }
+            tableRows.forEach(row => {
+                const text = row.innerText.toLowerCase();
+                if (text.includes(searchTerm)) {
+                    row.style.display = '';
+                } else {
+                    row.style.display = 'none';
+                }
+            });
         });
-    });
-});
+    }
+};
+
+document.addEventListener('DOMContentLoaded', window.initCategorySearch);
+document.addEventListener('adminPageLoaded', window.initCategorySearch);
 </script>
 
-<div class="admin-card overflow-x-auto">
+<div class="admin-card overflow-x-auto admin-card-list">
     <table class="admin-table">
-        <thead>
+        <thead class="list-header">
             <tr>
                 <th class="sortable cursor-pointer hover:bg-gray-100" data-column="row_number">
                     <div class="flex items-center justify-between">
@@ -152,8 +157,9 @@ function deleteCategory(id) {
 }
 
 // Table sorting functionality
-document.addEventListener('DOMContentLoaded', function() {
+window.initCategorySort = function() {
     const table = document.querySelector('.admin-table');
+    if (!table) return;
     const headers = table.querySelectorAll('th.sortable');
     let currentSort = { column: null, direction: 'asc' };
     
@@ -185,11 +191,15 @@ document.addEventListener('DOMContentLoaded', function() {
             const upArrow = this.querySelector('.fa-caret-up');
             const downArrow = this.querySelector('.fa-caret-down');
             if (currentSort.direction === 'asc') {
-                upArrow.classList.remove('text-gray-400');
-                upArrow.classList.add('text-blue-600');
+                if (upArrow) {
+                    upArrow.classList.remove('text-gray-400');
+                    upArrow.classList.add('text-blue-600');
+                }
             } else {
-                downArrow.classList.remove('text-gray-400');
-                downArrow.classList.add('text-blue-600');
+                if (downArrow) {
+                    downArrow.classList.remove('text-gray-400');
+                    downArrow.classList.add('text-blue-600');
+                }
             }
             
             // Sort rows
@@ -220,7 +230,10 @@ document.addEventListener('DOMContentLoaded', function() {
             rows.forEach(row => tbody.appendChild(row));
         });
     });
-});
+};
+
+document.addEventListener('DOMContentLoaded', window.initCategorySort);
+document.addEventListener('adminPageLoaded', window.initCategorySort);
 </script>
 
 <?php require_once __DIR__ . '/../../includes/admin-footer.php'; ?>

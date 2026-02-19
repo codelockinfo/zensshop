@@ -105,17 +105,15 @@ unset($_SESSION['success'], $_SESSION['error']);
 
     <!-- Search -->
     <div class="mb-4">
-        <form method="GET" class="flex gap-2">
-            <input type="text" name="search" value="<?php echo htmlspecialchars($search); ?>" 
+        <div class="flex gap-2">
+            <input type="text" id="searchInput" name="search" value="<?php echo htmlspecialchars($search); ?>" 
                    placeholder="Search by email..." 
-                   class="flex-1 border rounded px-4 py-2">
-            <button type="submit" class="bg-blue-600 text-white px-6 py-2 rounded hover:bg-blue-700">
-                <i class="fas fa-search"></i> Search
-            </button>
+                   class="flex-1 border rounded px-4 py-2"
+                   onkeypress="if(event.key === 'Enter'){event.preventDefault(); return false;}">
             <?php if ($search): ?>
                 <a href="?" class="bg-gray-500 text-white px-4 py-2 rounded hover:bg-gray-600">Clear</a>
             <?php endif; ?>
-        </form>
+        </div>
     </div>
 
     <!-- Stats -->
@@ -165,7 +163,7 @@ unset($_SESSION['success'], $_SESSION['error']);
                     </tr>
                 <?php else: ?>
                     <?php foreach ($subscribers as $sub): ?>
-                        <tr class="hover:bg-gray-50">
+                        <tr class="hover:bg-gray-50" data-email="<?php echo htmlspecialchars($sub['email'] ?? ''); ?>">
                             <td class="px-6 py-4 text-sm"><?php echo $sub['id']; ?></td>
                             <td class="px-6 py-4 text-sm font-medium"><?php echo htmlspecialchars($sub['email']); ?></td>
                             <td class="px-6 py-4 text-sm">
@@ -196,6 +194,12 @@ unset($_SESSION['success'], $_SESSION['error']);
                         </tr>
                     <?php endforeach; ?>
                 <?php endif; ?>
+                <tr id="noDataMessage" class="hidden">
+                    <td colspan="5" class="text-center py-8 text-gray-500">
+                        <i class="fas fa-search mb-2 text-2xl block"></i>
+                        No data match
+                    </td>
+                </tr>
             </tbody>
         </table>
     </div>
@@ -225,4 +229,57 @@ unset($_SESSION['success'], $_SESSION['error']);
     <?php endif; ?>
 </div>
 
+<script>
+window.initSubscriberSearch = function() {
+    const searchInput = document.getElementById('searchInput');
+    const tableRows = document.querySelectorAll('tbody tr');
+
+    // Make search work as user types
+    if (searchInput) {
+        searchInput.addEventListener('input', function(e) {
+            const query = e.target.value.toLowerCase().trim();
+            let visibleCount = 0;
+            
+            tableRows.forEach(row => {
+                if (row.id === 'noDataMessage') return;
+                
+                // Search in all visible text plus data attributes
+                const text = row.innerText.toLowerCase();
+                const email = (row.dataset.email || '').toLowerCase();
+                
+                if (query === '' || text.includes(query) || email.includes(query)) {
+                    row.style.display = '';
+                    visibleCount++;
+                } else {
+                    row.style.display = 'none';
+                }
+            });
+
+            // Show/hide "No data match" message
+            const noDataMessage = document.getElementById('noDataMessage');
+            if (noDataMessage) {
+                if (visibleCount === 0) {
+                    noDataMessage.classList.remove('hidden');
+                } else {
+                    noDataMessage.classList.add('hidden');
+                }
+            }
+            
+            // Update URL without reload for bookmarks/refresh
+            const newUrl = new URL(window.location);
+            if (query) {
+                newUrl.searchParams.set('search', query);
+            } else {
+                newUrl.searchParams.delete('search');
+            }
+            window.history.replaceState({}, '', newUrl);
+        });
+    }
+};
+
+document.addEventListener('DOMContentLoaded', window.initSubscriberSearch);
+document.addEventListener('adminPageLoaded', window.initSubscriberSearch);
+</script>
+
 <?php require_once __DIR__ . '/../../includes/admin-footer.php'; ?>
+

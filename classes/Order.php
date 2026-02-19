@@ -17,6 +17,7 @@ class Order {
      */
     public function getAll($filters = []) {
         $sql = "SELECT o.*, 
+                c.customer_id as public_customer_id,
                 COUNT(oi.id) as item_count,
                 SUM(oi.quantity) as total_quantity,
                 (SELECT p.featured_image 
@@ -26,6 +27,7 @@ class Order {
                  LIMIT 1) as product_image
                 FROM orders o
                 LEFT JOIN order_items oi ON o.order_number = oi.order_num
+                LEFT JOIN customers c ON (o.user_id = c.id OR (o.user_id IS NULL AND o.customer_email = c.email))
                 WHERE 1=1";
         $params = [];
 
@@ -50,8 +52,9 @@ class Order {
         }
         
         if (!empty($filters['search'])) {
-            $sql .= " AND (o.order_number LIKE ? OR o.customer_name LIKE ? OR o.customer_email LIKE ?)";
+            $sql .= " AND (o.order_number LIKE ? OR o.customer_name LIKE ? OR o.customer_email LIKE ? OR c.customer_id LIKE ?)";
             $searchTerm = "%{$filters['search']}%";
+            $params[] = $searchTerm;
             $params[] = $searchTerm;
             $params[] = $searchTerm;
             $params[] = $searchTerm;

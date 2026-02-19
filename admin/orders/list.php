@@ -54,10 +54,12 @@ $orders = $order->getAll($filters);
             <!-- Search Input -->
             <div class="relative">
                 <input type="text" 
+                       id="searchInput"
                        name="search"
                        placeholder="Search order..." 
                        value="<?php echo htmlspecialchars($filters['search']); ?>"
-                       class="border border-gray-300 rounded px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 w-64 h-10">
+                       class="border border-gray-300 rounded px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 w-64 h-10"
+                       onkeypress="if(event.key === 'Enter'){event.preventDefault(); return false;}">
             </div>
         </form>
         <a href="<?php echo url('admin/orders/export_csv.php'); ?>" class="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600 transition flex items-center">
@@ -66,9 +68,9 @@ $orders = $order->getAll($filters);
     </div>
 </div>
 
-<div class="admin-card overflow-x-auto">
+<div class="admin-card overflow-x-auto admin-card-list">
     <table class="admin-table">
-        <thead>
+        <thead class="list-header">
             <tr>
                 <th class="sortable cursor-pointer hover:bg-gray-100" data-column="row_number">
                     <div class="flex items-center justify-between">
@@ -135,7 +137,9 @@ $orders = $order->getAll($filters);
                 // Get product image with fallback using helper function
                 $productImage = !empty($item['product_image']) ? getImageUrl($item['product_image']) : 'https://placehold.co/50';
             ?>
-            <tr data-row-number="<?php echo $index + 1; ?>">
+            <tr data-row-number="<?php echo $index + 1; ?>"
+                data-customer-email="<?php echo htmlspecialchars($item['customer_email'] ?? ''); ?>"
+                data-customer-id="<?php echo htmlspecialchars($item['public_customer_id'] ?? ''); ?>">
                 <td><?php echo $index + 1; ?></td>
                 <td>
                     <img src="<?php echo htmlspecialchars($productImage); ?>" 
@@ -211,6 +215,12 @@ $orders = $order->getAll($filters);
                 </td>
             </tr>
             <?php endforeach; ?>
+            <tr id="noDataMessage" class="hidden">
+                <td colspan="10" class="text-center py-8 text-gray-500">
+                    <i class="fas fa-search mb-2 text-2xl block"></i>
+                    No data match
+                </td>
+            </tr>
         </tbody>
     </table>
 </div>
@@ -301,8 +311,9 @@ function deleteOrder(id) {
     })
 
 // Table sorting functionality
-document.addEventListener('DOMContentLoaded', function() {
+window.initOrderSort = function() {
     const table = document.querySelector('.admin-table');
+    if (!table) return;
     const headers = table.querySelectorAll('th.sortable');
     let currentSort = { column: null, direction: 'asc' };
     
@@ -334,11 +345,15 @@ document.addEventListener('DOMContentLoaded', function() {
             const upArrow = this.querySelector('.fa-caret-up');
             const downArrow = this.querySelector('.fa-caret-down');
             if (currentSort.direction === 'asc') {
-                upArrow.classList.remove('text-gray-400');
-                upArrow.classList.add('text-blue-600');
+                if (upArrow) {
+                    upArrow.classList.remove('text-gray-400');
+                    upArrow.classList.add('text-blue-600');
+                }
             } else {
-                downArrow.classList.remove('text-gray-400');
-                downArrow.classList.add('text-blue-600');
+                if (downArrow) {
+                    downArrow.classList.remove('text-gray-400');
+                    downArrow.classList.add('text-blue-600');
+                }
             }
             
             // Sort rows
@@ -376,12 +391,76 @@ document.addEventListener('DOMContentLoaded', function() {
             });
             
             // Re-append sorted rows
-            rows.forEach(row => tbody.appendChild(row));
+            rows.forEach(row => {
+                if (row.id !== 'noDataMessage') {
+                    tbody.appendChild(row);
+                }
+            });
+            
+            // Ensure noDataMessage is always at the bottom
+            const noDataMessage = document.getElementById('noDataMessage');
+            if (noDataMessage) tbody.appendChild(noDataMessage);
         });
     });
-});
+};
+
+document.addEventListener('DOMContentLoaded', window.initOrderSort);
+document.addEventListener('adminPageLoaded', window.initOrderSort);
 </script>
 
+
+<script>
+window.initOrderSearch = function() {
+    const searchInput = document.getElementById('searchInput');
+    const tableRows = document.querySelectorAll('tbody tr');
+
+    // Make search work as user types
+    if (searchInput) {
+        searchInput.addEventListener('input', function(e) {
+            const query = e.target.value.toLowerCase().trim();
+            let visibleCount = 0;
+            
+            tableRows.forEach(row => {
+                if (row.id === 'noDataMessage') return;
+                
+                // Search in all visible text plus hidden attributes
+                const text = row.innerText.toLowerCase();
+                const email = (row.dataset.customerEmail || '').toLowerCase();
+                const customerId = (row.dataset.customerId || '').toLowerCase();
+                
+                if (query === '' || text.includes(query) || email.includes(query) || customerId.includes(query)) {
+                    row.style.display = '';
+                    visibleCount++;
+                } else {
+                    row.style.display = 'none';
+                }
+            });
+
+            // Show/hide "No data match" message
+            const noDataMessage = document.getElementById('noDataMessage');
+            if (noDataMessage) {
+                if (visibleCount === 0) {
+                    noDataMessage.classList.remove('hidden');
+                } else {
+                    noDataMessage.classList.add('hidden');
+                }
+            }
+            
+            // Update URL without reload for bookmarks/refresh
+            const newUrl = new URL(window.location);
+            if (query) {
+                newUrl.searchParams.set('search', query);
+            } else {
+                newUrl.searchParams.delete('search');
+            }
+            window.history.replaceState({}, '', newUrl);
+        });
+    }
+};
+
+document.addEventListener('DOMContentLoaded', window.initOrderSearch);
+document.addEventListener('adminPageLoaded', window.initOrderSearch);
+</script>
 
 <?php require_once __DIR__ . '/../../includes/admin-footer.php'; ?>
 

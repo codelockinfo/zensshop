@@ -79,7 +79,7 @@ $profitLast30Days = $revenueLast30Days * 0.75; // Estimated 75% profit margin lo
 
 <!-- Statistics Cards -->
 <div class="grid grid-cols-3 gap-6 mb-8 dashboard-stats">
-    <div class="admin-card">
+    <a href="<?php echo url('admin/orders/list.php'); ?>" class="admin-card block hover:shadow-lg transition-shadow">
         <div class="flex items-center justify-between">
             <div>
                 <p class="text-gray-600 mb-1 text-sm md:text-base">Total Orders</p>
@@ -90,7 +90,7 @@ $profitLast30Days = $revenueLast30Days * 0.75; // Estimated 75% profit margin lo
                 <i class="fas fa-file-alt text-blue-500 text-lg md:text-2xl"></i>
             </div>
         </div>
-    </div>
+    </a>
     
     <div class="admin-card">
         <div class="flex items-center justify-between">
@@ -105,7 +105,7 @@ $profitLast30Days = $revenueLast30Days * 0.75; // Estimated 75% profit margin lo
         </div>
     </div>
     
-    <div class="admin-card">
+    <a href="<?php echo url('admin/customers/list.php'); ?>" class="admin-card block hover:shadow-lg transition-shadow">
         <div class="flex items-center justify-between">
             <div>
                 <p class="text-gray-600 mb-1 text-sm md:text-base">Total Customer</p>
@@ -116,7 +116,7 @@ $profitLast30Days = $revenueLast30Days * 0.75; // Estimated 75% profit margin lo
                 <i class="fas fa-users text-purple-500 text-lg md:text-2xl"></i>
             </div>
         </div>
-    </div>
+    </a>
 </div>
 
 <!-- Charts Section -->

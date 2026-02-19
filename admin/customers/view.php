@@ -15,7 +15,7 @@ $customer = new Customer();
 $order = new Order();
 
 // Get customer ID or email
-$customerId = $_GET['id'] ?? null;
+$customerId = $_GET['id'] ?? $_GET['customer_id'] ?? null;
 $customerEmail = $_GET['email'] ?? null;
 
 if ($customerId) {
