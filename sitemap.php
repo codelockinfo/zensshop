@@ -53,7 +53,7 @@ try {
     $products = $db->fetchAll("SELECT slug, updated_at FROM products WHERE status = 'active'");
     foreach ($products as $prod) {
         echo '<url>';
-        echo '<loc>' . htmlspecialchars($baseUrl . '/product/' . $prod['slug']) . '</loc>';
+        echo '<loc>' . htmlspecialchars($baseUrl . '/product?slug=' . $prod['slug']) . '</loc>';
         $lastMod = !empty($prod['updated_at']) ? date('Y-m-d', strtotime($prod['updated_at'])) : date('Y-m-d');
         echo '<lastmod>' . $lastMod . '</lastmod>';
         echo '<changefreq>daily</changefreq>';

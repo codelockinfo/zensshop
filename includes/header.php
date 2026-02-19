@@ -315,7 +315,7 @@ if (!function_exists('url')) {
             "@type" => "ListItem",
             "position" => $pos++,
             "name" => $productData['name'],
-            "item" => $baseUrl . '/product/' . $productData['slug']
+            "item" => $baseUrl . '/product?slug=' . $productData['slug']
         ];
     }
     // Context: Category Page (shop.php?category=...)

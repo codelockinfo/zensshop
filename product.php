@@ -149,7 +149,7 @@ if ($firstVariant) {
 // Prepare Offer Data
 $offerSchema = [
     "@type" => "Offer",
-    "url" => $baseUrl . '/product/' . $productData['slug'],
+    "url" => $baseUrl . '/product?slug=' . $productData['slug'],
     "priceCurrency" => "INR",
     "price" => $price,
     "availability" => ($productData['stock_status'] === 'instock' || ($productData['stock'] ?? 0) > 0) ? "https://schema.org/InStock" : "https://schema.org/OutOfStock",
