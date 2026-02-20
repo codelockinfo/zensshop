@@ -468,7 +468,6 @@ $brands = $brandsResult ? json_decode($brandsResult['setting_value'], true) : []
             
             <p class="text-sm text-gray-600">You need to add at least 4 images. Pay attention to the quality of the pictures you add, comply with the background color standards. Pictures must be in certain dimensions. Notice that the product shows all the details.</p>
             <input type="hidden" name="images" id="imagesInput" value="">
-            <input type="hidden" name="highlights" id="highlights_json" value="<?php echo htmlspecialchars($_POST['highlights'] ?? '[]'); ?>">
         </div>
 
         <div class="admin-card">

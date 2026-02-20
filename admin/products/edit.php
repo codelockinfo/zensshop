@@ -943,6 +943,12 @@ document.getElementById('productForm').addEventListener('submit', function(e) {
             }
         });
         
+        if (highlights.length > 0) {
+            document.getElementById('highlights_json').value = JSON.stringify(highlights);
+        } else {
+            document.getElementById('highlights_json').value = '[]';
+        }
+        
         if (typeof updateVariantsDataInput === 'function') {
             updateVariantsDataInput();
         }

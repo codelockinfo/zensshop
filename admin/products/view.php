@@ -375,7 +375,7 @@ $variants = $variantsData['variants'] ?? [];
                             foreach ($highlights as $h): ?>
                         <div class="flex items-center text-gray-700">
                             <i class="<?php echo htmlspecialchars($h['icon'] ?: 'fas fa-check'); ?> mr-2 text-blue-500"></i>
-                            <span><?php echo htmlspecialchars($h['text']); ?></span>
+                            <span><?php echo trim(strip_tags(html_entity_decode($h['text'] ?? '', ENT_QUOTES | ENT_HTML5))); ?></span>
                         </div>
                         <?php endforeach; 
                         else: ?>
