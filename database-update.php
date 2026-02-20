@@ -1504,7 +1504,16 @@ $sql_philosophy = "CREATE TABLE IF NOT EXISTS philosophy_section (
 executeSql($db, $sql_philosophy, "Create/Verify philosophy_section table", $errors, $success, $EXECUTE);
 
 
-
+if (!columnExists($db, 'blogs', 'settings')) {
+    executeSql(
+        $db,
+        "ALTER TABLE blogs ADD COLUMN settings LONGTEXT DEFAULT NULL AFTER layout",
+        "Add settings column to blogs",
+        $errors,
+        $success,
+        $EXECUTE
+    );
+}
 // ==========================================
 // STEP 38: COD Charge Column
 // ==========================================
