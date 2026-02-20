@@ -187,18 +187,20 @@ class Email {
             </div>
             
             <h3 style='margin-bottom: 15px;'>Order Items</h3>
-            <table style='width: 100%; border-collapse: collapse; margin-bottom: 25px;'>
-                <thead>
-                    <tr style='background: #f3f4f6; text-transform: uppercase; font-size: 12px; letter-spacing: 0.5px;'>
-                        <th style='padding: 12px; text-align: left; border-radius: 6px 0 0 6px;'>Product</th>
-                        <th style='padding: 12px; text-align: center;'>Quantity</th>
-                        <th style='padding: 12px; text-align: right; border-radius: 0 6px 6px 0;'>Price</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    $itemsHtml
-                </tbody>
-            </table>
+            <div style='overflow-x: auto; -webkit-overflow-scrolling: touch; width: 100%; margin-bottom: 25px; padding-bottom: 10px;'>
+                <table style='width: 100%; min-width: 500px; border-collapse: collapse;'>
+                    <thead>
+                        <tr style='background: #f3f4f6; text-transform: uppercase; font-size: 12px; letter-spacing: 0.5px;'>
+                            <th style='padding: 12px; text-align: left; border-radius: 6px 0 0 6px; min-width: 160px; max-width: 200px; width: 160px;'>Product</th>
+                            <th style='padding: 12px; text-align: center; white-space: nowrap;'>Quantity</th>
+                            <th style='padding: 12px; text-align: right; border-radius: 0 6px 6px 0; white-space: nowrap;'>Price</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        $itemsHtml
+                    </tbody>
+                </table>
+            </div>
             
             <div style='text-align: right; margin-top: 20px; border-top: 2px solid #e5e7eb; padding-top: 20px;'>
                  " . (!empty($orderDetails) ? "

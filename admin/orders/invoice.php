@@ -135,18 +135,19 @@ $customerAddressStr = implode(', ', array_filter([
         </div>
 
         <!-- Items Table -->
-        <div class="px-8 py-4">
+        <div class="px-8 py-4 print:overflow-visible">
             <h3 class="font-bold text-lg mb-4 text-gray-800">Order Items</h3>
-            <table class="w-full text-sm text-left">
+            <div class="overflow-x-auto scrollbar-thin scrollbar-thumb-gray-400 w-full pb-2" style="-webkit-overflow-scrolling: touch;">
+                <table class="w-full text-sm text-left min-w-[700px] print:min-w-0 print:table-fixed border-collapse">
                 <thead class="bg-gray-50 text-gray-500 font-bold border-b border-gray-200">
                     <tr>
-                        <th class="py-3 px-4">No.</th>
-                        <th class="py-3 px-4">Item Name</th>
-                        <th class="py-3 px-4 text-right">Price</th>
-                        <th class="py-3 px-4 text-center">Qty</th>
-                        <th class="py-3 px-4 text-center">Tax %</th>
-                        <th class="py-3 px-4 text-right">Tax Amt.</th>
-                        <th class="py-3 px-4 text-right">Total</th>
+                        <th class="py-3 px-2 md:px-4 text-[10px] md:text-sm">No.</th>
+                        <th class="py-3 px-2 md:px-4 min-w-[360px] max-w-[200px] md:min-w-0 md:max-w-none w-[160px] md:w-auto text-left text-[10px] md:text-sm">Item Name</th>
+                        <th class="py-3 px-2 md:px-4 text-right text-[10px] md:text-sm">Price</th>
+                        <th class="py-3 px-2 md:px-4 text-center text-[10px] md:text-sm">Qty</th>
+                        <th class="py-3 px-2 md:px-4 text-center text-[10px] md:text-sm">Tax %</th>
+                        <th class="py-3 px-2 md:px-4 text-right text-[10px] md:text-sm">Tax Amt.</th>
+                        <th class="py-3 px-2 md:px-4 text-right text-[10px] md:text-sm">Total</th>
                     </tr>
                 </thead>
                 <tbody class="divide-y divide-gray-100">
@@ -196,6 +197,7 @@ $customerAddressStr = implode(', ', array_filter([
                     <?php endforeach; ?>
                 </tbody>
             </table>
+            </div>
         </div>
 
         <!-- Totals -->
