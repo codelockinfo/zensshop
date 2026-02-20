@@ -827,7 +827,7 @@ $currentPage = basename($_SERVER['PHP_SELF']);
         <!-- Main Content -->
         <main class="admin-content" id="ajax-content">
             <!-- Loading Overlay -->
-            <div id="ajax-loader" class="hidden absolute inset-0 bg-white bg-opacity-50 z-50 flex items-center justify-center">
+            <div id="ajax-loader" class="hidden fixed inset-0 bg-white bg-opacity-50 z-[9999] flex items-center justify-center">
                 <div class="flex flex-col items-center">
                     <i class="fas fa-spinner fa-spin text-4xl text-blue-600"></i>
                     <p class="mt-2 text-blue-600 font-medium tracking-wide">Loading Content...</p>
