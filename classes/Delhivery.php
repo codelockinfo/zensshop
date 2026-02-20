@@ -173,14 +173,9 @@ class Delhivery {
         $isCOD = (strpos($paymentMethod, 'cod') !== false || strpos($paymentMethod, 'cash') !== false);
         $paymentMode = $isCOD ? 'COD' : 'Prepaid';
         $codAmount = $isCOD ? $orderData['total_amount'] : '0';
-
-        $payload = [
-            'client' => $warehouseName,
-            'client_name' => $warehouseName,
+        $dataPayload = [
             'shipments' => [
                 [
-                    'client' => $warehouseName,
-                    'client_name' => $warehouseName,
                     'name' => substr($orderData['customer_name'], 0, 30),
                     'add' => trim(preg_replace('/\s+/', ' ', ($shippingAddr['street'] ?? '') . ' ' . ($shippingAddr['address_line1'] ?? '') . ' ' . ($shippingAddr['address_line2'] ?? ''))),
                     'pin' => $shippingAddr['zip'] ?? $shippingAddr['postal_code'] ?? '',
@@ -202,7 +197,9 @@ class Delhivery {
                     'shipping_mode' => 'Standard', // Standard/Express
                     'address_type' => 'home',
                     'seller_name' => $this->settings->get('site_name', 'Zens Shop', $storeId) ?: 'Zens Shop',
-                    'pickup_location' => $warehouseName,
+                    'pickup_location' => [
+                        'name' => $warehouseName
+                    ],
                     'return_add' => trim(preg_replace('/\s+/', ' ', ($shippingAddr['street'] ?? '') . ' ' . ($shippingAddr['address_line1'] ?? '') . ' ' . ($shippingAddr['address_line2'] ?? '')))
                 ]
             ],
@@ -211,13 +208,12 @@ class Delhivery {
             ]
         ];
         
-        // Add extra details if available from first item
         if (!empty($items[0])) {
-            $payload['shipments'][0]['hsn_code'] = $items[0]['hsn_code'] ?? '';
-            $payload['shipments'][0]['gst_tax_value'] = $orderData['tax_amount'];
+            $dataPayload['shipments'][0]['hsn_code'] = $items[0]['hsn_code'] ?? '';
+            $dataPayload['shipments'][0]['gst_tax_value'] = $orderData['tax_amount'];
         }
 
-        $result = $this->createShipment($payload);
+        $result = $this->createShipment($dataPayload);
         
         if (isset($result['success']) && $result['success'] && isset($result['packages'][0]['waybill'])) {
             $waybill = $result['packages'][0]['waybill'];
