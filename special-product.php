@@ -244,7 +244,8 @@ require_once __DIR__ . '/includes/header.php';
                 } else {
                     const cartBtn = document.getElementById('cartBtn');
                     if(cartBtn) cartBtn.click();
-                    else console.log('Product added to cart!');
+                    // Fallback to notification if cart button missing
+                    else if(typeof showNotification === 'function') showNotification('Product added to cart!', 'success');
                 }
             }
         })
@@ -859,9 +860,9 @@ require_once __DIR__ . '/includes/header.php';
              <div class="hidden md:flex items-center border border-gray-300 rounded-md w-24 h-10 overflow-hidden bg-white">
                 <button onclick="updateStickyQty(-1)" class="w-8 h-full flex-shrink-0 flex items-center justify-center text-gray-600 hover:bg-gray-100 transition select-none">-</button>
                 <div class="flex-1 h-full grid place-items-center">
-                    <span id="sticky-qty-display" class="text-gray-900 font-semibold text-sm select-none">1</span>
+                    <span id="sticky-qty-display" class="text-gray-900 font-semibold text-sm select-none"><?php echo $isOutOfStock ? '0' : '1'; ?></span>
                 </div>
-                <input type="hidden" id="sticky-qty" value="1">
+                <input type="hidden" id="sticky-qty" value="<?php echo $isOutOfStock ? '0' : '1'; ?>">
                 <button onclick="updateStickyQty(1)" class="w-8 h-full flex-shrink-0 flex items-center justify-center text-gray-600 hover:bg-gray-100 transition select-none">+</button>
             </div>
 
@@ -909,14 +910,18 @@ function updateStickyQty(change) {
     const display = document.getElementById('sticky-qty-display');
     let val = parseInt(input.value) + change;
     
-    if (val > currentMaxStock) {
-        if (typeof showNotification === 'function') {
-            showNotification(`Only ${currentMaxStock} items available in stock`, 'info');
+    if (currentMaxStock > 0) {
+        if (val > currentMaxStock) {
+            if (typeof showNotification === 'function') {
+                showNotification(`Only ${currentMaxStock} items available in stock`, 'info');
+            }
+            val = currentMaxStock;
         }
-        val = currentMaxStock;
+        if (val < 1) val = 1;
+    } else {
+        val = 0;
     }
-    
-    if (val < 1) val = 1;
+
     input.value = val;
     if (display) display.textContent = val;
 }
@@ -949,7 +954,8 @@ function stickyAddToCart() {
                     } else {
                         const cartBtn = document.getElementById('cartBtn');
                         if(cartBtn) cartBtn.click();
-                        else console.log('Product added to cart!');
+                        // Fallback
+                        else if(typeof showNotification === 'function') showNotification('Product added to cart!', 'success');
                     }
                 }
             })

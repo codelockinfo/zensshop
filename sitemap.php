@@ -28,8 +28,6 @@ $staticPages = [
     'special-product' => ['priority' => '0.5', 'freq' => 'weekly'],
     'account' => ['priority' => '0.5', 'freq' => 'weekly'],
     'blog' => ['priority' => '0.5', 'freq' => 'weekly'],
-    'login' => ['priority' => '0.6', 'freq' => 'monthly'],
-    'register' => ['priority' => '0.6', 'freq' => 'monthly'],
     'privacy-policy' => ['priority' => '0.6', 'freq' => 'monthly'],
     'terms-conditions' => ['priority' => '0.6', 'freq' => 'monthly'],
     'shipping-policy' => ['priority' => '0.5', 'freq' => 'monthly'],

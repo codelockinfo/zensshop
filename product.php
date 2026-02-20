@@ -709,9 +709,9 @@ $p_buy_hover_text = $productStyles['buy_now_hover_text_color'] ?? '#ffffff';
                     <div class="flex items-center border border-gray-300 rounded-md w-28 h-10 overflow-hidden bg-white quantity-selector">
                         <button onclick="updateProductQuantity(-1)" class="w-10 h-full flex-shrink-0 flex items-center justify-center text-gray-600 hover:text-black hover:bg-gray-100 transition select-none">-</button>
                         <div class="flex-1 h-full grid place-items-center">
-                            <span id="productQuantityDisplay" class="text-gray-900 font-bold text-base select-none">1</span>
+                            <span id="productQuantityDisplay" class="text-gray-900 font-bold text-base select-none"><?php echo $isOutOfStock ? '0' : '1'; ?></span>
                         </div>
-                        <input type="hidden" id="productQuantity" value="1">
+                        <input type="hidden" id="productQuantity" value="<?php echo $isOutOfStock ? '0' : '1'; ?>">
                         <button onclick="updateProductQuantity(1)" class="w-10 h-full flex-shrink-0 flex items-center justify-center text-gray-600 hover:text-black hover:bg-gray-100 transition select-none">+</button>
                     </div>
                 </div>
@@ -1053,17 +1053,20 @@ function updateProductQuantity(change) {
     
     let val = parseInt(input.value) + change;
     
-    if (val > currentMaxStock) {
-        if (typeof showNotification === 'function') {
-            showNotification(`Only ${currentMaxStock} items available in stock`, 'info');
+    if (currentMaxStock > 0) {
+        if (val > currentMaxStock) {
+            if (typeof showNotification === 'function') {
+                showNotification(`Only ${currentMaxStock} items available in stock`, 'info');
+            }
+            val = currentMaxStock;
         }
-        val = currentMaxStock;
+        if (val < 1) val = 1;
+    } else {
+        val = 0;
     }
     
-    if (val < 1) val = 1;
-    
     // Update main
-    input.value = val;
+    if (input) input.value = val;
     if (display) display.textContent = val;
     
     // Sync with sticky bar
@@ -1486,10 +1489,10 @@ function addToCartFromDetail(productId, btn) {
     
     // Use global addToCart function if available
     if (typeof addToCart === 'function') {
-        addToCart(productId, quantity, btn, selectedOptions);
+        return addToCart(productId, quantity, btn, selectedOptions);
     } else {
         // Fallback to direct API call
-        fetch('<?php echo $baseUrl; ?>/api/cart.php', {
+        return fetch('<?php echo $baseUrl; ?>/api/cart.php', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ 
@@ -1523,14 +1526,16 @@ function addToCartFromDetail(productId, btn) {
                 } else if (typeof showNotification === 'function') {
                     showNotification('Product added to cart!', 'success');
                 }
+                return { success: true };
             } else {
                 if (typeof showNotificationModal === 'function') {
                     showNotificationModal(data.message || 'Failed to add product to cart', 'error');
                 } else if (typeof showNotification === 'function') {
                     showNotification(data.message || 'Failed to add product to cart', 'error');
                 } else {
-                    console.log(data.message || 'Failed to add product to cart');
+                    // console.log(data.message || 'Failed to add product to cart');
                 }
+                return { success: false, message: data.message };
             }
         })
         .catch(error => {
@@ -1540,8 +1545,9 @@ function addToCartFromDetail(productId, btn) {
             } else if (typeof showNotification === 'function') {
                 showNotification('An error occurred while adding the product to cart', 'error');
             } else {
-                console.log('An error occurred while adding the product to cart');
+                // console.log('An error occurred while adding the product to cart');
             }
+            return { success: false, error: error };
         })
         .finally(() => {
             if (btn) setBtnLoading(btn, false);
@@ -1567,13 +1573,21 @@ function buyNow(productId, btn) {
         if (data.success) {
             window.location.href = '<?php echo url('checkout'); ?>';
         } else {
-            console.log(data.message || 'Failed to add product to cart');
+            if (typeof showNotification === 'function') {
+                showNotification(data.message || 'Failed to add product to cart', 'error');
+            } else {
+                alert(data.message || 'Failed to add product to cart');
+            }
             if (btn) setBtnLoading(btn, false);
         }
     })
     .catch(error => {
         console.error('Error:', error);
-        console.log('An error occurred. Please try again.');
+        if (typeof showNotification === 'function') {
+            showNotification('An error occurred. Please try again.', 'error');
+        } else {
+            alert('An error occurred. Please try again.');
+        }
         if (btn) setBtnLoading(btn, false);
     });
 }
@@ -1966,9 +1980,9 @@ document.addEventListener('DOMContentLoaded', function() {
             <div class="hidden md:flex items-center border border-gray-300 rounded-md w-28 h-10 overflow-hidden bg-white quantity-selector">
                 <button onclick="updateStickyQty(-1)" class="w-10 h-full flex-shrink-0 flex items-center justify-center text-gray-600 hover:text-black hover:bg-gray-100 transition select-none">-</button>
                 <div class="flex-1 h-full grid place-items-center">
-                    <span id="sticky-qty-display" class="text-gray-900 font-semibold text-base select-none">1</span>
+                    <span id="sticky-qty-display" class="text-gray-900 font-semibold text-base select-none"><?php echo $isOutOfStock ? '0' : '1'; ?></span>
                 </div>
-                <input type="hidden" id="sticky-qty" value="1">
+                <input type="hidden" id="sticky-qty" value="<?php echo $isOutOfStock ? '0' : '1'; ?>">
                 <button onclick="updateStickyQty(1)" class="w-10 h-full flex-shrink-0 flex items-center justify-center text-gray-600 hover:text-black hover:bg-gray-100 transition select-none">+</button>
             </div>
 
@@ -2037,14 +2051,17 @@ function updateStickyQty(change) {
     
     let val = parseInt(input.value) + change;
     
-    if (val > currentMaxStock) {
-        if (typeof showNotification === 'function') {
-            showNotification(`Only ${currentMaxStock} items available in stock`, 'info');
+    if (currentMaxStock > 0) {
+        if (val > currentMaxStock) {
+            if (typeof showNotification === 'function') {
+                showNotification(`Only ${currentMaxStock} items available in stock`, 'info');
+            }
+            val = currentMaxStock;
         }
-        val = currentMaxStock;
+        if (val < 1) val = 1;
+    } else {
+        val = 0;
     }
-    
-    if (val < 1) val = 1;
     
     // Update sticky
     input.value = val;
@@ -2072,13 +2089,21 @@ function stickyAddToCart() {
             if(mainQty) mainQty.value = qty;
             
             // Call main function
-            addToCartFromDetail(productId, null); 
+            const result = addToCartFromDetail(productId, null); 
             
-            // Reset sticky button after short delay
-            setTimeout(() => {
-                btn.innerHTML = originalText;
-                btn.disabled = false;
-            }, 1000);
+            // Handle promise if returned
+            if (result && typeof result.then === 'function') {
+                result.finally(() => {
+                    btn.innerHTML = originalText;
+                    btn.disabled = false;
+                });
+            } else {
+                // Fallback for sync or no-return
+                setTimeout(() => {
+                    btn.innerHTML = originalText;
+                    btn.disabled = false;
+                }, 1000);
+            }
         } else {
             // Fallback
              fetch('<?php echo $baseUrl; ?>/api/cart.php', {
