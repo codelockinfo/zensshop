@@ -165,9 +165,9 @@ class Email {
         $itemsHtml = '';
         foreach ($items as $item) {
             $itemsHtml .= "<tr>
-                <td style='padding: 12px; border-bottom: 1px solid #e5e7eb;'>{$item['product_name']}</td>
-                <td style='padding: 12px; border-bottom: 1px solid #e5e7eb; text-align: center;'>{$item['quantity']}</td>
-                <td style='padding: 12px; border-bottom: 1px solid #e5e7eb; text-align: right;'>₹" . number_format($item['price'], 2) . "</td>
+                <td style='padding: 12px; border-bottom: 1px solid #e5e7eb; width: 70%; min-width: 250px;'>{$item['product_name']}</td>
+                <td style='padding: 12px; border-bottom: 1px solid #e5e7eb; text-align: center; width: 10%; min-width: 60px;'>{$item['quantity']}</td>
+                <td style='padding: 12px; border-bottom: 1px solid #e5e7eb; text-align: right; width: 20%; min-width: 80px;'>₹" . number_format($item['price'], 2) . "</td>
             </tr>";
         }
         
@@ -191,9 +191,9 @@ class Email {
                 <table style='width: 100%; min-width: 500px; border-collapse: collapse;'>
                     <thead>
                         <tr style='background: #f3f4f6; text-transform: uppercase; font-size: 12px; letter-spacing: 0.5px;'>
-                            <th style='padding: 12px; text-align: left; border-radius: 6px 0 0 6px; min-width: 160px; max-width: 200px; width: 160px;'>Product</th>
-                            <th style='padding: 12px; text-align: center; white-space: nowrap;'>Quantity</th>
-                            <th style='padding: 12px; text-align: right; border-radius: 0 6px 6px 0; white-space: nowrap;'>Price</th>
+                            <th style='padding: 12px; text-align: left; border-radius: 6px 0 0 6px; width: 70%; min-width: 250px;'>Product</th>
+                            <th style='padding: 12px; text-align: center; white-space: nowrap; width: 10%; min-width: 60px;'>Quantity</th>
+                            <th style='padding: 12px; text-align: right; border-radius: 0 6px 6px 0; white-space: nowrap; width: 20%; min-width: 80px;'>Price</th>
                         </tr>
                     </thead>
                     <tbody>
