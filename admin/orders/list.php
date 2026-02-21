@@ -62,9 +62,17 @@ $orders = $order->getAll($filters);
                        onkeypress="if(event.key === 'Enter'){event.preventDefault(); return false;}">
             </div>
         </form>
-        <a href="<?php echo url('admin/orders/export_csv.php'); ?>" class="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600 transition flex items-center">
-            <i class="fas fa-file-export mr-2"></i>Export all order
-        </a>
+        <div class="flex items-center gap-2 mt-4 md:mt-0 w-full md:w-auto overflow-x-auto print:hidden">
+            <button type="button" onclick="bulkPrintQR()" class="bg-gray-200 text-gray-700 px-3 py-2 rounded hover:bg-gray-300 transition text-sm flex items-center hidden whitespace-nowrap" id="bulkPrintBtn">
+                <i class="fas fa-print mr-1"></i> Print QR
+            </button>
+            <button type="button" onclick="bulkDownloadQR()" class="bg-gray-200 text-gray-700 px-3 py-2 rounded hover:bg-gray-300 transition text-sm flex items-center hidden whitespace-nowrap" id="bulkDownloadBtn">
+                <i class="fas fa-download mr-1"></i> Download QR
+            </button>
+            <a href="<?php echo url('admin/orders/export_csv.php'); ?>" class="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600 transition flex items-center whitespace-nowrap">
+                <i class="fas fa-file-export mr-2"></i>Export all
+            </a>
+        </div>
     </div>
 </div>
 
@@ -73,9 +81,10 @@ $orders = $order->getAll($filters);
         <thead class="list-header">
             <tr>
                 <th class="sortable cursor-pointer hover:bg-gray-100" data-column="row_number">
-                    <div class="flex items-center justify-between">
+                    <div class="flex items-center space-x-2">
+                        <input type="checkbox" id="selectAllOrders" onchange="toggleAllOrders(this)" class="cursor-pointer rounded border-gray-300" onclick="event.stopPropagation()">
                         <span>NO</span>
-                        <div class="flex flex-col ml-1">
+                        <div class="flex flex-col">
                             <i class="fas fa-caret-up text-gray-400 -mb-1" style="font-size: 0.75rem;"></i>
                             <i class="fas fa-caret-down text-gray-400" style="font-size: 0.75rem;"></i>
                         </div>
@@ -136,11 +145,34 @@ $orders = $order->getAll($filters);
             <?php foreach ($orders as $index => $item): 
                 // Get product image with fallback using helper function
                 $productImage = !empty($item['product_image']) ? getImageUrl($item['product_image']) : 'https://placehold.co/50';
+                
+                // Construct QR Code Text Data
+                $addr = is_array($item['shipping_address']) ? $item['shipping_address'] : json_decode($item['shipping_address'] ?? '{}', true);
+                $addrParts = array_filter([
+                    $addr['address_line1'] ?? $addr['address'] ?? '',
+                    $addr['city'] ?? '',
+                    $addr['state'] ?? '',
+                    $addr['postal_code'] ?? $addr['pincode'] ?? '',
+                    $addr['country'] ?? ''
+                ]);
+                $addressStr = implode(', ', $addrParts);
+                
+                $qrText = "ORD: " . $item['order_number'] . "\n" .
+                          "CUST: " . $item['customer_name'] . "\n" .
+                          "MOB: " . ($item['customer_phone'] ?? 'N/A') . "\n" .
+                          "ADR: " . ($addressStr ?: 'N/A') . "\n" .
+                          "PRD: " . $item['product_name'] . "\n" .
+                          "VAL: " . number_format($item['total_amount'] ?? 0, 2);
             ?>
             <tr data-row-number="<?php echo $index + 1; ?>"
                 data-customer-email="<?php echo htmlspecialchars($item['customer_email'] ?? ''); ?>"
                 data-customer-id="<?php echo htmlspecialchars($item['public_customer_id'] ?? ''); ?>">
-                <td><?php echo $index + 1; ?></td>
+                <td>
+                    <div class="flex items-center space-x-2">
+                        <input type="checkbox" class="order-checkbox cursor-pointer rounded border-gray-300" onchange="toggleOrderCheckbox()" value="<?php echo htmlspecialchars($item['order_number']); ?>" data-qrtext="<?php echo htmlspecialchars(base64_encode($qrText), ENT_QUOTES, 'UTF-8'); ?>">
+                        <span><?php echo $index + 1; ?></span>
+                    </div>
+                </td>
                 <td>
                     <img src="<?php echo htmlspecialchars($productImage); ?>" 
                          alt="Product" 
@@ -210,7 +242,9 @@ $orders = $order->getAll($filters);
                         <a href="<?php echo url('admin/orders/edit.php?order_number=' . urlencode($item['order_number'])); ?>" class="text-green-500 hover:text-green-700">
                             <i class="fas fa-edit"></i>
                         </a>
-
+                        <button type="button" onclick="openQRModal(this.dataset.qrtext, '<?php echo htmlspecialchars($item['order_number']); ?>')" data-qrtext="<?php echo htmlspecialchars(base64_encode($qrText), ENT_QUOTES, 'UTF-8'); ?>" class="text-purple-500 hover:text-purple-700" title="QR Code Options">
+                            <i class="fas fa-qrcode"></i>
+                        </button>
                     </div>
                 </td>
             </tr>
@@ -254,7 +288,253 @@ function deleteOrder(id) {
         });
     });
 }
+
+// Select toggling
+function toggleAllOrders(checkbox) {
+    const checkboxes = document.querySelectorAll('.order-checkbox');
+    checkboxes.forEach(cb => {
+        if (cb.closest('tr').style.display !== 'none') {
+            cb.checked = checkbox.checked;
+        }
+    });
+    toggleOrderCheckbox();
+}
+
+function toggleOrderCheckbox() {
+    const checkboxes = document.querySelectorAll('.order-checkbox:checked');
+    const bulkPrintBtn = document.getElementById('bulkPrintBtn');
+    const bulkDownloadBtn = document.getElementById('bulkDownloadBtn');
+    if (checkboxes.length > 0) {
+        bulkPrintBtn.classList.remove('hidden');
+        bulkDownloadBtn.classList.remove('hidden');
+    } else {
+        bulkPrintBtn.classList.add('hidden');
+        bulkDownloadBtn.classList.add('hidden');
+    }
+}
+
+// Single QR Option
+function openQRModal(qrtextBase64, orderNum) {
+    let qrtext = "";
+    try {
+        const binString = atob(qrtextBase64);
+        const bytes = new Uint8Array(binString.length);
+        for (let i = 0; i < binString.length; i++) {
+            bytes[i] = binString.charCodeAt(i);
+        }
+        qrtext = new TextDecoder().decode(bytes);
+    } catch(e) {
+        console.error("Base64 decode error:", e);
+        return;
+    }
+    const modal = document.getElementById('qrModal');
+    const qrContainer = document.getElementById('qrCodeContainer');
+    const title = document.getElementById('qrModalTitle');
+    title.innerText = "Order: " + orderNum;
+    qrContainer.innerHTML = '';
+    
+    // Generate QR using qrcode.js
+    try {
+        new QRCode(qrContainer, {
+            text: qrtext,
+            width: 350,
+            height: 350,
+            colorDark : "#000000",
+            colorLight : "#ffffff",
+            correctLevel : QRCode.CorrectLevel.L // Low Correction = Simplest/Largest Blocks
+        });
+    } catch (e) {
+        console.error('QRCode Error:', e);
+        qrContainer.innerHTML = '<p class="text-red-500">Error generating QR Code</p>';
+    }
+    
+    // Store variables for download/print
+    modal.dataset.orderNum = orderNum;
+    modal.dataset.qrtext = qrtextBase64;
+    modal.classList.remove('hidden');
+}
+
+function closeQRModal() {
+    document.getElementById('qrModal').classList.add('hidden');
+}
+
+function downloadSingleQR() {
+    const modal = document.getElementById('qrModal');
+    const canvas = document.querySelector('#qrCodeContainer canvas');
+    if (!canvas) return;
+    const a = document.createElement('a');
+    a.href = canvas.toDataURL("image/png");
+    a.download = `QR_Order_${modal.dataset.orderNum}.png`;
+    a.click();
+}
+
+function printSingleQR() {
+    const qrContainerHTML = document.getElementById('qrCodeContainer').innerHTML;
+    const orderNum = document.getElementById('qrModal').dataset.orderNum;
+    
+    const printWindow = window.open('', '_blank');
+    printWindow.document.write(`
+        <html><head><title>Print QR</title>
+        <style>body{text-align:center; font-family:sans-serif; margin-top:50px;}</style>
+        </head><body>
+        <h2>Order: ${orderNum}</h2>
+        <div style="display:inline-block; border:1px solid #ccc; padding:20px;">
+        ${qrContainerHTML}
+        </div>
+        <script>setTimeout(() => { window.print(); window.close(); }, 500);<\/script>
+        </body></html>
+    `);
+    printWindow.document.close();
+}
+
+// Bulk QR functions
+function generateBulkQRHTML(callback) {
+    const checked = document.querySelectorAll('.order-checkbox:checked');
+    if(checked.length === 0) return;
+    
+    const hiddenDiv = document.createElement('div');
+    hiddenDiv.style.display = 'none';
+    document.body.appendChild(hiddenDiv);
+    
+    let htmlContent = '';
+    let processed = 0;
+    
+    checked.forEach(cb => {
+        const tempDiv = document.createElement('div');
+        hiddenDiv.appendChild(tempDiv); // Important: must be in DOM for some QR libs
+        try {
+            const binString = atob(cb.dataset.qrtext);
+            const bytes = new Uint8Array(binString.length);
+            for (let i = 0; i < binString.length; i++) {
+                bytes[i] = binString.charCodeAt(i);
+            }
+            const bulkText = new TextDecoder().decode(bytes);
+
+            new QRCode(tempDiv, {
+                text: bulkText,
+                width: 400, height: 400,
+                correctLevel: QRCode.CorrectLevel.L
+            });
+        } catch (e) {
+            console.error('Bulk QR Error for ' + cb.value, e);
+        }
+        
+        setTimeout(() => {
+            const canvas = tempDiv.querySelector('canvas');
+            if(canvas) {
+                const dataUrl = canvas.toDataURL("image/png");
+                htmlContent += `
+                <div class="qr-page">
+                    <h2>Order: ${cb.value}</h2>
+                    <img src="${dataUrl}" />
+                </div>`;
+            }
+            processed++;
+            if(processed === checked.length) {
+                setTimeout(() => {
+                    document.body.removeChild(hiddenDiv);
+                    callback(htmlContent);
+                }, 100);
+            }
+        }, 500); // Increased timeout for better reliability
+    });
+}
+
+function bulkPrintQR() {
+    generateBulkQRHTML(function(htmlContent) {
+        const printWindow = window.open('', '_blank');
+        printWindow.document.write(`
+            <html><head><title>Bulk Print QR</title>
+            <style>
+                .qr-page { 
+                    display: flex; 
+                    flex-direction: column; 
+                    align-items: center; 
+                    justify-content: center; 
+                    min-height: 98vh; /* Use slightly less than full to avoid bleed */
+                    page-break-after: always;
+                    break-after: page;
+                }
+                .qr-page:last-child { 
+                    page-break-after: avoid; 
+                    break-after: avoid; 
+                }
+                img { width: 300px; height: 300px; margin-top: 10px; }
+                h2 { font-size: 24px; margin: 0; text-align: center; }
+            </style>
+            </head><body>
+            ${htmlContent.replace(/inline-block/g, 'flex').replace(/margin:20px; border:1px solid #ddd; padding:15px;/g, '')}
+            <script>setTimeout(() => { window.print(); window.close(); }, 500);<\/script>
+            </body></html>
+        `);
+        printWindow.document.close();
+    });
+}
+
+function bulkDownloadQR() {
+    generateBulkQRHTML(function(htmlContent) {
+        const element = document.createElement('div');
+        element.style.width = '210mm'; // A4 width
+        element.innerHTML = `
+            <style>
+                .qr-page { 
+                    display: flex; 
+                    flex-direction: column; 
+                    align-items: center; 
+                    justify-content: center; 
+                    min-height: 290mm; /* Slightly less than A4 to prevent blank pages */
+                    page-break-after: always;
+                    background: white;
+                    width: 100%;
+                }
+                .qr-page:last-child {
+                    page-break-after: avoid;
+                }
+                img { width: 400px; height: 400px; margin-top: 20px; }
+                h2 { font-size: 36px; margin-bottom: 20px; font-family: sans-serif; text-align:center; }
+            </style>
+            ${htmlContent.replace(/inline-block/g, 'flex').replace(/margin:20px; border:1px solid #ddd; padding:15px;/g, '')}
+        `;
+        
+        const opt = {
+            margin:       0,
+            filename:     'Bulk_Orders_QR.pdf',
+            image:        { type: 'jpeg', quality: 0.98 },
+            html2canvas:  { scale: 2, useCORS: true },
+            jsPDF:        { unit: 'mm', format: 'a4', orientation: 'portrait' }
+        };
+        
+        // Use html2pdf
+        html2pdf().set(opt).from(element).save();
+    });
+}
+
 </script>
+
+<!-- Add qrcode.js and html2pdf.js -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+
+<!-- QR Modal HTML -->
+<div id="qrModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center hidden z-50">
+    <div class="bg-white rounded-lg shadow-xl w-96 p-6">
+        <div class="flex justify-between items-center mb-4">
+            <h3 class="text-xl font-bold" id="qrModalTitle">Order QR</h3>
+            <button onclick="closeQRModal()" class="text-gray-500 hover:text-red-500">
+                <i class="fas fa-times"></i>
+            </button>
+        </div>
+        <div class="flex justify-center mb-6" id="qrCodeContainer"></div>
+        <div class="flex gap-4">
+            <button onclick="downloadSingleQR()" class="flex-1 bg-green-500 text-white py-2 rounded shadow hover:bg-green-600 transition flex items-center justify-center">
+                <i class="fas fa-download mr-2"></i> Download
+            </button>
+            <button onclick="printSingleQR()" class="flex-1 bg-blue-500 text-white py-2 rounded shadow hover:bg-blue-600 transition flex items-center justify-center">
+                <i class="fas fa-print mr-2"></i> Print
+            </button>
+        </div>
+    </div>
+</div>
 
 <script>
     document.addEventListener('change', function(e){

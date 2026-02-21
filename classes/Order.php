@@ -24,7 +24,11 @@ class Order {
                  FROM order_items oi2 
                  LEFT JOIN products p ON (oi2.product_id = p.product_id OR (oi2.product_id < 1000000000 AND oi2.product_id = p.id))
                  WHERE oi2.order_num = o.order_number 
-                 LIMIT 1) as product_image
+                 LIMIT 1) as product_image,
+                (SELECT oi3.product_name 
+                 FROM order_items oi3 
+                 WHERE oi3.order_num = o.order_number 
+                 LIMIT 1) as product_name
                 FROM orders o
                 LEFT JOIN order_items oi ON o.order_number = oi.order_num
                 LEFT JOIN customers c ON (o.user_id = c.id OR (o.user_id IS NULL AND o.customer_email = c.email))
