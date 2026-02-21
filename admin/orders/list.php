@@ -148,25 +148,29 @@ $orders = $order->getAll($filters);
                 
                 // Construct QR Code Text Data
                 $addr = is_array($item['shipping_address']) ? $item['shipping_address'] : json_decode($item['shipping_address'] ?? '{}', true);
-                $addrParts = array_filter([
-                    $addr['address_line1'] ?? $addr['address'] ?? '',
-                    $addr['city'] ?? '',
-                    $addr['state'] ?? '',
-                    $addr['postal_code'] ?? $addr['pincode'] ?? '',
-                    $addr['country'] ?? ''
-                ]);
-                $addressStr = implode(', ', $addrParts);
                 
-                // Truncate slightly to avoid QR overflow while using full labels
-                $cleanAddr = mb_strimwidth($addressStr ?: 'N/A', 0, 80, "..");
-                $cleanProd = mb_strimwidth($item['product_name'] ?? 'N/A', 0, 40, "..");
+                // Line 1: Street + Address lines
+                $line1Parts = array_filter([
+                    $addr['street'] ?? '',
+                    $addr['address_line1'] ?? $addr['address'] ?? '',
+                    $addr['address_line2'] ?? ''
+                ]);
+                $line1 = implode(', ', $line1Parts);
+                
+                // Line 2: City, State Zip
+                $zip = $addr['zip'] ?? $addr['postal_code'] ?? $addr['pincode'] ?? '';
+                $line2 = trim(($addr['city'] ?? '') . ', ' . ($addr['state'] ?? '') . ' ' . $zip);
+                
+                $line3 = trim($addr['country'] ?? '');
+                
+                $formattedAddr = implode("\n", array_filter([$line1, $line2, $line3]));
                 
                 $qrText = "Order ID: " . $item['order_number'] . "\n" .
                           "Customer: " . $item['customer_name'] . "\n" .
-                          "Mobile: " . ($item['customer_phone'] ?? 'N/A') . "\n" .
-                          "Address: " . $cleanAddr . "\n" .
-                          "Product: " . $cleanProd . "\n" .
-                          "Payment: " . strtoupper($item['payment_status'] ?? 'PENDING') . " (" . strtoupper($item['payment_method'] ?? 'COD') . ")\n" .
+                          "Mobile: " . ($item['customer_phone'] ?? 'N/A') . "\n\n" .
+                          "Shipping Address:\n" . $formattedAddr . "\n\n" .
+                          "Product: " . ($item['product_name'] ?? 'N/A') . "\n" .
+                          "Payment: " . strtoupper($item['payment_status'] ?? 'PENDING') . "\n" .
                           "Amount: Rs." . number_format($item['total_amount'] ?? 0, 2);
             ?>
             <tr data-row-number="<?php echo $index + 1; ?>"
@@ -348,7 +352,7 @@ function openQRModal(qrtextBase64, orderNum) {
         });
     } catch (e) {
         console.error('QRCode Error:', e);
-        qrContainer.innerHTML = '<p class="text-red-500 text-sm">QR pattern too complex for this data.</p>';
+        qrContainer.innerHTML = '<p class="text-red-500 text-xs">Error generating QR: ' + e.message + ' (Length: ' + qrtext.length + ')</p>';
     }
     
     // Store variables for download/print
@@ -445,18 +449,20 @@ function bulkPrintQR() {
         printWindow.document.write(`
             <html><head><title>Bulk Print QR</title>
             <style>
+                @page { size: auto; margin: 0mm; }
+                body { margin: 0; padding: 0; font-family: sans-serif; }
                 .qr-page { 
                     display: flex; 
                     flex-direction: column; 
                     align-items: center; 
                     justify-content: center; 
-                    min-height: 98vh; /* Use slightly less than full to avoid bleed */
+                    height: 100vh;
                     page-break-after: always;
-                    break-after: page;
+                    box-sizing: border-box;
+                    padding: 40px;
                 }
                 .qr-page:last-child { 
-                    page-break-after: avoid; 
-                    break-after: avoid; 
+                    page-break-after: auto; 
                 }
                 img { width: 300px; height: 300px; margin-top: 10px; }
                 h2 { font-size: 24px; margin: 0; text-align: center; }

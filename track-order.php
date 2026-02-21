@@ -195,14 +195,15 @@ $customerAddressStr = implode(', ', array_filter([
                     <p class="text-gray-600">
                         <?php 
                             $addr = is_array($order['shipping_address']) ? $order['shipping_address'] : json_decode($order['shipping_address'], true);
-                            $addrParts = array_filter([
-                                $addr['address'] ?? $addr['address_line1'] ?? '',
-                                $addr['city'] ?? '',
-                                $addr['state'] ?? '',
-                                $addr['pincode'] ?? $addr['postal_code'] ?? '',
-                                $addr['country'] ?? 'India'
-                            ]);
-                            echo htmlspecialchars(implode(', ', $addrParts));
+                            
+                            $line1 = array_filter([$addr['street'] ?? '', $addr['address'] ?? $addr['address_line1'] ?? '', $addr['address_line2'] ?? '']);
+                            $line2Parts = array_filter([$addr['city'] ?? '', $addr['state'] ?? '']);
+                            $line2 = implode(', ', $line2Parts) . ' ' . ($addr['zip'] ?? $addr['pincode'] ?? $addr['postal_code'] ?? '');
+                            $line3 = $addr['country'] ?? 'India';
+                            
+                            echo htmlspecialchars(implode(', ', $line1)) . '<br>';
+                            echo htmlspecialchars(trim($line2)) . '<br>';
+                            echo htmlspecialchars($line3);
                         ?><br>
                         Ph: <?php echo htmlspecialchars($order['customer_phone'] ?? ''); ?><br>
                         Email: <?php echo htmlspecialchars($order['customer_email']); ?>
