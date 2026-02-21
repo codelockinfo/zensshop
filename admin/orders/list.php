@@ -157,13 +157,17 @@ $orders = $order->getAll($filters);
                 ]);
                 $addressStr = implode(', ', $addrParts);
                 
-                $qrText = "ORD: " . $item['order_number'] . "\n" .
-                          "CUST: " . $item['customer_name'] . "\n" .
-                          "MOB: " . ($item['customer_phone'] ?? 'N/A') . "\n" .
-                          "ADR: " . ($addressStr ?: 'N/A') . "\n" .
-                          "PROD: " . ($item['product_name'] ?? 'N/A') . "\n" .
-                          "AMT: Rs." . number_format($item['total_amount'] ?? 0, 2) . "\n" .
-                          "PAY: " . strtoupper($item['payment_status'] ?? 'PENDING') . " (" . strtoupper($item['payment_method'] ?? 'N/A') . ")";
+                // Aggressively shorten to prevent QR overflow (qrcodejs limit)
+                $cleanAddr = mb_strimwidth($addressStr ?: 'N/A', 0, 100, "...");
+                $cleanProd = mb_strimwidth($item['product_name'] ?? 'N/A', 0, 50, "...");
+                
+                $qrText = "ORD:" . $item['order_number'] . "\n" .
+                          "CUST:" . $item['customer_name'] . "\n" .
+                          "MOB:" . ($item['customer_phone'] ?? 'N/A') . "\n" .
+                          "ADR:" . $cleanAddr . "\n" .
+                          "PRD:" . $cleanProd . "\n" .
+                          "AMT:" . number_format($item['total_amount'] ?? 0, 2) . "\n" .
+                          "PAY:" . strtoupper($item['payment_status'] ?? 'PENDING') . " " . strtoupper($item['payment_method'] ?? 'N/A');
             ?>
             <tr data-row-number="<?php echo $index + 1; ?>"
                 data-customer-email="<?php echo htmlspecialchars($item['customer_email'] ?? ''); ?>"
@@ -318,15 +322,12 @@ function toggleOrderCheckbox() {
 function openQRModal(qrtextBase64, orderNum) {
     let qrtext = "";
     try {
-        const binString = atob(qrtextBase64);
-        const bytes = new Uint8Array(binString.length);
-        for (let i = 0; i < binString.length; i++) {
-            bytes[i] = binString.charCodeAt(i);
-        }
-        qrtext = new TextDecoder().decode(bytes);
+        // More robust UTF-8 to Latin1 conversion for qrcode.js compatibility
+        qrtext = decodeURIComponent(escape(atob(qrtextBase64)));
     } catch(e) {
-        console.error("Base64 decode error:", e);
-        return;
+        console.error("Decoding error:", e);
+        // Fallback
+        qrtext = atob(qrtextBase64);
     }
     const modal = document.getElementById('qrModal');
     const qrContainer = document.getElementById('qrCodeContainer');
@@ -339,8 +340,8 @@ function openQRModal(qrtextBase64, orderNum) {
         qrContainer.innerHTML = '';
         const qrcode = new QRCode(qrContainer, {
             text: qrtext,
-            width: 350,
-            height: 350,
+            width: 300,
+            height: 300,
             colorDark : "#000000",
             colorLight : "#ffffff",
             correctLevel : QRCode.CorrectLevel.L
@@ -405,16 +406,12 @@ function generateBulkQRHTML(callback) {
         const tempDiv = document.createElement('div');
         hiddenDiv.appendChild(tempDiv); // Important: must be in DOM for some QR libs
         try {
-            const binString = atob(cb.dataset.qrtext);
-            const bytes = new Uint8Array(binString.length);
-            for (let i = 0; i < binString.length; i++) {
-                bytes[i] = binString.charCodeAt(i);
-            }
-            const bulkText = new TextDecoder().decode(bytes);
+            // Bulk decoding
+            const bulkText = decodeURIComponent(escape(atob(cb.dataset.qrtext)));
 
             new QRCode(tempDiv, {
                 text: bulkText,
-                width: 400, height: 400,
+                width: 300, height: 300,
                 correctLevel: QRCode.CorrectLevel.L
             });
         } catch (e) {
