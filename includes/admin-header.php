@@ -49,7 +49,8 @@ if (!function_exists('url')) {
             $path = $parts[0];
             $queryString = '?' . $parts[1];
         }
-        $path = preg_replace('/\.php$/', '', $path);
+        // Remove extension if present for clean URLs
+        $path = preg_replace('/\.(php|html|htm)$/i', '', $path);
         if (empty($path)) {
             return $baseUrl . '/' . $queryString;
         }
@@ -196,7 +197,7 @@ $action = $segments[count($segments) - 1] ?? '';  // add, list
                         .side-by-side-layout .image-col { max-width: 100%; flex: 0 0 100%; }
                     }
                 `,
-                images_upload_url: BASE_URL + '/admin/blogs/upload_image.php',
+                images_upload_url: '<?php echo url('admin/blogs/upload_image.php'); ?>',
                 convert_urls: false,
                 branding: false,
                 promotion: false,

@@ -22,7 +22,7 @@ if ($customerId) {
     $storeId = $_SESSION['store_id'] ?? null;
     $customerData = $customer->getById($customerId, $storeId);
     if (!$customerData) {
-        header('Location: ' . $baseUrl . '/admin/customers/list.php');
+        header('Location: ' . url('admin/customers/list.php'));
         exit;
     }
     $customerData['is_registered'] = true;
@@ -37,13 +37,13 @@ if ($customerId) {
     $storeId = $_SESSION['store_id'] ?? null;
     $customerData = $customer->getCustomerByEmail($customerEmail, $storeId);
     if (!$customerData) {
-        header('Location: ' . $baseUrl . '/admin/customers/list.php');
+        header('Location: ' . url('admin/customers/list.php'));
         exit;
     }
     $orders = $customer->getCustomerOrders(null, $customerEmail, $storeId);
     $customerData['is_subscriber'] = false; // Guest customers don't have subscriber status linked
 } else {
-    header('Location: ' . $baseUrl . '/admin/customers/list.php');
+    header('Location: ' . url('admin/customers/list.php'));
     exit;
 }
 require_once __DIR__ . '/../../includes/admin-header.php';
@@ -57,7 +57,7 @@ require_once __DIR__ . '/../../includes/admin-header.php';
                 <p class="text-gray-600 text-sm mt-1 pl-2">View customer information and orders</p>
             </div>
             <div class="flex items-center space-x-3">
-                <a href="<?php echo $baseUrl; ?>/admin/customers/list.php" class="admin-btn bg-gray-500 text-white">
+                <a href="<?php echo url('admin/customers/list.php'); ?>" class="admin-btn bg-gray-500 text-white">
                     <i class="fas fa-arrow-left mr-2"></i>Back to List
                 </a>
             </div>
@@ -236,7 +236,7 @@ require_once __DIR__ . '/../../includes/admin-header.php';
                                 <?php foreach ($orders as $orderItem): ?>
                                 <tr class="border-b border-gray-100 hover:bg-gray-50">
                                     <td class="py-4 px-4">
-                                        <a href="<?php echo $baseUrl; ?>/admin/orders/list.php?search=<?php echo urlencode($orderItem['order_number']); ?>" 
+                                        <a href="<?php echo url('admin/orders/list.php?search=' . urlencode($orderItem['order_number'])); ?>" 
                                            class="text-primary hover:underline font-semibold">
                                             #<?php echo htmlspecialchars($orderItem['order_number']); ?>
                                         </a>
@@ -267,7 +267,7 @@ require_once __DIR__ . '/../../includes/admin-header.php';
                                         <span class="font-semibold text-gray-800"><?php echo format_price($orderItem['total_amount'], $orderItem['currency'] ?? 'INR'); ?></span>
                                     </td>
                                     <td class="py-4 px-4 text-center">
-                                        <a href="<?php echo $baseUrl; ?>/admin/orders/detail.php?order_number=<?php echo urlencode($orderItem['order_number']); ?>" 
+                                        <a href="<?php echo url('admin/orders/detail.php?order_number=' . urlencode($orderItem['order_number'])); ?>" 
                                            class="admin-btn bg-blue-500 text-white text-sm px-3 py-1">
                                             <i class="fas fa-eye mr-1"></i>View
                                         </a>

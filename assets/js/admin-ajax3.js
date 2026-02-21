@@ -121,7 +121,21 @@ document.addEventListener('DOMContentLoaded', function () {
     function updateSidebarActiveState(url) {
         if (!sidebar) return;
         const links = sidebar.querySelectorAll('a');
+        const allSubmenus = sidebar.querySelectorAll('.sidebar-submenu');
         
+        // 1. Hide all submenus first to ensure only the active one is open
+        allSubmenus.forEach(sub => {
+            sub.classList.add('hidden');
+            const trigger = sub.previousElementSibling;
+            if (trigger) {
+                const arrow = trigger.querySelector('.fa-chevron-up, .fa-chevron-down');
+                if (arrow) {
+                    arrow.classList.remove('fa-chevron-up');
+                    arrow.classList.add('fa-chevron-down');
+                }
+            }
+        });
+
         let path;
         try {
             path = new URL(url, window.location.origin).pathname;
@@ -204,7 +218,10 @@ document.addEventListener('DOMContentLoaded', function () {
         const form = e.target.closest('form');
         if (!form || form.hasAttribute('data-no-ajax')) return;
 
-        // Form submission via AJAX (including file uploads)
+        if (typeof tinymce !== 'undefined') {
+            tinymce.triggerSave();
+        }
+        
         e.preventDefault();
         
         const url = form.getAttribute('action') || window.location.href;

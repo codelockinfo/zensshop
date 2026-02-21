@@ -168,13 +168,13 @@ unset($_SESSION['success'], $_SESSION['error']);
                             <td class="px-6 py-4 text-sm font-medium"><?php echo htmlspecialchars($sub['email']); ?></td>
                             <td class="px-6 py-4 text-sm">
                                 <?php if ($sub['user_id']): ?>
-                                    <a href="<?php echo $baseUrl; ?>/admin/customers/view.php?id=<?php echo $sub['real_customer_id'] ?? $sub['user_id']; ?>" 
-                                       class="text-blue-600 hover:text-blue-800 hover:underline font-medium">
+                                    <a href="<?php echo url('admin/customers/view.php?id=' . ($sub['real_customer_id'] ?? $sub['user_id'])); ?>" 
+                                        class="text-blue-600 hover:text-blue-800 hover:underline font-medium">
                                         <i class="fas fa-user"></i> <?php echo !empty($sub['customer_name']) ? htmlspecialchars($sub['customer_name']) : 'Customer #' . ($sub['real_customer_id'] ?? $sub['user_id']); ?>
                                     </a>
                                 <?php else: ?>
-                                    <a href="<?php echo $baseUrl; ?>/admin/customers/view.php?email=<?php echo urlencode($sub['email']); ?>" 
-                                       class="text-gray-600 hover:text-blue-800 hover:underline font-medium">
+                                    <a href="<?php echo url('admin/customers/view.php?email=' . urlencode($sub['email'])); ?>" 
+                                        class="text-gray-600 hover:text-blue-800 hover:underline font-medium">
                                         <i class="fas fa-user-clock"></i> Guest
                                     </a>
                                 <?php endif; ?>

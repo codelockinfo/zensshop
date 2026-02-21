@@ -63,7 +63,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $db->insert("INSERT INTO landing_pages (name, slug, product_id, page_config, banner_data, stats_data, why_data, about_data, testimonials_data, newsletter_data, platforms_data, store_id) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)", 
                     [$newName, $newSlug, $productId, $defaultPageConfig, $enabledJson, $enabledJson, $enabledJson, $enabledJson, $enabledJson, $enabledJson, $enabledJson, $storeId]);
                 $_SESSION['flash_success'] = "New landing page created!";
-                header("Location: " . $baseUrl . '/admin/special-page?page=' . urlencode($newSlug));
+                header("Location: " . url('admin/special-page?page=' . urlencode($newSlug)));
                 exit;
             } catch (Exception $e) {
                 $error = "Error creating page: " . $e->getMessage();
@@ -84,7 +84,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         if ($check) {
             $db->execute("DELETE FROM landing_pages WHERE id = ? AND store_id = ?", [$delId, $storeId]);
             $_SESSION['flash_success'] = "Page deleted successfully.";
-            header("Location: " . $baseUrl . '/admin/special-page');
+            header("Location: " . url('admin/special-page'));
             exit;
         } else {
             $error = "Page not found.";
@@ -432,7 +432,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
             $_SESSION['flash_success'] = "Page settings saved successfully!";
             session_write_close(); // Ensure session is saved before redirect
-            header("Location: " . $baseUrl . '/admin/special-page?page=' . urlencode($selectedSlug));
+            header("Location: " . url('admin/special-page?page=' . urlencode($selectedSlug)));
             exit;
         } catch (Exception $e) {
             $error = "Error saving settings: " . $e->getMessage();
@@ -552,7 +552,7 @@ if ($lp) {
     </div>
     <div class="flex items-center gap-3">
         <?php if (!empty($selectedSlug)): ?>
-        <a href="<?php echo $baseUrl; ?>/<?php echo $selectedSlug; ?>" target="_blank" class="bg-white text-gray-700 border border-gray-300 px-4 py-2.5 rounded shadow-sm hover:bg-gray-50 flex items-center font-bold text-sm transition">
+        <a href="<?php echo url($selectedSlug); ?>" target="_blank" class="bg-white text-gray-700 border border-gray-300 px-4 py-2.5 rounded shadow-sm hover:bg-gray-50 flex items-center font-bold text-sm transition">
             <i class="fas fa-external-link-alt mr-2 text-gray-400"></i> View Live Page
         </a>
         <?php endif; ?>
@@ -616,10 +616,10 @@ if ($lp) {
                                <?php echo htmlspecialchars($p['name']); ?>
                            </a>
                             <div class="flex items-center justify-between mt-1 group-hover/link min-w-0">
-                               <a href="<?php echo $baseUrl; ?>/<?php echo $p['slug']; ?>" target="_blank" class="text-xs text-gray-400 font-normal hover:text-blue-600 hover:underline truncate mr-2 block flex-1 min-w-0" title="<?php echo $baseUrl; ?>/<?php echo $p['slug']; ?>">
-                                   <?php echo $baseUrl; ?>/<?php echo $p['slug']; ?> <i class="fas fa-external-link-alt text-[10px] ml-1"></i>
+                               <a href="<?php echo url($p['slug']); ?>" target="_blank" class="text-xs text-gray-400 font-normal hover:text-blue-600 hover:underline truncate mr-2 block flex-1 min-w-0" title="<?php echo url($p['slug']); ?>">
+                                   <?php echo url($p['slug']); ?> <i class="fas fa-external-link-alt text-[10px] ml-1"></i>
                                </a>
-                               <button type="button" onclick="copyLink('<?php echo $baseUrl; ?>/<?php echo $p['slug']; ?>')" class="text-xs text-gray-400 hover:text-blue-600 p-1 flex-shrink-0" title="Copy Link">
+                               <button type="button" onclick="copyLink('<?php echo url($p['slug']); ?>')" class="text-xs text-gray-400 hover:text-blue-600 p-1 flex-shrink-0" title="Copy Link">
                                    <i class="fas fa-copy"></i>
                                </button>
                            </div>
@@ -1187,8 +1187,8 @@ if ($lp) {
 <script>
 // Parse initial links from hidden input
 // Parse initial links from hidden input
-let navLinks = [];
-const navLinksJsonEl = document.getElementById('navLinksJson');
+var navLinks = [];
+var navLinksJsonEl = document.getElementById('navLinksJson');
 if (navLinksJsonEl) {
     try {
         navLinks = JSON.parse(navLinksJsonEl.value);
@@ -1221,9 +1221,9 @@ function renderNavLinks() {
 }
 
 // Footer Data Logic
-let footerData = {};
-const footerDataJsonEl = document.getElementById('footerDataJson');
-const footerCopyrightEl = document.getElementById('footerCopyright');
+var footerData = {};
+var footerDataJsonEl = document.getElementById('footerDataJson');
+var footerCopyrightEl = document.getElementById('footerCopyright');
 
 if (footerDataJsonEl) {
     try {
@@ -1257,16 +1257,14 @@ function updateNavLink(index, key, value) {
 }
 
 // Exclusive Accordion Logic
-function toggleSection(id) {
-    const allSections = ['secHeaders', 'secBanner', 'secStats', 'secWhy', 'secAbout', 'secTesti', 'secNews', 'secOtherPlatforms', 'secFooter'];
-    
-    // Toggle the selected section
-    const current = document.getElementById(id);
-    const isHidden = current.classList.contains('hidden');
+window.toggleSection = function(id, btn) {
+    var allSections = ['secHeaders', 'secBanner', 'secStats', 'secWhy', 'secAbout', 'secTesti', 'secNews', 'secOtherPlatforms', 'secFooter'];
+    var current = document.getElementById(id);
+    var isHidden = current.classList.contains('hidden');
     
     // First hide ALL sections
     allSections.forEach(secId => {
-        const el = document.getElementById(secId);
+        var el = document.getElementById(secId);
         if(el) el.classList.add('hidden');
     });
 
@@ -1282,17 +1280,17 @@ renderNavLinks();
 // Auto-generate slug from page name
 // Shared Slug Generator
 function updateSlug(text) {
-    const slug = text.toLowerCase()
-        .replace(/[^a-z0-9\s-]/g, '') // remove invalid chars
-        .trim()
+    var slug = text.toLowerCase()
+        .replace(/[^\w\s-]/g, '') // remove invalid chars
         .replace(/\s+/g, '-')         // replace spaces with -
-        .replace(/-+/g, '-');         // collapse dashes
+        .replace(/-+/g, '-')         // collapse dashes
+        .trim();
     document.getElementById('newPageSlug').value = slug;
 }
 
 // 1. Auto-generate slug when typing in Page Name
 // 1. Auto-generate slug when typing in Page Name
-const newPageNameEl = document.getElementById('newPageName');
+var newPageNameEl = document.getElementById('newPageName');
 if (newPageNameEl) {
     newPageNameEl.addEventListener('input', function() {
         updateSlug(this.value);
@@ -1300,14 +1298,14 @@ if (newPageNameEl) {
 }
 
 // 2. Auto-fill Page Name & Slug when Product is selected
-const newProductSelectEl = document.getElementById('newProductSelect');
+var newProductSelectEl = document.getElementById('newProductSelect');
 if (newProductSelectEl) {
     newProductSelectEl.addEventListener('change', function() {
-        const selectedOption = this.options[this.selectedIndex];
+        var selectedOption = this.options[this.selectedIndex];
         
         if (selectedOption.value && newPageNameEl) {
             // Get product name
-            const rawName = selectedOption.text.trim();
+            var rawName = selectedOption.text.trim();
             
             // Update Page Name field
             newPageNameEl.value = rawName;
@@ -1317,13 +1315,13 @@ if (newProductSelectEl) {
         }
     });
 }
-const bannerContainer = document.getElementById('bannerSectionsContainer');
-let bannerCount = 0;
-let bannerData = [];
+var bannerContainer = document.getElementById('bannerSectionsContainer');
+var bannerCount = 0;
+var bannerData = [];
 
 // Initialize Banners
 try {
-    const rawData = document.getElementById('initialBannerData').value;
+    var rawData = document.getElementById('initialBannerData').value;
     bannerData = JSON.parse(rawData);
     if (!Array.isArray(bannerData)) bannerData = [];
 } catch(e) { bannerData = []; }
@@ -1336,13 +1334,13 @@ if (bannerData.length === 0) {
 }
 
 // --- Initialize Stats ---
-const initialStatsData = document.getElementById('initialStatsData').value;
-const statsContainer = document.getElementById('statsItemsContainer');
-let statsCount = 0;
+var initialStatsData = document.getElementById('initialStatsData') ? document.getElementById('initialStatsData').value : '[]';
+var statsContainer = document.getElementById('statsItemsContainer');
+var statsCount = 0;
 
 function addStatItem(data = {}) {
-    const index = statsCount++;
-    const div = document.createElement('div');
+    var index = statsCount++;
+    var div = document.createElement('div');
     div.className = 'grid grid-cols-2 gap-4 items-end bg-gray-50 p-3 rounded relative';
     div.innerHTML = `
         <button type="button" onclick="this.parentElement.remove()" class="absolute -top-2 -right-2 bg-red-500 text-white rounded-full w-5 h-5 flex items-center justify-center text-xs hover:bg-red-600 shadow-sm z-10" title="Remove">×</button>
@@ -1360,26 +1358,26 @@ function addStatItem(data = {}) {
 
 if (initialStatsData) {
     try {
-        const stats = JSON.parse(initialStatsData);
+        var stats = JSON.parse(initialStatsData);
         if (Array.isArray(stats) && stats.length > 0) {
             stats.forEach(s => addStatItem(s));
         } else {
             // Add 4 default empty ones if none exist
-            for(let i=0; i<4; i++) addStatItem();
+            for(var i=0; i<4; i++) addStatItem();
         }
     } catch(e) {  
-        for(let i=0; i<4; i++) addStatItem(); 
+        for(var i=0; i<4; i++) addStatItem(); 
     }
 }
 
 // --- Initialize Why Items ---
-const initialWhyData = document.getElementById('initialWhyData').value;
-const whyContainer = document.getElementById('whyItemsContainer');
-let whyCount = 0;
+var initialWhyData = document.getElementById('initialWhyData') ? document.getElementById('initialWhyData').value : '[]';
+var whyContainer = document.getElementById('whyItemsContainer');
+var whyCount = 0;
 
 function addWhyItem(data = {}) {
-    const index = whyCount++;
-    const div = document.createElement('div');
+    var index = whyCount++;
+    var div = document.createElement('div');
     div.className = 'border border-gray-200 p-3 rounded bg-gray-50 relative';
     div.innerHTML = `
          <button type="button" onclick="this.parentElement.remove()" class="absolute top-2 right-2 text-red-500 hover:text-red-700 font-bold" title="Remove">X</button>
@@ -1404,25 +1402,25 @@ function addWhyItem(data = {}) {
 
 if (initialWhyData) {
     try {
-        const items = JSON.parse(initialWhyData);
+        var items = JSON.parse(initialWhyData);
         if (Array.isArray(items) && items.length > 0) {
             items.forEach(item => addWhyItem(item));
         } else {
-            for(let i=0; i<3; i++) addWhyItem();
+            for(var i=0; i<3; i++) addWhyItem();
         }
     } catch(e) { 
-        for(let i=0; i<3; i++) addWhyItem(); 
+        for(var i=0; i<3; i++) addWhyItem(); 
     }
 }
 
 // --- Initialize Testimonials Items ---
-const initialTestimonialsData = document.getElementById('initialTestimonialsData').value;
-const testimonialsContainer = document.getElementById('testimonialsItemsContainer');
-let reviewCount = 0;
+var initialTestimonialsData = document.getElementById('initialTestimonialsData') ? document.getElementById('initialTestimonialsData').value : '[]';
+var testimonialsContainer = document.getElementById('testimonialsItemsContainer');
+var reviewCount = 0;
 
 function addTestimonialsItem(data = {}) {
-    const index = reviewCount++;
-    const div = document.createElement('div');
+    var index = reviewCount++;
+    var div = document.createElement('div');
     div.className = 'border border-gray-200 p-4 rounded bg-gray-50 relative animate-fade-in';
     div.innerHTML = `
          <button type="button" onclick="this.parentElement.remove()" class="absolute top-2 right-2 text-red-500 hover:text-red-700 font-bold bg-white rounded-full w-6 h-6 flex items-center justify-center shadow-sm" title="Remove">
@@ -1469,7 +1467,7 @@ function addTestimonialsItem(data = {}) {
 
 if (initialTestimonialsData) {
     try {
-        const reviews = JSON.parse(initialTestimonialsData);
+        var reviews = JSON.parse(initialTestimonialsData);
         if (Array.isArray(reviews) && reviews.length > 0) {
             reviews.forEach(r => addTestimonialsItem(r));
         } else {
@@ -1480,13 +1478,13 @@ if (initialTestimonialsData) {
 }
 
 // --- Initialize Other Platforms ---
-const initialPlatformData = document.getElementById('initialPlatformData') ? document.getElementById('initialPlatformData').value : '[]';
-const platformContainer = document.getElementById('platformItemsContainer');
-let platformItemCount = 0;
+var initialPlatformData = document.getElementById('initialPlatformData') ? document.getElementById('initialPlatformData').value : '[]';
+var platformContainer = document.getElementById('platformItemsContainer');
+var platformItemCount = 0;
 
 function addPlatformItem(data = {}) {
-    const index = platformItemCount++;
-    const div = document.createElement('div');
+    var index = platformItemCount++;
+    var div = document.createElement('div');
     div.className = 'border border-gray-200 p-4 rounded bg-gray-50 relative animate-fade-in mb-4';
     div.innerHTML = `
          <button type="button" onclick="this.parentElement.remove()" class="absolute top-2 right-2 text-red-500 hover:text-red-700 font-bold bg-white rounded-full w-6 h-6 flex items-center justify-center shadow-sm" title="Remove">
@@ -1548,7 +1546,7 @@ function addPlatformItem(data = {}) {
 
 if (initialPlatformData && platformContainer) {
     try {
-        const platforms = JSON.parse(initialPlatformData);
+        var platforms = JSON.parse(initialPlatformData);
         if (Array.isArray(platforms) && platforms.length > 0) {
             platforms.forEach(p => addPlatformItem(p));
         } else {
@@ -1559,12 +1557,12 @@ if (initialPlatformData && platformContainer) {
 
 // Toggle Section Content Visibility
 window.toggleSection = function(id, btn) {
-    const el = document.getElementById(id);
+    var el = document.getElementById(id);
     if(el) el.classList.toggle('hidden');
     
     // Toggle Icon if button passed
     if(btn) {
-        let icon = btn.querySelector('i');
+        var icon = btn.querySelector('i');
         // If btn itself is the icon element
         if (!icon && (btn.classList.contains('fas') || btn.tagName === 'I')) icon = btn;
         
@@ -1581,8 +1579,8 @@ window.toggleSection = function(id, btn) {
 };
 
 function addBannerSection(data = {}) {
-    const index = bannerCount++;
-    const div = document.createElement('div');
+    var index = bannerCount++;
+    var div = document.createElement('div');
     div.className = 'border border-gray-200 p-4 rounded bg-gray-50 relative animate-fade-in';
     div.innerHTML = `
         <button type="button" onclick="this.parentElement.remove()" class="absolute top-2 right-2 text-red-500 hover:text-red-700 font-bold bg-white rounded-full w-6 h-6 flex items-center justify-center shadow-sm" title="Remove Section">
@@ -1681,8 +1679,8 @@ function addBannerSection(data = {}) {
 
 // Wrapper to handle upload and UI toggling (placeholder vs preview)
 async function handleBannerUpload(input) {
-    const container = input.parentElement;
-    const placeholder = container.querySelector('.placeholder-box');
+    var container = input.parentElement;
+    var placeholder = container.querySelector('.placeholder-box');
     
     // Hide placeholder immediately on select
     if(placeholder) placeholder.classList.add('hidden');
@@ -1693,12 +1691,12 @@ async function handleBannerUpload(input) {
 
 function previewImage(input) {
     if (input.files && input.files[0]) {
-        const file = input.files[0];
-        const reader = new FileReader();
+        var file = input.files[0];
+        var reader = new FileReader();
         reader.onload = function(e) {
-            const container = input.parentElement;
-            const img = container.querySelector('.preview-img');
-            const video = container.querySelector('.preview-video');
+            var container = input.parentElement;
+            var img = container.querySelector('.preview-img');
+            var video = container.querySelector('.preview-video');
             
             if (file.type.startsWith('video/') && video) {
                 video.src = e.target.result;
@@ -1720,18 +1718,18 @@ async function chunkUpload(input) {
     // 1. Preview first (before we clear input)
     previewImage(input); 
     
-    const file = input.files[0];
-    const container = input.parentElement;
-    let progress = container.querySelector('.upload-progress');
+    var file = input.files[0];
+    var container = input.parentElement;
+    var progress = container.querySelector('.upload-progress');
     if (!progress) {
         progress = document.createElement('div');
         progress.className = 'upload-progress text-xs text-blue-600 mt-1 font-bold';
         container.appendChild(progress);
     }
     
-    const CHUNK_SIZE = 1024 * 1024; // 1MB
-    const totalChunks = Math.ceil(file.size / CHUNK_SIZE);
-    const uploadId = Date.now().toString(36) + Math.random().toString(36).substr(2);
+    var CHUNK_SIZE = 1024 * 1024; // 1MB
+    var totalChunks = Math.ceil(file.size / CHUNK_SIZE);
+    var uploadId = Date.now().toString(36) + Math.random().toString(36).substr(2);
     
     progress.innerText = 'Starting Upload...';
     progress.className = 'upload-progress text-xs text-blue-600 mt-1 font-bold';
@@ -1739,23 +1737,23 @@ async function chunkUpload(input) {
     // input.disabled = true; // Don't disable completely or form might be weird
     
     try {
-        for (let i = 0; i < totalChunks; i++) {
-            const start = i * CHUNK_SIZE;
-            const end = Math.min(file.size, start + CHUNK_SIZE);
-            const chunk = file.slice(start, end);
+        for (var i = 0; i < totalChunks; i++) {
+            var start = i * CHUNK_SIZE;
+            var end = Math.min(file.size, start + CHUNK_SIZE);
+            var chunk = file.slice(start, end);
             
-            const formData = new FormData();
+            var formData = new FormData();
             formData.append('chunk', chunk);
             formData.append('file_name', file.name);
             formData.append('chunk_index', i);
             formData.append('total_chunks', totalChunks);
             formData.append('upload_id', uploadId);
             
-            const req = await fetch('upload_chunk.php', { method: 'POST', body: formData });
+            var req = await fetch('upload_chunk.php', { method: 'POST', body: formData });
             
             if (!req.ok) throw new Error('Network error: ' + req.status);
             
-            const res = await req.json();
+            var res = await req.json();
             if (res.error) throw new Error(res.error);
             
             if (res.status === 'done') {
@@ -1763,7 +1761,7 @@ async function chunkUpload(input) {
                 progress.classList.replace('text-blue-600', 'text-green-600');
                 
                 // Update Hidden Input with Path
-                const hiddenUrl = container.querySelector('input[type="hidden"]');
+                var hiddenUrl = container.querySelector('input[type="hidden"]');
                 if (hiddenUrl) hiddenUrl.value = res.path;
                 
                 // Clear File Input to Avoid Post Size Error
@@ -1772,7 +1770,7 @@ async function chunkUpload(input) {
                 return;
             }
             
-            const percent = Math.round(((i + 1) / totalChunks) * 100);
+            var percent = Math.round(((i + 1) / totalChunks) * 100);
             progress.innerText = `Uploading ${percent}%...`;
         }
     } catch (e) {
@@ -1784,18 +1782,18 @@ async function chunkUpload(input) {
 }
 
 // DRAG AND DROP LOGIC FOR ADMIN SECTIONS
-const dragList = document.getElementById('draggableSections');
-const orderInput = document.getElementById('sectionOrderJson');
-let draggedItem = null;
+var dragList = document.getElementById('draggableSections');
+var orderInput = document.getElementById('sectionOrderJson');
+var draggedItem = null;
 
 if (dragList) {
-    const items = dragList.querySelectorAll('[data-section-id]');
+    var items = dragList.querySelectorAll('[data-section-id]');
     
     // Initial Order Save
     updateSectionOrder();
 
     items.forEach(item => {
-        const handle = item.querySelector('.cursor-move');
+        var handle = item.querySelector('.cursor-move');
         if(!handle) return; // safety
 
         handle.addEventListener('dragstart', function(e) {
@@ -1828,8 +1826,8 @@ if (dragList) {
             e.preventDefault();
             if (this === draggedItem) return;
             
-            const bounding = this.getBoundingClientRect();
-            const offset = bounding.y + (bounding.height / 2);
+            var bounding = this.getBoundingClientRect();
+            var offset = bounding.y + (bounding.height / 2);
             
             if (e.clientY - offset > 0) {
                 this.style['border-bottom'] = '2px solid #3b82f6';
@@ -1852,8 +1850,8 @@ if (dragList) {
             
             if (this === draggedItem) return;
 
-            const bounding = this.getBoundingClientRect();
-            const offset = bounding.y + (bounding.height / 2);
+            var bounding = this.getBoundingClientRect();
+            var offset = bounding.y + (bounding.height / 2);
             
             if (e.clientY - offset > 0) {
                 this.parentNode.insertBefore(draggedItem, this.nextSibling);
@@ -1866,8 +1864,8 @@ if (dragList) {
 
 function updateSectionOrder() {
     if(!dragList) return;
-    const currentItems = dragList.querySelectorAll('[data-section-id]');
-    const order = Array.from(currentItems).map(item => item.getAttribute('data-section-id'));
+    var currentItems = dragList.querySelectorAll('[data-section-id]');
+    var order = Array.from(currentItems).map(item => item.getAttribute('data-section-id'));
     orderInput.value = JSON.stringify(order);
 }
 

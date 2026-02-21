@@ -124,7 +124,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             );
             
             // Redirect before any output
-            header('Location: ' . $baseUrl . '/admin/products/list');
+            header('Location: ' . url('admin/products/list.php'));
             exit;
         } catch (Exception $e) {
             $msg = $e->getMessage();

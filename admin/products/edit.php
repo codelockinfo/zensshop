@@ -36,12 +36,12 @@ if ($productIdParam) {
     $productData = $product->getById($id, $storeId);
     $productId = $id;
 } else {
-    header('Location: ' . $baseUrl . '/admin/products/list');
+    header('Location: ' . url('admin/products/list.php'));
     exit;
 }
 
 if (!$productData) {
-    header('Location: ' . $baseUrl . '/admin/products/list');
+    header('Location: ' . url('admin/products/list.php'));
     exit;
 }
 
@@ -165,7 +165,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         );
         
         // Redirect after successful update
-        header('Location: ' . $baseUrl . '/admin/products/list?success=updated');
+        header('Location: ' . url('admin/products/list.php?success=updated'));
         exit;
         } catch (Exception $e) {
             $msg = $e->getMessage();

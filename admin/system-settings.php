@@ -15,7 +15,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     // Check for max post size violation
     if (empty($_POST) && isset($_SERVER['CONTENT_LENGTH']) && $_SERVER['CONTENT_LENGTH'] > 0) {
         $_SESSION['error'] = "The file is too large. It exceeds the server's post_max_size limit of " . ini_get('post_max_size') . ".";
-        header("Location: " . $baseUrl . '/admin/settings');
+        header("Location: " . url('admin/settings'));
         exit;
     }
 
@@ -160,7 +160,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         }
     }
     $_SESSION['success'] = "Settings updated successfully!";
-    header("Location: " . $baseUrl . '/admin/settings');
+    header("Location: " . url('admin/settings'));
     exit;
 }
 }
@@ -868,8 +868,8 @@ unset($_SESSION['error']);
 
 <script>
 // Help recover from garbled data if any was saved in Base64
-document.addEventListener('DOMContentLoaded', function() {
-    const sensitiveFields = [
+function initSystemSettings() {
+    var sensitiveFields = [
         'setting_global_schema_json',
         'setting_header_scripts', 
         'setting_pickup_message',
@@ -897,7 +897,9 @@ document.addEventListener('DOMContentLoaded', function() {
             }
         }
     });
-});
+}
+// Run on load
+initSystemSettings();
 
 function togglePassword(fieldId) {
     const input = document.getElementById(fieldId);
@@ -915,7 +917,7 @@ function togglePassword(fieldId) {
 }
 
 // Payment Icons Dynamic Rows
-const paymentData = <?php 
+var paymentData = <?php 
     $paymentIconsJson = $settings->get('checkout_payment_icons_json', '[]');
     echo $paymentIconsJson ?: '[]';
 ?>;
@@ -962,7 +964,7 @@ document.getElementById('settingsForm').addEventListener('submit', function(e) {
         tinymce.triggerSave();
     }
 
-    const sensitiveFields = [
+    var sensitiveFields = [
         'setting_global_schema_json',
         'setting_header_scripts', 
         'setting_pickup_message',
@@ -970,7 +972,7 @@ document.getElementById('settingsForm').addEventListener('submit', function(e) {
     ];
     
     // Helper to safely encode to Base64 (supporting UTF-8)
-    const toBase64 = (str) => btoa(unescape(encodeURIComponent(str)));
+    var toBase64 = (str) => btoa(unescape(encodeURIComponent(str)));
     
     // Create hidden fields for encoded values so we don't mess with the visible textareas
     // We also nullify the name of the original field so it's not sent (prevents WAF block)

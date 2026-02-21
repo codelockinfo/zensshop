@@ -59,8 +59,9 @@ function url($path = '') {
         $queryString = '?' . $parts[1];
     }
     
-    // Remove .php extension if present - DISABLED: Server requires .php
-    $path = preg_replace('/\.php$/', '', $path);
+    // Remove extension if present (e.g. .php, .html)
+    // This regex is already aggressive enough to strip .php, .html, .htm
+    $path = preg_replace('/\.(php|html|htm)$/i', '', $path);
     
     // If path is empty, return base URL
     if (empty($path)) {

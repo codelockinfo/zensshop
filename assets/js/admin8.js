@@ -157,6 +157,21 @@ window.initAdminUI = function () {
                     } else {
                         // Standard Accordion Behavior (Expanded)
                         if (submenu.classList.contains('hidden')) {
+                            // Close ALL other submenus first
+                            document.querySelectorAll('.sidebar-submenu').forEach(otherSub => {
+                                if (otherSub !== submenu) {
+                                    otherSub.classList.add('hidden');
+                                    const otherTrigger = otherSub.previousElementSibling;
+                                    if (otherTrigger) {
+                                        const otherArrow = otherTrigger.querySelector('.fa-chevron-up');
+                                        if (otherArrow) {
+                                            otherArrow.classList.remove('fa-chevron-up');
+                                            otherArrow.classList.add('fa-chevron-down');
+                                        }
+                                    }
+                                }
+                            });
+
                             submenu.classList.remove('hidden');
                             if (arrow) {
                                 arrow.classList.remove('fa-chevron-down');

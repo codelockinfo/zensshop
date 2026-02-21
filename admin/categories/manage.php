@@ -131,7 +131,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 "INSERT INTO categories (name, slug, description, status, sort_order, image, banner, icon, store_id) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)",
                 [$name, $slug, $description, $status, $sortOrder, $imagePath, $bannerPath, $icon, $storeId]
             );
-            header('Location: ' . $baseUrl . '/admin/categories/list.php');
+            header('Location: ' . url('admin/categories/list.php'));
             exit;
         }
     } catch (Exception $e) {
@@ -348,7 +348,7 @@ require_once __DIR__ . '/../../includes/admin-header.php';
             <button type="submit" class="admin-btn admin-btn-primary px-6 py-2.5 btn-loading">
                 Save
             </button>
-            <a href="<?php echo $baseUrl; ?>/admin/categories/list.php" class="admin-btn border border-gray-300 text-gray-600 px-6 py-2.5">
+            <a href="<?php echo url('admin/categories/list.php'); ?>" class="admin-btn border border-gray-300 text-gray-600 px-6 py-2.5">
                 Cancel
             </a>
         </div>

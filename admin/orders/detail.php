@@ -61,13 +61,13 @@ require_once __DIR__ . '/../../includes/admin-header.php';
             <p class="text-gray-600">Dashboard > Order > Order Details</p>
         </div>
         <div class="flex items-center space-x-3">
-            <a href="<?php echo $baseUrl; ?>/admin/orders/invoice.php?id=<?php echo $orderData['id']; ?>" target="_blank" class="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 transition">
+            <a href="<?php echo url('admin/orders/invoice.php?id=' . $orderData['id']); ?>" target="_blank" class="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 transition">
                 <i class="fas fa-file-invoice mr-2"></i>Invoice
             </a>
-            <a href="<?php echo $baseUrl; ?>/admin/orders/edit.php?order_number=<?php echo urlencode($orderData['order_number']); ?>" class="bg-green-500 text-white px-4 py-2 rounded hover:bg-green-600 transition">
+            <a href="<?php echo url('admin/orders/edit.php?order_number=' . urlencode($orderData['order_number'])); ?>" class="bg-green-500 text-white px-4 py-2 rounded hover:bg-green-600 transition">
                 <i class="fas fa-edit mr-2"></i>Edit Order
             </a>
-            <a href="<?php echo $baseUrl; ?>/admin/orders/list.php" class="bg-gray-500 text-white px-4 py-2 rounded hover:bg-gray-600 transition">
+            <a href="<?php echo url('admin/orders/list.php'); ?>" class="bg-gray-500 text-white px-4 py-2 rounded hover:bg-gray-600 transition">
                 <i class="fas fa-arrow-left mr-2"></i>Back to Orders
             </a>
         </div>
@@ -342,7 +342,7 @@ require_once __DIR__ . '/../../includes/admin-header.php';
             btn.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i> Processing...';
 
             try {
-                const response = await fetch('<?php echo $baseUrl; ?>/admin/api/delhivery_actions.php', {
+                const response = await fetch('<?php echo url("admin/api/delhivery_actions.php"); ?>', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ action, order_number: '<?php echo $orderData['order_number']; ?>' })
@@ -372,7 +372,7 @@ require_once __DIR__ . '/../../includes/admin-header.php';
         document.addEventListener('DOMContentLoaded', async () => {
             const statusDiv = document.getElementById('trackingStatusContainer');
             try {
-                const response = await fetch('<?php echo $baseUrl; ?>/admin/api/delhivery_actions.php', {
+                const response = await fetch('<?php echo url("admin/api/delhivery_actions.php"); ?>', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ action: 'track_shipment', order_number: '<?php echo $orderData['order_number']; ?>' })
@@ -580,7 +580,7 @@ async function handleRequestAction(event, requestId, status, type = '') {
     btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Processing...';
 
     try {
-        const res = await fetch('<?php echo $baseUrl; ?>/admin/api/handle_request.php', {
+        const res = await fetch('<?php echo url("admin/api/handle_request.php"); ?>', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ requestId, status, type })

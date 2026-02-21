@@ -28,7 +28,7 @@ if ($productIdParam) {
 }
 
 if (!$productData) {
-    header('Location: ' . $baseUrl . '/admin/products/list.php');
+    header('Location: ' . url('admin/products/list.php'));
     exit;
 }
 
