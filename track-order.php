@@ -77,21 +77,53 @@ $customerAddressStr = implode(', ', array_filter([
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
     <style>
+        /* PDF Generation Support - Force Desktop Layout */
+        .generating-pdf #invoice-content {
+            width: 1200px !important;
+            max-width: 1200px !important;
+            margin: 0 !important;
+            padding: 15mm !important;
+            box-shadow: none !important;
+            background: white !important;
+        }
+        .generating-pdf table {
+            width: 100% !important;
+            min-width: 0 !important;
+            table-layout: fixed !important; /* Force fixed to respect our widths */
+            font-size: 10pt !important;
+        }
+        .generating-pdf th, .generating-pdf td {
+            padding: 4mm 2mm !important;
+            word-wrap: break-word !important;
+        }
+        .generating-pdf .item-name-col {
+            width: auto !important; /* Let it take remaining space */
+        }
+        /* Specific widths for price columns to prevent overlap */
+        .generating-pdf .price-col { width: 120px !important; text-align: right !important; }
+        .generating-pdf .qty-col { width: 60px !important; text-align: center !important; }
+        .generating-pdf .tax-col { width: 80px !important; text-align: center !important; }
+        .generating-pdf .total-col { width: 140px !important; text-align: right !important; }
+
+        .generating-pdf .no-print {
+            display: none !important;
+        }
+
         @media print {
             .no-print { display: none !important; }
-            body { background: white; padding: 0 !important; margin: 0 !important; }
-            .shadow-lg { box-shadow: none !important; }
-            .invoice-container { 
-                width: 210mm !important; 
-                max-width: 210mm !important; 
+            body { background: white; padding: 0 !important; margin: 0 !important; -webkit-print-color-adjust: exact; }
+            #invoice-content { 
+                width: 100% !important; 
+                max-width: 100% !important; 
                 margin: 0 !important; 
-                border: none !important;
-                padding-left: 5mm !important;
-                padding-right: 5mm !important;
+                box-shadow: none !important;
+                padding: 10mm !important;
             }
-            table { font-size: 8.5pt !important; width: 100% !important; table-layout: fixed !important; }
-            th, td { word-wrap: break-word !important; padding-left: 1mm !important; padding-right: 1mm !important; }
-            .break-inside-avoid { break-inside: avoid !important; }
+            table { font-size: 9pt !important; width: 100% !important; table-layout: auto !important; }
+            th, td { padding: 3mm 1mm !important; border-bottom: 0.1pt solid #eee !important; }
+            .item-name-col { white-space: normal !important; }
+            .print-nowrap { white-space: nowrap !important; }
+            img { max-width: 10mm !important; }
         }
         /* Custom scrollbar for mobile visibility */
         .overflow-x-auto::-webkit-scrollbar {
@@ -216,16 +248,16 @@ $customerAddressStr = implode(', ', array_filter([
         <div class="px-4 md:px-8 py-4 print:overflow-visible">
             <h3 class="font-bold text-lg mb-4 text-gray-800">Order Items</h3>
             <div class="overflow-x-auto scrollbar-thin scrollbar-thumb-gray-400 w-full pb-2" style="-webkit-overflow-scrolling: touch;">
-                <table class="w-full text-xs md:text-sm text-left min-w-[700px] print:min-w-0 print:table-fixed border-collapse">
+                <table class="w-full text-xs md:text-sm text-left min-w-[700px] print:min-w-full print:table-auto border-collapse">
                 <thead class="bg-gray-50 text-gray-500 font-bold border-b border-gray-200">
                     <tr>
-                        <th class="py-2 px-1 md:py-3 md:px-4 w-8 text-center text-[10px] md:text-sm">No.</th>
-                        <th class="py-2 px-1 md:py-3 md:px-4 min-w-[160px] max-w-[200px] md:min-w-0 md:max-w-none w-[160px] md:w-auto text-[10px] md:text-sm">Item Name</th>
-                        <th class="py-2 px-1 md:py-3 md:px-4 w-20 md:w-24 text-right text-[10px] md:text-sm">Price</th>
-                        <th class="py-2 px-1 md:py-3 md:px-4 w-10 md:w-16 text-center text-[10px] md:text-sm">Qty</th>
-                        <th class="py-2 px-1 md:py-3 md:px-4 w-12 md:w-16 text-center text-[10px] md:text-sm">Tax %</th>
-                        <th class="py-2 px-1 md:py-3 md:px-4 w-20 md:w-24 text-right text-[10px] md:text-sm">Tax Amt.</th>
-                        <th class="py-2 px-1 md:py-3 md:px-4 w-24 md:w-28 text-right text-[10px] md:text-sm">Total</th>
+                        <th class="py-2 px-1 md:py-3 md:px-4 w-10 text-center text-[10px] md:text-sm">No.</th>
+                        <th class="py-2 px-1 md:py-3 md:px-4 text-[10px] md:text-sm item-name-col">Item Name</th>
+                        <th class="py-2 px-1 md:py-3 md:px-4 text-right text-[10px] md:text-sm price-col">Price</th>
+                        <th class="py-2 px-1 md:py-3 md:px-4 text-center text-[10px] md:text-sm qty-col">Qty</th>
+                        <th class="py-2 px-1 md:py-3 md:px-4 text-center text-[10px] md:text-sm tax-col">Tax %</th>
+                        <th class="py-2 px-1 md:py-3 md:px-4 text-right text-[10px] md:text-sm tax-col">Tax Amt.</th>
+                        <th class="py-2 px-1 md:py-3 md:px-4 text-right text-[10px] md:text-sm total-col">Total</th>
                     </tr>
                 </thead>
                 <tbody class="divide-y divide-gray-100">
@@ -256,7 +288,7 @@ $customerAddressStr = implode(', ', array_filter([
                     ?>
                     <tr>
                         <td class="py-2 px-1 md:py-4 md:px-4 text-gray-500 text-center border-b border-gray-50"><?php echo $i++; ?></td>
-                        <td class="py-2 px-1 md:py-4 md:px-4 border-b border-gray-50">
+                        <td class="py-2 px-1 md:py-4 md:px-4 border-b border-gray-50 item-name-col">
                             <div class="flex items-center">
                                 <?php if (!empty($item['product_image'])): ?>
                                     <img src="<?php echo getImageUrl($item['product_image']); ?>" class="w-8 h-8 md:w-12 md:h-12 object-cover rounded mr-2 md:mr-3 border shrink-0">
@@ -269,18 +301,18 @@ $customerAddressStr = implode(', ', array_filter([
                                 </div>
                             </div>
                         </td>
-                        <td class="py-2 px-1 md:py-4 md:px-4 text-right text-gray-600 border-b border-gray-50"><?php echo formatCurrency($unitPrice); ?></td>
-                        <td class="py-2 px-1 md:py-4 md:px-4 text-center text-gray-600 border-b border-gray-50"><?php echo $item['quantity']; ?></td>
-                        <td class="py-2 px-1 md:py-4 md:px-4 text-center text-gray-600 border-b border-gray-50">
+                        <td class="py-2 px-1 md:py-4 md:px-4 text-right text-gray-600 border-b border-gray-50 price-col"><?php echo formatCurrency($unitPrice); ?></td>
+                        <td class="py-2 px-1 md:py-4 md:px-4 text-center text-gray-600 border-b border-gray-50 qty-col"><?php echo $item['quantity']; ?></td>
+                        <td class="py-2 px-1 md:py-4 md:px-4 text-center text-gray-600 border-b border-gray-50 tax-col">
                             <?php echo $taxRate > 0 ? (float)$taxRate . '%' : '-'; ?>
                         </td>
-                        <td class="py-2 px-1 md:py-4 md:px-4 text-right text-gray-600 border-b border-gray-50">
+                        <td class="py-2 px-1 md:py-4 md:px-4 text-right text-gray-600 border-b border-gray-50 tax-col">
                             <?php 
                                 $rowTax = (!empty($item['tax_amount']) && $item['tax_amount'] > 0) ? $item['tax_amount'] : $totalLineTax;
                                 echo formatCurrency($rowTax); 
                             ?>
                         </td>
-                        <td class="py-2 px-1 md:py-4 md:px-4 text-right font-bold text-gray-800 border-b border-gray-50">
+                        <td class="py-2 px-1 md:py-4 md:px-4 text-right font-bold text-gray-800 border-b border-gray-50 total-col">
                             <?php echo formatCurrency($lineTotal); ?>
                         </td>
                     </tr>
@@ -405,17 +437,26 @@ $customerAddressStr = implode(', ', array_filter([
 
     <script>
         function downloadPDF() {
+            const body = document.body;
+            body.classList.add('generating-pdf');
+            
             var element = document.getElementById('invoice-content');
             var opt = {
-                margin:       [10, 10, 10, 10], // top, left, bottom, right
+                margin:       [5, 5, 5, 5],
                 filename:     'invoice_<?php echo $order['order_number']; ?>.pdf',
                 image:        { type: 'jpeg', quality: 0.98 },
-                html2canvas:  { scale: 2, useCORS: true },
+                html2canvas:  { 
+                    scale: 2, 
+                    useCORS: true, 
+                    width: 1200,      // Capture at desktop width
+                    windowWidth: 1200 // Force desktop viewport
+                },
                 jsPDF:        { unit: 'mm', format: 'a4', orientation: 'portrait' }
             };
             
-            // New Promise-based usage:
-            html2pdf().set(opt).from(element).save();
+            html2pdf().set(opt).from(element).save().then(() => {
+                body.classList.remove('generating-pdf');
+            });
         }
     </script>
 </body>
