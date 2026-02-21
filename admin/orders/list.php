@@ -158,8 +158,8 @@ $orders = $order->getAll($filters);
                 $addressStr = implode(', ', $addrParts);
                 
                 // Truncate slightly to avoid QR overflow while using full labels
-                $cleanAddr = mb_strimwidth($addressStr ?: 'N/A', 0, 100, "..");
-                $cleanProd = mb_strimwidth($item['product_name'] ?? 'N/A', 0, 60, "..");
+                $cleanAddr = mb_strimwidth($addressStr ?: 'N/A', 0, 80, "..");
+                $cleanProd = mb_strimwidth($item['product_name'] ?? 'N/A', 0, 40, "..");
                 
                 $qrText = "Order ID: " . $item['order_number'] . "\n" .
                           "Customer: " . $item['customer_name'] . "\n" .

@@ -453,7 +453,22 @@ if (isset($_SESSION['flash_success'])) {
 $pageTitle = 'Landing Page Settings';
 require_once __DIR__ . '/../includes/admin-header.php';
 ?>
-
+<style>
+    .custom-scrollbar::-webkit-scrollbar {
+        width: 6px;
+    }
+    .custom-scrollbar::-webkit-scrollbar-track {
+        background: #f1f1f1;
+        border-radius: 10px;
+    }
+    .custom-scrollbar::-webkit-scrollbar-thumb {
+        background: #cbd5e1;
+        border-radius: 10px;
+    }
+    .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+        background: #94a3b8;
+    }
+</style>
 <?php
 // --- DATA RECONCILIATION & BACKWARD COMPATIBILITY ---
 // Map JSON grouped data back to individual keys for the form UI to avoid undefined index warnings.
@@ -607,7 +622,7 @@ if ($lp) {
     <div class="lg:col-span-1 space-y-6">
         <div class="bg-white p-4 rounded shadow">
             <h3 class="font-bold text-lg mb-4 border-b pb-2">Select Page</h3>
-            <ul class="space-y-2">
+            <ul class="space-y-2 max-h-[500px] overflow-y-auto pr-2 custom-scrollbar">
                 <?php foreach ($allPages as $p): ?>
                 <li class="min-w-0">
                     <div class="flex items-center group w-full">
