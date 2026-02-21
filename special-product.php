@@ -412,7 +412,7 @@ require_once __DIR__ . '/includes/header.php';
                 <?php // Price variables already defined at top ?>
 
                 <div class="mb-6 max-w-xl mx-auto lg:mx-0">
-                    <div id="hero-description-container" class="relative overflow-hidden transition-all duration-300 prose prose-lg max-w-none line-clamp-5" style="color: inherit;">
+                    <div id="hero-description-container" class="relative overflow-hidden transition-all duration-300 prose prose-lg max-w-none line-clamp-5 text-left" style="color: inherit;">
                         <div class="opacity-80 leading-relaxed">
                             <?php echo $heroDescription; ?>
                         </div>
@@ -424,26 +424,28 @@ require_once __DIR__ . '/includes/header.php';
                     </button>
                 </div>
 
-                <div class="product-price-container mb-8 flex items-center gap-4 justify-center lg:justify-start flex-wrap">
+                <div class="product-price-container mb-8 flex items-center gap-4 justify-center lg:justify-start flex-wrap text-left">
                     <span class="text-2xl font-extrabold text-[#707b8e] uppercase tracking-tight">Price:</span>
                     <?php if ($hasSale): ?>
                         <span class="text-2xl font-bold text-gray-400 line-through opacity-80"><?php echo format_price($originalPrice, $productData['currency'] ?? 'INR'); ?></span>
-                        <span class="text-3xl font-black text-[#1a3d32]"><?php echo format_price($currentSalePrice, $productData['currency'] ?? 'INR'); ?></span>
-                        <span class="bg-[#ef4444] text-white text-[12px] font-black px-3 py-1 rounded-md shadow-sm">-<?php echo round((($originalPrice - $currentSalePrice) / $originalPrice) * 100); ?>% OFF</span>
+                        <div class="flex items-center gap-3">
+                            <span class="text-3xl font-black text-[#1a3d32]"><?php echo format_price($currentSalePrice, $productData['currency'] ?? 'INR'); ?></span>
+                            <span class="bg-[#ef4444] text-white text-[12px] font-black px-3 py-1 rounded-md shadow-sm whitespace-nowrap">-<?php echo round((($originalPrice - $currentSalePrice) / $originalPrice) * 100); ?>% OFF</span>
+                        </div>
                     <?php else: ?>
                         <span class="text-3xl font-black text-[#000000]"><?php echo format_price($originalPrice, $productData['currency'] ?? 'INR'); ?></span>
                     <?php endif; ?>
-                </div>
+                 </div>
                 
-                    <div class="flex items-center gap-4 justify-center lg:justify-start flex-wrap">
+                    <div class="grid grid-cols-2 gap-4 lg:flex lg:items-center lg:justify-start">
                         <button id="special-add-to-cart-btn" onclick="spAddToCart(<?php echo $productData['product_id']; ?>, this, <?php echo htmlspecialchars(json_encode($firstVariant['variant_attributes'] ?? (object)[])); ?>)" 
                                 data-product-id="<?php echo $productData['product_id']; ?>"
                                 data-product-name="<?php echo htmlspecialchars($productData['name'] ?? ''); ?>"
                                 data-product-price="<?php echo $price; ?>"
                                 data-product-slug="<?php echo htmlspecialchars($productData['slug'] ?? ''); ?>"
-                                class="bg-[#1a3d32] btn-accent px-6 h-[58px] py-[17px] rounded text-[11px] font-bold tracking-widest uppercase transition transform flex items-center justify-center gap-3 <?php echo $isOutOfStock ? 'opacity-50 cursor-not-allowed' : ''; ?>" data-loading-text="Adding..." <?php echo $isOutOfStock ? 'disabled' : ''; ?>>
-                            <i class="fas fa-shopping-cart text-[13px]"></i>
-                            <span><?php echo $isOutOfStock ? 'Out of Stock' : 'Add to cart'; ?></span>
+                                class="bg-[#1a3d32] btn-accent w-full lg:w-auto px-4 lg:px-6 h-[58px] rounded text-[10px] lg:text-[11px] font-bold tracking-widest uppercase transition transform flex items-center justify-center gap-2 lg:gap-3 <?php echo $isOutOfStock ? 'opacity-50 cursor-not-allowed' : ''; ?>" data-loading-text="Adding..." <?php echo $isOutOfStock ? 'disabled' : ''; ?>>
+                            <i class="fas fa-shopping-cart text-[12px] lg:text-[13px]"></i>
+                            <span class="truncate"><?php echo $isOutOfStock ? 'Out of Stock' : 'Add to cart'; ?></span>
                         </button>
 
                         <?php foreach ($platformItems as $plat): 
@@ -453,12 +455,12 @@ require_once __DIR__ . '/includes/header.php';
                             $pBg = $plat['bg'] ?? '#ffffff';
                             $pText = $plat['text'] ?? '#111827';
                         ?>
-                        <a href="<?php echo htmlspecialchars($pLink); ?>" target="_blank" class="h-[58px] px-6 rounded flex items-center gap-3 shadow-lg hover:shadow-xl transition-all transform hover:-translate-y-1 group border border-gray-100" style="background-color: <?php echo $pBg; ?>; color: <?php echo $pText; ?>;" title="<?php echo htmlspecialchars($pName); ?>">
+                        <a href="<?php echo htmlspecialchars($pLink); ?>" target="_blank" class="w-full lg:w-auto h-[58px] px-4 lg:px-6 rounded flex items-center justify-center gap-2 lg:gap-3 shadow-lg hover:shadow-xl transition-all transform hover:-translate-y-1 group border border-gray-100" style="background-color: <?php echo $pBg; ?>; color: <?php echo $pText; ?>;" title="<?php echo htmlspecialchars($pName); ?>">
                             <?php if ($pImg): ?>
-                                <img src="<?php echo htmlspecialchars($pImg); ?>" alt="" class="h-7 md:h-8 w-auto object-contain rounded-full">
+                                <img src="<?php echo htmlspecialchars($pImg); ?>" alt="" class="h-6 lg:h-8 w-auto object-contain rounded-full">
                             <?php endif; ?>
                             <?php if (!empty($pName)): ?>
-                                <span class="font-bold uppercase text-[11px] tracking-widest" style="color: <?php echo $pText; ?>;"><?php echo htmlspecialchars($pName); ?></span>
+                                <span class="font-bold uppercase text-[10px] lg:text-[11px] tracking-widest truncate" style="color: <?php echo $pText; ?>;"><?php echo htmlspecialchars($pName); ?></span>
                             <?php endif; ?>
                         </a>
                         <?php endforeach; ?>
