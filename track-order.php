@@ -28,6 +28,18 @@ if (!$order) {
     die("Order not found");
 }
 
+// Handle Courier Updates
+$message = '';
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['courier_update'])) {
+    $newStatus = $_POST['order_status'] ?? '';
+    if (in_array($newStatus, ['processing', 'shipped', 'delivered'])) {
+        $db = Database::getInstance();
+        $db->execute("UPDATE orders SET order_status = ? WHERE order_number = ?", [$newStatus, $order['order_number']]);
+        $order['order_status'] = $newStatus; 
+        $message = "Order status updated successfully!";
+    }
+}
+
 // Removed owner auth for public qr link
 
 // Fetch Settings (Dynamic based on Order's Store)
@@ -335,6 +347,59 @@ $customerAddressStr = implode(', ', array_filter([
             </div>
         </div>
 
+    </div>
+
+    <!-- Courier / Logistics Update Section -->
+    <div class="max-w-4xl mx-auto mt-8 mb-12 no-print">
+        <div class="bg-white rounded-lg shadow-lg overflow-hidden border-t-4 border-green-500">
+            <div class="p-6">
+                <div class="flex items-center mb-4">
+                    <div class="bg-green-100 p-2 rounded-full mr-3 text-green-600">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path d="M9 17a2 2 0 11-4 0 2 2 0 014 0zM19 17a2 2 0 11-4 0 2 2 0 014 0z" />
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16V6a1 1 0 00-1-1H4a1 1 0 00-1 1v10a1 1 0 001 1h1m8-1a1 1 0 01-1 1H9m4-1V8a1 1 0 011-1h2.586a1 1 0 01.707.293l3.414 3.414a1 1 0 01.293.707V16a1 1 0 01-1 1h-1m-6-1a1 1 0 001 1h1M5 17a2 2 0 104 0m-4 0a2 2 0 114 0m6 0a2 2 0 104 0m-4 0a2 2 0 114 0" />
+                        </svg>
+                    </div>
+                    <h3 class="text-xl font-bold text-gray-800">Shipment Update (For Courier)</h3>
+                </div>
+
+                <?php if ($message): ?>
+                    <div class="bg-green-50 text-green-700 p-4 rounded mb-6 border border-green-200 flex items-center">
+                        <svg class="w-5 h-5 mr-2" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"></path></svg>
+                        <?php echo $message; ?>
+                    </div>
+                <?php endif; ?>
+
+                <form method="POST" action="" class="space-y-4">
+                    <input type="hidden" name="courier_update" value="1">
+                    
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Update Status</label>
+                            <select name="order_status" class="w-full border-gray-300 rounded-md shadow-sm focus:ring-green-500 focus:border-green-500 border p-2">
+                                <option value="shipped" <?php echo ($order['order_status'] == 'shipped' || $order['order_status'] == 'processing') ? 'selected' : ''; ?>>In Transit / Out for Delivery</option>
+                                <option value="delivered" <?php echo $order['order_status'] == 'delivered' ? 'selected' : ''; ?>>Successfully Delivered</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Recipient Name</label>
+                            <input type="text" placeholder="Who received the package?" class="w-full border-gray-300 rounded-md shadow-sm focus:ring-green-500 focus:border-green-500 border p-2">
+                        </div>
+                    </div>
+
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Delivery Notes</label>
+                        <textarea rows="2" placeholder="Example: Left at front door, signature obtained, etc." class="w-full border-gray-300 rounded-md shadow-sm focus:ring-green-500 focus:border-green-500 border p-2"></textarea>
+                    </div>
+
+                    <div class="flex justify-end">
+                        <button type="submit" class="bg-green-600 text-white px-6 py-2 rounded-md font-bold hover:bg-green-700 transition shadow-md">
+                            Update Order Tracking
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
     </div>
 
     <script>

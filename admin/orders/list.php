@@ -157,17 +157,17 @@ $orders = $order->getAll($filters);
                 ]);
                 $addressStr = implode(', ', $addrParts);
                 
-                // Aggressively shorten to prevent QR overflow (qrcodejs limit)
-                $cleanAddr = mb_strimwidth($addressStr ?: 'N/A', 0, 100, "...");
-                $cleanProd = mb_strimwidth($item['product_name'] ?? 'N/A', 0, 50, "...");
+                // Truncate slightly to avoid QR overflow while using full labels
+                $cleanAddr = mb_strimwidth($addressStr ?: 'N/A', 0, 100, "..");
+                $cleanProd = mb_strimwidth($item['product_name'] ?? 'N/A', 0, 60, "..");
                 
-                $qrText = "ORD:" . $item['order_number'] . "\n" .
-                          "CUST:" . $item['customer_name'] . "\n" .
-                          "MOB:" . ($item['customer_phone'] ?? 'N/A') . "\n" .
-                          "ADR:" . $cleanAddr . "\n" .
-                          "PRD:" . $cleanProd . "\n" .
-                          "AMT:" . number_format($item['total_amount'] ?? 0, 2) . "\n" .
-                          "PAY:" . strtoupper($item['payment_status'] ?? 'PENDING') . " " . strtoupper($item['payment_method'] ?? 'N/A');
+                $qrText = "Order ID: " . $item['order_number'] . "\n" .
+                          "Customer: " . $item['customer_name'] . "\n" .
+                          "Mobile: " . ($item['customer_phone'] ?? 'N/A') . "\n" .
+                          "Address: " . $cleanAddr . "\n" .
+                          "Product: " . $cleanProd . "\n" .
+                          "Payment: " . strtoupper($item['payment_status'] ?? 'PENDING') . " (" . strtoupper($item['payment_method'] ?? 'COD') . ")\n" .
+                          "Amount: Rs." . number_format($item['total_amount'] ?? 0, 2);
             ?>
             <tr data-row-number="<?php echo $index + 1; ?>"
                 data-customer-email="<?php echo htmlspecialchars($item['customer_email'] ?? ''); ?>"
@@ -332,23 +332,23 @@ function openQRModal(qrtextBase64, orderNum) {
     const modal = document.getElementById('qrModal');
     const qrContainer = document.getElementById('qrCodeContainer');
     const title = document.getElementById('qrModalTitle');
+    
     title.innerText = "Order: " + orderNum;
     qrContainer.innerHTML = '';
     
     // Generate QR using qrcode.js
     try {
-        qrContainer.innerHTML = '';
         const qrcode = new QRCode(qrContainer, {
             text: qrtext,
-            width: 300,
-            height: 300,
+            width: 280,
+            height: 280,
             colorDark : "#000000",
             colorLight : "#ffffff",
             correctLevel : QRCode.CorrectLevel.L
         });
     } catch (e) {
         console.error('QRCode Error:', e);
-        qrContainer.innerHTML = '<p class="text-red-500">Error generating QR Code</p>';
+        qrContainer.innerHTML = '<p class="text-red-500 text-sm">QR pattern too complex for this data.</p>';
     }
     
     // Store variables for download/print
@@ -524,6 +524,7 @@ function bulkDownloadQR() {
             </button>
         </div>
         <div class="flex justify-center mb-6" id="qrCodeContainer"></div>
+        
         <div class="flex gap-4">
             <button onclick="downloadSingleQR()" class="flex-1 bg-green-500 text-white py-2 rounded shadow hover:bg-green-600 transition flex items-center justify-center">
                 <i class="fas fa-download mr-2"></i> Download
