@@ -161,8 +161,9 @@ $orders = $order->getAll($filters);
                           "CUST: " . $item['customer_name'] . "\n" .
                           "MOB: " . ($item['customer_phone'] ?? 'N/A') . "\n" .
                           "ADR: " . ($addressStr ?: 'N/A') . "\n" .
-                          "PRD: " . $item['product_name'] . "\n" .
-                          "VAL: " . number_format($item['total_amount'] ?? 0, 2);
+                          "PROD: " . ($item['product_name'] ?? 'N/A') . "\n" .
+                          "AMT: Rs." . number_format($item['total_amount'] ?? 0, 2) . "\n" .
+                          "PAY: " . strtoupper($item['payment_status'] ?? 'PENDING') . " (" . strtoupper($item['payment_method'] ?? 'N/A') . ")";
             ?>
             <tr data-row-number="<?php echo $index + 1; ?>"
                 data-customer-email="<?php echo htmlspecialchars($item['customer_email'] ?? ''); ?>"
@@ -335,13 +336,14 @@ function openQRModal(qrtextBase64, orderNum) {
     
     // Generate QR using qrcode.js
     try {
-        new QRCode(qrContainer, {
+        qrContainer.innerHTML = '';
+        const qrcode = new QRCode(qrContainer, {
             text: qrtext,
             width: 350,
             height: 350,
             colorDark : "#000000",
             colorLight : "#ffffff",
-            correctLevel : QRCode.CorrectLevel.L // Low Correction = Simplest/Largest Blocks
+            correctLevel : QRCode.CorrectLevel.L
         });
     } catch (e) {
         console.error('QRCode Error:', e);
