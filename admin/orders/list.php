@@ -149,29 +149,27 @@ $orders = $order->getAll($filters);
                 // Construct QR Code Text Data
                 $addr = is_array($item['shipping_address']) ? $item['shipping_address'] : json_decode($item['shipping_address'] ?? '{}', true);
                 
-                // Line 1: Street + Address lines
-                $line1Parts = array_filter([
+                // Compact data to avoid QR overflow
+                $line1Parts = array_unique(array_filter([
                     $addr['street'] ?? '',
                     $addr['address_line1'] ?? $addr['address'] ?? '',
                     $addr['address_line2'] ?? ''
-                ]);
+                ]));
                 $line1 = implode(', ', $line1Parts);
                 
-                // Line 2: City, State Zip
                 $zip = $addr['zip'] ?? $addr['postal_code'] ?? $addr['pincode'] ?? '';
-                $line2 = trim(($addr['city'] ?? '') . ', ' . ($addr['state'] ?? '') . ' ' . $zip);
+                $line2Parts = array_unique(array_filter([$addr['city'] ?? '', $addr['state'] ?? '']));
+                $line2 = implode(', ', $line2Parts) . ' ' . $zip;
                 
                 $line3 = trim($addr['country'] ?? '');
-                
-                $formattedAddr = implode("\n", array_filter([$line1, $line2, $line3]));
+                $formattedAddr = mb_strimwidth(implode("\n", array_filter([$line1, $line2, $line3])), 0, 250, "..");
                 
                 $qrText = "Order ID: " . $item['order_number'] . "\n" .
                           "Customer: " . $item['customer_name'] . "\n" .
-                          "Mobile: " . ($item['customer_phone'] ?? 'N/A') . "\n\n" .
-                          "Shipping Address:\n" . $formattedAddr . "\n\n" .
-                          "Product: " . ($item['product_name'] ?? 'N/A') . "\n" .
-                          "Payment: " . strtoupper($item['payment_status'] ?? 'PENDING') . "\n" .
-                          "Amount: Rs." . number_format($item['total_amount'] ?? 0, 2);
+                          "Mobile: " . ($item['customer_phone'] ?? 'N/A') . "\n" .
+                          "Payment: " . strtoupper($item['payment_method'] ?? 'COD') . " (" . strtoupper($item['payment_status'] ?? 'PENDING') . ")\n" .
+                          "Amount: Rs." . number_format($item['total_amount'] ?? 0, 2) . "\n\n" .
+                          "Shipping Address:\n" . $formattedAddr;
             ?>
             <tr data-row-number="<?php echo $index + 1; ?>"
                 data-customer-email="<?php echo htmlspecialchars($item['customer_email'] ?? ''); ?>"
@@ -348,7 +346,7 @@ function openQRModal(qrtextBase64, orderNum) {
             height: 280,
             colorDark : "#000000",
             colorLight : "#ffffff",
-            correctLevel : QRCode.CorrectLevel.L
+            correctLevel : QRCode.CorrectLevel.M
         });
     } catch (e) {
         console.error('QRCode Error:', e);
