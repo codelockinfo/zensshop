@@ -54,8 +54,8 @@ function setupImageUploadListeners() {
     }
 }
 
-document.addEventListener('DOMContentLoaded', setupImageUploadListeners);
-document.addEventListener('adminPageLoaded', setupImageUploadListeners);
+// Initialize immediately
+setupImageUploadListeners();
 
 // Toast Notification Utility
 function showToast(message, type = 'info', duration = 3000) {
@@ -112,7 +112,8 @@ function initializeImageUpload() {
 }
 
 function bindBoxEvents(box) {
-    if (!box) return;
+    if (!box || box.dataset.uploadInitialized) return;
+    box.dataset.uploadInitialized = 'true';
 
     try {
         const fileInput = box.querySelector('.image-file-input');
@@ -130,8 +131,8 @@ function bindBoxEvents(box) {
 
         // CLICK: Browse (Only if not clicking handle or delete)
         box.addEventListener('click', function(e) {
-            // Don't open file dialog if clicking remove button or the move handle
-            if (e.target !== removeBtn && !e.target.closest('.remove-image-btn') && !e.target.closest('.move-handle')) {
+            // Don't open file dialog if clicking remove button, move handle, or the file input itself
+            if (e.target !== fileInput && e.target !== removeBtn && !e.target.closest('.remove-image-btn') && !e.target.closest('.move-handle')) {
                 fileInput.click();
             }
         });

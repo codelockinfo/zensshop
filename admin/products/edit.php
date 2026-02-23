@@ -1026,10 +1026,7 @@ function initProductEditPage(retryCount = 0) {
     }
 }
 
-document.addEventListener('DOMContentLoaded', () => initProductEditPage());
-document.addEventListener('adminPageLoaded', () => initProductEditPage());
-
-// Call immediately in case this script is being re-executed by AJAX
+// Initialize
 initProductEditPage();
 </script>
 
