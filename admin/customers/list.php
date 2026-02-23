@@ -234,98 +234,86 @@ $customers = $customer->getAllCustomers($filters);
 // Table sorting functionality
 window.initCustomerSort = function() {
     const table = document.querySelector('.admin-table');
-    if (!table) return;
-    const headers = table.querySelectorAll('th.sortable');
-    let currentSort = { column: null, direction: 'asc' };
-    
-    headers.forEach(header => {
-        header.addEventListener('click', function() {
-            const column = this.dataset.column;
-            const tbody = table.querySelector('tbody');
-            const rows = Array.from(tbody.querySelectorAll('tr'));
-            
-            // Skip if no customers
-            if (rows.length === 1 && rows[0].querySelector('td[colspan]')) {
-                return;
-            }
-            
-            // Toggle direction
-            if (currentSort.column === column) {
-                currentSort.direction = currentSort.direction === 'asc' ? 'desc' : 'asc';
-            } else {
-                currentSort.direction = 'asc';
-                currentSort.column = column;
-            }
-            
-            // Reset all arrows
-            headers.forEach(h => {
-                const upArrow = h.querySelector('.fa-caret-up');
-                const downArrow = h.querySelector('.fa-caret-down');
-                if (upArrow) upArrow.classList.remove('text-blue-600');
-                if (upArrow) upArrow.classList.add('text-gray-400');
-                if (downArrow) downArrow.classList.remove('text-blue-600');
-                if (downArrow) downArrow.classList.add('text-gray-400');
+    if (!table || table.dataset.sortInitialized) return;
+    table.dataset.sortInitialized = 'true';
+
+    const thead = table.querySelector('thead');
+    if (!thead) return;
+
+    thead.addEventListener('click', function(e) {
+        const header = e.target.closest('th.sortable');
+        if (!header) return;
+
+        const column = header.dataset.column;
+        const tbody = table.querySelector('tbody');
+        const rows = Array.from(tbody.querySelectorAll('tr:not(#noDataMessage)'));
+        
+        // Skip if no actual data rows (only empty message or loading)
+        if (rows.length <= 1 && rows[0]?.querySelector('td[colspan]')) return;
+
+        // Determine direction
+        const currentDir = header.dataset.direction || 'none';
+        const direction = currentDir === 'asc' ? 'desc' : 'asc';
+
+        // Reset all other headers
+        table.querySelectorAll('th.sortable').forEach(h => {
+            h.dataset.direction = '';
+            h.querySelectorAll('i').forEach(icon => {
+                icon.classList.remove('text-blue-600');
+                icon.classList.add('text-gray-400');
             });
-            
-            // Highlight active arrow
-            const upArrow = this.querySelector('.fa-caret-up');
-            const downArrow = this.querySelector('.fa-caret-down');
-            if (currentSort.direction === 'asc') {
-                if (upArrow) {
-                    upArrow.classList.remove('text-gray-400');
-                    upArrow.classList.add('text-blue-600');
-                }
-            } else {
-                if (downArrow) {
-                    downArrow.classList.remove('text-gray-400');
-                    downArrow.classList.add('text-blue-600');
-                }
-            }
-            
-            // Sort rows
-            rows.sort((a, b) => {
-                let aVal, bVal;
-                
-                // Get cell index
-                const cellIndex = Array.from(this.parentElement.children).indexOf(this);
-                const aCell = a.children[cellIndex];
-                const bCell = b.children[cellIndex];
-                
-                if (column === 'row_number') {
-                    // Row number sort
-                    aVal = parseInt(a.dataset.rowNumber) || 0;
-                    bVal = parseInt(b.dataset.rowNumber) || 0;
-                } else if (column === 'id' || column === 'total_orders' || column === 'total_spent') {
-                    // Numeric sort
-                    aVal = parseFloat(aCell.textContent.replace(/[^0-9.-]/g, '')) || 0;
-                    bVal = parseFloat(bCell.textContent.replace(/[^0-9.-]/g, '')) || 0;
-                } else {
-                    // Text sort
-                    aVal = aCell.textContent.trim().toLowerCase();
-                    bVal = bCell.textContent.trim().toLowerCase();
-                }
-                
-                if (aVal < bVal) return currentSort.direction === 'asc' ? -1 : 1;
-                if (aVal > bVal) return currentSort.direction === 'asc' ? 1 : -1;
-                return 0;
-            });
-            
-            // Re-append sorted rows
-            rows.forEach(row => {
-                if (row.id !== 'noDataMessage') {
-                    tbody.appendChild(row);
-                }
-            });
-            
-            // Ensure noDataMessage is always at the bottom
-            const noDataMessage = document.getElementById('noDataMessage');
-            if (noDataMessage) tbody.appendChild(noDataMessage);
         });
+
+        // Set current header
+        header.dataset.direction = direction;
+        const upArrow = header.querySelector('.fa-caret-up');
+        const downArrow = header.querySelector('.fa-caret-down');
+        if (direction === 'asc' && upArrow) {
+            upArrow.classList.replace('text-gray-400', 'text-blue-600');
+        } else if (direction === 'desc' && downArrow) {
+            downArrow.classList.replace('text-gray-400', 'text-blue-600');
+        }
+
+        // Get cell index
+        const cellIndex = Array.from(header.parentElement.children).indexOf(header);
+
+        // Sort rows
+        const collator = new Intl.Collator(undefined, { numeric: true, sensitivity: 'base' });
+        
+        rows.sort((a, b) => {
+            let aVal, bVal;
+            const aCell = a.children[cellIndex];
+            const bCell = b.children[cellIndex];
+
+            if (column === 'row_number') {
+                aVal = parseInt(a.dataset.rowNumber) || 0;
+                bVal = parseInt(b.dataset.rowNumber) || 0;
+            } else if (column === 'id' || column === 'total_orders' || column === 'total_spent') {
+                aVal = parseFloat(aCell.textContent.replace(/[^0-9.-]/g, '')) || 0;
+                bVal = parseFloat(bCell.textContent.replace(/[^0-9.-]/g, '')) || 0;
+            } else {
+                aVal = aCell.textContent.trim();
+                bVal = bCell.textContent.trim();
+                return direction === 'asc' ? collator.compare(aVal, bVal) : collator.compare(bVal, aVal);
+            }
+
+            if (aVal < bVal) return direction === 'asc' ? -1 : 1;
+            if (aVal > bVal) return direction === 'asc' ? 1 : -1;
+            return 0;
+        });
+
+        // Re-append rows using fragment for performance
+        const fragment = document.createDocumentFragment();
+        rows.forEach(row => fragment.appendChild(row));
+        
+        const noData = document.getElementById('noDataMessage');
+        if (noData) fragment.appendChild(noData);
+        
+        tbody.appendChild(fragment);
     });
 };
 
-document.addEventListener('DOMContentLoaded', window.initCustomerSort);
-document.addEventListener('adminPageLoaded', window.initCustomerSort);
+window.initCustomerSort();
 </script>
 
 <script>
@@ -377,8 +365,7 @@ window.initCustomerSearch = function() {
     }
 };
 
-document.addEventListener('DOMContentLoaded', window.initCustomerSearch);
-document.addEventListener('adminPageLoaded', window.initCustomerSearch);
+window.initCustomerSearch();
 </script>
 
 <?php require_once __DIR__ . '/../../includes/admin-footer.php'; ?>
