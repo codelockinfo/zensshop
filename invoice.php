@@ -69,7 +69,7 @@ function getCurrencySymbol($currencyCode) {
 }
 
 function formatCurrency($amount, $currencyCode = 'INR') {
-    return getCurrencySymbol($currencyCode) . ' ' . number_format($amount, 2);
+    return getCurrencySymbol($currencyCode) . number_format($amount, 2);
 }
 
 // Extract currency
@@ -196,7 +196,7 @@ $customerAddressStr = implode(', ', array_filter([
             color: var(--invoice-slate);
         }
 
-        .invoice-table { width: 100%; border-collapse: separate; border-spacing: 0; }
+        .invoice-table { width: 100%; border-collapse: separate; border-spacing: 0; min-width: 600px; }
         .invoice-table thead th {
             background: var(--invoice-slate);
             color: #fff;
@@ -233,6 +233,7 @@ $customerAddressStr = implode(', ', array_filter([
             #invoice-content { border: none !important; box-shadow: none !important; width: 100% !important; padding: 0 !important; }
             .invoice-card { border: none !important; box-shadow: none !important; }
             .grand-total-container { background: #064e3b !important; -webkit-print-color-adjust: exact; }
+            .invoice-table { min-width: 100% !important; }
         }
 
         /* Mobile Adjustments */
@@ -246,7 +247,7 @@ $customerAddressStr = implode(', ', array_filter([
     <div id="invoice-content" class="max-w-4xl mx-auto bg-white rounded-lg shadow-lg overflow-hidden invoice-container">
         
         <!-- Header / Logo -->
-        <div class="md:p-12 p-6 flex justify-between items-start">
+        <div class="md:p-8 p-6 flex flex-col md:flex-row justify-between items-center md:items-start gap-4">
             <div class="flex flex-col gap-6">
                 <div class="bg-white p-2 rounded shadow-sm inline-block w-fit">
                     <?php if ($logoType === 'image' && !empty($logo)): ?>
@@ -270,7 +271,7 @@ $customerAddressStr = implode(', ', array_filter([
                 </div>
             </div>
 
-            <div class="text-right">
+            <div class="text-center md:text-right w-full md:w-auto">
                 <div class="inline-block px-6 py-2 bg-emerald-900 text-white rounded-md mb-4 shadow-lg">
                     <h2 class="text-2xl font-bold tracking-widest">INVOICE</h2>
                 </div>
@@ -280,7 +281,7 @@ $customerAddressStr = implode(', ', array_filter([
                 </div>
 
                 <!-- Control Buttons -->
-                <div class="flex gap-3 justify-end mt-8 no-print" data-html2canvas-ignore="true">
+                <div class="flex flex-wrap gap-3 justify-center md:justify-end mt-8 no-print" data-html2canvas-ignore="true">
                     <button onclick="window.print()" class="group flex items-center gap-2 bg-slate-800 text-white px-5 py-2.5 rounded-lg shadow-xl hover:bg-black transition-all">
                         <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 text-emerald-400 group-hover:scale-110 transition" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z" />
@@ -297,9 +298,9 @@ $customerAddressStr = implode(', ', array_filter([
             </div>
         </div>
 
-        <div class="px-6 md:px-12 pb-12">
+        <div class="px-6 md:px-12 pb-8">
             <!-- Professional Summary Bar -->
-            <div class="summary-grid mb-10">
+            <div class="summary-grid mb-6">
                 <div class="summary-item">
                     <label>Order Date</label>
                     <p><?php echo date('D, d M Y', strtotime($order['created_at'])); ?></p>
@@ -358,7 +359,7 @@ $customerAddressStr = implode(', ', array_filter([
             </div>
 
             <!-- Modern Table -->
-            <div class="mb-12 overflow-hidden">
+            <div class="mb-6 overflow-x-auto">
                 <table class="invoice-table">
                     <thead>
                         <tr>
@@ -403,12 +404,12 @@ $customerAddressStr = implode(', ', array_filter([
                                 </div>
                             </div>
                         </td>
-                        <td class="text-right font-medium text-slate-600"><?php echo formatCurrency($unitPrice, $currency); ?></td>
+                        <td class="text-right font-medium text-slate-600 whitespace-nowrap"><?php echo formatCurrency($unitPrice, $currency); ?></td>
                         <td class="text-center text-slate-800 font-bold"><?php echo $item['quantity']; ?></td>
                         <td class="text-center text-slate-500">
                             <?php echo $taxRate > 0 ? (float)$taxRate . '%' : '-'; ?>
                         </td>
-                        <td class="text-right font-bold text-slate-900">
+                        <td class="text-right font-bold text-slate-900 whitespace-nowrap">
                             <?php echo formatCurrency($lineTotal, $currency); ?>
                         </td>
                     </tr>
@@ -467,7 +468,7 @@ $customerAddressStr = implode(', ', array_filter([
                     <div class="grand-total-container shadow-2xl">
                         <div class="flex flex-col">
                             <span class="text-[10px] font-bold uppercase tracking-[0.1em] opacity-60">Grand Total</span>
-                            <span class="text-3xl font-bold leading-none"><?php echo formatCurrency($grandTotal, $currency); ?></span>
+                            <span class="text-3xl font-bold leading-none whitespace-nowrap"><?php echo formatCurrency($grandTotal, $currency); ?></span>
                         </div>
                         <div class="h-12 w-12 border-2 border-white/20 rounded-full flex items-center justify-center">
                             <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-white/50" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -479,8 +480,8 @@ $customerAddressStr = implode(', ', array_filter([
             </div>
 
             <!-- High-End Footer -->
-            <div class="mt-20 pt-10 border-t border-slate-100 text-center flex flex-col items-center gap-6">
-                <div class="flex gap-12 font-bold text-[10px] text-slate-300 uppercase tracking-[0.3em]">
+            <div class="mt-10 pt-6 border-t border-slate-100 text-center flex flex-col items-center gap-4">
+                <div class="flex gap-12 font-bold text-[10px] text-slate-300 uppercase">
                     <span>Secure</span>
                     <span>•</span>
                     <span>Fast Dispatch</span>

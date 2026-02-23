@@ -168,7 +168,7 @@ $orders = $order->getAll($filters);
                           "Customer: " . $item['customer_name'] . "\n" .
                           "Mobile: " . ($item['customer_phone'] ?? 'N/A') . "\n" .
                           "Payment: " . strtoupper($item['payment_method'] ?? 'COD') . " (" . strtoupper($item['payment_status'] ?? 'PENDING') . ")\n" .
-                          "Amount: " . format_currency($item['total_amount'] ?? 0, 2, $item['currency'] ?? 'INR') . "\n\n" .
+                          "Amount: Rs." . number_format($item['total_amount'] ?? 0, 2) . "\n\n" .
                           "Shipping Address:\n" . $formattedAddr;
             ?>
             <tr data-row-number="<?php echo $index + 1; ?>"
@@ -265,6 +265,8 @@ $orders = $order->getAll($filters);
         </tbody>
     </table>
 </div>
+<script src="https://cdn.jsdelivr.net/npm/qrcodejs@1.0.0/qrcode.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/html2pdf.js@0.10.1/dist/html2pdf.bundle.min.js"></script>
 
 <script>
 // BASE_URL is already declared in admin-header.php, so check if it exists first
@@ -340,17 +342,21 @@ function openQRModal(qrtextBase64, orderNum) {
     
     // Generate QR using qrcode.js
     try {
-        const qrcode = new QRCode(qrContainer, {
+        if (typeof QRCode === 'undefined' && typeof window.QRCode === 'undefined') {
+            throw new Error('QRCode library not loaded. Please refresh the page or check your internet connection.');
+        }
+        const QRCodeClass = typeof QRCode !== 'undefined' ? QRCode : window.QRCode;
+        const qrcode = new QRCodeClass(qrContainer, {
             text: qrtext,
             width: 280,
             height: 280,
             colorDark : "#000000",
             colorLight : "#ffffff",
-            correctLevel : QRCode.CorrectLevel.M
+            correctLevel : QRCodeClass.CorrectLevel.M
         });
     } catch (e) {
         console.error('QRCode Error:', e);
-        qrContainer.innerHTML = '<p class="text-red-500 text-xs">Error generating QR: ' + e.message + ' (Length: ' + qrtext.length + ')</p>';
+        qrContainer.innerHTML = '<p class="text-red-500 text-xs text-center py-4">Error generating QR: ' + e.message + '</p>';
     }
     
     // Store variables for download/print
@@ -411,10 +417,11 @@ function generateBulkQRHTML(callback) {
             // Bulk decoding
             const bulkText = decodeURIComponent(escape(atob(cb.dataset.qrtext)));
 
-            new QRCode(tempDiv, {
+            const QRCodeClass = typeof QRCode !== 'undefined' ? QRCode : window.QRCode;
+            new QRCodeClass(tempDiv, {
                 text: bulkText,
                 width: 300, height: 300,
-                correctLevel: QRCode.CorrectLevel.L
+                correctLevel: QRCodeClass.CorrectLevel.L
             });
         } catch (e) {
             console.error('Bulk QR Error for ' + cb.value, e);
@@ -513,10 +520,6 @@ function bulkDownloadQR() {
 }
 
 </script>
-
-<!-- Add qrcode.js and html2pdf.js -->
-<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
 
 <!-- QR Modal HTML -->
 <div id="qrModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center hidden z-50">

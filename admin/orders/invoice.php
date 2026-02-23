@@ -47,7 +47,7 @@ function getCurrencySymbol($currencyCode) {
 }
 
 function formatCurrency($amount, $currencyCode = 'INR') {
-    return getCurrencySymbol($currencyCode) . ' ' . number_format($amount, 2);
+    return getCurrencySymbol($currencyCode) . number_format($amount, 2);
 }
 
 // Extract currency
@@ -146,7 +146,7 @@ $shippingAddress = json_decode($order['shipping_address'], true) ?? [];
             color: var(--invoice-slate);
         }
 
-        .invoice-table { width: 100%; border-collapse: separate; border-spacing: 0; }
+        .invoice-table { width: 100%; border-collapse: separate; border-spacing: 0; min-width: 600px; }
         .invoice-table thead th {
             background: var(--invoice-slate);
             color: #fff;
@@ -181,6 +181,7 @@ $shippingAddress = json_decode($order['shipping_address'], true) ?? [];
             body { background: white !important; margin: 0 !important; padding: 0 !important; }
             #invoice-content { border: none !important; box-shadow: none !important; width: 100% !important; padding: 0 !important; }
             .grand-total-container { background: #064e3b !important; -webkit-print-color-adjust: exact; }
+            .invoice-table { min-width: 100% !important; }
         }
     </style>
 </head>
@@ -189,7 +190,7 @@ $shippingAddress = json_decode($order['shipping_address'], true) ?? [];
     <div id="invoice-content" class="max-w-4xl mx-auto bg-white rounded-lg shadow-lg overflow-hidden">
         
         <!-- Header / Logo -->
-        <div class="md:p-12 p-6 flex justify-between items-start">
+        <div class="md:p-8 p-6 flex flex-col md:flex-row justify-between items-center md:items-start gap-4">
             <div class="flex flex-col gap-6">
                 <div class="bg-white p-2 rounded shadow-sm inline-block w-fit">
                     <?php if ($logoType === 'image' && !empty($logo)): ?>
@@ -213,7 +214,7 @@ $shippingAddress = json_decode($order['shipping_address'], true) ?? [];
                 </div>
             </div>
 
-            <div class="text-right">
+            <div class="text-center md:text-right w-full md:w-auto">
                 <div class="inline-block px-6 py-2 bg-emerald-900 text-white rounded-md mb-4 shadow-lg">
                     <h2 class="text-2xl font-bold tracking-widest">INVOICE</h2>
                 </div>
@@ -223,7 +224,7 @@ $shippingAddress = json_decode($order['shipping_address'], true) ?? [];
                 </div>
 
                 <!-- Control Buttons -->
-                <div class="flex gap-3 justify-end mt-8 no-print">
+                <div class="flex flex-wrap gap-3 justify-center md:justify-end mt-8 no-print">
                     <button onclick="window.print()" class="group flex items-center gap-2 bg-slate-800 text-white px-5 py-2.5 rounded-lg shadow-xl hover:bg-black transition-all">
                         <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 text-emerald-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z" />
@@ -241,9 +242,9 @@ $shippingAddress = json_decode($order['shipping_address'], true) ?? [];
             </div>
         </div>
 
-        <div class="px-6 md:px-12 pb-12">
+        <div class="px-6 md:px-12 pb-8">
             <!-- Professional Summary Bar -->
-            <div class="summary-grid mb-10">
+            <div class="summary-grid mb-6">
                 <div class="summary-item">
                     <label>Order Date</label>
                     <p><?php echo date('D, d M Y', strtotime($order['created_at'])); ?></p>
@@ -302,7 +303,7 @@ $shippingAddress = json_decode($order['shipping_address'], true) ?? [];
             </div>
 
             <!-- Table -->
-            <div class="mb-12 overflow-hidden">
+            <div class="mb-6 overflow-x-auto">
                 <table class="invoice-table">
                     <thead>
                         <tr>
@@ -341,12 +342,12 @@ $shippingAddress = json_decode($order['shipping_address'], true) ?? [];
                                 </div>
                             </div>
                         </td>
-                        <td class="text-right font-medium text-slate-600"><?php echo formatCurrency($unitPrice, $currency); ?></td>
+                        <td class="text-right font-medium text-slate-600 whitespace-nowrap"><?php echo formatCurrency($unitPrice, $currency); ?></td>
                         <td class="text-center text-slate-800 font-bold"><?php echo $item['quantity']; ?></td>
                         <td class="text-center text-slate-500">
                             <?php echo $taxRate > 0 ? (float)$taxRate . '%' : '-'; ?>
                         </td>
-                        <td class="text-right font-bold text-slate-900">
+                        <td class="text-right font-bold text-slate-900 whitespace-nowrap">
                             <?php echo formatCurrency($lineTotal, $currency); ?>
                         </td>
                     </tr>
@@ -368,22 +369,22 @@ $shippingAddress = json_decode($order['shipping_address'], true) ?? [];
                     <div class="border-t border-slate-100 pt-4 space-y-3">
                         <div class="flex justify-between text-sm">
                             <span class="text-slate-500 font-bold uppercase text-[10px] tracking-widest">Base Amount</span>
-                            <span class="text-slate-900 font-bold"><?php echo formatCurrency($order['subtotal'], $currency); ?></span>
+                            <span class="text-slate-900 font-bold whitespace-nowrap"><?php echo formatCurrency($order['subtotal'], $currency); ?></span>
                         </div>
                         <?php if ($order['shipping_amount'] > 0): ?>
                         <div class="flex justify-between text-sm">
                             <span class="text-slate-500 font-bold uppercase text-[10px] tracking-widest">Shipping Fee</span>
-                            <span class="text-slate-900 font-bold"><?php echo formatCurrency($order['shipping_amount'], $currency); ?></span>
+                            <span class="text-slate-900 font-bold whitespace-nowrap"><?php echo formatCurrency($order['shipping_amount'], $currency); ?></span>
                         </div>
                         <?php endif; ?>
                         <div class="flex justify-between text-sm">
                             <span class="text-slate-500 font-bold uppercase text-[10px] tracking-widest">Tax (GST)</span>
-                            <span class="text-slate-900 font-bold"><?php echo formatCurrency($order['tax_amount'], $currency); ?></span>
+                            <span class="text-slate-900 font-bold whitespace-nowrap"><?php echo formatCurrency($order['tax_amount'], $currency); ?></span>
                         </div>
                         <?php if ($order['discount_amount'] > 0): ?>
                         <div class="flex justify-between text-sm text-rose-600">
                             <span class="font-bold uppercase text-[10px] tracking-widest">Applied Discount</span>
-                            <span class="font-bold">-<?php echo formatCurrency($order['discount_amount'], $currency); ?></span>
+                            <span class="font-bold whitespace-nowrap">-<?php echo formatCurrency($order['discount_amount'], $currency); ?></span>
                         </div>
                         <?php endif; ?>
                     </div>
@@ -391,7 +392,7 @@ $shippingAddress = json_decode($order['shipping_address'], true) ?? [];
                     <div class="grand-total-container shadow-2xl">
                         <div class="flex flex-col">
                             <span class="text-[10px] font-bold uppercase tracking-[0.1em] opacity-60">Grand Total</span>
-                            <span class="text-3xl font-bold leading-none"><?php echo formatCurrency($order['grand_total'], $currency); ?></span>
+                            <span class="text-3xl font-bold leading-none whitespace-nowrap"><?php echo formatCurrency($order['grand_total'], $currency); ?></span>
                         </div>
                         <div class="h-12 w-12 border-2 border-white/20 rounded-full flex items-center justify-center">
                             <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-white/50" fill="none" viewBox="0 0 24 24" stroke="currentColor">
