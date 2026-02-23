@@ -481,7 +481,7 @@ $customerAddressStr = implode(', ', array_filter([
 
             <!-- High-End Footer -->
             <div class="mt-10 pt-6 border-t border-slate-100 text-center flex flex-col items-center gap-4">
-                <div class="flex gap-12 font-bold text-[10px] text-slate-300 uppercase">
+                <div class="flex gap-5 md:gap-12 font-bold text-[10px] text-slate-300 uppercase">
                     <span>Secure</span>
                     <span>•</span>
                     <span>Fast Dispatch</span>
