@@ -72,14 +72,24 @@ $action = $segments[count($segments) - 1] ?? '';  // add, list
     <title><?php echo isset($pageTitle) ? $pageTitle . ' - ' : ''; ?>Admin Dashboard - CookPro</title>
     <?php 
     // Fetch favicon from settings
-    $favicon = $h_db->fetchOne("SELECT setting_value FROM site_settings WHERE setting_key = 'favicon_png' AND (store_id = ? OR store_id IS NULL) ORDER BY store_id DESC LIMIT 1", [$h_storeId])['setting_value'] ?? '';
-    if (empty($favicon)) {
-        $faviconUrl = $baseUrl . '/admin/Images/Favicon.png';
+    $faviconPng = getSetting('favicon_png', '', $h_storeId);
+    $faviconIco = getSetting('favicon_ico', '', $h_storeId);
+    $faviconUrl = '';
+    
+    if (!empty($faviconIco)) {
+        if (file_exists(BASE_PATH . '/' . $faviconIco)) {
+            $faviconUrl = $baseUrl . '/' . $faviconIco;
+        } else {
+            $faviconUrl = getImageUrl($faviconIco);
+        }
+    } elseif (!empty($faviconPng)) {
+        $faviconUrl = getImageUrl($faviconPng);
     } else {
-        $faviconUrl = getImageUrl($favicon);
+        $faviconUrl = $baseUrl . '/admin/Images/Favicon.png';
     }
+    $favType = (strpos($faviconUrl, '.png') !== false) ? 'image/png' : 'image/x-icon';
     ?>
-    <link rel="icon" type="image/png" href="<?php echo htmlspecialchars($faviconUrl) . '?v=' . time(); ?>">
+    <link rel="icon" type="<?php echo $favType; ?>" href="<?php echo htmlspecialchars($faviconUrl) . '?v=' . time(); ?>">
     
     <!-- Tailwind CSS with Typography Plugin -->
     <script src="https://cdn.tailwindcss.com?plugins=typography"></script>

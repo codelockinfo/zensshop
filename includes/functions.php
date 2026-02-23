@@ -24,6 +24,17 @@ function getCurrentStoreId() {
 }
 
 /**
+ * Retrieve the store name from the settings table.
+ */
+function getStoreName($storeId = null): string {
+    $name = getSetting('site_name', '', $storeId);
+    if (empty($name)) {
+        $name = getSetting('store_name', 'My Store', $storeId);
+    }
+    return $name;
+}
+
+/**
  * Get base URL for the site
  * Uses SITE_URL constant which automatically detects environment (local vs production)
  */
@@ -202,9 +213,14 @@ function format_price($amount, $currency = 'INR') {
 /**
  * Format currency amount with symbol (Backward compatibility)
  */
-function format_currency($amount, $decimals = 2) {
-    // Explicitly use Rupee symbol to override potential bad configuration on server
-    $symbol = '₹'; 
+function format_currency($amount, $decimals = 2, $currencyCode = 'INR') {
+    $symbols = [
+        'INR' => '₹',
+        'USD' => '$',
+        'EUR' => '€',
+        'GBP' => '£'
+    ];
+    $symbol = $symbols[strtoupper($currencyCode)] ?? '₹';
     return $symbol . number_format((float)$amount, $decimals);
 }
 
@@ -687,10 +703,12 @@ function calculateGST($price, $gstPercent, $sellerState, $customerState, $quanti
 /**
  * Get single setting value from site_settings or settings
  */
-function getSetting($key, $default = '') {
+function getSetting($key, $default = '', $storeId = null) {
     try {
         $db = Database::getInstance();
-        $storeId = getCurrentStoreId();
+        if ($storeId === null) {
+            $storeId = getCurrentStoreId();
+        }
         
         // Try site_settings first
         $result = $db->fetchOne("SELECT setting_value FROM site_settings WHERE setting_key = ? AND (store_id = ? OR store_id IS NULL)", [$key, $storeId]);

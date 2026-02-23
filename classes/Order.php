@@ -28,7 +28,12 @@ class Order {
                 (SELECT oi3.product_name 
                  FROM order_items oi3 
                  WHERE oi3.order_num = o.order_number 
-                 LIMIT 1) as product_name
+                 LIMIT 1) as product_name,
+                (SELECT p2.currency 
+                 FROM order_items oi4
+                 LEFT JOIN products p2 ON (oi4.product_id = p2.product_id OR (oi4.product_id < 1000000000 AND oi4.product_id = p2.id))
+                 WHERE oi4.order_num = o.order_number 
+                 LIMIT 1) as currency
                 FROM orders o
                 LEFT JOIN order_items oi ON o.order_number = oi.order_num
                 LEFT JOIN customers c ON (o.user_id = c.id OR (o.user_id IS NULL AND o.customer_email = c.email))
@@ -133,7 +138,7 @@ class Order {
         }
 
         $sql = "SELECT oi.*, p.name as product_name, p.featured_image as product_image, p.featured_image, p.images, p.sku as product_sku, p.slug as product_slug,
-                     p.weight, p.length, p.width, p.height
+                     p.weight, p.length, p.width, p.height, p.currency as currency
              FROM order_items oi 
              LEFT JOIN products p ON (oi.product_id = p.product_id OR (oi.product_id < 1000000000 AND oi.product_id = p.id))
              WHERE oi.order_num = ?";

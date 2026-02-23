@@ -51,6 +51,13 @@ $db = Database::getInstance();
 $request = $db->fetchOne("SELECT * FROM ordercancel WHERE order_id = ? AND store_id = ? ORDER BY created_at DESC LIMIT 1", [$orderData['id'], $storeId]);
 
 $pageTitle = 'Order Details - ' . $orderData['order_number'];
+
+// Detect currency
+$currencyCode = 'INR';
+if (!empty($orderData['items']) && !empty($orderData['items'][0]['currency'])) {
+    $currencyCode = $orderData['items'][0]['currency'];
+}
+
 require_once __DIR__ . '/../../includes/admin-header.php';
 ?>
 
@@ -159,12 +166,12 @@ require_once __DIR__ . '/../../includes/admin-header.php';
                             <?php endif; ?>
                         </p>
                         <p class="text-sm text-gray-600">
-                            Price: <span class="font-medium"><?php echo format_currency($item['price']); ?></span>
+                            Price: <span class="font-medium"><?php echo format_currency($item['price'], 2, $item['currency'] ?? $currencyCode); ?></span>
                         </p>
                     </div>
                     <div class="text-right flex flex-col items-end">
                         <p class="font-semibold text-gray-900">
-                            <?php echo format_currency($item['line_total'] ?? $item['subtotal']); ?>
+                            <?php echo format_currency($item['line_total'] ?? $item['subtotal'], 2, $item['currency'] ?? $currencyCode); ?>
                         </p>
                         <div class="text-[10px] text-gray-500 mt-1 text-right">
                             <?php if (!empty($item['hsn_code'])): ?>
@@ -172,10 +179,10 @@ require_once __DIR__ . '/../../includes/admin-header.php';
                             <?php endif; ?>
                             <p>GST: <?php echo number_format($item['gst_percent'] ?? 0, 2); ?>%</p>
                             <?php if (($item['cgst_amount'] ?? 0) > 0): ?>
-                                <p>CGST: <?php echo format_currency($item['cgst_amount']); ?></p>
-                                <p>SGST: <?php echo format_currency($item['sgst_amount'] ?? $item['cgst_amount']); ?></p>
+                                <p>CGST: <?php echo format_currency($item['cgst_amount'], 2, $item['currency'] ?? $currencyCode); ?></p>
+                                <p>SGST: <?php echo format_currency($item['sgst_amount'] ?? $item['cgst_amount'], 2, $item['currency'] ?? $currencyCode); ?></p>
                             <?php elseif (($item['igst_amount'] ?? 0) > 0): ?>
-                                <p>IGST: <?php echo format_currency($item['igst_amount']); ?></p>
+                                <p>IGST: <?php echo format_currency($item['igst_amount'], 2, $item['currency'] ?? $currencyCode); ?></p>
                             <?php endif; ?>
                         </div>
                     </div>
@@ -399,14 +406,14 @@ require_once __DIR__ . '/../../includes/admin-header.php';
                 <!-- Subtotal -->
                 <div class="flex justify-between text-sm">
                     <span class="text-gray-600">Subtotal</span>
-                    <span class="text-gray-900 font-medium"><?php echo format_currency($orderData['subtotal']); ?></span>
+                    <span class="text-gray-900 font-medium"><?php echo format_currency($orderData['subtotal'], 2, $currencyCode); ?></span>
                 </div>
                 
                 <!-- Discount -->
                 <?php if ($orderData['discount_amount'] > 0): ?>
                 <div class="flex justify-between text-sm">
                     <span class="text-gray-600">Discount</span>
-                    <span class="text-gray-600 font-medium">-<?php echo format_currency($orderData['discount_amount']); ?></span>
+                    <span class="text-gray-600 font-medium">-<?php echo format_currency($orderData['discount_amount'], 2, $currencyCode); ?></span>
                 </div>
                 <?php endif; ?>
                 
@@ -416,7 +423,7 @@ require_once __DIR__ . '/../../includes/admin-header.php';
                     <span class="text-gray-900 font-medium">
                         <?php 
                         if ($orderData['shipping_amount'] > 0) {
-                            echo format_currency($orderData['shipping_amount']);
+                            echo format_currency($orderData['shipping_amount'], 2, $currencyCode);
                         } else {
                             echo '<span class="text-green-600">Free</span>';
                         }
@@ -428,7 +435,7 @@ require_once __DIR__ . '/../../includes/admin-header.php';
                 <?php if (($orderData['cod_charge'] ?? 0) > 0): ?>
                 <div class="flex justify-between text-sm">
                     <span class="text-gray-600">COD Service Charge</span>
-                    <span class="text-gray-900 font-medium"><?php echo format_currency($orderData['cod_charge']); ?></span>
+                    <span class="text-gray-900 font-medium"><?php echo format_currency($orderData['cod_charge'] ?? 0, 2, $currencyCode); ?></span>
                 </div>
                 <?php endif; ?>
                 
@@ -436,25 +443,25 @@ require_once __DIR__ . '/../../includes/admin-header.php';
                 <?php if (($orderData['cgst_total'] ?? 0) > 0): ?>
                 <div class="flex justify-between text-sm">
                     <span class="text-gray-600">CGST</span>
-                    <span class="text-gray-900 font-medium"><?php echo format_currency($orderData['cgst_total']); ?></span>
+                    <span class="text-gray-900 font-medium"><?php echo format_currency($orderData['cgst_total'], 2, $currencyCode); ?></span>
                 </div>
                 <div class="flex justify-between text-sm">
                     <span class="text-gray-600">SGST</span>
-                    <span class="text-gray-900 font-medium"><?php echo format_currency($orderData['sgst_total']); ?></span>
+                    <span class="text-gray-900 font-medium"><?php echo format_currency($orderData['sgst_total'], 2, $currencyCode); ?></span>
                 </div>
                 <?php endif; ?>
 
                 <?php if (($orderData['igst_total'] ?? 0) > 0): ?>
                 <div class="flex justify-between text-sm">
                     <span class="text-gray-600">IGST</span>
-                    <span class="text-gray-900 font-medium"><?php echo format_currency($orderData['igst_total']); ?></span>
+                    <span class="text-gray-900 font-medium"><?php echo format_currency($orderData['igst_total'], 2, $currencyCode); ?></span>
                 </div>
                 <?php endif; ?>
 
                 <?php if ($orderData['tax_amount'] > 0 && ($orderData['cgst_total'] ?? 0) == 0 && ($orderData['igst_total'] ?? 0) == 0): ?>
                 <div class="flex justify-between text-sm">
                     <span class="text-gray-600">Taxes</span>
-                    <span class="text-gray-900 font-medium"><?php echo format_currency($orderData['tax_amount']); ?></span>
+                    <span class="text-gray-900 font-medium"><?php echo format_currency($orderData['tax_amount'], 2, $currencyCode); ?></span>
                 </div>
                 <?php endif; ?>
             </div>
@@ -462,7 +469,7 @@ require_once __DIR__ . '/../../includes/admin-header.php';
             <!-- Total -->
             <div class="flex justify-between text-lg font-bold pt-4 border-t border-gray-200 mb-4">
                 <span class="text-gray-900">Total</span>
-                <span class="text-gray-900"><?php echo format_currency($orderData['total_amount']); ?></span>
+                <span class="text-gray-900"><?php echo format_currency($orderData['total_amount'], 2, $currencyCode); ?></span>
             </div>
 
             <!-- Payment Info -->

@@ -168,7 +168,7 @@ $orders = $order->getAll($filters);
                           "Customer: " . $item['customer_name'] . "\n" .
                           "Mobile: " . ($item['customer_phone'] ?? 'N/A') . "\n" .
                           "Payment: " . strtoupper($item['payment_method'] ?? 'COD') . " (" . strtoupper($item['payment_status'] ?? 'PENDING') . ")\n" .
-                          "Amount: Rs." . number_format($item['total_amount'] ?? 0, 2) . "\n\n" .
+                          "Amount: " . format_currency($item['total_amount'] ?? 0, 2, $item['currency'] ?? 'INR') . "\n\n" .
                           "Shipping Address:\n" . $formattedAddr;
             ?>
             <tr data-row-number="<?php echo $index + 1; ?>"
@@ -190,7 +190,7 @@ $orders = $order->getAll($filters);
                     <span class="font-medium"><?php echo htmlspecialchars($item['customer_name']); ?></span>
                 </td>
                 <td><?php echo htmlspecialchars($item['order_number']); ?></td>
-                <td><?php echo format_currency($item['total_amount']); ?></td>
+                <td><?php echo format_currency($item['total_amount'], 2, $item['currency'] ?? 'INR'); ?></td>
                 <td><?php echo $item['total_quantity'] ?? 0; ?></td>
                 <td>
                     <?php 
