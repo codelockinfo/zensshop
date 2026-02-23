@@ -47,7 +47,7 @@ function getCurrencySymbol($currencyCode) {
 }
 
 function formatCurrency($amount, $currencyCode = 'INR') {
-    return getCurrencySymbol($currencyCode) . number_format($amount, 2);
+    return getCurrencySymbol($currencyCode) . ' ' . number_format($amount, 2);
 }
 
 // Extract currency
@@ -357,8 +357,8 @@ $shippingAddress = json_decode($order['shipping_address'], true) ?? [];
             </div>
 
             <!-- Totals Area -->
-            <div class="flex justify-between items-end gap-12">
-                <div class="max-w-[300px]">
+            <div class="flex flex-col-reverse md:flex-row justify-between items-start md:items-end gap-8 md:gap-12">
+                <div class="w-full md:max-w-[300px] border-t md:border-t-0 border-slate-100 pt-6 md:pt-0 mt-6 md:mt-0">
                     <h4 class="text-xs font-bold text-slate-400 uppercase tracking-widest mb-2">Internal Admin Note</h4>
                     <p class="text-[10px] text-slate-400 leading-relaxed italic">
                         Verified by Admin. This invoice summary reflects the latest transaction state for Order #<?php echo htmlspecialchars($order['order_number']); ?>.
@@ -369,30 +369,30 @@ $shippingAddress = json_decode($order['shipping_address'], true) ?? [];
                     <div class="border-t border-slate-100 pt-4 space-y-3">
                         <div class="flex justify-between text-sm">
                             <span class="text-slate-500 font-bold uppercase text-[10px] tracking-widest">Base Amount</span>
-                            <span class="text-slate-900 font-bold whitespace-nowrap"><?php echo formatCurrency($order['subtotal'], $currency); ?></span>
+                            <span class="text-slate-900 font-black whitespace-nowrap"><?php echo formatCurrency($order['subtotal'], $currency); ?></span>
                         </div>
                         <?php if ($order['shipping_amount'] > 0): ?>
                         <div class="flex justify-between text-sm">
                             <span class="text-slate-500 font-bold uppercase text-[10px] tracking-widest">Shipping Fee</span>
-                            <span class="text-slate-900 font-bold whitespace-nowrap"><?php echo formatCurrency($order['shipping_amount'], $currency); ?></span>
+                            <span class="text-slate-900 font-black whitespace-nowrap"><?php echo formatCurrency($order['shipping_amount'], $currency); ?></span>
                         </div>
                         <?php endif; ?>
                         <div class="flex justify-between text-sm">
                             <span class="text-slate-500 font-bold uppercase text-[10px] tracking-widest">Tax (GST)</span>
-                            <span class="text-slate-900 font-bold whitespace-nowrap"><?php echo formatCurrency($order['tax_amount'], $currency); ?></span>
+                            <span class="text-slate-900 font-black whitespace-nowrap"><?php echo formatCurrency($order['tax_amount'], $currency); ?></span>
                         </div>
                         <?php if ($order['discount_amount'] > 0): ?>
                         <div class="flex justify-between text-sm text-rose-600">
                             <span class="font-bold uppercase text-[10px] tracking-widest">Applied Discount</span>
-                            <span class="font-bold whitespace-nowrap">-<?php echo formatCurrency($order['discount_amount'], $currency); ?></span>
+                            <span class="font-black whitespace-nowrap">-<?php echo formatCurrency($order['discount_amount'], $currency); ?></span>
                         </div>
                         <?php endif; ?>
                     </div>
                     
                     <div class="grand-total-container shadow-2xl">
                         <div class="flex flex-col">
-                            <span class="text-[10px] font-bold uppercase tracking-[0.1em] opacity-60">Grand Total</span>
-                            <span class="text-3xl font-bold leading-none whitespace-nowrap"><?php echo formatCurrency($order['grand_total'], $currency); ?></span>
+                            <span class="text-[10px] font-bold uppercase tracking-[0.1em] opacity-60">Payable Amount</span>
+                            <span class="text-3xl font-black leading-none whitespace-nowrap"><?php echo formatCurrency($order['grand_total'], $currency); ?></span>
                         </div>
                         <div class="h-12 w-12 border-2 border-white/20 rounded-full flex items-center justify-center">
                             <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-white/50" fill="none" viewBox="0 0 24 24" stroke="currentColor">

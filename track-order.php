@@ -52,8 +52,18 @@ $storePhone = $settings->get('footer_phone', '', $storeId);
 $storeEmail = $settings->get('footer_email', '', $storeId);
 
 // Helpers
-function formatCurrency($amount) {
-    return '₹' . number_format($amount, 2);
+function getCurrencySymbol($currencyCode) {
+    $map = [
+        'INR' => '₹',
+        'USD' => '$',
+        'EUR' => '€',
+        'GBP' => '£'
+    ];
+    return $map[$currencyCode] ?? $currencyCode;
+}
+
+function formatCurrency($amount, $currencyCode = 'INR') {
+    return getCurrencySymbol($currencyCode) . ' ' . number_format($amount, 2);
 }
 
 // Customer Address
@@ -404,8 +414,8 @@ $customerAddressStr = implode(', ', array_filter([
             </div>
 
             <!-- Totals Area -->
-            <div class="flex justify-between items-end gap-12">
-                <div class="max-w-[300px]">
+            <div class="flex flex-col-reverse md:flex-row justify-between items-start md:items-end gap-8 md:gap-12">
+                <div class="w-full md:max-w-[300px] border-t md:border-t-0 border-slate-100 pt-6 md:pt-0 mt-6 md:mt-0">
                     <h4 class="text-xs font-black text-slate-400 uppercase tracking-widest mb-2">Terms & Conditions</h4>
                     <p class="text-[10px] text-slate-400 leading-relaxed italic">
                         All returns must accompany original invoice. Any claims for shortage or damage must be made within 24 hours of receipt. Goods once sold will not be taken back.
