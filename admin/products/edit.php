@@ -980,7 +980,7 @@ document.getElementById('productForm').addEventListener('submit', function(e) {
     }
 });
 </script>
-<script src="<?php echo $baseUrl; ?>/assets/js/admin-image-upload10.js?v=<?php echo time(); ?>"></script>
+<script src="<?php echo $baseUrl; ?>/assets/js/admin-image-upload11.js?v=<?php echo time(); ?>"></script>
 <script src="<?php echo $baseUrl; ?>/assets/js/product-variants7.js"></script>
 <script>
 // Initialize with existing images

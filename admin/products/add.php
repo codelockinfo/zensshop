@@ -858,7 +858,7 @@ function checkStockStatus(input) {
     }
 }
 </script>
-<script src="<?php echo $baseUrl; ?>/assets/js/admin-image-upload10.js?v=<?php echo time(); ?>"></script>
+<script src="<?php echo $baseUrl; ?>/assets/js/admin-image-upload11.js?v=<?php echo time(); ?>"></script>
 <script src="<?php echo $baseUrl; ?>/assets/js/product-variants7.js"></script>
 
 <!-- Brand Management Modal -->
