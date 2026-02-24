@@ -5,10 +5,22 @@ require_once __DIR__ . '/classes/Email.php';
 
 
 $pageTitle = 'Forgot Password';
-// Only include header if NOT an ajax request
-if (!isset($_POST['ajax'])) {
-    require_once __DIR__ . '/includes/header.php';
+$isAjax = (isset($_GET['ajax']) && $_GET['ajax'] == '1') || 
+          (isset($_POST['ajax']) && $_POST['ajax'] == '1') || 
+          (isset($_SERVER['HTTP_X_REQUESTED_WITH']) && strtolower($_SERVER['HTTP_X_REQUESTED_WITH']) === 'xmlhttprequest');
+
+if (!$isAjax) {
+    require_once __DIR__ . '/classes/CustomerAuth.php';
+    $auth = new CustomerAuth();
+    if (!$auth->isLoggedIn() && !defined('IS_ACCOUNT_PAGE')) {
+        header('Location: ' . url('account'));
+        exit;
+    }
+
 }
+
+
+
 
 $step = $_SESSION['reset_step'] ?? 1;
 $error = '';
@@ -171,13 +183,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     <div class="text-gray-800 font-medium" id="loaderText">Processing...</div>
 </div>
 
-<div class="py-12 bg-gray-50 flex justify-center px-4 relative overflow-hidden">
+<div class="relative overflow-hidden w-full">
+
     <!-- Background Decor -->
     <div class="floating-element bg-purple-400 w-96 h-96 -top-20 -left-20 animate-pulse"></div>
     <div class="floating-element bg-blue-400 w-96 h-96 -bottom-20 -right-20 animate-pulse" style="animation-delay: 1s;"></div>
 
     <div class="max-w-md w-full login-3d-card">
-        <div class="bg-white rounded-3xl login-inner-card p-1">
+        <div class="bg-white rounded login-inner-card p-1">
             <div class="bg-white rounded-[22px] p-8 md:p-10">
                 
                 <div class="text-center mb-8">
@@ -401,4 +414,4 @@ document.addEventListener('DOMContentLoaded', function() {
 });
 </script>
 
-<?php require_once __DIR__ . '/includes/footer.php'; ?>
+

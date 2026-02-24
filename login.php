@@ -3,6 +3,7 @@ require_once __DIR__ . '/includes/functions.php';
 require_once __DIR__ . '/classes/CustomerAuth.php';
 
 $auth = new CustomerAuth();
+$error = null;
 $redirect = $_GET['redirect'] ?? $_SESSION['login_redirect'] ?? '';
 
 if ($redirect) {
@@ -16,39 +17,51 @@ if ($auth->isLoggedIn()) {
     exit;
 }
 
-$error = $_GET['error'] ?? '';
+$isAjax = (isset($_GET['ajax']) && $_GET['ajax'] == '1') || 
+          (isset($_POST['ajax']) && $_POST['ajax'] == '1') || 
+          (isset($_SERVER['HTTP_X_REQUESTED_WITH']) && strtolower($_SERVER['HTTP_X_REQUESTED_WITH']) === 'xmlhttprequest');
+
+if (!$isAjax && !$auth->isLoggedIn() && !defined('IS_ACCOUNT_PAGE')) {
+    $queryString = $_SERVER['QUERY_STRING'] ?? '';
+    $redirectUrl = url('account') . ($queryString ? '?' . $queryString : '');
+    header('Location: ' . $redirectUrl);
+    exit;
+}
+
+
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+
     $email = $_POST['email'] ?? '';
     $password = $_POST['password'] ?? '';
     
     try {
         $customer = $auth->login($email, $password);
         
-        // Cart and Wishlist sync are now handled automatically by setCustomerSession inside auth.login()
-        /*
-        require_once __DIR__ . '/classes/Cart.php';
-        $cart = new Cart();
-        $cart->syncCartAfterLogin($customer['customer_id']);
-        
-        // Sync wishlist after login
-        require_once __DIR__ . '/classes/Wishlist.php';
-        $wishlist = new Wishlist();
-        $wishlist->syncWishlistAfterLogin($customer['customer_id']);
-        */
-        
-        // Better redirect: if redirect is checkout, go to checkout.php, else check if it's a valid relative path
+        if ($isAjax) {
+            if (!headers_sent()) header('Content-Type: application/json');
+            echo json_encode(['success' => true, 'redirect' => ($redirect === 'checkout') ? url('checkout') : url('account')]);
+            exit;
+        }
+
+
         $target = ($redirect === 'checkout') ? url('checkout') : url('account');
         unset($_SESSION['login_redirect']);
         header('Location: ' . $target);
         exit;
     } catch (Exception $e) {
         $error = $e->getMessage();
+        if ($isAjax) {
+            if (!headers_sent()) header('Content-Type: application/json');
+            echo json_encode(['success' => false, 'message' => $error]);
+            exit;
+        }
+
     }
 }
 
 $pageTitle = 'Login';
-require_once __DIR__ . '/includes/header.php';
 ?>
+
 
 <style>
 .login-3d-card {
@@ -69,13 +82,14 @@ require_once __DIR__ . '/includes/header.php';
 }
 </style>
 
-<div class="py-12 bg-gray-50 flex justify-center px-4 relative overflow-hidden">
+<div class="relative overflow-hidden w-full">
+
     <!-- Background Decor -->
     <div class="floating-element bg-purple-400 w-96 h-96 -top-20 -left-20 animate-pulse"></div>
     <div class="floating-element bg-blue-400 w-96 h-96 -bottom-20 -right-20 animate-pulse" style="animation-delay: 1s;"></div>
 
     <div class="max-w-md w-full login-3d-card">
-        <div class="bg-white rounded-3xl login-inner-card p-1">
+        <div class="bg-white rounded login-inner-card p-1">
             <div class="bg-white rounded-[22px] p-8 md:p-10">
                 <div class="text-center mb-5">
                     <h1 class="text-3xl font-bold text-gray-900">Welcome Back</h1>
@@ -140,7 +154,7 @@ require_once __DIR__ . '/includes/header.php';
                     <div>
                         <div class="flex justify-between mb-2">
                             <label class="block text-xs font-bold text-gray-400 uppercase tracking-widest">Password</label>
-                            <a href="<?php echo url('forgot-password'); ?>" class="text-xs font-bold text-blue-600 hover:underline">Forgot?</a>
+                            <a href="?forgot-password" class="text-xs font-bold text-blue-600 hover:underline">Forgot?</a>
                         </div>
                         <div class="relative">
                             <i class="fas fa-lock absolute left-4 top-1/2 -translate-y-1/2 text-gray-400"></i>
@@ -170,7 +184,7 @@ require_once __DIR__ . '/includes/header.php';
                 <div class="mt-4 text-center">
                     <p class="text-gray-500 text-sm">
                         Don't have an account? 
-                        <a href="<?php echo url('register'); ?>" class="text-black font-bold hover:underline">Sign Up</a>
+                        <a href="?register" class="text-black font-bold hover:underline">Sign Up</a>
                     </p>
                 </div>
             </div>
@@ -195,4 +209,4 @@ function togglePassword(inputId, btn) {
 }
 </script>
 
-<?php require_once __DIR__ . '/includes/footer.php'; ?>
+

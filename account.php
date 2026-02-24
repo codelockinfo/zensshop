@@ -1,27 +1,29 @@
 <?php
+ob_start();
+define('IS_ACCOUNT_PAGE', true);
 require_once __DIR__ . '/includes/functions.php';
 require_once __DIR__ . '/classes/CustomerAuth.php';
 require_once __DIR__ . '/classes/Order.php';
 require_once __DIR__ . '/classes/Wishlist.php';
 
 $auth = new CustomerAuth();
-if (!$auth->isLoggedIn()) {
-    header('Location: ' . url('login'));
-    exit;
+$isLoggedIn = $auth->isLoggedIn();
+$customer = null;
+
+if ($isLoggedIn) {
+    $customer = $auth->getCurrentCustomer();
+    if (!$customer) {
+        // Session is valid but customer record not found for this store
+        $auth->logout();
+        $isLoggedIn = false;
+    }
 }
 
-$customer = $auth->getCurrentCustomer();
-if (!$customer) {
-    // Session is valid but customer record not found for this store
-    $auth->logout();
-    header('Location: ' . url('login'));
-    exit;
-}
 $orderModel = new Order();
 $wishlistModel = new Wishlist();
 
 // Handle POST actions
-if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
+if ($isLoggedIn && $_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
     if ($_POST['action'] === 'remove_address') {
         $auth->updateProfile(['shipping_address' => null]);
     } elseif ($_POST['action'] === 'set_address') {
@@ -60,188 +62,243 @@ $tab = $_GET['tab'] ?? 'all'; // For orders: current, unpaid, all
 
 // Fetch data based on section
 $orders = [];
-if ($section === 'orders') {
-    $filters = [
-        'user_id' => $customer['customer_id'],
-        'store_id' => CURRENT_STORE_ID
-    ];
-    if ($tab === 'unpaid') {
-        $filters['payment_status'] = 'pending';
-    } elseif ($tab === 'current') {
-        // Current could mean pending/processing/shipped
-        // For simplicity, just show all for now or filter by status
-    }
-    $orders = $orderModel->getAll($filters);
-    
-    // Fetch cancellation/refund requests for these orders
-    $db = Database::getInstance();
-    $orderIds = array_column($orders, 'id');
-    $requests = [];
-    if (!empty($orderIds)) {
-        $placeholders = implode(',', array_fill(0, count($orderIds), '?'));
-        // Sort by ID DESC so that later requests for the same order overwrite earlier ones in the associative array
-        $reqData = $db->fetchAll("SELECT order_id, type, cancel_status FROM ordercancel WHERE order_id IN ($placeholders) AND customer_id = ? ORDER BY id ASC", [...$orderIds, $customer['customer_id']]);
-        foreach ($reqData as $rd) {
-            $requests[$rd['order_id']] = $rd;
+$addresses = [];
+$wishlistItems = [];
+$paymentOrders = [];
+$totalSpend = 0;
+
+if ($isLoggedIn) {
+    if ($section === 'orders') {
+        $filters = [
+            'user_id' => $customer['customer_id'],
+            'store_id' => CURRENT_STORE_ID
+        ];
+        if ($tab === 'unpaid') {
+            $filters['payment_status'] = 'pending';
+        } elseif ($tab === 'current') {
+            // Current could mean pending/processing/shipped
+            // For simplicity, just show all for now or filter by status
+        }
+        $orders = $orderModel->getAll($filters);
+        
+        // Fetch cancellation/refund requests for these orders
+        $db = Database::getInstance();
+        $orderIds = array_column($orders, 'id');
+        $requests = [];
+        if (!empty($orderIds)) {
+            $placeholders = implode(',', array_fill(0, count($orderIds), '?'));
+            // Sort by ID DESC so that later requests for the same order overwrite earlier ones in the associative array
+            $reqData = $db->fetchAll("SELECT order_id, type, cancel_status FROM ordercancel WHERE order_id IN ($placeholders) AND customer_id = ? ORDER BY id ASC", [...$orderIds, $customer['customer_id']]);
+            foreach ($reqData as $rd) {
+                $requests[$rd['order_id']] = $rd;
+            }
+        }
+        
+        // Get full items for each order
+        foreach ($orders as &$o) {
+            $o['items'] = $orderModel->getOrderItems($o['order_number']);
+            $o['request'] = $requests[$o['id']] ?? null;
         }
     }
-    
-    // Get full items for each order
-    foreach ($orders as &$o) {
-        $o['items'] = $orderModel->getOrderItems($o['order_number']);
-        $o['request'] = $requests[$o['id']] ?? null;
-    }
-}
 
-$addresses = [];
-if ($section === 'addresses') {
-    // 1. Get unique shipping addresses from past orders (Store Specific)
-    $pastOrders = $orderModel->getAll([
-        'user_id' => $customer['customer_id'],
-        'store_id' => CURRENT_STORE_ID
-    ]);
-    $uniqueAddresses = [];
-    foreach ($pastOrders as $po) {
-        $addr = $po['shipping_address'];
-        if ($addr) {
-            $hash = md5($addr);
-            if (!isset($uniqueAddresses[$hash])) {
-                $uniqueAddresses[$hash] = $addr;
+    if ($section === 'addresses') {
+        // 1. Get unique shipping addresses from past orders (Store Specific)
+        $pastOrders = $orderModel->getAll([
+            'user_id' => $customer['customer_id'],
+            'store_id' => CURRENT_STORE_ID
+        ]);
+        $uniqueAddresses = [];
+        foreach ($pastOrders as $po) {
+            $addr = $po['shipping_address'];
+            if ($addr) {
+                $hash = md5($addr);
+                if (!isset($uniqueAddresses[$hash])) {
+                    $uniqueAddresses[$hash] = $addr;
+                }
+            }
+        }
+        $orderAddresses = $uniqueAddresses;
+        
+        // 2. Current saved address
+        $savedAddress = $customer['shipping_address'] ?? null;
+    }
+
+    if ($section === 'wishlist') {
+        $wishlistItems = $wishlistModel->getItems($customer['customer_id'], CURRENT_STORE_ID);
+    }
+
+    if ($section === 'payments') {
+        $paymentOrders = $orderModel->getAll([
+            'user_id' => $customer['customer_id'],
+            'store_id' => CURRENT_STORE_ID
+        ]);
+    }
+
+    if ($section === 'details') {
+        // Calculate total spend (Store Specific)
+        $allOrders = $orderModel->getAll([
+            'user_id' => $customer['customer_id'],
+            'store_id' => CURRENT_STORE_ID
+        ]);
+        foreach ($allOrders as $ord) {
+            if ($ord['payment_status'] === 'paid' && $ord['order_status'] !== 'cancelled') {
+                $totalSpend += $ord['total_amount'];
+            }
+        }
+        
+        // If phone is missing, try to get from last order to pre-fill
+        if (empty($customer['phone'])) {
+            $lastOrder = $orderModel->getAll([
+                'user_id' => $customer['customer_id'], 
+                'store_id' => CURRENT_STORE_ID,
+                'limit' => 1
+            ]);
+            if (!empty($lastOrder[0]['customer_phone'])) {
+                $customer['phone'] = $lastOrder[0]['customer_phone'];
             }
         }
     }
-    $orderAddresses = $uniqueAddresses;
-    
-    // 2. Current saved address
-    $savedAddress = $customer['shipping_address'] ?? null;
 }
 
-$wishlistItems = [];
-if ($section === 'wishlist') {
-    $wishlistItems = $wishlistModel->getItems($customer['customer_id'], CURRENT_STORE_ID);
-}
-
-$paymentOrders = [];
-if ($section === 'payments') {
-    $paymentOrders = $orderModel->getAll([
-        'user_id' => $customer['customer_id'],
-        'store_id' => CURRENT_STORE_ID
-    ]);
-}
-
-$totalSpend = 0;
-if ($section === 'details') {
-    // Calculate total spend (Store Specific)
-    $allOrders = $orderModel->getAll([
-        'user_id' => $customer['customer_id'],
-        'store_id' => CURRENT_STORE_ID
-    ]);
-    foreach ($allOrders as $ord) {
-        if ($ord['payment_status'] === 'paid' && $ord['order_status'] !== 'cancelled') {
-            $totalSpend += $ord['total_amount'];
-        }
-    }
-    
-    // If phone is missing, try to get from last order to pre-fill
-    if (empty($customer['phone'])) {
-        $lastOrder = $orderModel->getAll([
-            'user_id' => $customer['customer_id'], 
-            'store_id' => CURRENT_STORE_ID,
-            'limit' => 1
-        ]);
-        if (!empty($lastOrder[0]['customer_phone'])) {
-            $customer['phone'] = $lastOrder[0]['customer_phone'];
-        }
-    }
-}
 
 $pageTitle = 'Your Account';
-$isAjax = isset($_GET['ajax']) && $_GET['ajax'] === '1';
+$isAjax = (isset($_GET['ajax']) && $_GET['ajax'] == '1') || 
+          (isset($_POST['ajax']) && $_POST['ajax'] == '1') || 
+          (isset($_SERVER['HTTP_X_REQUESTED_WITH']) && strtolower($_SERVER['HTTP_X_REQUESTED_WITH']) === 'xmlhttprequest');
+
+// Handle Auth POSTs early to prevent "headers already sent"
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && !$isLoggedIn) {
+    $requestUri = $_SERVER['REQUEST_URI'] ?? '';
+    // Check if it's likely one of our auth forms being submitted to this page
+    $isLoginSub = isset($_POST['email']) && isset($_POST['password']);
+    $isRegSub = isset($_POST['email']) && isset($_POST['password']) && isset($_POST['name']);
+    $isForgotSub = isset($_POST['email']) && !isset($_POST['password']);
+
+    if ($isLoginSub || $isRegSub || $isForgotSub || $isAjax) {
+        $initialAuth = 'login';
+        if (strpos($requestUri, 'register') !== false || isset($_GET['register']) || isset($_GET['signup'])) $initialAuth = 'register';
+        elseif (strpos($requestUri, 'forgot-password') !== false || isset($_GET['forgot-password'])) $initialAuth = 'forgot-password';
+        
+        // Use output buffering to catch any HTML from the included file
+        // so it doesn't send headers before we're ready
+        ob_start();
+        include __DIR__ . '/' . $initialAuth . '.php';
+        
+        if ($isAjax) {
+            ob_end_flush();
+            exit;
+        } else {
+            // Check if login was successful (it would have redirected/exited)
+            // If we're here, it failed. Discard the form HTML from the buffer
+            // so we can render the full page wrapper properly below.
+            ob_end_clean();
+        }
+    }
+}
+
+
 
 if (!$isAjax) {
     require_once __DIR__ . '/includes/header.php';
+    echo '<div class="pt-24 pb-20 bg-gray-50 flex flex-col items-center">';
+    echo '<div class="container mx-auto px-4 ' . ($isLoggedIn ? 'max-w-8xl' : 'max-w-md') . '">';
 }
 ?>
+<style>
+    .custom-scrollbar::-webkit-scrollbar {
+        width: 10px;
+    }
+    .custom-scrollbar::-webkit-scrollbar-track {
+        background: #f8fafc;
+        border-radius: 20px;
+    }
+    .custom-scrollbar::-webkit-scrollbar-thumb {
+        background: #e2e8f0;
+        border-radius: 20px;
+        border: 3px solid #f8fafc;
+    }
+    .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+        background: #cbd5e1;
+    }
+    /* Firefox */
+    .custom-scrollbar {
+        scrollbar-width: thin;
+        scrollbar-color: #e2e8f0 #f8fafc;
+    }
+</style>
 
-<?php if (!$isAjax): ?>
-<div class="min-h-screen pt-32 pb-20 bg-gray-50">
-    <div class="container mx-auto px-4 max-w-6xl">
-        <!-- Header -->
-        <div class="mb-10">
-            <h1 class="text-4xl font-bold text-gray-900">Your Account</h1>
-            <p class="text-gray-600 mt-2"><?php echo htmlspecialchars($customer['name'] ?? ''); ?></p>
-        </div>
+<?php if ($isLoggedIn): ?>
 
-        <div class="flex flex-col lg:flex-row gap-8">
+    <?php if (!$isAjax): ?>
+        <div class="flex flex-col lg:flex-row gap-8 w-full items-start relative">
             <!-- Sidebar -->
-            <div class="w-full lg:w-72 flex-shrink-0">
+            <div class="w-full lg:w-72 flex-shrink-0 lg:sticky lg:top-28 self-start z-10">
+                <!-- Header -->
+                <div class="mb-10">
+                    <h1 class="text-4xl font-bold text-gray-900">Your Account</h1>
+                    <p class="text-gray-600 mt-2"><?php echo htmlspecialchars($customer['name'] ?? ''); ?></p>
+                </div>
                 <nav class="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
                     <div class="p-2 space-y-1">
-                        <a href="?section=orders" 
-                           class="account-sidebar-link flex items-center gap-3 px-4 py-3 rounded-xl transition <?php echo $section === 'orders' ? 'bg-blue-50 text-blue-600' : 'text-gray-600 hover:bg-gray-50'; ?>">
-                            <div class="w-8 h-8 rounded-lg bg-blue-100 flex items-center justify-center">
-                                <i class="fas fa-truck text-sm"></i>
-                            </div>
-                            <span class="font-semibold">My orders</span>
-                        </a>
-                        <a href="?section=details" 
-                           class="account-sidebar-link flex items-center gap-3 px-4 py-3 rounded-xl transition <?php echo $section === 'details' ? 'bg-blue-50 text-blue-600' : 'text-gray-600 hover:bg-gray-50'; ?>">
-                            <div class="w-8 h-8 rounded-lg bg-blue-100 flex items-center justify-center">
-                                <i class="fas fa-user text-sm"></i>
-                            </div>
-                            <span class="font-semibold">My Details</span>
-                        </a>
-                        <a href="?section=addresses" 
-                           class="account-sidebar-link flex items-center gap-3 px-4 py-3 rounded-xl transition <?php echo $section === 'addresses' ? 'bg-blue-50 text-blue-600' : 'text-gray-600 hover:bg-gray-50'; ?>">
-                            <div class="w-8 h-8 rounded-lg bg-blue-100 flex items-center justify-center">
-                                <i class="fas fa-map-marker-alt text-sm"></i>
-                            </div>
-                            <span class="font-semibold">Your addresses</span>
-                        </a>
-                        <!-- <a href="?section=security" 
-                           class="account-sidebar-link flex items-center gap-3 px-4 py-3 rounded-xl transition <?php echo $section === 'security' ? 'bg-blue-50 text-blue-600' : 'text-gray-600 hover:bg-gray-50'; ?>">
-                            <div class="w-8 h-8 rounded-lg bg-blue-100 flex items-center justify-center">
-                                <i class="fas fa-lock text-sm"></i>
-                            </div>
-                            <span class="font-semibold">Login & security</span>
-                        </a> -->
-                        <a href="?section=payments" 
-                           class="account-sidebar-link flex items-center gap-3 px-4 py-3 rounded-xl transition <?php echo $section === 'payments' ? 'bg-blue-50 text-blue-600' : 'text-gray-600 hover:bg-gray-50'; ?>">
-                            <div class="w-8 h-8 rounded-lg bg-blue-100 flex items-center justify-center">
-                                <i class="fas fa-credit-card text-sm"></i>
-                            </div>
-                            <span class="font-semibold">Payments</span>
-                        </a>
-                        <a href="?section=wishlist" 
-                           class="account-sidebar-link flex items-center gap-3 px-4 py-3 rounded-xl transition <?php echo $section === 'wishlist' ? 'bg-blue-50 text-blue-600' : 'text-gray-600 hover:bg-gray-50'; ?>">
-                            <div class="w-8 h-8 rounded-lg bg-blue-100 flex items-center justify-center">
-                                <i class="fas fa-heart text-sm"></i>
-                            </div>
-                            <span class="font-semibold">Saved items</span>
-                        </a>
-                        <a href="?section=support" 
-                           class="account-sidebar-link flex items-center gap-3 px-4 py-3 rounded-xl transition <?php echo $section === 'support' ? 'bg-blue-50 text-blue-600' : 'text-gray-600 hover:bg-gray-50'; ?>">
-                            <div class="w-8 h-8 rounded-lg bg-blue-100 flex items-center justify-center">
-                                <i class="fas fa-comment-dots text-sm"></i>
-                            </div>
-                            <span class="font-semibold">Customer support</span>
-                        </a>
-                        <div class="pt-2 mt-2 border-t border-gray-100">
-                            <a href="logout" class="flex items-center gap-3 px-4 py-3 rounded-xl text-red-500 hover:bg-red-50 transition">
-                                <div class="w-8 h-8 rounded-lg bg-red-100 flex items-center justify-center">
-                                    <i class="fas fa-sign-out-alt text-sm"></i>
+                            <a href="?section=orders" 
+                            class="account-sidebar-link flex items-center gap-3 px-4 py-3 rounded-xl transition <?php echo $section === 'orders' ? 'bg-blue-50 text-blue-600' : 'text-gray-600 hover:bg-gray-50'; ?>">
+                                <div class="w-8 h-8 rounded-lg bg-blue-100 flex items-center justify-center">
+                                    <i class="fas fa-truck text-sm"></i>
                                 </div>
-                                <span class="font-semibold">Log out</span>
+                                <span class="font-semibold">My orders</span>
                             </a>
+                            <a href="?section=details" 
+                            class="account-sidebar-link flex items-center gap-3 px-4 py-3 rounded-xl transition <?php echo $section === 'details' ? 'bg-blue-50 text-blue-600' : 'text-gray-600 hover:bg-gray-50'; ?>">
+                                <div class="w-8 h-8 rounded-lg bg-blue-100 flex items-center justify-center">
+                                    <i class="fas fa-user text-sm"></i>
+                                </div>
+                                <span class="font-semibold">My Details</span>
+                            </a>
+                            <a href="?section=addresses" 
+                            class="account-sidebar-link flex items-center gap-3 px-4 py-3 rounded-xl transition <?php echo $section === 'addresses' ? 'bg-blue-50 text-blue-600' : 'text-gray-600 hover:bg-gray-50'; ?>">
+                                <div class="w-8 h-8 rounded-lg bg-blue-100 flex items-center justify-center">
+                                    <i class="fas fa-map-marker-alt text-sm"></i>
+                                </div>
+                                <span class="font-semibold">Your addresses</span>
+                            </a>
+                            <a href="?section=payments" 
+                            class="account-sidebar-link flex items-center gap-3 px-4 py-3 rounded-xl transition <?php echo $section === 'payments' ? 'bg-blue-50 text-blue-600' : 'text-gray-600 hover:bg-gray-50'; ?>">
+                                <div class="w-8 h-8 rounded-lg bg-blue-100 flex items-center justify-center">
+                                    <i class="fas fa-credit-card text-sm"></i>
+                                </div>
+                                <span class="font-semibold">Payments</span>
+                            </a>
+                            <a href="?section=wishlist" 
+                            class="account-sidebar-link flex items-center gap-3 px-4 py-3 rounded-xl transition <?php echo $section === 'wishlist' ? 'bg-blue-50 text-blue-600' : 'text-gray-600 hover:bg-gray-50'; ?>">
+                                <div class="w-8 h-8 rounded-lg bg-blue-100 flex items-center justify-center">
+                                    <i class="fas fa-heart text-sm"></i>
+                                </div>
+                                <span class="font-semibold">Saved items</span>
+                            </a>
+                            <a href="?section=support" 
+                            class="account-sidebar-link flex items-center gap-3 px-4 py-3 rounded-xl transition <?php echo $section === 'support' ? 'bg-blue-50 text-blue-600' : 'text-gray-600 hover:bg-gray-50'; ?>">
+                                <div class="w-8 h-8 rounded-lg bg-blue-100 flex items-center justify-center">
+                                    <i class="fas fa-comment-dots text-sm"></i>
+                                </div>
+                                <span class="font-semibold">Customer support</span>
+                            </a>
+                            <div class="pt-2 mt-2 border-t border-gray-100">
+                                <a href="logout" class="flex items-center gap-3 px-4 py-3 rounded-xl text-red-500 hover:bg-red-50 transition">
+                                    <div class="w-8 h-8 rounded-lg bg-red-100 flex items-center justify-center">
+                                        <i class="fas fa-sign-out-alt text-sm"></i>
+                                    </div>
+                                    <span class="font-semibold">Log out</span>
+                                </a>
+                            </div>
                         </div>
-                    </div>
-                </nav>
-            </div>
+                    </nav>
+                </div>
 
-            <!-- Content Area -->
-             <div class="flex-1" id="accountContent">
-<?php endif; ?>
-                <?php if ($section === 'orders'): ?>
+                <!-- Content Area -->
+                <div class="flex-1" id="accountContent">
+    <?php endif; ?>
+                    <?php if ($section === 'orders'): ?>
+
                     <!-- Orders Section -->
                     <div class="mb-8 p-1 bg-gray-200 rounded-xl flex flex-wrap md:inline-flex w-full md:w-auto">
                         <a href="?section=orders&tab=current" class="flex-1 text-center md:flex-none px-4 md:px-8 py-2 rounded-lg font-semibold transition text-sm md:text-base <?php echo $tab === 'current' ? 'bg-white shadow-sm' : 'text-gray-600 hover:text-black'; ?>">Current</a>
@@ -257,7 +314,7 @@ if (!$isAjax) {
                             <a href="<?php echo url('shop'); ?>" class="inline-block mt-6 bg-black text-white px-8 py-3 rounded-xl font-bold hover:bg-gray-900 transition">Start Shopping</a>
                         </div>
                     <?php else: ?>
-                        <div class="space-y-6">
+                        <div class="space-y-6 h-[800px] overflow-y-auto pr-4 custom-scrollbar">
                             <?php foreach ($orders as $order): ?>
                                 <div class="bg-white rounded-2xl border border-gray-100 overflow-hidden shadow-sm">
                                     <div class="p-6 md:p-8">
@@ -753,12 +810,41 @@ if (!$isAjax) {
 
 
                 <?php endif; ?>
-            
+                <?php if (!$isAjax): ?>
+                    </div> <!-- End accountContent -->
+                </div> <!-- End flex group -->
+                <?php endif; ?>
+<?php else: ?>
+<?php if (!$isAjax): ?><div id="authContainer" class="w-full"><?php endif; ?>
+                <?php 
+                // Determine which form to show based on URL or query params
+                $initialAuth = 'login';
+                $requestUri = $_SERVER['REQUEST_URI'];
+                $isRegister = strpos($requestUri, 'register') !== false || isset($_GET['register']) || isset($_GET['signup']);
+                $isForgot = strpos($requestUri, 'forgot-password') !== false || isset($_GET['forgot-password']);
+
+                if ($isRegister) $initialAuth = 'register';
+                elseif ($isForgot) $initialAuth = 'forgot-password';
+                
+                // Set ajax flag so the included file doesn't render header/footer
+                // Set method to GET so inclusion only renders the view, not re-process the POST
+                $origMethod = $_SERVER['REQUEST_METHOD'];
+                $_SERVER['REQUEST_METHOD'] = 'GET';
+                include __DIR__ . '/' . $initialAuth . '.php'; 
+                $_SERVER['REQUEST_METHOD'] = $origMethod;
+                ?>
+            <?php if (!$isAjax): ?></div><?php endif; ?>
+        <?php endif; ?>
+
 <?php if (!$isAjax): ?>
-            </div> <!-- End accountContent -->
-        </div>
     </div>
 </div>
+
+
+
+
+
+
 
 <script>
 document.addEventListener('DOMContentLoaded', () => {
@@ -846,10 +932,180 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Handle Back/Forward
     window.addEventListener('popstate', () => {
-        loadAccountSection(window.location.href);
+        const url = window.location.href;
+        if (document.getElementById('accountContent')) {
+            loadAccountSection(url);
+        } else if (document.getElementById('authContainer')) {
+            loadAuthForm(url, false); // Don't update URL again
+        }
     });
 
+
+    // Auth Loading and Switching
+    const authContainer = document.getElementById('authContainer');
+    if (authContainer) {
+        // Initialize components inside auth container (like Google Sign-In)
+        function initAuthComponents(container) {
+            if (window.google && window.google.accounts && window.google.accounts.id) {
+                const gLoad = container.querySelector('#g_id_onload');
+                if (gLoad) {
+                    window.google.accounts.id.initialize({
+                        client_id: gLoad.dataset.client_id,
+                        context: gLoad.dataset.context,
+                        ux_mode: gLoad.dataset.ux_mode,
+                        login_uri: gLoad.dataset.login_uri,
+                        auto_prompt: gLoad.dataset.auto_prompt === 'true'
+                    });
+                }
+                const gBtn = container.querySelector('.g_id_signin');
+                if (gBtn) {
+                    window.google.accounts.id.renderButton(gBtn, {
+                        theme: gBtn.dataset.theme,
+                        size: gBtn.dataset.size,
+                        width: gBtn.dataset.width
+                    });
+                }
+            }
+        }
+
+        async function loadAuthForm(path, updateUrl = true) {
+            authContainer.innerHTML = `
+                <div class="flex flex-col items-center justify-center py-20">
+                    <i class="fas fa-spinner fa-spin text-4xl text-gray-300 mb-4"></i>
+                    <p class="text-gray-500">Loading...</p>
+                </div>
+            `;
+            
+            if (updateUrl && path !== window.location.href) {
+                window.history.pushState({ path: path }, '', path);
+            }
+
+            const fetchUrl = path + (path.includes('?') ? '&' : '?') + 'ajax=1';
+
+            try {
+                const res = await fetch(fetchUrl, {
+                    headers: { 'X-Requested-With': 'XMLHttpRequest' }
+                });
+                const html = await res.text();
+                authContainer.innerHTML = html;
+                
+                // Re-initialize components
+                initAuthComponents(authContainer);
+
+            } catch (e) {
+                console.error(e);
+                authContainer.innerHTML = '<p class="text-center text-red-500 py-10">Error loading. Please refresh.</p>';
+            }
+        }
+
+
+
+        // Event Delegation for Clicks (Switching Forms)
+        authContainer.addEventListener('click', (e) => {
+            const link = e.target.closest('a');
+            if (link) {
+                const href = link.getAttribute('href');
+                if (href && (href.includes('login') || href.includes('register') || href.includes('forgot-password'))) {
+                    e.preventDefault();
+                    loadAuthForm(href);
+                }
+            }
+        });
+
+        // Event Delegation for Form Submissions
+        authContainer.addEventListener('submit', async (e) => {
+            const form = e.target.closest('form');
+            if (!form) return;
+            
+            // Skip if it's not an auth form handler (e.g. if we add other forms later)
+            if (form.id === 'accountSupportForm') return; 
+
+            e.preventDefault();
+            const btn = form.querySelector('button[type="submit"]');
+            const origHtml = btn.innerHTML;
+            btn.disabled = true;
+            btn.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i> Processing...';
+
+            const formData = new FormData(form);
+            formData.append('ajax', '1');
+            const baseUrl = form.getAttribute('action') || window.location.pathname;
+            const action = baseUrl + (baseUrl.includes('?') ? '&' : '?') + 'ajax=1';
+
+            try {
+                const submitRes = await fetch(action, {
+                    method: 'POST',
+                    headers: { 'X-Requested-With': 'XMLHttpRequest' },
+                    body: formData
+                });
+                const data = await submitRes.json();
+                if (data.success) {
+                    if (data.redirect) {
+                        window.location.href = data.redirect;
+                    } else {
+                        // If it's forgot-password, just reload the form to show next step
+                        if (window.location.pathname.includes('forgot-password') || (form.action && form.action.includes('forgot-password'))) {
+                            loadAuthForm('forgot-password');
+                        } else {
+                            window.location.reload();
+                        }
+                    }
+                } else {
+                    // Show error
+                    let errDiv = authContainer.querySelector('.bg-red-50');
+                    if (!errDiv) {
+                        errDiv = document.createElement('div');
+                        errDiv.className = 'bg-red-50 text-red-600 p-4 rounded-xl mb-6 text-sm flex items-center';
+                        const h1 = authContainer.querySelector('h1');
+                        if (h1 && h1.parentElement) h1.parentElement.insertAdjacentElement('afterend', errDiv);
+                    }
+                    errDiv.innerHTML = `<i class="fas fa-exclamation-circle mr-2"></i> ${data.message}`;
+                    btn.disabled = false;
+                    btn.innerHTML = origHtml;
+                    errDiv.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+                }
+            } catch (err) {
+                console.error(err);
+                btn.disabled = false;
+                btn.innerHTML = origHtml;
+            }
+        });
+
+        // Initialize the components for the server-side rendered form
+        initAuthComponents(authContainer);
+    }
+
+    // Shared Auth Helpers
+
+    window.togglePassword = function(inputId, btn) {
+        const input = document.getElementById(inputId);
+        if (!input) return;
+        const icon = btn.querySelector('i');
+        
+        if (input.type === 'password') {
+            input.type = 'text';
+            if (icon) {
+                icon.classList.remove('fa-eye');
+                icon.classList.add('fa-eye-slash');
+            }
+        } else {
+            input.type = 'password';
+            if (icon) {
+                icon.classList.remove('fa-eye-slash');
+                icon.classList.add('fa-eye');
+            }
+        }
+    };
+
+    window.submitBack = function() {
+        const form = document.getElementById('backForm');
+        if(form) {
+            form.dispatchEvent(new Event('submit', { cancelable: true, bubbles: true }));
+        }
+    };
+
     // Support Form Handling (Event Delegation)
+
+
     document.addEventListener('submit', async (e) => {
         if (e.target && e.target.id === 'accountSupportForm') {
             e.preventDefault();
@@ -1125,3 +1381,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
 <?php require_once __DIR__ . '/includes/footer.php'; ?>
 <?php endif; ?>
+<?php 
+if (ob_get_level() > 0) ob_end_flush(); 
+?>

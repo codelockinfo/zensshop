@@ -58,7 +58,8 @@ $topbarSlidesRaw = $settingsObj->get('topbar_slides', '[]');
 $topbarSlides = json_decode($topbarSlidesRaw, true) ?: [
     ['text' => '100% secure online payment', 'link' => '', 'link_text' => ''],
     ['text' => 'Free Shipping for all order over $99', 'link' => '', 'link_text' => ''],
-    ['text' => 'Sign up for 10% off your first order.', 'link' => 'signup', 'link_text' => 'Sign up']
+    ['text' => 'Sign up for 10% off your first order.', 'link' => 'register', 'link_text' => 'Sign up']
+
 ];
 
 $topbarLinksRaw = $settingsObj->get('topbar_links', '[]');
