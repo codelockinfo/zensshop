@@ -35,6 +35,9 @@ $staticPages = [
     'return-policy' => ['priority' => '0.5', 'freq' => 'monthly'],
     'category' => ['priority' => '0.5', 'freq' => 'monthly'],
     'collections' => ['priority' => '0.5', 'freq' => 'monthly'],
+    'account?login' => ['priority' => '0.5', 'freq' => 'monthly'],
+    'account?register' => ['priority' => '0.5', 'freq' => 'monthly'],
+    'account?forgot-password' => ['priority' => '0.5', 'freq' => 'monthly'],
 ];
 
 foreach ($staticPages as $path => $meta) {
