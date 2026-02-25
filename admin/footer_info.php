@@ -437,7 +437,7 @@ require_once __DIR__ . '/../includes/admin-header.php';
 
 
 <script>
-function toggleLogoFields(type) {
+window.toggleLogoFields = function(type) {
     if (type === 'text') {
         document.getElementById('textLogoField').classList.remove('hidden');
         document.getElementById('imageLogoField').classList.add('hidden');
@@ -445,9 +445,9 @@ function toggleLogoFields(type) {
         document.getElementById('textLogoField').classList.add('hidden');
         document.getElementById('imageLogoField').classList.remove('hidden');
     }
-}
+};
 
-function previewFooterLogo(input) {
+window.previewFooterLogo = function(input) {
     if (input.files && input.files[0]) {
         var reader = new FileReader();
         reader.onload = function(e) {
@@ -464,12 +464,12 @@ function previewFooterLogo(input) {
         }
         reader.readAsDataURL(input.files[0]);
     }
-}
+};
 
 // Social Media Dynamic Rows
 const socialData = <?php echo $settings['footer_social_json']; ?>;
 
-function addSocialRow(data = null) {
+window.addSocialRow = function(data = null) {
     const container = document.getElementById('socialLinksContainer');
     const template = document.getElementById('socialRowTemplate');
     const clone = template.content.cloneNode(true);
@@ -480,12 +480,12 @@ function addSocialRow(data = null) {
     }
     
     container.appendChild(clone);
-}
+};
 
 // Payment Icons Dynamic Rows
 const paymentData = <?php echo $settings['footer_payment_icons_json']; ?>;
 
-function addPaymentRow(data = null) {
+window.addPaymentRow = function(data = null) {
     const container = document.getElementById('paymentIconsContainer');
     const template = document.getElementById('paymentRowTemplate');
     const clone = template.content.cloneNode(true);
@@ -504,11 +504,11 @@ function addPaymentRow(data = null) {
     });
     
     container.appendChild(clone);
-}
+};
 
-function removeRow(btn) {
+window.removeRow = function(btn) {
     btn.closest('.social-row, .payment-row').remove();
-}
+};
 
 // Init social links
 if (socialData && socialData.length > 0) {

@@ -604,7 +604,7 @@ $s_arrow_icon = $savedStyles['arrow_icon_color'] ?? '#1f2937';
 <script>
 window.allBanners = <?php echo json_encode($banners); ?>;
 
-function getFullImageUrl(path) {
+window.getFullImageUrl = function(path) {
     if (!path) return '';
     if (path.startsWith('http://') || path.startsWith('https://') || path.startsWith('data:')) return path;
     
@@ -614,9 +614,9 @@ function getFullImageUrl(path) {
     let cleanPath = path.replace(/^\/+/, '');
     
     return cleanBase + '/' + cleanPath;
-}
+};
 
-function openModal() {
+window.openModal = function() {
     document.getElementById('bannerForm').reset();
     document.getElementById('bannerId').value = '';
     document.getElementById('modalTitle').innerText = 'Add New Banner';
@@ -644,13 +644,13 @@ function openModal() {
     });
     
     document.getElementById('bannerModal').classList.remove('hidden');
-}
+};
 
-function closeModal() {
+window.closeModal = function() {
     document.getElementById('bannerModal').classList.add('hidden');
-}
+};
 
-function editBanner(btn) {
+window.editBanner = function(btn) {
     const row = btn.closest('tr');
     if (!row) return;
     const bannerData = row.getAttribute('data-banner');
@@ -659,7 +659,7 @@ function editBanner(btn) {
     const banner = JSON.parse(bannerData);
     if (!banner) return;
 
-    openModal(); // This already handles UI reset
+    window.openModal(); // This already handles UI reset
     
     document.getElementById('modalTitle').innerText = 'Edit Banner';
     document.getElementById('bannerId').value = banner.id || '';
@@ -676,7 +676,7 @@ function editBanner(btn) {
         const placeholder = document.getElementById('placeholderDesktop');
         const btn = document.getElementById('removeDesktopBtn');
         if (img && placeholder) {
-            img.src = getFullImageUrl(banner.image_desktop);
+            img.src = window.getFullImageUrl(banner.image_desktop);
             img.classList.remove('hidden');
             placeholder.classList.add('hidden');
             if (btn) {
@@ -691,7 +691,7 @@ function editBanner(btn) {
         const placeholder = document.getElementById('placeholderMobile');
         const btn = document.getElementById('removeMobileBtn');
         if (img && placeholder) {
-            img.src = getFullImageUrl(banner.image_mobile);
+            img.src = window.getFullImageUrl(banner.image_mobile);
             img.classList.remove('hidden');
             placeholder.classList.add('hidden');
             if (btn) {
@@ -700,14 +700,14 @@ function editBanner(btn) {
             }
         }
     }
-}
+};
 
-function deleteBanner(id) {
+window.deleteBanner = function(id) {
     document.getElementById('deleteId').value = id;
     document.getElementById('deleteForm').submit();
-}
+};
 
-function previewBannerImage(input, imgId, placeholderId, btnId) {
+window.previewBannerImage = function(input, imgId, placeholderId, btnId) {
     if (input.files && input.files[0]) {
         var reader = new FileReader();
         reader.onload = function(e) {
@@ -729,9 +729,9 @@ function previewBannerImage(input, imgId, placeholderId, btnId) {
         }
         reader.readAsDataURL(input.files[0]);
     }
-}
+};
 
-function clearBannerImage(type) {
+window.clearBannerImage = function(type) {
     const imgId = type === 'desktop' ? 'previewDesktopImg' : 'previewMobileImg';
     const placeholderId = type === 'desktop' ? 'placeholderDesktop' : 'placeholderMobile';
     const inputId = type === 'desktop' ? 'desktopInput' : 'mobileInput';
@@ -754,7 +754,7 @@ function clearBannerImage(type) {
     if (document.getElementById('bannerId').value) {
         document.getElementById(flagId).value = '1';
     }
-}
+};
 
 </script>
 

@@ -146,7 +146,7 @@ $sectionId = 'cat-section-' . rand(1000, 9999);
             <!-- Slider Layout (Vanilla JS Custom Slider like Best Selling) -->
             <div class="relative px-2">
                 <div class="categories-slider overflow-hidden">
-                    <div class="flex gap-1 md:gap-6" id="categoriesSlider" style="will-change: transform;">
+                    <div class="flex gap-1 md:gap-6 w-fit mx-auto" id="categoriesSlider" style="will-change: transform;">
                         <?php foreach ($displayCategories as $category): 
                             $image = getImageUrl($category['image'] ?? '');
                             $link = $category['link'];
