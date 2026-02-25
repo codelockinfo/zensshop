@@ -744,8 +744,6 @@ document.addEventListener('DOMContentLoaded', function() {
 
 </script>
 
-
-<!-- Sections will be loaded progressively via AJAX -->
 <!-- Categories Skeleton -->
 <?php if ($showCategories): ?>
 <div id="categories-section" class="section-loading">
@@ -759,7 +757,7 @@ document.addEventListener('DOMContentLoaded', function() {
                     <div class="absolute inset-0 animate-shimmer"></div>
                 </div>
             </div>
-            <div class="<?php echo $catLayoutType === 'slider' ? 'flex gap-4 md:gap-6 overflow-hidden flex-nowrap' : 'flex flex-wrap justify-center gap-6'; ?>">
+            <div class="<?php echo $catLayoutType === 'slider' ? 'flex gap-4 md:gap-6 overflow-hidden flex-nowrap w-fit mx-auto' : 'flex flex-wrap justify-center gap-6'; ?>">
                 <?php 
                 $skelClass = 'w-[calc(50%-12px)]'; 
                 if ($catLayoutType === 'slider') {
@@ -1005,4 +1003,4 @@ document.addEventListener('DOMContentLoaded', function() {
 <?php endif; ?>
 <?php require_once __DIR__ . '/includes/footer.php'; ?>
 
-<script src="<?php echo $baseUrl; ?>/assets/js/lazy-load18.js?v=1" defer></script>
+<script src="<?php echo $baseUrl; ?>/assets/js/lazy-load18.js?v=3" defer></script>

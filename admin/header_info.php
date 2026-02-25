@@ -469,7 +469,7 @@ require_once __DIR__ . '/../includes/admin-header.php';
 
 <script>
 // Toggle between text and image logo fields
-function toggleLogoFields(type) {
+window.toggleLogoFields = function(type) {
     const textField = document.getElementById('textLogoField');
     const imageField = document.getElementById('imageLogoField');
     
@@ -480,9 +480,9 @@ function toggleLogoFields(type) {
         textField.classList.add('hidden');
         imageField.classList.remove('hidden');
     }
-}
+};
 
-function previewLogo(input) {
+window.previewLogo = function(input) {
     if (input.files && input.files[0]) {
         var reader = new FileReader();
         reader.onload = function(e) {
@@ -499,13 +499,14 @@ function previewLogo(input) {
         }
         reader.readAsDataURL(input.files[0]);
     }
-}
+};
 
 // Top Bar Slides Management
 const slidesData = <?php echo json_encode($topbarSlides); ?>;
 
-function addSlide(data = null) {
+window.addSlide = function(data = null) {
     const container = document.getElementById('slidesContainer');
+    if (!container) return;
     const slideDiv = document.createElement('div');
     slideDiv.className = 'flex items-center gap-3 p-3 bg-gray-50 border border-gray-200 rounded slide-row';
     
@@ -528,13 +529,14 @@ function addSlide(data = null) {
     `;
     
     container.appendChild(slideDiv);
-}
+};
 
 // Top Bar Links Management
 const linksData = <?php echo json_encode($topbarLinks); ?>;
 
-function addLink(data = null) {
+window.addLink = function(data = null) {
     const container = document.getElementById('linksContainer');
+    if (!container) return;
     const linkDiv = document.createElement('div');
     linkDiv.className = 'flex items-center gap-3 p-3 bg-gray-50 border border-gray-200 rounded link-row';
     
@@ -553,29 +555,37 @@ function addLink(data = null) {
     `;
     
     container.appendChild(linkDiv);
-}
+};
 
-function removeRow(btn) {
+window.removeRow = function(btn) {
     btn.closest('.slide-row, .link-row').remove();
-}
+};
 
-// Initialize existing data
-document.addEventListener('DOMContentLoaded', function() {
+// Initialize existing data immediately (since PJAX replaces content dynamically and DOMContentLoaded won't fire again)
+function initHeaderInfoJS() {
+    // Clear out existing if re-initializing
+    const sContainer = document.getElementById('slidesContainer');
+    if (sContainer) sContainer.innerHTML = '';
+    
+    const lContainer = document.getElementById('linksContainer');
+    if (lContainer) lContainer.innerHTML = '';
+
     // Load existing slides
     if (slidesData && slidesData.length > 0) {
-        slidesData.forEach(slide => addSlide(slide));
+        slidesData.forEach(slide => window.addSlide(slide));
     } else {
-        addSlide(); // Add one empty slide by default
+        window.addSlide(); // Add one empty slide by default
     }
     
     // Load existing links
     if (linksData && linksData.length > 0) {
-        linksData.forEach(link => addLink(link));
+        linksData.forEach(link => window.addLink(link));
     } else {
-        addLink(); // Add one empty link by default
+        window.addLink(); // Add one empty link by default
     }
-});
+}
 
+initHeaderInfoJS();
 </script>
 
 <?php require_once __DIR__ . '/../includes/admin-footer.php'; ?>
