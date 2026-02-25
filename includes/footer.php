@@ -90,7 +90,7 @@ $qv_policy_color = $qvStyles['policy_color'] ?? '#374151';
         footer.bg-white {
             background-color: <?php echo $footerBg; ?> !important;
             color: <?php echo $footerText; ?> !important;
-            border-top: none !important;
+            
         }
         footer .text-black,
         footer .text-gray-700,
