@@ -90,7 +90,7 @@ if (file_exists($offersConfigPath)) {
             <?php endif; ?>
         </div>
 
-        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+        <div class="grid grid-cols-2 md:grid-cols-2 lg:grid-cols-4 gap-3 md:gap-6">
             <?php foreach ($offers as $offer): ?>
             <?php
 				// Resolve Image URL
@@ -107,10 +107,10 @@ if (file_exists($offersConfigPath)) {
                      class="w-full h-64 object-cover group-hover:scale-110 transition-transform duration-500"
                      onerror="this.src='https://placehold.co/600x600?text=Offer+Image'">
                 <div class="absolute inset-0 transition offer-overlay"></div>
-                <div class="absolute inset-0 flex flex-col items-center justify-center text-white p-6">
+                <div class="absolute inset-0 flex flex-col items-center justify-center text-white p-3 md:p-6">
                     <h3 class="text-xl md:text-2xl font-heading font-bold mb-4 text-center offer-title"><?php echo htmlspecialchars($offer['title']); ?></h3>
                     <a href="<?php echo htmlspecialchars($link); ?>" 
-                       class="inline-block border px-8 py-3 transition offer-btn">
+                       class="inline-block border px-5 md:px-8 py-2 md:py-3 transition offer-btn">
                         <?php echo htmlspecialchars($offer['button_text']); ?>
                     </a>
                 </div>

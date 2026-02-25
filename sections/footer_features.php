@@ -18,13 +18,13 @@ $section_text = $settingsObj->get('footer_features_section_text', '#000000');
 $count = count($footerFeatures);
 ?>
 
-<section class="py-12" style="background-color: <?php echo htmlspecialchars($section_bg); ?>; color: <?php echo htmlspecialchars($section_text); ?>;">
+<section class="py-2 md:py-12" style="background-color: <?php echo htmlspecialchars($section_bg); ?>; color: <?php echo htmlspecialchars($section_text); ?>;">
     <div class="container mx-auto px-4">
         
         <!-- Grid Layout (Fixed Width Cards) -->
-        <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6 text-center">
+        <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 md:gap-6 text-center">
             <?php foreach ($footerFeatures as $f): ?>
-            <div class="group flex flex-col items-center justify-center p-6 rounded transition-transform hover:-translate-y-1 duration-300" 
+            <div class="group flex flex-col items-center justify-center p-3 md:p-6 rounded transition-transform hover:-translate-y-1 duration-300" 
                  style="background-color: <?php echo htmlspecialchars($f['bg_color']); ?>; color: <?php echo htmlspecialchars($f['text_color']); ?>;">
                 
                 <div class="mb-4 text-4xl transition-transform duration-500 group-hover:scale-x-[-1]">
