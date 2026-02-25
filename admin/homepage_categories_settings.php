@@ -23,6 +23,14 @@ if (!$storeId && isset($_SESSION['user_email'])) {
 
 // Handle Form Submission
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    $logData = [
+        'timestamp' => date('Y-m-d H:i:s'),
+        'store_id' => $storeId,
+        'post' => $_POST,
+        'files' => $_FILES
+    ];
+    file_put_contents('c:/wamp64/www/zensshop/admin/debug_save.log', print_r($logData, true));
+
     $section_heading = $_POST['section_heading'] ?? 'Shop By Category';
     $section_subheading = $_POST['section_subheading'] ?? 'Express your style with our standout collection—fashion meets sophistication.';
     $titles = $_POST['title'] ?? [];
@@ -33,10 +41,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     
     // Save Config to JSON for persistent storage (helps when table is empty)
     $show_section = isset($_POST['show_section']) ? true : false;
+    $layout_type = $_POST['layout_type'] ?? 'grid';
+    $mobile_size = $_POST['mobile_size'] ?? '2';
     $categoryConfig = [
         'heading' => $section_heading,
         'subheading' => $section_subheading,
-        'show_section' => $show_section
+        'show_section' => $show_section,
+        'layout_type' => $layout_type,
+        'mobile_size' => $mobile_size
     ];
     file_put_contents(__DIR__ . '/category_config.json', json_encode($categoryConfig));
 
@@ -54,7 +66,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
     // Update all existing rows with the global heading/subheading if titles are empty but heading changed
     if (empty($titles)) {
-        $db->execute("UPDATE section_categories SET heading = ?, subheading = ? WHERE store_id = ?", [$section_heading, $section_subheading, $storeId]);
+        $db->execute("UPDATE section_categories SET heading = ?, subheading = ?, layout_type = ?, mobile_size = ? WHERE store_id = ?", [$section_heading, $section_subheading, $layout_type, $mobile_size, $storeId]);
     }
     
     // Handle Deletions
@@ -104,8 +116,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 }
 
                 if ($exists) {
-                    $sql = "UPDATE section_categories SET title = ?, link = ?, sort_order = ?, heading = ?, subheading = ?";
-                    $params = [$title, $link, $order, $section_heading, $section_subheading];
+                    $sql = "UPDATE section_categories SET title = ?, link = ?, sort_order = ?, heading = ?, subheading = ?, layout_type = ?, mobile_size = ?";
+                    $params = [$title, $link, $order, $section_heading, $section_subheading, $layout_type, $mobile_size];
                     if ($imagePath) {
                         $sql .= ", image = ?";
                         $params[] = $imagePath;
@@ -118,14 +130,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 } else {
                     $imgToSave = $imagePath ? $imagePath : ''; 
                     $db->execute(
-                        "INSERT INTO section_categories (title, link, sort_order, image, heading, subheading, store_id) VALUES (?, ?, ?, ?, ?, ?, ?)",
-                        [$title, $link, $order, $imgToSave, $section_heading, $section_subheading, $storeId]
+                        "INSERT INTO section_categories (title, link, sort_order, image, heading, subheading, layout_type, mobile_size, store_id) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)",
+                        [$title, $link, $order, $imgToSave, $section_heading, $section_subheading, $layout_type, $mobile_size, $storeId]
                     );
                     $insertedCount++;
                 }
             }
             
-            $_SESSION['flash_success'] = "Categories updated successfully!";
+            $_SESSION['flash_success'] = "Categories updated successfully! (Inserted: $insertedCount, Updated: $updatedCount)";
             header("Location: " . $baseUrl . '/admin/category');
             exit;
         }
@@ -151,22 +163,31 @@ $categories = $db->fetchAll("SELECT * FROM section_categories WHERE store_id = ?
 $categoryConfigPath = __DIR__ . '/category_config.json';
 $savedConfig = null;
 $showSection = true;
+$layoutType = 'grid';
+$mobileSize = '2';
 if (file_exists($categoryConfigPath)) {
     $savedConfig = json_decode(file_get_contents($categoryConfigPath), true);
     $showSection = isset($savedConfig['show_section']) ? $savedConfig['show_section'] : true;
+    $layoutType = $savedConfig['layout_type'] ?? 'grid';
+    $mobileSize = $savedConfig['mobile_size'] ?? '2';
 }
 
-// Fetch Section Settings - Prioritize JSON for Admin Form persistence
+// Fetch Section Settings - Prioritize DB, then JSON fallback
 $section_heading = 'Shop By Category';
 $section_subheading = 'Express your style with our standout collection—fashion meets sophistication.';
 
-if ($savedConfig !== null) {
+if (!empty($categories)) {
+    // If we have categories in the DB, use their settings as priority
+    $section_heading = !empty($categories[0]['heading']) ? $categories[0]['heading'] : ($savedConfig['heading'] ?? $section_heading);
+    $section_subheading = !empty($categories[0]['subheading']) ? $categories[0]['subheading'] : ($savedConfig['subheading'] ?? $section_subheading);
+    $layoutType = !empty($categories[0]['layout_type']) ? $categories[0]['layout_type'] : ($savedConfig['layout_type'] ?? 'grid');
+    $mobileSize = !empty($categories[0]['mobile_size']) ? $categories[0]['mobile_size'] : ($savedConfig['mobile_size'] ?? '2');
+} elseif ($savedConfig !== null) {
+    // Fallback fully to JSON config if no categories
     $section_heading = $savedConfig['heading'] ?? $section_heading;
     $section_subheading = $savedConfig['subheading'] ?? $section_subheading;
-} elseif (!empty($categories)) {
-    $section_heading = $categories[0]['heading'] ?? $section_heading;
-    $section_subheading = $categories[0]['subheading'] ?? $section_subheading;
-    $section_subheading = $categories[0]['subheading'] ?? $section_subheading;
+    $layoutType = $savedConfig['layout_type'] ?? 'grid';
+    $mobileSize = $savedConfig['mobile_size'] ?? '2';
 }
 
 // Fetch Style Settings
@@ -240,8 +261,6 @@ $validCategories = $db->fetchAll("SELECT id, name, slug FROM categories WHERE st
             </div>
         </div>
 
-        </div>
-
         <!-- Visual Style Settings -->
         <div class="bg-white rounded-lg shadow-sm border border-gray-200 mb-8 overflow-hidden">
             <div class="bg-gray-50 px-6 py-4 border-b border-gray-200">
@@ -296,7 +315,25 @@ $validCategories = $db->fetchAll("SELECT id, name, slug FROM categories WHERE st
 
         <!-- Section Headers -->
         <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-6 mb-8">
-            <h2 class="text-lg font-bold text-gray-800 mb-4 border-b pb-2">Section Header Settings</h2>
+            <h2 class="text-lg font-bold text-gray-800 mb-4 border-b pb-2">Layout & Text Settings</h2>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+                <div>
+                    <label class="block text-sm font-semibold text-gray-700 mb-2">Section Layout</label>
+                    <select name="layout_type" class="w-full border rounded-lg p-2.5 focus:ring-2 focus:ring-blue-500 outline-none">
+                        <option value="grid" <?php echo ($layoutType === 'grid') ? 'selected' : ''; ?>>Grid Layout</option>
+                        <option value="slider" <?php echo ($layoutType === 'slider') ? 'selected' : ''; ?>>Swiper Slider</option>
+                    </select>
+                </div>
+                <div>
+                    <label class="block text-sm font-semibold text-gray-700 mb-2">Mobile Category Size (Items per row)</label>
+                    <select name="mobile_size" class="w-full border rounded-lg p-2.5 focus:ring-2 focus:ring-blue-500 outline-none">
+                        <option value="1" <?php echo ($mobileSize == '1') ? 'selected' : ''; ?>>1 Item (Extra Large)</option>
+                        <option value="2" <?php echo ($mobileSize == '2') ? 'selected' : ''; ?>>2 Items (Large - Default)</option>
+                        <option value="3" <?php echo ($mobileSize == '3') ? 'selected' : ''; ?>>3 Items (Medium)</option>
+                        <option value="4" <?php echo ($mobileSize == '4') ? 'selected' : ''; ?>>4 Items (Small)</option>
+                    </select>
+                </div>
+            </div>
             <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div>
                     <label class="block text-sm font-semibold text-gray-700 mb-2">Section Heading</label>
@@ -456,18 +493,21 @@ function previewImage(input) {
 }
 
 function updateLink(select) {
+    // Skip if it's the default "-- Select --" option (index 0)
+    if (select.selectedIndex === 0) return;
+    
     const slug = select.value;
-    if (slug) {
-        const row = select.closest('tr');
-        const linkInput = row.querySelector('input[name="link[]"]');
-        if (linkInput) {
-            linkInput.value = 'shop?category=' + slug;
-        }
-        const titleInput = row.querySelector('input[name="title[]"]');
-        const selectedText = select.options[select.selectedIndex].text;
-        if (titleInput) {
-            titleInput.value = selectedText.trim();
-        }
+    const row = select.closest('tr');
+    
+    const linkInput = row.querySelector('input[name="link[]"]');
+    if (linkInput) {
+        linkInput.value = slug ? ('shop?category=' + slug) : '#';
+    }
+    
+    const titleInput = row.querySelector('input[name="title[]"]');
+    const selectedText = select.options[select.selectedIndex].text;
+    if (titleInput) {
+        titleInput.value = selectedText.trim();
     }
 }
 

@@ -31,11 +31,11 @@ $sectionSubheading = 'Unmatched design—superior performance and customer satis
 $productsConfigPath = __DIR__ . '/../admin/homepage_products_config.json';
 if (file_exists($productsConfigPath)) {
     $conf = json_decode(file_get_contents($productsConfigPath), true);
-    $sectionHeading = $conf['tr_heading'] ?? $sectionHeading;
-    $sectionSubheading = $conf['tr_subheading'] ?? $sectionSubheading;
+    $sectionHeading = !empty($conf['tr_heading']) ? $conf['tr_heading'] : $sectionHeading;
+    $sectionSubheading = !empty($conf['tr_subheading']) ? $conf['tr_subheading'] : $sectionSubheading;
 } elseif (!empty($products)) {
-    $sectionHeading = $products[0]['heading'] ?? $sectionHeading;
-    $sectionSubheading = $products[0]['subheading'] ?? $sectionSubheading;
+    $sectionHeading = !empty($products[0]['heading']) ? $products[0]['heading'] : $sectionHeading;
+    $sectionSubheading = !empty($products[0]['subheading']) ? $products[0]['subheading'] : $sectionSubheading;
 }
 
 // Fallback logic removed per user request
@@ -53,8 +53,10 @@ if (file_exists($productsConfigPath)) {
     
     // Defaults (Global -> specific override if not empty)
     // Helper to get style with fallback
-    function getStyleTrending($key, $local, $global, $default) {
-        return !empty($local[$key]) ? $local[$key] : (!empty($global[$key]) ? $global[$key] : $default);
+    if (!function_exists('getStyleTrending')) {
+        function getStyleTrending($key, $local, $global, $default) {
+            return !empty($local[$key]) ? $local[$key] : (!empty($global[$key]) ? $global[$key] : $default);
+        }
     }
     
     // Define styles
@@ -108,8 +110,8 @@ if (file_exists($productsConfigPath)) {
 <section id="<?php echo $sectionId; ?>" class="py-5 md:py-14">
     <div class="container mx-auto px-4">
         <div class="text-center mb-10">
-            <h2 class="text-2xl md:text-3xl font-heading font-bold mb-4 section-heading"><?php echo htmlspecialchars($sectionHeading); ?></h2>
-            <p class="text-sm md:text-md max-w-2xl mx-auto section-subheading"><?php echo htmlspecialchars($sectionSubheading); ?></p>
+            <h2 class="text-3xl md:text-4xl font-heading font-bold mb-4 section-heading"><?php echo htmlspecialchars($sectionHeading); ?></h2>
+            <p class="text-sm md:text-lg max-w-2xl mx-auto section-subheading"><?php echo htmlspecialchars($sectionSubheading); ?></p>
         </div>
         
         <!-- Product Slider Container -->
@@ -130,7 +132,7 @@ if (file_exists($productsConfigPath)) {
                 $defaultAttributes = $firstVariant ? json_decode($firstVariant['variant_attributes'], true) : [];
                 $attributesJson = json_encode($defaultAttributes);
             ?>
-                    <div class="min-w-full md:min-w-[300px] my-2">
+                    <div class="min-w-[280px] md:min-w-[300px] my-2">
                         <div class="product-card bg-white rounded-lg overflow-hidden shadow-md transition-all duration-300 group relative">
                 <div class="relative overflow-hidden">
                     <a class="product-card-view-link" href="<?php echo url('product?slug=' . urlencode($item['slug'] ?? '')); ?>">

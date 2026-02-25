@@ -37,14 +37,14 @@ if ($linkUrl && !preg_match('/^https?:\/\//', $linkUrl) && strpos($linkUrl, '#')
 }
 ?>
 
-<section class="py-16 md:py-15" style="background-color: <?php echo htmlspecialchars($bgColor); ?>; color: <?php echo htmlspecialchars($textColor); ?>;">
+<section class="py-8 md:py-16" style="background-color: <?php echo htmlspecialchars($bgColor); ?>; color: <?php echo htmlspecialchars($textColor); ?>;">
     <div class="container mx-auto px-4 text-center">
         <?php if ($heading): ?>
             <h2 class="text-3xl md:text-4xl font-heading mb-6 tracking-wide" style="color: <?php echo htmlspecialchars($textColor); ?>;"><?php echo htmlspecialchars($heading); ?></h2>
         <?php endif; ?>
 
         <?php if ($content): ?>
-            <div class="philosophy-content text-2xl md:text-3xl max-w-6xl mx-auto mb-8 leading-relaxed font-light" style="line-height: 1.6; color: <?php echo htmlspecialchars($textColor); ?>;">
+            <div class="philosophy-content text-2xl md:text-3xl max-w-6xl mx-auto mb-8 leading-[0.8] md:leading-[1.6] font-light" style="color: <?php echo htmlspecialchars($textColor); ?>;">
                 <?php echo $content; ?>
             </div>
         <?php endif; ?>

@@ -128,7 +128,7 @@ $sectionId = 'video-section-' . rand(1000, 9999);
                     ?>
                     
                     <!-- Slide Item -->
-                    <div class="video-slide flex-shrink-0 w-full md:w-[calc(33.333%-16px)] lg:w-[calc(25%-18px)] h-[400px] md:h-[600px] video-card">
+                    <div class="video-slide flex-shrink-0 min-w-[280px] md:min-w-[300px] h-[400px] md:h-[600px] video-card">
                         <div class="relative w-full h-full rounded-lg overflow-hidden border border-gray-100 shadow-sm hover:shadow-md bg-black transition-all duration-300">
                         
                             <?php if (!empty($embed)): ?>

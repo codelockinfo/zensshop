@@ -213,10 +213,27 @@ document.addEventListener('DOMContentLoaded', function () {
         }
     });
 
+    // Global helper to close any open modals
+    function closeAllModals() {
+        const modals = [
+            document.getElementById('bannerModal'),
+            document.getElementById('confirmModal')
+        ];
+        modals.forEach(m => {
+            if (m) m.classList.add('hidden');
+        });
+        
+        // Remove styling effects often used in modals
+        document.body.style.overflow = '';
+    }
+
     // Intercept Form Submissions
     document.addEventListener('submit', function (e) {
         const form = e.target.closest('form');
         if (!form || form.hasAttribute('data-no-ajax')) return;
+
+        // Skip search form if it has its own logic
+        if (form.id === 'adminSearchForm') return;
 
         if (typeof tinymce !== 'undefined') {
             tinymce.triggerSave();
@@ -228,7 +245,7 @@ document.addEventListener('DOMContentLoaded', function () {
         const formData = new FormData(form);
         const submitBtn = form.querySelector('[type="submit"]');
 
-        if (window.setBtnLoading && submitBtn) window.setBtnLoading(submitBtn, true);
+        // Note: setBtnLoading is already called by the global listener in admin-footer.php
         if (loader) loader.classList.remove('hidden');
 
         fetch(url, {
@@ -238,33 +255,48 @@ document.addEventListener('DOMContentLoaded', function () {
                 'X-Requested-With': 'XMLHttpRequest'
             }
         })
-        .then(response => {
+        .then(async response => {
             // Check if it's a redirect after POST
-            if (response.redirected) {
-                return loadPage(response.url);
-            }
-            return response.text();
-        })
-        .then(html => {
-            if (!html) return;
+            const finalUrl = response.url;
+            const html = await response.text();
             
+            if (!html) {
+                // If response is empty (could happen on some 302s if fetch doesn't follow properly)
+                window.location.href = finalUrl;
+                return;
+            }
+
             const parser = new DOMParser();
             const doc = parser.parseFromString(html, 'text/html');
-            
             const newContent = doc.querySelector('#ajax-content-inner');
+
             if (newContent && contentInner) {
+                // Update content
                 contentInner.innerHTML = newContent.innerHTML;
+                
+                // Update Title & URL
+                document.title = doc.title;
+                if (window.location.href !== finalUrl) {
+                    history.pushState({ url: finalUrl }, doc.title, finalUrl);
+                }
+                
+                // Finalize
+                closeAllModals();
                 reinitializeScripts();
                 window.scrollTo(0, 0);
             } else {
-                window.location.reload();
+                // Fallback if structure is different
+                window.location.href = finalUrl;
             }
         })
         .catch(error => {
             console.error('Form Submit Error:', error);
-            form.submit(); // Fallback
+            // Fallback: Real form submit if AJAX fails
+            form.submit();
         })
         .finally(() => {
+            // Try to find the button again in the NEW DOM if it was replaced, 
+            // though normally the new HTML should have a fresh button.
             if (window.setBtnLoading && submitBtn) window.setBtnLoading(submitBtn, false);
             if (loader) loader.classList.add('hidden');
         });

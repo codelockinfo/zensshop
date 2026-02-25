@@ -239,7 +239,7 @@ require_once __DIR__ . '/includes/header.php';
                         
                         <!-- Product Info -->
                         <div class="p-4 flex flex-col flex-grow">
-                            <h3 class="font-semibold text-gray-800 mb-2 card-title" style="display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; min-height: 3rem;">
+                            <h3 class="font-semibold text-gray-800 mb-2 card-title" style="display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; min-height: 3rem; line-height: 1.5rem;">
                                 <a href="<?php echo url('product?slug=' . urlencode($item['slug'] ?? '')); ?>" class="hover:text-primary transition">
                                     <?php echo htmlspecialchars($item['name'] ?? 'Product'); ?>
                                 </a>
@@ -353,7 +353,7 @@ require_once __DIR__ . '/includes/header.php';
                             
                             <!-- Product Info -->
                             <div class="p-4 flex flex-col flex-1">
-                                <h3 class="font-semibold text-gray-800 mb-2 card-title" style="display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; min-height: 3rem;">
+                                <h3 class="font-semibold text-gray-800 mb-2 card-title" style="display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; min-height: 3rem; line-height: 1.5rem;">
                                 <a href="<?php echo $baseUrl; ?>/product?slug=<?php echo htmlspecialchars($recentProduct['slug'] ?? ''); ?>"  
                                    class="hover:text-primary transition">
                                     <?php echo htmlspecialchars($recentProduct['name'] ?? 'Product'); ?>
