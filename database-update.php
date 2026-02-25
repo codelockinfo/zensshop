@@ -1556,6 +1556,20 @@ if (!columnExists($db, 'orders', 'package_count')) {
     executeSql($db, "ALTER TABLE orders ADD COLUMN package_count INT DEFAULT 1", "Add package_count to orders", $errors, $success, $EXECUTE);
 }
 
+// ==========================================
+// STEP 40: Category Layout Options
+// ==========================================
+echo "STEP 40: Adding Category Layout Options\n";
+echo "---------------------------------\n";
+
+if (!columnExists($db, 'section_categories', 'layout_type')) {
+    executeSql($db, "ALTER TABLE section_categories ADD COLUMN layout_type VARCHAR(20) DEFAULT 'grid' AFTER subheading", "Add layout_type to section_categories", $errors, $success, $EXECUTE);
+}
+
+if (!columnExists($db, 'section_categories', 'mobile_size')) {
+    executeSql($db, "ALTER TABLE section_categories ADD COLUMN mobile_size VARCHAR(20) DEFAULT '2' AFTER layout_type", "Add mobile_size to section_categories", $errors, $success, $EXECUTE);
+}
+
 echo "\n========================================\n";
 echo "SUMMARY:\n";
 echo "========================================\n";

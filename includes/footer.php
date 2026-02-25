@@ -699,7 +699,7 @@ $qv_policy_color = $qvStyles['policy_color'] ?? '#374151';
             content.classList.remove('opacity-100');
             content.classList.add('opacity-0');
             
-            icon.classList.remove('fa-times');
+            icon.classList.remove('fa-minus');
             icon.classList.add('fa-plus');
             icon.style.transform = 'rotate(0deg)';
         } else {
@@ -709,8 +709,8 @@ $qv_policy_color = $qvStyles['policy_color'] ?? '#374151';
             content.classList.add('opacity-100');
             
             icon.classList.remove('fa-plus');
-            icon.classList.add('fa-times');
-            icon.style.transform = 'rotate(90deg)';
+            icon.classList.add('fa-minus');
+            icon.style.transform = 'rotate(180deg)';
         }
     }
     </script>

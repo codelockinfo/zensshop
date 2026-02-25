@@ -77,7 +77,7 @@ if ($showRecent !== '1') {
             $currentId = !empty($item['product_id']) ? $item['product_id'] : $item['id'];
             $inWishlist = in_array($currentId, $wishlistIds);
         ?>
-        <div class="swiper-slide h-auto">
+        <div class="swiper-slide h-auto !w-[280px] md:!w-[300px]">
             <div class="group product-card bg-white rounded-lg overflow-hidden shadow-md hover:shadow-xl transition-all duration-300 relative flex flex-col h-full w-full max-w-sm">
                 <div class="relative overflow-hidden">
                     <a class="product-card-view-link" href="<?php echo $baseUrl; ?>/product?slug=<?php echo urlencode($item['slug'] ?? ''); ?>" class="block">

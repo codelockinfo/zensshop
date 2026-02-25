@@ -19,6 +19,10 @@ $bannerConfigPath = __DIR__ . '/admin/banner_config.json';
 $bannerConf = file_exists($bannerConfigPath) ? json_decode(file_get_contents($bannerConfigPath), true) : [];
 $showBanner = $bannerConf['show_section'] ?? true;
 $bannerHideTextMobile = $bannerConf['hide_text_mobile'] ?? false;
+$bannerAlignment = $bannerConf['alignment'] ?? 'left';
+$bannerAlignmentMobile = $bannerConf['alignment_mobile'] ?? 'center';
+$bannerContentWidth = $bannerConf['content_width'] ?? '100';
+$bannerAdaptiveHeight = $bannerConf['adaptive_mobile_height'] ?? false;
 
 // Fetch Banner Styles
 $bannerStylesJson = $settingsObj->get('banner_styles', '{"heading_color":"#ffffff","subheading_color":"#f3f4f6","button_bg_color":"#ffffff","button_text_color":"#000000","arrow_bg_color":"#ffffff","arrow_icon_color":"#1f2937"}');
@@ -83,6 +87,14 @@ $showVideos = $vidConf['show_section'] ?? true;
 $catStylesJson = $settingsObj->get('homepage_categories_styles', '{"bg_color":"#ffffff"}');
 $catStyles = json_decode($catStylesJson, true);
 $catBgColor = $catStyles['bg_color'] ?? '#ffffff';
+$catConfig = getSectionConfig('category_config.json');
+$catLayoutType = $catConfig['layout_type'] ?? 'grid';
+
+// Fetch from DB primary for Category if available
+$catSectionData = $db->fetchOne("SELECT layout_type FROM section_categories WHERE (store_id = ? OR store_id IS NULL) ORDER BY store_id DESC LIMIT 1", [CURRENT_STORE_ID]);
+if ($catSectionData && !empty($catSectionData['layout_type'])) {
+    $catLayoutType = $catSectionData['layout_type'];
+}
 
 // 6. Newsletter
 $newsConf = getSectionConfig('newsletter_config.json');
@@ -102,10 +114,16 @@ $showFooterFeatures = $settingsObj->get('footer_features_section_visibility', '1
 <?php if ($showBanner): ?>
 <!-- Hero Section (Loaded First) -->
 <!-- Skeleton Loader for Banner -->
-<div id="hero-skeleton" class="relative h-[600px] md:h-[700px] bg-gradient-to-r from-gray-200 via-gray-300 to-gray-200 animate-pulse">
+<?php
+// Translation of settings to classes for Skeleton
+$sk_d_alignmentClass = ($bannerAlignment === 'center') ? 'md:justify-center' : (($bannerAlignment === 'right') ? 'md:justify-end' : 'md:justify-start');
+$sk_m_alignmentClass = ($bannerAlignmentMobile === 'center') ? 'justify-center' : (($bannerAlignmentMobile === 'right') ? 'justify-end' : 'justify-start');
+$sk_widthClass = ($bannerContentWidth == '50') ? 'md:max-w-[50%]' : (($bannerContentWidth == '40') ? 'md:max-w-[40%]' : 'max-w-md');
+?>
+<div id="hero-skeleton" class="relative overflow-hidden <?php echo $bannerAdaptiveHeight ? 'h-auto py-20' : 'h-[600px] md:h-[700px]'; ?> bg-gradient-to-r from-gray-200 via-gray-300 to-gray-200 animate-pulse">
     <div class="absolute inset-0 bg-gradient-to-r from-transparent via-white to-transparent opacity-50 animate-shimmer"></div>
-    <div class="container mx-auto px-4 h-full flex items-center">
-        <div class="max-w-md space-y-4">
+    <div class="container mx-auto px-4 h-full flex items-center <?php echo $sk_m_alignmentClass . ' ' . $sk_d_alignmentClass; ?>">
+        <div class="<?php echo $sk_widthClass; ?> space-y-4">
             <div class="h-4 bg-gray-400 rounded w-32 animate-pulse"></div>
             <div class="h-12 bg-gray-400 rounded w-64 animate-pulse"></div>
             <div class="h-12 bg-gray-400 rounded w-48 animate-pulse"></div>
@@ -143,11 +161,136 @@ $showFooterFeatures = $settingsObj->get('footer_features_section_visibility', '1
         opacity: 0.9 !important;
     }
     
+    @media (max-width: 768px) {
+        #hero-section .banner-text-content {
+            width: 100%;
+            /* Only move to bottom if text is VISIBLE to clear navigation arrows */
+            <?php if(!$bannerHideTextMobile): ?>
+            margin-top: auto;
+            margin-bottom: 5rem;
+            <?php endif; ?>
+        }
+        #hero-section .container {
+            padding-bottom: 2rem;
+            <?php if(!$bannerHideTextMobile): ?>
+            align-items: flex-end !important;
+            <?php endif; ?>
+        }
+    }
+
+    /* Only hide if the setting is ON AND we are on mobile */
     <?php if($bannerHideTextMobile): ?>
     @media (max-width: 768px) {
         #hero-section .banner-heading,
         #hero-section .banner-subheading {
             display: none !important;
+        }
+    }
+    <?php endif; ?>
+
+    /* Adaptive Mobile Height Styles */
+    <?php if($bannerAdaptiveHeight): ?>
+    @media (max-width: 768px) {
+        
+        /* 1. Force exact height for section and slider */
+        #hero-section, 
+        #hero-section .hero-slider, 
+        #hero-section .hero-view-port {
+            height: 350px !important;
+            min-height: 350px !important;
+            max-height: 350px !important;
+        }
+
+        #hero-section .hero-slide {
+            height: 350px !important;
+            display: flex !important;
+            align-items: center !important;
+            justify-content: center !important;
+            position: relative !important;
+        }
+        
+        /* 2. Absolute Image Layer */
+        #hero-section .hero-slide > a.md\:hidden,
+        #hero-section .hero-slide > div.md\:hidden {
+            position: absolute !important;
+            top: 0 !important; 
+            left: 0 !important; 
+            right: 0 !important; 
+            bottom: 0 !important;
+            z-index: 0 !important;
+            display: block !important;
+        }
+        
+        #hero-section .hero-slide .md\:hidden img {
+            width: 100% !important;
+            height: 100% !important;
+            object-fit: cover !important;
+        }
+        
+        /* 3. Dark Overlay Layer */
+        #hero-section .hero-slide .bg-black.bg-opacity-30 {
+            position: absolute !important;
+            top: 0 !important; 
+            left: 0 !important; 
+            right: 0 !important; 
+            bottom: 0 !important;
+            z-index: 1 !important;
+            display: block !important;
+        }
+        
+        /* 4. Text Container rigidly centered */
+        #hero-section .hero-slide .container {
+            position: relative !important;
+            z-index: 10 !important;
+            height: 100% !important;
+            display: flex !important;
+            flex-direction: column !important;
+            align-items: center !important;
+            justify-content: center !important;
+            padding: 1.5rem !important;
+        }
+
+        #hero-section .banner-text-content {
+            width: 100% !important;
+            text-align: center !important;
+        }
+
+        #hero-section .banner-heading {
+            font-size: 1.85rem !important;
+            line-height: 1.1 !important;
+            margin-bottom: 0.5rem !important;
+            color: #ffffff !important;
+            text-shadow: 0 2px 4px rgba(0,0,0,0.5) !important;
+        }
+
+        #hero-section .banner-subheading {
+            font-size: 0.9rem !important;
+            margin-bottom: 1rem !important;
+            color: #ffffff !important;
+            text-shadow: 0 1px 2px rgba(0,0,0,0.5) !important;
+        }
+
+        /* 5. Interactive full-width button */
+        #hero-section .banner-btn {
+            width: 100% !important;
+            max-width: 150px !important;
+            padding: 0.85rem !important;
+            font-weight: bold !important;
+            margin-top: 0.5rem !important;
+        }
+        
+        #hero-section .banner-btn-wrapper {
+            width: 100% !important;
+            justify-content: center !important;
+        }
+
+        /* 6. True Center Navigation Arrows */
+        #hero-section .hero-prev,
+        #hero-section .hero-next {
+            top: 50% !important;
+            bottom: auto !important;
+            transform: translateY(-50%) !important;
+            z-index: 20 !important;
         }
     }
     <?php endif; ?>
@@ -189,9 +332,26 @@ if (empty($banners)) {
                     // Handle Links
                     $desktopLink = resolveBannerLink($banner['link'] ?? '', $baseUrl);
                     $mobileLink = resolveBannerLink(($banner['link_mobile'] ?? '') ?: ($banner['link'] ?? ''), $baseUrl);
+
+                    // Desktop Alignment Classes
+                    $d_alignmentClass = ($bannerAlignment === 'center') ? 'md:justify-center' : (($bannerAlignment === 'right') ? 'md:justify-end' : 'md:justify-start');
+                    $d_textAlignmentClass = ($bannerAlignment === 'center') ? 'md:text-center' : (($bannerAlignment === 'right') ? 'md:text-right' : 'md:text-left');
+                    $d_buttonAlignmentClass = ($bannerAlignment === 'center') ? 'md:justify-center' : (($bannerAlignment === 'right') ? 'md:justify-end' : 'md:justify-start');
+
+                    // Mobile Alignment Classes
+                    $m_alignmentClass = ($bannerAlignmentMobile === 'center') ? 'justify-center' : (($bannerAlignmentMobile === 'right') ? 'justify-end' : 'justify-start');
+                    $m_textAlignmentClass = ($bannerAlignmentMobile === 'center') ? 'text-center' : (($bannerAlignmentMobile === 'right') ? 'text-right' : 'text-left');
+                    $m_buttonAlignmentClass = ($bannerAlignmentMobile === 'center') ? 'justify-center' : (($bannerAlignmentMobile === 'right') ? 'justify-end' : 'justify-start');
+                    
+
+
+                    // Desktop Width Class
+                    $widthClass = 'max-w-xl'; // Default
+                    if ($bannerContentWidth == '50') $widthClass = 'md:max-w-[50%]';
+                    elseif ($bannerContentWidth == '40') $widthClass = 'md:max-w-[40%]';
                     ?>
                     <!-- Slide <?php echo $index + 1; ?> -->
-                    <div class="hero-slide <?php echo $index === 0 ? 'active' : ''; ?> relative h-[600px] md:h-[700px]">
+                    <div class="hero-slide <?php echo $index === 0 ? 'active' : ''; ?> relative <?php echo $bannerAdaptiveHeight ? 'h-auto md:h-[700px]' : 'h-[600px] md:h-[700px]'; ?>">
                         <!-- Desktop Image -->
                         <?php if($desktopLink): ?>
                         <a href="<?php echo htmlspecialchars($desktopLink); ?>" class="hidden md:block absolute inset-0 z-0">
@@ -231,8 +391,8 @@ if (empty($banners)) {
                         <?php endif; ?>
                         
                         <div class="absolute inset-0 bg-black bg-opacity-30"></div>
-                        <div class="container mx-auto px-4 h-full flex items-center relative z-10">
-                            <div class="max-w-md text-white banner-text-content">
+                        <div class="container mx-auto px-4 h-full flex items-center relative z-10 <?php echo $m_alignmentClass; ?> <?php echo $d_alignmentClass; ?>">
+                            <div class="text-white banner-text-content <?php echo $widthClass; ?> <?php echo $m_textAlignmentClass; ?> <?php echo $d_textAlignmentClass; ?>">
                                 <?php if (!empty($banner['subheading'])): ?>
                                     <p class="text-md md:text-lg uppercase tracking-wider mb-2 banner-subheading"><?php echo htmlspecialchars($banner['subheading']); ?></p>
                                 <?php endif; ?>
@@ -242,15 +402,11 @@ if (empty($banners)) {
                                 <?php endif; ?>
                                 
                                 <?php if (!empty($banner['button_text'])): ?>
-                                    <!-- Desktop Button -->
-                                    <a href="<?php echo htmlspecialchars($desktopLink ?: '#'); ?>" class="hidden md:inline-block border border-white px-8 py-3 hover:bg-white hover:text-black transition relative z-10 banner-btn">
-                                        <?php echo htmlspecialchars($banner['button_text']); ?>
-                                    </a>
-        
-                                    <!-- Mobile Button -->
-                                    <a href="<?php echo htmlspecialchars($mobileLink ?: '#'); ?>" class="md:hidden inline-block border border-white px-8 py-3 hover:bg-white hover:text-black transition relative z-10 banner-btn">
-                                        <?php echo htmlspecialchars($banner['button_text']); ?>
-                                    </a>
+                                    <div class="flex <?php echo $m_buttonAlignmentClass; ?> <?php echo $d_buttonAlignmentClass; ?> banner-btn-wrapper">
+                                        <a href="<?php echo htmlspecialchars($desktopLink ?: '#'); ?>" class="inline-block border border-white px-8 py-3 hover:bg-white hover:text-black transition relative z-10 banner-btn">
+                                            <?php echo htmlspecialchars($banner['button_text']); ?>
+                                        </a>
+                                    </div>
                                 <?php endif; ?>
                             </div>
                         </div>
@@ -603,9 +759,17 @@ document.addEventListener('DOMContentLoaded', function() {
                     <div class="absolute inset-0 animate-shimmer"></div>
                 </div>
             </div>
-            <div class="flex flex-wrap justify-center gap-6">
-                <?php for($i=0; $i<6; $i++): ?>
-                <div class="w-[45%] md:w-[30%] lg:w-[14%] flex flex-col items-center">
+            <div class="<?php echo $catLayoutType === 'slider' ? 'flex gap-4 md:gap-6 overflow-hidden flex-nowrap' : 'flex flex-wrap justify-center gap-6'; ?>">
+                <?php 
+                $skelClass = 'w-[calc(50%-12px)]'; 
+                if ($catLayoutType === 'slider') {
+                    $skelClass = 'w-[calc(50%-8px)] md:w-[180px] lg:w-[150px] flex-shrink-0';
+                } else {
+                    $skelClass = 'w-[calc(50%-12px)] md:w-[calc(33.333%-16px)] lg:w-[calc(14.28%-20px)]';
+                }
+                for($i=0; $i<6; $i++): 
+                ?>
+                <div class="<?php echo $skelClass; ?> flex flex-col items-center">
                     <div class="w-full aspect-square bg-gray-200 rounded-full mb-4 relative overflow-hidden">
                         <div class="absolute inset-0 animate-shimmer"></div>
                     </div>
@@ -841,4 +1005,4 @@ document.addEventListener('DOMContentLoaded', function() {
 <?php endif; ?>
 <?php require_once __DIR__ . '/includes/footer.php'; ?>
 
-<script src="<?php echo $baseUrl; ?>/assets/js/lazy-load17.js?v=1" defer></script>
+<script src="<?php echo $baseUrl; ?>/assets/js/lazy-load18.js?v=1" defer></script>

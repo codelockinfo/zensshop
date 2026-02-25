@@ -133,7 +133,7 @@ if (!function_exists('url')) {
 }
 ?>
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" class="overflow-x-hidden">
 <head>
     <?php 
     // Google Tag Manager (Head)
@@ -983,7 +983,7 @@ $gs_tooltip_text = getGlobalStyle('tooltip_text_color', $globalCardStyles, '#fff
     }
     </style>
 </head>
-<body class="font-body">
+<body class="font-body overflow-x-hidden">
     <?php if (!empty($gtmId)): ?>
     <!-- Google Tag Manager (noscript) -->
     <noscript><iframe src="https://www.googletagmanager.com/ns.html?id=<?php echo htmlspecialchars($gtmId); ?>"
@@ -993,7 +993,7 @@ $gs_tooltip_text = getGlobalStyle('tooltip_text_color', $globalCardStyles, '#fff
     
     <?php if (!isset($isCheckout) || !$isCheckout): ?>
     <!-- Top Bar -->
-    <div class="block top-bar text-sm py-2" style="padding: 12px 0;">
+    <div class="block top-bar text-sm py-1 md:py-3 text-xs md:text-sm">
         <div class="container mx-auto px-4 flex justify-between items-center">
             <!-- Left side spacer (to balance the right links) -->
             <div class="flex-1 hidden xl:block"></div>
@@ -1084,7 +1084,7 @@ $gs_tooltip_text = getGlobalStyle('tooltip_text_color', $globalCardStyles, '#fff
     <!-- Main Navigation -->
     <nav class="sticky top-0 z-50 header-shadow">
         <div class="container mx-auto px-4">
-            <div class="flex items-center justify-between h-20">
+            <div class="flex items-center justify-between h-12 md:h-20">
                 <!-- Hamburger Menu  -->
                 <!-- Hamburger Menu  -->
                 <button class="xl:hidden text-black hover:text-gray-600 transition focus:outline-none" 
@@ -1115,7 +1115,7 @@ $gs_tooltip_text = getGlobalStyle('tooltip_text_color', $globalCardStyles, '#fff
                         <?php else: ?>
                             <img src="<?php echo $baseUrl; ?>/assets/images/<?php echo htmlspecialchars($siteLogo); ?>" 
                                  alt="Site Logo" 
-                                 class="h-14 object-contain"
+                                 class="h-10 md:h-14 object-contain"
                                  onerror="this.parentElement.innerHTML='<span class=\'text-3xl font-heading font-bold text-black\'>CookProo</span>'">
                         <?php endif; ?>
                     </a>
@@ -1178,12 +1178,12 @@ if (!empty($headerMenuItems)) {
                     if ($isCheckoutPage || $isCartPage): ?>
                         <a href="<?php echo url('cart'); ?>" class="text-black hover:text-gray-600 transition relative focus:outline-none header-icon inline-block" aria-label="View Shopping Cart">
                             <i class="fas fa-shopping-cart text-lg" aria-hidden="true"></i>
-                            <span class="absolute -top-2 -right-2 bg-red-500 text-white text-[10px] rounded-full w-5 h-5 flex items-center justify-center cart-count font-bold"><?php echo $cartCount; ?></span>
+                            <span class="absolute -top-1 -right-1.5 bg-red-500 font-medium text-white text-xs rounded-full w-4 h-4 flex items-center justify-center cart-count font-bold"><?php echo $cartCount; ?></span>
                         </a>
                     <?php else: ?>
                         <button class="text-black hover:text-gray-600 transition relative focus:outline-none header-icon" aria-label="Open Shopping Cart Drawer" id="cartBtn">
                             <i class="fas fa-shopping-cart text-lg" aria-hidden="true"></i>
-                            <span class="absolute -top-2 -right-2 bg-red-500 text-white text-[10px] rounded-full w-5 h-5 flex items-center justify-center cart-count font-bold"><?php echo $cartCount; ?></span>
+                            <span class="absolute -top-1 -right-1.5 bg-red-500 font-medium text-white text-xs rounded-full w-4 h-4 flex items-center justify-center cart-count font-bold"><?php echo $cartCount; ?></span>
                         </button>
                     <?php endif; ?>
                     <?php endif; ?>

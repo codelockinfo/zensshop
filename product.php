@@ -2157,6 +2157,6 @@ document.addEventListener('DOMContentLoaded', function() {
 </script>
 <?php endif; ?>
 
-<script src="<?php echo $baseUrl; ?>/assets/js/lazy-load17.js?v=4" defer></script>
+<script src="<?php echo $baseUrl; ?>/assets/js/lazy-load18.js?v=4" defer></script>
 <?php require_once __DIR__ . '/includes/footer.php'; ?>
 

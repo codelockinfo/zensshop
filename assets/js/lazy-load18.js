@@ -145,8 +145,10 @@ function scheduleInitialization(container) {
 
 function initializeSectionContent(container) {
   const bestSelling = container.querySelector("#bestSellingSlider");
-  if (bestSelling)
-    setupCustomSlider(bestSelling, "bestSellingPrev", "bestSellingNext");
+  if (bestSelling) setupCustomSlider(bestSelling, "bestSellingPrev", "bestSellingNext");
+
+  const categoriesSlider = container.querySelector("#categoriesSlider");
+  if (categoriesSlider) setupCustomSlider(categoriesSlider, "categoriesPrev", "categoriesNext");
 
   const trending = container.querySelector("#trendingSlider");
   if (trending) setupCustomSlider(trending, "trendingPrev", "trendingNext");
@@ -176,18 +178,13 @@ function initializeSectionContent(container) {
   const relatedSlider = container.querySelector(".people-bought-slider");
   if (relatedSlider && typeof Swiper !== "undefined") {
     new Swiper(relatedSlider, {
-        slidesPerView: 1,
+        slidesPerView: 'auto',
         spaceBetween: 20,
         loop: true,
         autoplay: { delay: 5000, disableOnInteraction: false },
         navigation: {
             nextEl: '.people-bought-next',
             prevEl: '.people-bought-prev',
-        },
-        breakpoints: {
-            640: { slidesPerView: 2, spaceBetween: 20 },
-            1024: { slidesPerView: 3, spaceBetween: 30 },
-            1280: { slidesPerView: 4, spaceBetween: 30 },
         }
     });
   }
@@ -196,18 +193,13 @@ function initializeSectionContent(container) {
   const recentSlider = container.querySelector(".recently-viewed-slider");
   if (recentSlider && typeof Swiper !== "undefined") {
     new Swiper(recentSlider, {
-        slidesPerView: 1,
+        slidesPerView: 'auto',
         spaceBetween: 20,
         loop: true,
         autoplay: { delay: 5000, disableOnInteraction: false },
         navigation: {
             nextEl: '.recently-viewed-next',
             prevEl: '.recently-viewed-prev',
-        },
-        breakpoints: {
-            640: { slidesPerView: 2, spaceBetween: 20 },
-            1024: { slidesPerView: 3, spaceBetween: 30 },
-            1280: { slidesPerView: 4, spaceBetween: 30 },
         }
     });
   }

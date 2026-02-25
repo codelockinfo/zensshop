@@ -31,7 +31,7 @@
     <script src="<?php echo isset($baseUrl) ? $baseUrl : getBaseUrl(); ?>/assets/js/admin-search2.js"></script>
     <script src="<?php echo isset($baseUrl) ? $baseUrl : getBaseUrl(); ?>/assets/js/admin-notifications4.js"></script>
     <script src="<?php echo isset($baseUrl) ? $baseUrl : getBaseUrl(); ?>/assets/js/admin-support3.js"></script>
-    <script src="<?php echo isset($baseUrl) ? $baseUrl : getBaseUrl(); ?>/assets/js/admin-ajax3.js"></script>
+    <script src="<?php echo isset($baseUrl) ? $baseUrl : getBaseUrl(); ?>/assets/js/admin-ajax4.js"></script>
     <?php endif; ?>
     <script>
     // Global function to show loading state on buttons
@@ -39,6 +39,8 @@
         if (!btn) return;
         
         if (isLoading) {
+            if (btn.disabled) return; // Already loading
+            
             // Lock the button dimensions to prevent layout shift
             const rect = btn.getBoundingClientRect();
             btn.style.width = rect.width + 'px';
@@ -47,7 +49,9 @@
             btn.style.minHeight = rect.height + 'px';
             
             btn.disabled = true;
-            btn.dataset.originalHtml = btn.innerHTML;
+            if (!btn.dataset.originalHtml) {
+                btn.dataset.originalHtml = btn.innerHTML;
+            }
             btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i>';
             btn.style.display = 'inline-flex';
             btn.style.alignItems = 'center';
