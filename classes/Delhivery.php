@@ -11,6 +11,7 @@ class Delhivery {
     private $baseUrl;
     private $expressUrl;
     private $settings;
+    public $lastRequest; // Added for debugging
 
     public function __construct($token = null, $storeId = null) {
         $this->settings = new Settings();
@@ -116,17 +117,13 @@ class Delhivery {
     public function createShipment($orderData) {
         $url = $this->expressUrl . '/api/cmu/create.json';
         
-        // Ensure data is structured correctly for Delhivery
+        // Pass as an array so makeRequest can handle the URL encoding properly
         $payload = [
             'format' => 'json',
             'data' => json_encode($orderData)
         ];
 
-        // CMU API uses form-data or raw body depending on implementation, 
-        // but typically 'data' parameter is used.
-        $response = $this->makeRequest($url, 'POST', $payload, true);
-
-        return $response;
+        return $this->makeRequest($url, 'POST', $payload, true);
     }
 
     /**
@@ -185,33 +182,33 @@ class Delhivery {
                     'phone' => substr(preg_replace('/[^0-9]/', '', $orderData['customer_phone'] ?? '0000000000'), -10),
                     'order' => $orderData['order_number'],
                     'payment_mode' => $paymentMode,
-                    'total_amount' => number_format((float)$orderData['total_amount'], 2, '.', ''),
-                    'cod_amount' => number_format((float)$codAmount, 2, '.', ''),
-                    'weight' => number_format((float)($orderData['total_weight'] ?: 0.5), 2, '.', ''),
-                    'length' => number_format((float)($items[0]['length'] ?? 10), 2, '.', ''),
-                    'width' => number_format((float)($items[0]['width'] ?? 10), 2, '.', ''),
-                    'height' => number_format((float)($items[0]['height'] ?? 10), 2, '.', ''),
+                    'return_pin' => '',
+                    'return_city' => '',
+                    'return_phone' => '',
+                    'return_add' => '',
+                    'return_state' => '',
+                    'return_country' => '',
                     'products_desc' => $productsDesc,
-                    'quantity' => (string)$totalQty,
+                    'hsn_code' => $items[0]['hsn_code'] ?? '',
+                    'cod_amount' => number_format((float)$codAmount, 2, '.', ''),
                     'order_date' => date('Y-m-d H:i:s', strtotime($orderData['created_at'] ?? 'now')),
-                    'shipping_mode' => 'Standard', // Standard/Express
-                    'address_type' => 'home',
+                    'total_amount' => number_format((float)$orderData['total_amount'], 2, '.', ''),
+                    'seller_add' => '',
                     'seller_name' => $this->settings->get('site_name', 'Zens Shop', $storeId) ?: 'Zens Shop',
-                    'pickup_location' => [
-                        'name' => $warehouseName
-                    ],
-                    'return_add' => trim(preg_replace('/\s+/', ' ', ($shippingAddr['street'] ?? '') . ' ' . ($shippingAddr['address_line1'] ?? '') . ' ' . ($shippingAddr['address_line2'] ?? '')))
+                    'seller_inv' => '',
+                    'quantity' => (string)$totalQty,
+                    'waybill' => '',
+                    'shipment_width' => number_format((float)($items[0]['width'] > 0 ? $items[0]['width'] : 10), 2, '.', ''),
+                    'shipment_height' => number_format((float)($items[0]['height'] > 0 ? $items[0]['height'] : 10), 2, '.', ''),
+                    'weight' => number_format((float)($orderData['total_weight'] ?: 0.5), 2, '.', ''),
+                    'shipping_mode' => 'Surface',
+                    'address_type' => 'home'
                 ]
             ],
             'pickup_location' => [
                 'name' => $warehouseName
             ]
         ];
-        
-        if (!empty($items[0])) {
-            $dataPayload['shipments'][0]['hsn_code'] = $items[0]['hsn_code'] ?? '';
-            $dataPayload['shipments'][0]['gst_tax_value'] = $orderData['tax_amount'];
-        }
 
         $result = $this->createShipment($dataPayload);
         
@@ -220,14 +217,18 @@ class Delhivery {
             // Update order with tracking number
             $db = Database::getInstance();
             $db->execute("UPDATE orders SET tracking_number = ?, order_status = 'processing' WHERE id = ?", [$waybill, $orderId]);
-            return ['success' => true, 'waybill' => $waybill];
+            return [
+                'success' => true, 
+                'waybill' => $waybill, 
+                'request_payload' => $dataPayload // Return the payload for visibility
+            ];
         }
 
         // Prioritize specific package remarks over generic 'rmk'
         $errorMsg = $result['packages'][0]['remarks'][0] ?? $result['rmk'] ?? $result['message'] ?? 'Failed to create shipment';
         return [
             'success' => false, 
-            'message' => "Delhivery Error: $errorMsg (Warehouse: $warehouseName)",
+            'message' => "$errorMsg (Warehouse: $warehouseName)",
             'warehouse' => $warehouseName
         ];
     }
@@ -329,7 +330,17 @@ class Delhivery {
         $query = $waybill ? "waybill=$waybill" : "ref_id=$orderId";
         $url = $this->baseUrl . "/api/v1/packages/json/?$query";
         
-        return $this->makeRequest($url, 'GET');
+        $result = $this->makeRequest($url, 'GET');
+        
+        // Normalize success flag for tracking
+        if (isset($result['ShipmentData']) && !empty($result['ShipmentData'])) {
+            $result['success'] = true;
+        } else {
+            $result['success'] = false;
+            $result['message'] = $result['Error'] ?? 'No tracking data found';
+        }
+        
+        return $result;
     }
 
     /**
@@ -338,13 +349,25 @@ class Delhivery {
     public function cancel($waybill) {
         if (empty($waybill)) return ['success' => false, 'message' => 'Waybill required'];
 
-        $url = $this->expressUrl . '/api/p/edit';
+        // Added trailing slash as required by some Delhivery API versions
+        $url = $this->expressUrl . '/api/p/edit/';
         $payload = [
             'waybill' => $waybill,
             'cancellation' => 'true'
         ];
 
-        return $this->makeRequest($url, 'POST', $payload);
+        $result = $this->makeRequest($url, 'POST', $payload);
+        
+        // Normalize success flag for cancellation
+        // Delhivery usually returns {"status": "Success"}
+        if (isset($result['status']) && (strtolower($result['status']) === 'success' || $result['status'] === true)) {
+            $result['success'] = true;
+        } elseif (!isset($result['success'])) {
+            $result['success'] = false;
+            $result['message'] = $result['message'] ?? $result['remarks'][0] ?? 'Cancellation failed';
+        }
+        
+        return $result;
     }
 
     /**
@@ -355,6 +378,7 @@ class Delhivery {
         curl_setopt($ch, CURLOPT_URL, $url);
         curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
         curl_setopt($ch, CURLOPT_FOLLOWLOCATION, true);
+        curl_setopt($ch, CURLOPT_TIMEOUT, 30); // Added timeout as per snippet
         
         // SSL Verification Fix for Local Environments
         curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
@@ -367,17 +391,28 @@ class Delhivery {
 
         if ($method === 'POST') {
             curl_setopt($ch, CURLOPT_POST, true);
-            if ($isFormData) {
-                $data['token'] = $this->token;
-                curl_setopt($ch, CURLOPT_POSTFIELDS, http_build_query($data));
+            
+            if (strpos($url, 'cmu/create.json') !== false || $isFormData) {
+                // For CMU creation, Delhivery requires URL-encoded body: format=json&data=ENCODED_JSON
+                $body = is_array($data) ? http_build_query($data) : $data;
+                curl_setopt($ch, CURLOPT_POSTFIELDS, $body);
                 $headers[] = 'Content-Type: application/x-www-form-urlencoded';
             } else {
-                curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode($data));
+                $finalData = is_string($data) ? $data : json_encode($data);
+                curl_setopt($ch, CURLOPT_POSTFIELDS, $finalData);
                 $headers[] = 'Content-Type: application/json';
             }
         }
 
         curl_setopt($ch, CURLOPT_HTTPHEADER, $headers);
+
+        // Store request for debugging visibility in Network tab
+        $this->lastRequest = [
+            'url' => $url,
+            'method' => $method,
+            'headers' => $headers,
+            'payload' => $data
+        ];
 
         // DEBUG LOGGING
         error_log("Delhivery Request URL: $url");
@@ -397,9 +432,12 @@ class Delhivery {
         $decoded = json_decode($response, true);
         if (json_last_error() !== JSON_ERROR_NONE) {
             error_log("Delhivery Invalid JSON: " . $response);
+            $msg = empty($response) ? "Empty response from Delhivery API" : "Invalid JSON: " . substr($response, 0, 100);
             return [
                 'success' => false, 
-                'message' => "Invalid JSON response from Delhivery: " . $response
+                'message' => "Delhivery Error: " . $msg,
+                'raw_response' => $response,
+                'http_code' => $httpCode
             ];
         }
 
