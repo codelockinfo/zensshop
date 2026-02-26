@@ -429,151 +429,174 @@ require_once __DIR__ . '/../includes/admin-header.php';
 </div>
 
 <script>
-document.addEventListener('DOMContentLoaded', function() {
-    const form = document.getElementById('searchStylingForm');
-    const saveBtn = document.getElementById('saveSearchBtn');
-    const alertBox = document.getElementById('statusAlert');
+window.initSearchStyling = function() {
+    var form = document.getElementById('searchStylingForm');
+    var saveBtn = document.getElementById('saveSearchBtn');
+    var alertBox = document.getElementById('statusAlert');
     
-    function showNotification(success, message) {
+    window.showSearchNotification = function(success, message) {
+        if (!alertBox) return;
         alertBox.classList.remove('hidden', 'bg-green-100', 'bg-red-100', 'text-green-700', 'text-red-700', 'border-l-4', 'border-green-500', 'border-red-500');
         
         if (success) {
             alertBox.classList.add('bg-green-100', 'text-green-700', 'border-l-4', 'border-green-500');
-            alertBox.querySelector('.status-icon').className = 'fas fa-check-circle mr-3 text-xl status-icon';
+            var icon = alertBox.querySelector('.status-icon');
+            if (icon) icon.className = 'fas fa-check-circle mr-3 text-xl status-icon';
         } else {
             alertBox.classList.add('bg-red-100', 'text-red-700', 'border-l-4', 'border-red-500');
-            alertBox.querySelector('.status-icon').className = 'fas fa-exclamation-circle mr-3 text-xl status-icon';
+            var icon = alertBox.querySelector('.status-icon');
+            if (icon) icon.className = 'fas fa-exclamation-circle mr-3 text-xl status-icon';
         }
         
-        alertBox.querySelector('.status-msg').innerText = message;
+        var msgEl = alertBox.querySelector('.status-msg');
+        if (msgEl) msgEl.innerText = message;
         
         // Auto hide after 5 seconds
         setTimeout(() => {
             alertBox.classList.add('hidden');
         }, 5000);
-    }
+    };
 
-    function updateLivePreview() {
+    window.updateSearchLivePreview = function() {
         // Collect values
-        const headingText = document.getElementById('in_heading_text').value;
-        const trendingText = document.getElementById('in_trending_text').value;
-        const popularText = document.getElementById('in_popular_heading_text').value;
+        var headingText = document.getElementById('in_heading_text')?.value || '';
+        var trendingText = document.getElementById('in_trending_text')?.value || '';
+        var popularText = document.getElementById('in_popular_heading_text')?.value || '';
         
-        const overlayBg = document.getElementById('in_overlay_bg_color').value;
-        const headingColor = document.getElementById('in_heading_color').value;
-        const generalTextColor = document.getElementById('in_general_text_color').value;
-        const inputTextBoxColor = document.getElementById('in_input_text_color').value;
+        var overlayBg = document.getElementById('in_overlay_bg_color')?.value || '#ffffff';
+        var headingColor = document.getElementById('in_heading_color')?.value || '#000000';
+        var generalTextColor = document.getElementById('in_general_text_color')?.value || '#374151';
+        var inputTextBoxColor = document.getElementById('in_input_text_color')?.value || '#000000';
         
-        const cardBg = document.getElementById('in_card_bg_color').value;
-        const cardBorder = document.getElementById('in_card_border_color').value;
-        const cardHeadingColor = document.getElementById('in_card_heading_color').value;
-        const cardSalePriceColor = document.getElementById('in_card_sale_price_color').value;
-        const cardComparePriceColor = document.getElementById('in_card_compare_price_color').value;
+        var cardBg = document.getElementById('in_card_bg_color')?.value || '#ffffff';
+        var cardBorder = document.getElementById('in_card_border_color')?.value || '#e5e7eb';
+        var cardHeadingColor = document.getElementById('in_card_heading_color')?.value || '#111827';
+        var cardSalePriceColor = document.getElementById('in_card_sale_price_color')?.value || '#1a3d32';
+        var cardComparePriceColor = document.getElementById('in_card_compare_price_color')?.value || '#9ca3af';
 
-        const viewAllBg = document.getElementById('in_view_all_bg_color').value;
-        const viewAllText = document.getElementById('in_view_all_text_color').value;
-        const viewAllHoverBg = document.getElementById('in_view_all_hover_bg_color').value;
-        const viewAllHoverText = document.getElementById('in_view_all_hover_text_color').value;
+        var viewAllBg = document.getElementById('in_view_all_bg_color')?.value || '#000000';
+        var viewAllText = document.getElementById('in_view_all_text_color')?.value || '#ffffff';
+        var viewAllHoverBg = document.getElementById('in_view_all_hover_bg_color')?.value || '#333333';
+        var viewAllHoverText = document.getElementById('in_view_all_hover_text_color')?.value || '#ffffff';
 
         // Update Text
-        document.getElementById('prevHeading').innerText = headingText;
-        document.getElementById('prevTrendingTitle').innerText = trendingText;
-        document.getElementById('prevPopularTitle').innerText = popularText;
+        var prevHeading = document.getElementById('prevHeading');
+        if (prevHeading) prevHeading.innerText = headingText;
+        var prevTrendingTitle = document.getElementById('prevTrendingTitle');
+        if (prevTrendingTitle) prevTrendingTitle.innerText = trendingText;
+        var prevPopularTitle = document.getElementById('prevPopularTitle');
+        if (prevPopularTitle) prevPopularTitle.innerText = popularText;
 
         // Update Main Styles
-        document.getElementById('previewContainer').style.backgroundColor = overlayBg;
-        document.getElementById('prevOverlay').style.backgroundColor = overlayBg;
+        var previewContainer = document.getElementById('previewContainer');
+        if (previewContainer) previewContainer.style.backgroundColor = overlayBg;
+        var prevOverlay = document.getElementById('prevOverlay');
+        if (prevOverlay) prevOverlay.style.backgroundColor = overlayBg;
         
-        document.getElementById('prevHeading').style.color = headingColor;
-        document.getElementById('prevTrendingTitle').style.color = headingColor;
-        document.getElementById('prevPopularTitle').style.color = headingColor;
+        if (prevHeading) prevHeading.style.color = headingColor;
+        if (prevTrendingTitle) prevTrendingTitle.style.color = headingColor;
+        if (prevPopularTitle) prevPopularTitle.style.color = headingColor;
         
-        document.getElementById('prevInput').style.color = inputTextBoxColor;
-        document.getElementById('prevSearchIcon').style.color = generalTextColor;
+        var prevInput = document.getElementById('prevInput');
+        if (prevInput) prevInput.style.color = inputTextBoxColor;
+        var prevSearchIcon = document.getElementById('prevSearchIcon');
+        if (prevSearchIcon) prevSearchIcon.style.color = generalTextColor;
 
         // Update Tags
-        const tags = document.querySelectorAll('.prevTrendingTag');
+        var tags = document.querySelectorAll('.prevTrendingTag');
         tags.forEach(tag => {
             tag.style.color = generalTextColor;
             tag.style.borderColor = generalTextColor + '44';
         });
 
         // Update Cards
-        const cards = document.querySelectorAll('.prevProductCard');
+        var cards = document.querySelectorAll('.prevProductCard');
         cards.forEach(card => {
             card.style.backgroundColor = cardBg;
             card.style.borderColor = cardBorder;
-            card.querySelector('.prevCardName').style.color = cardHeadingColor;
-            card.querySelector('.prevCardSalePrice').style.color = cardSalePriceColor;
-            card.querySelector('.prevCardComparePrice').style.color = cardComparePriceColor;
+            var cName = card.querySelector('.prevCardName');
+            if (cName) cName.style.color = cardHeadingColor;
+            var cSale = card.querySelector('.prevCardSalePrice');
+            if (cSale) cSale.style.color = cardSalePriceColor;
+            var cComp = card.querySelector('.prevCardComparePrice');
+            if (cComp) cComp.style.color = cardComparePriceColor;
         });
 
         // Update View All Button
-        const viewAllBtn = document.getElementById('prevViewAllBtn');
-        viewAllBtn.style.backgroundColor = viewAllBg;
-        viewAllBtn.style.color = viewAllText;
-        
-        viewAllBtn.onmouseenter = () => {
-            viewAllBtn.style.backgroundColor = viewAllHoverBg;
-            viewAllBtn.style.color = viewAllHoverText;
-        };
-        viewAllBtn.onmouseleave = () => {
+        var viewAllBtn = document.getElementById('prevViewAllBtn');
+        if (viewAllBtn) {
             viewAllBtn.style.backgroundColor = viewAllBg;
             viewAllBtn.style.color = viewAllText;
-        };
+            
+            viewAllBtn.onmouseenter = () => {
+                viewAllBtn.style.backgroundColor = viewAllHoverBg;
+                viewAllBtn.style.color = viewAllHoverText;
+            };
+            viewAllBtn.onmouseleave = () => {
+                viewAllBtn.style.backgroundColor = viewAllBg;
+                viewAllBtn.style.color = viewAllText;
+            };
+        }
 
         // Update Hex Labels
         document.querySelectorAll('.hex-label').forEach(label => {
-            const pickerId = label.getAttribute('data-hex-for');
-            const picker = document.getElementById(pickerId);
+            var pickerId = label.getAttribute('data-hex-for');
+            var picker = document.getElementById(pickerId);
             if (picker) {
                 label.innerText = picker.value.toUpperCase();
             }
         });
-    }
+    };
 
     // AJAX Form Submission
-    form.addEventListener('submit', function(e) {
-        e.preventDefault();
-        
-        // Add loading state
-        const originalText = saveBtn.querySelector('span').innerText;
-        saveBtn.disabled = true;
-        saveBtn.classList.add('opacity-75', 'cursor-not-allowed');
-        saveBtn.querySelector('i').className = 'fas fa-spinner fa-spin';
-        saveBtn.querySelector('span').innerText = 'Saving...';
+    if (form) {
+        form.addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            if (!saveBtn) return;
+            // Add loading state
+            var span = saveBtn.querySelector('span');
+            var originalText = span ? span.innerText : 'Save Changes';
+            saveBtn.disabled = true;
+            saveBtn.classList.add('opacity-75', 'cursor-not-allowed');
+            var icon = saveBtn.querySelector('i');
+            if (icon) icon.className = 'fas fa-spinner fa-spin';
+            if (span) span.innerText = 'Saving...';
 
-        const formData = new FormData(this);
+            var formData = new FormData(this);
 
-        fetch(window.location.href, {
-            method: 'POST',
-            body: formData
-        })
-        .then(response => response.json())
-        .then(data => {
-            showNotification(data.success, data.message);
-        })
-        .catch(error => {
-            console.error('Error:', error);
-            showNotification(false, 'An error occurred while saving.');
-        })
-        .finally(() => {
-            // Restore button
-            saveBtn.disabled = false;
-            saveBtn.classList.remove('opacity-75', 'cursor-not-allowed');
-            saveBtn.querySelector('i').className = 'fas fa-save';
-            saveBtn.querySelector('span').innerText = originalText;
+            fetch(window.location.href, {
+                method: 'POST',
+                body: formData
+            })
+            .then(response => response.json())
+            .then(data => {
+                window.showSearchNotification(data.success, data.message);
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                window.showSearchNotification(false, 'An error occurred while saving.');
+            })
+            .finally(() => {
+                // Restore button
+                saveBtn.disabled = false;
+                saveBtn.classList.remove('opacity-75', 'cursor-not-allowed');
+                if (icon) icon.className = 'fas fa-save';
+                if (span) span.innerText = originalText;
+            });
         });
-    });
 
-    // Attach events for real-time preview
-    form.querySelectorAll('input').forEach(input => {
-        input.addEventListener('input', updateLivePreview);
-    });
+        // Attach events for real-time preview
+        form.querySelectorAll('input').forEach(input => {
+            input.addEventListener('input', window.updateSearchLivePreview);
+        });
+    }
 
     // Initial trigger
-    updateLivePreview();
-});
+    window.updateSearchLivePreview();
+};
+
+window.initSearchStyling();
 </script>
 
 <?php require_once __DIR__ . '/../includes/admin-footer.php'; ?>

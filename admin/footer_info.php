@@ -428,152 +428,123 @@ require_once __DIR__ . '/../includes/admin-header.php';
                     </div>
                 </div>
             </template>
-        </div>
+    <script>
+    window.initFooterJS = function() {
+        // Initializing
         
-        </div>
-    </div>
-</form>
-
-
-
-<script>
-window.toggleLogoFields = function(type) {
-    if (type === 'text') {
-        document.getElementById('textLogoField').classList.remove('hidden');
-        document.getElementById('imageLogoField').classList.add('hidden');
-    } else {
-        document.getElementById('textLogoField').classList.add('hidden');
-        document.getElementById('imageLogoField').classList.remove('hidden');
-    }
-};
-
-window.previewFooterLogo = function(input) {
-    if (input.files && input.files[0]) {
-        var reader = new FileReader();
-        reader.onload = function(e) {
-            const img = document.getElementById('footerLogoPreview');
-            const placeholder = document.getElementById('footerLogoPlaceholder');
-            
-            if (img) {
-                img.src = e.target.result;
-                img.classList.remove('hidden');
+        window.toggleLogoFields = function(type) {
+            if (type === 'text') {
+                document.getElementById('textLogoField').classList.remove('hidden');
+                document.getElementById('imageLogoField').classList.add('hidden');
+            } else {
+                document.getElementById('textLogoField').classList.add('hidden');
+                document.getElementById('imageLogoField').classList.remove('hidden');
             }
-            if (placeholder) {
-                placeholder.classList.add('hidden');
+        };
+
+        window.previewFooterLogo = function(input) {
+            if (input.files && input.files[0]) {
+                var reader = new FileReader();
+                reader.onload = function(e) {
+                    const img = document.getElementById('footerLogoPreview');
+                    const placeholder = document.getElementById('footerLogoPlaceholder');
+                    if (img) {
+                        img.src = e.target.result;
+                        img.classList.remove('hidden');
+                    }
+                    if (placeholder) placeholder.classList.add('hidden');
+                }
+                reader.readAsDataURL(input.files[0]);
             }
+        };
+
+        // Social Media & Payment Icons
+        var sData = <?php echo !empty($settings['footer_social_json']) ? $settings['footer_social_json'] : '[]'; ?>;
+        var pData = <?php echo !empty($settings['footer_payment_icons_json']) ? $settings['footer_payment_icons_json'] : '[]'; ?>;
+
+        window.addSocialRow = function(data = null) {
+            var container = document.getElementById('socialLinksContainer');
+            var template = document.getElementById('socialRowTemplate');
+            if (container && template) {
+                var clone = template.content.cloneNode(true);
+                if (data) {
+                    clone.querySelector('select').value = data.icon;
+                    clone.querySelector('input').value = data.url;
+                }
+                container.appendChild(clone);
+            }
+        };
+
+        window.addPaymentRow = function(data = null) {
+            var container = document.getElementById('paymentIconsContainer');
+            var template = document.getElementById('paymentRowTemplate');
+            if (container && template) {
+                var clone = template.content.cloneNode(true);
+                if (data) {
+                    clone.querySelector('input').value = data.name;
+                    clone.querySelector('textarea').value = data.svg;
+                    clone.querySelector('.svg-preview').innerHTML = data.svg;
+                }
+                var textarea = clone.querySelector('textarea');
+                textarea.addEventListener('input', function() {
+                    var previewDiv = this.closest('.payment-row').querySelector('.svg-preview');
+                    previewDiv.innerHTML = this.value || '<span class="text-xs text-gray-400">Preview</span>';
+                });
+                container.appendChild(clone);
+            }
+        };
+
+        window.removeRow = function(btn) {
+            var row = btn.closest('.social-row, .payment-row');
+            if (row) row.remove();
+        };
+
+        // Re-init Rows
+        var sCont = document.getElementById('socialLinksContainer');
+        var pCont = document.getElementById('paymentIconsContainer');
+        if (sCont) sCont.innerHTML = '';
+        if (pCont) pCont.innerHTML = '';
+
+        if (sData && sData.length > 0) sData.forEach(item => window.addSocialRow(item));
+        else window.addSocialRow();
+
+        if (pData && pData.length > 0) pData.forEach(item => window.addPaymentRow(item));
+
+        // Form Submission Logic
+        var form = document.getElementById('footerForm');
+        if (form && !form.dataset.encodedAttached) {
+            form.dataset.encodedAttached = "true";
+            form.addEventListener('submit', function(e) {
+                if (typeof tinymce !== 'undefined') tinymce.triggerSave();
+                var toBase64 = (str) => btoa(unescape(encodeURIComponent(str)));
+                var sensitiveFields = ['footer_description'];
+                sensitiveFields.forEach(name => {
+                    var els = document.getElementsByName(name);
+                    if (els && els.length > 0) {
+                        var el = els[0];
+                        var hidden = document.createElement('input');
+                        hidden.type = 'hidden';
+                        hidden.name = 'encoded_' + name;
+                        hidden.value = toBase64(el.value);
+                        form.appendChild(hidden);
+                        el.removeAttribute('name');
+                    }
+                });
+                var svgs = document.getElementsByName('payment_svgs[]');
+                Array.from(svgs).forEach(el => {
+                    var hidden = document.createElement('input');
+                    hidden.type = 'hidden';
+                    hidden.name = 'encoded_payment_svgs[]';
+                    hidden.value = toBase64(el.value);
+                    form.appendChild(hidden);
+                    el.removeAttribute('name');
+                });
+            });
         }
-        reader.readAsDataURL(input.files[0]);
-    }
-};
-
-// Social Media Dynamic Rows
-const socialData = <?php echo $settings['footer_social_json']; ?>;
-
-window.addSocialRow = function(data = null) {
-    const container = document.getElementById('socialLinksContainer');
-    const template = document.getElementById('socialRowTemplate');
-    const clone = template.content.cloneNode(true);
-    
-    if (data) {
-        clone.querySelector('select').value = data.icon;
-        clone.querySelector('input').value = data.url;
-    }
-    
-    container.appendChild(clone);
-};
-
-// Payment Icons Dynamic Rows
-const paymentData = <?php echo $settings['footer_payment_icons_json']; ?>;
-
-window.addPaymentRow = function(data = null) {
-    const container = document.getElementById('paymentIconsContainer');
-    const template = document.getElementById('paymentRowTemplate');
-    const clone = template.content.cloneNode(true);
-    
-    if (data) {
-        clone.querySelector('input').value = data.name;
-        clone.querySelector('textarea').value = data.svg;
-        clone.querySelector('.svg-preview').innerHTML = data.svg;
-    }
-    
-    // Add real-time preview listener to the newly added textarea
-    const textarea = clone.querySelector('textarea');
-    textarea.addEventListener('input', function() {
-        const previewDiv = this.closest('.payment-row').querySelector('.svg-preview');
-        previewDiv.innerHTML = this.value || '<span class="text-xs text-gray-400">Preview</span>';
-    });
-    
-    container.appendChild(clone);
-};
-
-window.removeRow = function(btn) {
-    btn.closest('.social-row, .payment-row').remove();
-};
-
-// Init social links
-if (socialData && socialData.length > 0) {
-    socialData.forEach(item => addSocialRow(item));
-} else {
-    addSocialRow();
-}
-
-// Init payment icons
-if (paymentData && paymentData.length > 0) {
-    paymentData.forEach(item => addPaymentRow(item));
-} else {
-    // If no dynamic icons saved, we'll keep it empty for now.
-    // The user will add them.
-}
-
-
-
-// Encode sensitive fields before submission to prevent WAF blocking
-document.getElementById('footerForm').addEventListener('submit', function(e) {
-    const form = this;
-    
-    // Sync TinyMCE and Handle Content
-    if (typeof tinymce !== 'undefined') {
-        tinymce.triggerSave();
-    }
-    
-    // Helper to safely encode to Base64 (supporting UTF-8)
-    const toBase64 = (str) => btoa(unescape(encodeURIComponent(str)));
-    
-    const sensitiveFields = ['footer_description'];
-    
-    sensitiveFields.forEach(name => {
-        const els = document.getElementsByName(name);
-        if (els && els.length > 0) {
-            const el = els[0];
-            const hidden = document.createElement('input');
-            hidden.type = 'hidden';
-            hidden.name = 'encoded_' + name;
-            hidden.value = toBase64(el.value);
-            form.appendChild(hidden);
-            
-            // Remove name attribute right before submission to prevent WAF block
-            el.removeAttribute('name');
-        }
-    });
-
-    // 2. Handle SVGs
-    const svgs = document.getElementsByName('payment_svgs[]');
-    if (svgs && svgs.length > 0) {
-        const svgArray = Array.from(svgs);
-        svgArray.forEach(el => {
-            const hidden = document.createElement('input');
-            hidden.type = 'hidden';
-            hidden.name = 'encoded_payment_svgs[]';
-            hidden.value = toBase64(el.value);
-            form.appendChild(hidden);
-            
-            // Remove name attribute right before submission
-            el.removeAttribute('name');
-        });
-    }
-});
-</script>
+        // Initialized
+    };
+    window.initFooterJS();
+    </script>
+</div>
 
 <?php require_once __DIR__ . '/../includes/admin-footer.php'; ?>
-</body>
-</html>

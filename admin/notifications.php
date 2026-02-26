@@ -308,40 +308,51 @@ function renderNotificationsHtml($notifications, $totalPages, $page, $filter) {
 ?>
 
 <script>
-document.addEventListener('DOMContentLoaded', function() {
-    const container = document.getElementById('notifications-container');
-    
-    // Use body delegate
-    document.body.addEventListener('click', function(e) {
-        const link = e.target.closest('a.ajax-link');
-        if (link) {
-            e.preventDefault();
-            loadNotifications(link.href);
-        }
-    });
+window.initNotifications = function() {
+    var container = document.getElementById('notifications-container');
+    if (!container) return;
 
-    function loadNotifications(url) {
-        const fetchUrl = new URL(url);
+    // Remove old listeners to prevent duplicates
+    if (window.notificationsClickHandler) {
+        document.body.removeEventListener('click', window.notificationsClickHandler);
+    }
+
+    window.notificationsClickHandler = function(e) {
+        var link = e.target.closest('a.ajax-link');
+        if (link && link.classList.contains('pagination-link')) {
+            e.preventDefault();
+            window.loadNotifications(link.href);
+        }
+    };
+    document.body.addEventListener('click', window.notificationsClickHandler);
+
+    window.loadNotifications = function(url) {
+        var fetchUrl = new URL(url);
         fetchUrl.searchParams.set('ajax', '1');
         
-        container.style.opacity = '0.5';
+        var notifyContainer = document.getElementById('notifications-container');
+        if (notifyContainer) notifyContainer.style.opacity = '0.5';
         
         fetch(fetchUrl)
             .then(response => response.text())
             .then(html => {
-                container.innerHTML = html;
-                container.style.opacity = '1';
+                var newContainer = document.getElementById('notifications-container');
+                if (newContainer) {
+                    newContainer.innerHTML = html;
+                    newContainer.style.opacity = '1';
+                }
                 
                 window.history.pushState({}, '', url);
-                updateFilterStyles(new URL(url).searchParams.get('filter') || 'all');
+                window.updateNotificationFilterStyles(new URL(url).searchParams.get('filter') || 'all');
             })
             .catch(err => {
                 console.error('Error:', err);
-                container.style.opacity = '1';
+                var errContainer = document.getElementById('notifications-container');
+                if (errContainer) errContainer.style.opacity = '1';
             });
-    }
+    };
 
-    function updateFilterStyles(activeFilter) {
+    window.updateNotificationFilterStyles = function(activeFilter) {
         document.querySelectorAll('.filter-btn').forEach(btn => {
             if (btn.dataset.filter === activeFilter) {
                 btn.classList.remove('bg-white', 'text-gray-700', 'hover:bg-gray-50');
@@ -351,67 +362,65 @@ document.addEventListener('DOMContentLoaded', function() {
                  btn.classList.remove('bg-blue-600', 'text-white');
             }
         });
-    }
-    
-    window.addEventListener('popstate', function() {
-        location.reload(); 
-    });
-});
+    };
+};
 
-async function handleAjaxForm(e, form) {
-    e.preventDefault();
-    const btn = form.querySelector('button[type="submit"]');
-    let originalText = '';
+window.handleAjaxForm = async function(e, form) {
+    if (e) e.preventDefault();
+    var btn = form.querySelector('button[type="submit"]');
+    var originalText = '';
     
     if (btn) {
         originalText = btn.innerHTML;
-        btn.disabled = true;
-        // Keep icon if exist
-        if(btn.querySelector('i')) {
-             // btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i>';
-        }
+        if (window.setBtnLoading) window.setBtnLoading(btn, true);
+        else btn.disabled = true;
     }
     
-    const formData = new FormData(form);
+    var formData = new FormData(form);
     formData.append('ajax', '1');
     
     try {
-        const response = await fetch(window.location.href, {
+        var response = await fetch(window.location.href, {
             method: 'POST',
-            body: formData
+            body: formData,
+            headers: {
+                'X-Requested-With': 'XMLHttpRequest'
+            }
         });
-        const data = await response.json();
+        var data = await response.json();
         
         if (data.success) {
-            document.getElementById('notifications-container').innerHTML = data.html;
+            var contentContainer = document.getElementById('notifications-container');
+            if (contentContainer) contentContainer.innerHTML = data.html;
             
             // Update Unread Count
-            const unreadDisplay = document.getElementById('unread-count-display');
+            var unreadDisplay = document.getElementById('unread-count-display');
             if (unreadDisplay) {
                 unreadDisplay.innerText = data.unreadCount + " unread notification" + (data.unreadCount !== 1 ? 's' : '');
             }
             
             // Hide Mark All button if 0
-            const markAllContainer = document.getElementById('mark-all-read-container');
+            var markAllContainer = document.getElementById('mark-all-read-container');
             if (markAllContainer && data.unreadCount === 0) {
                 markAllContainer.style.display = 'none';
             }
             
-            // Show notification
-            if (typeof showNotification === 'function') {
-                 showNotification('success', data.message);
-            }
+            // Show notification if helper exists
+            if (window.showToast) window.showToast(data.message, 'success');
         }
     } catch (err) {
         console.error(err);
     } finally {
-         if (btn && document.contains(btn)) {
-            btn.disabled = false;
-            // btn.innerHTML = originalText; 
+        if (btn) {
+           if (window.setBtnLoading) window.setBtnLoading(btn, false);
+           else btn.disabled = false;
         }
     }
     return false;
-}
+};
+
+// Initialize
+window.initNotifications();
 </script>
 
 <?php require_once __DIR__ . '/../includes/admin-footer.php'; ?>

@@ -566,16 +566,11 @@ require_once __DIR__ . '/../includes/admin-header.php';
 
 <script>
     // --- Drag and Drop Logic ---
-    let draggedVideo = null;
+    var draggedVideo = null;
 
-    document.addEventListener('DOMContentLoaded', function() {
-        const cards = document.querySelectorAll('.video-card');
-        cards.forEach(card => enableDragAndDrop(card));
-    });
-
-    function enableDragAndDrop(card) {
+    window.enableDragAndDrop = function(card) {
         card.setAttribute('draggable', 'true');
-        const handle = card.querySelector('.drag-handle');
+        var handle = card.querySelector('.drag-handle');
         
         card.addEventListener('dragstart', function(e) {
             draggedVideo = card;
@@ -598,73 +593,78 @@ require_once __DIR__ . '/../includes/admin-header.php';
             e.preventDefault();
             if (!draggedVideo || draggedVideo === card) return;
 
-            const container = document.getElementById('videoContainer');
-            const allCards = Array.from(container.querySelectorAll('.video-card'));
-            const fromIndex = allCards.indexOf(draggedVideo);
-            const toIndex = allCards.indexOf(card);
+            var container = document.getElementById('videoContainer');
+            if (container) {
+                var allCards = Array.from(container.querySelectorAll('.video-card'));
+                var fromIndex = allCards.indexOf(draggedVideo);
+                var toIndex = allCards.indexOf(card);
 
-            if (fromIndex < toIndex) {
-                container.insertBefore(draggedVideo, card.nextSibling);
-            } else {
-                container.insertBefore(draggedVideo, card);
+                if (fromIndex < toIndex) {
+                    container.insertBefore(draggedVideo, card.nextSibling);
+                } else {
+                    container.insertBefore(draggedVideo, card);
+                }
+                
+                window.updateItemLabels();
             }
-            
-            updateItemLabels();
         });
-    }
+    };
 
-    function updateItemLabels() {
-        const cards = document.querySelectorAll('.video-card');
+    window.updateItemLabels = function() {
+        var cards = document.querySelectorAll('.video-card');
         cards.forEach((card, index) => {
-            const title = card.querySelector('.drag-handle');
+            var title = card.querySelector('.drag-handle');
             if(title) {
                 title.innerHTML = `<i class="fas fa-grip-vertical mr-2 text-gray-400"></i> Item ${index + 1}`;
             }
         });
-    }
+    };
 
-    function addVideoRow() {
-        const container = document.getElementById('videoContainer');
-        const template = document.getElementById('rowTemplate');
-        const clone = template.content.cloneNode(true);
+    window.addVideoRow = function() {
+        var container = document.getElementById('videoContainer');
+        var template = document.getElementById('rowTemplate');
+        if (!container || !template) return;
+
+        var clone = template.content.cloneNode(true);
         container.appendChild(clone);
         
-        const newCard = container.lastElementChild;
-        enableDragAndDrop(newCard); 
+        var newCard = container.lastElementChild;
+        window.enableDragAndDrop(newCard); 
         
-        const emptyMsg = document.getElementById('emptyMsg');
+        var emptyMsg = document.getElementById('emptyMsg');
         if(emptyMsg) emptyMsg.style.display = 'none';
         
-        updateItemLabels();
-        newCard.scrollIntoView({ behavior: 'smooth' });
-    }
+        window.updateItemLabels();
+    };
 
-    function removeCard(btn) {
-        const card = btn.closest('.video-card');
-        const container = card.parentNode;
+    window.removeCard = function(btn) {
+        var card = btn.closest('.video-card');
+        if (!card) return;
+        var container = card.parentNode;
         card.remove();
         
-        updateItemLabels();
+        window.updateItemLabels();
 
-        const emptyMsg = document.getElementById('emptyMsg');
-        if (container.querySelectorAll('.video-card').length === 0 && emptyMsg) {
+        var emptyMsg = document.getElementById('emptyMsg');
+        if (container && container.querySelectorAll('.video-card').length === 0 && emptyMsg) {
             emptyMsg.style.display = 'block';
         }
-    }
+    };
     
-    function triggerFileClick(div, event) {
-        if (event.target.tagName === 'INPUT') return;
-        const input = div.querySelector('input[type="file"]');
+    window.triggerFileClick = function(div, event) {
+        if (event && event.target && event.target.tagName === 'INPUT') return;
+        var input = div.querySelector('input[type="file"]');
         if(input) input.click();
-    }
+    };
     
-    function previewImageFile(input) {
+    window.previewImageFile = function(input) {
         if (input.files && input.files[0]) {
-            const container = input.closest('div'); 
-            const img = container.querySelector('.preview-img');
-            const placeholder = container.querySelector('.placeholder-box');
+            var container = input.closest('div'); 
+            if (!container) return;
+            var img = container.querySelector('.preview-img');
+            var placeholder = container.querySelector('.placeholder-box');
             
-            const reader = new FileReader();
+            var reader = new FileReader();
             reader.onload = function(e) {
                 if (img) {
                     img.src = e.target.result;
@@ -676,15 +676,16 @@ require_once __DIR__ . '/../includes/admin-header.php';
             }
             reader.readAsDataURL(input.files[0]);
         }
-    }
+    };
     
-    function previewVideoFile(input) {
+    window.previewVideoFile = function(input) {
         if (input.files && input.files[0]) {
-            const container = input.closest('div');
-            const video = container.querySelector('.preview-video');
-            const placeholder = container.querySelector('.placeholder-box');
+            var container = input.closest('div');
+            if (!container) return;
+            var video = container.querySelector('.preview-video');
+            var placeholder = container.querySelector('.placeholder-box');
             
-            const url = URL.createObjectURL(input.files[0]);
+            var url = URL.createObjectURL(input.files[0]);
             
             if (video) {
                 video.src = url;
@@ -695,7 +696,13 @@ require_once __DIR__ . '/../includes/admin-header.php';
                 placeholder.classList.add('hidden');
             }
         }
-    }
+    };
+
+    // Initial load
+    (function() {
+        var cards = document.querySelectorAll('.video-card');
+        cards.forEach(card => window.enableDragAndDrop(card));
+    })();
 </script>
 
 <?php require_once __DIR__ . '/../includes/admin-footer.php'; ?>

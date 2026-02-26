@@ -240,9 +240,9 @@ require_once __DIR__ . '/../includes/admin-header.php';
 </div>
 
 <script>
-(function() {
-    const container = document.getElementById('ajax-content-inner') || document;
-    const inputs = {
+window.initCollectionSettings = function() {
+    var container = document.getElementById('ajax-content-inner') || document;
+    var inputs = {
         heading: container.querySelector('input[name="heading"]'),
         subheading: container.querySelector('textarea[name="subheading"]'),
         headingColor: container.querySelector('input[name="heading_color"]'),
@@ -254,7 +254,7 @@ require_once __DIR__ . '/../includes/admin-header.php';
         btnHoverText: container.querySelector('input[name="btn_hover_text_color"]')
     };
 
-    const preview = {
+    var preview = {
         heading: document.getElementById('prevHeading'),
         subheading: document.getElementById('prevSubheading'),
         container: document.getElementById('collectionsPreview'),
@@ -262,12 +262,12 @@ require_once __DIR__ . '/../includes/admin-header.php';
         hoverStyles: document.getElementById('previewHoverStyles')
     };
 
-    function updatePreview() {
-        if (preview.heading) preview.heading.textContent = inputs.heading.value;
-        if (preview.subheading) preview.subheading.textContent = inputs.subheading.value;
-        if (preview.heading) preview.heading.style.color = inputs.headingColor.value;
-        if (preview.subheading) preview.subheading.style.color = inputs.subheadingColor.value;
-        if (preview.container) preview.container.style.backgroundColor = inputs.pageBg.value;
+    window.updateCollectionPreview = function() {
+        if (preview.heading && inputs.heading) preview.heading.textContent = inputs.heading.value;
+        if (preview.subheading && inputs.subheading) preview.subheading.textContent = inputs.subheading.value;
+        if (preview.heading && inputs.headingColor) preview.heading.style.color = inputs.headingColor.value;
+        if (preview.subheading && inputs.subheadingColor) preview.subheading.style.color = inputs.subheadingColor.value;
+        if (preview.container && inputs.pageBg) preview.container.style.backgroundColor = inputs.pageBg.value;
         
         preview.btns.forEach(btn => {
             btn.style.backgroundColor = inputs.btnBg.value;
@@ -282,19 +282,21 @@ require_once __DIR__ . '/../includes/admin-header.php';
                 }
             `;
         }
-    }
+    };
 
     Object.values(inputs).forEach(input => {
         if (input) {
-            input.addEventListener('input', updatePreview);
+            input.addEventListener('input', window.updateCollectionPreview);
             if(input.nextElementSibling && input.nextElementSibling.tagName === 'INPUT') {
-                input.nextElementSibling.addEventListener('input', updatePreview);
+                input.nextElementSibling.addEventListener('input', window.updateCollectionPreview);
             }
         }
     });
 
-    updatePreview();
-})();
+    window.updateCollectionPreview();
+};
+
+window.initCollectionSettings();
 </script>
 
 <?php require_once __DIR__ . '/../includes/admin-footer.php'; ?>

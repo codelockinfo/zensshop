@@ -103,7 +103,7 @@ require_once __DIR__ . '/../includes/admin-header.php';
         </div>
     <?php endif; ?>
 
-    <form method="POST" class="bg-white p-6 rounded shadow-md max-w-4xl max-w-full">
+    <form method="POST" class="bg-white p-6 rounded shadow-md w-full max-w-full">
         
         <div class="flex justify-between items-center mb-6 border-b pb-4">
             <h3 class="font-bold text-xl text-gray-700">Content Settings</h3>

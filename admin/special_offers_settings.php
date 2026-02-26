@@ -381,7 +381,6 @@ $s_button_hover_text = $savedStyles['button_hover_text'] ?? '#000000';
         </div>
     </div>
     </form>
-    </div>
 
     <!-- Offers List -->
     <div class="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden">
@@ -434,7 +433,6 @@ $s_button_hover_text = $savedStyles['button_hover_text'] ?? '#000000';
             </tbody>
         </table>
     </div>
-</div>
 
 <!-- Add/Edit Modal -->
 <div id="offerModal" class="fixed inset-0 bg-gray-600 bg-opacity-50 hidden overflow-y-auto h-full w-full z-50">
@@ -497,68 +495,80 @@ $s_button_hover_text = $savedStyles['button_hover_text'] ?? '#000000';
             </div>
         </form>
     </div>
+    <script>
+    window.allOffers = <?php echo json_encode($offers); ?>;
+    window.baseUrl = '<?php echo $baseUrl; ?>';
+
+    window.openModal = function() {
+        var form = document.getElementById('offerForm');
+        if (form) form.reset();
+        var idInput = document.getElementById('offerId');
+        if (idInput) idInput.value = '';
+        var title = document.getElementById('modalTitle');
+        if (title) title.innerText = 'Add New Offer';
+        
+        var previewImg = document.getElementById('previewImg');
+        var placeholderImg = document.getElementById('placeholderImg');
+        if (previewImg) {
+            previewImg.src = '';
+            previewImg.classList.add('hidden');
+        }
+        if (placeholderImg) placeholderImg.classList.remove('hidden');
+        
+        var modal = document.getElementById('offerModal');
+        if (modal) modal.classList.remove('hidden');
+    };
+
+    window.closeModal = function() {
+        var modal = document.getElementById('offerModal');
+        if (modal) modal.classList.add('hidden');
+    };
+
+    window.editOffer = function(offer) {
+        window.openModal();
+        var title = document.getElementById('modalTitle');
+        if (title) title.innerText = 'Edit Offer';
+        document.getElementById('offerId').value = offer.id;
+        document.getElementById('offerTitle').value = offer.title;
+        document.getElementById('offerButtonText').value = offer.button_text;
+        document.getElementById('offerLink').value = offer.link;
+        document.getElementById('offerOrder').value = offer.display_order;
+        document.getElementById('offerActive').checked = offer.active == 1;
+        
+        if (offer.image) {
+            var img = document.getElementById('previewImg');
+            var placeholder = document.getElementById('placeholderImg');
+            var src = offer.image;
+            if (!src.startsWith('http')) src = window.baseUrl + '/' + src;
+            if (img) {
+                img.src = src;
+                img.classList.remove('hidden');
+            }
+            if (placeholder) placeholder.classList.add('hidden');
+        }
+    };
+
+    window.previewImage = function(input, imgId, placeholderId) {
+        if (input.files && input.files[0]) {
+            var reader = new FileReader();
+            reader.onload = function(e) {
+                var img = document.getElementById(imgId);
+                var placeholder = document.getElementById(placeholderId);
+                if (img) {
+                    img.src = e.target.result;
+                    img.classList.remove('hidden');
+                }
+                if (placeholder) placeholder.classList.add('hidden');
+            }
+            reader.readAsDataURL(input.files[0]);
+        }
+    };
+
+    window.initOffersJS = function() {
+        // Initialized
+    };
+    window.initOffersJS();
+    </script>
 </div>
-
-<script>
-const allOffers = <?php echo json_encode($offers); ?>;
-const baseUrl = '<?php echo $baseUrl; ?>';
-
-function openModal() {
-    document.getElementById('offerForm').reset();
-    document.getElementById('offerId').value = '';
-    document.getElementById('modalTitle').innerText = 'Add New Offer';
-    
-    // Reset Preview
-    document.getElementById('previewImg').src = '';
-    document.getElementById('previewImg').classList.add('hidden');
-    document.getElementById('placeholderImg').classList.remove('hidden');
-    
-    document.getElementById('offerModal').classList.remove('hidden');
-}
-
-function closeModal() {
-    document.getElementById('offerModal').classList.add('hidden');
-}
-
-function editOffer(offer) {
-    openModal();
-    document.getElementById('modalTitle').innerText = 'Edit Offer';
-    document.getElementById('offerId').value = offer.id;
-    document.getElementById('offerTitle').value = offer.title;
-    document.getElementById('offerButtonText').value = offer.button_text;
-    document.getElementById('offerLink').value = offer.link;
-    document.getElementById('offerOrder').value = offer.display_order;
-    document.getElementById('offerActive').checked = offer.active == 1;
-    
-    if (offer.image) {
-        const img = document.getElementById('previewImg');
-        const placeholder = document.getElementById('placeholderImg');
-        
-        let src = offer.image;
-        if (!src.startsWith('http')) {
-            src = baseUrl + '/' + src;
-        }
-        
-        img.src = src;
-        img.classList.remove('hidden');
-        placeholder.classList.add('hidden');
-    }
-}
-
-function previewImage(input, imgId, placeholderId) {
-    if (input.files && input.files[0]) {
-        var reader = new FileReader();
-        reader.onload = function(e) {
-            const img = document.getElementById(imgId);
-            const placeholder = document.getElementById(placeholderId);
-            
-            img.src = e.target.result;
-            img.classList.remove('hidden');
-            placeholder.classList.add('hidden');
-        }
-        reader.readAsDataURL(input.files[0]);
-    }
-}
-</script>
-
+</div>
 <?php require_once __DIR__ . '/../includes/admin-footer.php'; ?>

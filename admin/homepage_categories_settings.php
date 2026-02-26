@@ -457,28 +457,31 @@ $validCategories = $db->fetchAll("SELECT id, name, slug FROM categories WHERE st
 </template>
 
 <script>
-function addRow() {
-    const template = document.getElementById('rowTemplate');
-    const tbody = document.getElementById('tableBody');
-    const emptyMsg = document.getElementById('emptyMessage');
+window.addRow = function() {
+    var template = document.getElementById('rowTemplate');
+    var tbody = document.getElementById('tableBody');
+    var emptyMsg = document.getElementById('emptyMessage');
     
     if (emptyMsg) emptyMsg.style.display = 'none';
     
-    const clone = template.content.cloneNode(true);
-    tbody.appendChild(clone);
-}
+    if (template && tbody) {
+        var clone = template.content.cloneNode(true);
+        tbody.appendChild(clone);
+    }
+};
 
-function removeRow(btn) {
-    btn.closest('tr').remove();
-}
+window.removeRow = function(btn) {
+    var row = btn.closest('tr');
+    if (row) row.remove();
+};
 
-function previewImage(input) {
+window.previewImage = function(input) {
     if (input.files && input.files[0]) {
         var reader = new FileReader();
         reader.onload = function(e) {
-            const wrapper = input.parentElement;
-            const img = wrapper.querySelector('img');
-            const placeholder = wrapper.querySelector('.upload-placeholder');
+            var wrapper = input.parentElement;
+            var img = wrapper.querySelector('img');
+            var placeholder = wrapper.querySelector('.upload-placeholder');
             
             if (img) {
                 img.src = e.target.result;
@@ -490,55 +493,64 @@ function previewImage(input) {
         }
         reader.readAsDataURL(input.files[0]);
     }
-}
+};
 
-function updateLink(select) {
+window.updateLink = function(select) {
     // Skip if it's the default "-- Select --" option (index 0)
     if (select.selectedIndex === 0) return;
     
-    const slug = select.value;
-    const row = select.closest('tr');
+    var slug = select.value;
+    var row = select.closest('tr');
+    if (!row) return;
     
-    const linkInput = row.querySelector('input[name="link[]"]');
+    var linkInput = row.querySelector('input[name="link[]"]');
     if (linkInput) {
         linkInput.value = slug ? ('shop?category=' + slug) : '#';
     }
     
-    const titleInput = row.querySelector('input[name="title[]"]');
-    const selectedText = select.options[select.selectedIndex].text;
+    var titleInput = row.querySelector('input[name="title[]"]');
+    var selectedText = select.options[select.selectedIndex].text;
     if (titleInput) {
         titleInput.value = selectedText.trim();
     }
-}
+};
 
-function markForDeletion(btn, id) {
-    const row = btn.closest('tr');
+window.markForDeletion = function(btn, id) {
+    var row = btn.closest('tr');
+    if (!row) return;
+    
     row.style.opacity = '0.5';
     row.style.backgroundColor = '#fee2e2';
-    const input = document.createElement('input');
+    var input = document.createElement('input');
     input.type = 'hidden';
     input.name = 'delete_id[]';
     input.value = id;
     row.appendChild(input);
-    const inputs = row.querySelectorAll('input:not([type="hidden"][name="delete_id[]"])');
+    var inputs = row.querySelectorAll('input:not([type="hidden"][name="delete_id[]"])');
     inputs.forEach(input => input.disabled = true);
     btn.innerHTML = '<i class="fas fa-undo"></i>';
-    btn.onclick = function() { undoDeletion(this, id) };
+    btn.onclick = function() { window.undoDeletion(this, id) };
     btn.className = 'text-green-500 hover:text-green-700 transition';
-}
+};
 
-function undoDeletion(btn, id) {
-    const row = btn.closest('tr');
+window.undoDeletion = function(btn, id) {
+    var row = btn.closest('tr');
+    if (!row) return;
+    
     row.style.opacity = '1';
     row.style.backgroundColor = '';
-    const delInput = row.querySelector('input[name="delete_id[]"]');
+    var delInput = row.querySelector('input[name="delete_id[]"]');
     if (delInput) delInput.remove();
-    const inputs = row.querySelectorAll('input');
+    var inputs = row.querySelectorAll('input');
     inputs.forEach(input => input.disabled = false);
     btn.innerHTML = '<i class="fas fa-trash"></i>';
-    btn.onclick = function() { markForDeletion(this, id) };
+    btn.onclick = function() { window.markForDeletion(this, id) };
     btn.className = 'text-red-500 hover:text-red-700 transition';
-}
+};
+window.initCategoryJS = function() {
+    // Initialized
+};
+window.initCategoryJS();
 </script>
 
 <?php require_once __DIR__ . '/../includes/admin-footer.php'; ?>

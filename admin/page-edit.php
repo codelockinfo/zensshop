@@ -389,8 +389,8 @@ require_once __DIR__ . '/../includes/admin-header.php';
 
 <script>
 // Auto-slug generation
-const titleInput = document.getElementById('pageTitle');
-const slugInput = document.getElementById('pageSlug');
+var titleInput = document.getElementById('pageTitle');
+var slugInput = document.getElementById('pageSlug');
 
 if (titleInput && slugInput) {
     slugInput.addEventListener('input', function() {

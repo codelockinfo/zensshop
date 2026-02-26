@@ -449,10 +449,11 @@ require_once __DIR__ . '/../includes/admin-header.php';
 </div>
 
 <script>
-(function() {
-    const container = document.getElementById('ajax-content-inner') || document;
-    function updatePreview() {
-        const settings = {};
+window.initProductSettings = function() {
+    var container = document.getElementById('ajax-content-inner') || document;
+    
+    window.updateProductPreview = function() {
+        var settings = {};
         container.querySelectorAll('form input[name], form textarea[name], form select[name]').forEach(input => {
             if (input.type === 'checkbox') {
                 settings[input.name] = input.checked ? '1' : '0';
@@ -462,40 +463,40 @@ require_once __DIR__ . '/../includes/admin-header.php';
         });
 
         // High Level Styles
-        const previewEl = document.getElementById('productPreview');
+        var previewEl = document.getElementById('productPreview');
         if (previewEl) previewEl.style.backgroundColor = settings.page_bg_color;
         
         // Prices
-        const salePrice = document.getElementById('prevSalePrice');
+        var salePrice = document.getElementById('prevSalePrice');
         if (salePrice) salePrice.style.color = settings.sale_price_color;
         
-        const regPrice = document.getElementById('prevRegPrice');
+        var regPrice = document.getElementById('prevRegPrice');
         if (regPrice) regPrice.style.color = settings.reg_price_color;
 
         // Variants
-        const variantEl = document.getElementById('prevVariant');
+        var variantEl = document.getElementById('prevVariant');
         if (variantEl) {
             variantEl.style.backgroundColor = settings.variant_bg_color;
             variantEl.style.color = settings.variant_text_color;
         }
 
         // Buttons
-        const atcBtn = document.getElementById('prevAtcBtn');
+        var atcBtn = document.getElementById('prevAtcBtn');
         if (atcBtn) {
             atcBtn.style.backgroundColor = settings.atc_btn_color;
             atcBtn.style.color = settings.atc_btn_text_color;
         }
-        const buyNowBtn = document.getElementById('prevBuyNowBtn');
+        var buyNowBtn = document.getElementById('prevBuyNowBtn');
         if (buyNowBtn) {
             buyNowBtn.style.backgroundColor = settings.buy_now_btn_color;
             buyNowBtn.style.color = settings.buy_now_btn_text_color;
         }
 
         // Action Links
-        const actionLinks = document.getElementById('prevActionLinks');
+        var actionLinks = document.getElementById('prevActionLinks');
         if (actionLinks) actionLinks.style.color = settings.action_links_color;
 
-        const infoBox = document.getElementById('prevInfoBox');
+        var infoBox = document.getElementById('prevInfoBox');
         if (infoBox) {
             infoBox.style.backgroundColor = settings.info_box_bg_color;
             infoBox.style.color = settings.info_box_text_color;
@@ -506,31 +507,31 @@ require_once __DIR__ . '/../includes/admin-header.php';
         container.querySelectorAll('.prevBorder').forEach(el => el.style.borderColor = settings.border_color);
 
         // Stock Status
-        const stockStatus = document.getElementById('prevStockStatus');
+        var stockStatus = document.getElementById('prevStockStatus');
         if (stockStatus) stockStatus.style.color = settings.in_stock_color;
 
         // Visibility Toggles
-        const relSec = document.getElementById('prevRelatedSection');
+        var relSec = document.getElementById('prevRelatedSection');
         if (relSec) relSec.classList.toggle('hidden', settings.show_related !== '1');
         
-        const recSec = document.getElementById('prevRecentSection');
+        var recSec = document.getElementById('prevRecentSection');
         if (recSec) recSec.classList.toggle('hidden', settings.show_recent !== '1');
 
         // Texts
-        const relTitle = document.getElementById('prevRelatedTitle');
+        var relTitle = document.getElementById('prevRelatedTitle');
         if (relTitle) relTitle.textContent = settings.related_title;
         
-        const relSub = document.getElementById('prevRelatedSubtitle');
+        var relSub = document.getElementById('prevRelatedSubtitle');
         if (relSub) relSub.textContent = settings.related_subtitle;
         
-        const recTitle = document.getElementById('prevRecentTitle');
+        var recTitle = document.getElementById('prevRecentTitle');
         if (recTitle) recTitle.textContent = settings.recent_title;
         
-        const recSub = document.getElementById('prevRecentSubtitle');
+        var recSub = document.getElementById('prevRecentSubtitle');
         if (recSub) recSub.textContent = settings.recent_subtitle;
 
         // Hove Styles
-        const styleTag = document.getElementById('previewStyles');
+        var styleTag = document.getElementById('previewStyles');
         if (styleTag) {
             styleTag.innerHTML = `
                 #prevAtcBtn:hover {
@@ -546,23 +547,23 @@ require_once __DIR__ . '/../includes/admin-header.php';
                 }
             `;
         }
-    }
+    };
 
     // Attach listeners
     container.querySelectorAll('input, select, textarea').forEach(input => {
-        input.addEventListener('input', updatePreview);
-        input.addEventListener('change', updatePreview);
+        input.addEventListener('input', window.updateProductPreview);
+        input.addEventListener('change', window.updateProductPreview);
     });
 
     // Color sync
     container.querySelectorAll('input[type="color"]').forEach(colorInput => {
-        const textInput = colorInput.nextElementSibling;
+        var textInput = colorInput.nextElementSibling;
         colorInput.addEventListener('input', () => {
             if (textInput) textInput.value = colorInput.value.toUpperCase();
         });
         if (textInput) {
             textInput.addEventListener('input', () => {
-                const val = textInput.value;
+                var val = textInput.value;
                 if (/^#[0-9A-F]{6}$/i.test(val)) {
                     colorInput.value = val;
                 }
@@ -570,8 +571,10 @@ require_once __DIR__ . '/../includes/admin-header.php';
         }
     });
 
-    updatePreview();
-})();
+    window.updateProductPreview();
+};
+
+window.initProductSettings();
 </script>
 
 <?php require_once __DIR__ . '/../includes/admin-footer.php'; ?>

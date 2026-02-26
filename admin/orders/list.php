@@ -270,12 +270,13 @@ $orders = $order->getAll($filters);
 
 <script>
 // BASE_URL is already declared in admin-header.php, so check if it exists first
-if (typeof BASE_URL === 'undefined') {
-    const BASE_URL = '<?php echo $baseUrl; ?>';
+if (typeof window.BASE_URL === 'undefined') {
+    window.BASE_URL = '<?php echo $baseUrl; ?>';
 }
-function deleteOrder(id) {
+
+window.deleteOrder = function(id) {
     showConfirmModal('Are you sure you want to delete this order? This action cannot be undone.', function() {
-        fetch(BASE_URL + '/admin/api/orders.php', {
+        fetch(window.BASE_URL + '/admin/api/orders.php', {
             method: 'DELETE',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ id: id })
@@ -296,35 +297,35 @@ function deleteOrder(id) {
             }, { isError: true, title: 'Error' });
         });
     });
-}
+};
 
 // Select toggling
-function toggleAllOrders(checkbox) {
-    const checkboxes = document.querySelectorAll('.order-checkbox');
+window.toggleAllOrders = function(checkbox) {
+    var checkboxes = document.querySelectorAll('.order-checkbox');
     checkboxes.forEach(cb => {
         if (cb.closest('tr').style.display !== 'none') {
             cb.checked = checkbox.checked;
         }
     });
-    toggleOrderCheckbox();
-}
+    window.toggleOrderButtonsVisibility();
+};
 
-function toggleOrderCheckbox() {
-    const checkboxes = document.querySelectorAll('.order-checkbox:checked');
-    const bulkPrintBtn = document.getElementById('bulkPrintBtn');
-    const bulkDownloadBtn = document.getElementById('bulkDownloadBtn');
+window.toggleOrderButtonsVisibility = function() {
+    var checkboxes = document.querySelectorAll('.order-checkbox:checked');
+    var bulkPrintBtn = document.getElementById('bulkPrintBtn');
+    var bulkDownloadBtn = document.getElementById('bulkDownloadBtn');
     if (checkboxes.length > 0) {
-        bulkPrintBtn.classList.remove('hidden');
-        bulkDownloadBtn.classList.remove('hidden');
+        if (bulkPrintBtn) bulkPrintBtn.classList.remove('hidden');
+        if (bulkDownloadBtn) bulkDownloadBtn.classList.remove('hidden');
     } else {
-        bulkPrintBtn.classList.add('hidden');
-        bulkDownloadBtn.classList.add('hidden');
+        if (bulkPrintBtn) bulkPrintBtn.classList.add('hidden');
+        if (bulkDownloadBtn) bulkDownloadBtn.classList.add('hidden');
     }
-}
+};
 
 // Single QR Option
-function openQRModal(qrtextBase64, orderNum) {
-    let qrtext = "";
+window.openQRModal = function(qrtextBase64, orderNum) {
+    var qrtext = "";
     try {
         // More robust UTF-8 to Latin1 conversion for qrcode.js compatibility
         qrtext = decodeURIComponent(escape(atob(qrtextBase64)));
@@ -333,20 +334,20 @@ function openQRModal(qrtextBase64, orderNum) {
         // Fallback
         qrtext = atob(qrtextBase64);
     }
-    const modal = document.getElementById('qrModal');
-    const qrContainer = document.getElementById('qrCodeContainer');
-    const title = document.getElementById('qrModalTitle');
+    var modal = document.getElementById('qrModal');
+    var qrContainer = document.getElementById('qrCodeContainer');
+    var title = document.getElementById('qrModalTitle');
     
-    title.innerText = "Order: " + orderNum;
-    qrContainer.innerHTML = '';
+    if (title) title.innerText = "Order: " + orderNum;
+    if (qrContainer) qrContainer.innerHTML = '';
     
     // Generate QR using qrcode.js
     try {
         if (typeof QRCode === 'undefined' && typeof window.QRCode === 'undefined') {
             throw new Error('QRCode library not loaded. Please refresh the page or check your internet connection.');
         }
-        const QRCodeClass = typeof QRCode !== 'undefined' ? QRCode : window.QRCode;
-        const qrcode = new QRCodeClass(qrContainer, {
+        var QRCodeClass = typeof QRCode !== 'undefined' ? QRCode : window.QRCode;
+        var qrcode = new QRCodeClass(qrContainer, {
             text: qrtext,
             width: 280,
             height: 280,
@@ -356,34 +357,40 @@ function openQRModal(qrtextBase64, orderNum) {
         });
     } catch (e) {
         console.error('QRCode Error:', e);
-        qrContainer.innerHTML = '<p class="text-red-500 text-xs text-center py-4">Error generating QR: ' + e.message + '</p>';
+        if (qrContainer) qrContainer.innerHTML = '<p class="text-red-500 text-xs text-center py-4">Error generating QR: ' + e.message + '</p>';
     }
     
     // Store variables for download/print
-    modal.dataset.orderNum = orderNum;
-    modal.dataset.qrtext = qrtextBase64;
-    modal.classList.remove('hidden');
-}
+    if (modal) {
+        modal.dataset.orderNum = orderNum;
+        modal.dataset.qrtext = qrtextBase64;
+        modal.classList.remove('hidden');
+    }
+};
 
-function closeQRModal() {
-    document.getElementById('qrModal').classList.add('hidden');
-}
+window.closeQRModal = function() {
+    var modal = document.getElementById('qrModal');
+    if (modal) modal.classList.add('hidden');
+};
 
-function downloadSingleQR() {
-    const modal = document.getElementById('qrModal');
-    const canvas = document.querySelector('#qrCodeContainer canvas');
-    if (!canvas) return;
-    const a = document.createElement('a');
+window.downloadSingleQR = function() {
+    var modal = document.getElementById('qrModal');
+    var canvas = document.querySelector('#qrCodeContainer canvas');
+    if (!canvas || !modal) return;
+    var a = document.createElement('a');
     a.href = canvas.toDataURL("image/png");
     a.download = `QR_Order_${modal.dataset.orderNum}.png`;
     a.click();
-}
+};
 
-function printSingleQR() {
-    const qrContainerHTML = document.getElementById('qrCodeContainer').innerHTML;
-    const orderNum = document.getElementById('qrModal').dataset.orderNum;
+window.printSingleQR = function() {
+    var qrContainer = document.getElementById('qrCodeContainer');
+    var modal = document.getElementById('qrModal');
+    if (!qrContainer || !modal) return;
+    var qrContainerHTML = qrContainer.innerHTML;
+    var orderNum = modal.dataset.orderNum;
     
-    const printWindow = window.open('', '_blank');
+    var printWindow = window.open('', '_blank');
     printWindow.document.write(`
         <html><head><title>Print QR</title>
         <style>body{text-align:center; font-family:sans-serif; margin-top:50px;}</style>
@@ -396,28 +403,26 @@ function printSingleQR() {
         </body></html>
     `);
     printWindow.document.close();
-}
+};
 
 // Bulk QR functions
-function generateBulkQRHTML(callback) {
-    const checked = document.querySelectorAll('.order-checkbox:checked');
+window.generateBulkQRHTML = function(callback) {
+    var checked = document.querySelectorAll('.order-checkbox:checked');
     if(checked.length === 0) return;
     
-    const hiddenDiv = document.createElement('div');
+    var hiddenDiv = document.createElement('div');
     hiddenDiv.style.display = 'none';
     document.body.appendChild(hiddenDiv);
     
-    let htmlContent = '';
-    let processed = 0;
+    var htmlContent = '';
+    var processed = 0;
     
     checked.forEach(cb => {
-        const tempDiv = document.createElement('div');
-        hiddenDiv.appendChild(tempDiv); // Important: must be in DOM for some QR libs
+        var tempDiv = document.createElement('div');
+        hiddenDiv.appendChild(tempDiv);
         try {
-            // Bulk decoding
-            const bulkText = decodeURIComponent(escape(atob(cb.dataset.qrtext)));
-
-            const QRCodeClass = typeof QRCode !== 'undefined' ? QRCode : window.QRCode;
+            var bulkText = decodeURIComponent(escape(atob(cb.dataset.qrtext)));
+            var QRCodeClass = typeof QRCode !== 'undefined' ? QRCode : window.QRCode;
             new QRCodeClass(tempDiv, {
                 text: bulkText,
                 width: 300, height: 300,
@@ -428,9 +433,9 @@ function generateBulkQRHTML(callback) {
         }
         
         setTimeout(() => {
-            const canvas = tempDiv.querySelector('canvas');
+            var canvas = tempDiv.querySelector('canvas');
             if(canvas) {
-                const dataUrl = canvas.toDataURL("image/png");
+                var dataUrl = canvas.toDataURL("image/png");
                 htmlContent += `
                 <div class="qr-page">
                     <h2>Order: ${cb.value}</h2>
@@ -444,13 +449,13 @@ function generateBulkQRHTML(callback) {
                     callback(htmlContent);
                 }, 100);
             }
-        }, 500); // Increased timeout for better reliability
+        }, 500);
     });
-}
+};
 
-function bulkPrintQR() {
-    generateBulkQRHTML(function(htmlContent) {
-        const printWindow = window.open('', '_blank');
+window.bulkPrintQR = function() {
+    window.generateBulkQRHTML(function(htmlContent) {
+        var printWindow = window.open('', '_blank');
         printWindow.document.write(`
             <html><head><title>Bulk Print QR</title>
             <style>
@@ -479,12 +484,12 @@ function bulkPrintQR() {
         `);
         printWindow.document.close();
     });
-}
+};
 
-function bulkDownloadQR() {
-    generateBulkQRHTML(function(htmlContent) {
-        const element = document.createElement('div');
-        element.style.width = '210mm'; // A4 width
+window.bulkDownloadQR = function() {
+    window.generateBulkQRHTML(function(htmlContent) {
+        var element = document.createElement('div');
+        element.style.width = '210mm';
         element.innerHTML = `
             <style>
                 .qr-page { 
@@ -492,7 +497,7 @@ function bulkDownloadQR() {
                     flex-direction: column; 
                     align-items: center; 
                     justify-content: center; 
-                    min-height: 290mm; /* Slightly less than A4 to prevent blank pages */
+                    min-height: 290mm;
                     page-break-after: always;
                     background: white;
                     width: 100%;
@@ -506,7 +511,7 @@ function bulkDownloadQR() {
             ${htmlContent.replace(/inline-block/g, 'flex').replace(/margin:20px; border:1px solid #ddd; padding:15px;/g, '')}
         `;
         
-        const opt = {
+        var opt = {
             margin:       0,
             filename:     'Bulk_Orders_QR.pdf',
             image:        { type: 'jpeg', quality: 0.98 },
@@ -514,112 +519,77 @@ function bulkDownloadQR() {
             jsPDF:        { unit: 'mm', format: 'a4', orientation: 'portrait' }
         };
         
-        // Use html2pdf
-        html2pdf().set(opt).from(element).save();
+        if (typeof html2pdf !== 'undefined') {
+            html2pdf().set(opt).from(element).save();
+        } else {
+            console.error('html2pdf library not loaded');
+        }
     });
-}
+};
 
-</script>
+window.updateOrderStatus = function(e) {
+    if(!e.target.classList.contains('order-status-select')) return;
 
-<!-- QR Modal HTML -->
-<div id="qrModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center hidden z-50">
-    <div class="bg-white rounded-lg shadow-xl w-96 p-6">
-        <div class="flex justify-between items-center mb-4">
-            <h3 class="text-xl font-bold" id="qrModalTitle">Order QR</h3>
-            <button onclick="closeQRModal()" class="text-gray-500 hover:text-red-500">
-                <i class="fas fa-times"></i>
-            </button>
-        </div>
-        <div class="flex justify-center mb-6" id="qrCodeContainer"></div>
-        
-        <div class="flex gap-4">
-            <button onclick="downloadSingleQR()" class="flex-1 bg-green-500 text-white py-2 rounded shadow hover:bg-green-600 transition flex items-center justify-center">
-                <i class="fas fa-download mr-2"></i> Download
-            </button>
-            <button onclick="printSingleQR()" class="flex-1 bg-blue-500 text-white py-2 rounded shadow hover:bg-blue-600 transition flex items-center justify-center">
-                <i class="fas fa-print mr-2"></i> Print
-            </button>
-        </div>
-    </div>
-</div>
+    var select = e.target;
+    var orderId = select.dataset.orderId;
+    var newStatus = select.value;
 
-<script>
-    document.addEventListener('change', function(e){
-        if(!e.target.classList.contains('order-status-select')) return;
+    var statusColors = {
+        'pending':    { bg: '#fef3c7', text: '#92400e' },
+        'processing': { bg: '#dbeafe', text: '#1e40af' },
+        'shipped':    { bg: '#f3e8ff', text: '#6b21a8' },
+        'delivered':  { bg: '#d1fae5', text: '#065f46' },
+        'success':    { bg: '#d1fae5', text: '#065f46' },
+        'cancelled':  { bg: '#fee2e2', text: '#991b1b' },
+        'cancel':     { bg: '#fee2e2', text: '#991b1b' }
+    };
 
-        const select = e.target;
-        const orderId = select.dataset.orderId;
-        const newStatus = select.value;
+    var color = statusColors[newStatus] || { bg: '#f3f4f6', text: '#374151' };
+    
+    select.classList.remove('bg-green-100', 'text-green-800', 'bg-orange-100', 'text-orange-800', 'bg-gray-100', 'text-gray-800');
+    select.style.backgroundColor = color.bg;
+    select.style.color = color.text;
 
-        // Visual feedback: Update styling immediately
-        const statusColors = {
-            'pending':    { bg: '#fef3c7', text: '#92400e' },
-            'processing': { bg: '#dbeafe', text: '#1e40af' },
-            'shipped':    { bg: '#f3e8ff', text: '#6b21a8' },
-            'delivered':  { bg: '#d1fae5', text: '#065f46' },
-            'success':    { bg: '#d1fae5', text: '#065f46' },
-            'cancelled':  { bg: '#fee2e2', text: '#991b1b' },
-            'cancel':     { bg: '#fee2e2', text: '#991b1b' }
-        };
-
-        const color = statusColors[newStatus] || { bg: '#f3f4f6', text: '#374151' };
-        
-        // Remove old classes that might conflict
-        select.classList.remove('bg-green-100', 'text-green-800', 'bg-orange-100', 'text-orange-800', 'bg-gray-100', 'text-gray-800');
-        
-        // Apply new styles
-        select.style.backgroundColor = color.bg;
-        select.style.color = color.text;
-
-        fetch(BASE_URL + '/admin/api/orders.php', {
-            method: 'PUT',
-            headers:{
-                'Content-Type':'application/json'
-            },
-            body:JSON.stringify({
-                id: orderId,
-                order_status: newStatus
-            })
-        })
-        .then(res => res.json())
-        .then(data => {
-            if(data.success){
-                console.log('Order status updated successfully');
-                // Optional: Show a small toast notification
-            } else {
-                console.log('Failed to update order status: ' + (data.message || 'Unknown error'));
-                // Revert selection if needed, but for now simple alert is enough
-            }
-        })
-        .catch(err => {
-            console.error('Something went wrong:', err);
-            console.log('System error while updating status');
-        });
+    fetch(window.BASE_URL + '/admin/api/orders.php', {
+        method: 'PUT',
+        headers:{ 'Content-Type':'application/json' },
+        body:JSON.stringify({ id: orderId, order_status: newStatus })
     })
+    .then(res => res.json())
+    .then(data => {
+        if(data.success){
+            console.log('Order status updated successfully');
+        } else {
+            console.log('Failed to update order status: ' + (data.message || 'Unknown error'));
+        }
+    })
+    .catch(err => {
+        console.error('Something went wrong:', err);
+    });
+};
 
-// Table sorting functionality
+document.addEventListener('change', window.updateOrderStatus);
+
 window.initOrderSort = function() {
-    const table = document.querySelector('.admin-table');
+    var table = document.querySelector('.admin-table');
     if (!table || table.dataset.sortInitialized) return;
     table.dataset.sortInitialized = 'true';
 
-    const thead = table.querySelector('thead');
+    var thead = table.querySelector('thead');
     if (!thead) return;
 
     thead.addEventListener('click', function(e) {
-        const header = e.target.closest('th.sortable');
+        var header = e.target.closest('th.sortable');
         if (!header) return;
 
-        const column = header.dataset.column;
-        const tbody = table.querySelector('tbody');
-        const rows = Array.from(tbody.querySelectorAll('tr:not(#noDataMessage)'));
+        var column = header.dataset.column;
+        var tbody = table.querySelector('tbody');
+        var rows = Array.from(tbody.querySelectorAll('tr:not(#noDataMessage)'));
         if (rows.length <= 1) return;
 
-        // Determine direction
-        const currentDir = header.dataset.direction || 'none';
-        const direction = currentDir === 'asc' ? 'desc' : 'asc';
+        var currentDir = header.dataset.direction || 'none';
+        var direction = currentDir === 'asc' ? 'desc' : 'asc';
 
-        // Reset all other headers
         table.querySelectorAll('th.sortable').forEach(h => {
             h.dataset.direction = '';
             h.querySelectorAll('i').forEach(icon => {
@@ -628,26 +598,22 @@ window.initOrderSort = function() {
             });
         });
 
-        // Set current header
         header.dataset.direction = direction;
-        const upArrow = header.querySelector('.fa-caret-up');
-        const downArrow = header.querySelector('.fa-caret-down');
+        var upArrow = header.querySelector('.fa-caret-up');
+        var downArrow = header.querySelector('.fa-caret-down');
         if (direction === 'asc' && upArrow) {
             upArrow.classList.replace('text-gray-400', 'text-blue-600');
         } else if (direction === 'desc' && downArrow) {
             downArrow.classList.replace('text-gray-400', 'text-blue-600');
         }
 
-        // Get cell index
-        const cellIndex = Array.from(header.parentElement.children).indexOf(header);
-
-        // Sort rows
-        const collator = new Intl.Collator(undefined, { numeric: true, sensitivity: 'base' });
+        var cellIndex = Array.from(header.parentElement.children).indexOf(header);
+        var collator = new Intl.Collator(undefined, { numeric: true, sensitivity: 'base' });
         
         rows.sort((a, b) => {
-            let aVal, bVal;
-            const aCell = a.children[cellIndex];
-            const bCell = b.children[cellIndex];
+            var aVal, bVal;
+            var aCell = a.children[cellIndex];
+            var bCell = b.children[cellIndex];
 
             if (column === 'row_number') {
                 aVal = parseInt(a.dataset.rowNumber) || 0;
@@ -669,39 +635,31 @@ window.initOrderSort = function() {
             return 0;
         });
 
-        // Re-append rows
-        const fragment = document.createDocumentFragment();
+        var fragment = document.createDocumentFragment();
         rows.forEach(row => fragment.appendChild(row));
         
-        const noData = document.getElementById('noDataMessage');
+        var noData = document.getElementById('noDataMessage');
         if (noData) fragment.appendChild(noData);
         
         tbody.appendChild(fragment);
     });
 };
 
-window.initOrderSort();
-</script>
-
-
-<script>
 window.initOrderSearch = function() {
-    const searchInput = document.getElementById('searchInput');
-    const tableRows = document.querySelectorAll('tbody tr');
+    var searchInput = document.getElementById('searchInput');
+    var tableRows = document.querySelectorAll('tbody tr');
 
-    // Make search work as user types
     if (searchInput) {
         searchInput.addEventListener('input', function(e) {
-            const query = e.target.value.toLowerCase().trim();
-            let visibleCount = 0;
+            var query = e.target.value.toLowerCase().trim();
+            var visibleCount = 0;
             
             tableRows.forEach(row => {
                 if (row.id === 'noDataMessage') return;
                 
-                // Search in all visible text plus hidden attributes
-                const text = row.innerText.toLowerCase();
-                const email = (row.dataset.customerEmail || '').toLowerCase();
-                const customerId = (row.dataset.customerId || '').toLowerCase();
+                var text = row.innerText.toLowerCase();
+                var email = (row.dataset.customerEmail || '').toLowerCase();
+                var customerId = (row.dataset.customerId || '').toLowerCase();
                 
                 if (query === '' || text.includes(query) || email.includes(query) || customerId.includes(query)) {
                     row.style.display = '';
@@ -711,8 +669,7 @@ window.initOrderSearch = function() {
                 }
             });
 
-            // Show/hide "No data match" message
-            const noDataMessage = document.getElementById('noDataMessage');
+            var noDataMessage = document.getElementById('noDataMessage');
             if (noDataMessage) {
                 if (visibleCount === 0) {
                     noDataMessage.classList.remove('hidden');
@@ -721,8 +678,7 @@ window.initOrderSearch = function() {
                 }
             }
             
-            // Update URL without reload for bookmarks/refresh
-            const newUrl = new URL(window.location);
+            var newUrl = new URL(window.location);
             if (query) {
                 newUrl.searchParams.set('search', query);
             } else {
@@ -733,7 +689,12 @@ window.initOrderSearch = function() {
     }
 };
 
-window.initOrderSearch();
+window.initOrderList = function() {
+    window.initOrderSort();
+    window.initOrderSearch();
+};
+
+window.initOrderList();
 </script>
 
 <?php require_once __DIR__ . '/../../includes/admin-footer.php'; ?>

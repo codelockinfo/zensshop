@@ -109,7 +109,13 @@ function getImageUrl($path) {
     if (strpos($cleanPath, 'assets/') === false && strpos($cleanPath, 'uploads/') === false) {
         // Check if file exists in root (for favicons)
         if (!file_exists(__DIR__ . '/../' . $cleanPath)) {
-            $cleanPath = 'assets/images/uploads/' . $cleanPath;
+            // Check if it's a known subfolder in assets/images (like special_offers)
+            $firstSegment = explode('/', $cleanPath)[0];
+            if (is_dir(__DIR__ . '/../assets/images/' . $firstSegment)) {
+                $cleanPath = 'assets/images/' . $cleanPath;
+            } else {
+                $cleanPath = 'assets/images/uploads/' . $cleanPath;
+            }
         }
     } elseif (strpos($cleanPath, 'uploads/') === 0) {
         // If it starts with uploads/, it likely needs assets/images/ prepended

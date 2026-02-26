@@ -422,146 +422,148 @@ require_once __DIR__ . '/../includes/admin-header.php';
     </div>
 
     <script>
-    (function() {
-        const container = document.getElementById('settingsForm') || document;
+window.initGlobalCardSettings = function() {
+    var container = document.getElementById('settingsForm') || document;
 
-        function updatePreview() {
-            // Get values from form inputs
-            const getVal = (name) => {
-                const el = container.querySelector(`input[name="${name}"]`);
-                return el ? el.value : '';
-            };
+    window.updateGlobalCardPreview = function() {
+        // Get values from form inputs
+        var getVal = (name) => {
+            var el = container.querySelector(`input[name="${name}"]`);
+            return el ? el.value : '';
+        };
 
-            const cardBg = getVal('card_bg_color');
-            const titleColor = getVal('card_title_color');
-            const priceColor = getVal('price_color');
-            const compareColor = getVal('compare_price_color');
-            const badgeBg = getVal('badge_bg_color');
-            const badgeText = getVal('badge_text_color');
-            
-            const btnBg = getVal('btn_bg_color');
-            const btnIcon = getVal('btn_icon_color');
-            const btnHoverBg = getVal('btn_hover_bg_color');
-            const btnHoverIcon = getVal('btn_hover_icon_color');
-            
-            const atcBg = getVal('atc_btn_bg_color');
-            const atcText = getVal('atc_btn_text_color');
-            const atcHoverBg = getVal('atc_btn_hover_bg_color');
-            const atcHoverText = getVal('atc_btn_hover_text_color');
-            
-            const tooltipBg = getVal('tooltip_bg_color');
-            const tooltipText = getVal('tooltip_text_color');
+        var cardBg = getVal('card_bg_color');
+        var titleColor = getVal('card_title_color');
+        var priceColor = getVal('price_color');
+        var compareColor = getVal('compare_price_color');
+        var badgeBg = getVal('badge_bg_color');
+        var badgeText = getVal('badge_text_color');
+        
+        var btnBg = getVal('btn_bg_color');
+        var btnIcon = getVal('btn_icon_color');
+        var btnHoverBg = getVal('btn_hover_bg_color');
+        var btnHoverIcon = getVal('btn_hover_icon_color');
+        
+        var atcBg = getVal('atc_btn_bg_color');
+        var atcText = getVal('atc_btn_text_color');
+        var atcHoverBg = getVal('atc_btn_hover_bg_color');
+        var atcHoverText = getVal('atc_btn_hover_text_color');
+        
+        var tooltipBg = getVal('tooltip_bg_color');
+        var tooltipText = getVal('tooltip_text_color');
 
-            const activeBg = getVal('btn_active_bg_color');
-            const activeIcon = getVal('btn_active_icon_color');
+        var activeBg = getVal('btn_active_bg_color');
+        var activeIcon = getVal('btn_active_icon_color');
 
-            // Apply to Cards
-            [document.getElementById('previewCard'), document.getElementById('previewCardWishlist')].forEach(card => {
-                if (!card) return;
-                card.style.backgroundColor = cardBg;
-                card.style.borderColor = (cardBg === '#ffffff' || cardBg === '#fff' || cardBg.toLowerCase() === '#ffffff') ? '#e5e7eb' : 'transparent';
-            });
-
-            // Text
-            const t1 = document.getElementById('prevTitle'); if(t1) t1.style.color = titleColor;
-            const t2 = document.getElementById('prevTitleW'); if(t2) t2.style.color = titleColor;
-            const p1 = document.getElementById('prevPrice'); if(p1) p1.style.color = priceColor;
-            const p2 = document.getElementById('prevPriceW'); if(p2) p2.style.color = priceColor;
-            const cp1 = document.getElementById('prevComparePrice'); if(cp1) cp1.style.color = compareColor;
-
-            // Badge
-            const badge = document.getElementById('prevBadge');
-            if (badge) {
-                badge.style.backgroundColor = badgeBg;
-                badge.style.color = badgeText;
-            }
-
-            // Action Buttons
-            const actionBtns = [
-                document.getElementById('prevWishlistBtn'),
-                document.getElementById('prevQvBtn'),
-                document.getElementById('prevAtcBtnIcon'),
-                document.getElementById('prevRemoveBtn')
-            ];
-
-            actionBtns.forEach(btn => {
-                if(!btn) return;
-                btn.style.backgroundColor = btnBg;
-                btn.style.color = btnIcon;
-                
-                btn.onmouseenter = () => {
-                   btn.style.backgroundColor = btnHoverBg;
-                   btn.style.color = btnHoverIcon;
-                };
-                btn.onmouseleave = () => {
-                   btn.style.backgroundColor = btnBg;
-                   btn.style.color = btnIcon;
-                };
-            });
-
-            // Main ATC Buttons
-            const atcBtns = [document.getElementById('prevMainAtcBtn'), document.getElementById('prevMainAtcBtnW')];
-            atcBtns.forEach(btn => {
-                if(!btn) return;
-                btn.style.backgroundColor = atcBg;
-                btn.style.color = atcText;
-                
-                btn.onmouseenter = () => {
-                    btn.style.backgroundColor = atcHoverBg;
-                    btn.style.color = atcHoverText;
-                };
-                btn.onmouseleave = () => {
-                    btn.style.backgroundColor = atcBg;
-                    btn.style.color = atcText;
-                };
-            });
-
-            // Tooltips
-            const tooltips = document.querySelectorAll('.product-tooltip');
-            tooltips.forEach(tip => {
-                tip.style.backgroundColor = tooltipBg;
-                tip.style.color = tooltipText;
-            });
-            document.documentElement.style.setProperty('--tooltip-bg-preview', tooltipBg);
-            
-            // Shared Style
-            let styleTag = document.getElementById('preview-tooltip-style');
-            if (!styleTag) {
-                styleTag = document.createElement('style');
-                styleTag.id = 'preview-tooltip-style';
-                document.head.appendChild(styleTag);
-            }
-            styleTag.innerHTML = `
-                .product-tooltip::after { border-left-color: ${tooltipBg} !important; border-color: transparent !important; border-left-color: ${tooltipBg} !important; }
-            `;
-        }
-
-        // Attach listeners
-        container.querySelectorAll('input[type="color"], input[type="text"]').forEach(input => {
-            input.addEventListener('input', updatePreview);
-            input.addEventListener('change', updatePreview);
-            
-            // Color Sync
-            if (input.type === 'color') {
-                const textInput = input.nextElementSibling;
-                if (textInput && textInput.type === 'text') {
-                    // Update text input when color picker changes
-                    input.addEventListener('input', () => { textInput.value = input.value.toUpperCase(); updatePreview(); });
-                    
-                    // Update color picker when text input changes
-                    textInput.addEventListener('input', () => {
-                        if (textInput.value.startsWith('#')) {
-                            input.value = textInput.value;
-                            updatePreview();
-                        }
-                    });
-                }
-            }
+        // Apply to Cards
+        [document.getElementById('previewCard'), document.getElementById('previewCardWishlist')].forEach(card => {
+            if (!card) return;
+            card.style.backgroundColor = cardBg;
+            card.style.borderColor = (cardBg === '#ffffff' || cardBg === '#fff' || cardBg.toLowerCase() === '#ffffff') ? '#e5e7eb' : 'transparent';
         });
 
-        // Initial call
-        updatePreview();
-    })();
-    </script>
+        // Text
+        var t1 = document.getElementById('prevTitle'); if(t1) t1.style.color = titleColor;
+        var t2 = document.getElementById('prevTitleW'); if(t2) t2.style.color = titleColor;
+        var p1 = document.getElementById('prevPrice'); if(p1) p1.style.color = priceColor;
+        var p2 = document.getElementById('prevPriceW'); if(p2) p2.style.color = priceColor;
+        var cp1 = document.getElementById('prevComparePrice'); if(cp1) cp1.style.color = compareColor;
+
+        // Badge
+        var badge = document.getElementById('prevBadge');
+        if (badge) {
+            badge.style.backgroundColor = badgeBg;
+            badge.style.color = badgeText;
+        }
+
+        // Action Buttons
+        var actionBtns = [
+            document.getElementById('prevWishlistBtn'),
+            document.getElementById('prevQvBtn'),
+            document.getElementById('prevAtcBtnIcon'),
+            document.getElementById('prevRemoveBtn')
+        ];
+
+        actionBtns.forEach(btn => {
+            if(!btn) return;
+            btn.style.backgroundColor = btnBg;
+            btn.style.color = btnIcon;
+            
+            btn.onmouseenter = () => {
+               btn.style.backgroundColor = btnHoverBg;
+               btn.style.color = btnHoverIcon;
+            };
+            btn.onmouseleave = () => {
+               btn.style.backgroundColor = btnBg;
+               btn.style.color = btnIcon;
+            };
+        });
+
+        // Main ATC Buttons
+        var atcBtns = [document.getElementById('prevMainAtcBtn'), document.getElementById('prevMainAtcBtnW')];
+        atcBtns.forEach(btn => {
+            if(!btn) return;
+            btn.style.backgroundColor = atcBg;
+            btn.style.color = atcText;
+            
+            btn.onmouseenter = () => {
+                btn.style.backgroundColor = atcHoverBg;
+                btn.style.color = atcHoverText;
+            };
+            btn.onmouseleave = () => {
+                btn.style.backgroundColor = atcBg;
+                btn.style.color = atcText;
+            };
+        });
+
+        // Tooltips
+        var tooltips = document.querySelectorAll('.product-tooltip');
+        tooltips.forEach(tip => {
+            tip.style.backgroundColor = tooltipBg;
+            tip.style.color = tooltipText;
+        });
+        document.documentElement.style.setProperty('--tooltip-bg-preview', tooltipBg);
+        
+        // Shared Style
+        var styleTag = document.getElementById('preview-tooltip-style');
+        if (!styleTag) {
+            styleTag = document.createElement('style');
+            styleTag.id = 'preview-tooltip-style';
+            document.head.appendChild(styleTag);
+        }
+        styleTag.innerHTML = `
+            .product-tooltip::after { border-left-color: ${tooltipBg} !important; border-color: transparent !important; border-left-color: ${tooltipBg} !important; }
+        `;
+    };
+
+    // Attach listeners
+    container.querySelectorAll('input[type="color"], input[type="text"]').forEach(input => {
+        input.addEventListener('input', window.updateGlobalCardPreview);
+        input.addEventListener('change', window.updateGlobalCardPreview);
+        
+        // Color Sync
+        if (input.type === 'color') {
+            var textInput = input.nextElementSibling;
+            if (textInput && textInput.type === 'text') {
+                // Update text input when color picker changes
+                input.addEventListener('input', () => { textInput.value = input.value.toUpperCase(); window.updateGlobalCardPreview(); });
+                
+                // Update color picker when text input changes
+                textInput.addEventListener('input', () => {
+                    if (textInput.value.startsWith('#')) {
+                        input.value = textInput.value;
+                        window.updateGlobalCardPreview();
+                    }
+                });
+            }
+        }
+    });
+
+    // Initial call
+    window.updateGlobalCardPreview();
+};
+
+window.initGlobalCardSettings();
+</script>
 </div>
 <?php require_once __DIR__ . '/../includes/admin-footer.php'; ?>

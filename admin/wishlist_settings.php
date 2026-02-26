@@ -28,29 +28,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $settingsObj->set('wishlist_subheading', $_POST['subheading'] ?? 'Explore your saved items, blending quality and style for a refined living experience.');
 
         // Visual Styles
-        $newStyles = [
-            'page_bg_color' => $_POST['page_bg_color'] ?? '#ffffff',
-            'heading_color' => $_POST['heading_color'] ?? '#1f2937',
-            'subheading_color' => $_POST['subheading_color'] ?? '#4b5563',
-            
-            // Preserve other settings from global or existing to avoid breaking anything
-            'card_bg_color' => $styles['card_bg_color'] ?? '#ffffff',
-            'card_title_color' => $styles['card_title_color'] ?? '#1f2937',
-            'price_color' => $styles['price_color'] ?? '#1a3d32',
-            'btn_bg_color' => $styles['btn_bg_color'] ?? '#1a3d32',
-            'btn_text_color' => $styles['btn_text_color'] ?? '#ffffff',
-            'btn_hover_bg_color' => $styles['btn_hover_bg_color'] ?? '#000000',
-            'btn_hover_text_color' => $styles['btn_hover_text_color'] ?? '#ffffff',
-            'remove_btn_bg_color' => $styles['remove_btn_bg_color'] ?? '#ffffff',
-            'remove_btn_icon_color' => $styles['remove_btn_icon_color'] ?? '#6b7280',
-            'remove_btn_hover_bg_color' => $styles['remove_btn_hover_bg_color'] ?? '#000000',
-            'remove_btn_hover_icon_color' => $styles['remove_btn_hover_icon_color'] ?? '#ffffff',
-            'quick_view_bg_color' => $styles['quick_view_bg_color'] ?? '#ffffff',
-            'quick_view_icon_color' => $styles['quick_view_icon_color'] ?? '#1f2937',
-            'quick_view_hover_bg_color' => $styles['quick_view_hover_bg_color'] ?? '#000000',
-            'quick_view_hover_icon_color' => $styles['quick_view_hover_icon_color'] ?? '#ffffff',
-            'stock_status_color' => $styles['stock_status_color'] ?? '#ef4444',
-        ];
+        $newStyles = $styles;
+        $newStyles['page_bg_color'] = $_POST['page_bg_color'] ?? ($styles['page_bg_color'] ?? '#ffffff');
+        $newStyles['heading_color'] = $_POST['heading_color'] ?? ($styles['heading_color'] ?? '#1f2937');
+        $newStyles['subheading_color'] = $_POST['subheading_color'] ?? ($styles['subheading_color'] ?? '#4b5563');
+
+        $keys_to_remove = ['card_bg_color', 'card_title_color', 'price_color', 'btn_bg_color', 'btn_text_color', 'btn_hover_bg_color', 'btn_hover_text_color', 'remove_btn_bg_color', 'remove_btn_icon_color', 'remove_btn_hover_bg_color', 'remove_btn_hover_icon_color', 'quick_view_bg_color', 'quick_view_icon_color', 'quick_view_hover_bg_color', 'quick_view_hover_icon_color', 'stock_status_color'];
+        foreach ($keys_to_remove as $key) {
+            unset($newStyles[$key]);
+        }
         
         $settingsObj->set('wishlist_styles', json_encode($newStyles), 'wishlist');
         
@@ -209,9 +195,9 @@ require_once __DIR__ . '/../includes/admin-header.php';
     </form>
 
 <script>
-(function() {
-    const container = document.querySelector('form') || document;
-    const inputs = {
+window.initWishlistSettings = function() {
+    var container = document.querySelector('form') || document;
+    var inputs = {
         heading: container.querySelector('input[name="heading"]'),
         subheading: container.querySelector('textarea[name="subheading"]'),
         headingColor: container.querySelector('input[name="heading_color"]'),
@@ -219,31 +205,33 @@ require_once __DIR__ . '/../includes/admin-header.php';
         pageBg: container.querySelector('input[name="page_bg_color"]')
     };
 
-    const preview = {
+    var preview = {
         heading: document.getElementById('prevHeading'),
         subheading: document.getElementById('prevSubheading'),
         container: document.getElementById('wishlistPreview')
     };
 
-    function updatePreview() {
+    window.updateWishlistPreview = function() {
         if (preview.heading && inputs.heading) preview.heading.textContent = inputs.heading.value;
         if (preview.subheading && inputs.subheading) preview.subheading.textContent = inputs.subheading.value;
         if (preview.heading && inputs.headingColor) preview.heading.style.color = inputs.headingColor.value;
         if (preview.subheading && inputs.subheadingColor) preview.subheading.style.color = inputs.subheadingColor.value;
         if (preview.container && inputs.pageBg) preview.container.style.backgroundColor = inputs.pageBg.value;
-    }
+    };
 
     Object.values(inputs).forEach(input => {
         if (input) {
-            input.addEventListener('input', updatePreview);
+            input.addEventListener('input', window.updateWishlistPreview);
             if(input.nextElementSibling && input.nextElementSibling.tagName === 'INPUT') {
-                input.nextElementSibling.addEventListener('input', updatePreview);
+                input.nextElementSibling.addEventListener('input', window.updateWishlistPreview);
             }
         }
     });
 
-    updatePreview();
-})();
+    window.updateWishlistPreview();
+};
+
+window.initWishlistSettings();
 </script>
 </div>
 

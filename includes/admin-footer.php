@@ -26,12 +26,12 @@
         </div>
     </div>
     
-    <script src="<?php echo isset($baseUrl) ? $baseUrl : getBaseUrl(); ?>/assets/js/admin8.js"></script>
-    <script src="<?php echo isset($baseUrl) ? $baseUrl : getBaseUrl(); ?>/assets/js/admin-confirm.js"></script>
-    <script src="<?php echo isset($baseUrl) ? $baseUrl : getBaseUrl(); ?>/assets/js/admin-search2.js"></script>
-    <script src="<?php echo isset($baseUrl) ? $baseUrl : getBaseUrl(); ?>/assets/js/admin-notifications4.js"></script>
-    <script src="<?php echo isset($baseUrl) ? $baseUrl : getBaseUrl(); ?>/assets/js/admin-support3.js"></script>
-    <script src="<?php echo isset($baseUrl) ? $baseUrl : getBaseUrl(); ?>/assets/js/admin-ajax4.js"></script>
+    <script src="<?php echo isset($baseUrl) ? $baseUrl : getBaseUrl(); ?>/assets/js/admin9.js?v=<?php echo filemtime(__DIR__ . '/../assets/js/admin9.js'); ?>"></script>
+    <script src="<?php echo isset($baseUrl) ? $baseUrl : getBaseUrl(); ?>/assets/js/admin-confirm.js?v=<?php echo filemtime(__DIR__ . '/../assets/js/admin-confirm.js'); ?>"></script>
+    <script src="<?php echo isset($baseUrl) ? $baseUrl : getBaseUrl(); ?>/assets/js/admin-search2.js?v=<?php echo filemtime(__DIR__ . '/../assets/js/admin-search2.js'); ?>"></script>
+    <script src="<?php echo isset($baseUrl) ? $baseUrl : getBaseUrl(); ?>/assets/js/admin-notifications4.js?v=<?php echo filemtime(__DIR__ . '/../assets/js/admin-notifications4.js'); ?>"></script>
+    <script src="<?php echo isset($baseUrl) ? $baseUrl : getBaseUrl(); ?>/assets/js/admin-support3.js?v=<?php echo filemtime(__DIR__ . '/../assets/js/admin-support3.js'); ?>"></script>
+    <script src="<?php echo isset($baseUrl) ? $baseUrl : getBaseUrl(); ?>/assets/js/admin-ajax5.js?v=<?php echo filemtime(__DIR__ . '/../assets/js/admin-ajax5.js'); ?>"></script>
     <?php endif; ?>
     <script>
     // Global function to show loading state on buttons

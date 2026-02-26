@@ -370,43 +370,50 @@ function renderMessagesHtml($messages, $totalPages, $page, $filter) {
 ?>
 
 <script>
-document.addEventListener('DOMContentLoaded', function() {
-    const container = document.getElementById('messages-container');
-    
-    document.addEventListener('click', function(e) {
-        // Handle Ajax Links (Filters & Pagination)
-        const link = e.target.closest('a.ajax-link');
-        if (link) {
-            e.preventDefault();
-            loadMessages(link.href);
-        }
-    });
+window.initSupport = function() {
+    var container = document.getElementById('messages-container');
+    if (!container) return;
 
-    function loadMessages(url) {
-        const fetchUrl = new URL(url);
+    if (window.supportClickHandler) {
+        document.body.removeEventListener('click', window.supportClickHandler);
+    }
+
+    window.supportClickHandler = function(e) {
+        var link = e.target.closest('a.ajax-link');
+        if (link && link.classList.contains('ajax-link')) {
+            e.preventDefault(); 
+            window.loadMessages(link.href);
+        }
+    };
+    document.body.addEventListener('click', window.supportClickHandler);
+
+    window.loadMessages = function(url) {
+        var fetchUrl = new URL(url);
         fetchUrl.searchParams.set('ajax', '1');
         
-        container.style.opacity = '0.5';
+        var msgContainer = document.getElementById('messages-container');
+        if (msgContainer) msgContainer.style.opacity = '0.5';
         
         fetch(fetchUrl)
             .then(response => response.text())
             .then(html => {
-                container.innerHTML = html;
-                container.style.opacity = '1';
+                var newContainer = document.getElementById('messages-container');
+                if (newContainer) {
+                    newContainer.innerHTML = html;
+                    newContainer.style.opacity = '1';
+                }
                 
-                // Update URL
                 window.history.pushState({}, '', url);
-                
-                // Update Filter Button Styles
-                updateFilterStyles(new URL(url).searchParams.get('filter') || 'all');
+                window.updateSupportFilterStyles(new URL(url).searchParams.get('filter') || 'all');
             })
             .catch(err => {
                 console.error('Error:', err);
-                container.style.opacity = '1';
+                var errContainer = document.getElementById('messages-container');
+                if (errContainer) errContainer.style.opacity = '1';
             });
-    }
+    };
 
-    function updateFilterStyles(activeFilter) {
+    window.updateSupportFilterStyles = function(activeFilter) {
         document.querySelectorAll('.filter-btn').forEach(btn => {
             if (btn.dataset.filter === activeFilter) {
                 btn.classList.remove('bg-white', 'text-gray-700', 'hover:bg-gray-50');
@@ -416,40 +423,40 @@ document.addEventListener('DOMContentLoaded', function() {
                  btn.classList.remove('bg-blue-600', 'text-white');
             }
         });
-    }
-    
-    // Handle Browser Back/Forward
-    window.addEventListener('popstate', function() {
-        location.reload(); // Simple fallback for now
-    });
-});
+    };
+};
 
-async function handleAjaxForm(e, form) {
-    e.preventDefault();
-    const btn = form.querySelector('button[type="submit"]');
-    let originalText = '';
+window.handleAjaxForm = async function(e, form) {
+    if (e) e.preventDefault();
+    var btn = form.querySelector('button[type="submit"]');
+    var originalText = '';
     
     if (btn) {
         originalText = btn.innerHTML;
-        btn.disabled = true;
-        btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i>';
+        if (window.setBtnLoading) window.setBtnLoading(btn, true);
+        else {
+            btn.disabled = true;
+            btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i>';
+        }
     }
     
-    const formData = new FormData(form);
+    var formData = new FormData(form);
     formData.append('ajax', '1');
     
     try {
-        const response = await fetch(window.location.href, {
+        var response = await fetch(window.location.href, {
             method: 'POST',
-            body: formData
+            body: formData,
+            headers: {
+                'X-Requested-With': 'XMLHttpRequest'
+            }
         });
-        const data = await response.json();
+        var data = await response.json();
         
         if (data.success) {
-            // Update List
-            document.getElementById('messages-container').innerHTML = data.html;
+            var msgContainer = document.getElementById('messages-container');
+            if (msgContainer) msgContainer.innerHTML = data.html;
             
-            // Update Stats
             if (data.stats) {
                 if(document.getElementById('stat-total')) document.getElementById('stat-total').innerText = data.stats.total;
                 if(document.getElementById('stat-open')) document.getElementById('stat-open').innerText = data.stats.open;
@@ -457,95 +464,36 @@ async function handleAjaxForm(e, form) {
                 if(document.getElementById('stat-closed')) document.getElementById('stat-closed').innerText = data.stats.closed;
             }
             
-            // Show notification
-            if (typeof showNotification === 'function') {
-                 showNotification('success', data.message);
-            } else {
-                 // Create temporary toast
-                 const toast = document.createElement('div');
-                 toast.className = 'fixed bottom-4 right-4 bg-green-600 text-white px-6 py-3 rounded shadow-lg z-50 animate-bounce';
-                 toast.innerText = data.message;
-                 document.body.appendChild(toast);
-                 setTimeout(() => toast.remove(), 3000);
-            }
+            if (window.showToast) window.showToast(data.message, 'success');
+            else if (window.showNotification) window.showNotification('success', data.message);
         }
     } catch (err) {
         console.error(err);
-        alert('An error occurred during the request.');
     } finally {
-         if (btn && document.contains(btn)) {
-            btn.disabled = false;
-            btn.innerHTML = originalText;
-            
-            // Should we hide the reply form if success?
-            // The list is re-rendered, so the form is reset anyway from server HTML.
+        if (btn) {
+            if (window.setBtnLoading) window.setBtnLoading(btn, false);
+            else {
+                btn.disabled = false;
+                btn.innerHTML = originalText;
+            }
         }
     }
     return false;
-}
+};
 
-document.addEventListener('DOMContentLoaded', function() {
-    const container = document.getElementById('messages-container');
-    
-    // Use body delegate for robustness
-    document.body.addEventListener('click', function(e) {
-        // Handle Ajax Links (Filters & Pagination)
-        const link = e.target.closest('a.ajax-link');
-        if (link) {
-            e.preventDefault(); // STOP reload
-            loadMessages(link.href);
-        }
-    });
+window.showReplyForm = function(id) {
+    var form = document.getElementById('replyForm' + id);
+    if (form) form.classList.remove('hidden');
+};
 
-    function loadMessages(url) {
-        const fetchUrl = new URL(url);
-        fetchUrl.searchParams.set('ajax', '1');
-        
-        container.style.opacity = '0.5';
-        
-        fetch(fetchUrl)
-            .then(response => response.text())
-            .then(html => {
-                container.innerHTML = html;
-                container.style.opacity = '1';
-                
-                // Update URL (without reload)
-                window.history.pushState({}, '', url);
-                
-                // Update Filter Button Styles
-                updateFilterStyles(new URL(url).searchParams.get('filter') || 'all');
-            })
-            .catch(err => {
-                console.error('Error:', err);
-                container.style.opacity = '1';
-            });
-    }
+window.hideReplyForm = function(id) {
+    var form = document.getElementById('replyForm' + id);
+    if (form) form.classList.add('hidden');
+};
 
-    function updateFilterStyles(activeFilter) {
-        document.querySelectorAll('.filter-btn').forEach(btn => {
-            if (btn.dataset.filter === activeFilter) {
-                btn.classList.remove('bg-white', 'text-gray-700', 'hover:bg-gray-50');
-                btn.classList.add('bg-blue-600', 'text-white');
-            } else {
-                 btn.classList.add('bg-white', 'text-gray-700', 'hover:bg-gray-50');
-                 btn.classList.remove('bg-blue-600', 'text-white');
-            }
-        });
-    }
-    
-    // Handle Browser Back/Forward
-    window.addEventListener('popstate', function() {
-        location.reload(); // Simple fallback for now
-    });
-});
-
-function showReplyForm(id) {
-    document.getElementById('replyForm' + id).classList.remove('hidden');
-}
-
-function hideReplyForm(id) {
-    document.getElementById('replyForm' + id).classList.add('hidden');
-}
+// Init
+window.initSupport();
+</script>
 </script>
 
 
