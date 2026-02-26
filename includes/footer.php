@@ -326,19 +326,19 @@ $qv_policy_color = $qvStyles['policy_color'] ?? '#374151';
                     
                     <div class="space-y-2 text-black mt-4">
                         <?php if (!empty($getFooterSetting('footer_address'))): ?>
-                        <a href="https://maps.google.com/?q=<?php echo urlencode($getFooterSetting('footer_address')); ?>" target="_blank" class="flex items-center text-sm text-gray-900 hover:text-black transition group">
+                        <a href="https://maps.google.com/?q=<?php echo urlencode($getFooterSetting('footer_address')); ?>" target="_blank" class="flex gap-2 items-center text-sm text-gray-900 hover:text-black transition group">
                             <i class="fas fa-map-marker-alt w-5 text-sm group-hover:text-black"></i>
                             <span class="group-hover:underline"><?php echo htmlspecialchars($getFooterSetting('footer_address')); ?></span>
                         </a>
                         <?php endif; ?>
                         <?php if (!empty($getFooterSetting('footer_phone'))): ?>
-                        <a href="tel:<?php echo htmlspecialchars(preg_replace('/[^0-9+]/', '', $getFooterSetting('footer_phone'))); ?>" class="flex items-center text-sm text-gray-900 hover:text-black transition group">
+                        <a href="tel:<?php echo htmlspecialchars(preg_replace('/[^0-9+]/', '', $getFooterSetting('footer_phone'))); ?>" class="flex gap-2 items-center text-sm text-gray-900 hover:text-black transition group">
                             <i class="fas fa-phone w-5 text-sm group-hover:text-black"></i>
                             <span class="group-hover:underline"><?php echo htmlspecialchars($getFooterSetting('footer_phone')); ?></span>
                         </a>
                         <?php endif; ?>
                         <?php if (!empty($getFooterSetting('footer_email'))): ?>
-                        <a href="mailto:<?php echo htmlspecialchars($getFooterSetting('footer_email')); ?>" class="flex items-center text-sm text-gray-900 hover:text-black transition group">
+                        <a href="mailto:<?php echo htmlspecialchars($getFooterSetting('footer_email')); ?>" class="flex gap-2 items-center text-sm text-gray-900 hover:text-black transition group">
                             <i class="fas fa-envelope w-5 text-sm group-hover:text-black"></i>
                             <span class="group-hover:underline"><?php echo htmlspecialchars($getFooterSetting('footer_email')); ?></span>
                         </a>
