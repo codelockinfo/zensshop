@@ -574,7 +574,7 @@ $qv_policy_color = $qvStyles['policy_color'] ?? '#374151';
     
     <!-- Scripts -->
     <script src="<?php echo $baseUrl; ?>/assets/js/main6.js?v=2" defer></script>
-    <script src="<?php echo $baseUrl; ?>/assets/js/cart18.js?v=1" defer></script>
+    <script src="<?php echo $baseUrl; ?>/assets/js/cart19.js?v=1" defer></script>
     <script src="<?php echo $baseUrl; ?>/assets/js/product-cards7.js?v=2" defer></script>
     <script src="<?php echo $baseUrl; ?>/assets/js/wishlist10.js?v=3" defer></script>
     <script src="<?php echo $baseUrl; ?>/assets/js/notification1.js?v=2" defer></script>
