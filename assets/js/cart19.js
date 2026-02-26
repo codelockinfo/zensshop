@@ -532,10 +532,10 @@ function updateCartUI() {
                         </h4>
                         ${variantDisplay}
                         <p class="text-gray-600 text-sm mt-1">${formatCurrency(price, item.currency)}</p>
-                        <div class="flex items-center space-x-2 mt-2">
-                            <button onclick="updateCartItem(${item.product_id}, ${quantity - 1}, this, ${variantJSON})" class="w-8 h-8 border rounded flex items-center justify-center hover:bg-gray-100 text-sm">-</button>
-                            <span class="w-8 text-center text-sm font-semibold">${quantity}</span>
-                            <button onclick="updateCartItem(${item.product_id}, ${quantity + 1}, this, ${variantJSON})" class="w-8 h-8 border rounded flex items-center justify-center hover:bg-gray-100 text-sm">+</button>
+                        <div class="flex items-center space-x-2 mt-2 border rounded justify-between  w-28">
+                            <button onclick="updateCartItem(${item.product_id}, ${quantity - 1}, this, ${variantJSON})" class="w-10 h-8 flex items-center justify-center hover:bg-gray-100 text-sm">-</button>
+                            <span class=" text-center text-sm font-semibold">${quantity}</span>
+                            <button onclick="updateCartItem(${item.product_id}, ${quantity + 1}, this, ${variantJSON})" class="w-10 h-8 flex items-center justify-center hover:bg-gray-100 text-sm">+</button>
                         </div>
                     </div>
                     <div class="text-right">

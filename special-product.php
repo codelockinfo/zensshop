@@ -404,7 +404,7 @@ require_once __DIR__ . '/includes/header.php';
         <div class="container mx-auto px-6 grid grid-cols-1 lg:grid-cols-2 gap-16 items-center">
             <div class="z-10 order-2 lg:order-1 text-center lg:text-left">
                 <h2 class="text-xl font-semibold tracking-widest uppercase mb-4 opacity-60"><?php echo htmlspecialchars($heroSubtitle); ?></h2>
-                <h1 class="text-6xl lg:text-[70px] font-bold mb-8 tracking-tighter lowercase leading-none line-clamp-4 overflow-hidden text-ellipsis" style="display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical;">
+                <h1 class="text-6xl lg:text-[70px] font-bold mb-8 tracking-tighter lowercase leading-[1.2] line-clamp-3 overflow-hidden text-ellipsis" style="display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical;">
                     <?php echo htmlspecialchars($heroTitle); ?>
 
                 </h1>
