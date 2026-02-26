@@ -45,9 +45,18 @@ switch ($action) {
         $result = $delhivery->autoCreateShipment($numericOrderId);
         
         if ($result['success']) {
-            echo json_encode(['success' => true, 'message' => 'Shipment created successfully', 'waybill' => $result['waybill']]);
+            echo json_encode([
+                'success' => true, 
+                'message' => 'Shipment created successfully', 
+                'waybill' => $result['waybill'],
+                'debug' => $delhivery->lastRequest // Show request in network tab
+            ]);
         } else {
-            echo json_encode(['success' => false, 'message' => $result['message']]);
+            echo json_encode([
+                'success' => false, 
+                'message' => $result['message'],
+                'debug' => $delhivery->lastRequest
+            ]);
         }
         break;
 
@@ -59,10 +68,10 @@ switch ($action) {
         }
 
         $result = $delhivery->cancel($waybill);
-        if (isset($result['success']) && $result['success']) {
-            echo json_encode(['success' => true, 'message' => 'Shipment cancelled successfully']);
+        if ($result['success']) {
+            echo json_encode(['success' => true, 'message' => 'Shipment cancelled successfully', 'debug' => $delhivery->lastRequest]);
         } else {
-            echo json_encode(['success' => false, 'message' => $result['message'] ?? 'Failed to cancel shipment']);
+            echo json_encode(['success' => false, 'message' => $result['message'] ?? 'Failed to cancel shipment', 'debug' => $delhivery->lastRequest]);
         }
         break;
 
@@ -74,7 +83,11 @@ switch ($action) {
         }
 
         $result = $delhivery->track($waybill);
-        echo json_encode(['success' => true, 'data' => $result]);
+        if ($result['success']) {
+            echo json_encode(['success' => true, 'data' => $result, 'debug' => $delhivery->lastRequest]);
+        } else {
+            echo json_encode(['success' => false, 'message' => $result['message'] ?? 'Tracking failed', 'debug' => $delhivery->lastRequest]);
+        }
         break;
 
     default:
