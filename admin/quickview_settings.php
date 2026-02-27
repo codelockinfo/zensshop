@@ -330,78 +330,80 @@ require_once __DIR__ . '/../includes/admin-header.php';
 </div>
 
 <script>
-(function() {
-    const container = document.getElementById('ajax-content-inner') || document;
-    const inputs = container.querySelectorAll('input');
-    function update() {
-        const d = {};
+window.initQuickViewSettings = function() {
+    var container = document.getElementById('ajax-content-inner') || document;
+    var inputs = container.querySelectorAll('input');
+    
+    window.updateQuickViewPreview = function() {
+        var d = {};
         inputs.forEach(i => d[i.name] = i.value);
         
-        const overlay = document.getElementById('qvPreviewOverlay');
-        const modal = document.getElementById('qvPreviewModal');
+        var overlay = document.getElementById('qvPreviewOverlay');
+        var modal = document.getElementById('qvPreviewModal');
         if (!overlay || !modal) return;
 
         overlay.style.backgroundColor = d.overlay_color;
         modal.style.backgroundColor = d.modal_bg_color;
         
-        const price = document.getElementById('qvPrevPrice');
+        var price = document.getElementById('qvPrevPrice');
         if (price) price.style.color = d.price_color;
         
-        const qty = document.getElementById('qvPrevQty');
+        var qty = document.getElementById('qvPrevQty');
         if (qty) qty.style.borderColor = d.qty_border_color;
         
-        const title = document.getElementById('qvPrevTitle');
+        var title = document.getElementById('qvPrevTitle');
         if (title) title.style.color = d.title_color;
         
-        const desc = document.getElementById('qvPrevDesc');
+        var desc = document.getElementById('qvPrevDesc');
         if (desc) desc.style.color = d.desc_color;
         
-        const stock = document.getElementById('qvPrevStock');
+        var stock = document.getElementById('qvPrevStock');
         if (stock) stock.style.color = d.stock_color;
         
-        const actions = document.getElementById('qvPrevActions');
+        var actions = document.getElementById('qvPrevActions');
         if (actions) {
             actions.style.color = d.actions_color;
             actions.style.borderColor = d.qty_border_color + '33';
         }
         
-        const policy = document.getElementById('qvPrevPolicy');
+        var policy = document.getElementById('qvPrevPolicy');
         if (policy) policy.style.color = d.policy_color;
         
-        const atc = document.getElementById('qvPrevAtc');
+        var atc = document.getElementById('qvPrevAtc');
         if (atc) {
             atc.style.backgroundColor = d.atc_btn_color;
             atc.style.color = d.atc_btn_text_color;
         }
         
-        const buy = document.getElementById('qvPrevBuy');
+        var buy = document.getElementById('qvPrevBuy');
         if (buy) {
             buy.style.backgroundColor = d.buy_now_btn_color;
             buy.style.color = d.buy_now_btn_text_color;
         }
         
-        const style = document.getElementById('qvPreviewStyles');
+        var style = document.getElementById('qvPreviewStyles');
         if (style) {
             style.innerHTML = `
                 #qvPrevAtc:hover { background-color: ${d.atc_hover_bg_color} !important; color: ${d.atc_hover_text_color} !important; }
                 #qvPrevBuy:hover { background-color: ${d.buy_now_hover_bg_color} !important; color: ${d.buy_now_hover_text_color} !important; }
             `;
         }
-    }
+    };
+
     inputs.forEach(i => {
-        i.addEventListener('input', update);
-        i.addEventListener('change', update);
+        i.addEventListener('input', window.updateQuickViewPreview);
+        i.addEventListener('change', window.updateQuickViewPreview);
     });
 
     // Color sync
     container.querySelectorAll('input[type="color"]').forEach(colorInput => {
-        const textInput = colorInput.nextElementSibling;
+        var textInput = colorInput.nextElementSibling;
         colorInput.addEventListener('input', () => {
             if (textInput) textInput.value = colorInput.value.toUpperCase();
         });
         if (textInput) {
             textInput.addEventListener('input', () => {
-                const val = textInput.value;
+                var val = textInput.value;
                 if (/^#[0-9A-F]{6}$/i.test(val)) {
                     colorInput.value = val;
                 }
@@ -409,8 +411,10 @@ require_once __DIR__ . '/../includes/admin-header.php';
         }
     });
 
-    update();
-})();
+    window.updateQuickViewPreview();
+};
+
+window.initQuickViewSettings();
 </script>
 
 <?php require_once __DIR__ . '/../includes/admin-footer.php'; ?>

@@ -394,7 +394,14 @@ require_once __DIR__ . '/../includes/admin-header.php';
                  <form method="POST" class="inline-block" id="deleteMenuForm">
                      <input type="hidden" name="action" value="delete_menu">
                      <input type="hidden" name="menu_id_delete" value="<?php echo $selectedMenuId; ?>">
-                     <button type="button" class="text-red-500 hover:text-red-700 text-sm font-medium" onclick="showConfirmModal('Are you sure you want to delete this menu and all its items?', function(){ document.getElementById('deleteMenuForm').submit(); })">Delete Menu</button>
+                     <button type="button" class="text-red-500 hover:text-red-700 text-sm font-medium" onclick="showConfirmModal('Are you sure you want to delete this menu and all its items?', function(){ 
+                         const fm = document.getElementById('deleteMenuForm');
+                         if (typeof fm.requestSubmit === 'function') {
+                             fm.requestSubmit();
+                         } else {
+                             fm.dispatchEvent(new Event('submit', { cancelable: true, bubbles: true }));
+                         }
+                     })">Delete Menu</button>
                  </form>
                  <?php endif; ?>
             </div>
@@ -659,13 +666,10 @@ require_once __DIR__ . '/../includes/admin-header.php';
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Sortable/1.15.0/Sortable.min.js"></script>
 
 <script>
-// ... (Keep existing JS for UI)
-// Re-inserting required JS functions from previous file to ensure functionality
+window.initMenuSettings = function() {
+    var LINK_RESOURCES = <?php echo $linkResourcesJson; ?>;
 
-// JS Resources
-    const LINK_RESOURCES = <?php echo $linkResourcesJson; ?>;
-
-    function getResourceUrl(type, item) {
+    window.getResourceUrl = function(type, item) {
         if (!item) return '';
         if (type === 'system') return item.url;
         if (type === 'pages') return item.url;
@@ -674,26 +678,22 @@ require_once __DIR__ . '/../includes/admin-header.php';
         if (type === 'blogs') return 'blog?slug=' + item.slug;
         if (type === 'landing_pages') return 'landing?slug=' + item.slug;
         return '';
-    }
+    };
 
-    function updateLinkPicker(typeSelect, itemSelectId, urlInputId, labelInputId) {
-        const type = typeSelect.value;
-        const itemSelect = document.getElementById(itemSelectId);
-        const urlInput = document.getElementById(urlInputId);
+    window.updateLinkPicker = function(typeSelect, itemSelectId, urlInputId, labelInputId) {
+        var type = typeSelect.value;
+        var itemSelect = document.getElementById(itemSelectId);
+        if (!itemSelect) return;
         
-        // Clear item select
         itemSelect.innerHTML = '<option value="">-- Select Item --</option>';
         itemSelect.disabled = true;
         
-        if (type === 'custom') {
-            // Enable URL input usage manually
-            return;
-        }
+        if (type === 'custom') return;
 
         if (LINK_RESOURCES[type] && LINK_RESOURCES[type].length > 0) {
             LINK_RESOURCES[type].forEach(item => {
-                const opt = document.createElement('option');
-                opt.value = JSON.stringify(item); // Store full item object
+                var opt = document.createElement('option');
+                opt.value = JSON.stringify(item);
                 opt.textContent = item.label;
                 itemSelect.appendChild(opt);
             });
@@ -701,40 +701,33 @@ require_once __DIR__ . '/../includes/admin-header.php';
         } else if (type) {
             itemSelect.innerHTML = '<option value="">No items found</option>';
         }
-    }
+    };
 
-    function applyLinkSelection(itemSelect, urlInputId, labelInputId) {
+    window.applyLinkSelection = function(itemSelect, urlInputId, labelInputId) {
         if (!itemSelect.value) return;
-        
-        // Robustly find the Type select using ID pattern (works for edit_link_item -> edit_link_type AND bulk_item_X -> bulk_type_X)
-        const typeSelectId = itemSelect.id.replace('item', 'type'); // e.g. bulk_item_0 -> bulk_type_0
-        const typeSelect = document.getElementById(typeSelectId);
-        const type = typeSelect ? typeSelect.value : '';
+        var typeSelectId = itemSelect.id.replace('item', 'type');
+        var typeSelect = document.getElementById(typeSelectId);
+        var type = typeSelect ? typeSelect.value : '';
         
         try {
-            const item = JSON.parse(itemSelect.value);
-            const url = getResourceUrl(type, item);
-            
+            var item = JSON.parse(itemSelect.value);
+            var url = window.getResourceUrl(type, item);
             if (url) document.getElementById(urlInputId).value = url;
-            // Always update label to match selected item (use full untruncated label)
-            if (labelInputId) {
-                 document.getElementById(labelInputId).value = item.full_label || item.label;
-            }
+            if (labelInputId) document.getElementById(labelInputId).value = item.full_label || item.label;
         } catch(e) { console.error("Error parsing selection", e); }
-    }
+    };
 
-    function addBulkRow() {
-        const container = document.getElementById('bulk_rows_container');
-        const index = container.children.length;
-        const row = document.createElement('div');
+    window.addBulkRow = function() {
+        var container = document.getElementById('bulk_rows_container');
+        if (!container) return;
+        var index = container.children.length;
+        var row = document.createElement('div');
         row.className = "flex gap-3 items-start bg-gray-50 p-3 rounded border border-gray-100 group relative";
-        
-        // Dynamic Quick Link UI for Bulk Row
         row.innerHTML = `
             <div class="flex-none w-64">
                 <label class="block text-xs font-bold text-gray-400 mb-1">Quick Link</label>
                 <div class="grid grid-cols-2 gap-1">
-                    <select id="bulk_type_${index}" onchange="updateLinkPicker(this, 'bulk_item_${index}', 'bulk_url_${index}', 'bulk_label_${index}')" class="w-full border p-1 rounded text-xs outline-none focus:ring-1 focus:ring-blue-500">
+                    <select id="bulk_type_${index}" onchange="window.updateLinkPicker(this, 'bulk_item_${index}', 'bulk_url_${index}', 'bulk_label_${index}')" class="w-full border p-1 rounded text-xs outline-none focus:ring-1 focus:ring-blue-500">
                         <option value="">Type</option>
                         <option value="system">System Link</option>
                         <option value="pages">Store Page</option>
@@ -744,7 +737,7 @@ require_once __DIR__ . '/../includes/admin-header.php';
                         <option value="landing_pages">Landing Page</option>
                         <option value="custom">URL</option>
                     </select>
-                    <select id="bulk_item_${index}" onchange="applyLinkSelection(this, 'bulk_url_${index}', 'bulk_label_${index}')" class="w-full border p-1 rounded text-xs outline-none focus:ring-1 focus:ring-blue-500 disabled:bg-gray-100" disabled>
+                    <select id="bulk_item_${index}" onchange="window.applyLinkSelection(this, 'bulk_url_${index}', 'bulk_label_${index}')" class="w-full border p-1 rounded text-xs outline-none focus:ring-1 focus:ring-blue-500 disabled:bg-gray-100" disabled>
                         <option value="">Item</option>
                     </select>
                 </div>
@@ -770,209 +763,208 @@ require_once __DIR__ . '/../includes/admin-header.php';
             <button type="button" onclick="this.parentElement.remove()" class="absolute -top-2 -right-2 bg-white rounded-full p-1 shadow text-gray-300 hover:text-red-500 hover:shadow-md transition"><i class="fas fa-times-circle"></i></button>
         `;
         container.appendChild(row);
-    }
-function openAddModal(parentId, parentName) {
-    document.getElementById('bulk_parent_id').value = parentId || '';
-    document.getElementById('bulk_parent_name').innerText = parentName || 'Top Level';
-    document.getElementById('bulk_rows_container').innerHTML = '';
-    addBulkRow(); 
-    document.getElementById('bulkAddModal').classList.remove('hidden');
-}
-function editItem(item) {
-    document.getElementById('edit_item_id').value = item.id;
-    document.getElementById('edit_label').value = item.label;
-    document.getElementById('edit_url').value = item.url;
-    document.getElementById('edit_parent_id').value = item.parent_id || '';
-    document.getElementById('edit_badge_text').value = item.badge_text || '';
-    document.getElementById('edit_custom_classes').value = item.custom_classes || '';
-    document.getElementById('edit_is_mega_menu').checked = (item.is_mega_menu == 1);
-    
-    // Toggle image section based on mega menu setting
-    toggleImageSection(item.is_mega_menu == 1);
-    
-    // Handle image display with new UI
-    const previewBox = document.getElementById('image_preview_box');
-    const placeholder = document.getElementById('image_upload_placeholder');
-    const removeBtn = document.getElementById('btn_remove_image');
-    const removeImageFlag = document.getElementById('remove_image_flag');
-    const editImageInput = document.getElementById('edit_image_input');
-    
-    // Reset states
-    removeImageFlag.value = '0';
-    editImageInput.value = '';
-    
-    if (item.image_path) {
-        previewBox.src = '<?php echo getBaseUrl(); ?>/assets/images/uploads/' + item.image_path;
-        previewBox.classList.remove('hidden');
-        placeholder.classList.add('hidden');
-        removeBtn.classList.remove('hidden');
-    } else {
-        previewBox.src = '';
-        previewBox.classList.add('hidden');
-        placeholder.classList.remove('hidden');
-        removeBtn.classList.add('hidden');
-    }
-    
-    document.getElementById('editItemModal').classList.remove('hidden');
-}
+    };
 
-function toggleImageSection(show) {
-    const section = document.getElementById('edit_image_section');
-    if (show) {
-        section.classList.remove('hidden');
-    } else {
-        section.classList.add('hidden');
-    }
-}
+    window.openAddModal = function(parentId, parentName) {
+        document.getElementById('bulk_parent_id').value = parentId || '';
+        document.getElementById('bulk_parent_name').innerText = parentName || 'Top Level';
+        document.getElementById('bulk_rows_container').innerHTML = '';
+        window.addBulkRow(); 
+        document.getElementById('bulkAddModal').classList.remove('hidden');
+    };
 
-function removeCurrentImage(e) {
-    if(e) e.stopPropagation();
-    document.getElementById('remove_image_flag').value = '1';
-    
-    // Reset UI to placeholder
-    document.getElementById('image_preview_box').src = '';
-    document.getElementById('image_preview_box').classList.add('hidden');
-    document.getElementById('image_upload_placeholder').classList.remove('hidden');
-    document.getElementById('btn_remove_image').classList.add('hidden');
-    
-    // Clear input
-    document.getElementById('edit_image_input').value = '';
-}
-
-function autoFillEdit(select) {
-    if (!select.value) return;
-    const label = select.options[select.selectedIndex].getAttribute('data-label');
-    document.getElementById('edit_label').value = label;
-    document.getElementById('edit_url').value = select.value;
-}
-
-function autoFillBulk(select, index) {
-    if (!select.value) return;
-    const label = select.options[select.selectedIndex].getAttribute('data-label');
-    const labelInput = document.getElementById('bulk_label_' + index);
-    const urlInput = document.getElementById('bulk_url_' + index);
-    if (labelInput) labelInput.value = label;
-    if (urlInput) urlInput.value = select.value;
-}
-
-function previewNewImage(input) {
-    const preview = document.getElementById('image_preview_box');
-    const placeholder = document.getElementById('image_upload_placeholder');
-    const removeBtn = document.getElementById('btn_remove_image');
-    
-    if (input.files && input.files[0]) {
-        const reader = new FileReader();
-        reader.onload = function(e) {
-            preview.src = e.target.result;
-            preview.classList.remove('hidden');
-            placeholder.classList.add('hidden');
-            removeBtn.classList.remove('hidden');
-        };
-        reader.readAsDataURL(input.files[0]);
-        document.getElementById('remove_image_flag').value = '0';
-    }
-}
-
-function closeModal(id) { document.getElementById(id).classList.add('hidden'); }
-
-// Drag and Drop Logic for Hierarchical List
-document.addEventListener('DOMContentLoaded', function() {
-    const nestedSortables = [].slice.call(document.querySelectorAll('.sortable-list'));
-    nestedSortables.forEach(function (el) {
-        new Sortable(el, {
-            group: 'nested', 
-            handle: '.drag-handle',
-            animation: 150,
-            fallbackOnBody: true,
-            swapThreshold: 0.65,
-            onEnd: function (evt) {
-                saveOrder();
+    window.editItem = function(item) {
+        document.getElementById('edit_item_id').value = item.id;
+        document.getElementById('edit_label').value = item.label;
+        document.getElementById('edit_url').value = item.url;
+        document.getElementById('edit_parent_id').value = item.parent_id || '';
+        document.getElementById('edit_badge_text').value = item.badge_text || '';
+        document.getElementById('edit_custom_classes').value = item.custom_classes || '';
+        document.getElementById('edit_is_mega_menu').checked = (item.is_mega_menu == 1);
+        window.toggleImageSection(item.is_mega_menu == 1);
+        
+        var previewBox = document.getElementById('image_preview_box');
+        var placeholder = document.getElementById('image_upload_placeholder');
+        var removeBtn = document.getElementById('btn_remove_image');
+        var removeImageFlag = document.getElementById('remove_image_flag');
+        var editImageInput = document.getElementById('edit_image_input');
+        
+        if (removeImageFlag) removeImageFlag.value = '0';
+        if (editImageInput) editImageInput.value = '';
+        
+        if (item.image_path) {
+            if (previewBox) {
+                previewBox.src = '<?php echo getBaseUrl(); ?>/assets/images/uploads/' + item.image_path;
+                previewBox.classList.remove('hidden');
             }
-        });
-    });
-});
+            if (placeholder) placeholder.classList.add('hidden');
+            if (removeBtn) removeBtn.classList.remove('hidden');
+        } else {
+            if (previewBox) {
+                previewBox.src = '';
+                previewBox.classList.add('hidden');
+            }
+            if (placeholder) placeholder.classList.remove('hidden');
+            if (removeBtn) removeBtn.classList.add('hidden');
+        }
+        document.getElementById('editItemModal').classList.remove('hidden');
+    };
 
-function saveOrder() {
-    const root = document.getElementById('menu-root');
-    if (!root) return;
-    const updates = {};
-    function walk(container, parentId) {
-        let index = 0;
-        for (let child of container.children) {
-            if (child.classList.contains('menu-item-container')) {
-                const itemId = child.getAttribute('data-id');
-                index++;
-                updates[itemId] = { sort_order: index, parent_id: parentId };
-                const subContainer = child.querySelector('.sortable-list');
-                if (subContainer) {
-                    walk(subContainer, itemId);
+    window.toggleImageSection = function(show) {
+        var section = document.getElementById('edit_image_section');
+        if (section) {
+            if (show) section.classList.remove('hidden');
+            else section.classList.add('hidden');
+        }
+    };
+
+    window.removeCurrentImage = function(e) {
+        if(e) e.stopPropagation();
+        document.getElementById('remove_image_flag').value = '1';
+        document.getElementById('image_preview_box').src = '';
+        document.getElementById('image_preview_box').classList.add('hidden');
+        document.getElementById('image_upload_placeholder').classList.remove('hidden');
+        document.getElementById('btn_remove_image').classList.add('hidden');
+        document.getElementById('edit_image_input').value = '';
+    };
+
+    window.previewNewImage = function(input) {
+        var preview = document.getElementById('image_preview_box');
+        var placeholder = document.getElementById('image_upload_placeholder');
+        var removeBtn = document.getElementById('btn_remove_image');
+        if (input.files && input.files[0]) {
+            var reader = new FileReader();
+            reader.onload = function(e) {
+                if (preview) {
+                    preview.src = e.target.result;
+                    preview.classList.remove('hidden');
+                }
+                if (placeholder) placeholder.classList.add('hidden');
+                if (removeBtn) removeBtn.classList.remove('hidden');
+            };
+            reader.readAsDataURL(input.files[0]);
+            document.getElementById('remove_image_flag').value = '0';
+        }
+    };
+
+    window.closeModal = function(id) { 
+        var modal = document.getElementById(id);
+        if (modal) modal.classList.add('hidden'); 
+    };
+
+    window.initMenuSortables = function() {
+        var root = document.getElementById('menu-root');
+        if (!root || root.hasAttribute('data-sortable-initialized')) return;
+        var nestedSortables = [].slice.call(document.querySelectorAll('.sortable-list'));
+        if (typeof Sortable !== 'undefined') {
+            nestedSortables.forEach(function (el) {
+                new Sortable(el, {
+                    group: 'nested', 
+                    handle: '.drag-handle',
+                    animation: 150,
+                    fallbackOnBody: true,
+                    swapThreshold: 0.65,
+                    onEnd: function (evt) {
+                        window.saveMenuOrder();
+                    }
+                });
+            });
+            root.setAttribute('data-sortable-initialized', 'true');
+        }
+    };
+
+    window.saveMenuOrder = function() {
+        var root = document.getElementById('menu-root');
+        if (!root) return;
+        var updates = {};
+        function walk(container, parentId) {
+            var index = 0;
+            for (var child of container.children) {
+                if (child.classList.contains('menu-item-container')) {
+                    var itemId = child.getAttribute('data-id');
+                    index++;
+                    updates[itemId] = { sort_order: index, parent_id: parentId };
+                    var subContainer = child.querySelector('.sortable-list');
+                    if (subContainer) {
+                        walk(subContainer, itemId);
+                    }
                 }
             }
         }
-    }
-    walk(root, 0); 
-    const formData = new FormData();
-    formData.append('action', 'reorder_items_tree');
-    formData.append('tree_data', JSON.stringify(updates));
-    fetch('', { method: 'POST', body: formData });
-}
+        walk(root, 0); 
+        var formData = new FormData();
+        formData.append('action', 'reorder_items_tree');
+        formData.append('tree_data', JSON.stringify(updates));
+        fetch('', { method: 'POST', body: formData });
+    };
 
-// Rename Modal
-function openRenameModal(id, name, location) {
-    document.getElementById('rename_menu_id').value = id;
-    document.getElementById('rename_menu_name').value = name;
-    document.getElementById('rename_location').value = location || '';
-    document.getElementById('renameMenuModal').classList.remove('hidden');
-}
+    window.openRenameModal = function(id, name, location) {
+        document.getElementById('rename_menu_id').value = id;
+        document.getElementById('rename_menu_name').value = name;
+        document.getElementById('rename_location').value = location || '';
+        document.getElementById('renameMenuModal').classList.remove('hidden');
+    };
 
-function toggleChildren(event, btn) {
-    event.stopPropagation();
-    const row = btn.closest('.menu-item-row');
-    const container = row.nextElementSibling;
-    const menuItemContainer = btn.closest('.menu-item-container');
-    const itemId = menuItemContainer.getAttribute('data-id');
-    
-    if (container && container.classList.contains('children-container')) {
-        if (container.classList.contains('hidden')) {
-            container.classList.remove('hidden');
-             btn.style.transform = 'rotate(0deg)';
-             setCookie('menu_item_' + itemId, 'expanded', 30);
-        } else {
-            container.classList.add('hidden');
-            btn.style.transform = 'rotate(-90deg)';
-            setCookie('menu_item_' + itemId, 'collapsed', 30);
-        }
-    }
-}
-function setCookie(name, value, days) {
-    const expires = new Date();
-    expires.setTime(expires.getTime() + (days * 24 * 60 * 60 * 1000));
-    document.cookie = name + '=' + value + ';expires=' + expires.toUTCString() + ';path=/';
-}
-function getCookie(name) {
-    const nameEQ = name + '=';
-    const ca = document.cookie.split(';');
-    for (let i = 0; i < ca.length; i++) {
-        let c = ca[i];
-        while (c.charAt(0) === ' ') c = c.substring(1, c.length);
-        if (c.indexOf(nameEQ) === 0) return c.substring(nameEQ.length, c.length);
-    }
-    return null;
-}
-document.addEventListener('DOMContentLoaded', function() {
-    document.querySelectorAll('.menu-item-container').forEach(function(item) {
-        const itemId = item.getAttribute('data-id');
-        const state = getCookie('menu_item_' + itemId);
-        if (state === 'expanded') {
-            const container = item.querySelector('.children-container');
-            const toggleBtn = item.querySelector('.toggle-btn');
-            if (container && toggleBtn) {
+    window.toggleChildren = function(event, btn) {
+        if (event) event.stopPropagation();
+        var row = btn.closest('.menu-item-row');
+        var container = row ? row.nextElementSibling : null;
+        var menuItemContainer = btn.closest('.menu-item-container');
+        var itemId = menuItemContainer ? menuItemContainer.getAttribute('data-id') : null;
+        
+        if (container && container.classList.contains('children-container')) {
+            if (container.classList.contains('hidden')) {
                 container.classList.remove('hidden');
-                toggleBtn.style.transform = 'rotate(0deg)';
+                btn.style.transform = 'rotate(0deg)';
+                if (itemId) window.setMenuCookie('menu_item_' + itemId, 'expanded', 30);
+            } else {
+                container.classList.add('hidden');
+                btn.style.transform = 'rotate(-90deg)';
+                if (itemId) window.setMenuCookie('menu_item_' + itemId, 'collapsed', 30);
             }
         }
-    });
-});
+    };
+
+    window.setMenuCookie = function(name, value, days) {
+        var expires = new Date();
+        expires.setTime(expires.getTime() + (days * 24 * 60 * 60 * 1000));
+        document.cookie = name + '=' + value + ';expires=' + expires.toUTCString() + ';path=/';
+    };
+
+    window.getMenuCookie = function(name) {
+        var nameEQ = name + '=';
+        var ca = document.cookie.split(';');
+        for (var i = 0; i < ca.length; i++) {
+            var c = ca[i];
+            while (c.charAt(0) === ' ') c = c.substring(1, c.length);
+            if (c.indexOf(nameEQ) === 0) return c.substring(nameEQ.length, c.length);
+        }
+        return null;
+    };
+
+    window.initMenuStates = function() {
+        var containers = document.querySelectorAll('.menu-item-container');
+        containers.forEach(function(item) {
+            if (item.hasAttribute('data-state-initialized')) return;
+            var itemId = item.getAttribute('data-id');
+            var state = window.getMenuCookie('menu_item_' + itemId);
+            if (state === 'expanded') {
+                var container = item.querySelector('.children-container');
+                var toggleBtn = item.querySelector('.toggle-btn');
+                if (container && toggleBtn) {
+                    container.classList.remove('hidden');
+                    toggleBtn.style.transform = 'rotate(0deg)';
+                }
+            }
+            item.setAttribute('data-state-initialized', 'true');
+        });
+    };
+
+    window.initMenuSortables();
+    window.initMenuStates();
+};
+
+window.initMenuSettings();
 </script>
 
 <?php

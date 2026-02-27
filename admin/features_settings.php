@@ -218,7 +218,7 @@ require_once __DIR__ . '/../includes/admin-header.php';
         <?php foreach ($features as $f): ?>
             <div class="p-4 rounded shadow border border-gray-200 relative group" style="background-color: <?php echo htmlspecialchars($f['bg_color'] ?? '#ffffff'); ?>; color: <?php echo htmlspecialchars($f['text_color'] ?? '#000000'); ?>;">
                 <div class="flex justify-end mb-2 absolute top-2 right-2">
-                    <button onclick='editFeature(<?php echo json_encode($f, JSON_HEX_APOS | JSON_HEX_QUOT); ?>)' class="text-blue-600 hover:text-blue-800 mr-2 bg-white rounded-full p-1" title="Edit">
+                    <button onclick='window.editFeatureCard(<?php echo json_encode($f, JSON_HEX_APOS | JSON_HEX_QUOT); ?>)' class="text-blue-600 hover:text-blue-800 mr-2 bg-white rounded-full p-1" title="Edit">
                         <i class="fas fa-edit"></i>
                     </button>
                     <form method="POST" class="inline">
@@ -239,7 +239,7 @@ require_once __DIR__ . '/../includes/admin-header.php';
         <?php endforeach; ?>
 
         <?php if ($count < 3): ?>
-            <button onclick="openModal()" class="flex flex-col items-center justify-center bg-gray-50 border-2 border-dashed border-gray-300 p-6 rounded hover:bg-gray-100 transition min-h-[200px] text-gray-500">
+            <button onclick="window.openFeaturesModal()" class="flex flex-col items-center justify-center bg-gray-50 border-2 border-dashed border-gray-300 p-6 rounded hover:bg-gray-100 transition min-h-[200px] text-gray-500">
                 <i class="fas fa-plus-circle text-3xl mb-2"></i>
                 <span class="font-bold">Add Feature Card</span>
                 <span class="text-xs mt-1">(<?php echo $count; ?>/3 used)</span>
@@ -253,7 +253,7 @@ require_once __DIR__ . '/../includes/admin-header.php';
     <div class="bg-white rounded-lg shadow-xl w-full max-w-3xl mx-4 max-h-[90vh] overflow-y-auto">
         <div class="flex justify-between items-center p-4 border-b">
             <h3 class="text-xl font-bold text-gray-800 modal-title">Add Feature</h3>
-            <button onclick="closeModal()" class="text-gray-500 hover:text-gray-700">
+            <button onclick="window.closeFeaturesModal()" class="text-gray-500 hover:text-gray-700">
                 <i class="fas fa-times text-xl"></i>
             </button>
         </div>
@@ -304,7 +304,7 @@ require_once __DIR__ . '/../includes/admin-header.php';
             </div>
             
             <div class="text-right pt-2">
-                <button type="button" onclick="closeModal()" class="px-4 py-2 text-gray-600 hover:text-gray-800 mr-2">Cancel</button>
+                <button type="button" onclick="window.closeFeaturesModal()" class="px-4 py-2 text-gray-600 hover:text-gray-800 mr-2">Cancel</button>
                 <button type="submit" class="bg-blue-600 text-white px-6 py-2 rounded hover:bg-blue-700 font-bold btn-loading">Save</button>
             </div>
         </form>
@@ -312,120 +312,87 @@ require_once __DIR__ . '/../includes/admin-header.php';
 </div>
 
 <script>
-// Section Color Sync
-const sectionBgPicker = document.getElementById('sectionBgPicker');
-const sectionBgText = document.getElementById('sectionBgText');
-const sectionTextPicker = document.getElementById('sectionTextPicker');
-const sectionTextText = document.getElementById('sectionTextText');
+window.initFeaturesJS = function() {
+    var sectionBgPicker = document.getElementById('sectionBgPicker');
+    var sectionBgText = document.getElementById('sectionBgText');
+    var sectionTextPicker = document.getElementById('sectionTextPicker');
+    var sectionTextText = document.getElementById('sectionTextText');
+    var modal = document.getElementById('featureModal');
+    if (!modal) return;
+    var title = modal.querySelector('.modal-title');
+    var inpId = document.getElementById('inpId');
+    var inpIcon = document.getElementById('inpIcon');
+    var inpHeading = document.getElementById('inpHeading');
+    var inpContent = document.getElementById('inpContent');
+    var inpBgColor = document.getElementById('inpBgColor');
+    var inpBgColorText = document.getElementById('inpBgColorText');
+    var inpTextColor = document.getElementById('inpTextColor');
+    var inpTextColorText = document.getElementById('inpTextColorText');
+    var inpHeadingColor = document.getElementById('inpHeadingColor');
+    var inpHeadingColorText = document.getElementById('inpHeadingColorText');
 
-// Sync section background color
-sectionBgPicker.addEventListener('input', (e) => {
-    sectionBgText.value = e.target.value.toUpperCase();
-});
-sectionBgText.addEventListener('input', (e) => {
-    if (/^#[0-9A-Fa-f]{6}$/.test(e.target.value)) {
-        sectionBgPicker.value = e.target.value;
+    if (sectionBgPicker && sectionBgText) {
+        sectionBgPicker.addEventListener('input', (e) => { sectionBgText.value = e.target.value.toUpperCase(); });
+        sectionBgText.addEventListener('input', (e) => { if (/^#[0-9A-Fa-f]{6}$/.test(e.target.value)) sectionBgPicker.value = e.target.value; });
     }
-});
-
-// Sync section text color
-sectionTextPicker.addEventListener('input', (e) => {
-    sectionTextText.value = e.target.value.toUpperCase();
-});
-sectionTextText.addEventListener('input', (e) => {
-    if (/^#[0-9A-Fa-f]{6}$/.test(e.target.value)) {
-        sectionTextPicker.value = e.target.value;
+    if (sectionTextPicker && sectionTextText) {
+        sectionTextPicker.addEventListener('input', (e) => { sectionTextText.value = e.target.value.toUpperCase(); });
+        sectionTextText.addEventListener('input', (e) => { if (/^#[0-9A-Fa-f]{6}$/.test(e.target.value)) sectionTextPicker.value = e.target.value; });
     }
-});
-
-// Modal elements
-const modal = document.getElementById('featureModal');
-const title = modal.querySelector('.modal-title');
-const inpId = document.getElementById('inpId');
-const inpIcon = document.getElementById('inpIcon');
-const inpHeading = document.getElementById('inpHeading');
-const inpContent = document.getElementById('inpContent');
-const inpBgColor = document.getElementById('inpBgColor');
-const inpBgColorText = document.getElementById('inpBgColorText');
-const inpTextColor = document.getElementById('inpTextColor');
-const inpTextColorText = document.getElementById('inpTextColorText');
-
-// Sync modal background color
-inpBgColor.addEventListener('input', (e) => {
-    inpBgColorText.value = e.target.value.toUpperCase();
-});
-inpBgColorText.addEventListener('input', (e) => {
-    if (/^#[0-9A-Fa-f]{6}$/.test(e.target.value)) {
-        inpBgColor.value = e.target.value;
+    if (inpBgColor && inpBgColorText) {
+        inpBgColor.addEventListener('input', (e) => { inpBgColorText.value = e.target.value.toUpperCase(); });
+        inpBgColorText.addEventListener('input', (e) => { if (/^#[0-9A-Fa-f]{6}$/.test(e.target.value)) inpBgColor.value = e.target.value; });
     }
-});
-
-// Sync modal text color
-inpTextColor.addEventListener('input', (e) => {
-    inpTextColorText.value = e.target.value.toUpperCase();
-});
-inpTextColorText.addEventListener('input', (e) => {
-    if (/^#[0-9A-Fa-f]{6}$/.test(e.target.value)) {
-        inpTextColor.value = e.target.value;
+    if (inpTextColor && inpTextColorText) {
+        inpTextColor.addEventListener('input', (e) => { inpTextColorText.value = e.target.value.toUpperCase(); });
+        inpTextColorText.addEventListener('input', (e) => { if (/^#[0-9A-Fa-f]{6}$/.test(e.target.value)) inpTextColor.value = e.target.value; });
     }
-});
-
-// Sync modal heading color
-const inpHeadingColor = document.getElementById('inpHeadingColor');
-const inpHeadingColorText = document.getElementById('inpHeadingColorText');
-
-inpHeadingColor.addEventListener('input', (e) => {
-    inpHeadingColorText.value = e.target.value.toUpperCase();
-});
-inpHeadingColorText.addEventListener('input', (e) => {
-    if (/^#[0-9A-Fa-f]{6}$/.test(e.target.value)) {
-        inpHeadingColor.value = e.target.value;
+    if (inpHeadingColor && inpHeadingColorText) {
+        inpHeadingColor.addEventListener('input', (e) => { inpHeadingColorText.value = e.target.value.toUpperCase(); });
+        inpHeadingColorText.addEventListener('input', (e) => { if (/^#[0-9A-Fa-f]{6}$/.test(e.target.value)) inpHeadingColor.value = e.target.value; });
     }
-});
 
-function openModal() {
-    modal.classList.remove('hidden');
-    modal.classList.add('flex');
-    
-    // Reset form
-    title.textContent = 'Add Feature';
-    inpId.value = '';
-    inpIcon.value = '';
-    inpHeading.value = '';
-    inpContent.value = '';
-    inpBgColor.value = '#ffffff';
-    inpBgColorText.value = '#FFFFFF';
-    document.getElementById('inpHeadingColor').value = '#000000';
-    document.getElementById('inpHeadingColorText').value = '#000000';
-    inpTextColor.value = '#000000';
-    inpTextColorText.value = '#000000';
-}
+    modal.addEventListener('click', (e) => { if (e.target === modal) window.closeFeaturesModal(); });
 
-function closeModal() {
-    modal.classList.add('hidden');
-    modal.classList.remove('flex');
-}
+    window.openFeaturesModal = function() {
+        modal.classList.remove('hidden');
+        modal.classList.add('flex');
+        title.textContent = 'Add Feature';
+        inpId.value = '';
+        inpIcon.value = '';
+        inpHeading.value = '';
+        inpContent.value = '';
+        inpBgColor.value = '#ffffff';
+        inpBgColorText.value = '#FFFFFF';
+        inpHeadingColor.value = '#000000';
+        inpHeadingColorText.value = '#000000';
+        inpTextColor.value = '#000000';
+        inpTextColorText.value = '#000000';
+    };
 
-function editFeature(data) {
-    openModal();
-    title.textContent = 'Edit Feature';
-    inpId.value = data.id;
-    inpIcon.value = data.icon;
-    inpHeading.value = data.heading;
-    inpContent.value = data.content;
-    inpBgColor.value = data.bg_color || '#ffffff';
-    inpBgColorText.value = (data.bg_color || '#ffffff').toUpperCase();
-    document.getElementById('inpHeadingColor').value = data.heading_color || '#000000';
-    document.getElementById('inpHeadingColorText').value = (data.heading_color || '#000000').toUpperCase();
-    inpTextColor.value = data.text_color || '#000000';
-    inpTextColorText.value = (data.text_color || '#000000').toUpperCase();
-    document.getElementById('inpSort').value = data.sort_order;
-}
+    window.closeFeaturesModal = function() {
+        modal.classList.add('hidden');
+        modal.classList.remove('flex');
+    };
 
-// Close on outside click
-modal.addEventListener('click', (e) => {
-    if (e.target === modal) closeModal();
-});
+    window.editFeatureCard = function(data) {
+        window.openFeaturesModal();
+        title.textContent = 'Edit Feature';
+        inpId.value = data.id;
+        inpIcon.value = data.icon;
+        inpHeading.value = data.heading;
+        inpContent.value = data.content;
+        inpBgColor.value = data.bg_color || '#ffffff';
+        inpBgColorText.value = (data.bg_color || '#ffffff').toUpperCase();
+        inpHeadingColor.value = data.heading_color || '#000000';
+        inpHeadingColorText.value = (data.heading_color || '#000000').toUpperCase();
+        inpTextColor.value = data.text_color || '#000000';
+        inpTextColorText.value = (data.text_color || '#000000').toUpperCase();
+        document.getElementById('inpSort').value = data.sort_order;
+    };
+};
+
+window.initFeaturesJS();
 </script>
 
 <?php require_once __DIR__ . '/../includes/admin-footer.php'; ?>

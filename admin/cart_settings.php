@@ -554,177 +554,177 @@ require_once __DIR__ . '/../includes/admin-header.php';
 </style>
 
 <script>
-(function() {
-    const container = document.getElementById('ajax-content-inner') || document;
+window.initCartSettings = function() {
+    var container = document.getElementById('ajax-content-inner') || document;
 
     // Live Preview Logic for Cart Drawer
-    function updateDrawerPreview() {
-        const drawer = document.getElementById('preview-cart-drawer');
+    window.updateDrawerPreview = function() {
+        var drawer = document.getElementById('preview-cart-drawer');
         if (!drawer) return;
-        const bgInput = document.getElementById('input_cd_bg');
+        var bgInput = document.getElementById('input_cd_bg');
         
         // Background
         if (bgInput) drawer.style.backgroundColor = bgInput.value;
 
         // Header Title
-        const headerColorInput = document.getElementById('input_cd_header_color');
-        const headerLinks = drawer.querySelectorAll('.preview-item-title');
+        var headerColorInput = document.getElementById('input_cd_header_color');
+        var headerLinks = drawer.querySelectorAll('.preview-item-title');
         
         if (headerColorInput) {
             headerLinks.forEach(el => el.style.color = headerColorInput.value);
         }
 
         // Price
-        const priceInput = document.getElementById('input_cd_price_color');
-        const prices = drawer.querySelectorAll('.preview-item-price');
+        var priceInput = document.getElementById('input_cd_price_color');
+        var prices = drawer.querySelectorAll('.preview-item-price');
         if (priceInput) {
             prices.forEach(el => el.style.color = priceInput.value);
         }
 
         // Qty
-        const qtyInput = document.getElementById('input_cd_qty_color');
-        const qties = drawer.querySelectorAll('.preview-item-qty');
+        var qtyInput = document.getElementById('input_cd_qty_color');
+        var qties = drawer.querySelectorAll('.preview-item-qty');
         if (qtyInput) {
             qties.forEach(el => el.style.color = qtyInput.value);
         }
 
         // Trash
-        const trashInput = document.getElementById('input_cd_trash_color');
-        const trashes = drawer.querySelectorAll('.preview-trash-icon');
+        var trashInput = document.getElementById('input_cd_trash_color');
+        var trashes = drawer.querySelectorAll('.preview-trash-icon');
         if (trashInput) {
             trashes.forEach(el => el.style.color = trashInput.value);
         }
 
         // Total
-        const totalInput = document.getElementById('input_cd_total_color');
-        const totals = drawer.querySelectorAll('.preview-total-text');
+        var totalInput = document.getElementById('input_cd_total_color');
+        var totals = drawer.querySelectorAll('.preview-total-text');
         if (totalInput) {
             totals.forEach(el => el.style.color = totalInput.value);
         }
 
         // Divider
-        const dividerInput = document.getElementById('input_cd_divider_color');
-        const dividers = drawer.querySelectorAll('.preview-divider');
+        var dividerInput = document.getElementById('input_cd_divider_color');
+        var dividers = drawer.querySelectorAll('.preview-divider');
         if (dividerInput) {
             dividers.forEach(el => el.style.borderColor = dividerInput.value);
         }
 
         // Close Icon
-        const closeIconInput = document.getElementById('input_cd_close_icon_color');
-        const closeIcon = drawer.querySelector('.preview-close-icon');
+        var closeIconInput = document.getElementById('input_cd_close_icon_color');
+        var closeIcon = drawer.querySelector('.preview-close-icon');
         if (closeIcon && closeIconInput) {
             closeIcon.style.color = closeIconInput.value;
         }
 
         // View Cart Button
-        const viewBg = document.getElementById('input_cd_view_bg');
-        const viewText = document.getElementById('input_cd_view_text');
-        const viewBtn = drawer.querySelector('.preview-view-btn');
+        var viewBg = document.getElementById('input_cd_view_bg');
+        var viewText = document.getElementById('input_cd_view_text');
+        var viewBtn = drawer.querySelector('.preview-view-btn');
         if (viewBtn) {
             if (viewBg) viewBtn.style.backgroundColor = viewBg.value;
             if (viewText) viewBtn.style.color = viewText.value;
         }
 
         // Checkout Cart Button
-        const checkBg = document.getElementById('input_cd_check_bg');
-        const checkText = document.getElementById('input_cd_check_text');
-        const checkBtn = drawer.querySelector('.preview-checkout-btn');
+        var checkBg = document.getElementById('input_cd_check_bg');
+        var checkText = document.getElementById('input_cd_check_text');
+        var checkBtn = drawer.querySelector('.preview-checkout-btn');
         if (checkBtn) {
              if (checkBg) checkBtn.style.backgroundColor = checkBg.value;
              if (checkText) checkBtn.style.color = checkText.value;
         }
-    }
+    };
 
     // Live Preview Logic for Cart Page
-    function updatePagePreview() {
-        const pagePreview = document.getElementById('preview-cart-page');
+    window.updatePagePreview = function() {
+        var pagePreview = document.getElementById('preview-cart-page');
         if (!pagePreview) return;
-        const bgInput = document.getElementById('input_cp_bg');
+        var bgInput = document.getElementById('input_cp_bg');
         
         // Background
         if (bgInput) pagePreview.style.backgroundColor = bgInput.value;
 
         // Product Card Background
-        const cardBgInput = document.getElementById('input_cp_card_bg');
-        const cards = pagePreview.querySelectorAll('.preview-cp-card');
+        var cardBgInput = document.getElementById('input_cp_card_bg');
+        var cards = pagePreview.querySelectorAll('.preview-cp-card');
         if (cardBgInput) {
             cards.forEach(el => el.style.backgroundColor = cardBgInput.value);
         }
 
         // Order Summary Background
-        const summaryBgInput = document.getElementById('input_cp_summary_bg');
-        const summaries = pagePreview.querySelectorAll('.preview-cp-summary');
+        var summaryBgInput = document.getElementById('input_cp_summary_bg');
+        var summaries = pagePreview.querySelectorAll('.preview-cp-summary');
         if (summaryBgInput) {
             summaries.forEach(el => el.style.backgroundColor = summaryBgInput.value);
         }
 
         // Order Summary Border
-        const summaryBorderInput = document.getElementById('input_cp_summary_border');
+        var summaryBorderInput = document.getElementById('input_cp_summary_border');
         if (summaryBorderInput) {
             summaries.forEach(el => el.style.borderColor = summaryBorderInput.value);
         }
 
         // Product Title
-        const headerColorInput = document.getElementById('input_cp_header_color');
-        const headerLinks = pagePreview.querySelectorAll('.preview-cp-title');
+        var headerColorInput = document.getElementById('input_cp_header_color');
+        var headerLinks = pagePreview.querySelectorAll('.preview-cp-title');
         if (headerColorInput) {
             headerLinks.forEach(el => el.style.color = headerColorInput.value);
         }
 
         // Price
-        const priceInput = document.getElementById('input_cp_price_color');
-        const prices = pagePreview.querySelectorAll('.preview-cp-price');
+        var priceInput = document.getElementById('input_cp_price_color');
+        var prices = pagePreview.querySelectorAll('.preview-cp-price');
         if (priceInput) {
             prices.forEach(el => el.style.color = priceInput.value);
         }
 
         // Qty & Item Total
-        const qtyInput = document.getElementById('input_cp_qty_color');
-        const qties = pagePreview.querySelectorAll('.preview-cp-qty');
-        const itemTotals = pagePreview.querySelectorAll('.preview-cp-total');
+        var qtyInput = document.getElementById('input_cp_qty_color');
+        var qties = pagePreview.querySelectorAll('.preview-cp-qty');
+        var itemTotals = pagePreview.querySelectorAll('.preview-cp-total');
         if (qtyInput) {
             qties.forEach(el => el.style.color = qtyInput.value);
             itemTotals.forEach(el => el.style.color = qtyInput.value);
         }
 
         // Trash
-        const trashInput = document.getElementById('input_cp_trash_color');
-        const trashes = pagePreview.querySelectorAll('.preview-cp-trash');
+        var trashInput = document.getElementById('input_cp_trash_color');
+        var trashes = pagePreview.querySelectorAll('.preview-cp-trash');
         if (trashInput) {
             trashes.forEach(el => el.style.color = trashInput.value);
         }
 
         // Total (Grand Total)
-        const totalInput = document.getElementById('input_cp_total_color');
-        const grandTotals = pagePreview.querySelectorAll('.preview-cp-grand-total');
+        var totalInput = document.getElementById('input_cp_total_color');
+        var grandTotals = pagePreview.querySelectorAll('.preview-cp-grand-total');
         if (totalInput) {
             grandTotals.forEach(el => el.style.color = totalInput.value);
         }
 
         // Checkout Button
-        const checkBg = document.getElementById('input_cp_check_bg');
-        const checkText = document.getElementById('input_cp_check_text');
-        const checkBtn = pagePreview.querySelector('.preview-cp-checkout-btn');
+        var checkBg = document.getElementById('input_cp_check_bg');
+        var checkText = document.getElementById('input_cp_check_text');
+        var checkBtn = pagePreview.querySelector('.preview-cp-checkout-btn');
         if (checkBtn) {
              if (checkBg) checkBtn.style.backgroundColor = checkBg.value;
              if (checkText) checkBtn.style.color = checkText.value;
         }
 
         // Continue Shopping Button
-        const continueBg = document.getElementById('input_cp_continue_bg');
-        const continueText = document.getElementById('input_cp_continue_text');
-        const continueBtn = pagePreview.querySelector('.preview-cp-continue-btn');
+        var continueBg = document.getElementById('input_cp_continue_bg');
+        var continueText = document.getElementById('input_cp_continue_text');
+        var continueBtn = pagePreview.querySelector('.preview-cp-continue-btn');
         if (continueBtn) {
              if (continueBg) continueBtn.style.backgroundColor = continueBg.value;
              if (continueText) continueBtn.style.color = continueText.value;
         }
-    }
+    };
 
     // Function to handle bulk listeners
-    function updateHovers() {
-        const styleTag = document.getElementById('cartPreviewStyles');
+    window.updateCartHovers = function() {
+        var styleTag = document.getElementById('cartPreviewStyles');
         if (styleTag) {
-            const settings = {};
+            var settings = {};
             container.querySelectorAll('input[name]').forEach(input => {
                 settings[input.name] = input.value;
             });
@@ -746,22 +746,22 @@ require_once __DIR__ . '/../includes/admin-header.php';
                 #prevCartSuccessContinue:hover { background-color: ${settings.setting_success_btn_hover_bg} !important; color: ${settings.setting_success_btn_hover_text} !important; }
             `;
         }
-    }
+    };
 
     // Combined update function
-    function updateAll() {
-        updateDrawerPreview();
-        updatePagePreview();
-        updateHovers();
-    }
+    window.updateCartAll = function() {
+        window.updateDrawerPreview();
+        window.updatePagePreview();
+        window.updateCartHovers();
+    };
 
     // Attach listeners to ALL inputs
     container.querySelectorAll('input').forEach(input => {
-        input.addEventListener('input', updateAll);
+        input.addEventListener('input', window.updateCartAll);
         
         // Color Sync
         if (input.type === 'color') {
-            const textInput = input.nextElementSibling;
+            var textInput = input.nextElementSibling;
             if (textInput && textInput.type === 'text') {
                 input.addEventListener('input', () => {
                     textInput.value = input.value.toUpperCase();
@@ -776,9 +776,10 @@ require_once __DIR__ . '/../includes/admin-header.php';
     });
 
     // Initial call
-    updateAll();
-})();
+    window.updateCartAll();
+};
 
+window.initCartSettings();
 </script>
 
 <?php require_once __DIR__ . '/../includes/admin-footer.php'; ?>

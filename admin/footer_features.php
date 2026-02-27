@@ -296,158 +296,188 @@ require_once __DIR__ . '/../includes/admin-header.php';
 </div>
 
 <script>
-// Section Color Sync
-const sectionBgPicker = document.getElementById('sectionBgPicker');
-const sectionBgText = document.getElementById('sectionBgText');
-const sectionTextPicker = document.getElementById('sectionTextPicker');
-const sectionTextText = document.getElementById('sectionTextText');
-
-// Sync section background color
-sectionBgPicker.addEventListener('input', (e) => {
-    sectionBgText.value = e.target.value.toUpperCase();
-});
-sectionBgText.addEventListener('input', (e) => {
-    if (/^#[0-9A-Fa-f]{6}$/.test(e.target.value)) {
-        sectionBgPicker.value = e.target.value;
+window.initFooterFeaturesJS = function() {
+    // Section Color Sync
+    var sectionBgPicker = document.getElementById('sectionBgPicker');
+    var sectionBgText = document.getElementById('sectionBgText');
+    var sectionTextPicker = document.getElementById('sectionTextPicker');
+    var sectionTextText = document.getElementById('sectionTextText');
+    
+    if (sectionBgPicker && sectionBgText) {
+        sectionBgPicker.addEventListener('input', (e) => {
+            sectionBgText.value = e.target.value.toUpperCase();
+        });
+        sectionBgText.addEventListener('input', (e) => {
+            if (/^#[0-9A-Fa-f]{6}$/.test(e.target.value)) {
+                sectionBgPicker.value = e.target.value;
+            }
+        });
     }
-});
-
-// Sync section text color
-sectionTextPicker.addEventListener('input', (e) => {
-    sectionTextText.value = e.target.value.toUpperCase();
-});
-sectionTextText.addEventListener('input', (e) => {
-    if (/^#[0-9A-Fa-f]{6}$/.test(e.target.value)) {
-        sectionTextPicker.value = e.target.value;
+    
+    if (sectionTextPicker && sectionTextText) {
+        sectionTextPicker.addEventListener('input', (e) => {
+            sectionTextText.value = e.target.value.toUpperCase();
+        });
+        sectionTextText.addEventListener('input', (e) => {
+            if (/^#[0-9A-Fa-f]{6}$/.test(e.target.value)) {
+                sectionTextPicker.value = e.target.value;
+            }
+        });
     }
-});
 
-// Modal elements
-const modal = document.getElementById('featureModal');
-const title = modal.querySelector('.modal-title');
-const inpId = document.getElementById('inpId');
-const inpIcon = document.getElementById('inpIcon');
-const inpHeading = document.getElementById('inpHeading');
-const inpContent = document.getElementById('inpContent');
-const inpBgColor = document.getElementById('inpBgColor');
-const inpBgColorText = document.getElementById('inpBgColorText');
-const inpTextColor = document.getElementById('inpTextColor');
-const inpTextColorText = document.getElementById('inpTextColorText');
-const inpHeadingColor = document.getElementById('inpHeadingColor');
-const inpHeadingColorText = document.getElementById('inpHeadingColorText');
+    // Modal elements
+    var inpIcon = document.getElementById('inpIcon');
+    var inpHeading = document.getElementById('inpHeading');
+    var inpContent = document.getElementById('inpContent');
+    var inpBgColor = document.getElementById('inpBgColor');
+    var inpBgColorText = document.getElementById('inpBgColorText');
+    var inpTextColor = document.getElementById('inpTextColor');
+    var inpTextColorText = document.getElementById('inpTextColorText');
+    var inpHeadingColor = document.getElementById('inpHeadingColor');
+    var inpHeadingColorText = document.getElementById('inpHeadingColorText');
 
-let currentEditingId = null;
+    window.updateLivePreview = function() {
+        if (!window.currentEditingId) return;
+        const card = document.getElementById(`feature-card-${window.currentEditingId}`);
+        if (!card) return;
 
-function updateLivePreview() {
-    if (!currentEditingId) return;
-    const card = document.getElementById(`feature-card-${currentEditingId}`);
-    if (!card) return;
+        const iconPreview = card.querySelector('.feature-icon-preview');
+        const headingPreview = card.querySelector('.feature-heading-preview');
+        const contentPreview = card.querySelector('.feature-content-preview');
 
-    const iconPreview = card.querySelector('.feature-icon-preview');
-    const headingPreview = card.querySelector('.feature-heading-preview');
-    const contentPreview = card.querySelector('.feature-content-preview');
+        if (iconPreview && inpIcon) iconPreview.innerHTML = inpIcon.value;
+        if (headingPreview && inpHeading) headingPreview.textContent = inpHeading.value;
+        if (contentPreview && inpContent) contentPreview.textContent = inpContent.value;
 
-    // Update Content
-    iconPreview.innerHTML = inpIcon.value;
-    headingPreview.textContent = inpHeading.value;
-    contentPreview.textContent = inpContent.value;
+        if (card && inpBgColor) card.style.backgroundColor = inpBgColor.value;
+        if (card && inpTextColor) card.style.color = inpTextColor.value;
+        if (headingPreview && inpHeadingColor) headingPreview.style.color = inpHeadingColor.value || (inpTextColor ? inpTextColor.value : '');
+    };
 
-    // Update Colors
-    card.style.backgroundColor = inpBgColor.value;
-    card.style.color = inpTextColor.value;
-    headingPreview.style.color = inpHeadingColor.value || inpTextColor.value;
-}
+    // Add input listeners for all fields
+    [inpIcon, inpHeading, inpContent, inpBgColor, inpTextColor, inpHeadingColor].forEach(el => {
+        if (el) el.addEventListener('input', window.updateLivePreview);
+    });
 
-// Add input listeners for all fields
-[inpIcon, inpHeading, inpContent, inpBgColor, inpTextColor, inpHeadingColor].forEach(el => {
-    el.addEventListener('input', updateLivePreview);
-});
-
-// Sync modal background color
-inpBgColor.addEventListener('input', (e) => {
-    inpBgColorText.value = e.target.value.toUpperCase();
-    updateLivePreview();
-});
-inpBgColorText.addEventListener('input', (e) => {
-    if (/^#[0-9A-Fa-f]{6}$/.test(e.target.value)) {
-        inpBgColor.value = e.target.value;
-        updateLivePreview();
+    if (inpBgColor && inpBgColorText) {
+        inpBgColor.addEventListener('input', (e) => {
+            inpBgColorText.value = e.target.value.toUpperCase();
+            window.updateLivePreview();
+        });
+        inpBgColorText.addEventListener('input', (e) => {
+            if (/^#[0-9A-Fa-f]{6}$/.test(e.target.value)) {
+                inpBgColor.value = e.target.value;
+                window.updateLivePreview();
+            }
+        });
     }
-});
 
-// Sync modal text color
-inpTextColor.addEventListener('input', (e) => {
-    inpTextColorText.value = e.target.value.toUpperCase();
-    updateLivePreview();
-});
-inpTextColorText.addEventListener('input', (e) => {
-    if (/^#[0-9A-Fa-f]{6}$/.test(e.target.value)) {
-        inpTextColor.value = e.target.value;
-        updateLivePreview();
+    if (inpTextColor && inpTextColorText) {
+        inpTextColor.addEventListener('input', (e) => {
+            inpTextColorText.value = e.target.value.toUpperCase();
+            window.updateLivePreview();
+        });
+        inpTextColorText.addEventListener('input', (e) => {
+            if (/^#[0-9A-Fa-f]{6}$/.test(e.target.value)) {
+                inpTextColor.value = e.target.value;
+                window.updateLivePreview();
+            }
+        });
     }
-});
 
-// Sync modal heading color
-inpHeadingColor.addEventListener('input', (e) => {
-    inpHeadingColorText.value = e.target.value.toUpperCase();
-    updateLivePreview();
-});
-inpHeadingColorText.addEventListener('input', (e) => {
-    if (/^#[0-9A-Fa-f]{6}$/.test(e.target.value)) {
-        inpHeadingColor.value = e.target.value;
-        updateLivePreview();
+    if (inpHeadingColor && inpHeadingColorText) {
+        inpHeadingColor.addEventListener('input', (e) => {
+            inpHeadingColorText.value = e.target.value.toUpperCase();
+            window.updateLivePreview();
+        });
+        inpHeadingColorText.addEventListener('input', (e) => {
+            if (/^#[0-9A-Fa-f]{6}$/.test(e.target.value)) {
+                inpHeadingColor.value = e.target.value;
+                window.updateLivePreview();
+            }
+        });
     }
-});
 
+    const modal = document.getElementById('featureModal');
+    if (modal) {
+        modal.onclick = (e) => {
+            if (e.target === modal) window.closeModal();
+        };
+    }
 
-function openModal() {
+    // Initialized
+};
+
+window.currentEditingId = null;
+
+window.openModal = function() {
+    const modal = document.getElementById('featureModal');
+    if (!modal) return;
     modal.classList.remove('hidden');
     modal.classList.add('flex');
     
     // Reset form
-    title.textContent = 'Add Footer Feature';
-    inpId.value = '';
-    inpIcon.value = '';
-    inpHeading.value = '';
-    inpContent.value = '';
-    inpBgColor.value = '#ffffff';
-    inpBgColorText.value = '#FFFFFF';
-    inpHeadingColor.value = '#000000';
-    inpHeadingColorText.value = '#000000';
-    inpTextColor.value = '#000000';
-    inpTextColorText.value = '#000000';
-    currentEditingId = null;
-}
+    const title = modal.querySelector('.modal-title');
+    if (title) title.textContent = 'Add Footer Feature';
+    
+    const fields = {
+        'inpId': '',
+        'inpIcon': '',
+        'inpHeading': '',
+        'inpContent': '',
+        'inpBgColor': '#ffffff',
+        'inpBgColorText': '#FFFFFF',
+        'inpHeadingColor': '#000000',
+        'inpHeadingColorText': '#000000',
+        'inpTextColor': '#000000',
+        'inpTextColorText': '#000000'
+    };
+    
+    for (let id in fields) {
+        const el = document.getElementById(id);
+        if (el) el.value = fields[id];
+    }
+    window.currentEditingId = null;
+};
 
-function closeModal() {
-    modal.classList.add('hidden');
-    modal.classList.remove('flex');
-    // We don't reload on cancel because the live preview modified the UI
-    // If user cancels, we should actually reload to discard live changes
-    location.reload(); 
-}
+window.closeModal = function() {
+    const modal = document.getElementById('featureModal');
+    if (modal) {
+        modal.classList.add('hidden');
+        modal.classList.remove('flex');
+    }
+};
 
-function editFeature(data) {
-    currentEditingId = data.id;
-    openModal();
-    title.textContent = 'Edit Footer Feature';
-    inpId.value = data.id;
-    inpIcon.value = data.icon;
-    inpHeading.value = data.heading;
-    inpContent.value = data.content;
-    inpBgColor.value = data.bg_color || '#ffffff';
-    inpBgColorText.value = (data.bg_color || '#ffffff').toUpperCase();
-    inpHeadingColor.value = data.heading_color || '#000000';
-    inpHeadingColorText.value = (data.heading_color || '#000000').toUpperCase();
-    inpTextColor.value = data.text_color || '#000000';
-    inpTextColorText.value = (data.text_color || '#000000').toUpperCase();
-    document.getElementById('inpSort').value = data.sort_order;
-}
+window.editFeature = function(data) {
+    window.currentEditingId = data.id;
+    window.openModal();
+    
+    const modal = document.getElementById('featureModal');
+    const title = modal ? modal.querySelector('.modal-title') : null;
+    if (title) title.textContent = 'Edit Footer Feature';
+    
+    const mapping = {
+        'inpId': data.id,
+        'inpIcon': data.icon,
+        'inpHeading': data.heading,
+        'inpContent': data.content,
+        'inpBgColor': data.bg_color || '#ffffff',
+        'inpBgColorText': (data.bg_color || '#ffffff').toUpperCase(),
+        'inpHeadingColor': data.heading_color || '#000000',
+        'inpHeadingColorText': (data.heading_color || '#000000').toUpperCase(),
+        'inpTextColor': data.text_color || '#000000',
+        'inpTextColorText': (data.text_color || '#000000').toUpperCase(),
+        'inpSort': data.sort_order
+    };
+    
+    for (let id in mapping) {
+        const el = document.getElementById(id);
+        if (el) el.value = mapping[id];
+    }
+};
 
-// Close on outside click
-modal.addEventListener('click', (e) => {
-    if (e.target === modal) closeModal();
-});
+// Run init
+window.initFooterFeaturesJS();
 </script>
 
 <?php require_once __DIR__ . '/../includes/admin-footer.php'; ?>

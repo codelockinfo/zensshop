@@ -34,6 +34,7 @@ $w_page_bg_color = $styles['page_bg_color'] ?? '#ffffff';
 $w_card_bg_color = $styles['card_bg_color'] ?? $globalStyles['card_bg_color'] ?? '#ffffff';
 $w_card_title_color = $styles['card_title_color'] ?? $globalStyles['card_title_color'] ?? '#1f2937';
 $w_price_color = $styles['price_color'] ?? $globalStyles['price_color'] ?? '#1a3d32';
+$w_compare_price_color = $styles['compare_price_color'] ?? $globalStyles['compare_price_color'] ?? '#9ca3af';
 $w_stock_status_color = $styles['stock_status_color'] ?? '#ef4444';
 
 // Use Global Action Button styles as base for specific buttons if not set
@@ -105,6 +106,9 @@ require_once __DIR__ . '/includes/header.php';
     }
     .wishlist-card .product-price, .recently-viewed-card .product-price {
         color: <?php echo $w_price_color; ?> !important;
+    }
+    .wishlist-card .compare-price, .recently-viewed-card .compare-price {
+        color: <?php echo $w_compare_price_color; ?> !important;
     }
     .wishlist-atc-btn {
         background-color: <?php echo $w_btn_bg_color; ?> !important;

@@ -26,7 +26,8 @@ window.initAdminUI = function () {
         });
     }
 
-    if (sidebarToggle && sidebar) {
+    if (sidebarToggle && sidebar && !sidebarToggle.hasAttribute('data-initialized')) {
+        sidebarToggle.setAttribute('data-initialized', 'true');
         sidebarToggle.addEventListener('click', function () {
             sidebar.classList.toggle('collapsed');
             sidebar.classList.toggle('expanded');
@@ -60,7 +61,8 @@ window.initAdminUI = function () {
 
     // User profile dropdown hover handling
     const userProfileDropdown = document.querySelector('.user-profile-dropdown');
-    if (userProfileDropdown) {
+    if (userProfileDropdown && !userProfileDropdown.hasAttribute('data-initialized')) {
+        userProfileDropdown.setAttribute('data-initialized', 'true');
         const dropdownMenu = userProfileDropdown.querySelector('.user-dropdown-menu');
         const trigger = userProfileDropdown.querySelector('.user-profile-trigger');
 
@@ -243,4 +245,25 @@ function setBtnLoading(btn, isLoading) {
     }
 }
 window.setBtnLoading = setBtnLoading;
+
+window.togglePassword = function (fieldId, btn = null) {
+    const input = document.getElementById(fieldId);
+    if (!input) return;
+    let icon = btn ? btn.querySelector('i') : document.getElementById('eye-' + fieldId);
+    if (!icon && btn) icon = btn;
+
+    if (input.type === 'password') {
+        input.type = 'text';
+        if (icon) {
+            icon.classList.remove('fa-eye');
+            icon.classList.add('fa-eye-slash');
+        }
+    } else {
+        input.type = 'password';
+        if (icon) {
+            icon.classList.remove('fa-eye-slash');
+            icon.classList.add('fa-eye');
+        }
+    }
+};
 

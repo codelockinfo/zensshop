@@ -1070,7 +1070,7 @@ initProductEditPage();
 </div>
 
 <script>
-function openBrandModal() {
+window.openBrandModal = function() {
     const modal = document.getElementById('brandModal');
     const content = document.getElementById('brandModalContent');
     modal.classList.remove('hidden');
@@ -1078,10 +1078,10 @@ function openBrandModal() {
         content.classList.remove('scale-95', 'opacity-0');
         content.classList.add('scale-100', 'opacity-100');
     }, 10);
-    loadBrands();
+    window.loadBrands();
 }
 
-function closeBrandModal() {
+window.closeBrandModal = function() {
     const modal = document.getElementById('brandModal');
     const content = document.getElementById('brandModalContent');
     content.classList.remove('scale-100', 'opacity-100');
@@ -1091,15 +1091,15 @@ function closeBrandModal() {
     }, 300);
 }
 
-async function loadBrands() {
+window.loadBrands = async function() {
     const container = document.getElementById('brandListContainer');
     try {
         const response = await fetch('<?php echo $baseUrl; ?>/admin/api/settings.php?action=get_brands');
         const data = await response.json();
         
         if (data.success) {
-            renderBrandList(data.brands);
-            updateBrandSelect(data.brands);
+            window.renderBrandList(data.brands);
+            window.updateBrandSelect(data.brands);
         } else {
             container.innerHTML = '<div class="p-4 text-red-500">' + data.message + '</div>';
         }
@@ -1108,7 +1108,7 @@ async function loadBrands() {
     }
 }
 
-function renderBrandList(brands) {
+window.renderBrandList = function(brands) {
     const container = document.getElementById('brandListContainer');
     if (!brands || brands.length === 0) {
         container.innerHTML = '<div class="p-4 text-center text-gray-500">No brands added yet.</div>';
@@ -1119,7 +1119,7 @@ function renderBrandList(brands) {
     brands.forEach(function(brand) {
         html += '<div class="flex items-center justify-between px-4 py-3 border-b last:border-0 hover:bg-white transition-colors">';
         html += '<span class="font-medium text-gray-700">' + brand + '</span>';
-        html += '<button type="button" onclick="removeBrand(\'' + brand.replace(/'/g, "\\'") + '\')" class="text-red-500 hover:text-red-700 transition-colors">';
+        html += '<button type="button" onclick="window.removeBrand(\'' + brand.replace(/'/g, "\\'") + '\')" class="text-red-500 hover:text-red-700 transition-colors">';
         html += '<i class="fas fa-trash-alt"></i>';
         html += '</button>';
         html += '</div>';
@@ -1127,7 +1127,7 @@ function renderBrandList(brands) {
     container.innerHTML = html;
 }
 
-function updateBrandSelect(brands) {
+window.updateBrandSelect = function(brands) {
     const select = document.getElementById('brandSelect');
     const currentValue = select.value;
     
@@ -1139,7 +1139,7 @@ function updateBrandSelect(brands) {
     select.innerHTML = html;
 }
 
-async function addNewBrand() {
+window.addNewBrand = async function() {
     const input = document.getElementById('newBrandName');
     const brand = input.value.trim();
     
@@ -1155,8 +1155,8 @@ async function addNewBrand() {
         
         if (data.success) {
             input.value = '';
-            renderBrandList(data.brands);
-            updateBrandSelect(data.brands);
+            window.renderBrandList(data.brands);
+            window.updateBrandSelect(data.brands);
         } else {
             console.error('Failed to add brand:', data.message);
         }
@@ -1165,7 +1165,7 @@ async function addNewBrand() {
     }
 }
 
-async function removeBrand(brand) {
+window.removeBrand = async function(brand) {
     try {
         const response = await fetch('<?php echo $baseUrl; ?>/admin/api/settings.php?action=remove_brand', {
             method: 'POST',
@@ -1175,8 +1175,8 @@ async function removeBrand(brand) {
         const data = await response.json();
         
         if (data.success) {
-            renderBrandList(data.brands);
-            updateBrandSelect(data.brands);
+            window.renderBrandList(data.brands);
+            window.updateBrandSelect(data.brands);
         }
     } catch (error) {
         console.log(error);

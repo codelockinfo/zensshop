@@ -239,7 +239,7 @@ $s_arrow_icon = $savedStyles['arrow_icon_color'] ?? '#1f2937';
             <button type="submit" form="settingsForm" class="bg-blue-600 text-white px-6 py-2.5 rounded-lg hover:bg-blue-700 transition shadow-md font-bold flex items-center gap-2">
                 <i class="fas fa-save"></i> Save All Settings
             </button>
-            <button onclick="openModal()" class="bg-white text-gray-700 border border-gray-300 px-4 py-2.5 rounded-lg hover:bg-gray-50 transition shadow-sm font-medium flex items-center">
+            <button onclick="openBannerModal()" class="bg-white text-gray-700 border border-gray-300 px-4 py-2.5 rounded-lg hover:bg-gray-50 transition shadow-sm font-medium flex items-center">
                 <i class="fas fa-plus mr-2"></i> Add New Banner
             </button>
         </div>
@@ -431,7 +431,6 @@ $s_arrow_icon = $savedStyles['arrow_icon_color'] ?? '#1f2937';
                         </div>
                      </div>
                 </div>
-
             </form>
         </div>
     </div>
@@ -482,7 +481,7 @@ $s_arrow_icon = $savedStyles['arrow_icon_color'] ?? '#1f2937';
                         </td>
                         <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                             <button type="button" onclick="editBanner(this)" class="text-indigo-600 hover:text-indigo-900 mr-3">Edit</button>
-                            <button type="button" onclick="if(confirm('Delete this banner?')) { deleteBanner(<?php echo $banner['id']; ?>); }" class="text-red-600 hover:text-red-900">Delete</button>
+                            <button type="button" onclick="deleteBanner(<?php echo $banner['id']; ?>);" class="text-red-600 hover:text-red-900">Delete</button>
                         </td>
                     </tr>
                     <?php endforeach; ?>
@@ -500,14 +499,13 @@ $s_arrow_icon = $savedStyles['arrow_icon_color'] ?? '#1f2937';
             <input type="hidden" name="id" id="deleteId">
         </form>
     </div>
-</div>
 
 <!-- Add/Edit Modal -->
 <div id="bannerModal" class="fixed inset-0 bg-gray-600 bg-opacity-50 hidden overflow-y-auto h-full w-full z-50">
     <div class="relative top-20 mx-auto p-5 border w-full max-w-2xl shadow-lg rounded-md bg-white">
         <div class="flex justify-between items-center mb-4">
             <h3 class="text-lg font-bold" id="modalTitle">Add New Banner</h3>
-            <button onclick="closeModal()" class="text-gray-600 hover:text-gray-800">&times;</button>
+            <button onclick="closeBannerModal()" class="text-gray-600 hover:text-gray-800">&times;</button>
         </div>
         
         <form method="POST" enctype="multipart/form-data" id="bannerForm">
@@ -594,168 +592,144 @@ $s_arrow_icon = $savedStyles['arrow_icon_color'] ?? '#1f2937';
             </div>
             
             <div class="flex justify-end gap-2 text-right">
-                <button type="button" onclick="closeModal()" class="bg-gray-300 text-gray-700 px-4 py-2 rounded hover:bg-gray-400">Cancel</button>
+                <button type="button" onclick="closeBannerModal()" class="bg-gray-300 text-gray-700 px-4 py-2 rounded hover:bg-gray-400">Cancel</button>
                 <button type="submit" class="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 btn-loading">Save Banner</button>
             </div>
         </form>
-    </div>
-</div>
+        <script>
+        window.allBanners = <?php echo json_encode($banners); ?>;
+        
+        window.getFullImageUrl = function(path) {
+            if (!path) return '';
+            if (path.startsWith('http://') || path.startsWith('https://') || path.startsWith('data:')) return path;
+            const baseUrl = typeof BASE_URL !== 'undefined' ? BASE_URL : '<?php echo $baseUrl; ?>';
+            let cleanBase = baseUrl.replace(/\/+$/, '');
+            let cleanPath = path.replace(/^\/+/, '');
+            return cleanBase + '/' + cleanPath;
+        };
 
-<script>
-window.allBanners = <?php echo json_encode($banners); ?>;
+        window.openBannerModal = function() {
+            var form = document.getElementById('bannerForm');
+            if (form) form.reset();
+            document.getElementById('bannerId').value = '';
+            document.getElementById('modalTitle').innerText = 'Add New Banner';
+            document.getElementById('removeDesktopFlag').value = '0';
+            document.getElementById('removeMobileFlag').value = '0';
+            const previews = ['previewDesktopImg', 'previewMobileImg'];
+            const placeholders = ['placeholderDesktop', 'placeholderMobile'];
+            const removeBtns = ['removeDesktopBtn', 'removeMobileBtn'];
+            previews.forEach(id => {
+                const el = document.getElementById(id);
+                if (el) { el.src = ''; el.classList.add('hidden'); }
+            });
+            placeholders.forEach(id => {
+                const el = document.getElementById(id);
+                if (el) el.classList.remove('hidden');
+            });
+            removeBtns.forEach(id => {
+                const el = document.getElementById(id);
+                if (el) { el.classList.add('hidden'); el.style.display = 'none'; }
+            });
+            var modal = document.getElementById('bannerModal');
+            if (modal) modal.classList.remove('hidden');
+        };
 
-window.getFullImageUrl = function(path) {
-    if (!path) return '';
-    if (path.startsWith('http://') || path.startsWith('https://') || path.startsWith('data:')) return path;
-    
-    // Use the global BASE_URL if available, otherwise fallback
-    const baseUrl = typeof BASE_URL !== 'undefined' ? BASE_URL : '<?php echo $baseUrl; ?>';
-    let cleanBase = baseUrl.replace(/\/+$/, '');
-    let cleanPath = path.replace(/^\/+/, '');
-    
-    return cleanBase + '/' + cleanPath;
-};
+        window.closeBannerModal = function() {
+            var modal = document.getElementById('bannerModal');
+            if (modal) modal.classList.add('hidden');
+        };
 
-window.openModal = function() {
-    document.getElementById('bannerForm').reset();
-    document.getElementById('bannerId').value = '';
-    document.getElementById('modalTitle').innerText = 'Add New Banner';
-    
-    // Reset Removal Flags
-    document.getElementById('removeDesktopFlag').value = '0';
-    document.getElementById('removeMobileFlag').value = '0';
-    
-    // Reset Previews and Placeholders
-    const previews = ['previewDesktopImg', 'previewMobileImg'];
-    const placeholders = ['placeholderDesktop', 'placeholderMobile'];
-    const removeBtns = ['removeDesktopBtn', 'removeMobileBtn'];
-
-    previews.forEach(id => {
-        const el = document.getElementById(id);
-        if (el) { el.src = ''; el.classList.add('hidden'); }
-    });
-    placeholders.forEach(id => {
-        const el = document.getElementById(id);
-        if (el) el.classList.remove('hidden');
-    });
-    removeBtns.forEach(id => {
-        const el = document.getElementById(id);
-        if (el) { el.classList.add('hidden'); el.style.display = 'none'; }
-    });
-    
-    document.getElementById('bannerModal').classList.remove('hidden');
-};
-
-window.closeModal = function() {
-    document.getElementById('bannerModal').classList.add('hidden');
-};
-
-window.editBanner = function(btn) {
-    const row = btn.closest('tr');
-    if (!row) return;
-    const bannerData = row.getAttribute('data-banner');
-    if (!bannerData) return;
-    
-    const banner = JSON.parse(bannerData);
-    if (!banner) return;
-
-    window.openModal(); // This already handles UI reset
-    
-    document.getElementById('modalTitle').innerText = 'Edit Banner';
-    document.getElementById('bannerId').value = banner.id || '';
-    document.getElementById('bannerHeading').value = banner.heading || '';
-    document.getElementById('bannerSubheading').value = banner.subheading || '';
-    document.getElementById('bannerButtonText').value = banner.button_text || '';
-    document.getElementById('bannerLink').value = banner.link || '';
-    document.getElementById('bannerLinkMobile').value = banner.link_mobile || '';
-    document.getElementById('bannerOrder').value = banner.display_order || 0;
-    document.getElementById('bannerActive').checked = parseInt(banner.active) === 1;
-    
-    if (banner.image_desktop) {
-        const img = document.getElementById('previewDesktopImg');
-        const placeholder = document.getElementById('placeholderDesktop');
-        const btn = document.getElementById('removeDesktopBtn');
-        if (img && placeholder) {
-            img.src = window.getFullImageUrl(banner.image_desktop);
-            img.classList.remove('hidden');
-            placeholder.classList.add('hidden');
-            if (btn) {
-                btn.classList.remove('hidden');
-                btn.style.display = 'flex';
+        window.editBanner = function(btn) {
+            const row = btn.closest('tr');
+            if (!row) return;
+            const bannerData = row.getAttribute('data-banner');
+            if (!bannerData) return;
+            const banner = JSON.parse(bannerData);
+            if (!banner) return;
+            window.openBannerModal();
+            document.getElementById('modalTitle').innerText = 'Edit Banner';
+            document.getElementById('bannerId').value = banner.id || '';
+            document.getElementById('bannerHeading').value = banner.heading || '';
+            document.getElementById('bannerSubheading').value = banner.subheading || '';
+            document.getElementById('bannerButtonText').value = banner.button_text || '';
+            document.getElementById('bannerLink').value = banner.link || '';
+            document.getElementById('bannerLinkMobile').value = banner.link_mobile || '';
+            document.getElementById('bannerOrder').value = banner.display_order || 0;
+            document.getElementById('bannerActive').checked = parseInt(banner.active) === 1;
+            if (banner.image_desktop) {
+                const img = document.getElementById('previewDesktopImg');
+                const placeholder = document.getElementById('placeholderDesktop');
+                const btn = document.getElementById('removeDesktopBtn');
+                if (img && placeholder) {
+                    img.src = window.getFullImageUrl(banner.image_desktop);
+                    img.classList.remove('hidden');
+                    placeholder.classList.add('hidden');
+                    if (btn) { btn.classList.remove('hidden'); btn.style.display = 'flex'; }
+                }
             }
-        }
-    }
-    
-    if (banner.image_mobile) {
-        const img = document.getElementById('previewMobileImg');
-        const placeholder = document.getElementById('placeholderMobile');
-        const btn = document.getElementById('removeMobileBtn');
-        if (img && placeholder) {
-            img.src = window.getFullImageUrl(banner.image_mobile);
-            img.classList.remove('hidden');
-            placeholder.classList.add('hidden');
-            if (btn) {
-                btn.classList.remove('hidden');
-                btn.style.display = 'flex';
+            if (banner.image_mobile) {
+                const img = document.getElementById('previewMobileImg');
+                const placeholder = document.getElementById('placeholderMobile');
+                const btn = document.getElementById('removeMobileBtn');
+                if (img && placeholder) {
+                    img.src = window.getFullImageUrl(banner.image_mobile);
+                    img.classList.remove('hidden');
+                    placeholder.classList.add('hidden');
+                    if (btn) { btn.classList.remove('hidden'); btn.style.display = 'flex'; }
+                }
             }
-        }
-    }
-};
+        };
 
-window.deleteBanner = function(id) {
-    document.getElementById('deleteId').value = id;
-    document.getElementById('deleteForm').submit();
-};
+        window.deleteBanner = function(id) {
+            const form = document.getElementById('deleteForm');
+            document.getElementById('deleteId').value = id;
+            if (typeof form.requestSubmit === 'function') form.requestSubmit();
+            else form.dispatchEvent(new Event('submit', { cancelable: true, bubbles: true }));
+        };
 
-window.previewBannerImage = function(input, imgId, placeholderId, btnId) {
-    if (input.files && input.files[0]) {
-        var reader = new FileReader();
-        reader.onload = function(e) {
+        window.previewBannerImage = function(input, imgId, placeholderId, btnId) {
+            if (input.files && input.files[0]) {
+                var reader = new FileReader();
+                reader.onload = function(e) {
+                    const img = document.getElementById(imgId);
+                    const placeholder = document.getElementById(placeholderId);
+                    const btn = document.getElementById(btnId);
+                    img.src = e.target.result;
+                    img.classList.remove('hidden');
+                    placeholder.classList.add('hidden');
+                    if (btn) { btn.classList.remove('hidden'); btn.style.display = 'flex'; }
+                    const flagId = (imgId === 'previewDesktopImg') ? 'removeDesktopFlag' : 'removeMobileFlag';
+                    document.getElementById(flagId).value = '0';
+                }
+                reader.readAsDataURL(input.files[0]);
+            }
+        };
+
+        window.clearBannerImage = function(type) {
+            const imgId = type === 'desktop' ? 'previewDesktopImg' : 'previewMobileImg';
+            const placeholderId = type === 'desktop' ? 'placeholderDesktop' : 'placeholderMobile';
+            const inputId = type === 'desktop' ? 'desktopInput' : 'mobileInput';
+            const btnId = type === 'desktop' ? 'removeDesktopBtn' : 'removeMobileBtn';
+            const flagId = type === 'desktop' ? 'removeDesktopFlag' : 'removeMobileFlag';
             const img = document.getElementById(imgId);
             const placeholder = document.getElementById(placeholderId);
+            const input = document.getElementById(inputId);
             const btn = document.getElementById(btnId);
-            
-            img.src = e.target.result;
-            img.classList.remove('hidden');
-            placeholder.classList.add('hidden');
-            if (btn) {
-                btn.classList.remove('hidden');
-                btn.style.display = 'flex';
-            }
-            
-            // Re-enable removal flag if a new image is chosen
-            const flagId = (imgId === 'previewDesktopImg') ? 'removeDesktopFlag' : 'removeMobileFlag';
-            document.getElementById(flagId).value = '0';
-        }
-        reader.readAsDataURL(input.files[0]);
-    }
-};
+            img.src = '';
+            img.classList.add('hidden');
+            placeholder.classList.remove('hidden');
+            input.value = '';
+            btn.classList.add('hidden');
+            btn.style.display = 'none';
+            if (document.getElementById('bannerId').value) document.getElementById(flagId).value = '1';
+        };
 
-window.clearBannerImage = function(type) {
-    const imgId = type === 'desktop' ? 'previewDesktopImg' : 'previewMobileImg';
-    const placeholderId = type === 'desktop' ? 'placeholderDesktop' : 'placeholderMobile';
-    const inputId = type === 'desktop' ? 'desktopInput' : 'mobileInput';
-    const btnId = type === 'desktop' ? 'removeDesktopBtn' : 'removeMobileBtn';
-    const flagId = type === 'desktop' ? 'removeDesktopFlag' : 'removeMobileFlag';
-    
-    const img = document.getElementById(imgId);
-    const placeholder = document.getElementById(placeholderId);
-    const input = document.getElementById(inputId);
-    const btn = document.getElementById(btnId);
-    
-    img.src = '';
-    img.classList.add('hidden');
-    placeholder.classList.remove('hidden');
-    input.value = ''; // Clear file input
-    btn.classList.add('hidden');
-    btn.style.display = 'none';
-    
-    // Set flag to remove from DB if we are editing an existing banner
-    if (document.getElementById('bannerId').value) {
-        document.getElementById(flagId).value = '1';
-    }
-};
-
-</script>
-
+        window.initBannerJS = function() {
+            // Initialized
+        };
+        window.initBannerJS();
+        </script>
+    </div>
+</div>
+</div>
 <?php require_once __DIR__ . '/../includes/admin-footer.php'; ?>

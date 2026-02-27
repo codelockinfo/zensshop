@@ -122,22 +122,22 @@ $pages = $db->fetchAll("SELECT * FROM pages WHERE store_id = ? ORDER BY created_
 
 <!-- Copy to Clipboard Script -->
 <script>
-function copyToClipboard(text) {
+window.copyToClipboard = function(text) {
     if (navigator.clipboard && window.isSecureContext) {
         // Secure context (HTTPS)
         navigator.clipboard.writeText(text).then(() => {
-            showToast('Link copied to clipboard!');
+            window.showPageToast('Link copied to clipboard!');
         }).catch(err => {
             console.error('Failed to copy: ', err);
-            fallbackCopyTextToClipboard(text);
+            window.fallbackCopyTextToClipboard(text);
         });
     } else {
         // Fallback
-        fallbackCopyTextToClipboard(text);
+        window.fallbackCopyTextToClipboard(text);
     }
-}
+};
 
-function fallbackCopyTextToClipboard(text) {
+window.fallbackCopyTextToClipboard = function(text) {
     var textArea = document.createElement("textarea");
     textArea.value = text;
     
@@ -153,21 +153,21 @@ function fallbackCopyTextToClipboard(text) {
     try {
         var successful = document.execCommand('copy');
         var msg = successful ? 'Link copied to clipboard!' : 'Failed to copy link';
-        showToast(msg);
+        window.showPageToast(msg);
     } catch (err) {
         console.error('Fallback: Oops, unable to copy', err);
-        showToast('Unable to copy link automatically');
+        window.showPageToast('Unable to copy link automatically');
     }
 
     document.body.removeChild(textArea);
-}
+};
 
-function showToast(message) {
+window.showPageToast = function(message) {
     // Check if existing toast
-    const existing = document.getElementById('toast-notification');
+    var existing = document.getElementById('toast-notification');
     if (existing) existing.remove();
 
-    const el = document.createElement('div');
+    var el = document.createElement('div');
     el.id = 'toast-notification';
     el.className = 'fixed bottom-4 right-4 bg-gray-800 text-white px-4 py-2 rounded shadow-lg text-sm z-50 animate-bounce flex items-center gap-2';
     el.innerHTML = '<i class="fas fa-check-circle text-green-400"></i> ' + message;
@@ -180,7 +180,7 @@ function showToast(message) {
         el.style.transition = 'opacity 0.5s';
         setTimeout(() => el.remove(), 500);
     }, 3000);
-}
+};
 </script>
 
 <?php require_once __DIR__ . '/../includes/admin-footer.php'; ?>

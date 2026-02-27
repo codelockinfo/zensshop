@@ -108,8 +108,8 @@ $action = $segments[count($segments) - 1] ?? '';  // add, list
     <script src="https://cdn.jsdelivr.net/npm/tinymce@6/tinymce.min.js"></script>
     <script>
     // Make BASE_URL available globally for all admin pages
-    const BASE_URL = '<?php echo $baseUrl; ?>';
-    const STORE_ID = '<?php echo $h_storeId ?? ''; ?>';
+    var BASE_URL = '<?php echo $baseUrl; ?>';
+    var STORE_ID = '<?php echo $h_storeId ?? ''; ?>';
     
     // Global TinyMCE 6 Initialization
     window.initTinyMCE = function() {

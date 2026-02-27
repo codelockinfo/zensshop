@@ -502,12 +502,12 @@ window.previewLogo = function(input) {
 };
 
 // Top Bar Slides Management
-const slidesData = <?php echo json_encode($topbarSlides); ?>;
+var slidesData = <?php echo json_encode($topbarSlides); ?>;
 
 window.addSlide = function(data = null) {
-    const container = document.getElementById('slidesContainer');
+    var container = document.getElementById('slidesContainer');
     if (!container) return;
-    const slideDiv = document.createElement('div');
+    var slideDiv = document.createElement('div');
     slideDiv.className = 'flex items-center gap-3 p-3 bg-gray-50 border border-gray-200 rounded slide-row';
     
     slideDiv.innerHTML = `
@@ -532,12 +532,12 @@ window.addSlide = function(data = null) {
 };
 
 // Top Bar Links Management
-const linksData = <?php echo json_encode($topbarLinks); ?>;
+var linksData = <?php echo json_encode($topbarLinks); ?>;
 
 window.addLink = function(data = null) {
-    const container = document.getElementById('linksContainer');
+    var container = document.getElementById('linksContainer');
     if (!container) return;
-    const linkDiv = document.createElement('div');
+    var linkDiv = document.createElement('div');
     linkDiv.className = 'flex items-center gap-3 p-3 bg-gray-50 border border-gray-200 rounded link-row';
     
     linkDiv.innerHTML = `
@@ -564,10 +564,10 @@ window.removeRow = function(btn) {
 // Initialize existing data immediately (since PJAX replaces content dynamically and DOMContentLoaded won't fire again)
 function initHeaderInfoJS() {
     // Clear out existing if re-initializing
-    const sContainer = document.getElementById('slidesContainer');
+    var sContainer = document.getElementById('slidesContainer');
     if (sContainer) sContainer.innerHTML = '';
     
-    const lContainer = document.getElementById('linksContainer');
+    var lContainer = document.getElementById('linksContainer');
     if (lContainer) lContainer.innerHTML = '';
 
     // Load existing slides

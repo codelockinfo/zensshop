@@ -53,57 +53,33 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
     // Save Visual Styles (Best Selling)
     $settingsObj = new Settings();
-    $currentBSStyles = json_decode($settingsObj->get('best_selling_styles', '{}'), true);
-    $bs_styles = [
-        'bg_color' => $_POST['bs_bg_color'] ?? '#ffffff',
-        'heading_color' => $_POST['bs_heading_color'] ?? '#1f2937',
-        'subheading_color' => $_POST['bs_subheading_color'] ?? '#4b5563',
-        'arrow_bg_color' => $_POST['bs_arrow_bg_color'] ?? '#ffffff',
-        'arrow_icon_color' => $_POST['bs_arrow_icon_color'] ?? '#1f2937',
-        
-        // Preserve card styles
-        'price_color' => $currentBSStyles['price_color'] ?? '#1a3d32',
-        'compare_price_color' => $currentBSStyles['compare_price_color'] ?? '#9ca3af',
-        'card_bg_color' => $currentBSStyles['card_bg_color'] ?? '#ffffff',
-        'card_title_color' => $currentBSStyles['card_title_color'] ?? '#1F2937',
-        'badge_bg_color' => $currentBSStyles['badge_bg_color'] ?? '#ef4444',
-        'badge_text_color' => $currentBSStyles['badge_text_color'] ?? '#ffffff',
-        'btn_bg_color' => $currentBSStyles['btn_bg_color'] ?? '#ffffff',
-        'btn_icon_color' => $currentBSStyles['btn_icon_color'] ?? '#000000',
-        'btn_hover_bg_color' => $currentBSStyles['btn_hover_bg_color'] ?? '#000000',
-        'btn_hover_icon_color' => $currentBSStyles['btn_hover_icon_color'] ?? '#ffffff',
-        'btn_active_bg_color' => $currentBSStyles['btn_active_bg_color'] ?? '#000000',
-        'btn_active_icon_color' => $currentBSStyles['btn_active_icon_color'] ?? '#ffffff',
-        'tooltip_bg_color' => $currentBSStyles['tooltip_bg_color'] ?? '#000000',
-        'tooltip_text_color' => $currentBSStyles['tooltip_text_color'] ?? '#ffffff'
-    ];
+    $bs_styles = $currentBSStyles;
+    $bs_styles['bg_color'] = $_POST['bs_bg_color'] ?? ($currentBSStyles['bg_color'] ?? '#ffffff');
+    $bs_styles['heading_color'] = $_POST['bs_heading_color'] ?? ($currentBSStyles['heading_color'] ?? '#1f2937');
+    $bs_styles['subheading_color'] = $_POST['bs_subheading_color'] ?? ($currentBSStyles['subheading_color'] ?? '#4b5563');
+    $bs_styles['arrow_bg_color'] = $_POST['bs_arrow_bg_color'] ?? ($currentBSStyles['arrow_bg_color'] ?? '#ffffff');
+    $bs_styles['arrow_icon_color'] = $_POST['bs_arrow_icon_color'] ?? ($currentBSStyles['arrow_icon_color'] ?? '#1f2937');
+    
+    $keys_to_remove = ['price_color', 'compare_price_color', 'card_bg_color', 'card_title_color', 'badge_bg_color', 'badge_text_color', 'btn_bg_color', 'btn_icon_color', 'btn_hover_bg_color', 'btn_hover_icon_color', 'btn_active_bg_color', 'btn_active_icon_color', 'tooltip_bg_color', 'tooltip_text_color'];
+    foreach ($keys_to_remove as $key) {
+        unset($bs_styles[$key]);
+    }
+    
     $settingsObj->set('best_selling_styles', json_encode($bs_styles), 'homepage');
 
     // Save Visual Styles (Trending)
     $currentTRStyles = json_decode($settingsObj->get('trending_styles', '{}'), true);
-    $tr_styles = [
-        'bg_color' => $_POST['tr_bg_color'] ?? '#ffffff',
-        'heading_color' => $_POST['tr_heading_color'] ?? '#1f2937',
-        'subheading_color' => $_POST['tr_subheading_color'] ?? '#4b5563',
-        'arrow_bg_color' => $_POST['tr_arrow_bg_color'] ?? '#ffffff',
-        'arrow_icon_color' => $_POST['tr_arrow_icon_color'] ?? '#1f2937',
-        
-        // Preserve card styles
-        'price_color' => $currentTRStyles['price_color'] ?? '#1a3d32',
-        'compare_price_color' => $currentTRStyles['compare_price_color'] ?? '#9ca3af',
-        'card_bg_color' => $currentTRStyles['card_bg_color'] ?? '#ffffff',
-        'card_title_color' => $currentTRStyles['card_title_color'] ?? '#1F2937',
-        'badge_bg_color' => $currentTRStyles['badge_bg_color'] ?? '#ef4444',
-        'badge_text_color' => $currentTRStyles['badge_text_color'] ?? '#ffffff',
-        'btn_bg_color' => $currentTRStyles['btn_bg_color'] ?? '#ffffff',
-        'btn_icon_color' => $currentTRStyles['btn_icon_color'] ?? '#000000',
-        'btn_hover_bg_color' => $currentTRStyles['btn_hover_bg_color'] ?? '#000000',
-        'btn_hover_icon_color' => $currentTRStyles['btn_hover_icon_color'] ?? '#ffffff',
-        'btn_active_bg_color' => $currentTRStyles['btn_active_bg_color'] ?? '#000000',
-        'btn_active_icon_color' => $currentTRStyles['btn_active_icon_color'] ?? '#ffffff',
-        'tooltip_bg_color' => $currentTRStyles['tooltip_bg_color'] ?? '#000000',
-        'tooltip_text_color' => $currentTRStyles['tooltip_text_color'] ?? '#ffffff'
-    ];
+    $tr_styles = $currentTRStyles;
+    $tr_styles['bg_color'] = $_POST['tr_bg_color'] ?? ($currentTRStyles['bg_color'] ?? '#ffffff');
+    $tr_styles['heading_color'] = $_POST['tr_heading_color'] ?? ($currentTRStyles['heading_color'] ?? '#1f2937');
+    $tr_styles['subheading_color'] = $_POST['tr_subheading_color'] ?? ($currentTRStyles['subheading_color'] ?? '#4b5563');
+    $tr_styles['arrow_bg_color'] = $_POST['tr_arrow_bg_color'] ?? ($currentTRStyles['arrow_bg_color'] ?? '#ffffff');
+    $tr_styles['arrow_icon_color'] = $_POST['tr_arrow_icon_color'] ?? ($currentTRStyles['arrow_icon_color'] ?? '#1f2937');
+    
+    foreach ($keys_to_remove as $key) {
+        unset($tr_styles[$key]);
+    }
+    
     $settingsObj->set('trending_styles', json_encode($tr_styles), 'homepage');
 
     try {
@@ -658,31 +634,28 @@ require_once __DIR__ . '/../includes/admin-header.php';
 
 <script>
 
-const collections = {
+var collections = {
     best_selling: new Set(<?php echo $bestSellingIdsStr ? '[' . $bestSellingIdsStr . ']' : '[]'; ?>),
     trending: new Set(<?php echo $trendingIdsStr ? '[' . $trendingIdsStr . ']' : '[]'; ?>)
 };
 
 // Initialize Combo Box for a section
-function initComboBox(key) {
-    const container = document.getElementById('combo_' + key);
-    const input = container.querySelector('input');
-    const dropdown = container.querySelector('.combobox-options');
-    const toggleIcon = container.querySelector('.toggle-icon');
+window.initComboBox = function(key) {
+    var container = document.getElementById('combo_' + key);
+    if (!container) return;
+    var input = container.querySelector('input');
+    var dropdown = container.querySelector('.combobox-options');
+    var toggleIcon = container.querySelector('.toggle-icon');
     
     // Render list function
     async function renderList(filterText = '') {
-        const term = filterText.trim();
-        
-        // Show loading state
+        var term = (filterText || '').trim();
         dropdown.innerHTML = '<div class="p-3 text-gray-500 text-sm"><i class="fas fa-spinner fa-spin mr-2"></i>Loading products...</div>';
         
         try {
-            // We allow empty term to show the first 20 products by default
-            const response = await fetch(`${BASE_URL}/admin/search_products_json.php?term=${encodeURIComponent(term)}`);
-            let products = await response.json();
+            var response = await fetch(`${BASE_URL}/admin/search_products_json.php?term=${encodeURIComponent(term)}`);
+            var products = await response.json();
             
-            // Filter out already selected products
             if (Array.isArray(products)) {
                 products = products.filter(p => !collections[key].has(parseInt(p.id)));
             }
@@ -703,11 +676,10 @@ function initComboBox(key) {
                     </div>
                 `).join('');
 
-                // Add click events to items
                 dropdown.querySelectorAll('.item-selection').forEach(item => {
                     item.addEventListener('click', function(e) {
-                        const p = JSON.parse(this.dataset.p);
-                        addItem(key, p.id, p.name, p.image);
+                        var p = JSON.parse(this.dataset.p);
+                        window.addItem(key, p.id, p.name, p.image);
                         input.value = '';
                         hideDropdown();
                     });
@@ -719,58 +691,51 @@ function initComboBox(key) {
         }
     }
     
-    // Toggle Dropdown
     function showDropdown() {
         renderList(input.value);
         dropdown.classList.remove('hidden');
     }
     
     function hideDropdown() {
-        // Small delay to allow click event to register
         setTimeout(() => dropdown.classList.add('hidden'), 200);
     }
     
-    // Events
     input.addEventListener('focus', showDropdown);
     input.addEventListener('input', (e) => renderList(e.target.value));
     toggleIcon.addEventListener('click', (e) => {
         e.stopPropagation();
         if (dropdown.classList.contains('hidden')) {
-            input.focus();
+            showDropdown();
         } else {
             dropdown.classList.add('hidden');
         }
     });
 
-    // Handle clicks outside to close
     document.addEventListener('click', (e) => {
         if (!container.contains(e.target)) {
             dropdown.classList.add('hidden');
         }
     });
-}
+};
 
-// selectItem function removed as logic moved into renderList event listeners
-
-function addItem(key, id, name, image) {
+window.addItem = function(key, id, name, image) {
     id = parseInt(id);
-    
     if (collections[key].has(id)) {
-        showMessage(key, 'Product already added.', 'error');
+        window.showMessage(key, 'Product already added.', 'error');
         return;
     }
-    
     collections[key].add(id);
-    
-    const list = document.getElementById('list_' + key);
-    const emptyMsg = list.querySelector('.empty-msg');
+    var list = document.getElementById('list_' + key);
+    if (!list) return;
+
+    var emptyMsg = list.querySelector('.empty-msg');
     if (emptyMsg) emptyMsg.remove();
     
-    const li = document.createElement('li');
+    var li = document.createElement('li');
     li.className = 'bg-white border border-gray-200 rounded p-2 flex items-center justify-between shadow-sm animate-fade-in';
     li.dataset.id = id;
     
-    const imgHtml = image 
+    var imgHtml = image 
         ? `<img src="${image}" class="w-10 h-10 object-cover rounded">`
         : `<div class="w-10 h-10 bg-gray-200 rounded flex items-center justify-center"><i class="fas fa-image text-gray-400"></i></div>`;
         
@@ -781,139 +746,106 @@ function addItem(key, id, name, image) {
             <span class="font-medium text-gray-800" style="max-width: 450px; display: inline-block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">${name}</span>
             <span class="text-xs text-gray-500">(Product ID: ${id})</span>
         </div>
-        <button type="button" onclick="removeItem('${key}', ${id})" class="text-red-500 hover:text-red-700 p-1">
+        <button type="button" onclick="window.removeItem('${key}', ${id})" class="text-red-500 hover:text-red-700 p-1">
             <i class="fas fa-times"></i>
         </button>
     `;
     
     list.appendChild(li);
-    updateHiddenInput(key);
-    
-    // showMessage(key, 'Product added successfully', 'success'); // Disabled per request
-}
+    window.updateHiddenInput(key);
+};
 
-function removeItem(key, id) {
+window.removeItem = function(key, id) {
     collections[key].delete(id);
-    
-    const list = document.getElementById('list_' + key);
-    const item = list.querySelector(`li[data-id="${id}"]`);
+    var list = document.getElementById('list_' + key);
+    if (!list) return;
+    var item = list.querySelector(`li[data-id="${id}"]`);
     if (item) item.remove();
     
     if (collections[key].size === 0) {
         list.innerHTML = '<li class="text-center text-gray-400 py-4 italic empty-msg">No products selected. Default products will be shown.</li>';
     }
-    updateHiddenInput(key);
-}
+    window.updateHiddenInput(key);
+};
 
-function updateHiddenInput(key) {
-    const list = document.getElementById('list_' + key);
-    const items = list.querySelectorAll('li[data-id]');
-    const ids = Array.from(items).map(li => li.dataset.id);
-    
+window.updateHiddenInput = function(key) {
+    var list = document.getElementById('list_' + key);
+    if (!list) return;
+    var items = list.querySelectorAll('li[data-id]');
+    var ids = Array.from(items).map(li => li.dataset.id);
     document.getElementById(key + '_ids').value = ids.join(',');
-    console.log('Hidden input updated for ' + key + ':', ids.join(','));
-}
+};
 
-function showMessage(key, msg, type='error') {
-    const el = document.getElementById('msg_' + key);
+window.showMessage = function(key, msg, type='error') {
+    var el = document.getElementById('msg_' + key);
     if(!el) return;
-    
-    const colorClass = type === 'error' ? 'text-red-500 bg-red-50 border-red-200' : 'text-green-500 bg-green-50 border-green-200';
-    
+    var colorClass = type === 'error' ? 'text-red-500 bg-red-50 border-red-200' : 'text-green-500 bg-green-50 border-green-200';
     el.className = `mb-3 px-3 py-2 rounded border text-sm ${colorClass}`;
     el.innerText = msg;
     el.classList.remove('hidden');
-    
-    setTimeout(() => {
-        el.classList.add('hidden');
-    }, 3000);
-}
+    setTimeout(() => el.classList.add('hidden'), 3000);
+};
 
-// Global Message Handler
-function showGlobalMessage(msg) {
-    const el = document.getElementById('global_message_container');
-    el.innerHTML = `<div class="bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded relative mb-4 animate-fade-in">${msg}</div>`;
-    
-    setTimeout(() => {
-        el.innerHTML = '';
-    }, 4000); 
-}
+window.showGlobalMessage = function(msg) {
+    var el = document.getElementById('global_message_container');
+    if (el) {
+        el.innerHTML = `<div class="bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded relative mb-4 animate-fade-in">${msg}</div>`;
+        setTimeout(() => { el.innerHTML = ''; }, 4000); 
+    }
+};
 
-// AJAX Form Submit
-document.getElementById('settingsForm').addEventListener('submit', function(e) {
-    e.preventDefault();
-    
-    const formData = new FormData(this);
-    const submitBtn = document.querySelector('button[form="settingsForm"]');
-    
-    // Note: Global 'btn-loading' listener in admin-footer.php handles showing the loader.
-    
-     fetch(`${BASE_URL}/admin/homepage_products_settings.php?ajax=1`, {
-        method: 'POST',
-        body: formData,
-        headers: { 'X-Requested-With': 'XMLHttpRequest' }
-    })
-    .then(response => {
-        if (!response.ok) throw new Error('Network response was not ok');
-        return response.text().then(text => {
-            try { 
-                return JSON.parse(text); 
-            } catch (e) { 
-                console.error('Server response:', text);
-                throw new Error('Something went wrong. Please try again.'); 
-            }
-        });
-    })
-    .then(data => {
-        if (data.success) { 
-            showGlobalMessage(data.message); 
-        } else {
-            throw new Error(data.message || 'Unknown error occurred');
-        }
-    })
-    .catch(err => {
-        console.error(err);
-        const el = document.getElementById('global_message_container');
-        el.innerHTML = `<div class="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative mb-4 animate-fade-in">Error saving: ${err.message}</div>`;
-        setTimeout(() => { el.innerHTML = ''; }, 5000);
-    })
-    .finally(() => {
-        // Restore button state using the global helper
-        if (submitBtn) {
-            setBtnLoading(submitBtn, false);
-        }
-    });
-});
-
-// Initialize Sortable for drag-and-drop
-function initSortable(key) {
-    const list = document.getElementById('list_' + key);
+window.initSortable = function(key) {
+    var list = document.getElementById('list_' + key);
+    if (!list || typeof Sortable === 'undefined') return;
     new Sortable(list, {
         animation: 150,
         handle: '.drag-handle',
         ghostClass: 'bg-blue-50',
-        dragClass: 'opacity-50',
-        onEnd: function(evt) {
-            // Update the hidden input with new order
-            updateHiddenInput(key);
-            
-            // Rebuild the collections Set with new order
-            const items = list.querySelectorAll('li[data-id]');
+        onEnd: function() {
+            window.updateHiddenInput(key);
+            var items = list.querySelectorAll('li[data-id]');
             collections[key].clear();
-            items.forEach(item => {
-                collections[key].add(parseInt(item.dataset.id));
-            });
-            
-            console.log('Order updated for ' + key + ':', Array.from(items).map(i => i.dataset.id).join(','));
+            items.forEach(item => collections[key].add(parseInt(item.dataset.id)));
         }
     });
-}
+};
 
-// Init
-initComboBox('best_selling');
-initComboBox('trending');
-initSortable('best_selling');
-initSortable('trending');
+(function() {
+    window.initComboBox('best_selling');
+    window.initComboBox('trending');
+    window.initSortable('best_selling');
+    window.initSortable('trending');
+    
+    var form = document.getElementById('settingsForm');
+    if (form) {
+        form.addEventListener('submit', function(e) {
+            e.preventDefault();
+            var formData = new FormData(this);
+            var submitBtn = document.querySelector('button[form="settingsForm"]');
+            
+            fetch(`${BASE_URL}/admin/homepage_products_settings.php?ajax=1`, {
+                method: 'POST',
+                body: formData,
+                headers: { 'X-Requested-With': 'XMLHttpRequest' }
+            })
+            .then(r => r.json())
+            .then(data => {
+                if (data.success) window.showGlobalMessage(data.message);
+                else throw new Error(data.message);
+            })
+            .catch(err => {
+                var el = document.getElementById('global_message_container');
+                if (el) {
+                    el.innerHTML = `<div class="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative mb-4">Error: ${err.message}</div>`;
+                    setTimeout(() => { el.innerHTML = ''; }, 5000);
+                }
+            })
+            .finally(() => {
+                if (submitBtn && window.setBtnLoading) window.setBtnLoading(submitBtn, false);
+            });
+        });
+    }
+})();
 
 // Hide PHP message if present
 // Hide PHP message if present and clean URL

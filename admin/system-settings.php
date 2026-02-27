@@ -306,7 +306,7 @@ unset($_SESSION['error']);
                 </div>
 
                 <script>
-                function previewFavicon(input, containerId) {
+                window.previewFavicon = function(input, containerId) {
                     if (input.files && input.files[0]) {
                         var reader = new FileReader();
                         reader.onload = function(e) {
@@ -448,7 +448,7 @@ unset($_SESSION['error']);
                 </div>
 
                 <script>
-                function previewEmailLogo(input, containerId) {
+                window.previewEmailLogo = function(input, containerId) {
                     if (input.files && input.files[0]) {
                         var reader = new FileReader();
                         reader.onload = function(e) {
@@ -469,14 +469,18 @@ unset($_SESSION['error']);
                     }
                 }
                 
-                function removeEmailLogo() {
+                window.removeEmailLogo = function() {
                     const form = document.getElementById('settingsForm');
                     const hiddenInput = document.createElement('input');
                     hiddenInput.type = 'hidden';
                     hiddenInput.name = 'setting_email_logo';
                     hiddenInput.value = '';
                     form.appendChild(hiddenInput);
-                    form.submit();
+                    if (typeof form.requestSubmit === 'function') {
+                        form.requestSubmit();
+                    } else {
+                        form.dispatchEvent(new Event('submit', { cancelable: true, bubbles: true }));
+                    }
                 }
                 </script>
             </div>
@@ -864,151 +868,127 @@ unset($_SESSION['error']);
 
         <!-- Save Button Removed (Moved to Header) -->
     </form>
-</div>
 
-<script>
-// Help recover from garbled data if any was saved in Base64
-function initSystemSettings() {
-    var sensitiveFields = [
-        'setting_global_schema_json',
-        'setting_header_scripts', 
-        'setting_pickup_message',
-        'setting_global_meta_description'
-    ];
-    
-    sensitiveFields.forEach(name => {
-        const el = document.getElementsByName(name)[0];
-        if (el && el.value && el.value.length > 8) {
-            const val = el.value.trim();
-            // Simple check if it might be Base64
-            if (/^[A-Za-z0-9+/=]+$/.test(val) && val.length % 4 === 0) {
-                try {
-                    const decoded = decodeURIComponent(escape(atob(val)));
-                    // Only apply if it doesn't look like binary garbage
-                    if (!/[\x00-\x08\x0E-\x1F]/.test(decoded)) {
-                        el.value = decoded;
-                        // If it's the pickup message, we might need to sync TinyMCE
-                        if (name === 'setting_pickup_message' && typeof tinymce !== 'undefined') {
-                            const editor = tinymce.get(el.id);
-                            if (editor) editor.setContent(decoded);
-                        }
+    <script>
+    // Help recover from garbled data if any was saved in Base64
+    window.initSettingsJS = function() {
+        // Initializing
+        var sensitiveFields = [
+            'setting_global_schema_json',
+            'setting_header_scripts', 
+            'setting_pickup_message',
+            'setting_global_meta_description'
+        ];
+        
+        sensitiveFields.forEach(name => {
+            var els = document.getElementsByName(name);
+            if (els && els.length > 0) {
+                var el = els[0];
+                if (el && el.value && el.value.length > 8) {
+                    var val = el.value.trim();
+                    if (/^[A-Za-z0-9+/=]+$/.test(val) && val.length % 4 === 0) {
+                        try {
+                            var decoded = decodeURIComponent(escape(atob(val)));
+                            if (!/[\x00-\x08\x0E-\x1F]/.test(decoded)) {
+                                el.value = decoded;
+                                if (name === 'setting_pickup_message' && typeof tinymce !== 'undefined') {
+                                    var editor = tinymce.get(el.id);
+                                    if (editor) editor.setContent(decoded);
+                                }
+                            }
+                        } catch (e) {}
                     }
-                } catch (e) {}
+                }
             }
-        }
-    });
-}
-// Run on load
-initSystemSettings();
-
-function togglePassword(fieldId) {
-    const input = document.getElementById(fieldId);
-    const icon = document.getElementById('eye-' + fieldId);
-    
-    if (input.type === 'password') {
-        input.type = 'text';
-        icon.classList.remove('fa-eye');
-        icon.classList.add('fa-eye-slash');
-    } else {
-        input.type = 'password';
-        icon.classList.remove('fa-eye-slash');
-        icon.classList.add('fa-eye');
-    }
-}
-
-// Payment Icons Dynamic Rows
-var paymentData = <?php 
-    $paymentIconsJson = $settings->get('checkout_payment_icons_json', '[]');
-    echo $paymentIconsJson ?: '[]';
-?>;
-
-function addPaymentRow(data = null) {
-    const container = document.getElementById('paymentIconsContainer');
-    const template = document.getElementById('paymentRowTemplate');
-    const clone = template.content.cloneNode(true);
-    
-    if (data) {
-        clone.querySelector('input').value = data.name;
-        clone.querySelector('textarea').value = data.svg;
-        clone.querySelector('.svg-preview').innerHTML = data.svg;
-    }
-    
-    // Add real-time preview listener to the newly added textarea
-    const textarea = clone.querySelector('textarea');
-    textarea.addEventListener('input', function() {
-        const previewDiv = this.closest('.payment-row').querySelector('.svg-preview');
-        previewDiv.innerHTML = this.value || '<span class="text-xs text-gray-400">Preview</span>';
-    });
-    
-    container.appendChild(clone);
-}
-
-function removePaymentRow(btn) {
-    btn.closest('.payment-row').remove();
-}
-
-// Init payment icons
-if (paymentData && paymentData.length > 0) {
-    paymentData.forEach(item => addPaymentRow(item));
-} else {
-    // Add one empty row by default
-    addPaymentRow();
-}
-
-// Encode sensitive fields before submission to prevent WAF blocking
-document.getElementById('settingsForm').addEventListener('submit', function(e) {
-    const form = this;
-    
-    // Sync TinyMCE editors
-    if (typeof tinymce !== 'undefined') {
-        tinymce.triggerSave();
-    }
-
-    var sensitiveFields = [
-        'setting_global_schema_json',
-        'setting_header_scripts', 
-        'setting_pickup_message',
-        'setting_global_meta_description'
-    ];
-    
-    // Helper to safely encode to Base64 (supporting UTF-8)
-    var toBase64 = (str) => btoa(unescape(encodeURIComponent(str)));
-    
-    // Create hidden fields for encoded values so we don't mess with the visible textareas
-    // We also nullify the name of the original field so it's not sent (prevents WAF block)
-    sensitiveFields.forEach(name => {
-        const els = document.getElementsByName(name);
-        if (els && els.length > 0) {
-            const el = els[0];
-            const val = el.value;
-            
-            const hidden = document.createElement('input');
-            hidden.type = 'hidden';
-            hidden.name = 'encoded_' + name.replace('setting_', '');
-            hidden.value = toBase64(val);
-            form.appendChild(hidden);
-            
-            // Remove the name right before submission so the WAF never sees the raw content
-            el.removeAttribute('name');
-        }
-    });
-
-    const svgs = document.getElementsByName('payment_svgs[]');
-    if (svgs && svgs.length > 0) {
-        // Convert to array to avoid issues when removing attributes
-        const svgArray = Array.from(svgs);
-        svgArray.forEach(el => {
-            const hidden = document.createElement('input');
-            hidden.type = 'hidden';
-            hidden.name = 'encoded_payment_svgs[]';
-            hidden.value = toBase64(el.value);
-            form.appendChild(hidden);
-            
-            // Remove the name right before submission
-            el.removeAttribute('name');
         });
-    }
-});
-</script>
+
+        // Payment Icons Dynamic Rows Logic
+        var pData = <?php 
+            $paymentIconsJson = $settings->get('checkout_payment_icons_json', '[]');
+            echo $paymentIconsJson ?: '[]';
+        ?>;
+        
+        window.addPaymentRow = function(data = null) {
+            var container = document.getElementById('paymentIconsContainer');
+            var template = document.getElementById('paymentRowTemplate');
+            if (!container || !template) return;
+            var clone = template.content.cloneNode(true);
+            
+            if (data) {
+                clone.querySelector('input').value = data.name || '';
+                clone.querySelector('textarea').value = data.svg || '';
+                clone.querySelector('.svg-preview').innerHTML = data.svg || '';
+            }
+            
+            var textarea = clone.querySelector('textarea');
+            if (textarea) {
+                textarea.addEventListener('input', function() {
+                    var previewRow = this.closest('.payment-row');
+                    if (previewRow) {
+                        var previewDiv = previewRow.querySelector('.svg-preview');
+                        previewDiv.innerHTML = this.value || '<span class="text-xs text-gray-400">Preview</span>';
+                    }
+                });
+            }
+            
+            container.appendChild(clone);
+        };
+
+        window.removePaymentRow = function(btn) {
+            var row = btn.closest('.payment-row');
+            if (row) row.remove();
+        };
+
+        // Clear and Re-init rows (Important for AJAX)
+        var pContainer = document.getElementById('paymentIconsContainer');
+        if (pContainer) pContainer.innerHTML = '';
+        
+        if (pData && pData.length > 0) {
+            pData.forEach(item => window.addPaymentRow(item));
+        } else {
+            window.addPaymentRow();
+        }
+
+        // Setup Form Encoder
+        var form = document.getElementById('settingsForm');
+        if (form && !form.dataset.encodedAttached) {
+            form.dataset.encodedAttached = "true";
+            form.addEventListener('submit', function(e) {
+                if (typeof tinymce !== 'undefined') tinymce.triggerSave();
+                var toBase64 = (str) => btoa(unescape(encodeURIComponent(str)));
+                
+                sensitiveFields.forEach(name => {
+                    var els = document.getElementsByName(name);
+                    if (els && els.length > 0) {
+                        var el = els[0];
+                        var hidden = document.createElement('input');
+                        hidden.type = 'hidden';
+                        hidden.name = 'encoded_' + name.replace('setting_', '');
+                        hidden.value = toBase64(el.value);
+                        form.appendChild(hidden);
+                        el.removeAttribute('name');
+                    }
+                });
+
+                var svgs = document.getElementsByName('payment_svgs[]');
+                if (svgs && svgs.length > 0) {
+                    Array.from(svgs).forEach(el => {
+                        var hidden = document.createElement('input');
+                        hidden.type = 'hidden';
+                        hidden.name = 'encoded_payment_svgs[]';
+                        hidden.value = toBase64(el.value);
+                        form.appendChild(hidden);
+                        el.removeAttribute('name');
+                    });
+                }
+            });
+        }
+        // Initialized
+    };
+
+    // Auto-run if not via AJAX
+    window.initSettingsJS();
+    </script>
+</div>
 
 <?php require_once __DIR__ . '/../includes/admin-footer.php'; ?>

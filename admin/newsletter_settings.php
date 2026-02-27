@@ -198,11 +198,12 @@ require_once __DIR__ . '/../includes/admin-header.php';
                  </div>
 
                  <script>
-                 function previewNewsletterImage(input) {
+                 window.previewNewsletterImage = function(input) {
                      if (input.files && input.files[0]) {
                          var reader = new FileReader();
                          reader.onload = function(e) {
-                             const container = document.getElementById('imagePreviewContainer');
+                             var container = document.getElementById('imagePreviewContainer');
+                             if (!container) return;
                              // Remove dashed styling
                              container.classList.remove('border-dashed', 'border-gray-300', 'bg-gray-50');
                              container.classList.add('border-gray-200');
@@ -218,7 +219,7 @@ require_once __DIR__ . '/../includes/admin-header.php';
                          }
                          reader.readAsDataURL(input.files[0]);
                      }
-                 }
+                 };
                  </script>
             </div>
 

@@ -296,6 +296,37 @@ $qv_policy_color = $qvStyles['policy_color'] ?? '#374151';
         }
     </style>
 
+    <script>
+    function toggleFooterAccordion(element) {
+        if (window.innerWidth >= 768) return;
+        
+        const content = element.nextElementSibling;
+        const icon = element.querySelector('i');
+        
+        if (!content || !icon) return;
+
+        // Check if currently open
+        if (content.style.maxHeight && content.style.maxHeight !== '0px') {
+            // Close
+            content.style.maxHeight = '0px';
+            content.classList.remove('opacity-100');
+            content.classList.add('opacity-0');
+            
+            icon.classList.remove('fa-minus');
+            icon.classList.add('fa-plus');
+            icon.style.transform = 'rotate(0deg)';
+        } else {
+            // Open
+            content.style.maxHeight = content.scrollHeight + "px";
+            content.classList.remove('opacity-0');
+            content.classList.add('opacity-100');
+            
+            icon.classList.remove('fa-plus');
+            icon.classList.add('fa-minus');
+            icon.style.transform = 'rotate(180deg)';
+        }
+    }
+    </script>
     <!-- Footer -->
     <footer class="bg-white text-black relative">
         <div class="container footer-block mx-auto px-4 pt-20">
@@ -685,35 +716,7 @@ $qv_policy_color = $qvStyles['policy_color'] ?? '#374151';
     window.confirmRemoveWithWishlist = confirmRemoveWithWishlist;
     window.confirmRemoveWithoutWishlist = confirmRemoveWithoutWishlist;
     </script>
-    <script>
-    function toggleFooterAccordion(element) {
-        if (window.innerWidth >= 768) return;
-        
-        const content = element.nextElementSibling;
-        const icon = element.querySelector('i');
-        
-        // Check if currently open
-        if (content.style.maxHeight && content.style.maxHeight !== '0px') {
-            // Close
-            content.style.maxHeight = '0px';
-            content.classList.remove('opacity-100');
-            content.classList.add('opacity-0');
-            
-            icon.classList.remove('fa-minus');
-            icon.classList.add('fa-plus');
-            icon.style.transform = 'rotate(0deg)';
-        } else {
-            // Open
-            content.style.maxHeight = content.scrollHeight + "px";
-            content.classList.remove('opacity-0');
-            content.classList.add('opacity-100');
-            
-            icon.classList.remove('fa-plus');
-            icon.classList.add('fa-minus');
-            icon.style.transform = 'rotate(180deg)';
-        }
-    }
-    </script>
+
 <!-- Ask a Question Modal (Shared) -->
 <div id="askQuestionModal" class="fixed inset-0 z-[100] hidden overflow-y-auto" aria-labelledby="modal-title" role="dialog" aria-modal="true">
     <div class="flex items-center justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0">
