@@ -6,7 +6,7 @@ function createQuickViewModal(){if(document.getElementById("quickViewModal"))ret
         <!-- Modal Panel Container -->
         <div class="fixed inset-0 z-10 overflow-hidden flex items-center justify-center p-4 sm:p-6" id="quickViewWrapper">
             <!-- Panel -->
-            <div class="relative transform rounded-lg text-left shadow-xl transition-all w-full max-w-5xl h-[85vh] flex flex-col opacity-0 scale-95 duration-300" id="quickViewPanel">
+            <div class="relative transform rounded-lg text-left shadow-xl transition-all w-full max-w-5xl max-h-[90vh] flex flex-col opacity-0 scale-95 duration-300 bg-white" id="quickViewPanel">
                 
                 <!-- Close Button -->
                 <div class="absolute right-4 top-4 z-20">
@@ -123,15 +123,15 @@ function createQuickViewModal(){if(document.getElementById("quickViewModal"))ret
                      `).join("")}
                  </div>
              </div>`});let m=t.in_wishlist?"fas":"far",g=t.in_wishlist?"Remove from Wishlist":"Add to Wishlist";if(e.innerHTML=`
-        <div class="h-full grid grid-cols-1 md:grid-cols-2 bg-transparent">
-            <div class="p-6 md:p-8 bg-transparent md:border-r border-gray-100 flex flex-col justify-between overflow-hidden relative max-h-[500px]">
+        <div class="grid grid-cols-1 md:grid-cols-2 bg-transparent">
+            <div class="p-6 md:p-8 bg-transparent md:border-r border-gray-100 flex flex-col justify-between overflow-hidden relative">
                 <div class="relative flex-1 flex flex-col items-center justify-center w-full min-h-0">
                     ${r}
                 </div>
                 ${o}
             </div>
 
-            <div class="p-6 md:p-8 h-full overflow-y-auto custom-scrollbar bg-transparent relative">
+            <div class="p-6 md:p-8 overflow-y-auto custom-scrollbar bg-transparent relative">
                 <h2 id="qvTitle" class="text-2xl md:text-3xl font-heading font-bold text-gray-900 mb-2 pr-8 truncate-3-lines">${t.name}</h2>
                 <div class="flex flex-wrap items-center gap-4 mb-4 text-sm">
                     <div class="flex items-center gap-1">
