@@ -200,7 +200,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && !$isLoggedIn) {
 
 if (!$isAjax) {
     require_once __DIR__ . '/includes/header.php';
-    echo '<div class="pt-24 pb-20 bg-gray-50 flex flex-col items-center">';
+    echo '<div class="pt-8 md:pt-24 pb-8 md:pb-20 bg-gray-50 flex flex-col items-center">';
     echo '<div class="container mx-auto px-4 ' . ($isLoggedIn ? 'max-w-8xl' : 'max-w-md') . '">';
 }
 ?>

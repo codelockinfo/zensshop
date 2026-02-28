@@ -74,11 +74,8 @@ $pageTitle = 'Register';
                     <p class="text-gray-500 mt-2">Join us for a better experience</p>
                 </div>
 
-                <?php if ($error): ?>
-                    <div class="bg-red-50 text-red-600 p-4 rounded-lg mb-6 text-sm">
-                        <?php echo htmlspecialchars($error); ?>
-                    </div>
-                <?php endif; ?>
+                <!-- Inline AJAX alert -->
+                <div id="registerAlert" style="display:none;opacity:1;transition:opacity 0.4s ease;"></div>
 
                 <!-- Google Login Library -->
                 <script src="https://accounts.google.com/gsi/client" async defer></script>
@@ -144,12 +141,54 @@ $pageTitle = 'Register';
                 </form>
 
                 <script>
-                document.getElementById('registerForm').addEventListener('submit', function() {
-                    const btn = document.getElementById('registerBtn');
-                    const originalText = btn.innerText;
-                    btn.disabled = true;
-                    btn.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i> Creating Account...';
-                });
+                (function(){
+                    var alertTimer = null;
+
+                    function showRegisterAlert(msg, isError) {
+                        var el = document.getElementById('registerAlert');
+                        el.innerHTML = '<div style="display:flex;align-items:center;gap:8px;padding:12px 16px;border-radius:12px;font-size:14px;font-weight:500;border:1px solid ' +
+                            (isError ? '#fecaca;background:#fef2f2;color:#b91c1c' : '#bbf7d0;background:#f0fdf4;color:#15803d') +
+                            '"><i class="fas ' + (isError ? 'fa-exclamation-circle' : 'fa-check-circle') + '" style="flex-shrink:0"></i><span>' + msg + '</span></div>';
+                        el.style.opacity = '1';
+                        el.style.display = 'block';
+                        el.style.marginBottom = '12px';
+                        if (alertTimer) clearTimeout(alertTimer);
+                        alertTimer = setTimeout(function() {
+                            el.style.opacity = '0';
+                            setTimeout(function(){ el.style.display = 'none'; el.style.opacity = '1'; }, 420);
+                        }, 4000);
+                    }
+
+                    document.getElementById('registerForm').addEventListener('submit', function(e) {
+                        e.preventDefault();
+                        var btn  = document.getElementById('registerBtn');
+                        var orig = 'Create Account';
+                        btn.disabled = true;
+                        btn.innerHTML = '<i class="fas fa-spinner fa-spin" style="margin-right:6px"></i> Creating Account...';
+
+                        fetch(window.location.href, {
+                            method: 'POST',
+                            headers: { 'X-Requested-With': 'XMLHttpRequest' },
+                            body: new FormData(this)
+                        })
+                        .then(function(r){ return r.json(); })
+                        .then(function(data) {
+                            if (data.success) {
+                                showRegisterAlert('Account created! Redirecting…', false);
+                                setTimeout(function(){ window.location.href = data.redirect; }, 1200);
+                            } else {
+                                showRegisterAlert(data.message || 'Registration failed. Please try again.', true);
+                                btn.disabled = false;
+                                btn.innerHTML = orig;
+                            }
+                        })
+                        .catch(function() {
+                            showRegisterAlert('Network error. Please try again.', true);
+                            btn.disabled = false;
+                            btn.innerHTML = orig;
+                        });
+                    });
+                })();
                 </script>
 
                 <div class="mt-4 text-center">

@@ -981,6 +981,57 @@ $gs_tooltip_text = getGlobalStyle('tooltip_text_color', $globalCardStyles, '#fff
         }
     }
     </style>
+    <style>
+        /* Fixed site header wrapper */
+        #siteHeaderFixed {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            z-index: 999;
+            width: 100%;
+        }
+        /* Announcement bar collapses on scroll */
+        #topBarAnnouncement {
+            max-height: 80px;
+            opacity: 1;
+            overflow: hidden;
+            transition: max-height 0.35s ease, opacity 0.35s ease, padding 0.35s ease;
+        }
+        #topBarAnnouncement.hide-topbar {
+            max-height: 0 !important;
+            opacity: 0 !important;
+            padding-top: 0 !important;
+            padding-bottom: 0 !important;
+        }
+    </style>
+    <script>
+    (function(){
+        function setBodyPadding() {
+            var wrapper = document.getElementById('siteHeaderFixed');
+            if (wrapper) {
+                document.body.style.paddingTop = wrapper.offsetHeight + 'px';
+            }
+        }
+        function onScroll() {
+            var tb = document.getElementById('topBarAnnouncement');
+            if (tb) {
+                if (window.scrollY > 5) {
+                    tb.classList.add('hide-topbar');
+                } else {
+                    tb.classList.remove('hide-topbar');
+                }
+            }
+            setTimeout(setBodyPadding, 360);
+        }
+        document.addEventListener('DOMContentLoaded', function(){
+            setBodyPadding();
+            window.addEventListener('scroll', onScroll, {passive: true});
+            window.addEventListener('resize', setBodyPadding);
+            setTimeout(setBodyPadding, 500);
+        });
+    })();
+    </script>
 </head>
 <body class="font-body overflow-x-hidden">
     <?php if (!empty($gtmId)): ?>
@@ -991,8 +1042,10 @@ $gs_tooltip_text = getGlobalStyle('tooltip_text_color', $globalCardStyles, '#fff
     <?php endif; ?>
     
     <?php if (!isset($isCheckout) || !$isCheckout): ?>
-    <!-- Top Bar -->
-    <div class="block top-bar text-sm py-1 md:py-3 text-xs md:text-sm">
+    <!-- Fixed Site Header: Announcement + Nav -->
+    <div id="siteHeaderFixed">
+    <!-- Top Bar (Announcement) -->
+    <div id="topBarAnnouncement" class="block top-bar text-sm py-1 md:py-3 text-xs md:text-sm">
         <div class="container mx-auto px-4 flex justify-between items-center">
             <!-- Left side spacer (to balance the right links) -->
             <div class="flex-1 hidden xl:block"></div>
@@ -1078,10 +1131,10 @@ $gs_tooltip_text = getGlobalStyle('tooltip_text_color', $globalCardStyles, '#fff
                 </div>
             </div>
         </div>
-    </div>
+    </div><!-- /#topBarAnnouncement -->
     
     <!-- Main Navigation -->
-    <nav class="sticky top-0 z-50 header-shadow">
+    <nav class="z-50 header-shadow" id="mainNav">
         <div class="container mx-auto px-4">
             <div class="flex items-center justify-between h-12 md:h-20">
                 <!-- Hamburger Menu  -->
@@ -1200,6 +1253,7 @@ if (!empty($headerMenuItems)) {
                 </div>
             </div>
     </nav>
+    </div><!-- /#siteHeaderFixed -->
     
     <!-- NEW REBUILT MOBILE MENU START -->
     
@@ -1207,12 +1261,13 @@ if (!empty($headerMenuItems)) {
     <!-- Dark Overlay (Shared) -->
     <div id="mobile-menu-overlay" 
          class="fixed inset-0 z-40 opacity-0 transition-opacity duration-300 ease-in-out" 
-         style="display: none; background-color: rgba(0,0,0,0.8); backdrop-filter: blur(5px); -webkit-backdrop-filter: blur(5px);"
+         style=" z-index: 9999;display: none; background-color: rgba(0,0,0,0.8); backdrop-filter: blur(5px); -webkit-backdrop-filter: blur(5px);"
          onclick="closeAllMobileMenus()"></div>
 
     <!-- Main Menu Drawer -->
     <div id="mobile-menu-main" 
-         class="fixed top-0 left-0 bottom-0 w-80 bg-white z-50 transform -translate-x-full transition-transform duration-300 ease-in-out flex flex-col overflow-hidden">
+         class="fixed top-0 left-0 bottom-0 w-80 bg-white z-50 transform -translate-x-full transition-transform duration-300 ease-in-out flex flex-col overflow-hidden"
+         style="z-index: 9999 !important">
         
         <!-- Header -->
         <div class="bg-black text-white px-5 py-4 flex items-center justify-between flex-shrink-0">

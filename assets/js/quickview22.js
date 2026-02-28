@@ -6,7 +6,7 @@ function createQuickViewModal(){if(document.getElementById("quickViewModal"))ret
         <!-- Modal Panel Container -->
         <div class="fixed inset-0 z-10 overflow-hidden flex items-center justify-center p-4 sm:p-6" id="quickViewWrapper">
             <!-- Panel -->
-            <div class="relative transform rounded-lg text-left shadow-xl transition-all w-full max-w-5xl max-h-[90vh] flex flex-col opacity-0 scale-95 duration-300 bg-white" id="quickViewPanel">
+            <div class="relative transform rounded-lg text-left shadow-xl transition-all w-full max-w-5xl max-h-[90vh] flex flex-col opacity-0 scale-95 duration-300 bg-white" id="quickViewPanel" style="min-height:500px">
                 
                 <!-- Close Button -->
                 <div class="absolute right-4 top-4 z-20">
@@ -19,7 +19,7 @@ function createQuickViewModal(){if(document.getElementById("quickViewModal"))ret
                 <!-- Content (Flex/Grid Wrapper) -->
                 <div class="flex-1 overflow-hidden rounded-lg" id="quickViewContent">
                     <!-- Loading State -->
-                    <div class="flex flex-col items-center justify-center h-full">
+                    <div class="flex flex-col items-center justify-center h-full" style="min-height:400px">
                         <i class="fas fa-spinner fa-spin text-4xl text-black mb-4"></i>
                         <p class="text-gray-500">Loading details...</p>
                     </div>
@@ -28,7 +28,7 @@ function createQuickViewModal(){if(document.getElementById("quickViewModal"))ret
         </div>
     </div>
     `;document.body.insertAdjacentHTML("beforeend",t),document.getElementById("quickViewBackdrop").addEventListener("click",closeQuickView),document.getElementById("quickViewWrapper").addEventListener("click",function(t){t.target===this&&closeQuickView()}),document.addEventListener("keydown",function(t){"Escape"!==t.key||document.getElementById("quickViewModal").classList.contains("hidden")||closeQuickView()})}async function openQuickView(t){let e=document.getElementById("quickViewModal"),i=document.getElementById("quickViewPanel"),a=document.getElementById("quickViewContent");e.classList.remove("hidden"),setTimeout(()=>{i.classList.remove("opacity-0","scale-95"),i.classList.add("opacity-100","scale-100")},10),document.body.style.overflow="hidden",a.innerHTML=`
-        <div class="flex flex-col items-center justify-center h-full">
+        <div class="flex flex-col items-center justify-center h-full" style="min-height:400px">
             <i class="fas fa-spinner fa-spin text-4xl text-gray-300 mb-4"></i>
             <p class="text-gray-500">Loading...</p>
         </div>
@@ -131,7 +131,7 @@ function createQuickViewModal(){if(document.getElementById("quickViewModal"))ret
                 ${o}
             </div>
 
-            <div class="p-6 md:p-8 overflow-y-auto custom-scrollbar bg-transparent relative">
+            <div class="p-6 md:p-8 overflow-y-auto max-h-[70vh] md:max-h-[90vh] md:h-auto custom-scrollbar bg-transparent relative">
                 <h2 id="qvTitle" class="text-2xl md:text-3xl font-heading font-bold text-gray-900 mb-2 pr-8 truncate-3-lines">${t.name}</h2>
                 <div class="flex flex-wrap items-center gap-4 mb-4 text-sm">
                     <div class="flex items-center gap-1">
