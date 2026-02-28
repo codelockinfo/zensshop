@@ -568,7 +568,7 @@ function renderFrontendMenuItem($item, $landingPagesList = [], $level = 0, $show
                                                       $subBadge = $subItem['badge_text'] ?? '';
                                                  ?>
                                                      <li>
-                                                         <a href="<?php echo url($subItem['url']); ?>" class="text-[15px] leading-loose text-gray-500 hover:text-red-700 transition flex items-center group/link font-sans">
+                                                         <a href="<?php echo url($subItem['url']); ?>" class="text-[15px] leading-loose text-gray-500 hover:text-red-700 transition flex items-center group/link font-sans whitespace-nowrap">
                                                              <span class="inline-block group-hover/link:translate-x-2 transition-transform duration-300"><?php echo htmlspecialchars($subItem['label']); ?></span>
                                                              <?php if($subBadge): ?> <span class="ml-2 bg-red-500 text-white text-[9px] font-bold px-1.5 rounded-sm"><?php echo $subBadge; ?></span> <?php endif; ?>
                                                          </a>
@@ -651,7 +651,7 @@ function renderFrontendMenuItem($item, $landingPagesList = [], $level = 0, $show
             <?php
          } else {
              ?>
-             <a href="<?php echo $itemUrl; ?>" class="block px-4 py-2 text-sm text-gray-700 hover:text-red-700 transition flex items-center group/link font-sans">
+             <a href="<?php echo $itemUrl; ?>" class="block px-4 py-2 text-sm text-gray-700 hover:text-red-700 transition flex items-center group/link font-sans whitespace-nowrap">
                 <span class="inline-block group-hover/link:translate-x-2 transition-transform duration-300"><?php echo $displayLabel; ?></span>
             </a>
             <?php

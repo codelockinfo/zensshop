@@ -688,8 +688,7 @@ $gs_tooltip_text = getGlobalStyle('tooltip_text_color', $globalCardStyles, '#fff
             background-color: <?php echo $headerBg; ?> !important;
         }
         /* Main Hover State for Links & Buttons */
-        nav.header-shadow a:hover, 
-        nav.header-shadow button:hover {
+        nav.header-shadow .nav-link:hover {
             color: <?php echo $headerHover; ?> !important;
             background-color: transparent !important;
             background: transparent !important;
@@ -1087,7 +1086,7 @@ $gs_tooltip_text = getGlobalStyle('tooltip_text_color', $globalCardStyles, '#fff
             <div class="flex items-center justify-between h-12 md:h-20">
                 <!-- Hamburger Menu  -->
                 <!-- Hamburger Menu  -->
-                <button class="xl:hidden text-black hover:text-gray-600 transition focus:outline-none" 
+                <button class="xl:hidden text-black hover:text-gray-600 transition focus:outline-none header-icon" 
                         aria-label="Open mobile menu"
                         aria-controls="mobile-menu-main"
                         aria-expanded="false"
