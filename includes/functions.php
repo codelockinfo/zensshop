@@ -573,6 +573,7 @@ function renderFrontendMenuItem($item, $landingPagesList = [], $level = 0, $show
                                                              <?php if($subBadge): ?> <span class="ml-2 bg-red-500 text-white text-[9px] font-bold px-1.5 rounded-sm"><?php echo $subBadge; ?></span> <?php endif; ?>
                                                          </a>
                                                      </li>
+                                                     
                                                  <?php endforeach; ?>
                                              </ul>
                                          <?php endif; ?>
