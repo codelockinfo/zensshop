@@ -131,7 +131,7 @@ function createQuickViewModal(){if(document.getElementById("quickViewModal"))ret
                 ${o}
             </div>
 
-            <div class="p-6 md:p-8 overflow-y-auto max-h-[70vh] md:max-h-[90vh] md:h-auto custom-scrollbar bg-transparent relative">
+            <div class="p-6 md:p-8 overflow-y-auto h-[300px] md:h-[800px] custom-scrollbar bg-transparent relative">
                 <h2 id="qvTitle" class="text-2xl md:text-3xl font-heading font-bold text-gray-900 mb-2 pr-8 truncate-3-lines">${t.name}</h2>
                 <div class="flex flex-wrap items-center gap-4 mb-4 text-sm">
                     <div class="flex items-center gap-1">
