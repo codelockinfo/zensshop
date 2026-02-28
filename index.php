@@ -906,7 +906,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
 <!-- Philosophy Skeleton -->
 <?php if ($showPhilosophy): ?>
-<div id="philosophy-section" class="section-loading">
+<div id="philosophy-section" class="section-loading pt-8 md:pt-14">
     <section class="py-20" style="background-color: <?php echo htmlspecialchars($philBgColor); ?>;">
         <div class="container mx-auto px-4 text-center">
             <div class="h-10 bg-gray-200 rounded w-3/4 md:w-1/2 mx-auto mb-10 relative overflow-hidden">

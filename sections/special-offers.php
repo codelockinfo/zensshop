@@ -78,7 +78,7 @@ if (file_exists($offersConfigPath)) {
     }
 </style>
 
-<section id="<?php echo $sectionId; ?>" class="py-5 md:py-14">
+<section id="<?php echo $sectionId; ?>" class="pt-8 md:pt-14">
     <div class="container mx-auto px-4">
         <!-- Section Header -->
         <div class="text-center mb-10">

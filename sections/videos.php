@@ -60,7 +60,7 @@ $sectionId = 'video-section-' . rand(1000, 9999);
     }
 </style>
 
-<section class="py-5 relative group/section" id="<?php echo $sectionId; ?>">
+<section class="pt-8 md:pt-14 relative group/section" id="<?php echo $sectionId; ?>">
     <div class="container mx-auto px-4">
         <!-- Section Header -->
         <div class="text-center mb-10">

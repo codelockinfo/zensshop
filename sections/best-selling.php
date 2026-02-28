@@ -105,7 +105,7 @@ if (file_exists($productsConfigPath)) {
     }
 </style>
 
-<section id="<?php echo $sectionId; ?>" class="py-5 md:py-14">
+<section id="<?php echo $sectionId; ?>" class="pt-8 md:pt-14">
     <div class="container mx-auto px-4">
         <div class="text-center mb-12">
             <h2 class="text-3xl md:text-4xl font-heading font-bold mb-4 section-heading"><?php echo htmlspecialchars($sectionHeading); ?></h2>
