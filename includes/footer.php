@@ -609,7 +609,7 @@ $qv_policy_color = $qvStyles['policy_color'] ?? '#374151';
     <script src="<?php echo $baseUrl; ?>/assets/js/product-cards7.js?v=2" defer></script>
     <script src="<?php echo $baseUrl; ?>/assets/js/wishlist10.js?v=3" defer></script>
     <script src="<?php echo $baseUrl; ?>/assets/js/notification1.js?v=2" defer></script>
-    <script src="<?php echo $baseUrl; ?>/assets/js/quickview22.js?v=2" defer></script>
+    <script src="<?php echo $baseUrl; ?>/assets/js/quickview23.js?v=2" defer></script>
     <script src="<?php echo $baseUrl; ?>/assets/js/add-to-cart3.js?v=2" defer></script>
     
     <!-- Remove from Cart Confirmation Script -->
