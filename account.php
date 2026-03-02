@@ -665,8 +665,8 @@ if (!$isAjax) {
                         </div>
                     <?php else: ?>
                         <div class="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
-                            <div class="overflow-x-auto custom-scrollbar">
-                                <table class="w-full text-left min-w-[600px] md:min-w-full">
+                            <div class="overflow-x-auto custom-scrollbar" style="-webkit-overflow-scrolling: touch;">
+                                <table class="w-full text-left min-w-[800px]">
                                     <thead class="bg-gray-50 text-gray-400 font-bold uppercase tracking-widest text-[10px]">
                                         <tr class="whitespace-nowrap">
                                             <th class="px-6 py-4">Order #</th>
