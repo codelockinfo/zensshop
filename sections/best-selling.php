@@ -151,24 +151,31 @@ if (file_exists($productsConfigPath)) {
                                          onerror="this.src='https://placehold.co/600x600?text=Product+Image'">
                                 </a>
                                 
-                                <!-- Discount Badge -->
-                                <?php if ($discount > 0): ?>
-                                <span class="absolute top-2 left-2 px-2 py-1 text-xs font-bold rounded discount-badge">-<?php echo $discount; ?>%</span>
-                                <?php endif; ?>
-                                
-                                <!-- Action Icons Column -->
-                                <?php 
-                                $currentId = !empty($item['product_id']) ? $item['product_id'] : $item['id'];
-                                $inWishlist = in_array($currentId, $wishlistIds);
-                                ?>
-                                <div class="absolute top-2 right-2 z-30 flex flex-col items-center gap-2">
-                                    <button id="product-card-wishlist-btn" class="w-10 h-10 rounded-full flex items-center justify-center relative group transition wishlist-btn product-action-btn <?php echo $inWishlist ? 'wishlist-active text-white' : ''; ?>" 
-                                            data-product-id="<?php echo $currentId; ?>"
-                                            aria-label="<?php echo $inWishlist ? 'Remove from Wishlist' : 'Add to Wishlist'; ?>"
-                                            title="<?php echo $inWishlist ? 'Remove from Wishlist' : 'Add to Wishlist'; ?>">
-                                        <i class="<?php echo $inWishlist ? 'fas' : 'far'; ?> fa-heart" aria-hidden="true"></i>
-                                        <span class="product-tooltip"><?php echo $inWishlist ? 'Remove from Wishlist' : 'Add to Wishlist'; ?></span>
-                                    </button>
+                                 <!-- Discount Badge -->
+                                 <?php if ($discount > 0): ?>
+                                 <span class="absolute top-2 left-2 px-2 py-1 text-xs font-bold rounded discount-badge">-<?php echo $discount; ?>%</span>
+                                 <?php endif; ?>
+
+                                 <?php
+                                 $currentId = !empty($item['product_id']) ? $item['product_id'] : $item['id'];
+                                 $inWishlist = in_array($currentId, $wishlistIds);
+                                 $oos = (($item['stock_status'] ?? 'in_stock') === 'out_of_stock' || (isset($item['stock_quantity']) && $item['stock_quantity'] <= 0));
+                                 ?>
+                                 
+                                 <!-- Out Of Stock Badge -->
+                                 <?php if ($oos): ?>
+                                 <span class="absolute top-10 left-2 bg-gray-800 text-white px-2 py-1 text-[10px] font-bold rounded-sm uppercase tracking-tighter z-10 opacity-90">OUT OF STOCK</span>
+                                 <?php endif; ?>
+                                 
+                                 <!-- Action Icons Column -->
+                                 <div class="absolute top-2 right-2 z-30 flex flex-col items-center gap-2">
+                                     <button id="product-card-wishlist-btn" class="w-10 h-10 rounded-full flex items-center justify-center relative group transition wishlist-btn product-action-btn <?php echo $inWishlist ? 'wishlist-active text-white' : ''; ?>" 
+                                             data-product-id="<?php echo $currentId; ?>"
+                                             aria-label="<?php echo $inWishlist ? 'Remove from Wishlist' : 'Add to Wishlist'; ?>"
+                                             title="<?php echo $inWishlist ? 'Remove from Wishlist' : 'Add to Wishlist'; ?>">
+                                         <i class="<?php echo $inWishlist ? 'fas' : 'far'; ?> fa-heart" aria-hidden="true"></i>
+                                         <span class="product-tooltip"><?php echo $inWishlist ? 'Remove from Wishlist' : 'Add to Wishlist'; ?></span>
+                                     </button>
                                     
                                     <a id="product-card-quick-view-btn" href="<?php echo $baseUrl; ?>/product?slug=<?php echo urlencode($item['slug'] ?? ''); ?>" 
                                        class="product-action-btn w-10 h-10 rounded-full flex items-center justify-center transition shadow-lg quick-view-btn relative group opacity-100 md:opacity-0 md:group-hover:opacity-100" 
@@ -180,6 +187,34 @@ if (file_exists($productsConfigPath)) {
                                         <i class="fas fa-eye" aria-hidden="true"></i>
                                         <span class="product-tooltip">Quick View</span>
                                     </a>
+
+                                    <?php
+                                    // Set up attributes for first variant
+                                    $vData = $product->getVariants($currentId);
+                                    $defaultAttributes = [];
+                                    if (!empty($vData['variants'])) {
+                                        $defaultVariant = $vData['variants'][0];
+                                        foreach ($vData['variants'] as $v) {
+                                            if (!empty($v['is_default'])) {
+                                                $defaultVariant = $v;
+                                                break;
+                                            }
+                                        }
+                                        $defaultAttributes = $defaultVariant['variant_attributes'];
+                                    }
+                                    $attributesJson = json_encode($defaultAttributes);
+                                    $oos = (($item['stock_status'] ?? 'in_stock') === 'out_of_stock' || (isset($item['stock_quantity']) && $item['stock_quantity'] <= 0));
+                                    ?>
+                                    <button id="product-card-add-to-cart-btn" onclick='addToCart(<?php echo $currentId; ?>, 1, this, <?php echo htmlspecialchars($attributesJson, ENT_QUOTES, 'UTF-8'); ?>)' 
+                                            class="productAddToCartBtn product-action-btn w-10 h-10 rounded-full flex items-center justify-center transition shadow-lg add-to-cart-hover-btn relative group opacity-100 md:opacity-0 md:group-hover:opacity-100 <?php echo $oos ? 'opacity-50 cursor-not-allowed' : ''; ?>"
+                                            data-product-id="<?php echo $currentId; ?>"
+                                            data-product-name="<?php echo htmlspecialchars($item['name'] ?? ''); ?>"
+                                            data-product-price="<?php echo $price; ?>"
+                                            data-product-slug="<?php echo htmlspecialchars($item['slug'] ?? ''); ?>"
+                                            <?php echo $oos ? 'disabled' : ''; ?>>
+                                        <i class="fas fa-shopping-cart" aria-hidden="true"></i>
+                                        <span class="product-tooltip"><?php echo $oos ? strtoupper(get_stock_status_text($item['stock_status'] ?? 'in_stock', $item['stock_quantity'] ?? 0)) : 'Add to Cart'; ?></span>
+                                    </button>
                                 </div>
                             </div>
                             <div class="p-4 flex flex-col flex-1">
@@ -207,26 +242,9 @@ if (file_exists($productsConfigPath)) {
                                     <?php endif; ?>
                                 </div>
 
-                                <?php
-                                $oos = (($item['stock_status'] ?? 'in_stock') === 'out_of_stock' || (isset($item['stock_quantity']) && $item['stock_quantity'] <= 0));
-                                ?>
-                                <button id="product-card-add-to-cart-btn" onclick='addToCart(<?php echo $currentId; ?>, 1, this, <?php echo htmlspecialchars($attributesJson, ENT_QUOTES, 'UTF-8'); ?>)' 
-                                        data-product-id="<?php echo $currentId; ?>"
-                                        data-product-name="<?php echo htmlspecialchars($item['name'] ?? ''); ?>"
-                                        data-product-price="<?php echo $price; ?>"
-                                        data-product-slug="<?php echo htmlspecialchars($item['slug'] ?? ''); ?>"
-                                        class="productAddToCartBtn w-full bg-[#1a3d32] text-white px-4 py-2.5 rounded hover:bg-black transition text-xs font-bold flex items-center justify-center gap-2 <?php echo $oos ? 'opacity-50 cursor-not-allowed' : ''; ?>"
-                                        <?php echo $oos ? 'disabled' : ''; ?>>
-                                    <?php if ($oos): ?>
-                                        <span><?php echo strtoupper(get_stock_status_text($item['stock_status'] ?? 'in_stock', $item['stock_quantity'] ?? 0)); ?></span>
-                                    <?php else: ?>
-                                        <i class="fas fa-shopping-cart text-[10px]"></i>
-                                        <span>ADD TO CART</span>
-                                    <?php endif; ?>
-                                </button>
+                                </div>
                             </div>
                         </div>
-                    </div>
                     <?php endforeach; ?>
                 </div><!-- /.swiper-wrapper -->
 

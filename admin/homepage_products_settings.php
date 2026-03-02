@@ -823,7 +823,7 @@ window.initSortable = function(key) {
             var formData = new FormData(this);
             var submitBtn = document.querySelector('button[form="settingsForm"]');
             
-            fetch(`${BASE_URL}/admin/homepage_products_settings.php?ajax=1`, {
+            fetch(`${BASE_URL}/admin/products?ajax=1`, {
                 method: 'POST',
                 body: formData,
                 headers: { 'X-Requested-With': 'XMLHttpRequest' }
