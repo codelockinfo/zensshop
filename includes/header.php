@@ -325,10 +325,17 @@ $gs_tooltip_text = getGlobalStyle('tooltip_text_color', $globalCardStyles, '#fff
         .product-card .product-tooltip {
             background-color: var(--tooltip-bg) !important;
             color: var(--tooltip-text) !important;
+            pointer-events: none !important;
         }
         .product-card .product-tooltip::after {
             border-color: transparent !important;
             border-left-color: var(--tooltip-bg) !important;
+        }
+        /* On touch-only devices, disable hover-triggered tooltips so first tap fires the action */
+        @media (hover: none) and (pointer: coarse) {
+            .product-tooltip {
+                display: none !important;
+            }
         }
 
         /* Breadcrumb Styles */
@@ -375,7 +382,74 @@ $gs_tooltip_text = getGlobalStyle('tooltip_text_color', $globalCardStyles, '#fff
             background-color: <?php echo $ss_view_all_hover_bg; ?> !important;
             color: <?php echo $ss_view_all_hover_text; ?> !important;
         }
+        /* ── Native Scroll-Snap Slider ── */
+
+        /* The scrollable viewport */
+        .slider-scroll-track {
+            overflow-x: scroll;
+            overflow-y: visible;      /* so arrows above/below are visible */
+            -webkit-overflow-scrolling: touch; /* iOS momentum scrolling */
+            scroll-snap-type: x mandatory;
+            scroll-behavior: smooth;
+            /* Hide scrollbar cross-browser */
+            scrollbar-width: none;      /* Firefox */
+            -ms-overflow-style: none;   /* IE/Edge */
+        }
+        .slider-scroll-track::-webkit-scrollbar {
+            display: none;              /* Chrome/Safari */
+        }
+
+        /* Each card/item snaps to the left edge */
+        .slider-snap-item {
+            scroll-snap-align: start;
+            flex-shrink: 0;
+        }
+
+        /* The flex track inside the viewport */
+        .slider-scroll-track > div {
+            /* let flex children be laid out naturally */
+            min-width: max-content;
+        }
+
+        /* Arrows: always above the scroll track */
+        .trending-prev, .trending-next,
+        .best-selling-prev, .best-selling-next,
+        #videoSectionPrev, #videoSectionNext {
+            z-index: 20 !important;
+            position: absolute !important;
+        }
+
+        /* ── Skeleton Slider: matches actual card slider layout ── */
+        /* Mobile: horizontal scroll row so skeleton exactly matches the real slider */
+        .skel-slider-row {
+            display: flex;
+            gap: 24px;
+            overflow-x: hidden;  /* no scroll handle on skeleton */
+        }
+        .skel-card-item {
+            flex-shrink: 0;
+            width: 280px;        /* matches min-w-[280px] on actual cards */
+        }
+        /* Desktop: look like a normal grid */
+        @media (min-width: 768px) {
+            .skel-slider-row {
+                display: grid;
+                grid-template-columns: repeat(2, 1fr);
+                overflow: visible;
+            }
+            .skel-card-item {
+                width: auto;
+            }
+        }
+        @media (min-width: 1024px) {
+            .skel-slider-row {
+                grid-template-columns: repeat(4, 1fr);
+            }
+        }
     </style>
+
+
+
     
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">

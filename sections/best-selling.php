@@ -114,9 +114,10 @@ if (file_exists($productsConfigPath)) {
         
         <!-- Product Slider Container -->
         <div class="relative">
-            <!-- Slider Wrapper -->
-            <div class="best-selling-slider overflow-hidden">
-                <div class="flex gap-6" id="bestSellingSlider" style="will-change: transform;">
+            <!-- Native scroll container -->
+            <div class="slider-scroll-track" id="bestSellingSliderViewport">
+                <div class="flex gap-6" id="bestSellingSlider">
+
                     <?php foreach ($products as $item): 
                         $mainImage = getProductImage($item);
                         $price = $item['sale_price'] ?? $item['price'];
@@ -131,7 +132,7 @@ if (file_exists($productsConfigPath)) {
                         $defaultAttributes = $firstVariant ? json_decode($firstVariant['variant_attributes'], true) : [];
                         $attributesJson = json_encode($defaultAttributes);
                     ?>
-                    <div class="min-w-[280px] md:min-w-[300px] my-2">
+                    <div class="slider-snap-item min-w-[280px] md:min-w-[300px] my-2">
                         <div class="product-card bg-white rounded-lg overflow-hidden shadow-md transition-all duration-300 group relative">
                             <div class="relative overflow-hidden">
                                 <a class="product-card-view-link" href="<?php echo url('product?slug=' . urlencode($item['slug'] ?? '')); ?>">

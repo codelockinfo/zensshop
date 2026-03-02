@@ -747,9 +747,35 @@ document.addEventListener('DOMContentLoaded', function() {
 <!-- Categories Skeleton -->
 <?php if ($showCategories): ?>
 <div id="categories-section" class="section-loading">
-    <section class="py-16" style="background-color: <?php echo htmlspecialchars($catBgColor); ?>;">
-        <div class="container mx-auto px-4">
-            <div class="text-center mb-12">
+    <section class="pt-8 md:pt-14 pb-8" style="background-color: <?php echo htmlspecialchars($catBgColor); ?>;">
+        <?php
+        // Mirror the same container logic as categories.php
+        $skelContainerClass = ($catLayoutType === 'slider') ? 'container mx-auto px-0 md:px-4' : 'container mx-auto px-4';
+
+        // Mirror the exact mobile width class from categories.php using $catMobileSize
+        $skelMobileGridClass  = 'w-[calc(50%-12px)]';  // default 2
+        $skelMobileSliderClass = 'w-[calc(50%-8px)]';
+        if ($catMobileSize == '1') {
+            $skelMobileGridClass  = 'w-full';
+            $skelMobileSliderClass = 'w-[calc(50%-8px)]';
+        } elseif ($catMobileSize == '3') {
+            $skelMobileGridClass  = 'w-[calc(33.333%-16px)]';
+            $skelMobileSliderClass = 'w-[calc(33.333%-10px)]';
+        } elseif ($catMobileSize == '4') {
+            $skelMobileGridClass  = 'w-[calc(25%-18px)]';
+            $skelMobileSliderClass = 'w-[calc(25%-12px)]';
+        }
+
+        if ($catLayoutType === 'slider') {
+            $skelItemClass  = $skelMobileSliderClass . ' md:w-[180px] lg:w-[150px] flex-shrink-0';
+            $skelWrapClass  = 'flex gap-1 md:gap-6 w-fit mx-auto overflow-hidden';
+        } else {
+            $skelItemClass  = $skelMobileGridClass . ' md:w-[30%] lg:w-[14%] flex-shrink-0';
+            $skelWrapClass  = 'flex flex-wrap justify-center gap-6';
+        }
+        ?>
+        <div class="<?php echo $skelContainerClass; ?>">
+            <div class="text-center mb-6 md:mb-12">
                 <div class="h-8 bg-gray-200 rounded w-64 mx-auto mb-4 relative overflow-hidden">
                     <div class="absolute inset-0 animate-shimmer"></div>
                 </div>
@@ -757,21 +783,17 @@ document.addEventListener('DOMContentLoaded', function() {
                     <div class="absolute inset-0 animate-shimmer"></div>
                 </div>
             </div>
-            <div class="<?php echo $catLayoutType === 'slider' ? 'flex gap-4 md:gap-6 overflow-hidden flex-nowrap w-fit mx-auto' : 'flex flex-wrap justify-center gap-6'; ?>">
-                <?php 
-                $skelClass = 'w-[calc(50%-12px)]'; 
-                if ($catLayoutType === 'slider') {
-                    $skelClass = 'w-[calc(50%-8px)] md:w-[180px] lg:w-[150px] flex-shrink-0';
-                } else {
-                    $skelClass = 'w-[calc(50%-12px)] md:w-[calc(33.333%-16px)] lg:w-[calc(14.28%-20px)]';
-                }
-                for($i=0; $i<6; $i++): 
-                ?>
-                <div class="<?php echo $skelClass; ?> flex flex-col items-center">
-                    <div class="w-full aspect-square bg-gray-200 rounded-full mb-4 relative overflow-hidden">
+
+            <div class="<?php echo $skelWrapClass; ?>">
+                <?php for($i = 0; $i < 6; $i++): ?>
+                <div class="<?php echo $skelItemClass; ?> flex flex-col items-center text-center my-2 px-1">
+                    <!-- Circle image — same max-width as real cat-img-container -->
+                    <div class="w-full aspect-square bg-gray-200 rounded-full mb-4 relative overflow-hidden"
+                         style="max-width:120px; margin-left:auto; margin-right:auto;">
                         <div class="absolute inset-0 animate-shimmer"></div>
                     </div>
-                    <div class="h-4 bg-gray-200 rounded w-24 relative overflow-hidden">
+                    <!-- Title bar -->
+                    <div class="h-3 bg-gray-200 rounded w-16 relative overflow-hidden">
                         <div class="absolute inset-0 animate-shimmer"></div>
                     </div>
                 </div>
@@ -781,6 +803,8 @@ document.addEventListener('DOMContentLoaded', function() {
     </section>
 </div>
 <?php endif; ?>
+
+
 
 <!-- Best Selling Skeleton -->
 <?php if ($showBest): ?>
@@ -795,20 +819,25 @@ document.addEventListener('DOMContentLoaded', function() {
                     <div class="absolute inset-0 animate-shimmer"></div>
                 </div>
             </div>
-            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+            <!-- Skeleton: matches slider layout (horizontal scroll on mobile, grid on desktop) -->
+            <div class="skel-slider-row">
                 <?php for($i=0; $i<4; $i++): ?>
-                <div class="bg-white rounded-lg border border-gray-100 p-4 space-y-4 shadow-sm">
-                    <div class="w-full h-64 bg-gray-200 rounded relative overflow-hidden">
-                        <div class="absolute inset-0 animate-shimmer"></div>
-                    </div>
-                    <div class="h-4 bg-gray-200 rounded w-3/4 relative overflow-hidden">
-                        <div class="absolute inset-0 animate-shimmer"></div>
-                    </div>
-                    <div class="h-4 bg-gray-200 rounded w-1/2 relative overflow-hidden">
-                        <div class="absolute inset-0 animate-shimmer"></div>
-                    </div>
-                    <div class="h-6 bg-gray-200 rounded w-1/4 relative overflow-hidden">
-                        <div class="absolute inset-0 animate-shimmer"></div>
+                <div class="skel-card-item">
+                    <div class="bg-white rounded-lg border border-gray-100 overflow-hidden shadow-sm">
+                        <div class="w-full h-64 bg-gray-200 relative overflow-hidden">
+                            <div class="absolute inset-0 animate-shimmer"></div>
+                        </div>
+                        <div class="p-4 space-y-3">
+                            <div class="h-4 bg-gray-200 rounded w-3/4 relative overflow-hidden">
+                                <div class="absolute inset-0 animate-shimmer"></div>
+                            </div>
+                            <div class="h-4 bg-gray-200 rounded w-1/2 relative overflow-hidden">
+                                <div class="absolute inset-0 animate-shimmer"></div>
+                            </div>
+                            <div class="h-6 bg-gray-200 rounded w-1/4 relative overflow-hidden">
+                                <div class="absolute inset-0 animate-shimmer"></div>
+                            </div>
+                        </div>
                     </div>
                 </div>
                 <?php endfor; ?>
@@ -817,6 +846,7 @@ document.addEventListener('DOMContentLoaded', function() {
     </section>
 </div>
 <?php endif; ?>
+
 
 <!-- Special Offers Skeleton -->
 <?php if ($showOffers): ?>
@@ -856,10 +886,13 @@ document.addEventListener('DOMContentLoaded', function() {
                     <div class="absolute inset-0 animate-shimmer"></div>
                 </div>
             </div>
-            <div class="flex gap-6 overflow-hidden">
+            <!-- Matches actual video slider layout -->
+            <div class="skel-slider-row">
                 <?php for($i=0; $i<4; $i++): ?>
-                <div class="flex-shrink-0 w-full md:w-[calc(33.333%-16px)] lg:w-[calc(25%-18px)] h-[400px] md:h-[600px] bg-gray-200 rounded-lg relative overflow-hidden">
-                    <div class="absolute inset-0 animate-shimmer"></div>
+                <div class="skel-card-item" style="height:400px;">
+                    <div class="w-full h-full bg-gray-200 rounded-lg relative overflow-hidden">
+                        <div class="absolute inset-0 animate-shimmer"></div>
+                    </div>
                 </div>
                 <?php endfor; ?>
             </div>
@@ -867,6 +900,7 @@ document.addEventListener('DOMContentLoaded', function() {
     </section>
 </div>
 <?php endif; ?>
+
 
 <!-- Trending Skeleton -->
 <?php if ($showTrend): ?>
@@ -881,20 +915,25 @@ document.addEventListener('DOMContentLoaded', function() {
                     <div class="absolute inset-0 animate-shimmer"></div>
                 </div>
             </div>
-            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+            <!-- Skeleton: matches slider layout -->
+            <div class="skel-slider-row">
                 <?php for($i=0; $i<4; $i++): ?>
-                <div class="bg-white rounded-lg border border-gray-100 p-4 space-y-4 shadow-sm">
-                    <div class="w-full h-64 bg-gray-200 rounded relative overflow-hidden">
-                        <div class="absolute inset-0 animate-shimmer"></div>
-                    </div>
-                    <div class="h-4 bg-gray-200 rounded w-3/4 relative overflow-hidden">
-                        <div class="absolute inset-0 animate-shimmer"></div>
-                    </div>
-                    <div class="h-4 bg-gray-200 rounded w-1/2 relative overflow-hidden">
-                        <div class="absolute inset-0 animate-shimmer"></div>
-                    </div>
-                    <div class="h-6 bg-gray-200 rounded w-1/4 relative overflow-hidden">
-                        <div class="absolute inset-0 animate-shimmer"></div>
+                <div class="skel-card-item">
+                    <div class="bg-white rounded-lg border border-gray-100 overflow-hidden shadow-sm">
+                        <div class="w-full h-64 bg-gray-200 relative overflow-hidden">
+                            <div class="absolute inset-0 animate-shimmer"></div>
+                        </div>
+                        <div class="p-4 space-y-3">
+                            <div class="h-4 bg-gray-200 rounded w-3/4 relative overflow-hidden">
+                                <div class="absolute inset-0 animate-shimmer"></div>
+                            </div>
+                            <div class="h-4 bg-gray-200 rounded w-1/2 relative overflow-hidden">
+                                <div class="absolute inset-0 animate-shimmer"></div>
+                            </div>
+                            <div class="h-6 bg-gray-200 rounded w-1/4 relative overflow-hidden">
+                                <div class="absolute inset-0 animate-shimmer"></div>
+                            </div>
+                        </div>
                     </div>
                 </div>
                 <?php endfor; ?>
@@ -903,6 +942,9 @@ document.addEventListener('DOMContentLoaded', function() {
     </section>
 </div>
 <?php endif; ?>
+
+
+
 
 <!-- Philosophy Skeleton -->
 <?php if ($showPhilosophy): ?>

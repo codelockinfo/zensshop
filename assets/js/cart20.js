@@ -154,7 +154,20 @@ async function addToCart(productId, quantity = 1, btn = null, variantAttributes 
             })
         });
         
-        const data = await response.json();
+        // Safely parse JSON - handle PHP error pages gracefully
+        let data;
+        const rawText = await response.text();
+        try {
+            data = JSON.parse(rawText);
+        } catch (parseErr) {
+            console.error('[CART] Invalid JSON response:', rawText.substring(0, 200));
+            if (typeof showNotificationModal === 'function') {
+                showNotificationModal('Server error. Please try again.', 'error');
+            } else if (typeof showNotification === 'function') {
+                showNotification('Server error. Please try again.', 'error');
+            }
+            return { success: false, message: 'Server error' };
+        }
         
         if (!(data.success && Array.isArray(data.cart))) {
             if (typeof showNotificationModal === 'function') {
@@ -165,6 +178,11 @@ async function addToCart(productId, quantity = 1, btn = null, variantAttributes 
             return { success: false, message: data.message };
         } else {
             cartData = data.cart;
+            
+            // Update cart count from server response
+            if (data.count !== undefined) {
+                window.lastCartCount = data.count;
+            }
             
             if (data.cookie_data) {
                 try {
@@ -198,10 +216,16 @@ async function addToCart(productId, quantity = 1, btn = null, variantAttributes 
             updateCartUI();
             updateCartCount();
             
+            // Show success message with quantity info
+            const addedQty = quantity || 1;
+            const successMsg = addedQty > 1
+                ? `${addedQty} items added to cart!`
+                : (data.message || 'Product added to cart!');
+
             if (typeof showNotificationModal === 'function') {
-                showNotificationModal('Product added to cart!', 'success');
+                showNotificationModal(successMsg, 'success');
             } else if (typeof showNotification === 'function') {
-                showNotification('Product added to cart!', 'success');
+                showNotification(successMsg, 'success');
             }
             
             const sideCart = document.getElementById('sideCart');
@@ -222,6 +246,7 @@ async function addToCart(productId, quantity = 1, btn = null, variantAttributes 
         if (btn) setBtnLoading(btn, false);
     }
 }
+
 
 async function updateCartItem(productId, quantity, btn = null, variantAttributes = {}) {
     if (btn) setBtnLoading(btn, true);

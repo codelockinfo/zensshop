@@ -91,10 +91,10 @@ $sectionId = 'video-section-' . rand(1000, 9999);
             </button>
             <?php endif; ?>
 
-            <!-- Video Section Slider Wrapper (Overflow Hidden) -->
-            <div class="video-section-slider overflow-hidden w-full relative z-10">
+            <!-- Native scroll container -->
+            <div class="slider-scroll-track" id="videoSectionViewport">
                 <!-- Track -->
-                <div id="videoSectionSlider" class="flex transition-transform duration-500 will-change-transform" style="gap: 24px;">
+                <div id="videoSectionSlider" class="flex" style="gap: 24px;">
                     <?php if (!empty($videos)): ?>
                     <?php foreach ($videos as $index => $video): 
                         $title = $video['title'] ?? '';
@@ -128,7 +128,7 @@ $sectionId = 'video-section-' . rand(1000, 9999);
                     ?>
                     
                     <!-- Slide Item -->
-                    <div class="video-slide flex-shrink-0 min-w-[280px] md:min-w-[300px] h-[400px] md:h-[600px] video-card">
+                    <div class="slider-snap-item video-slide flex-shrink-0 min-w-[280px] md:min-w-[300px] h-[400px] md:h-[600px] video-card">
                         <div class="relative w-full h-full rounded-lg overflow-hidden border border-gray-100 shadow-sm hover:shadow-md bg-black transition-all duration-300">
                         
                             <?php if (!empty($embed)): ?>

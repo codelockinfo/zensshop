@@ -1467,18 +1467,29 @@ function changeMainImage(imageUrl, button, variantData = null, isVideo = false) 
 
 function toggleSection(sectionId) {
     const content = document.getElementById(sectionId + '-content');
-    const icon = document.getElementById(sectionId + '-icon');
-    
-    // Check if the max-height is set (meaning it's open) and not '0px'
-    if (content.style.maxHeight && content.style.maxHeight !== '0px') {
+    const icon    = document.getElementById(sectionId + '-icon');
+    if (!content || !icon) return;
+
+    const isOpen = content.style.maxHeight && content.style.maxHeight !== '0px';
+
+    // Scale-pop animation: shrink → swap → grow
+    icon.style.transition = 'transform 0.15s ease';
+    icon.style.transform  = 'scale(0)';
+    setTimeout(function() {
+        if (isOpen) {
+            icon.classList.remove('fa-minus');
+            icon.classList.add('fa-plus');
+        } else {
+            icon.classList.remove('fa-plus');
+            icon.classList.add('fa-minus');
+        }
+        icon.style.transform = 'scale(1)';
+    }, 150);
+
+    if (isOpen) {
         content.style.maxHeight = '0px';
-        icon.classList.remove('fa-minus', 'rotate-180');
-        icon.classList.add('fa-plus');
     } else {
-        // Set max-height to scrollHeight to open it
-        content.style.maxHeight = content.scrollHeight + "px";
-        icon.classList.remove('fa-plus');
-        icon.classList.add('fa-minus', 'rotate-180');
+        content.style.maxHeight = content.scrollHeight + 'px';
     }
 }
 

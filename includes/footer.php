@@ -294,36 +294,139 @@ $qv_policy_color = $qvStyles['policy_color'] ?? '#374151';
             background-color: <?php echo $qv_buy_hover_bg; ?> !important;
             color: <?php echo $qv_buy_hover_text; ?> !important;
         }
+
+        /* ── Quick View Modal ── */
+        #quickViewModal #quickViewPanel {
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+        /* Content area fills remaining height */
+        #quickViewModal #quickViewContent {
+            flex: 1;
+            min-height: 0;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+        }
+        /* Inner layout wrapper always fills content height */
+        #quickViewModal .qv-layout-inner {
+            flex: 1;
+            min-height: 0;
+            overflow: hidden;
+        }
+        /* Desktop: right col scrolls, image col is fixed */
+        @media (min-width: 768px) {
+            #quickViewModal .qv-img-col {
+                /* let it size naturally based on aspect-ratio */
+                overflow: hidden;
+            }
+        }
+        /* Mobile: stacked — image is compact/fixed height, content scrolls below */
+        @media (max-width: 767px) {
+            #quickViewModal #quickViewPanel {
+                height: min(88vh, 600px) !important;
+                max-height: min(88vh, 600px) !important;
+            }
+
+            /* Image col: fixed 200px - becomes the positioning context for abs children */
+            #quickViewModal .qv-img-col {
+                flex-shrink: 0 !important;
+                height: 200px !important;
+                min-height: 200px !important;
+                overflow: hidden !important;
+                position: relative !important;
+                border-bottom: 1px solid #f3f4f6 !important;
+                padding: 0 !important;
+                display: block !important;
+            }
+
+            /* Collapse the aspect-ratio wrapper — column is now the size reference */
+            #quickViewModal .qv-img-col > div:first-child {
+                position: static !important;
+                aspect-ratio: unset !important;
+                height: 100% !important;
+                width: 100% !important;
+            }
+
+            /* Image link fills the entire column */
+            #quickViewModal #qvMainImageLink {
+                position: absolute !important;
+                inset: 0 !important;
+                width: 100% !important;
+                height: 100% !important;
+            }
+
+            /* Image fills the link */
+            #quickViewModal #qvMainImage {
+                width: 100% !important;
+                height: 100% !important;
+                object-fit: cover !important;
+                display: block !important;
+            }
+
+            /* Video fills the column too */
+            #quickViewModal #qvMainVideo {
+                position: absolute !important;
+                inset: 0 !important;
+                width: 100% !important;
+                height: 100% !important;
+            }
+
+            /* Discount badge */
+            #quickViewModal #qvDiscountBadge {
+                position: absolute !important;
+                top: 8px !important;
+                left: 8px !important;
+                z-index: 10 !important;
+            }
+
+            /* Hide thumbnails on mobile — saves space */
+            #quickViewModal .qv-img-col .qv-thumbnail-slider {
+                display: none !important;
+            }
+        }
+
+
+
+
+
+
     </style>
 
     <script>
-    function toggleFooterAccordion(element) {
+    function toggleFooterSection(sectionId) {
         if (window.innerWidth >= 768) return;
-        
-        const content = element.nextElementSibling;
-        const icon = element.querySelector('i');
-        
+
+        const content = document.getElementById(sectionId + '-content');
+        const icon    = document.getElementById(sectionId + '-icon');
         if (!content || !icon) return;
 
-        // Check if currently open
-        if (content.style.maxHeight && content.style.maxHeight !== '0px') {
-            // Close
+        const isOpen = icon.dataset.open === 'true';
+
+        // Animate icon: scale down, swap class, scale back up
+        icon.style.transform = 'scale(0)';
+        setTimeout(function() {
+            if (isOpen) {
+                icon.classList.remove('fa-minus');
+                icon.classList.add('fa-plus');
+            } else {
+                icon.classList.remove('fa-plus');
+                icon.classList.add('fa-minus');
+            }
+            icon.style.transform = 'scale(1)';
+        }, 150);
+
+        if (isOpen) {
             content.style.maxHeight = '0px';
-            content.classList.remove('opacity-100');
-            content.classList.add('opacity-0');
-            
-            icon.classList.remove('fa-minus');
-            icon.classList.add('fa-plus');
-            icon.style.transform = 'rotate(0deg)';
+            icon.dataset.open = 'false';
         } else {
-            // Open
-            content.style.maxHeight = content.scrollHeight + "px";
-            content.classList.remove('opacity-0');
-            content.classList.add('opacity-100');
-            
-            icon.classList.remove('fa-plus');
-            icon.classList.add('fa-minus');
-            icon.style.transform = 'rotate(180deg)';
+            content.style.maxHeight = 'none';
+            const h = content.scrollHeight;
+            content.style.maxHeight = '0px';
+            content.offsetHeight;
+            content.style.maxHeight = (h + 16) + 'px';
+            icon.dataset.open = 'true';
         }
     }
     </script>
@@ -332,7 +435,7 @@ $qv_policy_color = $qvStyles['policy_color'] ?? '#374151';
         <div class="container footer-block mx-auto px-4 pt-20">
             <div class="row flex flex-wrap -mx-4">
                 <!-- About Us / Footer Info Column -->
-                <div class="column w-full md:w-1/2 lg:w-1/3 px-4 mb-8 lg:mb-0">
+                <div class="column w-full md:w-1/2 lg:w-1/3 px-4 mb-0 md:mb-8 lg:mb-0">
                     <div class="mb-4">
                         <?php 
                         $logoType = $getFooterSetting('footer_logo_type', 'text');
@@ -399,26 +502,30 @@ $qv_policy_color = $qvStyles['policy_color'] ?? '#374151';
                 
                 <!-- Dynamic Footer Columns -->
                 <?php 
-                // We display up to 4 columns from the menu
-                // If there are more, they will wrap or we can limit them.
+                $colIndex = 0;
                 foreach ($footerColumns as $column): 
                     $colTitle = $column['label'];
                     $colItems = $column['children'] ?? [];
-                    
-                    // Special handing for "Follow Us" to show icons if needed?
-                    // For now, standard list as requested by "change text" requirement.
+                    $colId    = 'footer-col-' . $colIndex;
+                    $colIndex++;
                 ?>
-                <div class="column w-full md:w-1/2 lg:w-1/6 px-4 mb-6 lg:mb-0 border-b border-gray-100 md:border-none pb-4 md:pb-0 last:border-0">
-                    <div class="flex items-center justify-between cursor-pointer md:cursor-default group" onclick="toggleFooterAccordion(this)">
-                        <h3 class="text-lg font-sans text-black nav-link font-bold select-none"><?php echo htmlspecialchars($colTitle); ?></h3>
-                        <span class="md:hidden text-gray-500 group-hover:text-black transition-colors">
-                            <i class="fas fa-plus transition-transform duration-300"></i>
+                <div class="column w-full md:w-1/2 lg:w-1/6 px-4 mb-0 md:mb-6 lg:mb-0">
+                    <!-- Header row: clickable on mobile, static on desktop -->
+                    <div class="flex items-center justify-between py-4 border-b md:border-none cursor-pointer md:cursor-default md:mb-4"
+                         onclick="toggleFooterSection('<?php echo $colId; ?>')">
+                        <h3 class="text-base font-bold font-sans text-black select-none"><?php echo htmlspecialchars($colTitle); ?></h3>
+                        <span class="md:hidden text-gray-500">
+                            <i class="fas fa-plus footer-acc-icon" id="<?php echo $colId; ?>-icon" data-open="false"></i>
                         </span>
                     </div>
-                
-                    <div class="max-h-0 opacity-0 md:max-h-none md:opacity-100 md:block pt-4 footer-accordion-content overflow-hidden md:overflow-visible transition-all duration-500 ease-in-out">
-                    <?php if (stripos($colTitle, 'Follow') !== false): // Basic detection for Follow Us ?>
-                        <!-- Social Icons Logic -->
+
+                    <!-- Collapsible content -->
+                    <div id="<?php echo $colId; ?>-content"
+                         class="overflow-hidden transition-all duration-300 ease-in-out footer-accordion-content"
+                         style="max-height:0;">
+                        <div class="pb-4">
+                    <?php if (stripos($colTitle, 'Follow') !== false): ?>
+                        <!-- Social Icons -->
                         <div class="flex space-x-3">
                              <?php foreach ($colItems as $item): 
                                  $icon = 'link';
@@ -441,14 +548,16 @@ $qv_policy_color = $qvStyles['policy_color'] ?? '#374151';
                             <?php foreach ($colItems as $item) { renderFooterLinkRecursive($item, $baseUrl); } ?>
                         </ul>
                     <?php endif; ?>
+                        </div>
                     </div>
                 </div>
                 <?php endforeach; ?>
+
             </div>
             
             <!-- Bottom Bar -->
-            <div class="border-t border-gray-300 mt-8 pt-6 pb-6">
-                <div class="flex flex-wrap md:flex-nowrap justify-between md:justify-between items-center gap-5 md:gap-8">
+            <div class="border-t border-gray-300 mt-0 md:mt-8 pt-6 pb-6">
+                <div class="flex flex-col md:flex-row md:flex-nowrap justify-center md:justify-between items-center gap-4 md:gap-8">
                     <!-- Left Section: Currency & Copyright -->
                     <div class="flex flex-wrap gap-5 md:gap-8 justify-center md:justify-start items-center">
                         <!-- Currency Selector -->
@@ -487,7 +596,7 @@ $qv_policy_color = $qvStyles['policy_color'] ?? '#374151';
                         </div>
                         
                         <!-- Copyright -->
-                        <div class="text-gray-700 text-sm">
+                        <div class="text-gray-700 text-sm text-center md:text-left">
                             <?php echo htmlspecialchars($getFooterSetting('footer_copyright', '© ' . date('Y') . ' CookPro store. All rights reserved.')); ?>
                         </div>
                     </div>
@@ -519,7 +628,7 @@ $qv_policy_color = $qvStyles['policy_color'] ?? '#374151';
     </footer>
 
     <!-- Side Cart -->
-    <div class="fixed right-0 top-0 h-full w-full md:w-96 bg-white shadow-2xl z-50 transform translate-x-full transition-transform duration-300" id="sideCart">
+    <div class="fixed right-0 top-0 h-full w-full md:w-96 bg-white shadow-2xl z-50 transform translate-x-full transition-transform duration-300" id="sideCart" style="z-index: 999999 !important;">
         <div class="flex flex-col h-full">
             <!-- Cart Header -->
             <div class="flex items-center justify-between p-6 border-b">
@@ -605,12 +714,12 @@ $qv_policy_color = $qvStyles['policy_color'] ?? '#374151';
     
     <!-- Scripts -->
     <script src="<?php echo $baseUrl; ?>/assets/js/main6.js?v=2" defer></script>
-    <script src="<?php echo $baseUrl; ?>/assets/js/cart19.js?v=1" defer></script>
-    <script src="<?php echo $baseUrl; ?>/assets/js/product-cards7.js?v=2" defer></script>
+    <script src="<?php echo $baseUrl; ?>/assets/js/cart20.js?v=1" defer></script>
+    <script src="<?php echo $baseUrl; ?>/assets/js/product-cards8.js?v=5" defer></script>
     <script src="<?php echo $baseUrl; ?>/assets/js/wishlist10.js?v=3" defer></script>
     <script src="<?php echo $baseUrl; ?>/assets/js/notification1.js?v=2" defer></script>
-    <script src="<?php echo $baseUrl; ?>/assets/js/quickview23.js?v=2" defer></script>
-    <script src="<?php echo $baseUrl; ?>/assets/js/add-to-cart3.js?v=2" defer></script>
+    <script src="<?php echo $baseUrl; ?>/assets/js/quickview24.js?v=7" defer></script>
+    <script src="<?php echo $baseUrl; ?>/assets/js/add-to-cart4.js?v=3" defer></script>
     
     <!-- Remove from Cart Confirmation Script -->
     <script>
@@ -961,10 +1070,36 @@ document.getElementById('askQuestionForm').addEventListener('submit', async func
 </body>
 </html>
 <style>
-    
     @media (max-width: 768px) {
         .footer-block {
             padding-top: 2rem !important;
         }
     }
+    /* Desktop: always show accordion content regardless of inline JS styles */
+    @media (min-width: 768px) {
+        .footer-accordion-content {
+            max-height: none !important;
+            overflow: visible !important;
+        }
+    }
+    /* Mobile: smooth height transition */
+    @media (max-width: 767px) {
+        .footer-accordion-content {
+            transition: max-height 0.35s ease;
+        }
+    }
+    /* Icon animation: scale pop when swapping + and - */
+    .footer-acc-icon {
+        display: inline-block;
+        transition: transform 0.15s ease;
+        transform: scale(1);
+    }
+    /* Remove bottom border on the last footer column header (mobile) */
+    @media (max-width: 767px) {
+        .column:last-child > div:first-child {
+            border-bottom: none !important;
+        }
+    }
+
 </style>
+
