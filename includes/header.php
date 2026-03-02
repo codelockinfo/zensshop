@@ -135,6 +135,12 @@ if (!function_exists('url')) {
 <!DOCTYPE html>
 <html lang="en" class="overflow-x-hidden">
 <head>
+    <!-- Swiper CSS -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.css" />
+    
+    <!-- Swiper JS -->
+    <script src="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.js"></script>
+
     <?php 
     // Google Tag Manager (Head)
     $gtmId = $settingsObj->get('gtm_id', '');
@@ -205,9 +211,69 @@ $gs_tooltip_text = getGlobalStyle('tooltip_text_color', $globalCardStyles, '#fff
         }
 
         /* Standard Product Card Styling */
+        /* Swiper Styles */
+        .swiper-button-next,
+        .swiper-button-prev {
+            background-color: rgba(255, 255, 255, 0.9);
+            width: 44px;
+            height: 44px;
+            border-radius: 50%;
+            border: 1px solid #e5e7eb;
+            color: #111827;
+            box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1), 0 2px 4px -1px rgba(0,0,0,0.06);
+            transition: all 0.2s ease;
+        }
+        .swiper-button-next:after,
+        .swiper-button-prev:after {
+            font-size: 18px;
+            font-weight: 900;
+        }
+        .swiper-button-next:hover,
+        .swiper-button-prev:hover {
+            background-color: #ffffff;
+            color: var(--price-color, #1a3d32);
+            transform: scale(1.05);
+            box-shadow: 0 10px 15px -3px rgba(0,0,0,0.1);
+        }
+        .swiper-pagination-bullet-active {
+            background: var(--price-color, #1a3d32) !important;
+        }
+
+        /* Swiper spacing fixes */
+        .swiper {
+            padding-bottom: 48px !important;
+            padding-top: 10px !important;
+        }
+        .swiper-wrapper {
+            height: auto !important;
+        }
+        .swiper-button-next, .swiper-button-prev {
+            top: 50% !important;
+            transform: translateY(-80%) !important;
+            z-index: 50 !important;
+        }
+        @media (max-width: 768px) {
+            .swiper-button-next, .swiper-button-prev {
+                display: none !important; /* Hide arrows on small mobile for cleaner look */
+            }
+        }
+
         .product-card {
             background-color: var(--card-bg) !important;
             border: none !important;
+        }
+
+        /* Skeleton Loader */
+        .skeleton-loading {
+            background-color: #f3f4f6;
+            background-image: linear-gradient(90deg, #f3f4f6 0px, #e5e7eb 40px, #f3f4f6 80px);
+            background-size: 300px 100%; 
+            animation: skeleton-shimmer 1.5s infinite linear;
+            border-radius: 8px;
+        }
+        @keyframes skeleton-shimmer {
+            0% { background-position: -300px 0; }
+            100% { background-position: 300px 0; }
         }
         .product-card .card-title, 
         .product-card .card-title a,

@@ -664,38 +664,40 @@ if (!$isAjax) {
                             <p class="text-gray-500 mt-2">When you place orders, your payment details will appear here.</p>
                         </div>
                     <?php else: ?>
-                        <div class="bg-white rounded-2xl border border-gray-100 overflow-hidden shadow-sm">
-                            <table class="w-full text-left">
-                                <thead class="bg-gray-50 text-gray-400 font-bold uppercase tracking-widest text-[10px]">
-                                    <tr>
-                                        <th class="px-6 py-4">Order #</th>
-                                        <th class="px-6 py-4">Method</th>
-                                        <th class="px-6 py-4">Status</th>
-                                        <th class="px-6 py-4">Amount</th>
-                                        <th class="px-6 py-4">Date</th>
-                                    </tr>
-                                </thead>
-                                <tbody class="divide-y divide-gray-100">
-                                    <?php foreach ($paymentOrders as $po): ?>
-                                        <tr class="text-sm">
-                                            <td class="px-6 py-4 font-bold text-gray-900"><?php echo htmlspecialchars($po['order_number']); ?></td>
-                                            <td class="px-6 py-4">
-                                                <div class="flex items-center gap-2 text-gray-600">
-                                                    <i class="fas <?php echo $po['payment_method'] === 'cash_on_delivery' ? 'fa-money-bill-wave' : 'fa-credit-card'; ?> text-xs"></i>
-                                                    <?php echo ucfirst(str_replace('_', ' ', $po['payment_method'])); ?>
-                                                </div>
-                                            </td>
-                                            <td class="px-6 py-4">
-                                                <span class="inline-block px-3 py-1 rounded-full text-[10px] font-bold <?php echo $po['payment_status'] === 'paid' ? 'bg-green-100 text-green-600' : 'bg-orange-100 text-orange-600'; ?>">
-                                                    <?php echo strtoupper($po['payment_status']); ?>
-                                                </span>
-                                            </td>
-                                             <td class="px-6 py-4 font-bold text-gray-900"><?php echo format_price($po['total_amount'], $po['currency'] ?? 'INR'); ?></td>
-                                            <td class="px-6 py-4 text-gray-500"><?php echo date('M d, Y', strtotime($po['created_at'])); ?></td>
+                        <div class="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
+                            <div class="overflow-x-auto custom-scrollbar">
+                                <table class="w-full text-left">
+                                    <thead class="bg-gray-50 text-gray-400 font-bold uppercase tracking-widest text-[10px]">
+                                        <tr class="whitespace-nowrap">
+                                            <th class="px-6 py-4">Order #</th>
+                                            <th class="px-6 py-4">Method</th>
+                                            <th class="px-6 py-4">Status</th>
+                                            <th class="px-6 py-4">Amount</th>
+                                            <th class="px-6 py-4">Date</th>
                                         </tr>
-                                    <?php endforeach; ?>
-                                </tbody>
-                            </table>
+                                    </thead>
+                                    <tbody class="divide-y divide-gray-100">
+                                        <?php foreach ($paymentOrders as $po): ?>
+                                            <tr class="text-sm whitespace-nowrap">
+                                                <td class="px-6 py-4 font-bold text-gray-900"><?php echo htmlspecialchars($po['order_number']); ?></td>
+                                                <td class="px-6 py-4">
+                                                    <div class="flex items-center gap-2 text-gray-600">
+                                                        <i class="fas <?php echo $po['payment_method'] === 'cash_on_delivery' ? 'fa-money-bill-wave' : 'fa-credit-card'; ?> text-xs"></i>
+                                                        <?php echo ucfirst(str_replace('_', ' ', $po['payment_method'])); ?>
+                                                    </div>
+                                                </td>
+                                                <td class="px-6 py-4">
+                                                    <span class="inline-block px-3 py-1 rounded-full text-[10px] font-bold <?php echo $po['payment_status'] === 'paid' ? 'bg-green-100 text-green-600' : 'bg-orange-100 text-orange-600'; ?>">
+                                                        <?php echo strtoupper($po['payment_status']); ?>
+                                                    </span>
+                                                </td>
+                                                 <td class="px-6 py-4 font-bold text-gray-900"><?php echo format_price($po['total_amount'], $po['currency'] ?? 'INR'); ?></td>
+                                                <td class="px-6 py-4 text-gray-500"><?php echo date('M d, Y', strtotime($po['created_at'])); ?></td>
+                                            </tr>
+                                        <?php endforeach; ?>
+                                    </tbody>
+                                </table>
+                            </div>
                         </div>
                     <?php endif; ?>
 

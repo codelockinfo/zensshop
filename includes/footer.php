@@ -1066,6 +1066,20 @@ document.getElementById('askQuestionForm').addEventListener('submit', async func
 });
 </script>
 
+<script>
+    // Global Skeleton Loader for all images
+    document.addEventListener('DOMContentLoaded', () => {
+        document.querySelectorAll('img').forEach(img => {
+            if (!img.complete) {
+                img.classList.add('skeleton-loading');
+                const onDone = () => img.classList.remove('skeleton-loading');
+                img.addEventListener('load', onDone);
+                img.addEventListener('error', onDone);
+            }
+        });
+    });
+</script>
+
 <?php require_once __DIR__ . '/development_popup.php'; ?>
 </body>
 </html>

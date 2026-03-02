@@ -124,6 +124,10 @@ $sectionId = 'cat-section-' . rand(1000, 9999);
     }
     #<?php echo $sectionId; ?> .cat-arrow-prev { left: -20px; }
     #<?php echo $sectionId; ?> .cat-arrow-next { right: -20px; }
+    /* Hide arrows if not enough slides to slide */
+    .swiper-button-lock {
+        display: none !important;
+    }
     @media (max-width: 1024px) {
         #<?php echo $sectionId; ?> .cat-arrow { display: none; }
     }
@@ -143,10 +147,10 @@ $sectionId = 'cat-section-' . rand(1000, 9999);
         </div>
         
         <?php if ($catLayoutType === 'slider'): ?>
-            <!-- Slider Layout (Vanilla JS Custom Slider like Best Selling) -->
+            <!-- Slider Layout (Swiper.js) -->
             <div class="relative px-2">
-                <div class="categories-slider overflow-hidden">
-                    <div class="flex gap-1 md:gap-6 w-fit mx-auto" id="categoriesSlider" style="will-change: transform;">
+                <div class="swiper categories-swiper" id="categoriesSlider">
+                    <div class="swiper-wrapper">
                         <?php foreach ($displayCategories as $category): 
                             $image = getImageUrl($category['image'] ?? '');
                             $link = $category['link'];
@@ -154,27 +158,27 @@ $sectionId = 'cat-section-' . rand(1000, 9999);
                                  $link = $baseUrl . '/' . ltrim($link, '/');
                             }
                         ?>
-                        <div class="<?php echo $mobileSliderClass; ?> md:w-[180px] lg:w-[150px] my-2 text-center flex-shrink-0">
+                        <div class="swiper-slide !w-[120px] md:!w-[150px] text-center">
                             <a href="<?php echo htmlspecialchars($link); ?>" class="group block w-full px-1">
-                                <div class="relative mb-4 overflow-hidden rounded-full aspect-square cat-img-container shadow-sm border border-gray-100">
+                                <div class="relative mb-3 overflow-hidden rounded-full aspect-square cat-img-container shadow-sm border border-gray-100">
                                     <img src="<?php echo htmlspecialchars($image); ?>" alt="<?php echo htmlspecialchars($category['title']); ?>" 
                                          class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-300"
                                          onerror="this.src='https://placehold.co/600x600?text=Category+Image'">
                                 </div>
-                                <h3 class="text-xs md:text-sm font-semibold group-hover:text-primary transition cat-item-title px-1 line-clamp-2"><?php echo htmlspecialchars($category['title']); ?></h3>
+                                <h3 class="text-[10px] md:text-xs font-semibold group-hover:text-primary transition cat-item-title px-1 line-clamp-2"><?php echo htmlspecialchars($category['title']); ?></h3>
                             </a>
                         </div>
                         <?php endforeach; ?>
                     </div>
                 </div>
                 
-                <!-- Navigation Arrows -->
-                <?php if (count($displayCategories) > 1): ?>
-                <button class="cat-arrow cat-arrow-prev" id="categoriesPrev" aria-label="Previous category">
-                    <i class="fas fa-chevron-left" aria-hidden="true"></i>
+                <!-- Premium Navigation Arrows -->
+                <?php if (count($displayCategories) > 2): ?>
+                <button class="absolute left-0 md:-left-4 top-1/2 -translate-y-1/2 bg-white shadow-lg rounded-full w-9 h-9 flex items-center justify-center text-gray-800 hover:text-[#1a3d32] hover:bg-gray-50 transition z-30 border border-gray-100" id="categoriesPrev" aria-label="Previous">
+                    <i class="fas fa-chevron-left text-xs" aria-hidden="true"></i>
                 </button>
-                <button class="cat-arrow cat-arrow-next" id="categoriesNext" aria-label="Next category">
-                    <i class="fas fa-chevron-right" aria-hidden="true"></i>
+                <button class="absolute right-0 md:-right-4 top-1/2 -translate-y-1/2 bg-white shadow-lg rounded-full w-9 h-9 flex items-center justify-center text-gray-800 hover:text-[#1a3d32] hover:bg-gray-50 transition z-30 border border-gray-100" id="categoriesNext" aria-label="Next">
+                    <i class="fas fa-chevron-right text-xs" aria-hidden="true"></i>
                 </button>
                 <?php endif; ?>
             </div>

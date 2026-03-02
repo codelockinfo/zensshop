@@ -49,11 +49,13 @@ $sectionId = 'video-section-' . rand(1000, 9999);
     #<?php echo $sectionId; ?> .section-subheading {
         color: <?php echo $styles['subheading_color']; ?>;
     }
-    #<?php echo $sectionId; ?> .custom-arrow {
+    #<?php echo $sectionId; ?> .swiper-button-prev,
+    #<?php echo $sectionId; ?> .swiper-button-next {
         background-color: <?php echo $styles['arrow_bg_color']; ?>;
         color: <?php echo $styles['arrow_icon_color']; ?>;
     }
-    #<?php echo $sectionId; ?> .custom-arrow:hover {
+    #<?php echo $sectionId; ?> .swiper-button-prev:hover,
+    #<?php echo $sectionId; ?> .swiper-button-next:hover {
         background-color: <?php echo $styles['arrow_bg_color']; ?>;
         color: <?php echo $styles['arrow_icon_color']; ?>;
         opacity: 0.8;
@@ -73,30 +75,11 @@ $sectionId = 'video-section-' . rand(1000, 9999);
         </div>
         
         <div class="relative">
-            <!-- Navigation Buttons -->
-            <?php 
-            $videoConfigPath = __DIR__ . '/../admin/video_config.json';
-            $showVideoArrows = true;
-            if (file_exists($videoConfigPath)) {
-                $conf = json_decode(file_get_contents($videoConfigPath), true);
-                $showVideoArrows = isset($conf['show_arrows']) ? $conf['show_arrows'] : true;
-            }
-            if (count($videos) > 1 && $showVideoArrows): 
-            ?>
-            <button id="videoSectionPrev" type="button" style="z-index: 11 !important;" class="absolute left-4 top-1/2 -translate-y-1/2 z-50 shadow-xl rounded-full w-12 h-12 flex items-center justify-center transition focus:outline-none backdrop-blur-sm cursor-pointer border border-white flex custom-arrow">
-                <i class="fas fa-chevron-left"></i>
-            </button>
-            <button id="videoSectionNext" style="z-index: 11 !important;" type="button" class="absolute right-4 top-1/2 -translate-y-1/2 z-50 shadow-xl rounded-full w-12 h-12 flex items-center justify-center transition focus:outline-none backdrop-blur-sm cursor-pointer border border-white flex custom-arrow">
-                <i class="fas fa-chevron-right"></i>
-            </button>
-            <?php endif; ?>
-
-            <!-- Native scroll container -->
-            <div class="slider-scroll-track" id="videoSectionViewport">
-                <!-- Track -->
-                <div id="videoSectionSlider" class="flex" style="gap: 24px;">
+            <!-- Swiper container -->
+            <div class="swiper videoSwiper" id="videoSectionSlider">
+                <div class="swiper-wrapper">
                     <?php if (!empty($videos)): ?>
-                    <?php foreach ($videos as $index => $video): 
+                    <?php foreach ($videos as $index => $video):
                         $title = $video['title'] ?? '';
                         $subtitle = $video['subtitle'] ?? '';
                         
@@ -128,7 +111,7 @@ $sectionId = 'video-section-' . rand(1000, 9999);
                     ?>
                     
                     <!-- Slide Item -->
-                    <div class="slider-snap-item video-slide flex-shrink-0 min-w-[280px] md:min-w-[300px] h-[400px] md:h-[600px] video-card">
+                    <div class="swiper-slide video-slide !h-[400px] md:!h-[600px] !w-[220px] md:!w-[300px] video-card">
                         <div class="relative w-full h-full rounded-lg overflow-hidden border border-gray-100 shadow-sm hover:shadow-md bg-black transition-all duration-300">
                         
                             <?php if (!empty($embed)): ?>
@@ -189,8 +172,24 @@ $sectionId = 'video-section-' . rand(1000, 9999);
                     </div>
                     <?php endforeach; ?>
                     <?php endif; ?>
-                </div>
-            </div>
+                </div><!-- /.swiper-wrapper -->
+
+                <?php 
+                $videoConfigPath = __DIR__ . '/../admin/video_config.json';
+                $showVideoArrows = true;
+                if (file_exists($videoConfigPath)) {
+                    $conf = json_decode(file_get_contents($videoConfigPath), true);
+                    $showVideoArrows = isset($conf['show_arrows']) ? $conf['show_arrows'] : true;
+                }
+                if (count($videos) > 1 && $showVideoArrows): ?>
+                <button class="absolute left-2 md:-left-4 top-1/2 -translate-y-1/2 bg-white shadow-lg rounded-full w-10 h-10 flex items-center justify-center text-gray-800 hover:text-[#1a3d32] hover:bg-gray-50 transition z-30 video-swiper-prev border border-gray-100" aria-label="Previous">
+                    <i class="fas fa-chevron-left" aria-hidden="true"></i>
+                </button>
+                <button class="absolute right-2 md:-right-4 top-1/2 -translate-y-1/2 bg-white shadow-lg rounded-full w-10 h-10 flex items-center justify-center text-gray-800 hover:text-[#1a3d32] hover:bg-gray-50 transition z-30 video-swiper-next border border-gray-100" aria-label="Next">
+                    <i class="fas fa-chevron-right" aria-hidden="true"></i>
+                </button>
+                <?php endif; ?>
+            </div><!-- /.swiper -->
         </div>
     </div>
 </section>

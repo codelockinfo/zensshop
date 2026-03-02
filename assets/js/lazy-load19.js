@@ -144,43 +144,97 @@ function scheduleInitialization(container) {
 }
 
 function initializeSectionContent(container) {
+  // Helper to check slide count
+  const getSlideCount = (selector) => container.querySelectorAll(selector + ' .swiper-slide').length;
+
+  // Best Selling Slider (Swiper)
   const bestSelling = container.querySelector("#bestSellingSlider");
-  if (bestSelling) setupCustomSlider(bestSelling, "bestSellingPrev", "bestSellingNext");
+  if (bestSelling && typeof Swiper !== "undefined") {
+    const slideCount = getSlideCount("#bestSellingSlider");
+    new Swiper(bestSelling, {
+        slidesPerView: 'auto',
+        spaceBetween: 20,
+        loop: slideCount > 5,
+        watchOverflow: true,
+        autoplay: { delay: 5000, disableOnInteraction: false },
+        navigation: {
+            nextEl: '.best-selling-swiper-next',
+            prevEl: '.best-selling-swiper-prev',
+        }
+    });
+  }
 
+  // Categories Slider (Swiper)
   const categoriesSlider = container.querySelector("#categoriesSlider");
-  if (categoriesSlider) setupCustomSlider(categoriesSlider, "categoriesPrev", "categoriesNext");
+  if (categoriesSlider && typeof Swiper !== "undefined") {
+      const slideCount = getSlideCount("#categoriesSlider");
+      new Swiper(categoriesSlider, {
+          slidesPerView: 'auto',
+          spaceBetween: 15,
+          loop: slideCount > 8,
+          centerInsufficientSlides: true, // ONLY Category is centered
+          watchOverflow: true,
+          navigation: {
+              nextEl: '#categoriesNext',
+              prevEl: '#categoriesPrev',
+          }
+      });
+  }
 
+  // Trending Slider (Swiper)
   const trending = container.querySelector("#trendingSlider");
-  if (trending) setupCustomSlider(trending, "trendingPrev", "trendingNext");
+  if (trending && typeof Swiper !== "undefined") {
+      const slideCount = getSlideCount("#trendingSlider");
+      new Swiper(trending, {
+          slidesPerView: 'auto',
+          spaceBetween: 20,
+          loop: slideCount > 5,
+          watchOverflow: true,
+          autoplay: { delay: 5500, disableOnInteraction: false },
+          navigation: {
+              nextEl: '.trending-swiper-next',
+              prevEl: '.trending-swiper-prev',
+          }
+      });
+  }
 
+  // Videos Slider (Swiper)
   const videoSlider = container.querySelector("#videoSectionSlider");
-  if (videoSlider) {
+  if (videoSlider && typeof Swiper !== "undefined") {
     container.querySelectorAll("video").forEach((v) => {
       v.muted = true;
       v.playsInline = true;
       v.setAttribute("autoplay", "");
       v.play().catch(() => {});
     });
-    setupCustomSlider(videoSlider, "videoSectionPrev", "videoSectionNext");
+    
+    const slideCount = getSlideCount("#videoSectionSlider");
+    new Swiper(videoSlider, {
+        slidesPerView: 'auto',
+        spaceBetween: 20,
+        loop: slideCount > 4,
+        watchOverflow: true,
+        centeredSlides: false,
+        navigation: {
+            nextEl: '.video-swiper-next',
+            prevEl: '.video-swiper-prev',
+        }
+    });
   }
 
   if (typeof initializeProductCards === "function") {
     initializeProductCards(container);
   }
 
-  // Initialize Newsletter Form if present
-  const newsletterForm = container.querySelector("#globalNewsletterForm");
-  if (newsletterForm) {
-    initGlobalNewsletter(newsletterForm);
-  }
-
   // Related Products Slider
   const relatedSlider = container.querySelector(".people-bought-slider");
   if (relatedSlider && typeof Swiper !== "undefined") {
+    const slideCount = container.querySelectorAll('.people-bought-slider .swiper-slide').length;
     new Swiper(relatedSlider, {
         slidesPerView: 'auto',
         spaceBetween: 20,
-        loop: true,
+        loop: slideCount > 5,
+        watchOverflow: true,
         autoplay: { delay: 5000, disableOnInteraction: false },
         navigation: {
             nextEl: '.people-bought-next',
@@ -192,10 +246,12 @@ function initializeSectionContent(container) {
   // Recently Viewed Slider
   const recentSlider = container.querySelector(".recently-viewed-slider");
   if (recentSlider && typeof Swiper !== "undefined") {
+    const slideCount = container.querySelectorAll('.recently-viewed-slider .swiper-slide').length;
     new Swiper(recentSlider, {
         slidesPerView: 'auto',
         spaceBetween: 20,
-        loop: true,
+        loop: slideCount > 5,
+        watchOverflow: true,
         autoplay: { delay: 5000, disableOnInteraction: false },
         navigation: {
             nextEl: '.recently-viewed-next',

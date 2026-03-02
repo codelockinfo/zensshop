@@ -96,11 +96,13 @@ if (file_exists($productsConfigPath)) {
     #<?php echo $sectionId; ?> .section-subheading {
         color: <?php echo $subheading_color; ?>;
     }
-    #<?php echo $sectionId; ?> .custom-arrow {
+    #<?php echo $sectionId; ?> .swiper-button-prev,
+    #<?php echo $sectionId; ?> .swiper-button-next {
         background-color: <?php echo $arrow_bg_color; ?> !important;
         color: <?php echo $arrow_icon_color; ?> !important;
     }
-    #<?php echo $sectionId; ?> .custom-arrow:hover {
+    #<?php echo $sectionId; ?> .swiper-button-prev:hover,
+    #<?php echo $sectionId; ?> .swiper-button-next:hover {
         opacity: 0.8;
     }
 </style>
@@ -112,11 +114,18 @@ if (file_exists($productsConfigPath)) {
             <p class="text-lg max-w-2xl mx-auto section-subheading"><?php echo htmlspecialchars($sectionSubheading); ?></p>
         </div>
         
-        <!-- Product Slider Container -->
+        <!-- Swiper Slider -->
+        <?php 
+        $productsConfigPath = __DIR__ . '/../admin/homepage_products_config.json';
+        $showBSArrows = true;
+        if (file_exists($productsConfigPath)) {
+            $conf = json_decode(file_get_contents($productsConfigPath), true);
+            $showBSArrows = isset($conf['show_best_selling_arrows']) ? $conf['show_best_selling_arrows'] : true;
+        }
+        ?>
         <div class="relative">
-            <!-- Native scroll container -->
-            <div class="slider-scroll-track" id="bestSellingSliderViewport">
-                <div class="flex gap-6" id="bestSellingSlider">
+            <div class="swiper bestSellingSwiper" id="bestSellingSlider">
+                <div class="swiper-wrapper">
 
                     <?php foreach ($products as $item): 
                         $mainImage = getProductImage($item);
@@ -132,8 +141,8 @@ if (file_exists($productsConfigPath)) {
                         $defaultAttributes = $firstVariant ? json_decode($firstVariant['variant_attributes'], true) : [];
                         $attributesJson = json_encode($defaultAttributes);
                     ?>
-                    <div class="slider-snap-item min-w-[280px] md:min-w-[300px] my-2">
-                        <div class="product-card bg-white rounded-lg overflow-hidden shadow-md transition-all duration-300 group relative">
+                    <div class="swiper-slide h-auto !w-[280px] md:!w-[300px]">
+                        <div class="product-card bg-white rounded-lg overflow-hidden shadow-md hover:shadow-xl transition-all duration-300 group relative flex flex-col h-full w-full max-w-sm">
                             <div class="relative overflow-hidden">
                                 <a class="product-card-view-link" href="<?php echo url('product?slug=' . urlencode($item['slug'] ?? '')); ?>">
                                     <img src="<?php echo htmlspecialchars($mainImage); ?>" alt="<?php echo htmlspecialchars($item['name']); ?>" 
@@ -166,82 +175,71 @@ if (file_exists($productsConfigPath)) {
                                        aria-label="Quick view product"
                                        data-product-id="<?php echo $item['product_id']; ?>"
                                        data-product-name="<?php echo htmlspecialchars($item['name'] ?? ''); ?>"
-                                       data-product-price="<?php echo $finalPrice; ?>"
+                                       data-product-price="<?php echo $price; ?>"
                                        data-product-slug="<?php echo htmlspecialchars($item['slug'] ?? ''); ?>">
                                         <i class="fas fa-eye" aria-hidden="true"></i>
                                         <span class="product-tooltip">Quick View</span>
                                     </a>
-
-                                    <button id="product-card-add-to-cart-btn" class="productAddToCartBtn product-action-btn w-10 h-10 rounded-full flex items-center justify-center transition shadow-lg add-to-cart-hover-btn relative group opacity-100 md:opacity-0 md:group-hover:opacity-100 <?php echo (($item['stock_status'] ?? 'in_stock') === 'out_of_stock' || (isset($item['stock_quantity']) && $item['stock_quantity'] <= 0)) ? 'opacity-50 cursor-not-allowed' : ''; ?>" 
-                                            aria-label="Add product to cart"
-                                            data-product-id="<?php echo $currentId; ?>"
-                                            data-product-name="<?php echo htmlspecialchars($item['name'] ?? ''); ?>"
-                                            data-product-price="<?php echo $finalPrice; ?>"
-                                            data-product-slug="<?php echo htmlspecialchars($item['slug'] ?? ''); ?>"
-                                            data-attributes='<?php echo htmlspecialchars($attributesJson, ENT_QUOTES, 'UTF-8'); ?>'
-                                            <?php echo (($item['stock_status'] ?? 'in_stock') === 'out_of_stock' || (isset($item['stock_quantity']) && $item['stock_quantity'] <= 0)) ? 'disabled' : ''; ?>>
-                                        <i class="fas fa-shopping-cart"></i>
-                                        <span class="product-tooltip"><?php echo (($item['stock_status'] ?? 'in_stock') === 'out_of_stock' || (isset($item['stock_quantity']) && $item['stock_quantity'] <= 0)) ? get_stock_status_text($item['stock_status'] ?? 'in_stock', $item['stock_quantity'] ?? 0) : 'Add to Cart'; ?></span>
-                                    </button>
                                 </div>
                             </div>
-                            <div class="p-4">
-                                <h3 class="font-semibold text-sm md:text-base md:max-w-[250px] max-w-[250px] mb-2 overflow-hidden" style="display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; min-height: 3rem; line-height: 1.5rem; color: <?php echo $card_title_color; ?> !important;" title="<?php echo htmlspecialchars($item['name']); ?>">
-                                    <a class="product-card-view-link" href="<?php echo $baseUrl; ?>/product?slug=<?php echo urlencode($item['slug'] ?? ''); ?>" style="color: inherit;" class="hover:text-primary transition block">
+                            <div class="p-4 flex flex-col flex-1">
+                                <h3 class="font-semibold text-gray-800 mb-2 h-10 overflow-hidden line-clamp-2" style="display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; color: <?php echo $card_title_color; ?> !important;" title="<?php echo htmlspecialchars($item['name']); ?>">
+                                    <a class="product-card-view-link" href="<?php echo $baseUrl; ?>/product?slug=<?php echo urlencode($item['slug'] ?? ''); ?>" style="color: inherit;" class="hover:text-primary transition">
                                         <?php echo htmlspecialchars($item['name']); ?>
                                     </a>
                                 </h3>
                                 <div class="flex items-center mb-3">
                                     <div class="flex text-yellow-400">
                                         <?php 
-                                        $rating = floor($item['rating'] ?? 5);
+                                        $ratingValue = floor($item['rating'] ?? 5);
                                         for ($i = 0; $i < 5; $i++): 
                                         ?>
-                                        <i class="fas fa-star text-sm <?php echo $i < $rating ? '' : 'text-gray-300'; ?>"></i>
+                                        <i class="fas fa-star text-[10px] <?php echo $i < $ratingValue ? '' : 'text-gray-300'; ?>"></i>
                                         <?php endfor; ?>
                                     </div>
                                 </div>
-                                <div class="flex items-center gap-2">
-                                    <p class="text-md font-bold product-price" style="color: <?php echo $price_color; ?> !important;"><?php echo format_price($price, $item['currency'] ?? 'USD'); ?></p>
+                                <div class="flex items-center gap-2 mb-4 mt-auto">
+                                    <span class="product-price text-base font-bold" style="color: <?php echo $price_color; ?> !important;">
+                                        <?php echo format_price($price, $item['currency'] ?? 'USD'); ?>
+                                    </span>
                                     <?php if ($originalPrice): ?>
-                                    <span class="line-through text-sm block compare-price" style="color: <?php echo $compare_price_color; ?> !important;"><?php echo format_price($originalPrice, $item['currency'] ?? 'USD'); ?></span>
+                                        <span class="compare-price font-bold line-through text-xs" style="color: <?php echo $compare_price_color; ?> !important;"><?php echo format_price($originalPrice, $item['currency'] ?? 'USD'); ?></span>
                                     <?php endif; ?>
                                 </div>
+
+                                <?php
+                                $oos = (($item['stock_status'] ?? 'in_stock') === 'out_of_stock' || (isset($item['stock_quantity']) && $item['stock_quantity'] <= 0));
+                                ?>
+                                <button id="product-card-add-to-cart-btn" onclick='addToCart(<?php echo $currentId; ?>, 1, this, <?php echo htmlspecialchars($attributesJson, ENT_QUOTES, 'UTF-8'); ?>)' 
+                                        data-product-id="<?php echo $currentId; ?>"
+                                        data-product-name="<?php echo htmlspecialchars($item['name'] ?? ''); ?>"
+                                        data-product-price="<?php echo $price; ?>"
+                                        data-product-slug="<?php echo htmlspecialchars($item['slug'] ?? ''); ?>"
+                                        class="productAddToCartBtn w-full bg-[#1a3d32] text-white px-4 py-2.5 rounded hover:bg-black transition text-xs font-bold flex items-center justify-center gap-2 <?php echo $oos ? 'opacity-50 cursor-not-allowed' : ''; ?>"
+                                        <?php echo $oos ? 'disabled' : ''; ?>>
+                                    <?php if ($oos): ?>
+                                        <span><?php echo strtoupper(get_stock_status_text($item['stock_status'] ?? 'in_stock', $item['stock_quantity'] ?? 0)); ?></span>
+                                    <?php else: ?>
+                                        <i class="fas fa-shopping-cart text-[10px]"></i>
+                                        <span>ADD TO CART</span>
+                                    <?php endif; ?>
+                                </button>
                             </div>
                         </div>
                     </div>
                     <?php endforeach; ?>
-                </div>
-            </div>
-            
-            <?php 
-            $productsConfigPath = __DIR__ . '/../admin/homepage_products_config.json';
-            $showBSArrows = true;
-            if (file_exists($productsConfigPath)) {
-                $conf = json_decode(file_get_contents($productsConfigPath), true);
-                $showBSArrows = isset($conf['show_best_selling_arrows']) ? $conf['show_best_selling_arrows'] : true;
-            }
-            
-            if (count($products) > 1 && $showBSArrows): 
-            ?>
-            <!-- Navigation Arrows -->
-            <button class="absolute left-3 top-1/2 -translate-y-1/2 bg-white/90 shadow-xl border border-white rounded-full w-12 h-12 flex items-center justify-center text-gray-800 hover:text-primary hover:bg-white transition z-10 custom-arrow backdrop-blur-sm best-selling-prev" aria-label="Previous best selling products" id="bestSellingPrev">
-                <i class="fas fa-chevron-left" aria-hidden="true"></i>
-            </button>
-            <button class="absolute right-3 top-1/2 -translate-y-1/2 bg-white/90 shadow-xl border border-white rounded-full w-12 h-12 flex items-center justify-center text-gray-800 hover:text-primary hover:bg-white transition z-10 custom-arrow backdrop-blur-sm best-selling-next" aria-label="Next best selling products" id="bestSellingNext">
-                <i class="fas fa-chevron-right" aria-hidden="true"></i>
-            </button>
-            <?php endif; ?>
+                </div><!-- /.swiper-wrapper -->
+
+                <?php if (count($products) > 1 && $showBSArrows): ?>
+                <button class="absolute left-2 md:-left-4 top-1/2 -translate-y-1/2 bg-white shadow-lg rounded-full w-10 h-10 flex items-center justify-center text-gray-800 hover:text-[#1a3d32] hover:bg-gray-50 transition z-30 best-selling-swiper-prev border border-gray-100" aria-label="Previous">
+                    <i class="fas fa-chevron-left" aria-hidden="true"></i>
+                </button>
+                <button class="absolute right-2 md:-right-4 top-1/2 -translate-y-1/2 bg-white shadow-lg rounded-full w-10 h-10 flex items-center justify-center text-gray-800 hover:text-[#1a3d32] hover:bg-gray-50 transition z-30 best-selling-swiper-next border border-gray-100" aria-label="Next">
+                    <i class="fas fa-chevron-right" aria-hidden="true"></i>
+                </button>
+                <?php endif; ?>
+            </div><!-- /.swiper -->
         </div>
     </div>
 </section>
 <?php endif; ?>
-<!-- <script>
-    const bestSellerCartItem = document.getElementById('addToCartByProductIcon');
-    bestSellerCartItem.addEventListener('click', function(btn){
-        btn.preventDefault();
-        const productId = this.getAttribute('data-product-id');
-        addToCart(productId, 1);
-    })
-
-</script> -->
