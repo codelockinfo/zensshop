@@ -43,7 +43,7 @@ class Settings {
             return self::$cache[$cacheKey];
         }
         
-        // Try primary settings table
+        // Try primary settings table with store_id
         $sql = "SELECT setting_value FROM settings WHERE setting_key = ?";
         $params = [$key];
         if ($storeId) {
@@ -54,18 +54,44 @@ class Settings {
         }
         $result = $this->db->fetchOne($sql, $params);
         
+        // Fallback: If store_id didn't match, try finding ANY store's setting
+        if (!$result && $storeId && $storeId !== 'DEFAULT') {
+            $result = $this->db->fetchOne(
+                "SELECT setting_value FROM settings WHERE setting_key = ? AND store_id IS NOT NULL AND store_id != '' ORDER BY store_id DESC LIMIT 1",
+                [$key]
+            );
+        }
+        
+        // Fallback for DEFAULT store_id: try any available setting
+        if (!$result && $storeId === 'DEFAULT') {
+            $fallbackResult = $this->db->fetchOne(
+                "SELECT setting_value, store_id FROM settings WHERE setting_key = ? ORDER BY store_id DESC LIMIT 1",
+                [$key]
+            );
+            error_log("Settings::get() DEFAULT fallback for '$key': " . ($fallbackResult ? "FOUND (store_id={$fallbackResult['store_id']})" : "NOT FOUND"));
+            $result = $fallbackResult;
+        }
+        
         // Fallback to site_settings table (for logo, appearance, etc.)
         if (!$result) {
             try {
                 $sql = "SELECT setting_value FROM site_settings WHERE setting_key = ?";
                 $params = [$key];
-                if ($storeId) {
+                if ($storeId && $storeId !== 'DEFAULT') {
                     $sql .= " AND store_id = ?";
                     $params[] = $storeId;
                 } else {
                     $sql .= " AND (store_id IS NULL OR store_id = '')";
                 }
                 $result = $this->db->fetchOne($sql, $params);
+                
+                // Fallback for site_settings too
+                if (!$result && $storeId) {
+                    $result = $this->db->fetchOne(
+                        "SELECT setting_value FROM site_settings WHERE setting_key = ? ORDER BY store_id DESC LIMIT 1",
+                        [$key]
+                    );
+                }
             } catch (Exception $e) {
                 // Ignore if table doesn't exist
             }

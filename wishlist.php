@@ -205,19 +205,19 @@ require_once __DIR__ . '/includes/header.php';
             <!-- Wishlist Items -->
             <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-16">
                 <?php foreach ($wishlistItems as $item): ?>
-                    <div class="product-card wishlist-card group relative rounded-lg overflow-hidden hover:shadow-lg transition-shadow flex flex-col h-full" style="background-color: <?php echo $w_card_bg_color; ?>;">
+                    <div class="product-card wishlist-card group relative rounded-lg overflow-hidden hover:shadow-lg transition-shadow flex flex-col h-full" data-no-click-redirect="true" style="background-color: <?php echo $w_card_bg_color; ?>;">
                         <div class="absolute top-2 right-2 z-30 flex flex-col items-center gap-2">
                             <!-- Remove Button -->
                             <?php 
                             $finalPrice = !empty($item['sale_price']) ? $item['sale_price'] : $item['price'];
                             ?>
-                            <button onclick="removeFromWishlist(<?php echo $item['product_id']; ?>)" 
+                            <button onclick="event.stopPropagation(); removeFromWishlist(<?php echo $item['product_id']; ?>)" 
                                     class="wishlist-remove-btn w-10 h-10 rounded-full shadow-md transition flex items-center justify-center relative group product-action-btn">
                                 <i class="fas fa-times"></i>
                                 <span class="product-tooltip">Remove</span>
                             </button>
                             
-                            <button type="button" 
+                            <button type="button" onclick="event.stopPropagation();"
                                     class="wishlist-qv-btn w-10 h-10 rounded-full shadow-md transition flex items-center justify-center quick-view-btn relative group product-action-btn opacity-100 md:opacity-0 md:group-hover:opacity-100"
                                     data-product-id="<?php echo $item['product_id']; ?>"
                                     data-product-name="<?php echo htmlspecialchars($item['name'] ?? ''); ?>"
@@ -287,7 +287,7 @@ require_once __DIR__ . '/includes/header.php';
                             }
                             $attributesJson = json_encode($defaultAttributes);
                             ?>
-                            <button onclick='addToCart(<?php echo $item['product_id']; ?>, 1, this, <?php echo htmlspecialchars($attributesJson, ENT_QUOTES, 'UTF-8'); ?>)'
+                            <button onclick='event.stopPropagation(); addToCart(<?php echo $item['product_id']; ?>, 1, this, <?php echo htmlspecialchars($attributesJson, ENT_QUOTES, 'UTF-8'); ?>)'
                                     class="w-full py-3 text-[12px] rounded-lg transition flex items-center justify-center gap-2 mt-auto wishlist-atc-btn productAddToCartBtn <?php echo $isOutOfStock ? 'opacity-50 cursor-not-allowed' : ''; ?>"
                                     <?php echo $isOutOfStock ? 'disabled' : ''; ?>>
                                 <i class="fas fa-shopping-cart"></i>
@@ -322,10 +322,10 @@ require_once __DIR__ . '/includes/header.php';
                             }
                         }
                     ?>
-                        <div class="product-card recently-viewed-card group relative border border-gray-200 rounded-lg overflow-hidden hover:shadow-lg transition-shadow flex flex-col h-full" style="background-color: <?php echo $w_card_bg_color; ?>;">
+                        <div class="product-card recently-viewed-card group relative border border-gray-200 rounded-lg overflow-hidden hover:shadow-lg transition-shadow flex flex-col h-full" data-no-click-redirect="true" style="background-color: <?php echo $w_card_bg_color; ?>;">
                             <div class="absolute top-2 right-2 z-30 flex flex-col items-center gap-2">
                                 <!-- Wishlist Button -->
-                                <button onclick="toggleWishlist(<?php echo $recentProduct['id']; ?>, this)" 
+                                <button onclick="event.stopPropagation(); toggleWishlist(<?php echo $recentProduct['id']; ?>, this)" 
                                         class="wishlist-btn product-action-btn w-10 h-10 rounded-full shadow-md transition flex items-center justify-center relative group <?php echo $isInWishlist ? 'wishlist-active text-white' : ''; ?>"
                                         data-product-id="<?php echo $recentProduct['id']; ?>"
                                         aria-label="<?php echo $isInWishlist ? 'Remove from wishlist' : 'Add to wishlist'; ?>"
@@ -334,7 +334,7 @@ require_once __DIR__ . '/includes/header.php';
                                     <span class="product-tooltip"><?php echo $isInWishlist ? 'Remove' : 'Add to wishlist'; ?></span>
                                 </button>
 
-                                <button type="button" 
+                                <button type="button" onclick="event.stopPropagation();"
                                         class="quick-view-btn product-action-btn w-10 h-10 rounded-full shadow-md transition flex items-center justify-center relative group opacity-100 md:opacity-0 md:group-hover:opacity-100"
                                         data-product-id="<?php echo $recentProduct['id']; ?>"
                                         data-product-name="<?php echo htmlspecialchars($recentProduct['name'] ?? ''); ?>"

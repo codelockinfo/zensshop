@@ -1406,8 +1406,8 @@ if (!empty($headerMenuItems)) {
 
     <!-- Main Menu Drawer -->
     <div id="mobile-menu-main" 
-         class="fixed top-0 left-0 bottom-0 w-80 bg-white z-50 transform -translate-x-full transition-transform duration-300 ease-in-out flex flex-col overflow-hidden"
-         style="z-index: 9999 !important">
+         class="fixed top-0 left-0 bottom-0 w-80 bg-white z-[10001] transform -translate-x-full transition-transform duration-300 ease-in-out flex flex-col overflow-hidden"
+         style="z-index: 10001 !important">
         
         <!-- Header -->
         <div class="bg-black text-white px-5 py-4 flex items-center justify-between flex-shrink-0">
@@ -1429,7 +1429,7 @@ if (!empty($headerMenuItems)) {
                     $name = htmlspecialchars($item['label'] ?? $item['name'] ?? '');
                     // Use a more robust ID strategy or ensure consistent uniqid if passed from backend
                     // Fallback to counter if no ID
-                    $itemId = $item['id'] ?? 'menu-item-' . $menuItemCounter++;
+                    $itemId = $item['id'] ?? 'top-item-' . $menuItemCounter++;
                     $subId = 'mobile-menu-sub-' . $itemId; 
                     
                     if ($hasChildren) {
@@ -1482,7 +1482,8 @@ if (!empty($headerMenuItems)) {
                     
                     ?>
                     <div id="<?php echo $thisId; ?>" 
-                         class="fixed top-0 left-0 bottom-0 w-80 bg-white z-[60] transform -translate-x-full transition-transform duration-300 ease-in-out flex flex-col overflow-hidden">
+                         class="fixed top-0 left-0 bottom-0 w-80 bg-white transform -translate-x-full transition-transform duration-300 ease-in-out flex flex-col overflow-hidden"
+                         style="z-index: 10002 !important">
                         
                         <!-- Header with Back & Close -->
                         <div class="bg-black text-white px-5 py-4 flex items-center justify-between flex-shrink-0">
@@ -1505,7 +1506,7 @@ if (!empty($headerMenuItems)) {
                                     $cName = htmlspecialchars($child['label'] ?? $child['name'] ?? '');
                                     $cUrl = url($child['url'] ?? '#');
                                     $cHasChildren = !empty($child['children']);
-                                    $cSubId = 'mobile-menu-sub-' . ($child['id'] ?? uniqid());
+                                    $cSubId = 'mobile-menu-sub-' . ($child['id'] ?? 'child-' . $globalCounter);
 
                                     if ($cHasChildren) {
                                         echo '<button type="button" onclick="openMobileSubmenu(\''.$cSubId.'\')" class="flex items-center justify-between px-6 py-4 text-gray-800 border-b border-gray-100 hover:bg-gray-50 transition text-left group">';
@@ -1544,7 +1545,6 @@ if (!empty($headerMenuItems)) {
     renderNewMobileSubmenus($headerMenuItems, $submenuCounter);
     ?>
 
-    </script>
     <script>
     // --- NEW MOBILE MENU JS CONTROL ---
     
@@ -1593,7 +1593,7 @@ if (!empty($headerMenuItems)) {
         const main = document.getElementById('mobile-menu-main');
         
         // 1. Slide out ALL drawers (main and subs)
-        const drawers = document.querySelectorAll('[id^="mobile-menu-main"], [id^="mobile-menu-sub-"]');
+        const drawers = document.querySelectorAll('[id*="mobile-menu"]');
         drawers.forEach(el => {
             el.classList.add('-translate-x-full');
         });

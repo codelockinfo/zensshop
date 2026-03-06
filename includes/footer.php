@@ -715,7 +715,7 @@ $qv_policy_color = $qvStyles['policy_color'] ?? '#374151';
     <!-- Scripts -->
     <script src="<?php echo $baseUrl; ?>/assets/js/main6.js?v=2" defer></script>
     <script src="<?php echo $baseUrl; ?>/assets/js/cart20.js?v=1" defer></script>
-    <script src="<?php echo $baseUrl; ?>/assets/js/product-cards8.js?v=5" defer></script>
+    <script src="<?php echo $baseUrl; ?>/assets/js/product-cards9.js?v=5" defer></script>
     <script src="<?php echo $baseUrl; ?>/assets/js/wishlist10.js?v=3" defer></script>
     <script src="<?php echo $baseUrl; ?>/assets/js/notification1.js?v=2" defer></script>
     <script src="<?php echo $baseUrl; ?>/assets/js/quickview24.js?v=7" defer></script>
@@ -1081,6 +1081,85 @@ document.getElementById('askQuestionForm').addEventListener('submit', async func
 </script>
 
 <?php require_once __DIR__ . '/development_popup.php'; ?>
+
+<?php if (isset($pageTitle) && $pageTitle === 'Home'): ?>
+<!-- Cookie Consent Banner -->
+<div id="cookieConsentBanner" class="hidden fixed bottom-6 left-6 right-6 md:left-auto md:max-w-md bg-white/95 backdrop-blur-md p-6 rounded-2xl shadow-2xl z-[100] transform translate-y-20 opacity-0 pointer-events-none transition-all duration-700 border border-gray-100 flex flex-col gap-4">
+    <div class="flex items-start gap-4">
+        <div class="bg-black text-white p-3 rounded-xl flex-shrink-0">
+            <i class="fas fa-cookie-bite text-xl"></i>
+        </div>
+        <div class="flex-1">
+            <h3 class="text-lg font-bold text-gray-900 mb-1">Speed up your experience?</h3>
+            <p class="text-sm text-gray-600">
+                Enable local caching for an <b>instant</b> loading experience.
+            </p>
+        </div>
+    </div>
+    <div class="flex gap-3">
+        <button onclick="handleCookieConsent('allowed')" class="flex-1 bg-black text-white py-2.5 rounded-lg font-bold text-sm hover:bg-gray-800 transition active:scale-95 shadow-lg shadow-black/10">
+            Allow Cookies
+        </button>
+        <button onclick="handleCookieConsent('rejected')" class="text-gray-500 hover:text-black transition text-sm font-medium px-4 py-2 border border-gray-200 rounded-lg">
+            Maybe later
+        </button>
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const banner = document.getElementById('cookieConsentBanner');
+    const consentMode = 'cookie_consent_status';
+    
+    // Helper to get cookie
+    function getCookie(name) {
+        let nameEQ = name + "=";
+        let ca = document.cookie.split(';');
+        for(let i=0;i < ca.length;i++) {
+            let c = ca[i];
+            while (c.charAt(0)==' ') c = c.substring(1,c.length);
+            if (c.indexOf(nameEQ) == 0) return c.substring(nameEQ.length,c.length);
+        }
+        return null;
+    }
+
+    // Helper to set cookie
+    window.setCookie = function(name, value, days) {
+        let expires = "";
+        if (days) {
+            let date = new Date();
+            date.setTime(date.getTime() + (days*24*60*60*1000));
+            expires = "; expires=" + date.toUTCString();
+        }
+        document.cookie = name + "=" + (value || "")  + expires + "; path=/";
+    }
+
+    // Check if consent already given or rejected recently
+    if (!getCookie(consentMode)) {
+        setTimeout(() => {
+            banner.classList.remove('hidden');
+            // Force reflow
+            banner.offsetHeight;
+            banner.classList.remove('opacity-0', 'translate-y-20', 'pointer-events-none');
+        }, 2000);
+    }
+
+    window.handleCookieConsent = function(status) {
+        // Hide banner
+        banner.classList.add('opacity-0', 'translate-y-20', 'pointer-events-none');
+        setTimeout(() => {
+            banner.classList.add('hidden');
+        }, 700);
+
+        if (status === 'allowed') {
+            setCookie(consentMode, 'allowed', 365); // 1 year
+        } else {
+            setCookie(consentMode, 'rejected', 1); // 1 day
+        }
+    };
+});
+</script>
+<?php endif; ?>
 </body>
 </html>
 <style>

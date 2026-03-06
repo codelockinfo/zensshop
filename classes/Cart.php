@@ -560,23 +560,59 @@ class Cart {
             }
         }
         
+        // Always clear the cookie first to prevent any future double-merge
+        $this->saveCartToCookie([]);
+        
         if (empty($guestCart)) return;
         
         // Get existing database cart
         $storeId = function_exists('getCurrentStoreId') ? getCurrentStoreId() : ($_SESSION['store_id'] ?? null);
         $dbCart = $this->getCartFromDB($userId, $storeId);
         
-        // Merge guest cart into db cart
+        // SAFETY CHECK: Detect if the cookie is just a stale mirror of the DB.
+        // If every cookie item already exists in the DB with >= quantity, 
+        // the cookie is not a real "guest cart" — it's leftover data. Skip merge.
+        $hasNewItems = false;
+        foreach ($guestCart as $guestItem) {
+            $guestAttrs = $guestItem['variant_attributes'] ?? [];
+            $guestQty = (int)($guestItem['quantity'] ?? 1);
+            $foundInDb = false;
+            
+            foreach ($dbCart as $dbItem) {
+                $dbAttrs = $dbItem['variant_attributes'] ?? [];
+                if ($dbItem['product_id'] == $guestItem['product_id'] && $this->attributesMatch($dbAttrs, $guestAttrs)) {
+                    $dbQty = (int)($dbItem['quantity'] ?? 0);
+                    // If cookie qty matches DB qty exactly, it's a mirror — not new
+                    if ($guestQty != $dbQty) {
+                        $hasNewItems = true;
+                    }
+                    $foundInDb = true;
+                    break;
+                }
+            }
+            
+            if (!$foundInDb) {
+                $hasNewItems = true; // Truly new item not in DB
+            }
+            
+            if ($hasNewItems) break; // No need to check further
+        }
+        
+        // If cookie is just mirroring the DB, don't merge — quantities are already correct
+        if (!$hasNewItems) {
+            return;
+        }
+        
+        // Merge only genuinely new guest cart items into db cart
         foreach ($guestCart as $guestItem) {
             $guestAttrs = $guestItem['variant_attributes'] ?? [];
             $found = false;
             foreach ($dbCart as &$dbItem) {
                 $dbAttrs = $dbItem['variant_attributes'] ?? [];
                 if ($dbItem['product_id'] == $guestItem['product_id'] && $this->attributesMatch($dbAttrs, $guestAttrs)) {
-                    // Update quantity instead of adding
-                    // If db has 7 and guest has 1, total should be 8.
-                    // But we must ensure getCartFromDB actually returned the items correctly.
-                    $dbItem['quantity'] += $guestItem['quantity'];
+                    // Item exists in both — use the higher quantity rather than summing
+                    // This prevents doubling when the cookie is partially stale
+                    $dbItem['quantity'] = max((int)$dbItem['quantity'], (int)$guestItem['quantity']);
                     $found = true;
                     break;
                 }
@@ -587,8 +623,6 @@ class Cart {
         }
         
         $this->saveCartToDB($userId, $dbCart);
-        // Clear guest cart cookie after sync to prevent double-merging if called again
-        $this->saveCartToCookie([]);
     }
 }
 

@@ -14,8 +14,31 @@ if (empty($pincode)) {
     exit;
 }
 
+// Check if customer OR admin is logged in
+$isCustomerLoggedIn = isset($_SESSION['customer_id']);
+$isAdminLoggedIn = (isset($_SESSION['logged_in']) && $_SESSION['logged_in'] === true);
+
+if (!$isCustomerLoggedIn && !$isAdminLoggedIn) {
+    http_response_code(403);
+    echo json_encode(['success' => false, 'message' => 'Please login to check serviceability', 'error_type' => 'auth_required']);
+    exit;
+}
+
 $delhivery = new Delhivery();
 $result = $delhivery->checkPincode($pincode);
+$result['debug_store_id'] = defined('CURRENT_STORE_ID') ? CURRENT_STORE_ID : 'NOT_DEFINED';
+$result['debug_token_loaded'] = !empty($delhivery->getToken());
+$result['debug_mode'] = $delhivery->isTest() ? 'test (staging)' : 'live';
+$result['debug_base_url'] = $delhivery->getBaseUrl();
+$result['debug_url'] = $delhivery->lastRequest['url'] ?? 'N/A';
+$result['debug_token_len'] = strlen($delhivery->getToken());
+$result['debug_headers'] = $delhivery->lastRequest['headers'] ?? [];
+$result['debug_token_preview'] = substr($delhivery->getToken(), 0, 8) . '...';
+$result['debug_user_session'] = [
+    'customer_logged_in' => $isCustomerLoggedIn,
+    'admin_logged_in' => $isAdminLoggedIn,
+    'session_id_exists' => !empty(session_id())
+];
 
 $settings = new Settings();
 $isCodEnabled = (int)$settings->get('enable_cod', 0);

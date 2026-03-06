@@ -1,4 +1,6 @@
 <?php
+// Temporarily disabled - remove the line below to re-enable
+return;
 // Dynamic Image Configuration
 // You can change this URL to your own image
 $devPopupImage = getBaseUrl() . '/pop-up/pop-up.png'; 

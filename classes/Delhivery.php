@@ -11,6 +11,7 @@ class Delhivery {
     private $baseUrl;
     private $expressUrl;
     private $settings;
+    private $currentAuthType = 'Token'; // Added to track retry auth type
     public $lastRequest; // Added for debugging
 
     public function __construct($token = null, $storeId = null) {
@@ -21,41 +22,15 @@ class Delhivery {
             $storeId = getCurrentStoreId();
         }
 
-        $rawToken = $token ?: $this->settings->get('delhivery_api_token', '', $storeId);
-        $mode = $this->settings->get('delhivery_mode', '', $storeId);
-        
-        // Fallback: If settings are missing (likely on frontend without store session)
-        // Fetch them directly from the settings table
-        if (empty($rawToken) || empty($mode)) {
-            $db = Database::getInstance();
-            $sql = "SELECT setting_key, setting_value FROM settings WHERE setting_key IN ('delhivery_api_token', 'delhivery_mode', 'delhivery_warehouse_name')";
-            $params = [];
-            
-            if ($storeId) {
-                $sql .= " AND (store_id = ? OR store_id IS NULL)";
-                $params[] = $storeId;
-            }
-            // Ordering by store_id DESC ensures specific store settings override NULL/default settings
-            $sql .= " ORDER BY store_id DESC";
-            
-            $allSettings = $db->fetchAll($sql, $params);
-            
-            $dbSettings = [];
-            foreach ($allSettings as $s) {
-                // Only take the first one found for each key (which will be the store-specific one due to ORDER BY)
-                if (!isset($dbSettings[$s['setting_key']])) {
-                    $dbSettings[$s['setting_key']] = $s['setting_value'];
-                }
-            }
-
-            if (empty($rawToken)) $rawToken = $dbSettings['delhivery_api_token'] ?? '';
-            if (empty($mode)) $mode = $dbSettings['delhivery_mode'] ?? 'test';
-        }
+        // Settings::get() has built-in store_id fallback chain
+        // Trim the token when fetching it from Settings
+        $rawToken = $token ?: trim($this->settings->get('delhivery_api_token', '', $storeId));
+        $mode = $this->settings->get('delhivery_mode', 'test', $storeId);
         
         // Final fallback for mode if still empty
         if (empty($mode)) $mode = 'test';
         
-        // Trim any accidental spaces
+        // Trim any accidental spaces (redundant now, but harmless)
         $this->token = trim($rawToken);
         $this->isTest = ($mode === 'test');
         $this->baseUrl = ($mode === 'live') ? 'https://track.delhivery.com' : 'https://staging-express.delhivery.com';
@@ -66,47 +41,93 @@ class Delhivery {
         return $this->token;
     }
 
+    public function isTest() {
+        return $this->isTest;
+    }
+
+    public function getBaseUrl() {
+        return $this->baseUrl;
+    }
+
     /**
      * Check if a pincode is serviceable
      */
     public function checkPincode($pincode) {
         if (empty($pincode)) return ['success' => false, 'message' => 'Pincode is required'];
 
-        // Use filter_codes as per Delhivery documentation/user snippet
-        $url = $this->baseUrl . '/c/api/pin-codes/json/?filter_codes=' . urlencode($pincode);
-        $response = $this->makeRequest($url, 'GET');
-
-        // Check if makeRequest itself returned an error
-        if (isset($response['success']) && $response['success'] === false) {
-            return $response;
-        }
-
-        if ($response && isset($response['delivery_codes']) && !empty($response['delivery_codes'])) {
-            $postalData = $response['delivery_codes'][0]['postal_code'];
+        // Delhivery has multiple API versions and authentication patterns. 
+        // We try a wide variety to ensure compatibility with all account types.
+        $attempts = [
+            // Attempt 1: Standard Client API (Most common)
+            ['url' => $this->baseUrl . '/c/api/pin-codes/json/?filter_codes=' . urlencode($pincode), 'auth_type' => 'Token'],
             
-            // Per documentation: "Embargo" indicates temporary non-serviceable
-            $remark = strtolower($postalData['remark'] ?? '');
-            if (strpos($remark, 'embargo') !== false) {
-                return ['success' => true, 'is_serviceable' => false, 'message' => 'Service temporarily unavailable (Embargo)'];
-            }
+            // Attempt 2: Standard Client API with URL Token (Needed for some accounts)
+            ['url' => $this->baseUrl . '/c/api/pin-codes/json/?token=' . $this->token . '&filter_codes=' . urlencode($pincode), 'auth_type' => 'Token'],
+            
+            // Attempt 3: Unified API domain (track.delhivery.com)
+            ['url' => 'https://track.delhivery.com/c/api/pin-codes/json/?filter_codes=' . urlencode($pincode), 'auth_type' => 'Token'],
 
-            error_log("Delhivery Pincode Data for $pincode: " . json_encode($postalData));
-            return [
-                'success' => true,
-                'is_serviceable' => true,
-                'cod' => (($postalData['cod'] ?? '') === 'Y' || ($postalData['cash'] ?? '') === 'Y' || ($postalData['is_cod'] ?? '') === 'Y'),
-                'prepaid' => (($postalData['prepaid'] ?? $postalData['pre_paid'] ?? '') === 'Y'),
-                'repl' => (($postalData['repl'] ?? '') === 'Y' || ($postalData['pickup'] ?? '') === 'Y'),
-                'city' => $postalData['city'] ?? '',
-                'state' => $postalData['state_code'] ?? '',
-                'district' => $postalData['district'] ?? ''
+            // Attempt 4: Multi-Store / CL-API domain (cl-api.delhivery.com)
+            ['url' => 'https://cl-api.delhivery.com/c/api/pin-codes/json/?filter_codes=' . urlencode($pincode), 'auth_type' => 'Token'],
+            
+            // Attempt 5: Bearer Token (New 2024/25 standard)
+            ['url' => $this->baseUrl . '/c/api/pin-codes/json/?filter_codes=' . urlencode($pincode), 'auth_type' => 'Bearer'],
+
+            // Attempt 7: Legacy express domain
+            ['url' => 'https://express.delhivery.com/c/api/pin-codes/json/?filter_codes=' . urlencode($pincode), 'auth_type' => 'Token'],
+
+            // Attempt 8: Header 'Token' instead of 'Authorization' (Found in some docs)
+            ['url' => $this->baseUrl . '/c/api/pin-codes/json/?filter_codes=' . urlencode($pincode), 'auth_type' => 'CustomTokenHeader'],
+
+            // Attempt 9: Path without /c/ (Unified API style)
+            ['url' => $this->baseUrl . '/api/pin-codes/json/?filter_codes=' . urlencode($pincode), 'auth_type' => 'Token']
+        ];
+
+        $allAttempts = [];
+        $finalResult = null;
+        foreach ($attempts as $attempt) {
+            $this->currentAuthType = $attempt['auth_type'];
+            $response = $this->makeRequest($attempt['url'], 'GET');
+            
+            if (isset($response['success']) && $response['success'] === true && !empty($response['delivery_codes'])) {
+                $finalResult = $response;
+                break;
+            }
+            
+            $allAttempts[] = [
+                'url' => $attempt['url'],
+                'auth' => $attempt['auth_type'],
+                'http_code' => $response['http_code'] ?? 'N/A',
+                'response' => $response['raw_response'] ?? 'N/A'
             ];
+            $lastError = $response;
         }
 
+        if (!$finalResult) {
+            $lastError['debug_attempts'] = $allAttempts;
+            return $lastError;
+        }
+
+        // Process finalResult
+        $postalData = $finalResult['delivery_codes'][0]['postal_code'];
+        
+        // Per documentation: "Embargo" indicates temporary non-serviceable
+        $remark = strtolower($postalData['remark'] ?? '');
+        if (strpos($remark, 'embargo') !== false) {
+            return ['success' => true, 'is_serviceable' => false, 'message' => 'Service temporarily unavailable (Embargo)'];
+        }
+
+        error_log("Delhivery Pincode Data for $pincode: " . json_encode($postalData));
         return [
-            'success' => true, 
-            'is_serviceable' => false, 
-            'message' => 'Not serviceable'
+            'success' => true,
+            'is_serviceable' => true,
+            'city' => $postalData['district'] ?? ($postalData['city'] ?? 'Unknown'),
+            'state' => $postalData['state'] ?? 'Unknown',
+            'cod' => ($postalData['cash'] ?? 'No') === 'Yes',
+            'pickup' => ($postalData['pickup'] ?? 'No') === 'Yes',
+            'prepaid' => ($postalData['prepaid'] ?? 'No') === 'Yes',
+            'delivery_type' => $postalData['delivery_type'] ?? 'Standard',
+            'raw' => $postalData
         ];
     }
 
@@ -155,6 +176,17 @@ class Delhivery {
         $storeId = $orderData['store_id'] ?? null;
         $warehouseName = trim($this->settings->get('delhivery_warehouse_name', 'PRIMARY', $storeId));
         
+        // Fetch seller/return address from settings (stored as single JSON)
+        $sellerJson    = $this->settings->get('seller_address_data', '{}', $storeId);
+        $sellerData    = json_decode($sellerJson, true) ?: [];
+        $sellerAdd     = trim($sellerData['address'] ?? '');
+        $sellerCity    = trim($sellerData['city'] ?? '');
+        $sellerState   = trim($sellerData['state'] ?? '');
+        $sellerPin     = trim($sellerData['pincode'] ?? '');
+        $sellerPhone   = trim($sellerData['phone'] ?? '');
+        $sellerCountry = trim($sellerData['country'] ?? 'India');
+        $sellerName    = $this->settings->get('site_name', 'Zens Shop', $storeId) ?: 'Zens Shop';
+        
         // Prepare items description
         $items = $orderData['items'] ?? [];
         $descParts = [];
@@ -182,19 +214,19 @@ class Delhivery {
                     'phone' => substr(preg_replace('/[^0-9]/', '', $orderData['customer_phone'] ?? '0000000000'), -10),
                     'order' => $orderData['order_number'],
                     'payment_mode' => $paymentMode,
-                    'return_pin' => '',
-                    'return_city' => '',
-                    'return_phone' => '',
-                    'return_add' => '',
-                    'return_state' => '',
-                    'return_country' => '',
+                    'return_pin' => $sellerPin,
+                    'return_city' => $sellerCity,
+                    'return_phone' => $sellerPhone ? substr(preg_replace('/[^0-9]/', '', $sellerPhone), -10) : '',
+                    'return_add' => $sellerAdd,
+                    'return_state' => $sellerState,
+                    'return_country' => $sellerCountry,
                     'products_desc' => $productsDesc,
                     'hsn_code' => $items[0]['hsn_code'] ?? '',
                     'cod_amount' => number_format((float)$codAmount, 2, '.', ''),
-                    'order_date' => date('Y-m-d H:i:s', strtotime($orderData['created_at'] ?? 'now')),
+                    'order_date' => date('Y-m-d', strtotime($orderData['created_at'] ?? 'now')),
                     'total_amount' => number_format((float)$orderData['total_amount'], 2, '.', ''),
-                    'seller_add' => '',
-                    'seller_name' => $this->settings->get('site_name', 'Zens Shop', $storeId) ?: 'Zens Shop',
+                    'seller_add' => $sellerAdd,
+                    'seller_name' => $sellerName,
                     'seller_inv' => '',
                     'quantity' => (string)$totalQty,
                     'waybill' => '',
@@ -380,14 +412,25 @@ class Delhivery {
         curl_setopt($ch, CURLOPT_FOLLOWLOCATION, true);
         curl_setopt($ch, CURLOPT_TIMEOUT, 30); // Added timeout as per snippet
         
+        curl_setopt($ch, CURLOPT_USERAGENT, 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36');
         // SSL Verification Fix for Local Environments
         curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
         curl_setopt($ch, CURLOPT_SSL_VERIFYHOST, false);
         
-        $headers = [
-            'Authorization: Token ' . $this->token,
-            'Accept: application/json'
-        ];
+        // Construct Headers based on current attempt
+        $cleanToken = preg_replace('/^(Token|Bearer)\s+/i', '', $this->token);
+        $headers = ['Accept: application/json'];
+
+        if ($this->currentAuthType === 'Bearer') {
+            $headers[] = 'Authorization: Bearer ' . $cleanToken;
+        } elseif ($this->currentAuthType === 'CustomTokenHeader') {
+            $headers[] = 'Token: ' . $cleanToken;
+        } elseif ($this->currentAuthType === 'Raw') {
+            $headers[] = 'Authorization: ' . $cleanToken;
+        } else {
+            // Default: Token prefix
+            $headers[] = 'Authorization: Token ' . $cleanToken;
+        }
 
         if ($method === 'POST') {
             curl_setopt($ch, CURLOPT_POST, true);
@@ -402,11 +445,19 @@ class Delhivery {
                 curl_setopt($ch, CURLOPT_POSTFIELDS, $finalData);
                 $headers[] = 'Content-Type: application/json';
             }
+        } else {
+            // For GET requests, ensure token is in URL as well as some Delhivery accounts require it
+            if (strpos($url, 'token=') === false) {
+                $separator = (strpos($url, '?') !== false) ? '&' : '?';
+                $cleanToken = preg_replace('/^(Token|Bearer)\s+/i', '', $this->token);
+                $url .= $separator . 'token=' . $cleanToken;
+                curl_setopt($ch, CURLOPT_URL, $url);
+            }
         }
 
         curl_setopt($ch, CURLOPT_HTTPHEADER, $headers);
 
-        // Store request for debugging visibility in Network tab
+        // Store request for debugging visibility
         $this->lastRequest = [
             'url' => $url,
             'method' => $method,

@@ -1092,6 +1092,14 @@ document.addEventListener('DOMContentLoaded', function() {
                 
                 try {
                     const response = await fetch('<?php echo $baseUrl; ?>/api/pincode_serviceability.php?pincode=' + pincode);
+                    if (!response.ok) {
+                        if (response.status === 403) {
+                            zipStatus.innerHTML = '<i class="fas fa-lock mr-1"></i> <a href="<?php echo $baseUrl; ?>/login" class="underline font-bold">Please login</a> to check delivery availability';
+                            zipStatus.className = 'mt-2 text-xs text-orange-600';
+                            return;
+                        }
+                        throw new Error('Server error: ' + response.status);
+                    }
                     const data = await response.json();
                     
                     if (data.success && data.is_serviceable) {
@@ -1157,6 +1165,8 @@ document.addEventListener('DOMContentLoaded', function() {
                         }
                     }
                 } catch (error) {
+                    console.error('Serviceability check error:', error);
+                    // Handle session timeout or auth required (data was not parsed in catch block usually, but fetch might succeed with 403)
                     zipStatus.innerHTML = '<i class="fas fa-exclamation-triangle mr-1"></i> Error checking serviceability';
                     zipStatus.className = 'mt-2 text-xs text-orange-600';
                 }

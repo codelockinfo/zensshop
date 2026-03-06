@@ -138,7 +138,7 @@ class CustomerAuth {
         return $customer;
     }
     
-    private function setCustomerSession($customer) {
+    private function setCustomerSession($customer, $isAutoLogin = false) {
         $_SESSION['customer_id'] = $customer['customer_id'];
         $_SESSION['customer_name'] = $customer['name'];
         $_SESSION['customer_email'] = $customer['email'];
@@ -146,19 +146,21 @@ class CustomerAuth {
         $_SESSION['store_id'] = $customer['store_id'] ?? null;
         $_SESSION['customer_logged_in'] = true;
 
-        // Sync Cart and Wishlist from cookies
-        try {
-            require_once __DIR__ . '/Cart.php';
-            $cart = new Cart();
-            // syncCartAfterLogin will merge cookie items into DB and clear cookie
-            $cart->syncCartAfterLogin($customer['customer_id']);
+        // Only sync cart/wishlist on FRESH logins (not auto-login via remember-me)
+        // On auto-login, the cookie already mirrors the DB from a previous session,
+        // so merging again would double-count all existing quantities.
+        if (!$isAutoLogin) {
+            try {
+                require_once __DIR__ . '/Cart.php';
+                $cart = new Cart();
+                $cart->syncCartAfterLogin($customer['customer_id']);
 
-            require_once __DIR__ . '/Wishlist.php';
-            $wishlist = new Wishlist();
-            // syncWishlistAfterLogin will merge cookie items into DB and clear cookie
-            $wishlist->syncWishlistAfterLogin($customer['customer_id']);
-        } catch (Exception $e) {
-            error_log("Error syncing cart/wishlist after login: " . $e->getMessage());
+                require_once __DIR__ . '/Wishlist.php';
+                $wishlist = new Wishlist();
+                $wishlist->syncWishlistAfterLogin($customer['customer_id']);
+            } catch (Exception $e) {
+                error_log("Error syncing cart/wishlist after login: " . $e->getMessage());
+            }
         }
     }
     
@@ -243,7 +245,7 @@ class CustomerAuth {
             if ($session && hash_equals($session['token'], hash('sha256', $validator))) {
                 $customer = $this->db->fetchOne("SELECT * FROM customers WHERE customer_id = ?", [$session['customer_id']]);
                 if ($customer) {
-                    $this->setCustomerSession($customer);
+                    $this->setCustomerSession($customer, true); // auto-login: skip cart sync
                 }
             }
         } catch (Exception $e) {

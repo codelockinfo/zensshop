@@ -12,6 +12,11 @@ $currentUser = $auth->getCurrentUser();
 $error = '';
 $success = '';
 
+// Load Settings for Seller Address
+require_once __DIR__ . '/../classes/Settings.php';
+$settingsObj = new Settings();
+$storeId = $currentUser['store_id'] ?? null;
+
 // Handle profile image upload (before header to allow redirects)
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     // Check if POST is empty but Content-Length > 0 (post_max_size exceeded)
@@ -133,6 +138,24 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && !isset($_POST['upload_profile'])) {
                 }
             }
         }
+    } catch (Exception $e) {
+        $error = $e->getMessage();
+    }
+}
+
+// Handle Seller Address update
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['update_seller_address'])) {
+    try {
+        $sellerData = [
+            'address' => trim($_POST['seller_address'] ?? ''),
+            'city'    => trim($_POST['seller_city'] ?? ''),
+            'state'   => trim($_POST['seller_state'] ?? ''),
+            'pincode' => trim($_POST['seller_pincode'] ?? ''),
+            'phone'   => trim($_POST['seller_phone'] ?? ''),
+            'country' => trim($_POST['seller_country'] ?? 'India'),
+        ];
+        $settingsObj->set('seller_address_data', json_encode($sellerData), $storeId);
+        $success = 'Seller / Return address updated successfully!';
     } catch (Exception $e) {
         $error = $e->getMessage();
     }
@@ -292,6 +315,81 @@ require_once __DIR__ . '/../includes/admin-header.php';
             
             <button type="submit" class="admin-btn admin-btn-primary btn-loading">
                 Update Password
+            </button>
+        </form>
+    </div>
+
+    <!-- Seller / Return Address -->
+    <div class="admin-card">
+        <h2 class="text-xl font-bold mb-1">Seller / Return Address</h2>
+        <p class="text-gray-500 text-sm mb-4">Used for shipping labels & returns (Delhivery).</p>
+
+        <?php
+        $sellerJson = $settingsObj->get('seller_address_data', '{}', $storeId);
+        $seller = json_decode($sellerJson, true) ?: [];
+        $sellerAddr    = $seller['address'] ?? '';
+        $sellerCity    = $seller['city'] ?? '';
+        $sellerState   = $seller['state'] ?? '';
+        $sellerPin     = $seller['pincode'] ?? '';
+        $sellerPhone   = $seller['phone'] ?? '';
+        $sellerCountry = $seller['country'] ?? 'India';
+        ?>
+
+        <form method="POST" action="">
+            <input type="hidden" name="update_seller_address" value="1">
+            
+            <div class="admin-form-group">
+                <label class="admin-form-label">Street Address</label>
+                <input type="text" name="seller_address" 
+                       value="<?php echo htmlspecialchars($sellerAddr); ?>" 
+                       placeholder="Ashapuri Society, Ashwin society-2, Khodiyar nagar road, Varachha main road"
+                       class="admin-form-input">
+            </div>
+
+            <div class="grid grid-cols-2 gap-3">
+                <div class="admin-form-group">
+                    <label class="admin-form-label">City</label>
+                    <input type="text" name="seller_city" 
+                           value="<?php echo htmlspecialchars($sellerCity); ?>" 
+                           placeholder="e.g. Mumbai"
+                           class="admin-form-input">
+                </div>
+                <div class="admin-form-group">
+                    <label class="admin-form-label">State</label>
+                    <input type="text" name="seller_state" 
+                           value="<?php echo htmlspecialchars($sellerState); ?>" 
+                           placeholder="e.g. MH"
+                           class="admin-form-input">
+                </div>
+            </div>
+
+            <div class="grid grid-cols-2 gap-3">
+                <div class="admin-form-group">
+                    <label class="admin-form-label">Pincode</label>
+                    <input type="text" name="seller_pincode" 
+                           value="<?php echo htmlspecialchars($sellerPin); ?>" 
+                           placeholder="e.g. 400001"
+                           class="admin-form-input">
+                </div>
+                <div class="admin-form-group">
+                    <label class="admin-form-label">Phone</label>
+                    <input type="text" name="seller_phone" 
+                           value="<?php echo htmlspecialchars($sellerPhone); ?>" 
+                           placeholder="e.g. 9876543210"
+                           class="admin-form-input">
+                </div>
+            </div>
+
+            <div class="admin-form-group">
+                <label class="admin-form-label">Country</label>
+                <input type="text" name="seller_country" 
+                       value="<?php echo htmlspecialchars($sellerCountry); ?>" 
+                       placeholder="India"
+                       class="admin-form-input">
+            </div>
+            
+            <button type="submit" class="admin-btn admin-btn-primary btn-loading">
+                <i class="fas fa-save mr-2"></i>Save Address
             </button>
         </form>
     </div>

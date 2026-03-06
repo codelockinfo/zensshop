@@ -80,7 +80,8 @@ function initCardClickRedirect(container) {
         card.dataset.clickInit = 'true';
         card.style.cursor = 'pointer';
         card.addEventListener('click', function(e) {
-            if (e.target.closest('button, a, input, select, textarea')) return;
+            if (card.dataset.noClickRedirect === 'true') return;
+            if (e.target.closest('button, a, input, select, textarea, .product-action-btn')) return;
             var link = card.querySelector('.product-card-view-link, a[href*="product"]');
             if (link && link.href) window.location.href = link.href;
         });
