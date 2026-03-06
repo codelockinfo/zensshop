@@ -76,18 +76,23 @@
 
     // Global listener for buttons with 'btn-loading' class
 document.addEventListener('submit', function(e) {
-    const form = e.target;
-    // 1. Check for buttons inside the form
-    let submitBtn = form.querySelector('.btn-loading[type="submit"]');
-    
-    // 2. If not found inside, check for buttons outside using the 'form' attribute
-    if (!submitBtn && form.id) {
-        submitBtn = document.querySelector(`.btn-loading[type="submit"][form="${form.id}"]`);
-    }
-    
-    if (submitBtn) {
-        setBtnLoading(submitBtn, true);
-    }
+    // Wait a tiny bit to check if a specific validator called preventDefault
+    setTimeout(() => {
+        if (e.defaultPrevented) return;
+
+        const form = e.target;
+        // 1. Check for buttons inside the form
+        let submitBtn = form.querySelector('.btn-loading[type="submit"]');
+        
+        // 2. If not found inside, check for buttons outside using the 'form' attribute
+        if (!submitBtn && form.id) {
+            submitBtn = document.querySelector(`.btn-loading[type="submit"][form="${form.id}"]`);
+        }
+        
+        if (submitBtn) {
+            setBtnLoading(submitBtn, true);
+        }
+    }, 10);
 });
     document.addEventListener('click', function(e) {
         const btn = e.target.closest('.btn-loading');

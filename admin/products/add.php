@@ -129,11 +129,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         } catch (Exception $e) {
             $msg = $e->getMessage();
             if (strpos($msg, 'Duplicate entry') !== false) {
-                // Extract the duplicate value if needed, or just generic message
-                $error = "Duplicate: A product with this SKU already exists.";
+                $error = "A product with this SKU already exists. Please use a unique SKU.";
             } else {
-                $error = $msg;
+                $error = "Something went wrong. Please try again.";
             }
+            error_log("Add Product Error: " . $msg); // Log original error for admin
         }
     }
 }
@@ -164,17 +164,15 @@ $brands = $brandsResult ? json_decode($brandsResult['setting_value'], true) : []
     </button>
 </div>
 
-<?php if ($error): ?>
-<div class="admin-alert admin-alert-error mb-4">
-    <?php echo htmlspecialchars($error); ?>
-</div>
-<?php endif; ?>
-
 <?php if ($success): ?>
 <div class="admin-alert admin-alert-success mb-4">
     <?php echo htmlspecialchars($success); ?>
 </div>
 <?php endif; ?>
+
+<div id="js-error-container" class="admin-alert admin-alert-error mb-4 <?php echo $error ? '' : 'hidden'; ?>">
+    <?php echo htmlspecialchars($error ?? ''); ?>
+</div>
 
 <form id="productForm" method="POST" action="" enctype="multipart/form-data">
 <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
@@ -261,11 +259,26 @@ $brands = $brandsResult ? json_decode($brandsResult['setting_value'], true) : []
                         const selectedIds = <?php echo json_encode(array_values($selectedCats)); ?>.map(String);
                         
                         // Initialize options state
-                        let allOptions = categoriesData.map(cat => ({
-                            value: String(cat.id),
-                            text: cat.name,
-                            selected: selectedIds.includes(String(cat.id))
-                        }));
+                        let allOptions = categoriesData.map(cat => {
+                            const isAll = cat.name.toLowerCase() === 'all';
+                            const isSelected = selectedIds.includes(String(cat.id)) || (selectedIds.length === 0 && isAll);
+                            
+                            // If it's "All" and we're in "Add" mode (selectedIds is empty), select it in the real select too
+                            if (isSelected) {
+                                for(let i=0; i<realSelect.options.length; i++) {
+                                    if(realSelect.options[i].value == cat.id) {
+                                        realSelect.options[i].selected = true;
+                                        break;
+                                    }
+                                }
+                            }
+
+                            return {
+                                value: String(cat.id),
+                                text: cat.name,
+                                selected: isSelected
+                            };
+                        });
                         
                         function escapeHtml(text) {
                             if (!text) return text;
@@ -774,7 +787,58 @@ function removeHighlightRow(btn, editorId) {
 }
 
 document.getElementById('productForm').addEventListener('submit', function(e) {
-    // Validate Category
+    const form = e.target;
+    const submitBtns = [document.getElementById('topSubmitBtn'), document.getElementById('bottomSubmitBtn')];
+    
+    // Custom function to reset buttons
+    const resetButtons = () => {
+        submitBtns.forEach(btn => {
+            if (btn) {
+                btn.disabled = false;
+                if (btn.id === 'topSubmitBtn') {
+                    btn.querySelector('span').textContent = 'Save Product';
+                    btn.querySelector('i').className = 'fas fa-save mr-2';
+                } else {
+                    btn.querySelector('span').textContent = 'Add product';
+                    btn.querySelector('i').className = 'fas fa-plus-circle mr-2';
+                }
+            }
+        });
+    };
+
+    // Custom function to show error on page instead of alert
+    const showError = (message) => {
+        const errorContainer = document.getElementById('js-error-container');
+        if (errorContainer) {
+            errorContainer.textContent = message;
+            errorContainer.classList.remove('hidden');
+            errorContainer.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            
+            // Auto-hide after 5 seconds
+            setTimeout(() => {
+                errorContainer.classList.add('hidden');
+            }, 5000);
+        }
+    };
+
+    // 1. Validate Required Fields with helpful messages
+    const requiredFields = [
+        { id: 'name', label: 'Product Name', input: form.querySelector('input[name="name"]') },
+        { id: 'base_price', label: 'Price', input: document.getElementById('base_price') },
+        { id: 'stock_quantity', label: 'Stock Quantity', input: document.getElementById('stock_quantity') },
+        { id: 'weight', label: 'Weight', input: form.querySelector('input[name="weight"]') }
+    ];
+
+    for (const field of requiredFields) {
+        if (!field.input.value || field.input.value.trim() === '') {
+            e.preventDefault();
+            showError(`Please fill in the ${field.label}. It is important for product listing.`);
+            field.input.focus();
+            return;
+        }
+    }
+
+    // 2. Validate Category
     const catSelect = document.getElementById('real-category-select');
     let hasCategory = false;
     for (let j = 0; j < catSelect.options.length; j++) {
@@ -786,24 +850,11 @@ document.getElementById('productForm').addEventListener('submit', function(e) {
     
     if (!hasCategory) {
         e.preventDefault();
-        // Scroll to category section
-        document.getElementById('category-multiselect-container').scrollIntoView({ behavior: 'smooth', block: 'center' });
+        showError('Please select at least one category. This field is required.');
         return;
     }
 
-    // Prevent double-submission
-    const submitBtns = [document.getElementById('topSubmitBtn'), document.getElementById('bottomSubmitBtn')];
-    submitBtns.forEach(btn => {
-        if (btn) {
-            btn.disabled = true;
-            const span = btn.querySelector('span');
-            if (span) span.textContent = 'Processing...';
-            const icon = btn.querySelector('i');
-            if (icon) icon.className = 'fas fa-spinner fa-spin mr-2';
-        }
-    });
-
-    // Sync all TinyMCE instances
+    // loader is handled by global admin-footer.php listener but we ensure TinyMCE sync
     if (typeof tinymce !== 'undefined') {
         tinymce.triggerSave();
     }
@@ -822,27 +873,15 @@ document.getElementById('productForm').addEventListener('submit', function(e) {
         }
         document.getElementById('highlights_json').value = JSON.stringify(highlights);
 
-        // Explicitly sync variants and images one last time
-        if (typeof updateVariantsDataInput === 'function') {
-            updateVariantsDataInput();
-        }
-        if (typeof updateImagesInput === 'function') {
-            updateImagesInput();
-        }
+        // Sync variants and images
+        if (typeof updateVariantsDataInput === 'function') updateVariantsDataInput();
+        if (typeof updateImagesInput === 'function') updateImagesInput();
+        
     } catch (err) {
-        console.error("Submission Error:", err);
-        // Re-enable buttons so user can try again
-        submitBtns.forEach(btn => {
-            if (btn) {
-                btn.disabled = false;
-                const span = btn.querySelector('span');
-                if (span) span.textContent = 'Save Product';
-                const icon = btn.querySelector('i');
-                if (icon) icon.className = 'fas fa-save mr-2';
-            }
-        });
-        alert("An error occurred while preparing the form: " + err.message);
+        console.error("Submission Preparation Error:", err);
         e.preventDefault();
+        resetButtons();
+        showError("An error occurred while preparing the form: " + err.message);
     }
 });
 

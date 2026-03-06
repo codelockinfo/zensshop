@@ -103,12 +103,7 @@ $pageTitle = 'Login';
                     </div>
                 <?php endif; ?>
 
-                <?php if ($error): ?>
-                    <div class="bg-red-50 text-red-600 p-4 rounded-xl mb-6 text-sm flex items-center">
-                        <i class="fas fa-exclamation-circle mr-2"></i>
-                        <?php echo htmlspecialchars($error); ?>
-                    </div>
-                <?php endif; ?>
+                <div id="loginAlert" style="display:none; transition: opacity 0.4s ease;"></div>
 
                 <!-- Google Login Library -->
                 <script src="https://accounts.google.com/gsi/client" async defer></script>
@@ -174,11 +169,82 @@ $pageTitle = 'Login';
                 </form>
 
                 <script>
-                document.getElementById('loginForm').addEventListener('submit', function() {
-                    const btn = document.getElementById('loginBtn');
-                    btn.disabled = true;
-                    btn.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i> Signing In...';
-                });
+                (function(){
+                    var alertTimer = null;
+                    function showLoginAlert(msg, isError) {
+                        var el = document.getElementById('loginAlert');
+                        el.innerHTML = '<div style="display:flex;align-items:center;gap:8px;padding:12px 16px;border-radius:12px;font-size:14px;font-weight:500;border:1px solid ' +
+                            (isError ? '#fecaca;background:#fef2f2;color:#b91c1c' : '#bbf7d0;background:#f0fdf4;color:#15803d') +
+                            '"><i class="fas ' + (isError ? 'fa-exclamation-circle' : 'fa-check-circle') + '"></i><span>' + msg + '</span></div>';
+                        el.style.opacity = '1';
+                        el.style.display = 'block';
+                        el.style.marginBottom = '20px';
+                        if (alertTimer) clearTimeout(alertTimer);
+                        alertTimer = setTimeout(function() {
+                            el.style.opacity = '0';
+                            setTimeout(function(){ el.style.display = 'none'; }, 420);
+                        }, 4000);
+                    }
+
+                    document.getElementById('loginForm').addEventListener('submit', function(e) {
+                        e.preventDefault();
+                        const formData = new FormData(this);
+                        const email = formData.get('email').toLowerCase().trim();
+                        
+                        // Basic email validation
+                        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+                        if (!emailRegex.test(email)) {
+                            showLoginAlert('Please enter a valid email address.', true);
+                            return;
+                        }
+
+                        // Catch common typos like gm3ail.com (from user screenshot)
+                        const commonTypos = ['gm3ail', 'gmaill', 'gmal', 'yahool', 'yaho', 'hotmal', 'outlok'];
+                        const domainPart = email.split('@')[1] ? email.split('@')[1].split('.')[0] : '';
+                        
+                        if (commonTypos.includes(domainPart)) {
+                            showLoginAlert('It looks like there might be a typo in your email domain (e.g., ' + domainPart + '). Please check it again.', true);
+                            return;
+                        }
+
+                        // Check for numbers in what look like common providers
+                        if (domainPart.match(/^[a-z]+[0-9]+[a-z]*$/)) {
+                            const commonBases = ['gmail', 'yahoo', 'hotmail', 'outlook', 'icloud', 'protonmail'];
+                            const pureBase = domainPart.replace(/[0-9]/g, '');
+                            if (commonBases.includes(pureBase)) {
+                                showLoginAlert('Suspicious character detected in email domain: "' + domainPart + '". Please ensure your email is correct.', true);
+                                return;
+                            }
+                        }
+
+                        const btn = document.getElementById('loginBtn');
+                        const orig = btn.innerHTML;
+                        btn.disabled = true;
+                        btn.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i> Signing In...';
+
+                        fetch(window.location.href, {
+                            method: 'POST',
+                            headers: { 'X-Requested-With': 'XMLHttpRequest' },
+                            body: formData
+                        })
+                        .then(r => r.json())
+                        .then(data => {
+                            if (data.success) {
+                                showLoginAlert('Login successful! Redirecting...', false);
+                                setTimeout(() => { window.location.href = data.redirect; }, 1000);
+                            } else {
+                                showLoginAlert(data.message || 'Login failed', true);
+                                btn.disabled = false;
+                                btn.innerHTML = orig;
+                            }
+                        })
+                        .catch(() => {
+                            showLoginAlert('Network error, please try again.', true);
+                            btn.disabled = false;
+                            btn.innerHTML = orig;
+                        });
+                    });
+                })();
                 </script>
 
                 <div class="mt-4 text-center">

@@ -912,107 +912,7 @@ function toggleAskQuestionModal(show, productName = '') {
 }
 </script>
 
-<!-- Cookie Consent Popup -->
-<div id="cookieConsentBanner" class="hidden fixed bottom-6 left-6 right-6 md:left-auto md:max-w-md bg-white/95 backdrop-blur-md p-6 rounded-2xl shadow-2xl z-[100] transform translate-y-20 opacity-0 pointer-events-none transition-all duration-700 border border-gray-100 flex flex-col gap-4">
-    <div class="flex items-start gap-4">
-        <div class="bg-black text-white p-3 rounded-xl flex-shrink-0">
-            <i class="fas fa-cookie-bite text-xl"></i>
-        </div>
-        <div class="flex-1">
-            <h3 class="text-lg font-bold text-gray-900 mb-1">Speed up your experience?</h3>
-            <p class="text-sm text-gray-600">
-                Enable local caching for an <b>instant</b> loading experience.
-            </p>
-        </div>
-    </div>
-    <div class="flex gap-3">
-        <button onclick="handleCookieConsent('allowed')" class="flex-1 bg-black text-white py-2.5 rounded-lg font-bold text-sm hover:bg-gray-800 transition active:scale-95 shadow-lg shadow-black/10">
-            Allow Cookies
-        </button>
-        <button onclick="handleCookieConsent('rejected')" class="text-gray-500 hover:text-black transition text-sm font-medium px-4 py-2 border border-gray-200 rounded-lg">
-            Maybe later
-        </button>
-    </div>
-</div>
 
-<script>
-// Cookie Consent & Service Worker Logic
-function handleCookieConsent(choice) {
-    const banner = document.getElementById('cookieConsentBanner');
-    if (choice === 'allowed') {
-        const now = new Date().getTime();
-        const expiry = now + (7 * 24 * 60 * 60 * 1000); // 7 days
-        const consentData = {
-            value: 'allowed',
-            expires: expiry
-        };
-        localStorage.setItem('cookieConsent', JSON.stringify(consentData));
-        registerServiceWorker();
-    } else {
-        // "Maybe later" - Hide only for current browser session
-        sessionStorage.setItem('cookieConsent_dismissed', 'true');
-    }
-
-    if (banner) {
-        banner.classList.remove('translate-y-0', 'opacity-100', 'pointer-events-auto');
-        banner.classList.add('translate-y-20', 'opacity-0', 'pointer-events-none');
-        setTimeout(() => banner.classList.add('hidden'), 700);
-    }
-}
-
-function registerServiceWorker() {
-    if ('serviceWorker' in navigator) {
-        navigator.serviceWorker.getRegistrations().then(function(registrations) {
-            for(let registration of registrations) {
-                registration.unregister();
-            }
-        });
-    }
-}
-
-document.addEventListener('DOMContentLoaded', function() {
-    const consentRaw = localStorage.getItem('cookieConsent');
-    let isAllowed = false;
-    
-    if (consentRaw) {
-        try {
-            const data = JSON.parse(consentRaw);
-            if (data && data.value === 'allowed' && data.expires > new Date().getTime()) {
-                isAllowed = true;
-            } else {
-                localStorage.removeItem('cookieConsent');
-            }
-        } catch (e) {
-            if (consentRaw === 'allowed') {
-                isAllowed = true;
-            }
-        }
-    }
-
-    const sessionDismissed = sessionStorage.getItem('cookieConsent_dismissed');
-    const banner = document.getElementById('cookieConsentBanner');
-
-    if (isAllowed) {
-        registerServiceWorker();
-    } else if (!sessionDismissed) {
-        // Show banner only if no valid consent exists AND it wasn't dismissed this session
-        setTimeout(() => {
-            if (banner) {
-                banner.classList.remove('hidden');
-                // Force a reflow to ensure transition works
-                banner.offsetHeight; 
-                banner.classList.remove('translate-y-20', 'opacity-0', 'pointer-events-none');
-                banner.classList.add('translate-y-0', 'opacity-100', 'pointer-events-auto');
-            }
-        }, 2000);
-    }
-});
-</script>
-<style>
-#cookieConsentBanner {
-    box-shadow: 0 10px 40px -10px rgba(0,0,0,0.2);
-}
-</style>
 <script>
 document.getElementById('askQuestionForm').addEventListener('submit', async function(e) {
     e.preventDefault();
@@ -1194,5 +1094,8 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     }
 
+    #cookieConsentBanner {
+        box-shadow: 0 10px 40px -10px rgba(0,0,0,0.2);
+    }
 </style>
 

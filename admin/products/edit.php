@@ -170,11 +170,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         } catch (Exception $e) {
             $msg = $e->getMessage();
             if (strpos($msg, 'Duplicate entry') !== false) {
-                // Extract the duplicate value if needed, or just generic message
-                $error = "Duplicate: A product with this SKU already exists.";
+                $error = "A product with this SKU already exists. Please use a unique SKU.";
             } else {
-                $error = $msg;
+                $error = "Something went wrong. Please try again.";
             }
+            error_log("Edit Product Error: " . $msg); // Log original error for admin
         }
     }
 }
@@ -235,17 +235,15 @@ $existingVariants = $product->getVariants($productId);
     </button>
 </div>
 
-<?php if ($error): ?>
-<div class="admin-alert admin-alert-error mb-4">
-    <?php echo htmlspecialchars($error); ?>
-</div>
-<?php endif; ?>
-
 <?php if ($success): ?>
 <div class="admin-alert admin-alert-success mb-4">
     <?php echo htmlspecialchars($success); ?>
 </div>
 <?php endif; ?>
+
+<div id="js-error-container" class="admin-alert admin-alert-error mb-4 <?php echo $error ? '' : 'hidden'; ?>">
+    <?php echo htmlspecialchars($error ?? ''); ?>
+</div>
 
 <form id="productForm" method="POST" action="" enctype="multipart/form-data">
 <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
@@ -892,10 +890,58 @@ function removeHighlightRow(btn, editorId) {
     btn.parentElement.remove();
 }
 
-document.getElementById('productForm').addEventListener('submit', function(e) {
-
+    const form = e.target;
+    const submitBtns = [document.getElementById('topSubmitBtn'), document.getElementById('bottomSubmitBtn')];
     
-    // Validate Category
+    // Custom function to reset buttons
+    const resetButtons = () => {
+        submitBtns.forEach(btn => {
+            if (btn) {
+                btn.disabled = false;
+                if (btn.id === 'topSubmitBtn') {
+                    btn.querySelector('span').textContent = 'Save Changes';
+                    btn.querySelector('i').className = 'fas fa-save mr-2';
+                } else {
+                    btn.querySelector('span').textContent = 'Update product';
+                    btn.querySelector('i').className = 'fas fa-save mr-2'; // Bottom uses save icon usually
+                }
+            }
+        });
+    };
+
+    // Custom function to show error on page instead of alert
+    const showError = (message) => {
+        const errorContainer = document.getElementById('js-error-container');
+        if (errorContainer) {
+            errorContainer.textContent = message;
+            errorContainer.classList.remove('hidden');
+            errorContainer.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            
+            // Auto-hide after 5 seconds
+            setTimeout(() => {
+                errorContainer.classList.add('hidden');
+            }, 5000);
+        }
+    };
+
+    // 1. Validate Required Fields with helpful messages
+    const requiredFields = [
+        { id: 'name', label: 'Product Name', input: form.querySelector('input[name="name"]') },
+        { id: 'base_price', label: 'Price', input: document.getElementById('base_price') },
+        { id: 'stock_quantity', label: 'Stock Quantity', input: document.getElementById('stock_quantity') },
+        { id: 'weight', label: 'Weight', input: form.querySelector('input[name="weight"]') }
+    ];
+
+    for (const field of requiredFields) {
+        if (!field.input.value || field.input.value.trim() === '') {
+            e.preventDefault();
+            showError(`Please fill in the ${field.label}. It is important for product updates.`);
+            field.input.focus();
+            return;
+        }
+    }
+
+    // 2. Validate Category
     const catSelect = document.getElementById('real-category-select');
     let hasCategory = false;
     for (let j = 0; j < catSelect.options.length; j++) {
@@ -907,20 +953,9 @@ document.getElementById('productForm').addEventListener('submit', function(e) {
     
     if (!hasCategory) {
         e.preventDefault();
-        // Scroll to category section
-        document.getElementById('category-multiselect-container').scrollIntoView({ behavior: 'smooth', block: 'center' });
+        showError('Please select at least one category. This field is required for your product.');
         return;
     }
-
-    // Prevent double-submission
-    const submitBtns = [document.getElementById('topSubmitBtn'), document.getElementById('bottomSubmitBtn')];
-    submitBtns.forEach(btn => {
-        if (btn) {
-            btn.disabled = true;
-            const span = btn.querySelector('span');
-            if (span) span.textContent = 'Processing...';
-        }
-    });
 
     // Sync all TinyMCE instances
     if (typeof tinymce !== 'undefined') {
@@ -931,52 +966,23 @@ document.getElementById('productForm').addEventListener('submit', function(e) {
         const icons = Array.from(document.querySelectorAll('input[name="highlight_icons[]"]')).map(i => i.value);
         const highlights = [];
         document.querySelectorAll('.highlight-text-editor').forEach((editor, index) => {
-            // Assuming 'data-id' and 'data-placeholder' might be added or are conceptual
-            // For now, we'll use the editor's actual ID and a generic placeholder if not present
-            const id = editor.id; // Use actual ID
-            const placeholder = editor.getAttribute('data-placeholder') || `Highlight ${index + 1}`; // Fallback placeholder
             const content = typeof tinymce !== 'undefined' && tinymce.get(editor.id) ? tinymce.get(editor.id).getContent() : editor.innerHTML;
-            
-            // Combine icon and content as per original logic, but with new structure
             if (icons[index] || content) {
                 highlights.push({ icon: icons[index], text: content });
             }
         });
         
-        if (highlights.length > 0) {
-            document.getElementById('highlights_json').value = JSON.stringify(highlights);
-        } else {
-            document.getElementById('highlights_json').value = '[]';
-        }
+        document.getElementById('highlights_json').value = JSON.stringify(highlights);
         
-        if (typeof updateVariantsDataInput === 'function') {
-            updateVariantsDataInput();
-        }
-        if (typeof updateImagesInput === 'function') {
-            updateImagesInput();
-        }
-
-        // Explicitly sync variants and images one last time
-        if (typeof updateVariantsDataInput === 'function') {
-            updateVariantsDataInput();
-        }
-        if (typeof updateImagesInput === 'function') {
-            updateImagesInput();
-        }
+        // Sync variants and images
+        if (typeof updateVariantsDataInput === 'function') updateVariantsDataInput();
+        if (typeof updateImagesInput === 'function') updateImagesInput();
+        
     } catch (err) {
-        console.error("Submission Error:", err);
-        // Re-enable buttons so user can try again
-        submitBtns.forEach(btn => {
-            if (btn) {
-                btn.disabled = false;
-                const span = btn.querySelector('span');
-                if (span) span.textContent = 'Save Changes';
-            }
-        });
-        // We don't preventDefault here because we want to see if the browser can submit anyway, 
-        // OR we should alert the user.
-        alert("An error occurred while preparing the form: " + err.message);
+        console.error("Submission Preparation Error:", err);
         e.preventDefault();
+        resetButtons();
+        showError("An error occurred while preparing the form: " + err.message);
     }
 });
 </script>

@@ -13,6 +13,9 @@ class CustomerAuth {
     }
     
     public function register($name, $email, $password) {
+        if (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
+            throw new Exception("Invalid email format");
+        }
         $hashedPassword = password_hash($password, PASSWORD_DEFAULT);
         // Generate unique 10-digit customer ID
         $customCustomerId = mt_rand(1000000000, 9999999999);
@@ -55,6 +58,9 @@ class CustomerAuth {
     }
     
     public function login($email, $password) {
+        if (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
+            throw new Exception("Invalid email format");
+        }
         $storeId = function_exists('getCurrentStoreId') ? getCurrentStoreId() : ($_SESSION['store_id'] ?? null);
         
         $customer = $this->db->fetchOne(

@@ -28,6 +28,15 @@ if ($id) {
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $name = $_POST['name'] ?? '';
     $slug = $_POST['slug'] ?? '';
+    
+    // Auto-generate slug from name if empty
+    if (empty($slug) && !empty($name)) {
+        $slug = strtolower(trim($name));
+        $slug = preg_replace('/[^\w\s-]/', '', $slug); // Remove special chars
+        $slug = preg_replace('/[\s_-]+/', '-', $slug); // Replace spaces/underscores with -
+        $slug = trim($slug, '-'); // Trim leading/trailing hyphens
+    }
+
     $description = $_POST['description'] ?? '';
     $status = $_POST['status'] ?? 'active';
     $sortOrder = $_POST['sort_order'] ?? 0;
@@ -135,7 +144,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             exit;
         }
     } catch (Exception $e) {
-        $error = $e->getMessage();
+        $msg = $e->getMessage();
+        if (strpos($msg, 'Duplicate entry') !== false && strpos($msg, 'unique_slug_store') !== false) {
+            $error = "A category with the slug '$slug' already exists. Please use a unique slug.";
+        } else {
+            $error = "Something went wrong. Please try again.";
+        }
+        error_log("Manage Category Error: " . $msg); // Log original error for admin
     }
 }
 

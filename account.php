@@ -206,24 +206,25 @@ if (!$isAjax) {
 ?>
 <style>
     .custom-scrollbar::-webkit-scrollbar {
-        width: 10px;
+        width: 8px;
+        height: 6px;
     }
     .custom-scrollbar::-webkit-scrollbar-track {
-        background: #f8fafc;
+        background: #f1f5f9;
         border-radius: 20px;
     }
     .custom-scrollbar::-webkit-scrollbar-thumb {
-        background: #e2e8f0;
+        background: #cbd5e1;
         border-radius: 20px;
-        border: 3px solid #f8fafc;
+        border: 2px solid #f1f5f9;
     }
     .custom-scrollbar::-webkit-scrollbar-thumb:hover {
-        background: #cbd5e1;
+        background: #3b82f6;
     }
     /* Firefox */
     .custom-scrollbar {
         scrollbar-width: thin;
-        scrollbar-color: #e2e8f0 #f8fafc;
+        scrollbar-color: #cbd5e1 #f1f5f9;
     }
 </style>
 
@@ -295,7 +296,7 @@ if (!$isAjax) {
                 </div>
 
                 <!-- Content Area -->
-                <div class="flex-1 min-w-0 overflow-hidden" id="accountContent">
+                <div class="w-full flex-1 min-w-0 overflow-hidden" id="accountContent">
     <?php endif; ?>
                     <?php if ($section === 'orders'): ?>
 
@@ -311,7 +312,7 @@ if (!$isAjax) {
                             <i class="fas fa-box-open text-5xl text-gray-200 mb-4"></i>
                             <h3 class="text-xl font-bold text-gray-900">No orders yet</h3>
                             <p class="text-gray-500 mt-2">When you shop, your orders will appear here.</p>
-                            <a href="<?php echo url('shop'); ?>" class="inline-block mt-6 bg-black text-white px-8 py-3 rounded-xl font-bold hover:bg-gray-900 transition">Start Shopping</a>
+                            <a href="<?php echo url('shop'); ?>" class="inline-block mt-6 bg-black text-white px-8 py-3 rounded-xl font-bold hover:text-white transition">Start Shopping</a>
                         </div>
                     <?php else: ?>
                         <div class="space-y-6 h-[800px] overflow-y-auto pr-4 custom-scrollbar">
@@ -664,16 +665,16 @@ if (!$isAjax) {
                             <p class="text-gray-500 mt-2">When you place orders, your payment details will appear here.</p>
                         </div>
                     <?php else: ?>
-                        <div class="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
-                            <div class="overflow-x-auto custom-scrollbar" style="-webkit-overflow-scrolling: touch;">
-                                <table class="w-full text-left min-w-[800px]">
-                                    <thead class="bg-gray-50 text-gray-400 font-bold uppercase tracking-widest text-[10px]">
+                        <div class="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden p-1">
+                            <div class="max-h-[500px] overflow-y-auto overflow-x-auto custom-scrollbar pb-2" style="-webkit-overflow-scrolling: touch;">
+                                <table class="w-full text-left min-w-[900px] border-separate border-spacing-0">
+                                    <thead class="bg-gray-50 text-gray-400 font-bold uppercase tracking-widest text-[10px] sticky top-0 z-10 shadow-sm">
                                         <tr class="whitespace-nowrap">
-                                            <th class="px-6 py-4">Order #</th>
-                                            <th class="px-6 py-4">Method</th>
-                                            <th class="px-6 py-4">Status</th>
-                                            <th class="px-6 py-4">Amount</th>
-                                            <th class="px-6 py-4">Date</th>
+                                            <th class="px-6 py-4 bg-gray-50">Order #</th>
+                                            <th class="px-6 py-4 bg-gray-50">Method</th>
+                                            <th class="px-6 py-4 bg-gray-50">Status</th>
+                                            <th class="px-6 py-4 bg-gray-50">Amount</th>
+                                            <th class="px-6 py-4 bg-gray-50">Date</th>
                                         </tr>
                                     </thead>
                                     <tbody class="divide-y divide-gray-100">
@@ -856,9 +857,11 @@ document.addEventListener('DOMContentLoaded', () => {
     async function loadAccountSection(url) {
         // Show Loader
         contentDiv.innerHTML = `
-            <div class="flex flex-col items-center justify-center py-20 min-h-[400px]">
-                <i class="fas fa-spinner fa-spin text-4xl text-gray-300 mb-4"></i>
-                <p class="text-gray-500">Loading...</p>
+            <div class="w-full h-full flex flex-col items-center justify-center py-20 min-h-[400px] text-center">
+                <div class="relative">
+                    <i class="fas fa-spinner fa-spin text-4xl text-blue-600 mb-4"></i>
+                </div>
+                <p class="text-gray-500 font-medium">Loading...</p>
             </div>
         `;
 
@@ -972,9 +975,9 @@ document.addEventListener('DOMContentLoaded', () => {
 
         async function loadAuthForm(path, updateUrl = true) {
             authContainer.innerHTML = `
-                <div class="flex flex-col items-center justify-center py-20">
-                    <i class="fas fa-spinner fa-spin text-4xl text-gray-300 mb-4"></i>
-                    <p class="text-gray-500">Loading...</p>
+                <div class="w-full flex flex-col items-center justify-center py-20 text-center">
+                    <i class="fas fa-spinner fa-spin text-4xl text-blue-600 mb-4"></i>
+                    <p class="text-gray-500 font-medium">Loading...</p>
                 </div>
             `;
             

@@ -148,10 +148,10 @@ $pageTitle = 'Register';
                         var el = document.getElementById('registerAlert');
                         el.innerHTML = '<div style="display:flex;align-items:center;gap:8px;padding:12px 16px;border-radius:12px;font-size:14px;font-weight:500;border:1px solid ' +
                             (isError ? '#fecaca;background:#fef2f2;color:#b91c1c' : '#bbf7d0;background:#f0fdf4;color:#15803d') +
-                            '"><i class="fas ' + (isError ? 'fa-exclamation-circle' : 'fa-check-circle') + '" style="flex-shrink:0"></i><span>' + msg + '</span></div>';
+                            '"><i class="fas ' + (isError ? 'fa-exclamation-circle' : 'fa-check-circle') + '"></i><span>' + msg + '</span></div>';
                         el.style.opacity = '1';
                         el.style.display = 'block';
-                        el.style.marginBottom = '12px';
+                        el.style.marginBottom = '20px';
                         if (alertTimer) clearTimeout(alertTimer);
                         alertTimer = setTimeout(function() {
                             el.style.opacity = '0';
@@ -161,6 +161,35 @@ $pageTitle = 'Register';
 
                     document.getElementById('registerForm').addEventListener('submit', function(e) {
                         e.preventDefault();
+                        const formData = new FormData(this);
+                        const email = formData.get('email').toLowerCase().trim();
+                        
+                        // Basic email validation
+                        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+                        if (!emailRegex.test(email)) {
+                            showRegisterAlert('Please enter a valid email address.', true);
+                            return;
+                        }
+
+                        // Catch common typos like gm3ail.com (from user screenshot)
+                        const commonTypos = ['gm3ail', 'gmaill', 'gmal', 'yahool', 'yaho', 'hotmal', 'outlok'];
+                        const domainPart = email.split('@')[1] ? email.split('@')[1].split('.')[0] : '';
+                        
+                        if (commonTypos.includes(domainPart)) {
+                            showRegisterAlert('It looks like there might be a typo in your email domain (e.g., ' + domainPart + '). Please check it again.', true);
+                            return;
+                        }
+
+                        // Check for numbers in what look like common providers
+                        if (domainPart.match(/^[a-z]+[0-9]+[a-z]*$/)) {
+                            const commonBases = ['gmail', 'yahoo', 'hotmail', 'outlook', 'icloud', 'protonmail'];
+                            const pureBase = domainPart.replace(/[0-9]/g, '');
+                            if (commonBases.includes(pureBase)) {
+                                showRegisterAlert('Suspicious character detected in email domain: "' + domainPart + '". Please ensure your email is correct.', true);
+                                return;
+                            }
+                        }
+
                         var btn  = document.getElementById('registerBtn');
                         var orig = 'Create Account';
                         btn.disabled = true;
@@ -169,7 +198,7 @@ $pageTitle = 'Register';
                         fetch(window.location.href, {
                             method: 'POST',
                             headers: { 'X-Requested-With': 'XMLHttpRequest' },
-                            body: new FormData(this)
+                            body: formData
                         })
                         .then(function(r){ return r.json(); })
                         .then(function(data) {
