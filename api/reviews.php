@@ -99,6 +99,8 @@ try {
             // Get reviews for a product
             $productId = isset($_GET['product_id']) ? $_GET['product_id'] : 0;
             $sortBy = isset($_GET['sort']) ? $_GET['sort'] : 'recent';
+            $limit = isset($_GET['limit']) ? intval($_GET['limit']) : 0;
+            $offset = isset($_GET['offset']) ? intval($_GET['offset']) : 0;
             
             if (empty($productId)) {
                 echo json_encode(['success' => false, 'message' => 'Product ID is required']);
@@ -124,17 +126,31 @@ try {
                     $orderBy = 'ORDER BY created_at DESC';
             }
             
-            $reviews = $db->fetchAll(
-                "SELECT id, user_name, user_email, rating, title, comment, created_at 
-                 FROM reviews 
-                 WHERE product_id = ? AND TRIM(LOWER(status)) = 'approved' 
-                 $orderBy",
+            // Build query with pagination
+            $sql = "SELECT id, user_name, user_email, rating, title, comment, created_at 
+                    FROM reviews 
+                    WHERE product_id = ? AND TRIM(LOWER(status)) = 'approved' 
+                    $orderBy";
+            $params = [$productId];
+            
+            if ($limit > 0) {
+                $sql .= " LIMIT ? OFFSET ?";
+                $params[] = $limit;
+                $params[] = $offset;
+            }
+            
+            $reviews = $db->fetchAll($sql, $params);
+            
+            // Get total count for pagination
+            $totalReviews = $db->fetchOne(
+                "SELECT COUNT(*) as total FROM reviews WHERE product_id = ? AND TRIM(LOWER(status)) = 'approved'",
                 [$productId]
             );
             
             echo json_encode([
                 'success' => true,
-                'reviews' => $reviews
+                'reviews' => $reviews,
+                'total' => intval($totalReviews['total'] ?? 0)
             ]);
             break;
             

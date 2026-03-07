@@ -989,6 +989,13 @@ $p_buy_hover_text = $productStyles['buy_now_hover_text_color'] ?? '#ffffff';
                         <p>Loading reviews...</p>
                     </div>
                 </div>
+
+                <!-- Load More Button -->
+                <div id="loadMoreReviewsContainer" class="text-center mt-8 hidden">
+                    <button onclick="loadMoreReviews()" id="loadMoreReviewsBtn" class="product-border-item border-2 px-8 py-3 rounded-lg hover:border-black transition-all flex items-center justify-center mx-auto space-x-2">
+                        <span>Load More Reviews</span>
+                    </button>
+                </div>
             </div>
         </div>
         
@@ -1719,50 +1726,57 @@ function submitReview(event) {
     });
 }
 
-function loadReviews() {
+let currentReviewOffset = 0;
+const reviewsLimit = 6;
+
+function loadReviews(isLoadMore = false) {
     const productId = <?php echo json_encode($productData['id']); ?>;
     const sortSelect = document.getElementById('reviewSort');
     const sortBy = sortSelect?.value || 'recent';
     const header = document.getElementById('reviewListHeader');
+    const loadMoreContainer = document.getElementById('loadMoreReviewsContainer');
+    const loadMoreBtn = document.getElementById('loadMoreReviewsBtn');
     
-    if (header && sortSelect) {
-        header.textContent = sortSelect.options[sortSelect.selectedIndex].text;
+    if (!isLoadMore) {
+        currentReviewOffset = 0;
+        if (header && sortSelect) {
+            header.textContent = sortSelect.options[sortSelect.selectedIndex].text;
+        }
     }
     
     const reviewsList = document.getElementById('reviewsList');
     if (!reviewsList) return;
     
-    // Show loading state
-    reviewsList.innerHTML = '<div class="text-center text-gray-500 py-8"><i class="fas fa-spinner fa-spin text-2xl mb-2"></i><p>Loading reviews...</p></div>';
+    if (!isLoadMore) {
+        // Show loading state ONLY on initial load
+        reviewsList.innerHTML = '<div class="text-center text-gray-500 py-8"><i class="fas fa-spinner fa-spin text-2xl mb-2"></i><p>Loading reviews...</p></div>';
+    } else if (loadMoreBtn) {
+        loadMoreBtn.disabled = true;
+        loadMoreBtn.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>Loading...';
+    }
     
-    fetch(`<?php echo $baseUrl; ?>/api/reviews.php?product_id=${productId}&sort=${sortBy}`)
+    fetch(`<?php echo $baseUrl; ?>/api/reviews.php?product_id=${productId}&sort=${sortBy}&limit=${reviewsLimit}&offset=${currentReviewOffset}`)
         .then(response => {
             if (!response.ok) throw new Error('Network response was not ok');
             return response.json();
         })
         .then(data => {
-            if (data.success && data.reviews && data.reviews.length > 0) {
-                reviewsList.innerHTML = data.reviews.map(review => {
+            if (data.success && data.reviews) {
+                const reviewsHtml = data.reviews.map(review => {
                     const date = new Date(review.created_at);
                     const formattedDate = !isNaN(date.getTime()) 
                         ? date.toLocaleDateString('en-US', { month: '2-digit', day: '2-digit', year: 'numeric' })
-                        : review.created_at.split(' ')[0]; // Fallback to YYYY-MM-DD
+                        : review.created_at.split(' ')[0];
                     
                     let stars = '';
                     for (let i = 1; i <= 5; i++) {
-                        if (i <= review.rating) {
-                            stars += '<i class="fas fa-star text-yellow-400 text-sm"></i>';
-                        } else {
-                            stars += '<i class="fas fa-star text-gray-300 text-sm"></i>';
-                        }
+                        stars += `<i class="fas fa-star ${i <= review.rating ? 'text-yellow-400' : 'text-gray-300'} text-sm"></i>`;
                     }
                     
                     return `
-                        <div class="border-b pb-6 mb-6">
+                        <div class="border-b pb-6 mb-6 review-item animate-fade-in">
                             <div class="flex items-center mb-2">
-                                <div class="flex items-center mr-4">
-                                    ${stars}
-                                </div>
+                                <div class="flex items-center mr-4">${stars}</div>
                                 <span class="font-semibold">${escapeHtml(review.user_name)}</span>
                                 <span class="text-gray-500 text-sm ml-4">${formattedDate}</span>
                             </div>
@@ -1771,14 +1785,46 @@ function loadReviews() {
                         </div>
                     `;
                 }).join('');
-            } else {
-                reviewsList.innerHTML = '<div class="text-center text-gray-500 py-8"><p>No reviews yet. Be the first to review this product!</p></div>';
+
+                if (!isLoadMore) {
+                    if (data.reviews.length > 0) {
+                        reviewsList.innerHTML = reviewsHtml;
+                    } else {
+                        reviewsList.innerHTML = '<div class="text-center text-gray-500 py-8"><p>No reviews yet. Be the first to review this product!</p></div>';
+                    }
+                } else {
+                    reviewsList.insertAdjacentHTML('beforeend', reviewsHtml);
+                }
+
+                // Update offset for next load
+                currentReviewOffset += data.reviews.length;
+
+                // Show/Hide Load More button
+                if (loadMoreContainer) {
+                    if (currentReviewOffset < data.total) {
+                        loadMoreContainer.classList.remove('hidden');
+                    } else {
+                        loadMoreContainer.classList.add('hidden');
+                    }
+                }
             }
         })
         .catch(error => {
             console.error('Error loading reviews:', error);
-            reviewsList.innerHTML = '<div class="text-center text-gray-500 py-8"><p>Unable to load reviews.</p></div>';
+            if (!isLoadMore) {
+                reviewsList.innerHTML = '<div class="text-center text-gray-500 py-8"><p>Unable to load reviews.</p></div>';
+            }
+        })
+        .finally(() => {
+            if (loadMoreBtn) {
+                loadMoreBtn.disabled = false;
+                loadMoreBtn.innerHTML = '<span>Load More Reviews</span>';
+            }
         });
+}
+
+function loadMoreReviews() {
+    loadReviews(true);
 }
 
 function escapeHtml(text) {
