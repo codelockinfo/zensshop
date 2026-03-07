@@ -973,7 +973,7 @@ $p_buy_hover_text = $productStyles['buy_now_hover_text_color'] ?? '#ffffff';
             <!-- Reviews List -->
             <div class="space-y-6">
                 <div class="flex items-center justify-between mb-4">
-                    <h3 class="font-semibold">Most Recent</h3>
+                    <h3 class="font-semibold" id="reviewListHeader">Most Recent</h3>
                     <select class="product-border-item border rounded px-3 py-2 text-sm" id="reviewSort" onchange="loadReviews()">
                         <option value="recent">Most Recent</option>
                         <option value="oldest">Oldest First</option>
@@ -1720,27 +1720,33 @@ function submitReview(event) {
 }
 
 function loadReviews() {
-    const productId = <?php echo $productData['id']; ?>;
-    const sortBy = document.getElementById('reviewSort')?.value || 'recent';
+    const productId = <?php echo json_encode($productData['id']); ?>;
+    const sortSelect = document.getElementById('reviewSort');
+    const sortBy = sortSelect?.value || 'recent';
+    const header = document.getElementById('reviewListHeader');
     
-    let sortOrder = 'ORDER BY created_at DESC';
-    if (sortBy === 'oldest') {
-        sortOrder = 'ORDER BY created_at ASC';
-    } else if (sortBy === 'highest') {
-        sortOrder = 'ORDER BY rating DESC, created_at DESC';
-    } else if (sortBy === 'lowest') {
-        sortOrder = 'ORDER BY rating ASC, created_at DESC';
+    if (header && sortSelect) {
+        header.textContent = sortSelect.options[sortSelect.selectedIndex].text;
     }
     
+    const reviewsList = document.getElementById('reviewsList');
+    if (!reviewsList) return;
+    
+    // Show loading state
+    reviewsList.innerHTML = '<div class="text-center text-gray-500 py-8"><i class="fas fa-spinner fa-spin text-2xl mb-2"></i><p>Loading reviews...</p></div>';
+    
     fetch(`<?php echo $baseUrl; ?>/api/reviews.php?product_id=${productId}&sort=${sortBy}`)
-        .then(response => response.json())
+        .then(response => {
+            if (!response.ok) throw new Error('Network response was not ok');
+            return response.json();
+        })
         .then(data => {
-            const reviewsList = document.getElementById('reviewsList');
-            
             if (data.success && data.reviews && data.reviews.length > 0) {
                 reviewsList.innerHTML = data.reviews.map(review => {
                     const date = new Date(review.created_at);
-                    const formattedDate = date.toLocaleDateString('en-US', { month: '2-digit', day: '2-digit', year: 'numeric' });
+                    const formattedDate = !isNaN(date.getTime()) 
+                        ? date.toLocaleDateString('en-US', { month: '2-digit', day: '2-digit', year: 'numeric' })
+                        : review.created_at.split(' ')[0]; // Fallback to YYYY-MM-DD
                     
                     let stars = '';
                     for (let i = 1; i <= 5; i++) {
@@ -1771,7 +1777,7 @@ function loadReviews() {
         })
         .catch(error => {
             console.error('Error loading reviews:', error);
-            document.getElementById('reviewsList').innerHTML = '<div class="text-center text-gray-500 py-8"><p>Unable to load reviews.</p></div>';
+            reviewsList.innerHTML = '<div class="text-center text-gray-500 py-8"><p>Unable to load reviews.</p></div>';
         });
 }
 

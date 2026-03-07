@@ -13,12 +13,16 @@ function getDelhiveryShippingCost($pincode, $paymentMode = 'Prepaid') {
     require_once __DIR__ . '/../classes/Delhivery.php';
     $delhivery = new Delhivery();
     
+    /* 
+    // Temporarily disabled for manual shipment creation
     // Check serviceability first
     $serviceCheck = $delhivery->checkPincode($pincode);
     if (!$serviceCheck['success'] || !($serviceCheck['is_serviceable'] ?? false)) {
         throw new Exception("Delivery not available to pincode: " . htmlspecialchars($pincode));
     }
+    */
     
+    /*
     // Calculate cost
     $params = [
         'ss' => $sourcePincode,
@@ -33,7 +37,8 @@ function getDelhiveryShippingCost($pincode, $paymentMode = 'Prepaid') {
     if (isset($costResult['total_amount']) && $costResult['total_amount'] > 0) {
         return floatval($costResult['total_amount']);
     }
+    */
     
-    return 0.00; // Fallback if API fails to return cost
+    return 0.00; // Fallback to free shipping for manual orders for now
 }
 ?>

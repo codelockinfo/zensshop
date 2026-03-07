@@ -55,6 +55,10 @@ class Delhivery {
     public function checkPincode($pincode) {
         if (empty($pincode)) return ['success' => false, 'message' => 'Pincode is required'];
 
+        // Temporarily disabled for manual shipments - UNCOMMENT BELOW LOGIC TO RESTORE
+        return ['success' => true, 'is_serviceable' => false, 'message' => 'Manual processing mode enabled.'];
+
+        /*
         // Delhivery has multiple API versions and authentication patterns. 
         // We try a wide variety to ensure compatibility with all account types.
         $attempts = [
@@ -129,6 +133,7 @@ class Delhivery {
             'delivery_type' => $postalData['delivery_type'] ?? 'Standard',
             'raw' => $postalData
         ];
+        */
     }
 
     /**

@@ -177,8 +177,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $updateData['payment_method'] = $_POST['payment_method'] ?? null;
         }
         
-        // Tracking and notes (allow empty values)
+        // Tracking, notes and delivery date (allow empty values)
         $updateData['tracking_number'] = $_POST['tracking_number'] ?? null;
+        $updateData['delivery_date'] = $_POST['delivery_date'] ?? null;
         $updateData['notes'] = $_POST['notes'] ?? null;
         
         // Financial fields - use recalculated values if items were modified, otherwise use form values
@@ -305,6 +306,11 @@ require_once __DIR__ . '/../../includes/admin-header.php';
                 <div class="admin-form-group">
                     <label class="admin-form-label">Tracking Number</label>
                     <input type="text" name="tracking_number" value="<?php echo htmlspecialchars($orderData['tracking_number'] ?? ''); ?>" class="admin-form-input" placeholder="Enter tracking number">
+                </div>
+                
+                <div class="admin-form-group">
+                    <label class="admin-form-label">Delivery Date</label>
+                    <input type="date" name="delivery_date" value="<?php echo htmlspecialchars($orderData['delivery_date'] ?? ''); ?>" class="admin-form-input">
                 </div>
                 
                 <div class="admin-form-group">

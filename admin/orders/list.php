@@ -101,6 +101,15 @@ $orders = $order->getAll($filters);
                         </div>
                     </div>
                 </th>
+                <th class="sortable cursor-pointer hover:bg-gray-100" data-column="delivery_date">
+                    <div class="flex items-center justify-between">
+                        <span>Delivery Date</span>
+                        <div class="flex flex-col ml-1">
+                            <i class="fas fa-caret-up text-gray-400 -mb-1" style="font-size: 0.75rem;"></i>
+                            <i class="fas fa-caret-down text-gray-400" style="font-size: 0.75rem;"></i>
+                        </div>
+                    </div>
+                </th>
                 <th class="sortable cursor-pointer hover:bg-gray-100" data-column="total_amount">
                     <div class="flex items-center justify-between">
                         <span>Price</span>
@@ -190,6 +199,11 @@ $orders = $order->getAll($filters);
                     <span class="font-medium"><?php echo htmlspecialchars($item['customer_name']); ?></span>
                 </td>
                 <td><?php echo htmlspecialchars($item['order_number']); ?></td>
+                <td data-date="<?php echo $item['delivery_date'] ?? ''; ?>">
+                    <span class="text-xs text-gray-600 font-medium">
+                        <?php echo !empty($item['delivery_date']) ? date('d-m-Y', strtotime($item['delivery_date'])) : 'N/A'; ?>
+                    </span>
+                </td>
                 <td><?php echo format_currency($item['total_amount'], 2, $item['currency'] ?? 'INR'); ?></td>
                 <td><?php echo $item['total_quantity'] ?? 0; ?></td>
                 <td>
@@ -621,6 +635,9 @@ window.initOrderSort = function() {
             } else if (column === 'total_amount' || column === 'total_quantity') {
                 aVal = parseFloat(aCell.textContent.replace(/[^0-9.-]/g, '')) || 0;
                 bVal = parseFloat(bCell.textContent.replace(/[^0-9.-]/g, '')) || 0;
+            } else if (column === 'delivery_date') {
+                aVal = aCell.dataset.date || '';
+                bVal = bCell.dataset.date || '';
             } else if (column === 'order_status') {
                 aVal = (aCell.querySelector('select')?.value || '').toLowerCase();
                 bVal = (bCell.querySelector('select')?.value || '').toLowerCase();

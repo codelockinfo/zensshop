@@ -240,7 +240,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['place_order']) && emp
             $delhivery = new Delhivery();
             $delhivery->autoCreateShipment($orderId);
         } catch (Exception $e) {
-            error_log("Failed to auto-create Delhivery shipment for order " . $orderNumber . ": " . $e->getMessage());
+            // error_log("Failed to auto-create Delhivery shipment for order " . $orderNumber . ": " . $e->getMessage());
         }
 
         // Clear cart
@@ -521,7 +521,7 @@ nav.bg-white.sticky.top-0 {
                             <div>
                                 <label class="block text-sm font-semibold mb-2 text-gray-700">Full name</label>
                                 <input type="text" name="customer_name" required 
-                                       pattern="[a-zA-Z\s\.-]{2,50}"
+                                       pattern="[a-zA-Z\s\.\-]{2,50}"
                                        title="Please enter a valid name (letters only)"
                                        onkeypress="return (event.charCode >= 65 && event.charCode <= 90) || (event.charCode >= 97 && event.charCode <= 122) || event.charCode === 32 || event.charCode === 46 || event.charCode === 45"
                                        value="<?php echo htmlspecialchars($_POST['customer_name'] ?? ($customer['name'] ?? '')); ?>"
@@ -531,7 +531,7 @@ nav.bg-white.sticky.top-0 {
                             <div>
                                 <label class="block text-sm font-semibold mb-2 text-gray-700">Email address</label>
                                 <input type="email" name="customer_email" required 
-                                       pattern="[a-z0-9._%+-]+@[a-z0-9.-]+\.[a-z]{2,}$"
+                                       pattern="[a-z0-9\._%+\-]+@[a-z0-9\.\-]+\.[a-z]{2,}$"
                                        title="Please enter a valid email address (e.g., user@example.com)"
                                        value="<?php echo htmlspecialchars($_POST['customer_email'] ?? ($customer['email'] ?? '')); ?>"
                                        class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent checkout-input">
@@ -673,10 +673,7 @@ nav.bg-white.sticky.top-0 {
                                 <div>
                                     <label class="block text-sm font-semibold mb-2 text-gray-700">ZIP Code</label>
                                     <input type="text" name="zip" id="zipInput" required
-                                           pattern="[0-9\s-]{6}"
-                                           title="Please enter a valid 6-digit ZIP code"
-                                           onkeypress="return (event.charCode >= 48 && event.charCode <= 57) || event.charCode === 45 || event.charCode === 32"
-                                           maxlength="6"
+                                           placeholder="Enter ZIP code"
                                            value="<?php echo htmlspecialchars($_POST['zip'] ?? ''); ?>"
                                            class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent">
                                     <div id="zipStatus" class="mt-2 text-xs"></div>
@@ -780,12 +777,12 @@ nav.bg-white.sticky.top-0 {
                             <div id="taxSummarySection" class="hidden space-y-2">
                                 <div class="flex justify-between text-sm">
                                     <span class="text-gray-600">Tax</span>
-                                    <span class="font-semibold" id="taxValueTotal">₹0.00</span>
+                                    <span class="font-semibold" id="taxValueTotal">₹0</span>
                                 </div>
                             </div>
                             <div class="flex justify-between text-sm hidden" id="genericTaxRow">
                                 <span class="text-gray-600">Tax</span>
-                                <span class="font-semibold" id="genericTaxValue">₹0.00</span>
+                                <span class="font-semibold" id="genericTaxValue">₹0</span>
                             </div>
                             <div class="flex justify-between text-sm <?php echo $discountAmount > 0 ? '' : 'hidden'; ?>" id="summaryDiscountRow">
                                 <span class="text-gray-600">Discount</span>
@@ -954,7 +951,7 @@ async function recalculateTaxes() {
             const genericTaxRow = document.getElementById('genericTaxRow');
             if (data.total_tax > 0) {
                 taxSection.classList.remove('hidden');
-                document.getElementById('taxValueTotal').innerText = '₹' + data.total_tax.toFixed(2);
+                document.getElementById('taxValueTotal').innerText = '₹' + (Number.isInteger(data.total_tax) ? data.total_tax.toFixed(0) : data.total_tax.toFixed(2));
                 genericTaxRow.classList.add('hidden');
             } else {
                 taxSection.classList.add('hidden');
@@ -992,15 +989,15 @@ function updateShipping() {
     const shippingEl = document.getElementById('summaryShipping');
     const totalEl = document.getElementById('summaryTotal');
     
-    if (shippingEl) shippingEl.innerText = '₹' + shipping.toFixed(2);
-    if (totalEl) totalEl.innerText = '₹' + total.toFixed(2);
+    if (shippingEl) shippingEl.innerText = '₹' + (Number.isInteger(shipping) ? shipping.toFixed(0) : shipping.toFixed(2));
+    if (totalEl) totalEl.innerText = '₹' + (Number.isInteger(total) ? total.toFixed(0) : total.toFixed(2));
 
     // Update COD Charge Row
     const codRow = document.getElementById('codChargeRow');
     const codSummaryVal = document.getElementById('summaryCodCharge');
     if (codCharge > 0) {
         codRow.classList.remove('hidden');
-        if (codSummaryVal) codSummaryVal.innerText = '₹' + codCharge.toFixed(2);
+        if (codSummaryVal) codSummaryVal.innerText = '₹' + (Number.isInteger(codCharge) ? codCharge.toFixed(0) : codCharge.toFixed(2));
     } else {
         codRow.classList.add('hidden');
     }
@@ -1009,8 +1006,8 @@ function updateShipping() {
     const payBtn = document.getElementById('razorpayPayButton');
     const cityInput = document.querySelector('input[name="city"]');
     if (payBtn) {
-        payBtn.setAttribute('data-order-amount', total.toFixed(2));
-        payBtn.setAttribute('data-discount-amount', window.currentDiscountAmount.toFixed(2));
+        payBtn.setAttribute('data-order-amount', Number.isInteger(total) ? total.toFixed(0) : total.toFixed(2));
+        payBtn.setAttribute('data-discount-amount', Number.isInteger(window.currentDiscountAmount) ? window.currentDiscountAmount.toFixed(0) : window.currentDiscountAmount.toFixed(2));
         if (cityInput) {
              payBtn.setAttribute('data-city', cityInput.value);
         }
@@ -1083,6 +1080,8 @@ document.addEventListener('DOMContentLoaded', function() {
     const zipStatus = document.getElementById('zipStatus');
     const payBtn = document.getElementById('razorpayPayButton');
 
+    /*
+    // ZIP code validation temporarily disabled for manual shipments
     if (zipInput) {
         zipInput.addEventListener('input', async function() {
             const pincode = this.value.trim().replace(/\s/g, '');
@@ -1187,6 +1186,7 @@ document.addEventListener('DOMContentLoaded', function() {
             });
         });
     }
+    */
 
     // City Update logic already exists below, but we'll ensure it works with our new cityInput ID
     if (cityInput && payBtn) {
@@ -1573,7 +1573,7 @@ function handleDiscount(action) {
             
             if (res.discount_amount > 0) {
                 if (discountRow) discountRow.classList.remove('hidden');
-                if (discountAmountEl) discountAmountEl.textContent = '-₹' + parseFloat(res.discount_amount).toFixed(2);
+                if (discountAmountEl) discountAmountEl.textContent = '-₹' + (Number.isInteger(parseFloat(res.discount_amount)) ? parseFloat(res.discount_amount).toFixed(0) : parseFloat(res.discount_amount).toFixed(2));
             } else {
                 if (discountRow) discountRow.classList.add('hidden');
             }

@@ -227,7 +227,11 @@ function format_currency($amount, $decimals = 2, $currencyCode = 'INR') {
         'GBP' => '£'
     ];
     $symbol = $symbols[strtoupper($currencyCode)] ?? '₹';
-    return $symbol . number_format((float)$amount, $decimals);
+    
+    // If the amount is a whole number, don't show decimals by default
+    $actualDecimals = (floor($amount) == $amount) ? 0 : $decimals;
+    
+    return $symbol . number_format((float)$amount, $actualDecimals);
 }
 
 /**

@@ -414,7 +414,7 @@ class Order {
         if (!$storeId) $storeId = $_SESSION['store_id'] ?? null;
         $updates = [];
         $params = [];
-        $allowedFields = ['order_status', 'payment_status', 'tracking_number', 'notes', 'customer_name', 'customer_email', 'customer_phone', 'billing_address', 'shipping_address', 'subtotal', 'discount_amount', 'shipping_amount', 'tax_amount', 'total_amount', 'payment_method'];
+        $allowedFields = ['order_status', 'payment_status', 'tracking_number', 'notes', 'customer_name', 'customer_email', 'customer_phone', 'billing_address', 'shipping_address', 'subtotal', 'discount_amount', 'shipping_amount', 'tax_amount', 'total_amount', 'payment_method', 'delivery_date'];
         foreach ($allowedFields as $field) {
             if (array_key_exists($field, $data)) {
                 if ($field === 'billing_address' || $field === 'shipping_address') {

@@ -97,10 +97,10 @@ try {
             
         case 'GET':
             // Get reviews for a product
-            $productId = isset($_GET['product_id']) ? intval($_GET['product_id']) : 0;
+            $productId = isset($_GET['product_id']) ? $_GET['product_id'] : 0;
             $sortBy = isset($_GET['sort']) ? $_GET['sort'] : 'recent';
             
-            if (!$productId) {
+            if (empty($productId)) {
                 echo json_encode(['success' => false, 'message' => 'Product ID is required']);
                 exit;
             }
@@ -108,6 +108,9 @@ try {
             // Determine sort order
             $orderBy = 'ORDER BY created_at DESC';
             switch ($sortBy) {
+                case 'recent':
+                    $orderBy = 'ORDER BY created_at DESC';
+                    break;
                 case 'oldest':
                     $orderBy = 'ORDER BY created_at ASC';
                     break;
@@ -117,12 +120,14 @@ try {
                 case 'lowest':
                     $orderBy = 'ORDER BY rating ASC, created_at DESC';
                     break;
+                default:
+                    $orderBy = 'ORDER BY created_at DESC';
             }
             
             $reviews = $db->fetchAll(
                 "SELECT id, user_name, user_email, rating, title, comment, created_at 
                  FROM reviews 
-                 WHERE product_id = ? AND status = 'approved' 
+                 WHERE product_id = ? AND TRIM(LOWER(status)) = 'approved' 
                  $orderBy",
                 [$productId]
             );
