@@ -17,6 +17,10 @@ require_once __DIR__ . '/../classes/Cart.php';
 $cart = new Cart();
 $cartCount = $cart->getCount();
 
+require_once __DIR__ . '/../classes/Wishlist.php';
+$wishlistObj = new Wishlist();
+$wishlistCount = $wishlistObj->getCount();
+
 require_once __DIR__ . '/../classes/Database.php';
 require_once __DIR__ . '/../classes/Settings.php';
 $db = Database::getInstance();
@@ -1347,16 +1351,8 @@ if (!empty($headerMenuItems)) {
                     <!-- Wishlist - Only visible on xl screens -->
                     <a href="<?php echo url('wishlist'); ?>" class="hidden xl:block text-gray-800 hover:text-primary transition relative header-icon" aria-label="View Wishlist">
                         <i class="fas fa-heart text-xl" aria-hidden="true"></i>
-                        <span class="wishlist-count absolute -top-1 -right-1.5 font-medium bg-red-500 text-white text-xs rounded-full w-4 h-4 flex items-center justify-center">
-                            <?php 
-                            if ($currentCustomer) {
-                                require_once __DIR__ . '/../classes/Wishlist.php';
-                                $wishlist = new Wishlist();
-                                echo count($wishlist->getItems($currentCustomer['id']));
-                            } else {
-                                echo '0';
-                            }
-                            ?>
+                        <span class="wishlist-count absolute -top-1 -right-1.5 font-medium bg-red-500 text-white text-xs rounded-full w-4 h-4 flex items-center justify-center" style="<?php echo ($wishlistCount > 0) ? 'display: flex;' : 'display: none;'; ?>">
+                            <?php echo $wishlistCount; ?>
                         </span>
                     </a>
                     <?php endif; ?>
@@ -1373,12 +1369,12 @@ if (!empty($headerMenuItems)) {
                     if ($isCheckoutPage || $isCartPage): ?>
                         <a href="<?php echo url('cart'); ?>" class="text-black hover:text-gray-600 transition relative focus:outline-none header-icon inline-block" aria-label="View Shopping Cart">
                             <i class="fas fa-shopping-cart text-lg" aria-hidden="true"></i>
-                            <span class="absolute -top-1 -right-1.5 bg-red-500 font-medium text-white text-xs rounded-full w-4 h-4 flex items-center justify-center cart-count font-bold"><?php echo $cartCount; ?></span>
+                            <span class="absolute -top-1 -right-1.5 bg-red-500 font-medium text-white text-xs rounded-full w-4 h-4 flex items-center justify-center cart-count font-bold" style="<?php echo ($cartCount > 0) ? 'display: flex;' : 'display: none;'; ?>"><?php echo $cartCount; ?></span>
                         </a>
                     <?php else: ?>
                         <button class="text-black hover:text-gray-600 transition relative focus:outline-none header-icon" aria-label="Open Shopping Cart Drawer" id="cartBtn">
                             <i class="fas fa-shopping-cart text-lg" aria-hidden="true"></i>
-                            <span class="absolute -top-1 -right-1.5 bg-red-500 font-medium text-white text-xs rounded-full w-4 h-4 flex items-center justify-center cart-count font-bold"><?php echo $cartCount; ?></span>
+                            <span class="absolute -top-1 -right-1.5 bg-red-500 font-medium text-white text-xs rounded-full w-4 h-4 flex items-center justify-center cart-count font-bold" style="<?php echo ($cartCount > 0) ? 'display: flex;' : 'display: none;'; ?>"><?php echo $cartCount; ?></span>
                         </button>
                     <?php endif; ?>
                     <?php endif; ?>
@@ -1451,9 +1447,14 @@ if (!empty($headerMenuItems)) {
                 ?>
 
                 <!-- Standard Extra Links -->
-                <a href="<?php echo url('wishlist'); ?>" onclick="closeAllMobileMenus()" class="flex items-center px-6 py-4 text-gray-800 border-b border-gray-100 hover:bg-gray-50 transition group">
-                    <i class="fas fa-heart text-gray-400 mr-3 group-hover:text-black transition"></i>
-                    <span class="font-medium group-hover:text-black">Wishlist</span>
+                <a href="<?php echo url('wishlist'); ?>" onclick="closeAllMobileMenus()" class="flex items-center justify-between px-6 py-4 text-gray-800 border-b border-gray-100 hover:bg-gray-50 transition group">
+                    <div class="flex items-center">
+                        <i class="fas fa-heart text-gray-400 mr-3 group-hover:text-black transition"></i>
+                        <span class="font-medium group-hover:text-black">Wishlist</span>
+                    </div>
+                    <?php if ($wishlistCount > 0): ?>
+                    <span class="bg-red-500 text-white text-[10px] font-bold px-2 py-0.5 rounded-full"><?php echo $wishlistCount; ?></span>
+                    <?php endif; ?>
                 </a>
                 
                 <?php if ($currentCustomer): ?>
