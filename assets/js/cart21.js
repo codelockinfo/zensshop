@@ -645,9 +645,20 @@ function updateCartCount() {
         count = cartData.reduce((sum, item) => sum + parseInt(item.quantity || 0), 0);
     }
     
+    // Use INITIAL_CART_COUNT if counts are empty (handles initial load sync)
+    if (count === 0 && typeof window.INITIAL_CART_COUNT !== 'undefined' && window.INITIAL_CART_COUNT > 0) {
+        count = window.INITIAL_CART_COUNT;
+    }
+    
     const cartCountElements = document.querySelectorAll('.cart-count');
     cartCountElements.forEach(el => {
         el.textContent = count;
+        // Also sync display style to prevent "0" badge or flickering
+        if (count === 0) {
+            el.style.display = 'none';
+        } else {
+            el.style.display = 'flex';
+        }
     });
 }
 

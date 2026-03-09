@@ -417,7 +417,12 @@ async function removeFromWishlist(productId) {
 
 // Update wishlist count badge
 function updateWishlistCount() {
-  const count = wishlistData.length;
+  // Use INITIAL_WISHLIST_COUNT if wishlistData is empty (handles initial load sync)
+  let count = wishlistData.length;
+  if (count === 0 && typeof window.INITIAL_WISHLIST_COUNT !== 'undefined' && window.INITIAL_WISHLIST_COUNT > 0) {
+      count = window.INITIAL_WISHLIST_COUNT;
+  }
+  
   const wishlistCountElements = document.querySelectorAll(".wishlist-count");
   wishlistCountElements.forEach((el) => {
     el.textContent = count;

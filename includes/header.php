@@ -20,6 +20,12 @@ $cartCount = $cart->getCount();
 require_once __DIR__ . '/../classes/Wishlist.php';
 $wishlistObj = new Wishlist();
 $wishlistCount = $wishlistObj->getCount();
+?>
+<script>
+    window.INITIAL_WISHLIST_COUNT = <?php echo (int)$wishlistCount; ?>;
+    window.INITIAL_CART_COUNT = <?php echo (int)$cartCount; ?>;
+</script>
+<?php
 
 require_once __DIR__ . '/../classes/Database.php';
 require_once __DIR__ . '/../classes/Settings.php';
@@ -1452,9 +1458,9 @@ if (!empty($headerMenuItems)) {
                         <i class="fas fa-heart text-gray-400 mr-3 group-hover:text-black transition"></i>
                         <span class="font-medium group-hover:text-black">Wishlist</span>
                     </div>
-                    <?php if ($wishlistCount > 0): ?>
-                    <span class="bg-red-500 text-white text-[10px] font-bold px-2 py-0.5 rounded-full"><?php echo $wishlistCount; ?></span>
-                    <?php endif; ?>
+                    <span class="wishlist-count bg-red-500 text-white text-[10px] font-bold px-2 py-0.5 rounded-full" style="<?php echo ($wishlistCount > 0) ? 'display: flex;' : 'display: none;'; ?>">
+                        <?php echo $wishlistCount; ?>
+                    </span>
                 </a>
                 
                 <?php if ($currentCustomer): ?>
