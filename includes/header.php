@@ -520,6 +520,9 @@ $gs_tooltip_text = getGlobalStyle('tooltip_text_color', $globalCardStyles, '#fff
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title><?php echo isset($pageTitle) ? htmlspecialchars($pageTitle) . ' - ' : ''; ?><?php echo htmlspecialchars($siteTitleSuffix); ?></title>
+    <?php if (isset($_SERVER['HTTP_HOST']) && strpos($_SERVER['HTTP_HOST'], 'localhost') === false): ?>
+    <link rel="canonical" href="https://homeprox.in<?php echo $_SERVER['REQUEST_URI']; ?>">
+    <?php endif; ?>
     
     <?php
     $faviconUrl = '';
