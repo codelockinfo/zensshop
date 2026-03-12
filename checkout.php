@@ -238,9 +238,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['place_order']) && emp
         try {
             require_once __DIR__ . '/classes/Delhivery.php';
             $delhivery = new Delhivery();
-            $delhivery->autoCreateShipment($orderId);
+            $res = $delhivery->autoCreateShipment($orderId);
+            if (!$res['success']) {
+                error_log("Delhivery autoCreateShipment failed for order $orderNumber: " . ($res['message'] ?? 'Unknown error'));
+            }
         } catch (Exception $e) {
-            // error_log("Failed to auto-create Delhivery shipment for order " . $orderNumber . ": " . $e->getMessage());
+            error_log("Failed to auto-create Delhivery shipment for order " . $orderNumber . ": " . $e->getMessage());
         }
 
         // Clear cart
@@ -1080,8 +1083,7 @@ document.addEventListener('DOMContentLoaded', function() {
     const zipStatus = document.getElementById('zipStatus');
     const payBtn = document.getElementById('razorpayPayButton');
 
-    /*
-    // ZIP code validation temporarily disabled for manual shipments
+    
     if (zipInput) {
         zipInput.addEventListener('input', async function() {
             const pincode = this.value.trim().replace(/\s/g, '');
@@ -1186,7 +1188,6 @@ document.addEventListener('DOMContentLoaded', function() {
             });
         });
     }
-    */
 
     // City Update logic already exists below, but we'll ensure it works with our new cityInput ID
     if (cityInput && payBtn) {

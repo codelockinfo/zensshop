@@ -55,10 +55,6 @@ class Delhivery {
     public function checkPincode($pincode) {
         if (empty($pincode)) return ['success' => false, 'message' => 'Pincode is required'];
 
-        // Temporarily disabled for manual shipments - UNCOMMENT BELOW LOGIC TO RESTORE
-        return ['success' => true, 'is_serviceable' => false, 'message' => 'Manual processing mode enabled.'];
-
-        /*
         // Delhivery has multiple API versions and authentication patterns. 
         // We try a wide variety to ensure compatibility with all account types.
         $attempts = [
@@ -93,7 +89,8 @@ class Delhivery {
             $this->currentAuthType = $attempt['auth_type'];
             $response = $this->makeRequest($attempt['url'], 'GET');
             
-            if (isset($response['success']) && $response['success'] === true && !empty($response['delivery_codes'])) {
+            $isValidResponse = (isset($response['success']) && $response['success'] === true) || !empty($response['delivery_codes']);
+            if ($isValidResponse && !empty($response['delivery_codes'])) {
                 $finalResult = $response;
                 break;
             }
@@ -108,6 +105,13 @@ class Delhivery {
         }
 
         if (!$finalResult) {
+            $lastError = $lastError ?? [];
+            if (!isset($lastError['success'])) {
+                $lastError['success'] = false;
+            }
+            if (!isset($lastError['message'])) {
+                $lastError['message'] = 'Pincode not serviceable';
+            }
             $lastError['debug_attempts'] = $allAttempts;
             return $lastError;
         }
@@ -133,7 +137,6 @@ class Delhivery {
             'delivery_type' => $postalData['delivery_type'] ?? 'Standard',
             'raw' => $postalData
         ];
-        */
     }
 
     /**
@@ -210,13 +213,13 @@ class Delhivery {
         $dataPayload = [
             'shipments' => [
                 [
-                    'name' => substr($orderData['customer_name'], 0, 30),
-                    'add' => trim(preg_replace('/\s+/', ' ', ($shippingAddr['street'] ?? '') . ' ' . ($shippingAddr['address_line1'] ?? '') . ' ' . ($shippingAddr['address_line2'] ?? ''))),
-                    'pin' => $shippingAddr['zip'] ?? $shippingAddr['postal_code'] ?? '',
-                    'city' => $shippingAddr['city'] ?? '',
-                    'state' => $shippingAddr['state'] ?? '',
+                    'name' => substr($shippingAddr['name'] ?? $orderData['customer_name'] ?? 'Customer', 0, 30),
+                    'add' => trim(preg_replace('/\s+/', ' ', ($shippingAddr['street'] ?? $shippingAddr['address_line1'] ?? $shippingAddr['address'] ?? $orderData['shipping_address_str'] ?? ''))),
+                    'pin' => $shippingAddr['zip'] ?? $shippingAddr['postal_code'] ?? $shippingAddr['pincode'] ?? '',
+                    'city' => $shippingAddr['city'] ?? $orderData['customer_city'] ?? '',
+                    'state' => $shippingAddr['state'] ?? $orderData['customer_state'] ?? '',
                     'country' => $shippingAddr['country'] ?? 'India',
-                    'phone' => substr(preg_replace('/[^0-9]/', '', $orderData['customer_phone'] ?? '0000000000'), -10),
+                    'phone' => substr(preg_replace('/[^0-9]/', '', $shippingAddr['phone'] ?? $orderData['customer_phone'] ?? ''), -10),
                     'order' => $orderData['order_number'],
                     'payment_mode' => $paymentMode,
                     'return_pin' => $sellerPin,
@@ -386,22 +389,30 @@ class Delhivery {
     public function cancel($waybill) {
         if (empty($waybill)) return ['success' => false, 'message' => 'Waybill required'];
 
-        // Added trailing slash as required by some Delhivery API versions
-        $url = $this->expressUrl . '/api/p/edit/';
+        // Staging requires .json extension for clean JSON response
+        $url = $this->expressUrl . '/api/p/edit.json';
+        
+        // Some staging accounts require return_pin for validation even on cancel
+        $storeId = $_SESSION['store_id'] ?? null;
+        $sellerJson = $this->settings->get('seller_address_data', '{}', $storeId);
+        $sellerData = json_decode($sellerJson, true) ?: [];
+        $returnPin = $sellerData['pincode'] ?? '394101';
+
         $payload = [
             'waybill' => $waybill,
             'cancellation' => 'true'
+            // 'return_pin' => $returnPin // Some versions need this, adding if header edit fails
         ];
 
         $result = $this->makeRequest($url, 'POST', $payload);
         
         // Normalize success flag for cancellation
-        // Delhivery usually returns {"status": "Success"}
-        if (isset($result['status']) && (strtolower($result['status']) === 'success' || $result['status'] === true)) {
+        // Delhivery returns {"status": true} or {"status": "Success"}
+        if (isset($result['status']) && ($result['status'] === true || strtolower($result['status']) === 'success')) {
             $result['success'] = true;
         } elseif (!isset($result['success'])) {
             $result['success'] = false;
-            $result['message'] = $result['message'] ?? $result['remarks'][0] ?? 'Cancellation failed';
+            $result['message'] = $result['message'] ?? $result['remarks'][0] ?? $result['remark'] ?? 'Cancellation failed';
         }
         
         return $result;

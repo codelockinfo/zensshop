@@ -50,6 +50,12 @@ $shippingAddress = !empty($orderData['shipping_address']) ? json_decode($orderDa
 $db = Database::getInstance();
 $request = $db->fetchOne("SELECT * FROM ordercancel WHERE order_id = ? AND store_id = ? ORDER BY created_at DESC LIMIT 1", [$orderData['id'], $storeId]);
 
+// Fetch registered customer if linked
+$registeredCustomer = null;
+if (!empty($orderData['user_id'])) {
+    $registeredCustomer = $db->fetchOne("SELECT * FROM customers WHERE customer_id = ?", [$orderData['user_id']]);
+}
+
 $pageTitle = 'Order Details - ' . $orderData['order_number'];
 
 // Detect currency
@@ -385,13 +391,15 @@ require_once __DIR__ . '/../../includes/admin-header.php';
                     body: JSON.stringify({ action: 'track_shipment', order_number: '<?php echo $orderData['order_number']; ?>' })
                 });
                 const data = await response.json();
-                if (data.success && data.data.ShipmentData && data.data.ShipmentData[0]) {
+                if (data.success && data.data && data.data.ShipmentData && data.data.ShipmentData[0]) {
                     const ship = data.data.ShipmentData[0].Shipment;
                     statusDiv.innerHTML = `<span class="font-bold text-blue-800">${ship.Status.Status || 'Active'}</span><br><span class="text-xs text-gray-500">${ship.Status.Instructions || ''}</span>`;
                 } else {
-                    statusDiv.innerHTML = '<span class="text-gray-500">Status unavailable</span>';
+                    const errorMsg = data.message || 'Status unavailable';
+                    statusDiv.innerHTML = `<span class="text-gray-500 italic"><i class="fas fa-info-circle mr-1"></i> ${errorMsg}</span>`;
                 }
             } catch (e) {
+                console.error('Tracking fetch error:', e);
                 statusDiv.innerHTML = '<span class="text-red-500">Failed to load status</span>';
             }
         });
@@ -500,19 +508,44 @@ require_once __DIR__ . '/../../includes/admin-header.php';
 
             <!-- Customer Info -->
             <div class="pt-4 border-t border-gray-200 mt-4 space-y-2">
-                <div class="text-sm">
-                    <span class="text-gray-600">Customer:</span>
-                    <span class="font-medium ml-2"><?php echo htmlspecialchars($orderData['customer_name']); ?></span>
-                </div>
-                <div class="text-sm">
-                    <span class="text-gray-600">Email:</span>
-                    <span class="font-medium ml-2"><?php echo htmlspecialchars($orderData['customer_email']); ?></span>
-                </div>
-                <?php if (!empty($orderData['customer_phone'])): ?>
-                <div class="text-sm">
-                    <span class="text-gray-600">Phone:</span>
-                    <span class="font-medium ml-2"><?php echo htmlspecialchars($orderData['customer_phone']); ?></span>
-                </div>
+                <?php if ($registeredCustomer): ?>
+                    <div class="flex items-center gap-2 mb-2">
+                        <span class="px-2 py-0.5 bg-blue-100 text-blue-800 text-[10px] font-bold uppercase rounded border border-blue-200">Registered User</span>
+                    </div>
+                    <div class="text-sm">
+                        <span class="text-gray-600">Customer:</span>
+                        <a href="<?php echo url('admin/customers/view.php?id=' . $registeredCustomer['customer_id']); ?>" class="font-medium ml-2 text-blue-600 hover:underline">
+                            <?php echo htmlspecialchars($registeredCustomer['name']); ?> (ID: <?php echo htmlspecialchars($registeredCustomer['customer_id']); ?>)
+                        </a>
+                    </div>
+                    <div class="text-sm">
+                        <span class="text-gray-600">Email:</span>
+                        <span class="font-medium ml-2"><?php echo htmlspecialchars($registeredCustomer['email']); ?></span>
+                    </div>
+                    <?php if (!empty($registeredCustomer['phone'])): ?>
+                    <div class="text-sm">
+                        <span class="text-gray-600">Phone:</span>
+                        <span class="font-medium ml-2"><?php echo htmlspecialchars($registeredCustomer['phone']); ?></span>
+                    </div>
+                    <?php endif; ?>
+                <?php else: ?>
+                    <div class="flex items-center gap-2 mb-2">
+                        <span class="px-2 py-0.5 bg-gray-100 text-gray-600 text-[10px] font-bold uppercase rounded border border-gray-200">Guest Checkout</span>
+                    </div>
+                    <div class="text-sm">
+                        <span class="text-gray-600">Customer:</span>
+                        <span class="font-medium ml-2"><?php echo htmlspecialchars($orderData['customer_name']); ?></span>
+                    </div>
+                    <div class="text-sm">
+                        <span class="text-gray-600">Email:</span>
+                        <span class="font-medium ml-2"><?php echo htmlspecialchars($orderData['customer_email']); ?></span>
+                    </div>
+                    <?php if (!empty($orderData['customer_phone'])): ?>
+                    <div class="text-sm">
+                        <span class="text-gray-600">Phone:</span>
+                        <span class="font-medium ml-2"><?php echo htmlspecialchars($orderData['customer_phone']); ?></span>
+                    </div>
+                    <?php endif; ?>
                 <?php endif; ?>
             </div>
         </div>

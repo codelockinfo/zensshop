@@ -58,7 +58,12 @@ $userId = null;
 $auth = new CustomerAuth();
 if ($auth->isLoggedIn()) {
     $currentUser = $auth->getCurrentCustomer();
-    $userId = $currentUser['id'] ?? null;
+    $userId = $currentUser['customer_id'] ?? null;
+    
+    // Fallback/safety check
+    if ($userId && $userId < 1000000000) {
+        $userId = null;
+    }
 }
 
 try {
@@ -157,7 +162,10 @@ try {
     try {
         require_once __DIR__ . '/../../classes/Delhivery.php';
         $delhivery = new Delhivery();
-        $delhivery->autoCreateShipment($createdOrderId['id']);
+        $res = $delhivery->autoCreateShipment($createdOrderId['id']);
+        if (!$res['success']) {
+            error_log("Delhivery autoCreateShipment failed for order " . $createdOrderId['order_number'] . ": " . ($res['message'] ?? 'Unknown error'));
+        }
     } catch (Exception $e) {
         error_log("Failed to auto-create Delhivery shipment for order " . $createdOrderId['order_number'] . ": " . $e->getMessage());
     }

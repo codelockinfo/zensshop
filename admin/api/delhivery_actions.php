@@ -40,57 +40,80 @@ if (!$orderData) {
 
 $numericOrderId = $orderData['id'];
 
-switch ($action) {
-    case 'create_shipment':
-        $result = $delhivery->autoCreateShipment($numericOrderId);
-        
-        if ($result['success']) {
-            echo json_encode([
-                'success' => true, 
-                'message' => 'Shipment created successfully', 
-                'waybill' => $result['waybill'],
-                'debug' => $delhivery->lastRequest // Show request in network tab
-            ]);
-        } else {
-            echo json_encode([
-                'success' => false, 
-                'message' => $result['message'],
-                'debug' => $delhivery->lastRequest
-            ]);
-        }
-        break;
+// Clear ANY previous output (like database connection messages or warnings)
+if (ob_get_level() > 0) ob_clean();
 
-    case 'cancel_shipment':
-        $waybill = $orderData['tracking_number'];
-        if (!$waybill) {
-            echo json_encode(['success' => false, 'message' => 'No tracking number found for this order']);
-            exit;
-        }
+try {
+    switch ($action) {
+        case 'create_shipment':
+            $result = $delhivery->autoCreateShipment($numericOrderId);
+            
+            if ($result['success']) {
+                echo json_encode([
+                    'success' => true, 
+                    'status' => 'success',
+                    'message' => 'Shipment created successfully', 
+                    'waybill' => $result['waybill'],
+                    'debug' => $delhivery->lastRequest
+                ]);
+            } else {
+                echo json_encode([
+                    'success' => false, 
+                    'status' => 'error',
+                    'message' => $result['message'],
+                    'debug' => $delhivery->lastRequest
+                ]);
+            }
+            break;
 
-        $result = $delhivery->cancel($waybill);
-        if ($result['success']) {
-            echo json_encode(['success' => true, 'message' => 'Shipment cancelled successfully', 'debug' => $delhivery->lastRequest]);
-        } else {
-            echo json_encode(['success' => false, 'message' => $result['message'] ?? 'Failed to cancel shipment', 'debug' => $delhivery->lastRequest]);
-        }
-        break;
+        case 'cancel_shipment':
+            $waybill = $orderData['tracking_number'];
+            if (!$waybill) {
+                echo json_encode(['success' => false, 'status' => 'error', 'message' => 'No tracking number found for this order']);
+                exit;
+            }
 
-    case 'track_shipment':
-        $waybill = $orderData['tracking_number'];
-        if (!$waybill) {
-            echo json_encode(['success' => false, 'message' => 'No tracking number found']);
-            exit;
-        }
+            $result = $delhivery->cancel($waybill);
+            if ($result['success']) {
+                // Update order: clear tracking number and move status back to pending
+                $db = Database::getInstance();
+                $db->execute("UPDATE orders SET tracking_number = NULL, order_status = 'pending' WHERE id = ?", [$numericOrderId]);
 
-        $result = $delhivery->track($waybill);
-        if ($result['success']) {
-            echo json_encode(['success' => true, 'data' => $result, 'debug' => $delhivery->lastRequest]);
-        } else {
-            echo json_encode(['success' => false, 'message' => $result['message'] ?? 'Tracking failed', 'debug' => $delhivery->lastRequest]);
-        }
-        break;
+                echo json_encode(['success' => true, 'status' => 'success', 'message' => 'Shipment cancelled successfully and order status updated.', 'debug' => $delhivery->lastRequest]);
+            } else {
+                echo json_encode(['success' => false, 'status' => 'error', 'message' => $result['message'] ?? 'Failed to cancel shipment', 'debug' => $delhivery->lastRequest]);
+            }
+            break;
 
-    default:
-        echo json_encode(['success' => false, 'message' => 'Invalid action']);
-        break;
+        case 'track_shipment':
+            $waybill = $orderData['tracking_number'];
+            if (!$waybill) {
+                echo json_encode(['success' => false, 'status' => 'error', 'message' => 'No tracking number found']);
+                exit;
+            }
+
+            $result = $delhivery->track($waybill);
+            if ($result['success']) {
+                echo json_encode([
+                    'success' => true, 
+                    'status' => 'success',
+                    'data' => $result, 
+                    'debug' => $delhivery->lastRequest
+                ]);
+            } else {
+                echo json_encode(['success' => false, 'status' => 'error', 'message' => $result['message'] ?? 'Tracking failed', 'debug' => $delhivery->lastRequest]);
+            }
+            break;
+
+        default:
+            echo json_encode(['success' => false, 'status' => 'error', 'message' => 'Invalid action']);
+            break;
+    }
+} catch (Exception $e) {
+    echo json_encode([
+        'success' => false,
+        'status' => 'error',
+        'message' => 'System Error: ' . $e->getMessage()
+    ]);
 }
+

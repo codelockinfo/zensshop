@@ -44,7 +44,7 @@ $settings = new Settings();
 $isCodEnabled = (int)$settings->get('enable_cod', 0);
 $result['system_cod_enabled'] = $isCodEnabled;
 
-if ($result['success'] && ($result['is_serviceable'] ?? false)) {
+if ((isset($result['success']) && $result['success']) && ($result['is_serviceable'] ?? false)) {
     // We keep the courier's COD status in $result['cod']
     // but the frontend will also check system_cod_enabled
     

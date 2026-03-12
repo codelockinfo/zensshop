@@ -333,10 +333,20 @@ if (!$isAjax) {
                                             </div>
                                         </div>
 
-                                        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 mb-8 text-sm">
+                                        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8 mb-8 text-sm">
                                             <div>
                                                 <p class="text-gray-400 font-bold uppercase tracking-widest text-[10px] mb-2">Status</p>
                                                 <p class="font-bold text-orange-500"><?php echo ucfirst($order['order_status']); ?></p>
+                                            </div>
+                                            <div>
+                                                <p class="text-gray-400 font-bold uppercase tracking-widest text-[10px] mb-2">Tracking Number</p>
+                                                <?php if (!empty($order['tracking_number'])): ?>
+                                                    <p class="font-bold text-blue-600 cursor-pointer hover:underline" onclick="window.open('https://www.delhivery.com/track/package/<?php echo urlencode($order['tracking_number']); ?>', '_blank')">
+                                                        <?php echo htmlspecialchars($order['tracking_number']); ?>
+                                                    </p>
+                                                <?php else: ?>
+                                                    <p class="font-bold text-gray-400">Not assigned yet</p>
+                                                <?php endif; ?>
                                             </div>
                                             <div>
                                                 <p class="text-gray-400 font-bold uppercase tracking-widest text-[10px] mb-2">Date of delivery</p>
