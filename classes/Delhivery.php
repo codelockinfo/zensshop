@@ -291,13 +291,36 @@ class Delhivery {
 
         $result = $this->createShipment($dataPayload);
         
-        // Handle Duplicate Order ID error by retrying with a suffix
+        // Handle Duplicate Order ID or Missing Warehouse error
         if (isset($result['success']) && !$result['success']) {
             $errorMsg = $result['packages'][0]['remarks'][0] ?? $result['rmk'] ?? $result['message'] ?? '';
+            
+            // Fix 1: Duplicate Order ID retry
             if (strpos(strtolower($errorMsg), 'duplicate order id') !== false) {
                 // Append a partial timestamp to make the order ID unique for Delhivery
                 $dataPayload['shipments'][0]['order'] = $orderData['order_number'] . '-' . substr(time(), -4);
                 $result = $this->createShipment($dataPayload);
+            }
+            // Fix 2: Auto-register warehouse if it doesn't exist
+            elseif (strpos(strtolower($errorMsg), 'clientwarehouse matching query does not exist') !== false) {
+                // Prepare warehouse registration data
+                $warehousePayload = [
+                    'name' => $warehouseName,
+                    'registered_name' => $sellerName,
+                    'address' => $sellerAdd ?: 'Primary Warehouse Address', // Fallback if setting empty
+                    'pincode' => $sellerPin ?: '394101',
+                    'phone' => $sellerPhone ?: '7600464414',
+                    'city' => $sellerCity ?: 'Surat',
+                    'state' => $sellerState ?: 'Gujarat',
+                    'country' => 'India'
+                ];
+                
+                $regResult = $this->createWarehouse($warehousePayload);
+                
+                // If registration was successful (status Success), retry the shipment
+                if (isset($regResult['success']) && $regResult['success'] || (isset($regResult['status']) && strtolower((string)$regResult['status']) === 'success')) {
+                    $result = $this->createShipment($dataPayload);
+                }
             }
         }
         

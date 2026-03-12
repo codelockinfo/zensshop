@@ -719,21 +719,25 @@ window.openQRModal = function(qrtextBase64, orderNum) {
     var title = document.getElementById('qrModalTitle');
     
     if (title) title.innerText = "Order: " + orderNum;
-    if (qrContainer) qrContainer.innerHTML = '';
-    
-    try {
-        var QRCodeClass = typeof QRCode !== 'undefined' ? QRCode : window.QRCode;
-        new QRCodeClass(qrContainer, {
-            text: qrtext,
-            width: 280,
-            height: 280,
-            colorDark : "#000000",
-            colorLight : "#ffffff",
-            correctLevel : QRCodeClass.CorrectLevel.M
-        });
-    } catch (e) {
-        console.error('QRCode Error:', e);
-        if (qrContainer) qrContainer.innerHTML = '<p class="text-red-500 text-xs text-center py-4">Error generating QR: ' + e.message + '</p>';
+    if (qrContainer) {
+        qrContainer.innerHTML = '';
+        try {
+            var QRCodeClass = typeof QRCode !== 'undefined' ? QRCode : window.QRCode;
+            new QRCodeClass(qrContainer, {
+                text: qrtext,
+                width: 280,
+                height: 280,
+                colorDark : "#000000",
+                colorLight : "#ffffff",
+                correctLevel : QRCodeClass.CorrectLevel.M
+            });
+        } catch (e) {
+            console.error('QRCode Error:', e);
+            qrContainer.innerHTML = '<p class="text-red-500 text-xs text-center py-4">Error generating QR: ' + e.message + '</p>';
+        }
+    } else {
+        console.error('QR Error: Element #qrCodeContainer not found in DOM.');
+        alert('Software Update Required: Please make sure you have uploaded the latest Order Detail file to the server.');
     }
     
     if (modal) {
