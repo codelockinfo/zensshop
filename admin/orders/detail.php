@@ -359,10 +359,6 @@ require_once __DIR__ . '/../../includes/admin-header.php';
                                  class="w-full bg-blue-600 text-white py-2 rounded text-sm font-semibold hover:bg-blue-700 transition">
                             <i class="fas fa-search-location mr-2"></i> Track Live Status
                         </button>
-                        <button onclick="handleDelhiveryAction('download_label')" 
-                                 class="w-full bg-green-600 text-white py-2 rounded text-sm font-semibold hover:bg-green-700 transition">
-                            <i class="fas fa-file-pdf mr-2"></i> Download Shipping Label
-                        </button>
                         <button onclick="handleDelhiveryAction('cancel_shipment')" 
                                  class="w-full bg-white border border-red-200 text-red-600 py-2 rounded text-sm font-semibold hover:bg-red-50 transition">
                             <i class="fas fa-times-circle mr-2"></i> Cancel Shipment

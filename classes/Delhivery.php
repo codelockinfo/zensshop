@@ -306,62 +306,14 @@ class Delhivery {
 
         $result = $this->createShipment($dataPayload);
         
-        // Handle Duplicate Order ID or Missing Warehouse error
+        // Handle Duplicate Order ID error
         if (isset($result['success']) && !$result['success']) {
             $errorMsg = $result['packages'][0]['remarks'][0] ?? $result['rmk'] ?? $result['message'] ?? '';
             
-            // Fix 1: Duplicate Order ID retry
             if (strpos(strtolower($errorMsg), 'duplicate order id') !== false) {
                 // Append a partial timestamp to make the order ID unique for Delhivery
                 $dataPayload['shipments'][0]['order'] = $orderData['order_number'] . '-' . substr(time(), -4);
                 $result = $this->createShipment($dataPayload);
-            }
-            // Fix 2: Auto-register warehouse if it doesn't exist
-            elseif (strpos(strtolower($errorMsg), 'clientwarehouse matching query does not exist') !== false) {
-                // Prepare warehouse registration data (Match Delhivery Live requirements)
-                $warehousePayload = [
-                    'name'            => $warehouseName,
-                    'registered_name' => $sellerName ?: 'ZENS ENTERPRISE',
-                    'address'         => $sellerAdd ?: 'Ashapuri Society, Ashwin society -2, Khodiyar nagar road',
-                    'pin'             => $sellerPin ?: '394210', // Delhivery requires 'pin', not 'pincode'
-                    'phone'           => $sellerPhone ?: '7600464414',
-                    'city'            => $sellerCity ?: 'Surat',
-                    'state'           => $sellerState ?: 'Gujarat',
-                    'country'         => 'India',
-                    'return_address'  => $sellerAdd ?: 'Ashapuri Society, Ashwin society -2, Khodiyar nagar road',
-                    'return_pin'      => $sellerPin ?: '394210',
-                    'return_city'     => $sellerCity ?: 'Surat',
-                    'return_state'    => $sellerState ?: 'Gujarat',
-                    'return_phone'    => $sellerPhone ?: '7600464414'
-                ];
-                
-                $regResult = $this->createWarehouse($warehousePayload);
-                $regRaw = $regResult['raw_response'] ?? '';
-                $isRegSuccess = (isset($regResult['success']) && $regResult['success']) || 
-                                (isset($regResult['status']) && strtolower((string)$regResult['status']) === 'success') ||
-                                (strpos($regRaw, 'created in HQ') !== false);
-                
-                // If registration was successful, retry the shipment
-                if ($isRegSuccess) {
-                    $result = $this->createShipment($dataPayload);
-                } else {
-                    // Registration failed - try to extract error from XML if needed
-                    $raw = $regResult['raw_response'] ?? '';
-                    $cleanMsg = 'Warehouse registration failed';
-                    
-                    if (strpos($raw, '<message>') !== false) {
-                        preg_match('/<message>(.*?)<\/message>/s', $raw, $matches);
-                        if (!empty($matches[1])) $cleanMsg = strip_tags($matches[1]);
-                    } elseif (isset($regResult['message'])) {
-                        $cleanMsg = $regResult['message'];
-                    }
-
-                    return [
-                        'success' => false,
-                        'message' => "Delhivery Registration Rejected: $cleanMsg. Please check your Site Name and Seller Address settings.",
-                        'debug' => $this->lastRequest
-                    ];
-                }
             }
         }
         
