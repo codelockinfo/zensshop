@@ -182,10 +182,23 @@ class Delhivery {
 
         $shippingAddr = json_decode($orderData['shipping_address'] ?? '[]', true);
         $storeId = $orderData['store_id'] ?? null;
-        $warehouseName = trim($this->settings->get('delhivery_warehouse_name', 'PRIMARY', $storeId));
+        $warehouseName = trim($this->settings->get('delhivery_warehouse_name', 'ZENSENTERPRISE-do-B2C', $storeId));
         
         // Fetch seller/return address from settings (stored as single JSON)
-        $sellerJson    = $this->settings->get('seller_address_data', '{}', $storeId);
+        $sellerJson = null;
+        
+        // 1. Try specific store ID
+        if ($storeId) {
+            $sellerJson = $this->settings->get('seller_address_data', null, $storeId);
+        }
+        
+        // 2. Try Global (NULL store_id)
+        if (empty($sellerJson) || $sellerJson === '{}' || $sellerJson === 'EMPTY') {
+            $db = Database::getInstance();
+            $globalRes = $db->fetchOne("SELECT setting_value FROM settings WHERE setting_key = 'seller_address_data' AND (store_id IS NULL OR store_id = '' OR store_id = 0) LIMIT 1");
+            $sellerJson = $globalRes['setting_value'] ?? '{}';
+        }
+
         $sellerData    = json_decode($sellerJson, true) ?: [];
         $sellerAdd     = trim($sellerData['address'] ?? '');
         $sellerCity    = trim($sellerData['city'] ?? '');
@@ -193,9 +206,11 @@ class Delhivery {
         $sellerPin     = trim($sellerData['pincode'] ?? '');
         $sellerPhone   = trim($sellerData['phone'] ?? '');
         $sellerCountry = trim($sellerData['country'] ?? 'India');
-        $sellerName    = $this->settings->get('site_name', 'Zens Shop', $storeId) ?: 'Zens Shop';
         
-        // Prepare items description
+        $sellerName    = $this->settings->get('site_name', null, $storeId);
+        if (empty($sellerName)) $sellerName = $this->settings->get('site_name', 'ZENS ENTERPRISE', null);
+        
+        // Prepare items description (Max 50 chars for Delhivery)
         $items = $orderData['items'] ?? [];
         $descParts = [];
         $totalQty = 0;
@@ -203,7 +218,7 @@ class Delhivery {
             $descParts[] = $item['product_name'];
             $totalQty += $item['quantity'];
         }
-        $productsDesc = substr(implode(', ', $descParts), 0, 50);
+        $productsDesc = substr(implode(', ', $descParts), 0, 47) . '...';
 
         // Map payment mode
         $paymentMethod = strtolower($orderData['payment_method'] ?? '');
@@ -303,23 +318,49 @@ class Delhivery {
             }
             // Fix 2: Auto-register warehouse if it doesn't exist
             elseif (strpos(strtolower($errorMsg), 'clientwarehouse matching query does not exist') !== false) {
-                // Prepare warehouse registration data
+                // Prepare warehouse registration data (Match Delhivery Live requirements)
                 $warehousePayload = [
-                    'name' => $warehouseName,
-                    'registered_name' => $sellerName,
-                    'address' => $sellerAdd ?: 'Primary Warehouse Address', // Fallback if setting empty
-                    'pincode' => $sellerPin ?: '394101',
-                    'phone' => $sellerPhone ?: '7600464414',
-                    'city' => $sellerCity ?: 'Surat',
-                    'state' => $sellerState ?: 'Gujarat',
-                    'country' => 'India'
+                    'name'            => $warehouseName,
+                    'registered_name' => $sellerName ?: 'ZENS ENTERPRISE',
+                    'address'         => $sellerAdd ?: 'Ashapuri Society, Ashwin society -2, Khodiyar nagar road',
+                    'pin'             => $sellerPin ?: '394210', // Delhivery requires 'pin', not 'pincode'
+                    'phone'           => $sellerPhone ?: '7600464414',
+                    'city'            => $sellerCity ?: 'Surat',
+                    'state'           => $sellerState ?: 'Gujarat',
+                    'country'         => 'India',
+                    'return_address'  => $sellerAdd ?: 'Ashapuri Society, Ashwin society -2, Khodiyar nagar road',
+                    'return_pin'      => $sellerPin ?: '394210',
+                    'return_city'     => $sellerCity ?: 'Surat',
+                    'return_state'    => $sellerState ?: 'Gujarat',
+                    'return_phone'    => $sellerPhone ?: '7600464414'
                 ];
                 
                 $regResult = $this->createWarehouse($warehousePayload);
+                $regRaw = $regResult['raw_response'] ?? '';
+                $isRegSuccess = (isset($regResult['success']) && $regResult['success']) || 
+                                (isset($regResult['status']) && strtolower((string)$regResult['status']) === 'success') ||
+                                (strpos($regRaw, 'created in HQ') !== false);
                 
-                // If registration was successful (status Success), retry the shipment
-                if (isset($regResult['success']) && $regResult['success'] || (isset($regResult['status']) && strtolower((string)$regResult['status']) === 'success')) {
+                // If registration was successful, retry the shipment
+                if ($isRegSuccess) {
                     $result = $this->createShipment($dataPayload);
+                } else {
+                    // Registration failed - try to extract error from XML if needed
+                    $raw = $regResult['raw_response'] ?? '';
+                    $cleanMsg = 'Warehouse registration failed';
+                    
+                    if (strpos($raw, '<message>') !== false) {
+                        preg_match('/<message>(.*?)<\/message>/s', $raw, $matches);
+                        if (!empty($matches[1])) $cleanMsg = strip_tags($matches[1]);
+                    } elseif (isset($regResult['message'])) {
+                        $cleanMsg = $regResult['message'];
+                    }
+
+                    return [
+                        'success' => false,
+                        'message' => "Delhivery Registration Rejected: $cleanMsg. Please check your Site Name and Seller Address settings.",
+                        'debug' => $this->lastRequest
+                    ];
                 }
             }
         }
