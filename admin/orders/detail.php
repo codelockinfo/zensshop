@@ -46,6 +46,27 @@ if (!$orderData) {
 $billingAddress = !empty($orderData['billing_address']) ? json_decode($orderData['billing_address'], true) : null;
 $shippingAddress = !empty($orderData['shipping_address']) ? json_decode($orderData['shipping_address'], true) : null;
 
+// Construct QR Code Text Data
+$addr = is_array($orderData['shipping_address']) ? $orderData['shipping_address'] : json_decode($orderData['shipping_address'] ?? '{}', true);
+$line1Parts = array_unique(array_filter([
+    $addr['street'] ?? '',
+    $addr['address_line1'] ?? $addr['address'] ?? '',
+    $addr['address_line2'] ?? ''
+]));
+$line1 = implode(', ', $line1Parts);
+$zip = $addr['zip'] ?? $addr['postal_code'] ?? $addr['pincode'] ?? '';
+$line2Parts = array_unique(array_filter([$addr['city'] ?? '', $addr['state'] ?? '']));
+$line2 = implode(', ', $line2Parts) . ' ' . $zip;
+$line3 = trim($addr['country'] ?? '');
+$formattedAddr = mb_strimwidth(implode("\n", array_filter([$line1, $line2, $line3])), 0, 250, "..");
+
+$qrText = "Order ID: " . $orderData['order_number'] . "\n" .
+          "Customer: " . $orderData['customer_name'] . "\n" .
+          "Mobile: " . ($orderData['customer_phone'] ?? 'N/A') . "\n" .
+          "Payment: " . strtoupper($orderData['payment_method'] ?? 'COD') . " (" . strtoupper($orderData['payment_status'] ?? 'PENDING') . ")\n" .
+          "Amount: Rs." . number_format($orderData['total_amount'] ?? 0, 2) . "\n\n" .
+          "Shipping Address:\n" . $formattedAddr;
+
 // Fetch cancellation/refund request
 $db = Database::getInstance();
 $request = $db->fetchOne("SELECT * FROM ordercancel WHERE order_id = ? AND store_id = ? ORDER BY created_at DESC LIMIT 1", [$orderData['id'], $storeId]);
@@ -74,9 +95,12 @@ require_once __DIR__ . '/../../includes/admin-header.php';
             <p class="text-gray-600">Dashboard > Order > Order Details</p>
         </div>
         <div class="flex items-center space-x-3">
-            <a href="<?php echo url('admin/orders/invoice.php?id=' . $orderData['id']); ?>" target="_blank" class="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 transition">
+            <a href="<?php echo url('admin/orders/invoice.php?order_number=' . urlencode($orderData['order_number'])); ?>" target="_blank" class="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 transition">
                 <i class="fas fa-file-invoice mr-2"></i>Invoice
             </a>
+            <button type="button" onclick="openQRModal(this.dataset.qrtext, '<?php echo htmlspecialchars($orderData['order_number']); ?>')" data-qrtext="<?php echo htmlspecialchars(base64_encode($qrText), ENT_QUOTES, 'UTF-8'); ?>" class="bg-purple-600 text-white px-4 py-2 rounded hover:bg-purple-700 transition flex items-center gap-2">
+                <i class="fas fa-qrcode"></i> QR Label
+            </button>
             <a href="<?php echo url('admin/orders/edit.php?order_number=' . urlencode($orderData['order_number'])); ?>" class="bg-green-500 text-white px-4 py-2 rounded hover:bg-green-600 transition">
                 <i class="fas fa-edit mr-2"></i>Edit Order
             </a>
@@ -332,11 +356,15 @@ require_once __DIR__ . '/../../includes/admin-header.php';
 
                     <div class="flex flex-col gap-2">
                         <button onclick="handleDelhiveryAction('track_shipment')" 
-                                class="w-full bg-blue-600 text-white py-2 rounded text-sm font-semibold hover:bg-blue-700 transition">
+                                 class="w-full bg-blue-600 text-white py-2 rounded text-sm font-semibold hover:bg-blue-700 transition">
                             <i class="fas fa-search-location mr-2"></i> Track Live Status
                         </button>
+                        <button onclick="handleDelhiveryAction('download_label')" 
+                                 class="w-full bg-green-600 text-white py-2 rounded text-sm font-semibold hover:bg-green-700 transition">
+                            <i class="fas fa-file-pdf mr-2"></i> Download Shipping Label
+                        </button>
                         <button onclick="handleDelhiveryAction('cancel_shipment')" 
-                                class="w-full bg-white border border-red-200 text-red-600 py-2 rounded text-sm font-semibold hover:bg-red-50 transition">
+                                 class="w-full bg-white border border-red-200 text-red-600 py-2 rounded text-sm font-semibold hover:bg-red-50 transition">
                             <i class="fas fa-times-circle mr-2"></i> Cancel Shipment
                         </button>
                     </div>
@@ -351,6 +379,13 @@ require_once __DIR__ . '/../../includes/admin-header.php';
             
             if (action === 'cancel_shipment' && !confirm('Are you sure you want to cancel this shipment?')) return;
             
+            // Special handling for label download: Bypass AJAX and use direct proxy link
+            if (action === 'download_label') {
+                const labelProxyUrl = `<?php echo url("admin/api/delhivery_actions.php"); ?>?action=download_label&order_number=<?php echo urlencode($orderData['order_number']); ?>`;
+                window.open(labelProxyUrl, '_blank');
+                return;
+            }
+
             btn.disabled = true;
             btn.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i> Processing...';
 
@@ -364,8 +399,10 @@ require_once __DIR__ . '/../../includes/admin-header.php';
                 const data = await response.json();
                 if (data.success) {
                     if (action === 'track_shipment') {
-                        // Display tracking data in console instead of alert
+                        // Display tracking data in console
                         console.log('Delhivery Live Tracking Data:', data.data);
+                        // Also proactively open the live webpage
+                        window.open(`https://www.delhivery.com/track/package/<?php echo $orderData['tracking_number'] ?? ''; ?>`, '_blank');
                     } else {
                         location.reload();
                     }
@@ -640,6 +677,107 @@ async function handleRequestAction(event, requestId, status, type = '') {
         btn.innerHTML = originalContent;
     }
 }
+</script>
+
+<!-- QR Code Modal -->
+<div id="qrModal" class="confirm-modal-overlay hidden">
+    <div class="confirm-modal" style="max-width: 400px;">
+        <div class="confirm-modal-header">
+            <div class="confirm-modal-icon bg-purple-100 text-purple-600">
+                <i class="fas fa-qrcode"></i>
+            </div>
+            <h3 class="confirm-modal-title" id="qrModalTitle">Order QR Code</h3>
+        </div>
+        <div class="confirm-modal-body flex flex-col items-center justify-center p-6">
+            <div id="qrCodeContainer" class="bg-white p-2 border rounded shadow-sm inline-block"></div>
+            <p class="text-xs text-gray-400 mt-4 italic text-center">Scan this QR to view order details on any mobile device.</p>
+        </div>
+        <div class="confirm-modal-footer flex gap-2">
+            <button type="button" onclick="closeQRModal()" class="confirm-modal-btn confirm-modal-btn-cancel flex-1">Close</button>
+            <button type="button" onclick="downloadSingleQR()" class="bg-blue-600 text-white px-4 py-2 rounded text-sm font-bold hover:bg-blue-700 transition flex-1 flex items-center justify-center gap-2">
+                <i class="fas fa-download text-xs"></i> Download
+            </button>
+            <button type="button" onclick="printSingleQR()" class="bg-gray-800 text-white px-4 py-2 rounded text-sm font-bold hover:bg-gray-900 transition flex-1 flex items-center justify-center gap-2">
+                <i class="fas fa-print text-xs"></i> Print
+            </button>
+        </div>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/qrcodejs@1.0.0/qrcode.min.js"></script>
+<script>
+window.openQRModal = function(qrtextBase64, orderNum) {
+    var qrtext = "";
+    try {
+        qrtext = decodeURIComponent(escape(atob(qrtextBase64)));
+    } catch(e) {
+        qrtext = atob(qrtextBase64);
+    }
+    
+    var modal = document.getElementById('qrModal');
+    var qrContainer = document.getElementById('qrCodeContainer');
+    var title = document.getElementById('qrModalTitle');
+    
+    if (title) title.innerText = "Order: " + orderNum;
+    if (qrContainer) qrContainer.innerHTML = '';
+    
+    try {
+        var QRCodeClass = typeof QRCode !== 'undefined' ? QRCode : window.QRCode;
+        new QRCodeClass(qrContainer, {
+            text: qrtext,
+            width: 280,
+            height: 280,
+            colorDark : "#000000",
+            colorLight : "#ffffff",
+            correctLevel : QRCodeClass.CorrectLevel.M
+        });
+    } catch (e) {
+        console.error('QRCode Error:', e);
+        if (qrContainer) qrContainer.innerHTML = '<p class="text-red-500 text-xs text-center py-4">Error generating QR: ' + e.message + '</p>';
+    }
+    
+    if (modal) {
+        modal.dataset.orderNum = orderNum;
+        modal.classList.remove('hidden');
+    }
+};
+
+window.closeQRModal = function() {
+    var modal = document.getElementById('qrModal');
+    if (modal) modal.classList.add('hidden');
+};
+
+window.downloadSingleQR = function() {
+    var modal = document.getElementById('qrModal');
+    var canvas = document.querySelector('#qrCodeContainer canvas');
+    if (!canvas || !modal) return;
+    var a = document.createElement('a');
+    a.href = canvas.toDataURL("image/png");
+    a.download = `QR_Order_${modal.dataset.orderNum}.png`;
+    a.click();
+};
+
+window.printSingleQR = function() {
+    var qrContainer = document.getElementById('qrCodeContainer');
+    var modal = document.getElementById('qrModal');
+    if (!qrContainer || !modal) return;
+    var qrContainerHTML = qrContainer.innerHTML;
+    var orderNum = modal.dataset.orderNum;
+    
+    var printWindow = window.open('', '_blank');
+    printWindow.document.write(`
+        <html><head><title>Print QR</title>
+        <style>body{text-align:center; font-family:sans-serif; margin-top:50px;}</style>
+        </head><body>
+        <h2>Order: ${orderNum}</h2>
+        <div style="display:inline-block; border:1px solid #ccc; padding:20px;">
+        ${qrContainerHTML}
+        </div>
+        <script>setTimeout(() => { window.print(); window.close(); }, 500);<\/script>
+        </body></html>
+    `);
+    printWindow.document.close();
+};
 </script>
 
 <?php 

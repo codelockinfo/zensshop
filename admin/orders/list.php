@@ -279,6 +279,32 @@ $orders = $order->getAll($filters);
         </tbody>
     </table>
 </div>
+
+<!-- QR Code Modal -->
+<div id="qrModal" class="confirm-modal-overlay hidden">
+    <div class="confirm-modal" style="max-width: 400px;">
+        <div class="confirm-modal-header">
+            <div class="confirm-modal-icon bg-purple-100 text-purple-600">
+                <i class="fas fa-qrcode"></i>
+            </div>
+            <h3 class="confirm-modal-title" id="qrModalTitle">Order QR Code</h3>
+        </div>
+        <div class="confirm-modal-body flex flex-col items-center justify-center p-6">
+            <div id="qrCodeContainer" class="bg-white p-2 border rounded shadow-sm inline-block"></div>
+            <p class="text-xs text-gray-400 mt-4 italic text-center">Scan this QR to view order details on any mobile device.</p>
+        </div>
+        <div class="confirm-modal-footer flex gap-2">
+            <button type="button" onclick="closeQRModal()" class="confirm-modal-btn confirm-modal-btn-cancel flex-1">Close</button>
+            <button type="button" onclick="downloadSingleQR()" class="bg-blue-600 text-white px-4 py-2 rounded text-sm font-bold hover:bg-blue-700 transition flex-1 flex items-center justify-center gap-2">
+                <i class="fas fa-download text-xs"></i> Download
+            </button>
+            <button type="button" onclick="printSingleQR()" class="bg-gray-800 text-white px-4 py-2 rounded text-sm font-bold hover:bg-gray-900 transition flex-1 flex items-center justify-center gap-2">
+                <i class="fas fa-print text-xs"></i> Print
+            </button>
+        </div>
+    </div>
+</div>
+
 <script src="https://cdn.jsdelivr.net/npm/qrcodejs@1.0.0/qrcode.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/html2pdf.js@0.10.1/dist/html2pdf.bundle.min.js"></script>
 

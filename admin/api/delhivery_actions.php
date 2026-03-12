@@ -11,12 +11,13 @@ if (!$auth->isLoggedIn()) {
     exit;
 }
 
-$data = json_decode(file_get_contents('php://input'), true);
-$action = $data['action'] ?? '';
-$orderId = $data['order_id'] ?? '';
-$orderNumber = $data['order_number'] ?? '';
+$data = json_decode(file_get_contents('php://input'), true) ?? [];
+$action = $_REQUEST['action'] ?? $data['action'] ?? '';
+$orderId = $_REQUEST['order_id'] ?? $data['order_id'] ?? '';
+$orderNumber = $_REQUEST['order_number'] ?? $data['order_number'] ?? '';
 
 if (!$action || (!$orderId && !$orderNumber)) {
+    if ($_SERVER['REQUEST_METHOD'] === 'GET') die("Missing parameters");
     echo json_encode(['success' => false, 'message' => 'Missing parameters']);
     exit;
 }
@@ -102,6 +103,65 @@ try {
                 ]);
             } else {
                 echo json_encode(['success' => false, 'status' => 'error', 'message' => $result['message'] ?? 'Tracking failed', 'debug' => $delhivery->lastRequest]);
+            }
+            break;
+
+        case 'download_label':
+            $waybill = $orderData['tracking_number'];
+            if (!$waybill) {
+                if ($_SERVER['REQUEST_METHOD'] === 'GET') die("No tracking number");
+                echo json_encode(['success' => false, 'status' => 'error', 'message' => 'No tracking number found']);
+                exit;
+            }
+
+            // Proxy the PDF through our server to handle headers correctly
+            $result = $delhivery->generateLabel($waybill);
+            
+            // Check if we got a valid PDF response (starts with %PDF)
+            $isPdf = isset($result['raw_response']) && strpos($result['raw_response'], '%PDF') !== false;
+
+            if ($result['http_code'] === 200 && $isPdf) {
+                // Completely clear ALL output buffers to prevent corruption
+                while (ob_get_level()) {
+                    ob_end_clean();
+                }
+                
+                header('Content-Type: application/pdf');
+                header('Content-Disposition: inline; filename="Label_'.$waybill.'.pdf"');
+                header('Cache-Control: private, max-age=0, must-revalidate');
+                header('Pragma: public');
+                
+                echo $result['raw_response'];
+                exit;
+            } else {
+                // LOG RAW RESPONSE FOR DEBUGGING
+                error_log("Delhivery Label Download Failed for $waybill");
+                error_log("HTTP Code: " . $result['http_code']);
+                error_log("Raw Response: " . ($result['raw_response'] ?? 'EMPTY'));
+                
+                // If we are in the browser (GET), show a clean error message
+                if ($_SERVER['REQUEST_METHOD'] === 'GET') {
+                    while (ob_get_level()) ob_end_clean();
+                    header('Content-Type: text/html');
+                    
+                    // Fallback to searching the whole result for a body if raw_response is missing
+                    $bodyContent = $result['raw_response'] ?? $result['message'] ?? $result['remarks'][0] ?? "No response body";
+                    $rawDump = htmlspecialchars(substr($bodyContent, 0, 1000));
+                    $errorDetails = $isPdf ? "" : " (Response was not a valid PDF)";
+                    
+                    die("<div style='font-family:sans-serif;padding:20px;color:#721c24;background:#f8d7da;border:1px solid #f5c6cb;border-radius:4px;'>
+                        <h3 style='margin-top:0'>Label Download Failed</h3>
+                        <p>Could not fetch the label for <b>$waybill</b> from Delhivery.</p>
+                        <p style='font-size:13px'>HTTP Status: {$result['http_code']}$errorDetails</p>
+                        <div style='background:#fff;padding:10px;border:1px solid #ccc;font-family:monospace;font-size:12px;overflow:auto;max-height:200px;margin-top:10px;'>
+                            <b>API Response:</b><br><br>
+                            $rawDump
+                        </div>
+                        <br>
+                        <button onclick='window.close()' style='padding:8px 16px;cursor:pointer'>Close Window</button>
+                    </div>");
+                }
+                echo json_encode(['success' => false, 'status' => 'error', 'message' => 'Failed to fetch valid label']);
             }
             break;
 

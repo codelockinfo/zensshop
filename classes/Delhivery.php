@@ -210,16 +210,55 @@ class Delhivery {
         $isCOD = (strpos($paymentMethod, 'cod') !== false || strpos($paymentMethod, 'cash') !== false);
         $paymentMode = $isCOD ? 'COD' : 'Prepaid';
         $codAmount = $isCOD ? $orderData['total_amount'] : '0';
+
+        // Smarter lookup for Address, State and Phone if missing/unknown
+        $db = Database::getInstance();
+        
+        // Initialize with order data
+        $fName  = $shippingAddr['name'] ?? $orderData['customer_name'] ?? 'Customer';
+        $fAdd   = trim(preg_replace('/\s+/', ' ', ($shippingAddr['street'] ?? $shippingAddr['address_line1'] ?? $shippingAddr['address'] ?? $orderData['shipping_address_str'] ?? '')));
+        $fPin   = $shippingAddr['zip'] ?? $shippingAddr['postal_code'] ?? $shippingAddr['pincode'] ?? '';
+        $fCity  = $shippingAddr['city'] ?? $orderData['customer_city'] ?? '';
+        $fState = $shippingAddr['state'] ?? $orderData['customer_state'] ?? '';
+        $fPhone = $shippingAddr['phone'] ?? $orderData['customer_phone'] ?? '';
+
+        // Fallback to registered customer profile if critical fields are missing
+        if (!empty($orderData['user_id'])) {
+            $cust = $db->fetchOne("SELECT shipping_address, phone, name FROM customers WHERE customer_id = ?", [$orderData['user_id']]);
+            if ($cust) {
+                if (empty($fPhone)) $fPhone = $cust['phone'] ?? '';
+                if (empty($fName) || $fName === 'Customer') $fName = $cust['name'] ?? 'Customer';
+                
+                if (!empty($cust['shipping_address'])) {
+                    $custAddr = json_decode($cust['shipping_address'], true);
+                    if ($custAddr) {
+                        if (empty($fAdd)) {
+                            $fAdd = trim(preg_replace('/\s+/', ' ', ($custAddr['street'] ?? $custAddr['address_line1'] ?? $custAddr['address'] ?? '')));
+                        }
+                        if (empty($fPin))   $fPin   = $custAddr['zip'] ?? $custAddr['postal_code'] ?? $custAddr['pincode'] ?? '';
+                        if (empty($fCity))  $fCity  = $custAddr['city'] ?? '';
+                        if (empty($fState) || strtolower($fState) === 'unknown') $fState = $custAddr['state'] ?? '';
+                    }
+                }
+            }
+        }
+
+        // Final formatting and hard fallbacks for mandatory fields
+        $fPhone = substr(preg_replace('/[^0-9]/', '', $fPhone), -10);
+        $fState = (empty($fState) || strtolower($fState) === 'unknown') ? 'Gujarat' : $fState;
+        $fName  = substr($fName, 0, 30);
+        $fAdd   = !empty($fAdd) ? $fAdd : 'Address Not Provided';
+
         $dataPayload = [
             'shipments' => [
                 [
-                    'name' => substr($shippingAddr['name'] ?? $orderData['customer_name'] ?? 'Customer', 0, 30),
-                    'add' => trim(preg_replace('/\s+/', ' ', ($shippingAddr['street'] ?? $shippingAddr['address_line1'] ?? $shippingAddr['address'] ?? $orderData['shipping_address_str'] ?? ''))),
-                    'pin' => $shippingAddr['zip'] ?? $shippingAddr['postal_code'] ?? $shippingAddr['pincode'] ?? '',
-                    'city' => $shippingAddr['city'] ?? $orderData['customer_city'] ?? '',
-                    'state' => $shippingAddr['state'] ?? $orderData['customer_state'] ?? '',
+                    'name' => $fName,
+                    'add' => $fAdd,
+                    'pin' => $fPin,
+                    'city' => $fCity,
+                    'state' => $fState,
                     'country' => $shippingAddr['country'] ?? 'India',
-                    'phone' => substr(preg_replace('/[^0-9]/', '', $shippingAddr['phone'] ?? $orderData['customer_phone'] ?? ''), -10),
+                    'phone' => $fPhone,
                     'order' => $orderData['order_number'],
                     'payment_mode' => $paymentMode,
                     'return_pin' => $sellerPin,
@@ -252,6 +291,16 @@ class Delhivery {
 
         $result = $this->createShipment($dataPayload);
         
+        // Handle Duplicate Order ID error by retrying with a suffix
+        if (isset($result['success']) && !$result['success']) {
+            $errorMsg = $result['packages'][0]['remarks'][0] ?? $result['rmk'] ?? $result['message'] ?? '';
+            if (strpos(strtolower($errorMsg), 'duplicate order id') !== false) {
+                // Append a partial timestamp to make the order ID unique for Delhivery
+                $dataPayload['shipments'][0]['order'] = $orderData['order_number'] . '-' . substr(time(), -4);
+                $result = $this->createShipment($dataPayload);
+            }
+        }
+        
         if (isset($result['success']) && $result['success'] && isset($result['packages'][0]['waybill'])) {
             $waybill = $result['packages'][0]['waybill'];
             // Update order with tracking number
@@ -260,7 +309,7 @@ class Delhivery {
             return [
                 'success' => true, 
                 'waybill' => $waybill, 
-                'request_payload' => $dataPayload // Return the payload for visibility
+                'request_payload' => $dataPayload // Return the final payload used
             ];
         }
 
@@ -330,7 +379,8 @@ class Delhivery {
      * @param string $waybill
      */
     public function generateLabel($waybill) {
-        $url = $this->expressUrl . "/api/p/packing_slip?wbw=$waybill";
+        $cleanToken = preg_replace('/^(Token|Bearer)\s+/i', '', $this->token);
+        $url = $this->expressUrl . "/api/p/packing_slip?wbw=$waybill&client=$cleanToken";
         return $this->makeRequest($url, 'GET');
     }
 
@@ -435,7 +485,7 @@ class Delhivery {
         
         // Construct Headers based on current attempt
         $cleanToken = preg_replace('/^(Token|Bearer)\s+/i', '', $this->token);
-        $headers = ['Accept: application/json'];
+        $headers = ['Accept: */*']; // Use a generic accept header to avoid 406 errors
 
         if ($this->currentAuthType === 'Bearer') {
             $headers[] = 'Authorization: Bearer ' . $cleanToken;
@@ -463,7 +513,8 @@ class Delhivery {
             }
         } else {
             // For GET requests, ensure token is in URL as well as some Delhivery accounts require it
-            if (strpos($url, 'token=') === false) {
+            // Skip appending if 'token=' or 'client=' is already present
+            if (strpos($url, 'token=') === false && strpos($url, 'client=') === false) {
                 $separator = (strpos($url, '?') !== false) ? '&' : '?';
                 $cleanToken = preg_replace('/^(Token|Bearer)\s+/i', '', $this->token);
                 $url .= $separator . 'token=' . $cleanToken;
@@ -493,7 +544,11 @@ class Delhivery {
 
         if ($error) {
             error_log("Delhivery cURL Error: $error");
-            return ['success' => false, 'message' => "cURL Error: $error"];
+            return [
+                'success' => false, 
+                'message' => "cURL Error: $error",
+                'http_code' => $httpCode
+            ];
         }
 
         $decoded = json_decode($response, true);
@@ -508,9 +563,11 @@ class Delhivery {
             ];
         }
 
-        // Log non-success responses for debugging
-        if (isset($decoded['success']) && !$decoded['success']) {
-            error_log("Delhivery API Failure: " . json_encode($decoded));
+        // Always include raw response and http code in the result
+        if (is_array($decoded)) {
+            $decoded['raw_response'] = $response;
+            $decoded['http_code'] = $httpCode;
+            return $decoded;
         }
 
         return $decoded;

@@ -12,17 +12,23 @@ $settings = new Settings();
 $auth = new Auth();
 $auth->requireLogin();
 
-// Get Order ID
+// Get Order Identifier
 $orderId = $_GET['id'] ?? null;
-if (!$orderId) {
-    die("Invalid Order ID");
-}
+$orderNumber = $_GET['order_number'] ?? null;
 
 $orderModel = new Order();
-$order = $orderModel->getById($orderId);
+$order = null;
+
+if ($orderNumber) {
+    $order = $orderModel->getByOrderNumber($orderNumber);
+} elseif ($orderId) {
+    // Convert to integer if numeric
+    if (is_numeric($orderId)) $orderId = (int)$orderId;
+    $order = $orderModel->getById($orderId);
+}
 
 if (!$order) {
-    die("Order not found");
+    die("Order not found or invalid access");
 }
 
 // Fetch Settings (Dynamic based on Order's Store)
