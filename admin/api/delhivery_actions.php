@@ -164,6 +164,48 @@ try {
                 echo json_encode(['success' => false, 'status' => 'error', 'message' => 'Failed to fetch valid label']);
             }
             break;
+            
+        case 'request_pickup':
+            // Can handle single or bulk
+            $ids = $data['bulk_ids'] ?? [$numericOrderId];
+            $result = $delhivery->autoRequestPickup($ids);
+            
+            if ($result['success']) {
+                echo json_encode(['success' => true, 'status' => 'success', 'message' => 'Pickup requested successfully', 'debug' => $delhivery->lastRequest]);
+            } else {
+                echo json_encode(['success' => false, 'status' => 'error', 'message' => $result['message'] ?? 'Pickup request failed', 'debug' => $delhivery->lastRequest]);
+            }
+            break;
+
+        case 'get_shipping_charge':
+            $shippingAddr = json_decode($orderData['shipping_address'] ?? '[]', true);
+            $destPin = $shippingAddr['pincode'] ?? $shippingAddr['zip'] ?? $shippingAddr['postal_code'] ?? '';
+            
+            // Get Warehouse Pincode
+            $sellerJson = $settings->get('seller_address_data', '{}', $storeId);
+            $sellerData = json_decode($sellerJson, true) ?: [];
+            $sourcePin = $sellerData['pincode'] ?? '';
+
+            if (!$sourcePin || !$destPin) {
+                echo json_encode(['success' => false, 'message' => 'Pincodes missing (Source: '.$sourcePin.', Dest: '.$destPin.')']);
+                exit;
+            }
+
+            $params = [
+                'ss' => $sourcePin,
+                'ds' => $destPin,
+                'wt' => ($orderData['total_weight'] > 0) ? ($orderData['total_weight'] * 1000) : 500, // Convert KG to Grams
+                'md' => 'Surface',
+                'pt' => (strpos(strtolower($orderData['payment_method'] ?? ''), 'cod') !== false) ? 'COD' : 'Prepaid'
+            ];
+
+            $result = $delhivery->calculateShippingCost($params);
+            if (isset($result[0]['total_amount']) || isset($result['total_amount'])) {
+                 echo json_encode(['success' => true, 'data' => $result]);
+            } else {
+                 echo json_encode(['success' => false, 'message' => 'Calculation failed', 'raw' => $result]);
+            }
+            break;
 
         default:
             echo json_encode(['success' => false, 'status' => 'error', 'message' => 'Invalid action']);

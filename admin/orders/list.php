@@ -42,7 +42,14 @@ $orders = $order->getAll($filters);
                         class="border border-gray-300 rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white cursor-pointer h-10 min-w-[150px]">
                     <option value="">All Status</option>
                     <?php 
-                    $statuses = ['pending' => 'Pending', 'processing' => 'Processing', 'shipped' => 'Shipped', 'delivered' => 'Delivered', 'cancelled' => 'Cancelled'];
+                    $statuses = [
+                        'pending' => 'Pending', 
+                        'processing' => 'Processing', 
+                        'ready_for_pickup' => 'Ready for Pickup',
+                        'shipped' => 'Shipped', 
+                        'delivered' => 'Delivered', 
+                        'cancelled' => 'Cancelled'
+                    ];
                     foreach($statuses as $val => $label): 
                         $selected = (isset($_GET['status']) && $_GET['status'] === $val) ? 'selected' : '';
                     ?>

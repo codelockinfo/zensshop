@@ -410,6 +410,57 @@ class Delhivery {
     }
 
     /**
+     * Automatically request a pickup for a set of orders
+     * @param array $orderIds Array of order IDs
+     */
+    public function autoRequestPickup($orderIds) {
+        if (empty($orderIds)) return ['success' => false, 'message' => 'No orders selected'];
+        if (!is_array($orderIds)) $orderIds = [$orderIds];
+
+        require_once __DIR__ . '/Order.php';
+        require_once __DIR__ . '/Database.php';
+        $orderObj = new Order();
+        $db = Database::getInstance();
+
+        $warehouseName = null;
+        $totalWeight = 0;
+        $activeOrders = [];
+
+        foreach ($orderIds as $id) {
+            $order = $orderObj->getById($id);
+            if (!$order || empty($order['tracking_number'])) continue;
+
+            $activeOrders[] = $order;
+            $totalWeight += (float)($order['total_weight'] ?? 0.5);
+            
+            if (!$warehouseName) {
+                $storeId = $order['store_id'] ?? null;
+                $warehouseName = $this->settings->get('delhivery_warehouse_name', 'ZENSENTERPRISE-do-B2C', $storeId);
+            }
+        }
+
+        if (empty($activeOrders)) return ['success' => false, 'message' => 'No valid shipments found for pickup'];
+
+        $payload = [
+            'pickup_location' => $warehouseName,
+            'expected_package_count' => count($activeOrders),
+            'pickup_date' => date('Y-m-d'),
+            'pickup_time' => date('H:i:s', strtotime('+1 hour')), // Request 1 hour from now
+        ];
+
+        $result = $this->createPickupRequest($payload);
+        
+        if (isset($result['success']) && $result['success']) {
+            // Update order status to 'ready_for_pickup'
+            foreach ($activeOrders as $order) {
+                $db->execute("UPDATE orders SET order_status = 'ready_for_pickup' WHERE id = ?", [$order['id']]);
+            }
+        }
+
+        return $result;
+    }
+
+    /**
      * Create Client Warehouse
      * @param array $data Warehouse details
      */
@@ -455,30 +506,24 @@ class Delhivery {
     public function cancel($waybill) {
         if (empty($waybill)) return ['success' => false, 'message' => 'Waybill required'];
 
-        // Staging requires .json extension for clean JSON response
+        // Live/Staging uses the edit endpoint for cancellations
         $url = $this->expressUrl . '/api/p/edit.json';
         
-        // Some staging accounts require return_pin for validation even on cancel
-        $storeId = $_SESSION['store_id'] ?? null;
-        $sellerJson = $this->settings->get('seller_address_data', '{}', $storeId);
-        $sellerData = json_decode($sellerJson, true) ?: [];
-        $returnPin = $sellerData['pincode'] ?? '394101';
-
         $payload = [
             'waybill' => $waybill,
             'cancellation' => 'true'
-            // 'return_pin' => $returnPin // Some versions need this, adding if header edit fails
         ];
 
         $result = $this->makeRequest($url, 'POST', $payload);
         
-        // Normalize success flag for cancellation
-        // Delhivery returns {"status": true} or {"status": "Success"}
-        if (isset($result['status']) && ($result['status'] === true || strtolower($result['status']) === 'success')) {
+        // Normalize for multiple formats
+        if (isset($result['status']) && ($result['status'] === true || strtolower((string)$result['status']) === 'success')) {
             $result['success'] = true;
-        } elseif (!isset($result['success'])) {
+        } elseif (isset($result['success']) && $result['success']) {
+            $result['success'] = true;
+        } else {
             $result['success'] = false;
-            $result['message'] = $result['message'] ?? $result['remarks'][0] ?? $result['remark'] ?? 'Cancellation failed';
+            $result['message'] = $result['message'] ?? $result['remarks'][0] ?? $result['error'] ?? 'Cancellation failed';
         }
         
         return $result;
