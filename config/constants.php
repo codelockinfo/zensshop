@@ -11,9 +11,15 @@ if (session_status() === PHP_SESSION_NONE) {
 date_default_timezone_set('Asia/Kolkata');
 
 // 1. Detect environment and set CURRENT_URL (host + path without protocol)
-$protocol = (isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] === 'on') ? 'https://' : 'http://';
 $rawHost = $_SERVER['HTTP_HOST'] ?? 'localhost';
 $cleanHost = explode(':', $rawHost)[0]; // Remove port (e.g. localhost:8080 -> localhost)
+
+// Force HTTPS for production domain, otherwise detect normally
+if (strpos($cleanHost, 'homeprox.in') !== false) {
+    $protocol = 'https://';
+} else {
+    $protocol = (isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] === 'on') ? 'https://' : 'http://';
+}
 $projectDir = basename(dirname(__DIR__));
 
 if (strpos($cleanHost, 'localhost') !== false || strpos($cleanHost, '127.0.0.1') !== false) {

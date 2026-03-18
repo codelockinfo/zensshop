@@ -9,6 +9,9 @@ require_once __DIR__ . '/classes/Database.php';
 
 $db = Database::getInstance();
 $baseUrl = getBaseUrl();
+if (strpos($baseUrl, 'homeprox.in') !== false) {
+    $baseUrl = str_replace('http://', 'https://', $baseUrl);
+}
 
 // Start XML output
 echo '<?xml version="1.0" encoding="UTF-8"?>';
@@ -21,8 +24,6 @@ $staticPages = [
     'shop' => ['priority' => '0.9', 'freq' => 'daily'],
     'about' => ['priority' => '0.8', 'freq' => 'monthly'],
     'support' => ['priority' => '0.8', 'freq' => 'monthly'],
-    'login' => ['priority' => '0.6', 'freq' => 'monthly'],
-    'register' => ['priority' => '0.6', 'freq' => 'monthly'],
     'wishlist' => ['priority' => '0.5', 'freq' => 'weekly'],
     'cart' => ['priority' => '0.5', 'freq' => 'weekly'],
     'special-product' => ['priority' => '0.5', 'freq' => 'weekly'],
@@ -35,9 +36,6 @@ $staticPages = [
     'return-policy' => ['priority' => '0.5', 'freq' => 'monthly'],
     'category' => ['priority' => '0.5', 'freq' => 'monthly'],
     'collections' => ['priority' => '0.5', 'freq' => 'monthly'],
-    'account?login' => ['priority' => '0.5', 'freq' => 'monthly'],
-    'account?register' => ['priority' => '0.5', 'freq' => 'monthly'],
-    'account?forgot-password' => ['priority' => '0.5', 'freq' => 'monthly'],
 ];
 
 foreach ($staticPages as $path => $meta) {
