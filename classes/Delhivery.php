@@ -33,8 +33,7 @@ class Delhivery {
         // Trim any accidental spaces (redundant now, but harmless)
         $this->token = trim($rawToken);
         $this->isTest = ($mode === 'test');
-        // Use cl-api for Live (standard for Delhivery One) and staging-express for Test
-        $this->baseUrl = ($mode === 'live') ? 'https://cl-api.delhivery.com' : 'https://staging-express.delhivery.com';
+        $this->baseUrl = ($mode === 'live') ? 'https://track.delhivery.com' : 'https://staging-express.delhivery.com';
         $this->expressUrl = $this->baseUrl;
     }
 
@@ -406,14 +405,8 @@ class Delhivery {
      * @param array $data Contains pickup_time, pickup_date, pickup_location, expected_package_count
      */
     public function createPickupRequest($data) {
-        // Use the base URL defined in the constructor (Live or Staging)
-        // Wrap data in the format=json&data={JSON} pattern
         $url = rtrim($this->baseUrl, '/') . '/api/pickup/request/creation/';
-        $payload = [
-            'format' => 'json',
-            'data' => json_encode($data)
-        ];
-        return $this->makeRequest($url, 'POST', $payload, true);
+        return $this->makeRequest($url, 'POST', $data);
     }
 
     /**
@@ -560,7 +553,7 @@ class Delhivery {
         
         // Construct Headers based on current attempt
         $cleanToken = preg_replace('/^(Token|Bearer)\s+/i', '', $this->token);
-        $headers = ['Accept: */*']; // Use a generic accept header to avoid 406 errors
+        $headers = ['Accept: application/json']; // Ensure Delhivery sees this as an API call, not a browser visit
 
         if ($this->currentAuthType === 'Bearer') {
             $headers[] = 'Authorization: Bearer ' . $cleanToken;
