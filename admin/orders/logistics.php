@@ -286,19 +286,30 @@ async function loadTabData(tab) {
         }
     });
 
-    tableBody.innerHTML = `<tr><td colspan="9" class="p-12 text-center text-gray-500"><div class="flex items-center justify-center gap-2"><i class="fas fa-spinner fa-spin text-xl text-blue-500"></i><span class="font-medium">Loading ${tab.replace('_', ' ')}...</span></div></td></tr>`;
+    tableBody.innerHTML = `<tr><td colspan="10" class="p-12 text-center text-gray-500"><div class="flex items-center justify-center gap-2"><i class="fas fa-spinner fa-spin text-xl text-blue-500"></i><span class="font-medium">Loading ${tab.replace(/_/g, ' ')}...</span></div></td></tr>`;
 
     try {
-        const response = await fetch(`logistics.php?ajax_tab=${tab}`);
-        if (!response.ok) throw new Error('Network response was not ok');
+        // Use window.location.pathname to handle clean URLs correctly
+        const baseUrl = window.location.pathname;
+        const response = await fetch(`${baseUrl}?ajax_tab=${tab}`);
+        if (!response.ok) throw new Error(`Server returned ${response.status}`);
         const html = await response.text();
+        
+        if (html.trim() === '') throw new Error('Empty response from server');
+        
         tableBody.innerHTML = html;
         
         initTableActions();
         startTrackingFetch();
     } catch (e) {
         console.error('Tab loading error:', e);
-        tableBody.innerHTML = `<tr><td colspan="9" class="p-12 text-center text-red-500">Failed to load data. Error: ${e.message}</td></tr>`;
+        tableBody.innerHTML = `<tr><td colspan="10" class="p-12 text-center text-red-500">
+            <div class="flex flex-col items-center gap-2">
+                <i class="fas fa-exclamation-triangle text-2xl"></i>
+                <span>Failed to load data: ${e.message}</span>
+                <button onclick="loadTabData('${tab}')" class="mt-2 text-xs bg-gray-100 px-3 py-1 rounded border hover:bg-gray-200">Retry</button>
+            </div>
+        </td></tr>`;
     }
 }
 

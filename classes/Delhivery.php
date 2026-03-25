@@ -518,8 +518,9 @@ class Delhivery {
     public function cancel($waybill) {
         if (empty($waybill)) return ['success' => false, 'message' => 'Waybill required'];
 
-        // Live/Staging uses the edit endpoint for cancellations
-        $url = $this->expressUrl . '/api/p/edit.json';
+        // Use cl-api for live and staging-express for test
+        $baseUrl = $this->isTest ? 'https://staging-express.delhivery.com' : 'https://cl-api.delhivery.com';
+        $url = $baseUrl . '/api/p/edit.json';
         
         $payload = [
             'waybill' => $waybill,

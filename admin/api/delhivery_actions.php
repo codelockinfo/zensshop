@@ -181,10 +181,15 @@ try {
             $shippingAddr = json_decode($orderData['shipping_address'] ?? '[]', true);
             $destPin = $shippingAddr['pincode'] ?? $shippingAddr['zip'] ?? $shippingAddr['postal_code'] ?? '';
             
-            // Get Warehouse Pincode
-            $sellerJson = $settings->get('seller_address_data', '{}', $storeId);
-            $sellerData = json_decode($sellerJson, true) ?: [];
-            $sourcePin = $sellerData['pincode'] ?? '';
+            // Get Warehouse Pincode from specific Delhivery settings first
+            $sourcePin = $settings->get('delhivery_warehouse_pincode', '', $storeId);
+            
+            // Fallback to general seller address if not set
+            if (empty($sourcePin)) {
+                $sellerJson = $settings->get('seller_address_data', '{}', $storeId);
+                $sellerData = json_decode($sellerJson, true) ?: [];
+                $sourcePin = $sellerData['pincode'] ?? '';
+            }
 
             if (!$sourcePin || !$destPin) {
                 echo json_encode(['success' => false, 'message' => 'Pincodes missing (Source: '.$sourcePin.', Dest: '.$destPin.')']);
