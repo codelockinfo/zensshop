@@ -561,6 +561,10 @@ $action = $segments[count($segments) - 1] ?? '';  // add, list
                         <i class="fas fa-gem text-xs"></i>
                         <span>Order List</span>
                     </a>
+                    <a href="<?php echo url('admin/orders/logistics'); ?>" class="<?php echo (strpos($_SERVER['REQUEST_URI'], 'orders/logistics') !== false) ? 'bg-gray-700 text-white' : ''; ?> flex items-center space-x-2 py-1 px-4 text-sm" title="Delhivery Logistics">
+                        <i class="fas fa-truck text-xs"></i>
+                        <span>Logistics</span>
+                    </a>
                 </div>
                 <a href="<?php echo url('admin/discounts/manage'); ?>" class=" <?php echo strpos($_SERVER['PHP_SELF'], 'discounts') !== false ? 'bg-gray-700' : ''; ?> sidebar-menu-item flex items-center space-x-3 py-2 px-4 mt-2" title="Discounts">
                     <i class="fas fa-tag text-lg"></i>
