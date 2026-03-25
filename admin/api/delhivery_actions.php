@@ -76,9 +76,9 @@ try {
 
             $result = $delhivery->cancel($waybill);
             if ($result['success']) {
-                // Update order: clear tracking number and move status back to pending
+                // Update order: clear tracking number and move status BACK to 'confirmed' so it reappears in Pending AWB
                 $db = Database::getInstance();
-                $db->execute("UPDATE orders SET tracking_number = NULL, order_status = 'pending' WHERE id = ?", [$numericOrderId]);
+                $db->execute("UPDATE orders SET tracking_number = NULL, order_status = 'confirmed' WHERE id = ?", [$numericOrderId]);
 
                 echo json_encode(['success' => true, 'status' => 'success', 'message' => 'Shipment cancelled successfully and order status updated.', 'debug' => $delhivery->lastRequest]);
             } else {
@@ -166,14 +166,23 @@ try {
             break;
             
         case 'request_pickup':
-            // Can handle single or bulk
-            $ids = $data['bulk_ids'] ?? [$numericOrderId];
-            $result = $delhivery->autoRequestPickup($ids);
+            $orderNumber = $data['order_number'] ?? null;
+            $bulkNumbers = $data['bulk_numbers'] ?? [];
             
-            if ($result['success']) {
+            require_once __DIR__ . '/../../classes/Delhivery.php';
+            $delhivery = new Delhivery();
+            $result = $delhivery->autoRequestPickup($bulkNumbers ?: [$orderNumber]);
+            
+            if (isset($result['success']) && $result['success']) {
                 echo json_encode(['success' => true, 'status' => 'success', 'message' => 'Pickup requested successfully', 'debug' => $delhivery->lastRequest]);
             } else {
-                echo json_encode(['success' => false, 'status' => 'error', 'message' => $result['message'] ?? 'Pickup request failed', 'debug' => $delhivery->lastRequest]);
+                echo json_encode([
+                    'success' => false, 
+                    'status' => 'error', 
+                    'message' => $result['message'] ?? $result['error'] ?? 'Pickup request failed', 
+                    'raw' => $result['raw_response'] ?? null,
+                    'debug' => $delhivery->lastRequest
+                ]);
             }
             break;
 
@@ -182,7 +191,7 @@ try {
             $destPin = $shippingAddr['pincode'] ?? $shippingAddr['zip'] ?? $shippingAddr['postal_code'] ?? '';
             
             // Get Warehouse Pincode from specific Delhivery settings first
-            $sourcePin = $settings->get('delhivery_warehouse_pincode', '', $storeId);
+            $sourcePin = $settings->get('delhivery_source_pincode', '', $storeId);
             
             // Fallback to general seller address if not set
             if (empty($sourcePin)) {

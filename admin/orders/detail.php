@@ -327,7 +327,7 @@ require_once __DIR__ . '/../../includes/admin-header.php';
                             <p class="text-xs font-bold text-gray-700"><?php echo (int)($orderData['package_count'] ?? 1); ?></p>
                         </div>
                     </div>
-                    <button onclick="handleDelhiveryAction('create_shipment')" id="createShipmentBtn" 
+                    <button onclick="handleDelhiveryAction('create_shipment', event)" id="createShipmentBtn" 
                             class="w-full bg-orange-600 text-white py-2 rounded font-semibold hover:bg-orange-700 transition flex items-center justify-center">
                         <i class="fas fa-plus-circle mr-2"></i> Create Delhivery Shipment
                     </button>
@@ -355,11 +355,11 @@ require_once __DIR__ . '/../../includes/admin-header.php';
                     </div>
 
                     <div class="flex flex-col gap-2">
-                        <button onclick="handleDelhiveryAction('track_shipment')" 
+                        <button onclick="handleDelhiveryAction('track_shipment', event)" 
                                  class="w-full bg-blue-600 text-white py-2 rounded text-sm font-semibold hover:bg-blue-700 transition">
                             <i class="fas fa-search-location mr-2"></i> Track Live Status
                         </button>
-                        <button onclick="handleDelhiveryAction('cancel_shipment')" 
+                        <button onclick="handleDelhiveryAction('cancel_shipment', event)" 
                                  class="w-full bg-white border border-red-200 text-red-600 py-2 rounded text-sm font-semibold hover:bg-red-50 transition">
                             <i class="fas fa-times-circle mr-2"></i> Cancel Shipment
                         </button>
@@ -369,7 +369,7 @@ require_once __DIR__ . '/../../includes/admin-header.php';
         </div>
 
         <script>
-        async function handleDelhiveryAction(action) {
+        async function handleDelhiveryAction(action, event) {
             const btn = event.currentTarget;
             const originalContent = btn.innerHTML;
             

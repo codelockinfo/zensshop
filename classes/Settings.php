@@ -54,10 +54,10 @@ class Settings {
         }
         $result = $this->db->fetchOne($sql, $params);
         
-        // Fallback: If store_id didn't match, try finding ANY store's setting
-        if (!$result && $storeId && $storeId !== 'DEFAULT') {
+        // Fallback: If store_id didn't match, check Global settings (store_id IS NULL)
+        if (!$result && $storeId) {
             $result = $this->db->fetchOne(
-                "SELECT setting_value FROM settings WHERE setting_key = ? AND store_id IS NOT NULL AND store_id != '' ORDER BY store_id DESC LIMIT 1",
+                "SELECT setting_value FROM settings WHERE setting_key = ? AND (store_id IS NULL OR store_id = '')",
                 [$key]
             );
         }

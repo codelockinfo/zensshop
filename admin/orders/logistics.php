@@ -7,9 +7,12 @@ require_once __DIR__ . '/../../includes/functions.php';
 
 if (!function_exists('url')) {
     function url($path = '') {
-        $baseUrl = rtrim((isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] === 'on' ? "https" : "http") . "://$_SERVER[HTTP_HOST]" . str_replace(basename($_SERVER['SCRIPT_NAME']), '', $_SERVER['SCRIPT_NAME']), '/');
-        $baseUrl = str_replace('/admin/orders', '', $baseUrl);
-        return $baseUrl . '/' . ltrim($path, '/');
+        $host = (isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] === 'on' ? "https" : "http") . "://$_SERVER[HTTP_HOST]";
+        // Correctly find the project root by stripping the known admin path
+        $scriptPath = $_SERVER['SCRIPT_NAME'];
+        $rootPath = str_replace('/admin/orders/logistics.php', '', $scriptPath);
+        $rootPath = str_replace('/admin/orders/logistics', '', $rootPath);
+        return $host . rtrim($rootPath, '/') . '/' . ltrim($path, '/');
     }
 }
 
@@ -347,56 +350,67 @@ function initTableActions() {
     }
 }
 
-function startTrackingFetch() {
-    const rows = document.querySelectorAll('tr[data-awb]');
-    rows.forEach(async row => {
+async function startTrackingFetch() {
+    // 1. Load shipping charges first (Quick)
+    document.querySelectorAll('tr[data-order-number]').forEach(async (row, index) => {
+        const num = row.dataset.orderNumber;
+        if (num) setTimeout(() => loadShippingCharge(num, row), index * 150);
+    });
+
+    // 2. Load live tracking (Slower, staggered to prevent overload)
+    const trackingRows = Array.from(document.querySelectorAll('tr[data-awb]')).filter(row => {
         const awb = row.dataset.awb;
-        if (!awb || awb === 'NULL' || awb === '') return;
-        
+        return awb && awb !== 'NULL' && awb !== '';
+    });
+
+    trackingRows.forEach(async (row, index) => {
         const orderNum = row.dataset.orderNumber;
+        const awb = row.dataset.awb;
         const statusCell = document.getElementById(`status-${awb}`);
         const updateCell = document.getElementById(`update-${awb}`);
         const modeCell = document.getElementById(`mode-${awb}`);
-        
+
+        // Add a delay proportional to row index to avoid hitting the server all at once
+        await new Promise(resolve => setTimeout(resolve, index * 300));
+
         try {
-            const response = await fetch('<?php echo url("admin/api/delhivery_actions"); ?>', {
+            const response = await fetch('<?php echo url("admin/api/delhivery_actions.php"); ?>', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ action: 'track_shipment', order_number: orderNum })
             });
-            const data = await response.json();
-            if (data.success && data.data.ShipmentData && data.data.ShipmentData[0]) {
-                const ship = data.data.ShipmentData[0].Shipment;
-                const status = ship.Status.Status || 'Active';
-                const lastScan = ship.Scans ? ship.Scans[0] : null;
+            const result = await response.json();
+            
+            if (result.success && result.data && result.data.ShipmentData && result.data.ShipmentData[0]) {
+                const shipment = result.data.ShipmentData[0].Shipment;
+                const statusInfo = shipment.Status;
+                const status = statusInfo.Status || 'Active';
+                const location = statusInfo.StatusLocation || '';
+                const dateTime = statusInfo.StatusDateTime;
                 
-                let statusClass = 'text-gray-500 bg-gray-100';
-                if (status.includes('Delivered')) statusClass = 'status-delivered';
-                else if (status.includes('Transit') || status.includes('Picked')) statusClass = 'status-transit';
-                else if (status.includes('Pickup')) statusClass = 'status-pickup';
-                else if (status.includes('Manifest') || status === 'Ready for pickup') statusClass = 'status-manifest';
-                else if (status.includes('Cancel')) statusClass = 'status-cancelled';
-                else if (status.includes('RTO') || status.includes('Return')) statusClass = 'status-rto';
-
-                if (statusCell) statusCell.innerHTML = `<span class="status-pill text-[10px] ${statusClass}">${status}</span>`;
+                // Update Badge
+                if (statusCell) {
+                    const statusClass = status.includes('Delivered') ? 'bg-green-100 text-green-700' : 'bg-blue-100 text-blue-700';
+                    statusCell.innerHTML = `<span class="status-pill text-[10px] ${statusClass}">${status}</span>`;
+                }
                 
-                // Fetch Estimated Charge
-                fetchEstimatedCharge(row.dataset.orderId);
-
-                if (lastScan && updateCell) {
-                    const scanTime = new Date(lastScan.ScanDateTime);
+                // Update Last Update info
+                if (updateCell && dateTime) {
+                    const date = new Date(dateTime).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' });
+                    const time = new Date(dateTime).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' });
                     updateCell.innerHTML = `
-                        <span class="text-[11px] text-gray-800 font-medium">${lastScan.Scan}</span>
-                        <span class="text-[9px] text-gray-500">${scanTime.toLocaleDateString('en-GB')} ${scanTime.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}</span>
+                        <div class="font-bold text-gray-800">${location}</div>
+                        <div class="text-[10px] text-gray-400">${date} ${time}</div>
                     `;
                 }
 
-                if (ship.Destination && modeCell) {
+                // Update Transport Mode & Destination
+                if (modeCell) {
                     modeCell.innerHTML = `
                         <i class="fas fa-truck text-xs text-blue-500"></i>
                         <div class="flex flex-col">
-                            <span class="text-[10px] font-bold text-gray-500">${ship.ServiceType || 'SURFACE'}</span>
-                            <span class="text-[9px] text-gray-400">${ship.Destination}</span>
+                            <span class="text-[10px] font-bold text-gray-500">${shipment.ServiceType || 'SURFACE'}</span>
+                            <span class="text-[9px] text-gray-400">${shipment.Destination || ''}</span>
                         </div>
                     `;
                 }
@@ -405,51 +419,51 @@ function startTrackingFetch() {
                 if (updateCell) updateCell.innerHTML = `<span class="text-[10px] text-gray-400 italic">Waiting...</span>`;
             }
         } catch (e) {
-            if (statusCell) statusCell.innerHTML = `<span class="text-[10px] text-red-500">Error</span>`;
+            console.error('Tracking failed for ' + awb, e);
         }
     });
 }
 
-async function fetchEstimatedCharge(orderId) {
-    const chargeCell = document.getElementById(`charge-${orderId}`);
-    if (!chargeCell) return;
+const loadShippingCharge = async (orderNumber, row) => {
+    const estChargeEl = row.querySelector('.est-charge');
+    if (!estChargeEl) return;
 
     try {
-        const response = await fetch('<?php echo url("admin/api/delhivery_actions"); ?>', {
+        const response = await fetch('<?php echo url("admin/api/delhivery_actions.php"); ?>', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ action: 'get_shipping_charge', order_id: orderId })
+            body: JSON.stringify({ action: 'get_shipping_charge', order_number: orderNumber })
         });
         const result = await response.json();
         if (result.success && result.data) {
-            // result.data is usually an array from Delhivery shipping_charge API
-            const charge = Array.isArray(result.data) ? result.data[0] : result.data;
-            const amount = charge.total_amount || charge.total_charge || '--';
-            chargeCell.innerHTML = `
+            // Delhivery often returns an array or a nested object
+            const data = Array.isArray(result.data) ? result.data[0] : result.data;
+            const amount = data.total_amount || data.total_charge || data.expected_charge || '--';
+            estChargeEl.innerHTML = `
                 <span class="text-[11px] text-green-700 font-bold">₹${amount}</span>
                 <span class="text-[9px] text-gray-400">API Estimate</span>
             `;
         } else {
-            chargeCell.innerHTML = `<span class="text-[10px] text-gray-400">N/A</span>`;
+            estChargeEl.innerHTML = `<span class="text-[10px] text-gray-400">N/A</span>`;
         }
     } catch (e) {
-        chargeCell.innerHTML = `<span class="text-[10px] text-red-500">Error</span>`;
+        estChargeEl.innerHTML = `<span class="text-[10px] text-red-500">Error</span>`;
     }
 }
 
 window.handleBulkAction = async (action) => {
-    const selectedIds = Array.from(document.querySelectorAll('.order-checkbox:checked')).map(cb => {
-        return cb.closest('tr').dataset.orderId;
+    const selectedOrders = Array.from(document.querySelectorAll('.order-checkbox:checked')).map(cb => {
+        return cb.closest('tr').dataset.orderNumber;
     });
 
     if (action === 'request_pickup') {
-        if (!confirm(`Do you want to request Delhivery pickup for ${selectedIds.length} orders?`)) return;
+        if (!confirm(`Do you want to request Delhivery pickup for ${selectedOrders.length} orders?`)) return;
         
         try {
-            const response = await fetch('<?php echo url("admin/api/delhivery_actions"); ?>', {
+            const response = await fetch('<?php echo url("admin/api/delhivery_actions.php"); ?>', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ action: 'request_pickup', order_id: selectedIds[0], bulk_ids: selectedIds })
+                body: JSON.stringify({ action: 'request_pickup', order_number: selectedOrders[0], bulk_numbers: selectedOrders })
             });
             const result = await response.json();
             if (result.success) {
@@ -462,14 +476,10 @@ window.handleBulkAction = async (action) => {
             alert('Connection failure');
         }
     } else if (action === 'print_labels') {
-        selectedIds.forEach((id, index) => {
-            const row = document.querySelector(`tr[data-order-id="${id}"]`);
-            if (row) {
-                const orderNum = row.dataset.orderNumber;
-                setTimeout(() => {
-                    window.open(`<?php echo url('admin/api/delhivery_actions?action=download_label&order_number='); ?>${orderNum}`, '_blank');
-                }, index * 500);
-            }
+        selectedOrders.forEach((num, index) => {
+            setTimeout(() => {
+                window.open(`<?php echo url('admin/api/delhivery_actions?action=download_label&order_number='); ?>${num}`, '_blank');
+            }, index * 500);
         });
     }
 };

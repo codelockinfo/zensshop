@@ -405,8 +405,15 @@ class Delhivery {
      * @param array $data Contains pickup_time, pickup_date, pickup_location, expected_package_count
      */
     public function createPickupRequest($data) {
-        $url = rtrim($this->baseUrl, '/') . '/api/pickup/request/creation/';
-        return $this->makeRequest($url, 'POST', $data);
+        // v1.4 Force Main Domain - Bypassing staging domain resolution issues
+        $url = 'https://track.delhivery.com/fm/request/new/';
+        
+        // Ensure expected_package_count is an integer
+        if (isset($data['expected_package_count'])) {
+            $data['expected_package_count'] = (int)$data['expected_package_count'];
+        }
+
+        return $this->makeRequest($url, 'POST', $data, false);
     }
 
     /**
@@ -414,20 +421,22 @@ class Delhivery {
      * @param array $orderIds Array of order IDs
      */
     public function autoRequestPickup($orderIds) {
-        if (empty($orderIds)) return ['success' => false, 'message' => 'No orders selected'];
+        if (empty($orderIds)) return ['success' => false, 'message' => 'No orders provided'];
         if (!is_array($orderIds)) $orderIds = [$orderIds];
 
-        require_once __DIR__ . '/Order.php';
         require_once __DIR__ . '/Database.php';
-        $orderObj = new Order();
         $db = Database::getInstance();
 
         $warehouseName = null;
         $totalWeight = 0;
         $activeOrders = [];
 
+        require_once __DIR__ . '/Order.php';
+        $orderObj = new Order();
+
         foreach ($orderIds as $id) {
-            $order = $orderObj->getById($id);
+            // Support both internal ID and Order Number string
+            $order = is_numeric($id) ? $orderObj->getById($id) : $orderObj->getByOrderNumber($id);
             if (!$order || empty($order['tracking_number'])) continue;
 
             $activeOrders[] = $order;
@@ -435,8 +444,12 @@ class Delhivery {
             
             if (!$warehouseName) {
                 $storeId = $order['store_id'] ?? null;
-                $warehouseName = $this->settings->get('delhivery_warehouse_name', 'ZENSENTERPRISE-do-B2C', $storeId);
-                $warehousePincode = $this->settings->get('delhivery_warehouse_pincode', '', $storeId);
+                // Get exactly what's in the database (e.g., with the 772c73- prefix)
+                $warehouseName = $this->settings->get('delhivery_warehouse_name', '', $storeId);
+                $warehousePincode = $this->settings->get('delhivery_source_pincode', '', $storeId);
+                
+                // Final fallback for name if empty
+                if (empty($warehouseName)) $warehouseName = 'ZENSENTERPRISE-do-B2C';
             }
         }
 
@@ -512,8 +525,8 @@ class Delhivery {
     public function cancel($waybill) {
         if (empty($waybill)) return ['success' => false, 'message' => 'Waybill required'];
 
-        // Use cl-api for live and staging-express for test
-        $baseUrl = $this->isTest ? 'https://staging-express.delhivery.com' : 'https://cl-api.delhivery.com';
+        // Use track/staging-express based on mode
+        $baseUrl = $this->isTest ? 'https://staging-express.delhivery.com' : 'https://track.delhivery.com';
         $url = $baseUrl . '/api/p/edit.json';
         
         $payload = [
@@ -582,11 +595,12 @@ class Delhivery {
         }
 
         // For Delhivery APIs, ensuring token is in URL helps bypass Auth0 redirects on some accounts
-        if (strpos($url, 'token=') === false && strpos($url, 'client=') === false) {
+        // v1.3 Refresh - BUT skip for FM/Unified APIs which strictly want it in headers only
+        if (strpos($url, '/fm/') === false && strpos($url, 'token=') === false && strpos($url, 'client=') === false) {
             $separator = (strpos($url, '?') !== false) ? '&' : '?';
             $url .= $separator . 'token=' . $cleanToken;
-            curl_setopt($ch, CURLOPT_URL, $url);
         }
+        curl_setopt($ch, CURLOPT_URL, $url);
 
         curl_setopt($ch, CURLOPT_HTTPHEADER, $headers);
 
