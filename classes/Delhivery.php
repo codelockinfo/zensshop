@@ -33,7 +33,8 @@ class Delhivery {
         // Trim any accidental spaces (redundant now, but harmless)
         $this->token = trim($rawToken);
         $this->isTest = ($mode === 'test');
-        $this->baseUrl = ($mode === 'live') ? 'https://track.delhivery.com' : 'https://staging-express.delhivery.com';
+        // Use cl-api for Live (standard for Delhivery One) and staging-express for Test
+        $this->baseUrl = ($mode === 'live') ? 'https://cl-api.delhivery.com' : 'https://staging-express.delhivery.com';
         $this->expressUrl = $this->baseUrl;
     }
 
