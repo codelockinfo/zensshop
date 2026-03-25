@@ -217,11 +217,9 @@ $countAll = $db->fetchOne("SELECT COUNT(*) as count FROM orders WHERE store_id =
             <span class="text-sm font-medium text-gray-700" id="selectedCountText">0 items selected</span>
         </div>
         <div class="flex gap-2" id="bulkActions" style="display: none;">
-            <?php if ($tab === 'ready_to_ship'): ?>
-            <button onclick="handleBulkAction('request_pickup')" class="bg-orange-600 text-white px-3 py-1.5 rounded text-xs font-semibold hover:bg-orange-700 flex items-center gap-2">
+            <button id="bulkPickupBtn" onclick="handleBulkAction('request_pickup')" class="bg-orange-600 text-white px-3 py-1.5 rounded text-xs font-semibold hover:bg-orange-700 items-center gap-2" style="display: none;">
                 <i class="fas fa-truck"></i> Request Pickup
             </button>
-            <?php endif; ?>
             <button onclick="handleBulkAction('print_labels')" class="bg-blue-600 text-white px-3 py-1.5 rounded text-xs font-semibold hover:bg-blue-700 flex items-center gap-2">
                 <i class="fas fa-print"></i> Print Labels
             </button>
@@ -336,7 +334,15 @@ function initTableActions() {
 
     function updateBulkUI() {
         const checked = document.querySelectorAll('.order-checkbox:checked').length;
-        if (bulkActions) bulkActions.style.display = checked > 0 ? 'flex' : 'none';
+        if (bulkActions) {
+            bulkActions.style.display = checked > 0 ? 'flex' : 'none';
+            // Only show Pickup button on 'Ready to Ship' tab
+            const pickupBtn = document.getElementById('bulkPickupBtn');
+            if (pickupBtn) {
+                const currentTab = document.querySelector('.tab-btn.active').dataset.tab;
+                pickupBtn.style.display = (checked > 0 && currentTab === 'ready_to_ship') ? 'flex' : 'none';
+            }
+        }
         if (selectedCountText) selectedCountText.innerText = `${checked} items selected`;
     }
 }
