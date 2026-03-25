@@ -405,8 +405,14 @@ class Delhivery {
      * @param array $data Contains pickup_time, pickup_date, pickup_location, expected_package_count
      */
     public function createPickupRequest($data) {
-        $url = $this->expressUrl . '/api/pickup/request/creation/json/';
-        return $this->makeRequest($url, 'POST', $data);
+        // Use the base URL defined in the constructor (Live or Staging)
+        // Wrap data in the format=json&data={JSON} pattern
+        $url = rtrim($this->baseUrl, '/') . '/api/pickup/request/creation/';
+        $payload = [
+            'format' => 'json',
+            'data' => json_encode($data)
+        ];
+        return $this->makeRequest($url, 'POST', $payload, true);
     }
 
     /**
@@ -436,6 +442,7 @@ class Delhivery {
             if (!$warehouseName) {
                 $storeId = $order['store_id'] ?? null;
                 $warehouseName = $this->settings->get('delhivery_warehouse_name', 'ZENSENTERPRISE-do-B2C', $storeId);
+                $warehousePincode = $this->settings->get('delhivery_warehouse_pincode', '', $storeId);
             }
         }
 
@@ -445,8 +452,13 @@ class Delhivery {
             'pickup_location' => $warehouseName,
             'expected_package_count' => count($activeOrders),
             'pickup_date' => date('Y-m-d'),
-            'pickup_time' => date('H:i:s', strtotime('+1 hour')), // Request 1 hour from now
+            'pickup_time' => date('H:i:s', strtotime('+1 hour')),
         ];
+
+        // Add pin if we have it from settings
+        if (!empty($warehousePincode)) {
+            $payload['pickup_location_pin'] = $warehousePincode;
+        }
 
         $result = $this->createPickupRequest($payload);
         
