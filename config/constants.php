@@ -50,6 +50,11 @@ try {
     if (!$storeResult) {
         $storeResult = $db->fetchOne("SELECT store_id FROM users WHERE store_url = ? LIMIT 1", [$cleanHost]);
     }
+
+    // Local development fallback: if still not found, use the first available store
+    if (!$storeResult && (strpos($cleanHost, 'localhost') !== false || strpos($cleanHost, '127.0.0.1') !== false)) {
+        $storeResult = $db->fetchOne("SELECT store_id FROM users ORDER BY id ASC LIMIT 1");
+    }
     
     define('CURRENT_STORE_ID', $storeResult['store_id'] ?? 'DEFAULT');
     error_log("Store Detected: " . CURRENT_STORE_ID . " for URL: " . $currentUrl);
