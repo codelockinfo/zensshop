@@ -394,10 +394,10 @@ function renderFrontendMenuItem($item, $landingPagesList = [], $level = 0, $show
         // Only trigger hardcoded mega menu if NO children are defined in DB. 
         // If user added children in DB, we use the dynamic renderer below.
          ?>
-        <div class="relative mega-menu-parent">
+        <div class="relative mega-menu-parent group">
             <a href="<?php echo $itemUrl; ?>" class="text-black hover:text-red-700 transition flex items-center font-sans text-md nav-link">
                 <?php echo $displayLabel; ?>
-                <i class="fas fa-chevron-down text-xs ml-1"></i>
+                <i class="fas fa-chevron-down text-xs ml-1 transition-transform duration-300 group-hover:-rotate-180"></i>
             </a>
             <!-- Mega Menu Dropdown -->
             <div class="mega-menu mega-menu-products">
@@ -497,7 +497,7 @@ function renderFrontendMenuItem($item, $landingPagesList = [], $level = 0, $show
             <div class="<?php echo $parentClass; ?> h-full flex items-center">
                  <a href="<?php echo $itemUrl; ?>" class="<?php echo $linkClasses; ?>">
                     <span><?php echo $displayLabel; ?></span>
-                    <i class="fas fa-chevron-down text-xs ml-1"></i>
+                    <i class="fas fa-chevron-down text-xs ml-1 transition-transform duration-300 group-hover:-rotate-180"></i>
                  </a>
                  
                  <?php if ($isMega): ?>

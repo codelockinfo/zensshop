@@ -90,7 +90,7 @@ foreach ($linkResources as $type => &$items) {
 unset($items); // Break reference
 
 // Helper to pass data to JS
-$linkResourcesJson = json_encode($linkResources);
+$linkResourcesJson = json_encode($linkResources, JSON_INVALID_UTF8_SUBSTITUTE) ?: '{}';
 
 
 // Handle Actions
@@ -666,7 +666,6 @@ require_once __DIR__ . '/../includes/admin-header.php';
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Sortable/1.15.0/Sortable.min.js"></script>
 
 <script>
-window.initMenuSettings = function() {
     var LINK_RESOURCES = <?php echo $linkResourcesJson; ?>;
 
     window.getResourceUrl = function(type, item) {
@@ -962,9 +961,6 @@ window.initMenuSettings = function() {
 
     window.initMenuSortables();
     window.initMenuStates();
-};
-
-window.initMenuSettings();
 </script>
 
 <?php
