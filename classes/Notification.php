@@ -29,6 +29,50 @@ class Notification {
                 "INSERT INTO admin_notifications (type, title, message, link, store_id, created_at) VALUES (?, ?, ?, ?, ?, UTC_TIMESTAMP())",
                 [$type, $title, $message, $link, $storeId]
             );
+
+            // Send Slack Notification
+            if (defined('SLACK_API_KEY') && defined('CHANNEL_ID')) {
+                $slackUrl = 'https://slack.com/api/chat.postMessage';
+                
+                // Format the Slack message to include the link if it exists
+                $slackMessage = "*$title*\n$message";
+                if ($link) {
+                    $fullLink = defined('SITE_URL') ? rtrim(SITE_URL, '/') . '/' . ltrim($link, '/') : $link;
+                    $slackMessage .= "\n<$fullLink|View Details>";
+                }
+                
+                $slackData = [
+                    'channel' => CHANNEL_ID,
+                    'text' => $slackMessage
+                ];
+                
+                $ch = curl_init($slackUrl);
+                curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+                curl_setopt($ch, CURLOPT_HTTPHEADER, [
+                    'Authorization: Bearer ' . SLACK_API_KEY,
+                    'Content-Type: application/json; charset=utf-8'
+                ]);
+                curl_setopt($ch, CURLOPT_POST, true);
+                curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode($slackData));
+                curl_setopt($ch, CURLOPT_TIMEOUT, 3); // 3 seconds timeout so it doesn't block
+                
+                // Fix for local WAMP SSL Certificate issues
+                curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
+                curl_setopt($ch, CURLOPT_SSL_VERIFYHOST, false);
+                
+                $result = curl_exec($ch);
+                
+                if (curl_errno($ch)) {
+                    error_log("Slack Curl Error: " . curl_error($ch));
+                } else {
+                    error_log("Slack Response: " . $result);
+                }
+                
+                curl_close($ch);
+            } else {
+                error_log("Slack API Key or Channel ID is NOT defined when trying to send notification.");
+            }
+
             return true;
         } catch (Exception $e) {
             error_log("Notification creation failed: " . $e->getMessage());

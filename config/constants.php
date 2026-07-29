@@ -96,6 +96,10 @@ define('SESSION_LIFETIME', 3600); // 1 hour
 // Admin Email (for error notifications)
 define('ADMIN_EMAIL', 'admin@CookPro.com'); // Change this to your admin email
 
+
+define('SLACK_API_KEY','xoxb-8593020489572-11698388133346-aG3D5KogeSDPQTJHRB7vJeHV');
+define('CHANNEL_ID','C0BLN1VB3L4');
+
 // API Configuration - Now managed in database settings (see admin/system-settings.php)
 // Load Razorpay and Google API keys from database
 require_once __DIR__ . '/../classes/Settings.php';

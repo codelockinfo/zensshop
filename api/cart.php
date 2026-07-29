@@ -4,6 +4,7 @@
  * Handles cart operations via AJAX
  */
 
+require_once __DIR__ . '/../config/constants.php';
 require_once __DIR__ . '/../classes/Cart.php';
 
 $cart = new Cart();
@@ -88,6 +89,27 @@ try {
             error_log("   Product ID: $productId");
             error_log("   Quantity: $quantity");
             error_log("   Cart Total: $" . number_format($cartTotal, 2));
+            
+            // Trigger Notification (which auto-sends to Slack)
+            require_once __DIR__ . '/../includes/functions.php';
+            require_once __DIR__ . '/../classes/Notification.php';
+            
+            $cartCurrency = !empty($items) ? ($items[0]['currency'] ?? 'INR') : 'INR';
+            
+            // Find the added product's price from the updated cart items
+            $productPrice = 0;
+            foreach ($items as $item) {
+                if ($item['product_id'] == $productId) {
+                    $productPrice = $item['price'];
+                    break;
+                }
+            }
+            
+            $linePrice = $productPrice * $quantity;
+            
+            $notification = new Notification();
+            $notification->create('cart', '🛒 Added to Cart', "$productName was added to cart.\nQuantity: $quantity\nPrice: " . format_price($linePrice, $cartCurrency));
+
             error_log("   Cart Count: $cartCount item(s)");
             error_log("   Cookie set: YES");
             

@@ -51,6 +51,15 @@ if (empty($cartItems)) {
     exit;
 }
 
+// Track checkout start via Slack/Notification
+if ($_SERVER['REQUEST_METHOD'] === 'GET' && !isset($_SESSION['checkout_tracked_' . md5(json_encode($cartItems))])) {
+    require_once __DIR__ . '/classes/Notification.php';
+    $cartCurrency = !empty($cartItems) ? ($cartItems[0]['currency'] ?? 'INR') : 'INR';
+    $notification = new Notification();
+    $notification->create('cart', '💳 Checkout Started', "User has proceeded to checkout.\nCart Total: " . format_price($cartTotal, $cartCurrency) . "\nItems: " . count($cartItems));
+    $_SESSION['checkout_tracked_' . md5(json_encode($cartItems))] = true;
+}
+
 $error = '';
 $success = false;
 $orderId = null;
