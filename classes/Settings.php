@@ -18,7 +18,9 @@ class Settings {
      */
     public function get($key, $default = null, $storeId = null) {
         if (!$storeId) {
-            if (function_exists('getCurrentStoreId')) {
+            if (defined('CURRENT_STORE_ID')) {
+                $storeId = CURRENT_STORE_ID;
+            } elseif (function_exists('getCurrentStoreId')) {
                 $storeId = getCurrentStoreId();
             } else {
                 // Fallback session logic
@@ -301,6 +303,16 @@ class Settings {
         // Google Auth Configuration
         if (!defined('GOOGLE_CLIENT_ID')) {
             define('GOOGLE_CLIENT_ID', $settings->get('google_client_id', ''));
+        }
+        
+        // Slack Configuration
+        $slackApiKey = $settings->get('slack_api_key', '');
+        if (!empty($slackApiKey) && !defined('SLACK_API_KEY')) {
+            define('SLACK_API_KEY', $slackApiKey);
+        }
+        $slackChannelId = $settings->get('slack_channel_id', '');
+        if (!empty($slackChannelId) && !defined('CHANNEL_ID')) {
+            define('CHANNEL_ID', $slackChannelId);
         }
     }
 }

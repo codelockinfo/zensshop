@@ -717,6 +717,8 @@ unset($_SESSION['error']);
                         'razorpay_key_id' => ['label' => 'Razorpay Live Key ID', 'placeholder' => 'rzp_live_...'],
                         'razorpay_key_secret' => ['label' => 'Razorpay Live Key Secret', 'placeholder' => '...', 'type' => 'password'],
                         'google_client_id' => ['label' => 'Google Client ID', 'placeholder' => '...-apps.googleusercontent.com', 'type' => 'password'],
+                        'slack_api_key' => ['label' => 'Slack API Key', 'placeholder' => 'xoxb-...', 'type' => 'password'],
+                        'slack_channel_id' => ['label' => 'Slack Channel ID', 'placeholder' => 'C0BLN1...'],
                     ];
                     foreach ($mainApiFields as $key => $field): 
                          $val = $settings->get($key, '');
