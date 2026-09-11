@@ -217,8 +217,9 @@ require_once __DIR__ . '/includes/header.php';
                                 <span class="product-tooltip">Remove</span>
                             </button>
                             
-                            <button type="button" onclick="event.stopPropagation();"
+                            <button type="button"
                                     class="wishlist-qv-btn w-10 h-10 rounded-full shadow-md transition flex items-center justify-center quick-view-btn relative group product-action-btn opacity-100 md:opacity-0 md:group-hover:opacity-100"
+                                    onclick="if(typeof openQuickView === 'function'){ createQuickViewModal(); openQuickView(this.getAttribute('data-product-slug')); } event.stopPropagation();"
                                     data-product-id="<?php echo $item['product_id']; ?>"
                                     data-product-name="<?php echo htmlspecialchars($item['name'] ?? ''); ?>"
                                     data-product-price="<?php echo $finalPrice; ?>"
@@ -334,8 +335,9 @@ require_once __DIR__ . '/includes/header.php';
                                     <span class="product-tooltip"><?php echo $isInWishlist ? 'Remove' : 'Add to wishlist'; ?></span>
                                 </button>
 
-                                <button type="button" onclick="event.stopPropagation();"
+                                <button type="button"
                                         class="quick-view-btn product-action-btn w-10 h-10 rounded-full shadow-md transition flex items-center justify-center relative group opacity-100 md:opacity-0 md:group-hover:opacity-100"
+                                        onclick="if(typeof openQuickView === 'function'){ createQuickViewModal(); openQuickView(this.getAttribute('data-product-slug')); } event.stopPropagation();"
                                         data-product-id="<?php echo $recentProduct['id']; ?>"
                                         data-product-name="<?php echo htmlspecialchars($recentProduct['name'] ?? ''); ?>"
                                         data-product-price="<?php echo $displayPrice; ?>"

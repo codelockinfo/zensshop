@@ -296,10 +296,24 @@ $qv_policy_color = $qvStyles['policy_color'] ?? '#374151';
         }
 
         /* ── Quick View Modal ── */
+        #quickViewModal {
+            z-index: 99999 !important;
+        }
+        #quickViewBackdrop {
+            z-index: 99998 !important;
+        }
+        #quickViewWrapper {
+            z-index: 99999 !important;
+            padding-top: 3.5rem !important;
+            padding-bottom: 2.5rem !important;
+        }
         #quickViewModal #quickViewPanel {
             display: flex;
             flex-direction: column;
             overflow: hidden;
+            height: min(80vh, 660px) !important;
+            max-height: min(80vh, 660px) !important;
+            margin: auto !important;
         }
         /* Content area fills remaining height */
         #quickViewModal #quickViewContent {
@@ -718,7 +732,7 @@ $qv_policy_color = $qvStyles['policy_color'] ?? '#374151';
     <script src="<?php echo $baseUrl; ?>/assets/js/product-cards9.js?v=5" defer></script>
     <script src="<?php echo $baseUrl; ?>/assets/js/wishlist11.js?v=3" defer></script>
     <script src="<?php echo $baseUrl; ?>/assets/js/notification1.js?v=2" defer></script>
-    <script src="<?php echo $baseUrl; ?>/assets/js/quickview24.js?v=7" defer></script>
+    <script src="<?php echo $baseUrl; ?>/assets/js/quickview24.js?v=10" defer></script>
     <script src="<?php echo $baseUrl; ?>/assets/js/add-to-cart4.js?v=3" defer></script>
     
     <!-- Remove from Cart Confirmation Script -->

@@ -166,7 +166,7 @@ define('SITE_NAME', 'CookPro');
 define('SITE_URL', 'http://localhost/oecom');
 ```
 
-## Security Notes
+## Security Notes 
 
 - All database queries use prepared statements
 - Passwords are hashed using `password_hash()`

@@ -5,3 +5,15 @@ admin/*.log
 .htaccess
 vendor/
 node_modules/
+
+# Images and uploads
+assets/uploads/
+assets/images/
+assets/products/
+assets/banners/
+assets/banner/
+assets/categories/
+assets/blogs/
+assets/special_offers/
+assets/profiles/
+assets/checkout-image/

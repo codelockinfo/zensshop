@@ -3,15 +3,15 @@
 function createQuickViewModal() {
     if (document.getElementById("quickViewModal")) return;
     const t = `
-    <div id="quickViewModal" class="fixed inset-0 z-50 hidden" aria-labelledby="modal-title" role="dialog" aria-modal="true">
+    <div id="quickViewModal" class="fixed inset-0 hidden" aria-labelledby="modal-title" role="dialog" aria-modal="true" style="z-index: 99999 !important;">
         <!-- Backdrop -->
-        <div class="fixed inset-0 bg-gray-500 bg-opacity-75 transition-opacity backdrop-blur-sm" aria-hidden="true" id="quickViewBackdrop"></div>
-        <!-- Modal Wrapper: perfectly centered, with gap from edges on mobile -->
-        <div class="fixed inset-0 z-10 flex items-center justify-center p-4 sm:p-5" id="quickViewWrapper">
+        <div class="fixed inset-0 bg-black/60 transition-opacity backdrop-blur-sm" aria-hidden="true" id="quickViewBackdrop" style="z-index: 99998 !important;"></div>
+        <!-- Modal Wrapper: centered with generous safe margin from top and edges -->
+        <div class="fixed inset-0 flex items-center justify-center p-4 sm:p-6 md:p-8" id="quickViewWrapper" style="z-index: 99999 !important; padding-top: 3.5rem !important; padding-bottom: 2.5rem !important;">
             <!-- Panel -->
             <div class="relative transform rounded-2xl text-left shadow-2xl transition-all w-full max-w-5xl bg-white flex flex-col opacity-0 scale-95 duration-300"
                  id="quickViewPanel"
-                 style="height: min(88vh, 740px); max-height: min(88vh, 740px); overflow: hidden;">
+                 style="height: min(80vh, 660px); max-height: min(80vh, 660px); overflow: hidden; margin: auto;">
                 <!-- Close Button -->
                 <button type="button"
                         class="absolute right-3 top-3 z-20 rounded-full bg-gray-100 p-2 text-gray-400 hover:text-gray-600 hover:bg-gray-200 focus:outline-none transition shadow-sm"
@@ -81,8 +81,7 @@ function closeQuickView() {
 // Event delegation for .quick-view-btn
 !function() {
     if (window.quickViewInitialized) return;
-    window.quickViewInitialized = true;
-    document.body.addEventListener("click", function(e) {
+    document.addEventListener("click", function(e) {
         var btn = e.target.closest(".quick-view-btn");
         if (btn) {
             e.preventDefault();
@@ -93,7 +92,7 @@ function closeQuickView() {
                 openQuickView(slug);
             }
         }
-    });
+    }, true);
     if ('requestIdleCallback' in window) {
         requestIdleCallback(createQuickViewModal);
     } else {
@@ -268,7 +267,7 @@ function renderQuickView(t) {
                 </div>
 
                 <p id="qvDesc" class="text-gray-600 text-sm mb-4 leading-relaxed">
-                    ${t.short_description || (t.description ? (t.description.length > 150 ? t.description.substring(0,150) + '...' : t.description) : 'No description available.')}
+                    ${t.short_description || (t.description ? (function(d){ var text = d.replace(/<[^>]*>/g, ' ').replace(/\s+/g, ' ').trim(); return text.length > 150 ? text.substring(0, 150) + '...' : text; })(t.description) : 'No description available.')}
                 </p>
 
                 <div id="qvVariants" class="mb-4 ${variantsHtml ? 'border-t border-gray-100 pt-3' : ''}">${variantsHtml}</div>
