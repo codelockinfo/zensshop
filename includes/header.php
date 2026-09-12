@@ -251,7 +251,7 @@ $gs_tooltip_text = getGlobalStyle('tooltip_text_color', $globalCardStyles, '#fff
 
         /* Swiper spacing fixes */
         .swiper {
-            padding-bottom: 48px !important;
+            padding-bottom: 8px !important;
             padding-top: 10px !important;
         }
         .swiper-wrapper {
@@ -259,13 +259,8 @@ $gs_tooltip_text = getGlobalStyle('tooltip_text_color', $globalCardStyles, '#fff
         }
         .swiper-button-next, .swiper-button-prev {
             top: 50% !important;
-            transform: translateY(-80%) !important;
+            transform: translateY(-50%) !important;
             z-index: 50 !important;
-        }
-        @media (max-width: 768px) {
-            .swiper-button-next, .swiper-button-prev {
-                display: none !important; /* Hide arrows on small mobile for cleaner look */
-            }
         }
 
         .product-card {

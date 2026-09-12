@@ -50,27 +50,31 @@ $sectionId = 'video-section-' . rand(1000, 9999);
         color: <?php echo $styles['subheading_color']; ?>;
     }
     #<?php echo $sectionId; ?> .swiper-button-prev,
-    #<?php echo $sectionId; ?> .swiper-button-next {
+    #<?php echo $sectionId; ?> .swiper-button-next,
+    #<?php echo $sectionId; ?> .video-swiper-prev,
+    #<?php echo $sectionId; ?> .video-swiper-next {
         background-color: <?php echo $styles['arrow_bg_color']; ?>;
         color: <?php echo $styles['arrow_icon_color']; ?>;
     }
     #<?php echo $sectionId; ?> .swiper-button-prev:hover,
-    #<?php echo $sectionId; ?> .swiper-button-next:hover {
+    #<?php echo $sectionId; ?> .swiper-button-next:hover,
+    #<?php echo $sectionId; ?> .video-swiper-prev:hover,
+    #<?php echo $sectionId; ?> .video-swiper-next:hover {
         background-color: <?php echo $styles['arrow_bg_color']; ?>;
         color: <?php echo $styles['arrow_icon_color']; ?>;
         opacity: 0.8;
     }
 </style>
 
-<section class="pt-8 md:pt-14 relative group/section" id="<?php echo $sectionId; ?>">
+<section class="pt-5 md:pt-12 relative group/section" id="<?php echo $sectionId; ?>">
     <div class="container mx-auto px-4">
         <!-- Section Header -->
-        <div class="text-center mb-10">
+        <div class="text-center mb-4 md:mb-10">
             <?php if (!empty($sectionHeading)): ?>
-                <h2 class="text-3xl md:text-4xl font-bold font-heading mb-3 section-heading"><?php echo htmlspecialchars($sectionHeading); ?></h2>
+                <h2 class="text-2xl md:text-4xl font-bold font-heading mb-1.5 md:mb-3 section-heading"><?php echo htmlspecialchars($sectionHeading); ?></h2>
             <?php endif; ?>
             <?php if (!empty($sectionSubheading)): ?>
-                <p class="text-base md:text-lg section-subheading"><?php echo htmlspecialchars($sectionSubheading); ?></p>
+                <p class="text-sm md:text-base section-subheading"><?php echo htmlspecialchars($sectionSubheading); ?></p>
             <?php endif; ?>
         </div>
         
@@ -173,23 +177,23 @@ $sectionId = 'video-section-' . rand(1000, 9999);
                     <?php endforeach; ?>
                     <?php endif; ?>
                 </div><!-- /.swiper-wrapper -->
-
-                <?php 
-                $videoConfigPath = __DIR__ . '/../admin/video_config.json';
-                $showVideoArrows = true;
-                if (file_exists($videoConfigPath)) {
-                    $conf = json_decode(file_get_contents($videoConfigPath), true);
-                    $showVideoArrows = isset($conf['show_arrows']) ? $conf['show_arrows'] : true;
-                }
-                if (count($videos) > 1 && $showVideoArrows): ?>
-                <button class="absolute left-2 md:-left-4 top-1/2 -translate-y-1/2 bg-white shadow-lg rounded-full w-10 h-10 flex items-center justify-center text-gray-800 hover:text-[#1a3d32] hover:bg-gray-50 transition z-30 video-swiper-prev border border-gray-100" aria-label="Previous">
-                    <i class="fas fa-chevron-left" aria-hidden="true"></i>
-                </button>
-                <button class="absolute right-2 md:-right-4 top-1/2 -translate-y-1/2 bg-white shadow-lg rounded-full w-10 h-10 flex items-center justify-center text-gray-800 hover:text-[#1a3d32] hover:bg-gray-50 transition z-30 video-swiper-next border border-gray-100" aria-label="Next">
-                    <i class="fas fa-chevron-right" aria-hidden="true"></i>
-                </button>
-                <?php endif; ?>
             </div><!-- /.swiper -->
+
+            <?php 
+            $videoConfigPath = __DIR__ . '/../admin/video_config.json';
+            $showVideoArrows = true;
+            if (file_exists($videoConfigPath)) {
+                $conf = json_decode(file_get_contents($videoConfigPath), true);
+                $showVideoArrows = isset($conf['show_arrows']) ? $conf['show_arrows'] : true;
+            }
+            if (count($videos) > 1 && $showVideoArrows): ?>
+            <button class="absolute left-2 md:-left-5 top-1/2 -translate-y-1/2 bg-white shadow-lg rounded-full w-10 h-10 flex items-center justify-center text-gray-800 hover:text-[#1a3d32] hover:bg-gray-50 transition z-30 video-swiper-prev border border-gray-100" aria-label="Previous">
+                <i class="fas fa-chevron-left" aria-hidden="true"></i>
+            </button>
+            <button class="absolute right-2 md:-right-5 top-1/2 -translate-y-1/2 bg-white shadow-lg rounded-full w-10 h-10 flex items-center justify-center text-gray-800 hover:text-[#1a3d32] hover:bg-gray-50 transition z-30 video-swiper-next border border-gray-100" aria-label="Next">
+                <i class="fas fa-chevron-right" aria-hidden="true"></i>
+            </button>
+            <?php endif; ?>
         </div>
     </div>
 </section>

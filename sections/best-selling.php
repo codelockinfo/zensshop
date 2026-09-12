@@ -97,21 +97,25 @@ if (file_exists($productsConfigPath)) {
         color: <?php echo $subheading_color; ?>;
     }
     #<?php echo $sectionId; ?> .swiper-button-prev,
-    #<?php echo $sectionId; ?> .swiper-button-next {
+    #<?php echo $sectionId; ?> .swiper-button-next,
+    #<?php echo $sectionId; ?> .best-selling-swiper-prev,
+    #<?php echo $sectionId; ?> .best-selling-swiper-next {
         background-color: <?php echo $arrow_bg_color; ?> !important;
         color: <?php echo $arrow_icon_color; ?> !important;
     }
     #<?php echo $sectionId; ?> .swiper-button-prev:hover,
-    #<?php echo $sectionId; ?> .swiper-button-next:hover {
+    #<?php echo $sectionId; ?> .swiper-button-next:hover,
+    #<?php echo $sectionId; ?> .best-selling-swiper-prev:hover,
+    #<?php echo $sectionId; ?> .best-selling-swiper-next:hover {
         opacity: 0.8;
     }
 </style>
 
-<section id="<?php echo $sectionId; ?>" class="pt-8 md:pt-14">
+<section id="<?php echo $sectionId; ?>" class="pt-2 md:pt-12 pb-2 md:pb-4">
     <div class="container mx-auto px-4">
-        <div class="text-center mb-12">
-            <h2 class="text-3xl md:text-4xl font-heading font-bold mb-4 section-heading"><?php echo htmlspecialchars($sectionHeading); ?></h2>
-            <p class="text-lg max-w-2xl mx-auto section-subheading"><?php echo htmlspecialchars($sectionSubheading); ?></p>
+        <div class="text-center mb-4 md:mb-10">
+            <h2 class="text-2xl md:text-4xl font-heading font-bold mb-1.5 md:mb-3 section-heading"><?php echo htmlspecialchars($sectionHeading); ?></h2>
+            <p class="text-sm md:text-base max-w-2xl mx-auto section-subheading"><?php echo htmlspecialchars($sectionSubheading); ?></p>
         </div>
         
         <!-- Swiper Slider -->
@@ -241,22 +245,21 @@ if (file_exists($productsConfigPath)) {
                                         <span class="compare-price font-bold line-through text-xs" style="color: <?php echo $compare_price_color; ?> !important;"><?php echo format_price($originalPrice, $item['currency'] ?? 'USD'); ?></span>
                                     <?php endif; ?>
                                 </div>
-
-                                </div>
                             </div>
                         </div>
+                    </div>
                     <?php endforeach; ?>
                 </div><!-- /.swiper-wrapper -->
-
-                <?php if (count($products) > 1 && $showBSArrows): ?>
-                <button class="absolute left-2 md:-left-4 top-1/2 -translate-y-1/2 bg-white shadow-lg rounded-full w-10 h-10 flex items-center justify-center text-gray-800 hover:text-[#1a3d32] hover:bg-gray-50 transition z-30 best-selling-swiper-prev border border-gray-100" aria-label="Previous">
-                    <i class="fas fa-chevron-left" aria-hidden="true"></i>
-                </button>
-                <button class="absolute right-2 md:-right-4 top-1/2 -translate-y-1/2 bg-white shadow-lg rounded-full w-10 h-10 flex items-center justify-center text-gray-800 hover:text-[#1a3d32] hover:bg-gray-50 transition z-30 best-selling-swiper-next border border-gray-100" aria-label="Next">
-                    <i class="fas fa-chevron-right" aria-hidden="true"></i>
-                </button>
-                <?php endif; ?>
             </div><!-- /.swiper -->
+
+            <?php if (count($products) > 1 && $showBSArrows): ?>
+            <button class="absolute left-2 md:-left-5 top-1/2 -translate-y-1/2 bg-white shadow-lg rounded-full w-10 h-10 flex items-center justify-center text-gray-800 hover:text-[#1a3d32] hover:bg-gray-50 transition z-30 best-selling-swiper-prev border border-gray-100" aria-label="Previous">
+                <i class="fas fa-chevron-left" aria-hidden="true"></i>
+            </button>
+            <button class="absolute right-2 md:-right-5 top-1/2 -translate-y-1/2 bg-white shadow-lg rounded-full w-10 h-10 flex items-center justify-center text-gray-800 hover:text-[#1a3d32] hover:bg-gray-50 transition z-30 best-selling-swiper-next border border-gray-100" aria-label="Next">
+                <i class="fas fa-chevron-right" aria-hidden="true"></i>
+            </button>
+            <?php endif; ?>
         </div>
     </div>
 </section>

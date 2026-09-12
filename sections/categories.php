@@ -133,7 +133,7 @@ $sectionId = 'cat-section-' . rand(1000, 9999);
     }
 </style>
 
-<section id="<?php echo $sectionId; ?>" class="pt-8 md:pt-14">
+<section id="<?php echo $sectionId; ?>" class="pt-5 md:pt-12 pb-1 md:pb-6">
 <?php
         $containerClass = 'container mx-auto px-4';
         if ($catLayoutType === 'slider') {
@@ -141,9 +141,9 @@ $sectionId = 'cat-section-' . rand(1000, 9999);
         }
         ?>
     <div class="<?php echo $containerClass; ?>">
-        <div class="text-center mb-6 md:mb-12">
-            <h2 class="text-3xl md:text-4xl font-heading font-bold mb-4 cat-heading"><?php echo htmlspecialchars($heading); ?></h2>
-            <p class="text-lg md:text-md max-w-2xl mx-auto cat-subheading"><?php echo htmlspecialchars($subheading); ?></p>
+        <div class="text-center mb-4 md:mb-10">
+            <h2 class="text-2xl md:text-4xl font-heading font-bold mb-1.5 md:mb-3 cat-heading"><?php echo htmlspecialchars($heading); ?></h2>
+            <p class="text-sm md:text-base max-w-2xl mx-auto cat-subheading"><?php echo htmlspecialchars($subheading); ?></p>
         </div>
         
         <?php if ($catLayoutType === 'slider'): ?>
@@ -174,10 +174,10 @@ $sectionId = 'cat-section-' . rand(1000, 9999);
                 
                 <!-- Premium Navigation Arrows -->
                 <?php if (count($displayCategories) > 2): ?>
-                <button class="absolute left-0 md:-left-4 top-1/2 -translate-y-1/2 bg-white shadow-lg rounded-full w-9 h-9 flex items-center justify-center text-gray-800 hover:text-[#1a3d32] hover:bg-gray-50 transition z-30 border border-gray-100" id="categoriesPrev" aria-label="Previous">
+                <button class="absolute left-0 md:-left-4 top-[60px] md:top-[75px] -translate-y-1/2 bg-white shadow-lg rounded-full w-9 h-9 flex items-center justify-center text-gray-800 hover:text-[#1a3d32] hover:bg-gray-50 transition z-30 border border-gray-100" id="categoriesPrev" aria-label="Previous">
                     <i class="fas fa-chevron-left text-xs" aria-hidden="true"></i>
                 </button>
-                <button class="absolute right-0 md:-right-4 top-1/2 -translate-y-1/2 bg-white shadow-lg rounded-full w-9 h-9 flex items-center justify-center text-gray-800 hover:text-[#1a3d32] hover:bg-gray-50 transition z-30 border border-gray-100" id="categoriesNext" aria-label="Next">
+                <button class="absolute right-0 md:-right-4 top-[60px] md:top-[75px] -translate-y-1/2 bg-white shadow-lg rounded-full w-9 h-9 flex items-center justify-center text-gray-800 hover:text-[#1a3d32] hover:bg-gray-50 transition z-30 border border-gray-100" id="categoriesNext" aria-label="Next">
                     <i class="fas fa-chevron-right text-xs" aria-hidden="true"></i>
                 </button>
                 <?php endif; ?>

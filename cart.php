@@ -125,9 +125,9 @@ $cp_continue_hover_text = getCartStyle('cart_page_continue_btn_hover_text', '#11
     }
 </style>
 
-<section class="py-16 md:py-24 bg-gray-50 min-h-screen">
+<section class="pt-6 pb-12 md:pt-8 md:pb-16 bg-gray-50 min-h-screen">
     <div class="container mx-auto px-4">
-        <h1 class="text-4xl font-heading font-bold mb-8">Shopping Cart</h1>
+        <h1 class="text-3xl md:text-4xl font-heading font-bold mb-6">Shopping Cart</h1>
         <?php 
             // Determine currency for totals (use first item's currency or default)
             $cartCurrency = !empty($cartItems) ? ($cartItems[0]['currency'] ?? 'USD') : 'USD';

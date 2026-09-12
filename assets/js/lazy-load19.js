@@ -158,8 +158,8 @@ function initializeSectionContent(container) {
         watchOverflow: true,
         autoplay: { delay: 5000, disableOnInteraction: false },
         navigation: {
-            nextEl: '.best-selling-swiper-next',
-            prevEl: '.best-selling-swiper-prev',
+            nextEl: container.querySelector('.best-selling-swiper-next') || '.best-selling-swiper-next',
+            prevEl: container.querySelector('.best-selling-swiper-prev') || '.best-selling-swiper-prev',
         }
     });
   }
@@ -175,8 +175,8 @@ function initializeSectionContent(container) {
           centerInsufficientSlides: true, // ONLY Category is centered
           watchOverflow: true,
           navigation: {
-              nextEl: '#categoriesNext',
-              prevEl: '#categoriesPrev',
+              nextEl: container.querySelector('#categoriesNext') || '#categoriesNext',
+              prevEl: container.querySelector('#categoriesPrev') || '#categoriesPrev',
           }
       });
   }
@@ -192,8 +192,8 @@ function initializeSectionContent(container) {
           watchOverflow: true,
           autoplay: { delay: 5500, disableOnInteraction: false },
           navigation: {
-              nextEl: '.trending-swiper-next',
-              prevEl: '.trending-swiper-prev',
+              nextEl: container.querySelector('.trending-swiper-next') || '.trending-swiper-next',
+              prevEl: container.querySelector('.trending-swiper-prev') || '.trending-swiper-prev',
           }
       });
   }
@@ -216,8 +216,8 @@ function initializeSectionContent(container) {
         watchOverflow: true,
         centeredSlides: false,
         navigation: {
-            nextEl: '.video-swiper-next',
-            prevEl: '.video-swiper-prev',
+            nextEl: container.querySelector('.video-swiper-next') || '.video-swiper-next',
+            prevEl: container.querySelector('.video-swiper-prev') || '.video-swiper-prev',
         }
     });
   }

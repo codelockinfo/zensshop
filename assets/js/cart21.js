@@ -552,8 +552,8 @@ function updateCartUI() {
                         <img src="${escapeHtml(imgUrl)}" alt="${escapeHtml(item.name)}" class="w-20 h-20 object-cover rounded" onerror="this.src='https://placehold.co/150x150?text=Product+Image'">
                     </a>
                     <div class="flex-1">
-                        <h4 class="font-semibold text-sm mb-1">
-                            <a href="product?slug=${item.slug}" class="hover:text-[#1a3d32] transition-colors uppercase line-clamp-2" style="display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;">${escapeHtml(item.name)}</a>
+                        <h4 class="font-semibold text-xs mb-1">
+                            <a href="product?slug=${item.slug}" class="hover:text-[#1a3d32] transition-colors uppercase line-clamp-2" style="display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; line-height: 1.4;">${escapeHtml(item.name)}</a>
                         </h4>
                         ${variantDisplay}
                         <p class="text-gray-600 text-sm mt-1">${formatCurrency(price, item.currency)}</p>
@@ -576,8 +576,8 @@ function updateCartUI() {
                         <img src="${escapeHtml(imgUrl)}" alt="${escapeHtml(item.name)}" class="w-16 h-16 object-cover rounded border border-gray-200" onerror="this.src='https://placehold.co/150x150?text=Product+Image'">
                     </a>
                     <div class="flex-1">
-                        <h4 class="font-semibold text-sm mb-1 text-gray-800">
-                            <a href="product?slug=${item.slug}" class="hover:text-[#1a3d32] transition-colors uppercase line-clamp-2" style="display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;">${escapeHtml(item.name)}</a>
+                        <h4 class="font-semibold text-xs mb-1 text-gray-800">
+                            <a href="product?slug=${item.slug}" class="hover:text-[#1a3d32] transition-colors uppercase line-clamp-2" style="display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; line-height: 1.4;">${escapeHtml(item.name)}</a>
                         </h4>
                         <p class="text-gray-600 text-xs mb-2">Add to wishlist before remove?</p>
                         <div class="flex space-x-2">

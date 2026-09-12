@@ -188,28 +188,33 @@ $sk_widthClass = ($bannerContentWidth == '50') ? 'md:max-w-[50%]' : (($bannerCon
     }
     <?php endif; ?>
 
-    /* Adaptive Mobile Height Styles */
-    <?php if($bannerAdaptiveHeight): ?>
+    /* Mobile Banner Fixed Height Styles */
     @media (max-width: 768px) {
-        
-        /* 1. Force exact height for section and slider */
+        #hero-skeleton {
+            height: 520px !important;
+        }
+
         #hero-section, 
-        #hero-section .hero-slider, 
+        #hero-section .hero-slider,
         #hero-section .hero-view-port {
-            height: 350px !important;
-            min-height: 350px !important;
-            max-height: 350px !important;
+            height: 520px !important;
+            min-height: 520px !important;
+            max-height: 520px !important;
+            background-color: #000000;
         }
 
         #hero-section .hero-slide {
-            height: 350px !important;
+            height: 520px !important;
+            min-height: 520px !important;
+            max-height: 520px !important;
             display: flex !important;
             align-items: center !important;
             justify-content: center !important;
             position: relative !important;
+            background-color: #000000;
         }
         
-        /* 2. Absolute Image Layer */
+        /* Absolute Image Layer */
         #hero-section .hero-slide > a.md\:hidden,
         #hero-section .hero-slide > div.md\:hidden {
             position: absolute !important;
@@ -218,27 +223,26 @@ $sk_widthClass = ($bannerContentWidth == '50') ? 'md:max-w-[50%]' : (($bannerCon
             right: 0 !important; 
             bottom: 0 !important;
             z-index: 0 !important;
-            display: block !important;
+            display: flex !important;
+            align-items: center !important;
+            justify-content: center !important;
+            background-color: #000000;
+            width: 100% !important;
+            height: 100% !important;
         }
         
         #hero-section .hero-slide .md\:hidden img {
             width: 100% !important;
             height: 100% !important;
-            object-fit: cover !important;
+            object-fit: contain !important;
+            background-color: #000000;
         }
         
-        /* 3. Dark Overlay Layer */
         #hero-section .hero-slide .bg-black.bg-opacity-30 {
-            position: absolute !important;
-            top: 0 !important; 
-            left: 0 !important; 
-            right: 0 !important; 
-            bottom: 0 !important;
-            z-index: 1 !important;
-            display: block !important;
+            display: none !important;
         }
         
-        /* 4. Text Container rigidly centered */
+        /* Text Container */
         #hero-section .hero-slide .container {
             position: relative !important;
             z-index: 10 !important;
@@ -248,6 +252,12 @@ $sk_widthClass = ($bannerContentWidth == '50') ? 'md:max-w-[50%]' : (($bannerCon
             align-items: center !important;
             justify-content: center !important;
             padding: 1.5rem !important;
+            pointer-events: none;
+        }
+
+        #hero-section .hero-slide .container a,
+        #hero-section .hero-slide .container button {
+            pointer-events: auto;
         }
 
         #hero-section .banner-text-content {
@@ -270,7 +280,6 @@ $sk_widthClass = ($bannerContentWidth == '50') ? 'md:max-w-[50%]' : (($bannerCon
             text-shadow: 0 1px 2px rgba(0,0,0,0.5) !important;
         }
 
-        /* 5. Interactive full-width button */
         #hero-section .banner-btn {
             width: 100% !important;
             max-width: 150px !important;
@@ -284,7 +293,7 @@ $sk_widthClass = ($bannerContentWidth == '50') ? 'md:max-w-[50%]' : (($bannerCon
             justify-content: center !important;
         }
 
-        /* 6. True Center Navigation Arrows */
+        /* Navigation Arrows */
         #hero-section .hero-prev,
         #hero-section .hero-next {
             top: 50% !important;
@@ -293,7 +302,6 @@ $sk_widthClass = ($bannerContentWidth == '50') ? 'md:max-w-[50%]' : (($bannerCon
             z-index: 20 !important;
         }
     }
-    <?php endif; ?>
 </style>
 
 <section id="hero-section" class="relative overflow-hidden" style="display: none;">
@@ -390,7 +398,6 @@ if (empty($banners)) {
                         </div>
                         <?php endif; ?>
                         
-                        <div class="absolute inset-0 bg-black bg-opacity-30"></div>
                         <div class="container mx-auto px-4 h-full flex items-center relative z-10 <?php echo $m_alignmentClass; ?> <?php echo $d_alignmentClass; ?>">
                             <div class="text-white banner-text-content <?php echo $widthClass; ?> <?php echo $m_textAlignmentClass; ?> <?php echo $d_textAlignmentClass; ?>">
                                 <?php if (!empty($banner['subheading'])): ?>
@@ -510,6 +517,7 @@ document.addEventListener('DOMContentLoaded', function() {
             heroSkeleton.style.display = 'none';
             if (hasSlides) {
                 heroSection.style.display = 'block';
+                window.dispatchEvent(new Event('resize'));
             } else {
                 heroSection.style.display = 'none';
             }
@@ -747,7 +755,7 @@ document.addEventListener('DOMContentLoaded', function() {
 <!-- Categories Skeleton -->
 <?php if ($showCategories): ?>
 <div id="categories-section" class="section-loading">
-    <section class="pt-8 md:pt-14 pb-8" style="background-color: <?php echo htmlspecialchars($catBgColor); ?>;">
+    <section class="pt-5 md:pt-12 pb-1 md:pb-6" style="background-color: <?php echo htmlspecialchars($catBgColor); ?>;">
         <?php
         // Mirror the same container logic as categories.php
         $skelContainerClass = ($catLayoutType === 'slider') ? 'container mx-auto px-0 md:px-4' : 'container mx-auto px-4';
@@ -775,7 +783,7 @@ document.addEventListener('DOMContentLoaded', function() {
         }
         ?>
         <div class="<?php echo $skelContainerClass; ?>">
-            <div class="text-center mb-6 md:mb-12">
+            <div class="text-center mb-4 md:mb-10">
                 <div class="h-8 bg-gray-200 rounded w-64 mx-auto mb-4 relative overflow-hidden">
                     <div class="absolute inset-0 animate-shimmer"></div>
                 </div>
@@ -809,9 +817,9 @@ document.addEventListener('DOMContentLoaded', function() {
 <!-- Best Selling Skeleton -->
 <?php if ($showBest): ?>
 <div id="best-selling-section" class="section-loading">
-    <section class="py-14" style="background-color: <?php echo htmlspecialchars($bsBgColor); ?>;">
+    <section class="pt-2 md:pt-12 pb-2 md:pb-4" style="background-color: <?php echo htmlspecialchars($bsBgColor); ?>;">
         <div class="container mx-auto px-4">
-            <div class="text-center mb-12">
+            <div class="text-center mb-4 md:mb-10">
                 <div class="h-8 bg-gray-200 rounded w-64 mx-auto mb-4 relative overflow-hidden">
                     <div class="absolute inset-0 animate-shimmer"></div>
                 </div>
@@ -851,9 +859,9 @@ document.addEventListener('DOMContentLoaded', function() {
 <!-- Special Offers Skeleton -->
 <?php if ($showOffers): ?>
 <div id="special-offers-section" class="section-loading">
-    <section class="py-14" style="background-color: <?php echo htmlspecialchars($soBgColor); ?>;">
+    <section class="pt-2 md:pt-6 pb-8" style="background-color: <?php echo htmlspecialchars($soBgColor); ?>;">
         <div class="container mx-auto px-4">
-            <div class="text-center mb-10">
+            <div class="text-center mb-4 md:mb-10">
                 <div class="h-10 bg-gray-200 rounded w-72 mx-auto mb-3 relative overflow-hidden">
                     <div class="absolute inset-0 animate-shimmer"></div>
                 </div>
@@ -876,9 +884,9 @@ document.addEventListener('DOMContentLoaded', function() {
 <!-- Videos Skeleton -->
 <?php if ($showVideos): ?>
 <div id="videos-section" class="section-loading">
-    <section class="py-10" style="background-color: <?php echo htmlspecialchars($vidBgColor); ?>;">
+    <section class="pt-5 md:pt-12 pb-8" style="background-color: <?php echo htmlspecialchars($vidBgColor); ?>;">
         <div class="container mx-auto px-4">
-            <div class="text-center mb-10">
+            <div class="text-center mb-4 md:mb-10">
                 <div class="h-10 bg-gray-200 rounded w-64 mx-auto mb-3 relative overflow-hidden">
                     <div class="absolute inset-0 animate-shimmer"></div>
                 </div>
@@ -905,9 +913,9 @@ document.addEventListener('DOMContentLoaded', function() {
 <!-- Trending Skeleton -->
 <?php if ($showTrend): ?>
 <div id="trending-section" class="section-loading">
-    <section class="py-14" style="background-color: <?php echo htmlspecialchars($trBgColor); ?>;">
+    <section class="pt-5 md:pt-12 pb-8" style="background-color: <?php echo htmlspecialchars($trBgColor); ?>;">
         <div class="container mx-auto px-4">
-            <div class="text-center mb-10">
+            <div class="text-center mb-4 md:mb-10">
                 <div class="h-8 bg-gray-200 rounded w-64 mx-auto mb-4 relative overflow-hidden">
                     <div class="absolute inset-0 animate-shimmer"></div>
                 </div>
@@ -1045,4 +1053,4 @@ document.addEventListener('DOMContentLoaded', function() {
 <?php endif; ?>
 <?php require_once __DIR__ . '/includes/footer.php'; ?>
 
-<script src="<?php echo $baseUrl; ?>/assets/js/lazy-load19.js?v=3" defer></script>
+<script src="<?php echo $baseUrl; ?>/assets/js/lazy-load19.js?v=7" defer></script>

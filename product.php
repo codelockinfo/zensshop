@@ -224,6 +224,7 @@ $p_atc_text = $productStyles['atc_btn_text_color'] ?? '#ffffff';
 $p_buy_bg = $productStyles['buy_now_btn_color'] ?? '#b91c1c';
 $p_buy_text = $productStyles['buy_now_btn_text_color'] ?? '#ffffff';
 $p_action_color = $productStyles['action_links_color'] ?? '#4b5563';
+$p_hover_bg = $productStyles['action_links_hover_color'] ?? '#1a3d32';
 $p_info_bg = $productStyles['info_box_bg_color'] ?? '#f9fafb';
 $p_info_text = $productStyles['info_box_text_color'] ?? '#374151';
 $p_border_color = $productStyles['border_color'] ?? '#e5e7eb';
@@ -321,10 +322,10 @@ $p_buy_hover_text = $productStyles['buy_now_hover_text_color'] ?? '#ffffff';
     }
 </style>
 
-<section id="product-main-section" class=" md:py-12">
+<section id="product-main-section" class="pt-2 pb-8 md:pt-4 md:pb-12">
     <div class="container mx-auto px-4">
         <!-- Breadcrumbs -->
-        <nav class="breadcrumb-nav text-sm mb-6 pt-3 mt-5">
+        <nav class="breadcrumb-nav text-sm mb-4">
             <a href="<?php echo $baseUrl; ?>/">Home</a>
             <span>></span>
             <?php if ($primaryCategory): ?>
@@ -337,7 +338,7 @@ $p_buy_hover_text = $productStyles['buy_now_hover_text_color'] ?? '#ffffff';
         </nav>
         
         <!-- Product Skeleton -->
-        <div id="productSkeleton" class="grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-12 mb-16 animate-pulse">
+        <div id="productSkeleton" class="grid grid-cols-1 lg:grid-cols-2 gap-3 lg:gap-12 mb-6 md:mb-12 animate-pulse">
             <!-- Image Skeleton -->
             <div class="rounded-lg overflow-hidden">
                 <div class="w-full h-[500px] bg-gray-200 mb-4 rounded-lg"></div>
@@ -352,7 +353,7 @@ $p_buy_hover_text = $productStyles['buy_now_hover_text_color'] ?? '#ffffff';
             <!-- Info Skeleton -->
             <div class="space-y-6">
                 <div class="space-y-2">
-                    <div class="h-10 bg-gray-200 rounded w-3/4"></div> <!-- Title -->
+                    <div class="h-8 md:h-10 bg-gray-200 rounded w-3/4"></div> <!-- Title -->
                     <div class="flex items-center space-x-4">
                          <div class="h-5 bg-gray-200 rounded w-32"></div> <!-- Rating -->
                          <div class="h-5 bg-gray-200 rounded w-24"></div> <!-- Sold count -->
@@ -397,12 +398,12 @@ $p_buy_hover_text = $productStyles['buy_now_hover_text_color'] ?? '#ffffff';
             </div>
         </div>
 
-        <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-12 mb-16 hidden" id="mainProductContainer">
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-3 lg:gap-12 mb-6 md:mb-12 hidden" id="mainProductContainer">
             <!-- Product Images -->
             <div>
 
                 <!-- Main Image -->
-                <div class="mb-4 w-full max-w-[730px] mx-auto flex items-center justify-center bg-gray-50 rounded-lg overflow-hidden border border-gray-100 relative group" id="mainImageContainer" style="aspect-ratio: 1 / 1;">
+                <div class="mb-1 lg:mb-4 w-full max-w-[730px] mx-auto flex items-center justify-center bg-gray-50 rounded-lg overflow-hidden border border-gray-100 relative group" id="mainImageContainer" style="aspect-ratio: 1 / 1;">
                     <?php
                     $mainExt = strtolower(pathinfo($mainImage, PATHINFO_EXTENSION));
                     $isMainVideo = in_array($mainExt, ['mp4', 'webm', 'ogg', 'mov', 'avi', 'mkv', 'm4v']);
@@ -517,7 +518,7 @@ $p_buy_hover_text = $productStyles['buy_now_hover_text_color'] ?? '#ffffff';
                     </style>
                 <?php if (count($galleryItems) > 1): ?>
                 <div class="relative">
-                    <div class="swiper thumbnail-slider mt-4">
+                    <div class="swiper thumbnail-slider mt-2 lg:mt-4">
                         <div class="swiper-wrapper">
                             <?php foreach ($galleryItems as $index => $item): 
                                 $ext = strtolower(pathinfo($item['url'], PATHINFO_EXTENSION));
@@ -552,7 +553,7 @@ $p_buy_hover_text = $productStyles['buy_now_hover_text_color'] ?? '#ffffff';
             
             <!-- Product Information -->
             <div>
-                <h1 class="text-2xl md:text-3xl font-heading font-bold mb-4"><?php echo htmlspecialchars($productData['name'] ?? 'Product'); ?></h1>
+                <h1 class="text-xl md:text-3xl font-heading font-bold mb-2.5 md:mb-4"><?php echo htmlspecialchars($productData['name'] ?? 'Product'); ?></h1>
                 
                 <!-- Rating and Reviews -->
                 <div class="flex items-center space-x-4 mb-4 text-sm cursor-pointer hover:opacity-80 transition" onclick="document.getElementById('customer-reviews').scrollIntoView({ behavior: 'smooth' })">
@@ -578,7 +579,7 @@ $p_buy_hover_text = $productStyles['buy_now_hover_text_color'] ?? '#ffffff';
                 </div>
                 
                 <!-- Description with Read More -->
-                <div class="mb-6">
+                <div class="mb-5">
                     <style>
                         .line-clamp-5 {
                             display: -webkit-box;
@@ -627,18 +628,18 @@ $p_buy_hover_text = $productStyles['buy_now_hover_text_color'] ?? '#ffffff';
                 </div>
                 
                 <!-- Key Information (Highlights) -->
-                <div class="space-y-3 mb-6 text-sm">
-                    <?php 
-                    $highlights = json_decode($productData['highlights'] ?? '[]', true);
-                    if (!empty($highlights)):
-                        foreach ($highlights as $h): ?>
+                <?php 
+                $highlights = json_decode($productData['highlights'] ?? '[]', true);
+                if (!empty($highlights)): ?>
+                <div class="space-y-3 mb-5 text-sm">
+                    <?php foreach ($highlights as $h): ?>
                     <div class="flex items-center text-gray-700">
                         <i class="<?php echo htmlspecialchars($h['icon'] ?: 'fas fa-check'); ?> mr-2 text-primary"></i>
                         <span><?php echo trim(strip_tags(html_entity_decode($h['text'] ?? '', ENT_QUOTES | ENT_HTML5))); ?></span>
                     </div>
-                    <?php endforeach; 
-                    endif; ?>
+                    <?php endforeach; ?>
                 </div>
+                <?php endif; ?>
                 
                 <!-- Dynamic Variant Selectors -->
                 <?php if (!empty($productOptions)): ?>
@@ -646,7 +647,7 @@ $p_buy_hover_text = $productStyles['buy_now_hover_text_color'] ?? '#ffffff';
                         $optionName = $option['option_name'];
                         $optionValues = $option['option_values'];
                     ?>
-                    <div class="mb-6 variant-option-group" data-option-name="<?php echo htmlspecialchars($optionName); ?>">
+                    <div class="mb-5 variant-option-group" data-option-name="<?php echo htmlspecialchars($optionName); ?>">
                         <div class="flex items-center justify-between mb-3">
                             <label class="font-semibold text-gray-900"><?php echo htmlspecialchars($optionName); ?>: <span class="selected-value text-primary font-normal"></span></label>
                             <!-- <?php if (strtolower($optionName) === 'size'): ?>
@@ -664,21 +665,6 @@ $p_buy_hover_text = $productStyles['buy_now_hover_text_color'] ?? '#ffffff';
                         </div>
                     </div>
                     <?php endforeach; ?>
-                <?php else: ?>
-                    <!-- Fallback or simple size selector if no variants in DB -->
-                    <div class="mb-6">
-                        <div class="flex items-center justify-between mb-3">
-                            <label class="font-semibold text-gray-900">Standard Size:</label>
-                        </div>
-                        <div class="flex flex-wrap gap-2">
-                            <?php foreach (['Standard'] as $size): ?>
-                            <button type="button" 
-                                    class="variant-option-btn active px-6 py-2 border-2 rounded border-primary bg-primary text-white">
-                                <?php echo $size; ?>
-                            </button>
-                            <?php endforeach; ?>
-                        </div>
-                    </div>
                 <?php endif; ?>
 
                 <!-- Variant Images Section -->
@@ -704,7 +690,7 @@ $p_buy_hover_text = $productStyles['buy_now_hover_text_color'] ?? '#ffffff';
                 <?php endif; ?>
                 
                 <!-- Quantity Selector - Premium Non-clickable Style -->
-                <div class="flex items-center gap-4 mb-6">
+                <div class="flex items-center gap-4 mb-5">
                     <label class="font-semibold text-gray-900">Quantity:</label>
                     <div class="flex items-center border border-gray-300 rounded-md w-28 h-10 overflow-hidden bg-white quantity-selector">
                         <button onclick="updateProductQuantity(-1)" class="w-10 h-full flex-shrink-0 flex items-center justify-center text-gray-600 hover:text-black hover:bg-gray-100 transition select-none">-</button>
@@ -830,8 +816,8 @@ $p_buy_hover_text = $productStyles['buy_now_hover_text_color'] ?? '#ffffff';
                 </div>
                 
                 <!-- Guarantee -->
-                <div class="mt-6 pt-4 border-t">
-                    <p class="text-sm text-gray-600 text-right">Guarantee Safe Checkout</p>
+                <div class="mt-4 md:mt-6 pt-3 md:pt-4 border-t">
+                    <p class="text-xs md:text-sm text-gray-600 text-right">Guarantee Safe Checkout</p>
                     <div class="flex justify-end items-center flex-wrap gap-1 mt-2">
                         <?php 
                         $checkoutPaymentIconsJson = $settings->get('checkout_payment_icons_json', '[]');
@@ -869,16 +855,16 @@ $p_buy_hover_text = $productStyles['buy_now_hover_text_color'] ?? '#ffffff';
         </script>
         
         <!-- Collapsible Sections -->
-        <div class="max-w-4xl mx-auto mb-16">
-            <div class="space-y-4">
+        <div class="max-w-4xl mx-auto mb-8 md:mb-14">
+            <div>
                 <!-- Description -->
                 <div class="border-b">
-                    <button onclick="toggleSection('description')" class="w-full flex items-center justify-between py-4 text-left">
-                        <span class="font-semibold text-lg">Description</span>
-                        <i class="fas fa-plus text-gray-400 transition-transform duration-300" id="description-icon"></i>
+                    <button onclick="toggleSection('description')" class="w-full flex items-center justify-between py-2.5 md:py-3.5 text-left">
+                        <span class="font-semibold text-base md:text-lg">Description</span>
+                        <i class="fas fa-plus text-gray-400 transition-transform duration-300 text-sm" id="description-icon"></i>
                     </button>
                     <div id="description-content" class="max-h-0 overflow-hidden transition-all duration-500 ease-in-out text-gray-700 text-sm">
-                        <div class="pb-4">
+                        <div class="pb-3 md:pb-4">
                             <div class="prose prose-sm max-w-none">
                                 <?php echo htmlspecialchars_decode($productData['description'] ?? 'No description available.'); ?>
                             </div>
@@ -888,12 +874,12 @@ $p_buy_hover_text = $productStyles['buy_now_hover_text_color'] ?? '#ffffff';
                 
                 <!-- Shipping Policy -->
                 <div class="border-b">
-                    <button onclick="toggleSection('shipping')" class="w-full flex items-center justify-between py-4 text-left">
-                        <span class="font-semibold text-lg">Shipping and Returns</span>
-                        <i class="fas fa-plus text-gray-400 transition-transform duration-300" id="shipping-icon"></i>
+                    <button onclick="toggleSection('shipping')" class="w-full flex items-center justify-between py-2.5 md:py-3.5 text-left">
+                        <span class="font-semibold text-base md:text-lg">Shipping and Returns</span>
+                        <i class="fas fa-plus text-gray-400 transition-transform duration-300 text-sm" id="shipping-icon"></i>
                     </button>
                     <div id="shipping-content" class="max-h-0 overflow-hidden transition-all duration-500 ease-in-out text-gray-700 text-sm">
-                        <div class="pb-4">
+                        <div class="pb-3 md:pb-4">
                             <div class="prose prose-sm max-w-none text-[15px]">
                                 <?php 
                                 $shippingPolicy = $productData['shipping_policy'] ?? '';
@@ -912,12 +898,12 @@ $p_buy_hover_text = $productStyles['buy_now_hover_text_color'] ?? '#ffffff';
                 
                 <!-- Return Policies -->
                 <div class="border-b">
-                    <button onclick="toggleSection('returns')" class="w-full flex items-center justify-between py-4 text-left">
-                        <span class="font-semibold text-lg">Return Policies</span>
-                        <i class="fas fa-plus text-gray-400 transition-transform duration-300" id="returns-icon"></i>
+                    <button onclick="toggleSection('returns')" class="w-full flex items-center justify-between py-2.5 md:py-3.5 text-left">
+                        <span class="font-semibold text-base md:text-lg">Return Policies</span>
+                        <i class="fas fa-plus text-gray-400 transition-transform duration-300 text-sm" id="returns-icon"></i>
                     </button>
                     <div id="returns-content" class="max-h-0 overflow-hidden transition-all duration-500 ease-in-out text-gray-700 text-sm">
-                        <div class="pb-4">
+                        <div class="pb-3 md:pb-4">
                             <div class="prose prose-sm max-w-none text-[15px]">
                                 <?php 
                                 $returnPolicy = $productData['return_policy'] ?? '';
@@ -937,8 +923,8 @@ $p_buy_hover_text = $productStyles['buy_now_hover_text_color'] ?? '#ffffff';
         </div>
         
         <!-- Customer Reviews -->
-        <div class="max-w-4xl mx-auto mb-16" id="customer-reviews">
-            <h2 class="text-xl font-heading font-bold mb-6">Customer Reviews</h2>
+        <div class="max-w-4xl mx-auto mb-12 md:mb-16" id="customer-reviews">
+            <h2 class="text-lg md:text-xl font-heading font-bold mb-4 md:mb-6">Customer Reviews</h2>
             
             <div class="grid grid-cols-1 md:grid-cols-3 gap-8 mb-8">
                 <!-- Overall Rating -->

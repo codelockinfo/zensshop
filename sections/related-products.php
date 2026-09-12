@@ -76,11 +76,11 @@ if ($showRelated !== '1') {
 ?>
 
 <div class="text-center mb-8 px-4">
-    <h2 class="text-2xl font-heading font-bold mb-2"><?php echo htmlspecialchars($relatedTitle); ?></h2>
+    <h2 class="text-xl md:text-2xl font-heading font-bold mb-2"><?php echo htmlspecialchars($relatedTitle); ?></h2>
     <p class="text-gray-600 max-w-2xl mx-auto"><?php echo htmlspecialchars($relatedSubtitle); ?></p>
 </div>
 
-<div class="swiper people-bought-slider pb-12 px-4 md:px-12 relative overflow-hidden">
+<div class="swiper people-bought-slider pb-6 md:pb-12 px-4 md:px-12 relative overflow-hidden">
     <div class="swiper-wrapper">
         <?php foreach ($relatedProducts as $item): 
             $itemImage = getProductImage($item);
