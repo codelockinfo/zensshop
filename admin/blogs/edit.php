@@ -247,22 +247,22 @@ require_once __DIR__ . '/../../includes/admin-header.php';
                                 <div>
                                     <label class="block text-xs font-bold mb-1">Text Color</label>
                                     <div class="flex items-center gap-1">
-                                        <input type="color" name="banner_text_color" value="<?php echo htmlspecialchars($blogSettings['banner']['text_color'] ?? '#ffffff'); ?>" class="h-8 w-8 rounded cursor-pointer border-0 p-0 shadow-sm">
-                                        <input type="text" oninput="this.previousElementSibling.value = this.value" value="<?php echo htmlspecialchars($blogSettings['banner']['text_color'] ?? '#ffffff'); ?>" class="w-full border p-1 rounded text-xs uppercase" readonly>
+                                        <input type="color" name="banner_text_color" value="<?php echo htmlspecialchars($blogSettings['banner']['text_color'] ?? '#ffffff'); ?>" class="h-8 w-8 rounded cursor-pointer border-0 p-0 shadow-sm" oninput="this.nextElementSibling.value = this.value">
+                                        <input type="text" oninput="this.previousElementSibling.value = this.value" value="<?php echo htmlspecialchars($blogSettings['banner']['text_color'] ?? '#ffffff'); ?>" class="w-full border p-1 rounded text-xs uppercase">
                                     </div>
                                 </div>
                                 <div>
                                     <label class="block text-xs font-bold mb-1">Heading Color</label>
                                     <div class="flex items-center gap-1">
-                                        <input type="color" name="banner_heading_color" value="<?php echo htmlspecialchars($blogSettings['banner']['heading_color'] ?? '#ffffff'); ?>" class="h-8 w-8 rounded cursor-pointer border-0 p-0 shadow-sm">
-                                        <input type="text" oninput="this.previousElementSibling.value = this.value" value="<?php echo htmlspecialchars($blogSettings['banner']['heading_color'] ?? '#ffffff'); ?>" class="w-full border p-1 rounded text-xs uppercase" readonly>
+                                        <input type="color" name="banner_heading_color" value="<?php echo htmlspecialchars($blogSettings['banner']['heading_color'] ?? '#ffffff'); ?>" class="h-8 w-8 rounded cursor-pointer border-0 p-0 shadow-sm" oninput="this.nextElementSibling.value = this.value">
+                                        <input type="text" oninput="this.previousElementSibling.value = this.value" value="<?php echo htmlspecialchars($blogSettings['banner']['heading_color'] ?? '#ffffff'); ?>" class="w-full border p-1 rounded text-xs uppercase">
                                     </div>
                                 </div>
                                 <div>
                                     <label class="block text-xs font-bold mb-1">Subheading Color</label>
                                     <div class="flex items-center gap-1">
-                                        <input type="color" name="banner_subheading_color" value="<?php echo htmlspecialchars($blogSettings['banner']['subheading_color'] ?? '#ffffff'); ?>" class="h-8 w-8 rounded cursor-pointer border-0 p-0 shadow-sm">
-                                        <input type="text" oninput="this.previousElementSibling.value = this.value" value="<?php echo htmlspecialchars($blogSettings['banner']['subheading_color'] ?? '#ffffff'); ?>" class="w-full border p-1 rounded text-xs uppercase" readonly>
+                                        <input type="color" name="banner_subheading_color" value="<?php echo htmlspecialchars($blogSettings['banner']['subheading_color'] ?? '#ffffff'); ?>" class="h-8 w-8 rounded cursor-pointer border-0 p-0 shadow-sm" oninput="this.nextElementSibling.value = this.value">
+                                        <input type="text" oninput="this.previousElementSibling.value = this.value" value="<?php echo htmlspecialchars($blogSettings['banner']['subheading_color'] ?? '#ffffff'); ?>" class="w-full border p-1 rounded text-xs uppercase">
                                     </div>
                                 </div>
                              </div>
@@ -270,8 +270,8 @@ require_once __DIR__ . '/../../includes/admin-header.php';
                              <div>
                                 <label class="block text-xs font-bold mb-1">Banner Background Color</label>
                                 <div class="flex items-center gap-1">
-                                    <input type="color" name="banner_bg_color" value="<?php echo htmlspecialchars($blogSettings['banner']['bg_color'] ?? '#ffffff'); ?>" class="h-8 w-8 rounded cursor-pointer border-0 p-0 shadow-sm">
-                                    <input type="text" oninput="this.previousElementSibling.value = this.value" value="<?php echo htmlspecialchars($blogSettings['banner']['bg_color'] ?? '#ffffff'); ?>" class="w-full border p-1 rounded text-xs uppercase" readonly>
+                                    <input type="color" name="banner_bg_color" value="<?php echo htmlspecialchars($blogSettings['banner']['bg_color'] ?? '#ffffff'); ?>" class="h-8 w-8 rounded cursor-pointer border-0 p-0 shadow-sm" oninput="this.nextElementSibling.value = this.value">
+                                    <input type="text" oninput="this.previousElementSibling.value = this.value" value="<?php echo htmlspecialchars($blogSettings['banner']['bg_color'] ?? '#ffffff'); ?>" class="w-full border p-1 rounded text-xs uppercase">
                                 </div>
                                 <p class="text-[10px] text-gray-400 mt-1">Used if banner image is not uploaded.</p>
                              </div>
@@ -301,8 +301,8 @@ require_once __DIR__ . '/../../includes/admin-header.php';
                              <div class="pt-2 border-t mt-4">
                                 <label class="block text-xs font-bold mb-1">Page Background Color</label>
                                 <div class="flex items-center gap-1">
-                                    <input type="color" name="page_bg_color" value="<?php echo htmlspecialchars($blogSettings['page_bg_color'] ?? '#ffffff'); ?>" class="h-8 w-8 rounded cursor-pointer border-0 p-0 shadow-sm">
-                                    <input type="text" oninput="this.previousElementSibling.value = this.value" value="<?php echo htmlspecialchars($blogSettings['page_bg_color'] ?? '#ffffff'); ?>" class="w-full border p-1 rounded text-xs uppercase" readonly>
+                                    <input type="color" name="page_bg_color" value="<?php echo htmlspecialchars($blogSettings['page_bg_color'] ?? '#ffffff'); ?>" class="h-8 w-8 rounded cursor-pointer border-0 p-0 shadow-sm" oninput="this.nextElementSibling.value = this.value">
+                                    <input type="text" oninput="this.previousElementSibling.value = this.value" value="<?php echo htmlspecialchars($blogSettings['page_bg_color'] ?? '#ffffff'); ?>" class="w-full border p-1 rounded text-xs uppercase">
                                 </div>
                              </div>
                         </div>
