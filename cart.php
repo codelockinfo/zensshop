@@ -127,7 +127,7 @@ $cp_continue_hover_text = getCartStyle('cart_page_continue_btn_hover_text', '#11
 
 <section class="pt-6 pb-12 md:pt-8 md:pb-16 bg-gray-50 min-h-screen">
     <div class="container mx-auto px-4">
-        <h1 class="text-3xl md:text-4xl font-heading font-bold mb-6">Shopping Cart</h1>
+        <h1 class="text-2xl md:text-4xl font-heading font-bold mb-6">Shopping Cart</h1>
         <?php 
             // Determine currency for totals (use first item's currency or default)
             $cartCurrency = !empty($cartItems) ? ($cartItems[0]['currency'] ?? 'USD') : 'USD';
@@ -195,7 +195,7 @@ $cp_continue_hover_text = getCartStyle('cart_page_continue_btn_hover_text', '#11
                                  onerror="this.src='https://placehold.co/600x600?text=Product+Image'">
                         </a>
                         <div class="flex-1">
-                            <h3 class="text-xl font-semibold mb-1 line-clamp-2" style="display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; text-overflow: ellipsis;" title="<?php echo htmlspecialchars($item['name']); ?>">
+                            <h3 class="text-base md:text-xl font-semibold mb-1 line-clamp-2" style="display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; text-overflow: ellipsis;" title="<?php echo htmlspecialchars($item['name']); ?>">
                                 <a href="<?php echo $productUrl; ?>" class="hover:text-primary transition">
                                     <?php echo htmlspecialchars($item['name']); ?>
                                 </a>
@@ -225,12 +225,12 @@ $cp_continue_hover_text = getCartStyle('cart_page_continue_btn_hover_text', '#11
                                 <button onclick='incrementCartItem(<?php echo $item['product_id']; ?>, this, <?php echo $attributesEscaped; ?>)' 
                                         class="px-4 py-2 hover:bg-gray-100" data-loading-text="">+</button>
                             </div>
-                            <p class="text-xl font-bold w-24 text-right item-total">
+                            <p class="text-base md:text-xl font-bold w-24 text-right item-total">
                                 <span><?php echo format_price($item['price'] * $item['quantity'], $item['currency'] ?? 'USD'); ?></span>
                             </p>
                             <button onclick='showInlineRemoveConfirm(<?php echo $item['product_id']; ?>, <?php echo $attributesEscaped; ?>)' 
                                     class="text-red-500 hover:text-red-700">
-                                <i class="fas fa-trash text-xl"></i>
+                                <i class="fas fa-trash text-lg md:text-xl"></i>
                             </button>
                         </div>
                     </div>
@@ -241,7 +241,7 @@ $cp_continue_hover_text = getCartStyle('cart_page_continue_btn_hover_text', '#11
                              class="w-20 h-20 object-cover rounded border border-gray-200"
                              onerror="this.src='https://placehold.co/600x600?text=Product+Image'">
                         <div class="flex-1">
-                            <h3 class="text-base font-semibold mb-1 text-gray-800"><?php echo htmlspecialchars($item['name']); ?></h3>
+                            <h3 class="text-sm md:text-base font-semibold mb-1 text-gray-800 line-clamp-2"><?php echo htmlspecialchars($item['name']); ?></h3>
                             <p class="text-gray-600 text-sm mb-3">Add to wishlist before remove?</p>
                             <div class="flex space-x-3">
                                 <button onclick='confirmInlineRemoveWithWishlist(<?php echo $item['product_id']; ?>, this, <?php echo $attributesEscaped; ?>)' 

@@ -32,9 +32,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     // Auto-generate slug from name if empty
     if (empty($slug) && !empty($name)) {
         $slug = strtolower(trim($name));
-        $slug = preg_replace('/[^\w\s-]/', '', $slug); // Remove special chars
-        $slug = preg_replace('/[\s_-]+/', '-', $slug); // Replace spaces/underscores with -
-        $slug = trim($slug, '-'); // Trim leading/trailing hyphens
+        $slug = preg_replace('/[^\w\s-]/', '', $slug);
+        $slug = preg_replace('/[\s_-]+/', '-', $slug);
+        $slug = trim($slug, '-');
     }
 
     $description = $_POST['description'] ?? '';
@@ -42,7 +42,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $sortOrder = $_POST['sort_order'] ?? 0;
     
     // Handle Image Upload
-    $imagePath = ($id && $category) ? $category['image'] : ''; // Default to existing
+    $imagePath = ($id && $category) ? $category['image'] : '';
     
     if (isset($_FILES['image'])) {
         if ($_FILES['image']['error'] === UPLOAD_ERR_OK) {
@@ -53,7 +53,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             
             $allowedfileExtensions = array('jpg', 'gif', 'png', 'jpeg', 'webp');
             if (in_array($fileExtension, $allowedfileExtensions)) {
-                $uploadFileDir = __DIR__ . '/../../assets/images/categories/';
+                $uploadFileDir = __DIR__ . '/../../assets/categories/';
                 if (!is_dir($uploadFileDir)) {
                     mkdir($uploadFileDir, 0777, true);
                 }
@@ -63,7 +63,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $dest_path = $uploadFileDir . $newFileName;
                 
                 if(move_uploaded_file($fileTmpPath, $dest_path)) {
-                    $imagePath = 'assets/images/categories/' . $newFileName;
+                    $imagePath = 'assets/categories/' . $newFileName;
                 } else {
                      $error = "Failed to move uploaded image file.";
                 }
@@ -74,11 +74,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
              $error = "Image upload failed with error code: " . $_FILES['image']['error'];
         }
     } else if (isset($_POST['remove_image']) && $_POST['remove_image'] == '1') {
-        $imagePath = ''; // User removed image
+        $imagePath = '';
     }
 
     // Handle Banner Upload
-    $bannerPath = ($id && $category) ? ($category['banner'] ?? '') : ''; // Default to existing
+    $bannerPath = ($id && $category) ? ($category['banner'] ?? '') : '';
 
     if (isset($_FILES['banner'])) {
         if ($_FILES['banner']['error'] === UPLOAD_ERR_OK) {
@@ -89,7 +89,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             
             $allowedfileExtensions = array('jpg', 'gif', 'png', 'jpeg', 'webp');
             if (in_array($fileExtension, $allowedfileExtensions)) {
-                $uploadFileDir = __DIR__ . '/../../assets/images/categories/';
+                $uploadFileDir = __DIR__ . '/../../assets/categories/';
                 if (!is_dir($uploadFileDir)) {
                     mkdir($uploadFileDir, 0777, true);
                 }
@@ -99,7 +99,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $dest_path = $uploadFileDir . $newFileName;
                 
                 if(move_uploaded_file($fileTmpPath, $dest_path)) {
-                    $bannerPath = 'assets/images/categories/' . $newFileName;
+                    $bannerPath = 'assets/categories/' . $newFileName;
                 } else {
                     $error = "Failed to move uploaded banner file. Check directory permissions.";
                 }
@@ -107,7 +107,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $error = "Invalid banner file type. Allowed: jpg, png, webp.";
             }
         } elseif ($_FILES['banner']['error'] !== UPLOAD_ERR_NO_FILE) {
-             // Handle generic upload errors (size, etc)
              switch ($_FILES['banner']['error']) {
                  case UPLOAD_ERR_INI_SIZE:
                  case UPLOAD_ERR_FORM_SIZE:
@@ -119,7 +118,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         }
     }
     
-    // Proper check for removal flag
     if (isset($_POST['remove_banner']) && $_POST['remove_banner'] == '1') {
         $bannerPath = ''; 
     }
@@ -132,9 +130,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 "UPDATE categories SET name = ?, slug = ?, description = ?, status = ?, sort_order = ?, image = ?, banner = ?, icon = ? WHERE id = ? AND store_id = ?",
                 [$name, $slug, $description, $status, $sortOrder, $imagePath, $bannerPath, $icon, $id, $storeId]
             );
-            $success = 'Category updated successfully!';
-            // Refresh category data
-            $category = $db->fetchOne("SELECT * FROM categories WHERE id = ? AND store_id = ?", [$id, $storeId]);
+            header('Location: ' . url('admin/categories/list.php'));
+            exit;
         } else {
             $db->insert(
                 "INSERT INTO categories (name, slug, description, status, sort_order, image, banner, icon, store_id) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)",
@@ -150,7 +147,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         } else {
             $error = "Something went wrong. Please try again.";
         }
-        error_log("Manage Category Error: " . $msg); // Log original error for admin
+        error_log("Manage Category Error: " . $msg);
     }
 }
 
@@ -193,48 +190,46 @@ require_once __DIR__ . '/../../includes/admin-header.php';
         </div>
         
         <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <!-- Upload Image -->
             <div class="admin-form-group">
                 <label class="admin-form-label">Upload image *</label>
-                <div class="category-image-upload border-2 border-dashed border-gray-300 rounded-lg p-8 text-center cursor-pointer hover:border-blue-500 transition-colors relative" onclick="document.getElementById('fileInput').click()">
-                    <input type="file" name="image" id="fileInput" accept="image/*" class="hidden category-image-input">
+                <div class="category-image-upload border-2 border-dashed border-gray-300 rounded-lg p-8 text-center cursor-pointer hover:border-blue-500 transition-colors relative" id="imageUploadArea">
+                    <input type="file" name="image" id="fileInput" accept="image/*" class="hidden">
                     <div class="upload-placeholder <?php echo !empty($category['image']) ? 'hidden' : ''; ?>">
                         <i class="fas fa-cloud-upload-alt text-5xl text-blue-500 mb-3"></i>
                         <p class="text-sm text-gray-600">
                             Drop image here<br><span class="text-xs text-gray-400">(Recommended 3:4)</span>
                         </p>
                     </div>
-                    <!-- Preview Container -->
                     <div class="image-preview <?php echo !empty($category['image']) ? '' : 'hidden'; ?> mt-4 relative inline-block">
                         <?php if (!empty($category['image'])): ?>
                             <img src="<?php echo $baseUrl . '/' . $category['image']; ?>" alt="Preview" class="h-32 object-cover rounded border">
                         <?php endif; ?>
                     </div>
-                    
-                    <button type="button" id="removeImageBtn" class="remove-image-btn absolute top-2 right-2 bg-red-500 text-white rounded-full w-6 h-6 flex items-center justify-center hover:bg-red-600 <?php echo !empty($category['image']) ? '' : 'hidden'; ?>">
+                    <button type="button" id="removeImageBtn" class="absolute top-2 right-2 bg-red-500 text-white rounded-full w-6 h-6 flex items-center justify-center hover:bg-red-600 <?php echo !empty($category['image']) ? '' : 'hidden'; ?>">
                         <i class="fas fa-times text-xs"></i>
                     </button>
                 </div>
                 <input type="hidden" name="remove_image" id="removeImageInput" value="0">
             </div>
 
+            <!-- Upload Banner -->
             <div class="admin-form-group">
                 <label class="admin-form-label">Upload banner</label>
-                <div class="category-banner-upload border-2 border-dashed border-gray-300 rounded-lg p-8 text-center cursor-pointer hover:border-blue-500 transition-colors relative" onclick="document.getElementById('bannerInput').click()">
-                    <input type="file" name="banner" id="bannerInput" accept="image/*" class="hidden category-banner-input">
+                <div class="category-banner-upload border-2 border-dashed border-gray-300 rounded-lg p-8 text-center cursor-pointer hover:border-blue-500 transition-colors relative" id="bannerUploadArea">
+                    <input type="file" name="banner" id="bannerInput" accept="image/*" class="hidden">
                     <div class="banner-placeholder <?php echo !empty($category['banner']) ? 'hidden' : ''; ?>">
                         <i class="fas fa-image text-5xl text-blue-500 mb-3"></i>
                         <p class="text-sm text-gray-600">
                             Drop banner here<br><span class="text-xs text-gray-400">(Recommended 16:9)</span>
                         </p>
                     </div>
-                    <!-- Preview Container -->
                     <div class="banner-preview <?php echo !empty($category['banner']) ? '' : 'hidden'; ?> mt-4 relative inline-block w-full">
                         <?php if (!empty($category['banner'])): ?>
                             <img src="<?php echo $baseUrl . '/' . $category['banner']; ?>" alt="Banner Preview" class="w-full h-32 object-cover rounded border">
                         <?php endif; ?>
                     </div>
-                    
-                    <button type="button" id="removeBannerBtn" class="remove-banner-btn absolute top-2 right-2 bg-red-500 text-white rounded-full w-6 h-6 flex items-center justify-center hover:bg-red-600 <?php echo !empty($category['banner']) ? '' : 'hidden'; ?>">
+                    <button type="button" id="removeBannerBtn" class="absolute top-2 right-2 bg-red-500 text-white rounded-full w-6 h-6 flex items-center justify-center hover:bg-red-600 <?php echo !empty($category['banner']) ? '' : 'hidden'; ?>">
                         <i class="fas fa-times text-xs"></i>
                     </button>
                 </div>
@@ -242,88 +237,6 @@ require_once __DIR__ . '/../../includes/admin-header.php';
             </div>
         </div>
         
-        <script>
-        // Inline script for better context handling
-        document.addEventListener('DOMContentLoaded', function() {
-            // Main Image Logic
-            const fileInput = document.getElementById('fileInput');
-            const previewContainer = document.querySelector('.image-preview');
-            const placeholder = document.querySelector('.upload-placeholder');
-            const removeBtn = document.getElementById('removeImageBtn');
-            const removeInput = document.getElementById('removeImageInput');
-
-            fileInput.addEventListener('change', function(e) {
-                if (this.files && this.files[0]) {
-                    const reader = new FileReader();
-                    reader.onload = function(e) {
-                        previewContainer.innerHTML = `<img src="${e.target.result}" class="h-32 object-cover rounded border">`;
-                        previewContainer.classList.remove('hidden');
-                        placeholder.classList.add('hidden');
-                        removeBtn.classList.remove('hidden');
-                        removeInput.value = '0'; // Reset remove flag
-                    }
-                    reader.readAsDataURL(this.files[0]);
-                }
-            });
-
-            removeBtn.addEventListener('click', function(e) {
-                e.stopPropagation(); // Prevent opening file dialog
-                fileInput.value = ''; // Clear input
-                previewContainer.innerHTML = '';
-                previewContainer.classList.add('hidden');
-                placeholder.classList.remove('hidden');
-                removeBtn.classList.add('hidden');
-                removeInput.value = '1'; // Mark for removal
-            });
-
-            // Banner Logic
-            const bannerInput = document.getElementById('bannerInput');
-            const bannerPreview = document.querySelector('.banner-preview');
-            const bannerPlaceholder = document.querySelector('.banner-placeholder');
-            const removeBannerBtn = document.getElementById('removeBannerBtn');
-            const removeBannerInput = document.getElementById('removeBannerInput');
-
-            bannerInput.addEventListener('change', function(e) {
-                if (this.files && this.files[0]) {
-                    const reader = new FileReader();
-                    reader.onload = function(e) {
-                        bannerPreview.innerHTML = `<img src="${e.target.result}" class="w-full h-32 object-cover rounded border">`;
-                        bannerPreview.classList.remove('hidden');
-                        bannerPlaceholder.classList.add('hidden');
-                        removeBannerBtn.classList.remove('hidden');
-                        removeBannerInput.value = '0'; // Reset remove flag
-                    }
-                    reader.readAsDataURL(this.files[0]);
-                }
-            });
-
-            removeBannerBtn.addEventListener('click', function(e) {
-                e.stopPropagation(); // Prevent opening file dialog
-                bannerInput.value = ''; // Clear input
-                bannerPreview.innerHTML = '';
-                bannerPreview.classList.add('hidden');
-                bannerPlaceholder.classList.remove('hidden');
-                removeBannerBtn.classList.add('hidden');
-                removeBannerInput.value = '1'; // Mark for removal
-            });
-
-            // Auto-generate slug from name
-            const nameInput = document.querySelector('input[name="name"]');
-            const slugInput = document.querySelector('input[name="slug"]');
-
-            if (nameInput && slugInput) {
-                nameInput.addEventListener('input', function() {
-                    const slug = this.value
-                        .toLowerCase()
-                        .trim()
-                        .replace(/[^\w\s-]/g, '')
-                        .replace(/[\s_-]+/g, '-')
-                        .replace(/^-+|-+$/g, '');
-                    slugInput.value = slug;
-                });
-            }
-        });
-        </script>
         <div class="admin-form-group">
             <label class="admin-form-label">Slug</label>
             <input type="text" 
@@ -370,5 +283,123 @@ require_once __DIR__ . '/../../includes/admin-header.php';
     </form>
 </div>
 
-<?php require_once __DIR__ . '/../../includes/admin-footer.php'; ?>
+<script>
+document.addEventListener('DOMContentLoaded', function() {
 
+    // ========== Image Upload ==========
+    var imageArea = document.getElementById('imageUploadArea');
+    var fileInput = document.getElementById('fileInput');
+    var imagePreview = document.querySelector('.image-preview');
+    var imagePlaceholder = document.querySelector('.upload-placeholder');
+    var removeImageBtn = document.getElementById('removeImageBtn');
+    var removeImageInput = document.getElementById('removeImageInput');
+
+    if (imageArea && fileInput) {
+        imageArea.addEventListener('click', function(e) {
+            // Only skip click if user clicked the remove button itself
+            var clickedRemove = removeImageBtn && (e.target === removeImageBtn || removeImageBtn.contains(e.target));
+            if (!clickedRemove) {
+                fileInput.click();
+            }
+        });
+    }
+
+    if (fileInput) {
+        fileInput.addEventListener('change', function() {
+            if (this.files && this.files[0]) {
+                var reader = new FileReader();
+                reader.onload = function(e) {
+                    imagePreview.innerHTML = '<img src="' + e.target.result + '" class="h-32 object-cover rounded border" style="pointer-events:none;">';
+                    imagePreview.classList.remove('hidden');
+                    imagePlaceholder.classList.add('hidden');
+                    if (removeImageBtn) removeImageBtn.classList.remove('hidden');
+                    removeImageInput.value = '0';
+                };
+                reader.readAsDataURL(this.files[0]);
+            }
+        });
+    }
+
+    if (removeImageBtn) {
+        removeImageBtn.addEventListener('click', function(e) {
+            e.stopPropagation();
+            e.preventDefault();
+            fileInput.value = '';
+            imagePreview.innerHTML = '';
+            imagePreview.classList.add('hidden');
+            imagePlaceholder.classList.remove('hidden');
+            removeImageBtn.classList.add('hidden');
+            removeImageInput.value = '1';
+        });
+    }
+
+    // ========== Banner Upload ==========
+    var bannerArea = document.getElementById('bannerUploadArea');
+    var bannerInput = document.getElementById('bannerInput');
+    var bannerPreview = document.querySelector('.banner-preview');
+    var bannerPlaceholder = document.querySelector('.banner-placeholder');
+    var removeBannerBtn = document.getElementById('removeBannerBtn');
+    var removeBannerInput = document.getElementById('removeBannerInput');
+
+    if (bannerArea && bannerInput) {
+        bannerArea.addEventListener('click', function(e) {
+            var clickedRemove = removeBannerBtn && (e.target === removeBannerBtn || removeBannerBtn.contains(e.target));
+            if (!clickedRemove) {
+                bannerInput.click();
+            }
+        });
+    }
+
+    if (bannerInput) {
+        bannerInput.addEventListener('change', function() {
+            if (this.files && this.files[0]) {
+                var reader = new FileReader();
+                reader.onload = function(e) {
+                    bannerPreview.innerHTML = '<img src="' + e.target.result + '" class="w-full h-32 object-cover rounded border" style="pointer-events:none;">';
+                    bannerPreview.classList.remove('hidden');
+                    bannerPlaceholder.classList.add('hidden');
+                    if (removeBannerBtn) removeBannerBtn.classList.remove('hidden');
+                    removeBannerInput.value = '0';
+                };
+                reader.readAsDataURL(this.files[0]);
+            }
+        });
+    }
+
+    if (removeBannerBtn) {
+        removeBannerBtn.addEventListener('click', function(e) {
+            e.stopPropagation();
+            e.preventDefault();
+            bannerInput.value = '';
+            bannerPreview.innerHTML = '';
+            bannerPreview.classList.add('hidden');
+            bannerPlaceholder.classList.remove('hidden');
+            removeBannerBtn.classList.add('hidden');
+            removeBannerInput.value = '1';
+        });
+    }
+
+    // Make existing preview images non-blocking for clicks
+    document.querySelectorAll('.image-preview img, .banner-preview img').forEach(function(img) {
+        img.style.pointerEvents = 'none';
+    });
+
+    // ========== Auto-generate slug from name ==========
+    var nameInput = document.querySelector('input[name="name"]');
+    var slugInput = document.querySelector('input[name="slug"]');
+
+    if (nameInput && slugInput) {
+        nameInput.addEventListener('input', function() {
+            var slug = this.value
+                .toLowerCase()
+                .trim()
+                .replace(/[^\w\s-]/g, '')
+                .replace(/[\s_-]+/g, '-')
+                .replace(/^-+|-+$/g, '');
+            slugInput.value = slug;
+        });
+    }
+});
+</script>
+
+<?php require_once __DIR__ . '/../../includes/admin-footer.php'; ?>

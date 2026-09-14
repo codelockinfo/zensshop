@@ -838,8 +838,8 @@ $gs_tooltip_text = getGlobalStyle('tooltip_text_color', $globalCardStyles, '#fff
         /* Main Hover State for Links & Buttons */
         nav.header-shadow .nav-link:hover {
             color: <?php echo $headerHover; ?> !important;
-            background-color: transparent !important;
-            background: transparent !important;
+            background-color: <?php echo $headerHoverBg; ?> !important;
+            background: <?php echo $headerHoverBg; ?> !important;
             /* Applying padding expansion to everything *except* action icons */
             padding-left: 8px !important;
             padding-right: 8px !important;
@@ -848,8 +848,8 @@ $gs_tooltip_text = getGlobalStyle('tooltip_text_color', $globalCardStyles, '#fff
         /* Action Icons (Search, Heart, Account, Cart) - No Padding Effect */
         nav.header-shadow .header-icon:hover {
             color: <?php echo $headerHover; ?> !important;
-            background-color: transparent !important;
-            background: transparent !important;
+            background-color: <?php echo $headerHoverBg; ?> !important;
+            background: <?php echo $headerHoverBg; ?> !important;
             padding-left: 0 !important;
             padding-right: 0 !important;
         }
@@ -918,7 +918,7 @@ $gs_tooltip_text = getGlobalStyle('tooltip_text_color', $globalCardStyles, '#fff
         .absolute .bg-white a:hover,
         nav .absolute a:hover {
             color: <?php echo $submenuHoverText; ?> !important;
-            background-color: transparent !important;
+            background-color: <?php echo $submenuHoverBg; ?> !important;
         }
 
         /* Border tweaks for seamless look if colors change */
