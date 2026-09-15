@@ -1617,31 +1617,33 @@ if (!empty($headerMenuItems)) {
     
     <!-- Search Overlay -->
     <div class="fixed inset-0 bg-white z-[60] overflow-y-auto transition-transform duration-500 ease-in-out transform -translate-y-full invisible" id="searchOverlay">
-        <button id="closeSearchBtn" class="absolute top-6 right-6 text-gray-400 hover:text-black transition p-2">
-            <i class="fas fa-times text-2xl"></i>
-        </button>
-
-        <div class="container mx-auto px-4 pt-20 pb-12 relative max-w-6xl">
-            <h2 class="text-3xl font-serif text-center mb-8"><?php echo htmlspecialchars($ss_heading_text); ?></h2>
+        
+        <div class="container mx-auto px-4 pt-[100px] md:pt-[110px] pb-8 md:pb-12 relative max-w-6xl">
+            <div class="relative flex items-center justify-center mb-4 md:mb-6">
+                <h2 class="text-2xl md:text-3xl font-serif text-center"><?php echo htmlspecialchars($ss_heading_text); ?></h2>
+                <button id="closeSearchBtn" class="absolute right-0 text-gray-400 hover:text-black transition p-2 z-[70] md:hidden">
+                    <i class="fas fa-times text-2xl"></i>
+                </button>
+            </div>
             
-            <div class="max-w-3xl mx-auto relative mb-12">
+            <div class="max-w-3xl mx-auto relative mb-6 md:mb-8">
                 <form action="<?php echo url('shop'); ?>" method="GET" class="relative group border border-gray-300 rounded-full focus-within:border-black transition-colors px-4" onclick="document.getElementById('headerSearchInput').focus()">
                     <input type="text" name="search" id="headerSearchInput" placeholder="I'm looking for..." 
-                           class="w-full px-4 py-3 text-lg font-light bg-transparent text-left focus:outline-none placeholder-gray-400"
+                           class="w-full px-4 py-2 md:py-3 text-base md:text-lg font-light bg-transparent text-left focus:outline-none placeholder-gray-400"
                            style="color: <?php echo $ss_text_color; ?>;"
                            autocomplete="off">
                     <button type="submit" id="headerSearchSubmitBtn" class="absolute right-4 top-1/2 -translate-y-1/2 p-2" style="color: <?php echo $ss_text_color; ?>;">
-                        <i class="fas fa-search text-xl"></i>
+                        <i class="fas fa-search text-lg md:text-xl"></i>
                     </button>
                     <button type="button" id="headerSearchClearBtn" class="hidden absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 hover:text-black p-2 transition-colors">
-                        <i class="fas fa-times text-xl"></i>
+                        <i class="fas fa-times text-lg md:text-xl"></i>
                     </button>
                 </form>
             </div>
 
             <!-- Trending Search (Always Visible) -->
-            <div class="mb-12 text-center hidden md:block">
-                <h3 class="text-lg font-serif mb-6"><?php echo htmlspecialchars($ss_trending_text); ?></h3>
+            <div class="mb-8 md:mb-8 text-center hidden md:block">
+                <h3 class="text-lg font-serif mb-4 md:mb-4"><?php echo htmlspecialchars($ss_trending_text); ?></h3>
                 <div class="flex flex-wrap justify-center gap-3">
                     <?php
                     // Fetch random categories for Trending Search
@@ -1669,7 +1671,7 @@ if (!empty($headerMenuItems)) {
             <div id="searchPopularContent" class="animate-fade-in">
                 <!-- Popular Products -->
                 <div>
-                    <h3 class="text-lg font-serif mb-8 text-center"><?php echo htmlspecialchars($ss_popular_heading); ?></h3>
+                    <h3 class="text-base md:text-lg font-serif mb-4 md:mb-6 text-center"><?php echo htmlspecialchars($ss_popular_heading); ?></h3>
                     
                     <!-- Popular Products Slider -->
                     <div class="relative group/slider">
