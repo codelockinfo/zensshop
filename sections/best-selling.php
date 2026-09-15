@@ -227,16 +227,26 @@ if (file_exists($productsConfigPath)) {
                                         <?php echo htmlspecialchars($item['name']); ?>
                                     </a>
                                 </h3>
-                                <div class="flex items-center mb-3">
-                                    <div class="flex text-yellow-400">
-                                        <?php 
-                                        $ratingValue = floor($item['rating'] ?? 5);
-                                        for ($i = 0; $i < 5; $i++): 
-                                        ?>
-                                        <i class="fas fa-star text-[10px] <?php echo $i < $ratingValue ? '' : 'text-gray-300'; ?>"></i>
-                                        <?php endfor; ?>
+                                <?php 
+                                $reviewCount = intval($item['review_count'] ?? 0);
+                                if ($reviewCount === 0): 
+                                ?>
+                                    <div class="flex flex-col mb-3">
+                                        <span class="text-xs text-gray-500 font-medium">No reviews yet</span>
                                     </div>
-                                </div>
+                                <?php else: ?>
+                                    <div class="flex items-center mb-3">
+                                        <div class="flex text-yellow-400">
+                                            <?php 
+                                            $ratingValue = floor($item['rating'] ?? 5);
+                                            for ($i = 0; $i < 5; $i++): 
+                                            ?>
+                                            <i class="fas fa-star text-[10px] <?php echo $i < $ratingValue ? '' : 'text-gray-300'; ?>"></i>
+                                            <?php endfor; ?>
+                                        </div>
+                                        <span class="text-[10px] text-gray-500 ml-1">(<?php echo $reviewCount; ?>)</span>
+                                    </div>
+                                <?php endif; ?>
                                 <div class="flex items-center gap-2 mb-4 mt-auto">
                                     <span class="product-price text-base font-bold" style="color: <?php echo $price_color; ?> !important;">
                                         <?php echo format_price($price, $item['currency'] ?? 'USD'); ?>

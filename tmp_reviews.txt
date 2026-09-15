@@ -1,0 +1,105 @@
+                <!-- Rating and Reviews -->
+                <div class="flex items-center space-x-4 mb-4 text-sm cursor-pointer hover:opacity-80 transition" onclick="document.getElementById('customer-reviews').scrollIntoView({ behavior: 'smooth' })">
+                        $reviewCount = intval($productData['review_count'] ?? 1);
+                    <span class="text-gray-600 underline decoration-dotted"><?php echo $reviewCount; ?> review<?php echo $reviewCount != 1 ? 's' : ''; ?></span>
+        <!-- Customer Reviews -->
+        <div class="max-w-4xl mx-auto mb-12 md:mb-16" id="customer-reviews">
+            <h2 class="text-lg md:text-xl font-heading font-bold mb-4 md:mb-6">Customer Reviews</h2>
+                    <p class="text-gray-600 text-sm">Based on <?php echo $reviewCount; ?> review<?php echo $reviewCount != 1 ? 's' : ''; ?></p>
+                        <span class="text-sm text-gray-600 w-8"><?php echo $star === 5 ? $reviewCount : 0; ?></span>
+            <button onclick="openReviewModal()" class="product-border-item bg-white border-2 px-6 py-2 rounded-lg hover:border-primary transition mb-6 text-sm">
+                Write A Review
+            <!-- Reviews List -->
+                    <h3 class="font-semibold" id="reviewListHeader">Most Recent</h3>
+                    <select class="product-border-item border rounded px-3 py-2 text-sm" id="reviewSort" onchange="loadReviews()">
+                <!-- Reviews List Container -->
+                <div id="reviewsList">
+                        <p>Loading reviews...</p>
+                <div id="loadMoreReviewsContainer" class="text-center mt-8 hidden">
+                    <button onclick="loadMoreReviews()" id="loadMoreReviewsBtn" class="product-border-item border-2 px-8 py-3 rounded-lg hover:border-black transition-all flex items-center justify-center mx-auto space-x-2">
+                        <span>Load More Reviews</span>
+// Review Modal Functions
+    document.getElementById('reviewRating').value = rating;
+function openReviewModal() {
+    document.getElementById('reviewModal').classList.remove('hidden');
+function closeReviewModal() {
+    document.getElementById('reviewModal').classList.add('hidden');
+    document.getElementById('reviewForm').reset();
+    document.getElementById('reviewRating').value = '';
+function submitReview(event) {
+            showNotificationModal('Please select a rating before submitting your review.', 'info', 'Rating Required');
+        product_id: document.getElementById('reviewProductId').value,
+        user_name: document.getElementById('reviewName').value,
+        user_email: document.getElementById('reviewEmail').value,
+        title: document.getElementById('reviewTitle').value,
+        comment: document.getElementById('reviewComment').value
+    fetch('<?php echo $baseUrl; ?>/api/reviews.php', {
+            closeReviewModal();
+                showNotificationModal('Thank you for your review! It has been submitted successfully.', 'success', 'Review Submitted');
+                console.log('Thank you for your review! It has been submitted successfully.');
+            // Reload reviews
+            loadReviews();
+                showNotificationModal(data.message || 'Failed to submit review. Please try again.', 'error', 'Error');
+                console.log(data.message || 'Failed to submit review. Please try again.');
+            submitBtn.textContent = 'Submit Review';
+            showNotificationModal('An error occurred while submitting your review. Please try again.', 'error', 'Error');
+            console.log('An error occurred while submitting your review. Please try again.');
+        submitBtn.textContent = 'Submit Review';
+let currentReviewOffset = 0;
+const reviewsLimit = 6;
+function loadReviews(isLoadMore = false) {
+    const sortSelect = document.getElementById('reviewSort');
+    const header = document.getElementById('reviewListHeader');
+    const loadMoreContainer = document.getElementById('loadMoreReviewsContainer');
+    const loadMoreBtn = document.getElementById('loadMoreReviewsBtn');
+        currentReviewOffset = 0;
+    const reviewsList = document.getElementById('reviewsList');
+    if (!reviewsList) return;
+        reviewsList.innerHTML = '<div class="text-center text-gray-500 py-8"><i class="fas fa-spinner fa-spin text-2xl mb-2"></i><p>Loading reviews...</p></div>';
+    fetch(`<?php echo $baseUrl; ?>/api/reviews.php?product_id=${productId}&sort=${sortBy}&limit=${reviewsLimit}&offset=${currentReviewOffset}`)
+            if (data.success && data.reviews) {
+                const reviewsHtml = data.reviews.map(review => {
+                    const date = new Date(review.created_at);
+                        : review.created_at.split(' ')[0];
+                        stars += `<i class="fas fa-star ${i <= review.rating ? 'text-yellow-400' : 'text-gray-300'} text-sm"></i>`;
+                        <div class="border-b pb-6 mb-6 review-item animate-fade-in">
+                                <span class="font-semibold">${escapeHtml(review.user_name)}</span>
+                            ${review.title ? `<h4 class="font-semibold mb-2">${escapeHtml(review.title)}</h4>` : ''}
+                            <p class="text-gray-700">${escapeHtml(review.comment)}</p>
+                    if (data.reviews.length > 0) {
+                        reviewsList.innerHTML = reviewsHtml;
+                        reviewsList.innerHTML = '<div class="text-center text-gray-500 py-8"><p>No reviews yet. Be the first to review this product!</p></div>';
+                    reviewsList.insertAdjacentHTML('beforeend', reviewsHtml);
+                currentReviewOffset += data.reviews.length;
+                    if (currentReviewOffset < data.total) {
+            console.error('Error loading reviews:', error);
+                reviewsList.innerHTML = '<div class="text-center text-gray-500 py-8"><p>Unable to load reviews.</p></div>';
+                loadMoreBtn.innerHTML = '<span>Load More Reviews</span>';
+function loadMoreReviews() {
+    loadReviews(true);
+// Load reviews and initialize variants on page load
+    loadReviews();
+    const reviewModal = document.getElementById('reviewModal');
+    if (reviewModal) {
+        reviewModal.addEventListener('click', function(e) {
+                closeReviewModal();
+<!-- Review Modal -->
+<div id="reviewModal" class="hidden fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
+                <h2 class="text-xl font-heading font-bold">Write A Review</h2>
+                <button onclick="closeReviewModal()" class="text-gray-500 hover:text-gray-800" data-aria-label="Close review modal">
+            <form id="reviewForm" onsubmit="submitReview(event)">
+                <input type="hidden" id="reviewProductId" value="<?php echo $productData['id']; ?>">
+                    <input type="hidden" id="reviewRating" name="rating" required>
+                    <label for="reviewName" class="block text-gray-700 font-semibold mb-2">Your Name *</label>
+                           id="reviewName" 
+                    <label for="reviewEmail" class="block text-gray-700 font-semibold mb-2">Your Email *</label>
+                           id="reviewEmail" 
+                <!-- Review Title -->
+                    <label for="reviewTitle" class="block text-gray-700 font-semibold mb-2">Review Title</label>
+                           id="reviewTitle" 
+                           placeholder="Summarize your review"
+                <!-- Review Comment -->
+                    <label for="reviewComment" class="block text-gray-700 font-semibold mb-2">Your Review *</label>
+                    <textarea id="reviewComment" 
+                            onclick="closeReviewModal()" 
+                        Submit Review

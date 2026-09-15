@@ -313,12 +313,20 @@ if (isset($_GET['ajax'])) {
                     echo '</h3>';
                     
                     // Star Rating
-                    echo '<div class="flex items-center mb-3 card-rating">';
-                    for ($i = 0; $i < 5; $i++) {
-                        $starClass = ($i < $fullStars) ? 'text-yellow-400' : (($i === $fullStars && $hasHalfStar) ? 'text-yellow-400' : 'text-gray-300');
-                        echo '<i class="fas fa-star text-sm ' . $starClass . '"></i>';
+                    $reviewCount = intval($item['review_count'] ?? 0);
+                    if ($reviewCount === 0) {
+                        echo '<div class="flex flex-col mb-3 card-rating">';
+                        echo '<span class="text-xs text-gray-500 font-medium">No reviews yet</span>';
+                        echo '</div>';
+                    } else {
+                        echo '<div class="flex items-center mb-3 card-rating">';
+                        for ($i = 0; $i < 5; $i++) {
+                            $starClass = ($i < $fullStars) ? 'text-yellow-400' : (($i === $fullStars && $hasHalfStar) ? 'text-yellow-400' : 'text-gray-300');
+                            echo '<i class="fas fa-star text-sm ' . $starClass . '"></i>';
+                        }
+                        echo '<span class="text-xs text-gray-500 ml-1">(' . $reviewCount . ')</span>';
+                        echo '</div>';
                     }
-                    echo '</div>';
                     
                     // Description
                     echo '<div class="card-description">';

@@ -206,8 +206,20 @@ function renderQuickView(t) {
 
     // Stars
     var starsHtml = "";
-    var rating = Math.floor(t.rating || 5);
-    for (var f = 0; f < 5; f++) starsHtml += `<i class="fas fa-star text-xs ${f < rating ? 'text-yellow-400' : 'text-gray-300'}"></i>`;
+    var revCount = t.review_count ? parseInt(t.review_count, 10) : 0;
+    if (revCount === 0) {
+        starsHtml = `<div class="flex flex-col">
+            <span class="text-xs text-gray-500 font-medium">No reviews yet</span>
+        </div>`;
+    } else {
+        var rating = Math.floor(t.rating || 5);
+        var s = "";
+        for (var f = 0; f < 5; f++) s += `<i class="fas fa-star text-xs ${f < rating ? 'text-yellow-400' : 'text-gray-300'}"></i>`;
+        starsHtml = `<div class="flex items-center gap-1">
+            <div class="flex text-yellow-400">${s}</div>
+            <span class="text-gray-500 text-xs">(${revCount} reviews)</span>
+        </div>`;
+    }
 
     // Variants
     var variantsHtml = "";
@@ -251,10 +263,7 @@ function renderQuickView(t) {
 
                 <h2 id="qvTitle" class="text-xl md:text-2xl font-heading font-bold text-gray-900 mb-2 pr-8 leading-snug">${t.name}</h2>
                 <div class="flex flex-wrap items-center gap-3 mb-3 text-sm">
-                    <div class="flex items-center gap-1">
-                        <div class="flex text-yellow-400">${starsHtml}</div>
-                        <span class="text-gray-500 text-xs">(${t.review_count || Math.floor(Math.random()*50+5)} reviews)</span>
-                    </div>
+                    ${starsHtml}
                     <span class="text-gray-400">|</span>
                     <span class="text-gray-500 text-xs">${Math.floor(Math.random()*20+5)} sold in last 18 hrs</span>
                 </div>

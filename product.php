@@ -557,18 +557,25 @@ $p_buy_hover_text = $productStyles['buy_now_hover_text_color'] ?? '#ffffff';
                 
                 <!-- Rating and Reviews -->
                 <div class="flex items-center space-x-4 mb-4 text-sm cursor-pointer hover:opacity-80 transition" onclick="document.getElementById('customer-reviews').scrollIntoView({ behavior: 'smooth' })">
-                    <div class="flex items-center">
-                        <?php 
-                        $rating = floatval($productData['rating'] ?? 5);
-                        $reviewCount = intval($productData['review_count'] ?? 1);
-                        $fullStars = floor($rating);
-                        $hasHalfStar = ($rating - $fullStars) >= 0.5;
-                        for ($i = 0; $i < 5; $i++): 
-                        ?>
-                        <i class="fas fa-star <?php echo $i < $fullStars ? 'text-yellow-400' : ($i === $fullStars && $hasHalfStar ? 'text-yellow-400' : 'text-gray-300'); ?>"></i>
-                        <?php endfor; ?>
-                    </div>
-                    <span class="text-gray-600 underline decoration-dotted"><?php echo $reviewCount; ?> review<?php echo $reviewCount != 1 ? 's' : ''; ?></span>
+                    <?php 
+                    $rating = floatval($productData['rating'] ?? 5);
+                    $reviewCount = intval($productData['review_count'] ?? 1);
+                    $fullStars = floor($rating);
+                    $hasHalfStar = ($rating - $fullStars) >= 0.5;
+                    
+                    if ($reviewCount === 0):
+                    ?>
+                        <div class="flex flex-col">
+                            <span class="text-sm text-gray-500 font-medium">No reviews yet</span>
+                        </div>
+                    <?php else: ?>
+                        <div class="flex items-center">
+                            <?php for ($i = 0; $i < 5; $i++): ?>
+                            <i class="fas fa-star <?php echo $i < $fullStars ? 'text-yellow-400' : ($i === $fullStars && $hasHalfStar ? 'text-yellow-400' : 'text-gray-300'); ?>"></i>
+                            <?php endfor; ?>
+                        </div>
+                        <span class="text-gray-600 underline decoration-dotted"><?php echo $reviewCount; ?> review<?php echo $reviewCount != 1 ? 's' : ''; ?></span>
+                    <?php endif; ?>
                     <span class="text-gray-600">10 sold in last 18 hours</span>
                 </div>
                 

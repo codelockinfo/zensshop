@@ -251,16 +251,26 @@ require_once __DIR__ . '/includes/header.php';
                             </h3>
                             
                             <!-- Rating -->
-                            <div class="flex items-center mb-3">
-                                <div class="flex text-yellow-400">
-                                    <?php 
-                                    $rating = floor($item['rating'] ?? 5);
-                                    for ($i = 0; $i < 5; $i++): 
-                                    ?>
-                                    <i class="fas fa-star text-xs <?php echo $i < $rating ? '' : 'text-gray-300'; ?>"></i>
-                                    <?php endfor; ?>
+                            <?php 
+                            $reviewCount = intval($item['review_count'] ?? 0);
+                            if ($reviewCount === 0): 
+                            ?>
+                                <div class="flex flex-col mb-3">
+                                    <span class="text-xs text-gray-500 font-medium">No reviews yet</span>
                                 </div>
-                            </div>
+                            <?php else: ?>
+                                <div class="flex items-center mb-3">
+                                    <div class="flex text-yellow-400">
+                                        <?php 
+                                        $rating = floor($item['rating'] ?? 5);
+                                        for ($i = 0; $i < 5; $i++): 
+                                        ?>
+                                        <i class="fas fa-star text-xs <?php echo $i < $rating ? '' : 'text-gray-300'; ?>"></i>
+                                        <?php endfor; ?>
+                                    </div>
+                                    <span class="text-[10px] text-gray-500 ml-1">(<?php echo $reviewCount; ?>)</span>
+                                </div>
+                            <?php endif; ?>
                             
                             <div class="flex items-center gap-2 mb-4">
                                 <span class="text-lg font-bold current-price"><?php echo format_price($finalPrice, $item['currency'] ?? 'USD'); ?></span>
@@ -366,16 +376,26 @@ require_once __DIR__ . '/includes/header.php';
                                 </a>
                             </h3>
                                 
-                                <div class="flex items-center mb-3">
-                                    <div class="flex text-yellow-400">
-                                        <?php 
-                                        $ratingValue = floor($recentProduct['rating'] ?? 5);
-                                        for ($i = 0; $i < 5; $i++): 
-                                        ?>
-                                        <i class="fas fa-star text-xs <?php echo $i < $ratingValue ? '' : 'text-gray-300'; ?>"></i>
-                                        <?php endfor; ?>
+                                <?php 
+                                $reviewCount = intval($recentProduct['review_count'] ?? 0);
+                                if ($reviewCount === 0): 
+                                ?>
+                                    <div class="flex flex-col mb-3">
+                                        <span class="text-xs text-gray-500 font-medium">No reviews yet</span>
                                     </div>
-                                </div>
+                                <?php else: ?>
+                                    <div class="flex items-center mb-3">
+                                        <div class="flex text-yellow-400">
+                                            <?php 
+                                            $ratingValue = floor($recentProduct['rating'] ?? 5);
+                                            for ($i = 0; $i < 5; $i++): 
+                                            ?>
+                                            <i class="fas fa-star text-xs <?php echo $i < $ratingValue ? '' : 'text-gray-300'; ?>"></i>
+                                            <?php endfor; ?>
+                                        </div>
+                                        <span class="text-[10px] text-gray-500 ml-1">(<?php echo $reviewCount; ?>)</span>
+                                    </div>
+                                <?php endif; ?>
                                 
                                 <div class="flex items-center gap-2 mt-auto">
                                 <?php 

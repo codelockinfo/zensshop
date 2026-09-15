@@ -835,11 +835,21 @@ require_once __DIR__ . '/includes/header.php';
 
             <div class="min-w-0">
                 <h3 class="font-bold text-gray-900 leading-tight text-sm md:text-base overflow-hidden text-ellipsis" style="display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; max-width: 450px;"><?php echo htmlspecialchars($heroTitle); ?></h3>
-                <div class="hidden md:flex text-xs text-yellow-500 items-center mt-1">
+                <div class="hidden md:flex text-xs items-center mt-1">
                     <?php 
-                    $rating = floatval($avgRating ?? 5);
-                    for ($i = 0; $i < 5; $i++) {
-                        echo '<i class="fas fa-star ' . ($i < $rating ? '' : 'text-gray-300') . '"></i>';
+                    $reviewCount = intval($productData['review_count'] ?? 0);
+                    if ($reviewCount === 0) {
+                        echo '<div class="flex flex-col">';
+                        echo '<span class="text-[10px] text-gray-500 font-medium">No reviews yet</span>';
+                        echo '</div>';
+                    } else {
+                        echo '<div class="flex items-center text-yellow-500">';
+                        $rating = floatval($avgRating ?? $productData['rating'] ?? 5);
+                        for ($i = 0; $i < 5; $i++) {
+                            echo '<i class="fas fa-star ' . ($i < $rating ? '' : 'text-gray-300') . '"></i>';
+                        }
+                        echo '<span class="text-[10px] text-gray-500 ml-1">(' . $reviewCount . ')</span>';
+                        echo '</div>';
                     }
                     ?>
                 </div>
