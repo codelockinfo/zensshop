@@ -18,7 +18,7 @@ require_once __DIR__ . '/includes/header.php';
 
         <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
             <div class="bg-white p-6 rounded-lg shadow-sm border">
-                <div class="flex items-center mb-4">
+                <div class="flex items-center">
                     <div class="w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center mr-4">
                         <i class="fas fa-envelope text-blue-600 text-xl"></i>
                     </div>
@@ -30,7 +30,7 @@ require_once __DIR__ . '/includes/header.php';
             </div>
 
             <div class="bg-white p-6 rounded-lg shadow-sm border">
-                <div class="flex items-center mb-4">
+                <div class="flex items-center">
                     <div class="w-12 h-12 bg-green-100 rounded-full flex items-center justify-center mr-4">
                         <i class="fas fa-clock text-green-600 text-xl"></i>
                     </div>
@@ -43,48 +43,48 @@ require_once __DIR__ . '/includes/header.php';
         </div>
 
         <div class="bg-white rounded-lg shadow-md p-8 pt-4">
-            <h2 class="text-2xl font-bold mb-6">Send us a message</h2>
+            <h2 class="text-2xl font-bold mb-3">Send us a message</h2>
             
-            <form id="supportForm" class="space-y-6">
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <form id="supportForm" class="space-y-3">
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div>
-                        <label for="name" class="block text-sm font-medium text-gray-700 mb-2">Your Name *</label>
+                        <label for="name" class="block text-sm font-medium text-gray-700 mb-1">Your Name *</label>
                         <input type="text" 
                                id="name" 
                                name="name" 
                                value="<?php echo $customer ? htmlspecialchars($customer['name']) : ''; ?>"
                                required 
-                               class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                               class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
                     </div>
 
                     <div>
-                        <label for="email" class="block text-sm font-medium text-gray-700 mb-2">Your Email *</label>
+                        <label for="email" class="block text-sm font-medium text-gray-700 mb-1">Your Email *</label>
                         <input type="email" 
                                id="email" 
                                name="email" 
                                value="<?php echo $customer ? htmlspecialchars($customer['email']) : ''; ?>"
                                required 
-                               class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                               class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
                     </div>
                 </div>
 
                 <div>
-                    <label for="subject" class="block text-sm font-medium text-gray-700 mb-2">Subject *</label>
+                    <label for="subject" class="block text-sm font-medium text-gray-700 mb-1">Subject *</label>
                     <input type="text" 
                            id="subject" 
                            name="subject" 
                            required 
-                           class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                           class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                            placeholder="How can we help you?">
                 </div>
 
                 <div>
-                    <label for="message" class="block text-sm font-medium text-gray-700 mb-2">Message *</label>
+                    <label for="message" class="block text-sm font-medium text-gray-700 mb-1">Message *</label>
                     <textarea id="message" 
                               name="message" 
                               rows="6" 
                               required 
-                              class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                              class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                               placeholder="Please describe your issue or question in detail..."></textarea>
                 </div>
 

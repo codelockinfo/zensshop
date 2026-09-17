@@ -198,9 +198,9 @@ class Cart {
             }
             
             // Convert to full URL if needed
-            if (!empty($productImage) && strpos($productImage, 'http') !== 0 && strpos($productImage, '/') !== 0 && strpos($productImage, 'data:') !== 0) {
+            if (!empty($productImage) && strpos($productImage, 'data:') !== 0) {
                 require_once __DIR__ . '/../includes/functions.php';
-                $productImage = getBaseUrl() . '/assets/images/uploads/' . $productImage;
+                $productImage = getImageUrl($productImage);
             }
             
             $cartItems[] = [

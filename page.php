@@ -77,7 +77,7 @@ require_once __DIR__ . '/includes/header.php';
     
     <div id="page-banner" class="relative w-full h-[300px] md:h-[400px]" style="display: none; background-color: <?php echo $banner['bg_color'] ?? '#f3f4f6'; ?>;">
         <img src="<?php echo getBaseUrl() . '/' . $banner['image']; ?>" alt="Banner" class="w-full h-full object-cover" onload="hidePageBannerSkeleton()">
-        <div class="absolute inset-0 bg-black bg-opacity-40 flex items-center justify-center">
+        <div class="absolute inset-0 flex items-center justify-center">
             <div class="text-center px-4" style="color: <?php echo $banner['text_color'] ?? '#ffffff'; ?>;">
                 <?php if (!empty($banner['heading'])): ?>
                 <h1 class="text-3xl md:text-5xl font-bold mb-4 drop-shadow-lg" style="color: <?php echo $banner['heading_color'] ?? '#ffffff'; ?>;"><?php echo htmlspecialchars($banner['heading']); ?></h1>
@@ -149,7 +149,6 @@ require_once __DIR__ . '/includes/header.php';
 }
 
 .ck-content h2 { 
-    font-family: 'Playfair Display', serif; 
     margin-top: 2em; 
     margin-bottom: 0.8em; 
     font-size: 1.75em; 
@@ -159,7 +158,6 @@ require_once __DIR__ . '/includes/header.php';
 }
 
 .ck-content h3 { 
-    font-family: 'Playfair Display', serif; 
     margin-top: 1.5em; 
     margin-bottom: 0.8em; 
     font-size: 1.4em; 

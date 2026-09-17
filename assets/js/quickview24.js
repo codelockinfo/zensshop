@@ -259,9 +259,9 @@ function renderQuickView(t) {
                 ${thumbsHtml}
             </div>
             <!-- Right: Details — SCROLLABLE -->
-            <div class="flex-1 min-h-0 overflow-y-auto p-4 md:p-6 bg-white custom-scrollbar" style="-webkit-overflow-scrolling:touch;">
+            <div class="flex-1 min-h-0 overflow-y-auto p-4 md:p-6 bg-white custom-scrollbar flex flex-col justify-center" style="-webkit-overflow-scrolling:touch;">
 
-                <h2 id="qvTitle" class="text-xl md:text-2xl font-heading font-bold text-gray-900 mb-2 pr-8 leading-snug">${t.name}</h2>
+                <h2 id="qvTitle" class="text-xl md:text-2xl font-heading font-bold text-gray-900 mb-2 mt-4 pr-8 leading-snug">${t.name}</h2>
                 <div class="flex flex-wrap items-center gap-3 mb-3 text-sm">
                     ${starsHtml}
                     <span class="text-gray-400">|</span>

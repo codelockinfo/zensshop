@@ -78,7 +78,7 @@ $banner = $blogSettings['banner'];
     
     <div id="blog-banner" class="relative w-full h-[400px] md:h-[500px]" style="display: none; background-color: <?php echo $banner['bg_color'] ?? '#ffffff'; ?>;">
         <img src="<?php echo $baseUrl . '/' . $blog['image']; ?>" alt="<?php echo htmlspecialchars($blog['title']); ?>" class="w-full h-full object-cover" onload="hideBlogBannerSkeleton()">
-        <div class="absolute inset-0 bg-black bg-opacity-50 flex items-center justify-center">
+        <div class="absolute inset-0 flex items-center justify-center">
             <div class="text-center px-4 max-w-4xl" style="color: <?php echo $banner['text_color'] ?? '#ffffff'; ?>;">
                 <!-- Breadcrumb -->
                 <nav class="breadcrumb-nav text-sm md:text-base mb-4 opacity-90 font-light">
@@ -188,8 +188,8 @@ $banner = $blogSettings['banner'];
 
 <style>
 /* Additional Typography Styles for Blog Content */
-.ck-content h2 { font-family: 'Playfair Display', serif; margin-top: 2em; margin-bottom: 0.8em; font-size: 1.75em; color: #111; line-height: 1.3; }
-.ck-content h3 { font-family: 'Playfair Display', serif; margin-top: 1.5em; margin-bottom: 0.8em; font-size: 1.4em; color: #333; }
+.ck-content h2 { margin-top: 2em; margin-bottom: 0.8em; font-size: 1.75em; color: #111; line-height: 1.3; }
+.ck-content h3 { margin-top: 1.5em; margin-bottom: 0.8em; font-size: 1.4em; color: #333; }
 .ck-content p { margin-bottom: 1.5em; font-size: 1.125rem; line-height: 1.8; }
 .ck-content ul { list-style-type: disc; padding-left: 1.5em; margin-bottom: 1.5em; }
 .ck-content ol { list-style-type: decimal; padding-left: 1.5em; margin-bottom: 1.5em; }

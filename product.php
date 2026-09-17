@@ -586,16 +586,15 @@ $p_buy_hover_text = $productStyles['buy_now_hover_text_color'] ?? '#ffffff';
                 </div>
                 
                 <!-- Description with Read More -->
-                <div class="mb-5">
+                <div class="mb-1">
                     <style>
-                        .line-clamp-5 {
-                            display: -webkit-box;
-                            -webkit-line-clamp: 5;
-                            -webkit-box-orient: vertical;
+                        .desc-collapsed {
+                            max-height: 120px;
                             overflow: hidden;
+                            position: relative;
                         }
                     </style>
-                    <div id="product-description-text" class="text-gray-700 leading-relaxed transition-all duration-300 prose prose-sm max-w-none line-clamp-5">
+                    <div id="product-description-text" class="text-gray-700 leading-relaxed transition-all duration-300 prose prose-sm max-w-none desc-collapsed">
                         <?php echo htmlspecialchars_decode($productData['description'] ?? $productData['short_description'] ?? 'No description available.'); ?>
                     </div>
                     <button id="toggle-description-btn" 
@@ -609,25 +608,31 @@ $p_buy_hover_text = $productStyles['buy_now_hover_text_color'] ?? '#ffffff';
                         const container = document.getElementById('product-description-text');
                         const btn = document.getElementById('toggle-description-btn');
                         
-                        if (container.classList.contains('line-clamp-5')) {
+                        if (container.classList.contains('desc-collapsed')) {
                             // Expand
-                            container.classList.remove('line-clamp-5');
+                            container.classList.remove('desc-collapsed');
+                            // Also remove max-height explicitly just in case inline styles mess with it
+                            container.style.maxHeight = 'none';
                             btn.textContent = 'Read Less';
                         } else {
                             // Collapse
-                            container.classList.add('line-clamp-5');
+                            container.classList.add('desc-collapsed');
+                            container.style.maxHeight = '120px';
                             btn.textContent = 'Read More';
                         }
                     }
 
-                    // Check if content exceeds height to show/hide button
                     document.addEventListener('DOMContentLoaded', function() {
                         const container = document.getElementById('product-description-text');
                         const btn = document.getElementById('toggle-description-btn');
                         
-                        // Check if content exceeds the clamp limit
-                        // When clamped, scrollHeight (full content) will be greater than clientHeight (visible area)
-                        if (container.scrollHeight > container.clientHeight) {
+                        // Check if content exceeds the max-height
+                        // Temporarily remove class to get true height
+                        container.classList.remove('desc-collapsed');
+                        const trueHeight = container.scrollHeight;
+                        container.classList.add('desc-collapsed');
+                        
+                        if (trueHeight > 120) {
                             btn.classList.remove('hidden');
                         }
                     });
