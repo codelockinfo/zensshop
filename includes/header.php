@@ -1164,6 +1164,7 @@ $gs_tooltip_text = getGlobalStyle('tooltip_text_color', $globalCardStyles, '#fff
             var wrapper = document.getElementById('siteHeaderFixed');
             if (wrapper) {
                 document.body.style.paddingTop = wrapper.offsetHeight + 'px';
+                document.documentElement.style.setProperty('--header-height', wrapper.offsetHeight + 'px');
             }
         }
         function onScroll() {
