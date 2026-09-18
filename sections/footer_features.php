@@ -18,7 +18,7 @@ $section_text = $settingsObj->get('footer_features_section_text', '#000000');
 $count = count($footerFeatures);
 ?>
 
-<section class="py-2 md:py-12" style="background-color: <?php echo htmlspecialchars($section_bg); ?>; color: <?php echo htmlspecialchars($section_text); ?>;">
+<section class="py-1 md:py-4" style="background-color: <?php echo htmlspecialchars($section_bg); ?>; color: <?php echo htmlspecialchars($section_text); ?>;">
     <div class="container mx-auto px-4">
         
         <!-- Grid Layout (Fixed Width Cards) -->
@@ -31,7 +31,7 @@ $count = count($footerFeatures);
                     <?php echo $f['icon']; ?>
                 </div>
                 
-                <h3 class="text-lg font-bold mb-2" style="color: <?php echo htmlspecialchars($f['heading_color'] ?? $f['text_color']); ?>;"><?php echo htmlspecialchars($f['heading']); ?></h3>
+                <h3 class="text-[18px] font-bold mb-2 tracking-wide" style="color: <?php echo htmlspecialchars($f['heading_color'] ?? $f['text_color']); ?>;"><?php echo htmlspecialchars(ucwords(strtolower($f['heading']))); ?></h3>
                 <p class="text-sm opacity-90 leading-relaxed max-w-xs mx-auto">
                     <?php echo nl2br(htmlspecialchars($f['content'])); ?>
                 </p>

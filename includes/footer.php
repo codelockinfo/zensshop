@@ -446,7 +446,7 @@ $qv_policy_color = $qvStyles['policy_color'] ?? '#374151';
     </script>
     <!-- Footer -->
     <footer class="bg-white text-black relative">
-        <div class="container footer-block mx-auto px-4 pt-20">
+        <div class="container footer-block mx-auto px-4 pt-8">
             <div class="row flex flex-wrap -mx-4">
                 <!-- About Us / Footer Info Column -->
                 <div class="column w-full md:w-1/2 lg:w-1/3 px-4 mb-0 md:mb-8 lg:mb-0">

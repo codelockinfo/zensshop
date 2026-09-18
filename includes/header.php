@@ -1867,13 +1867,14 @@ if (!empty($headerMenuItems)) {
             searchBtn.addEventListener('click', (e) => {
                 e.preventDefault();
                 
-                // Set dynamic padding based on scroll (announcement bar visible or not)
+                // Set dynamic padding based on exact header height
                 const searchContent = document.getElementById('searchOverlayContent');
                 if (searchContent) {
-                    if (window.scrollY > 5) {
-                        searchContent.style.paddingTop = window.innerWidth >= 768 ? '90px' : '80px';
+                    const headerWrapper = document.getElementById('siteHeaderFixed');
+                    if (headerWrapper) {
+                        searchContent.style.paddingTop = (headerWrapper.offsetHeight + 10) + 'px';
                     } else {
-                        searchContent.style.paddingTop = window.innerWidth >= 768 ? '140px' : '120px';
+                        searchContent.style.paddingTop = window.innerWidth >= 768 ? '100px' : '80px';
                     }
                 }
 

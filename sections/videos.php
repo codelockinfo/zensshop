@@ -66,10 +66,10 @@ $sectionId = 'video-section-' . rand(1000, 9999);
     }
 </style>
 
-<section class="pt-5 md:pt-12 relative group/section" id="<?php echo $sectionId; ?>">
+<section class="pt-4 md:pt-5 pb-4 relative group/section" id="<?php echo $sectionId; ?>">
     <div class="container mx-auto px-4">
-        <!-- Section Header -->
-        <div class="text-center mb-4 md:mb-10">
+        
+        <div class="text-center mb-2 md:mb-4">
             <?php if (!empty($sectionHeading)): ?>
                 <h2 class="text-2xl md:text-4xl font-bold font-heading mb-1.5 md:mb-3 section-heading"><?php echo htmlspecialchars($sectionHeading); ?></h2>
             <?php endif; ?>

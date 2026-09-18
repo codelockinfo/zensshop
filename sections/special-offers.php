@@ -78,10 +78,10 @@ if (file_exists($offersConfigPath)) {
     }
 </style>
 
-<section id="<?php echo $sectionId; ?>" class="pt-2 md:pt-6">
+<section id="<?php echo $sectionId; ?>" class="pt-4 md:pt-5 pb-4">
     <div class="container mx-auto px-4">
         <!-- Section Header -->
-        <div class="text-center mb-4 md:mb-10">
+        <div class="text-center mb-2 md:mb-4">
             <?php if (!empty($sectionHeading)): ?>
                 <h2 class="text-2xl md:text-4xl font-bold font-heading mb-1.5 md:mb-3 offer-heading"><?php echo htmlspecialchars($sectionHeading); ?></h2>
             <?php endif; ?>

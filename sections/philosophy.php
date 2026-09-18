@@ -37,15 +37,25 @@ if ($linkUrl && !preg_match('/^https?:\/\//', $linkUrl) && strpos($linkUrl, '#')
 }
 ?>
 
-<section class="py-10 md:py-8" style="background-color: <?php echo htmlspecialchars($bgColor); ?>; color: <?php echo htmlspecialchars($textColor); ?>;">
+<section class="pt-10 pb-4 md:pt-8 md:pb-4" style="background-color: <?php echo htmlspecialchars($bgColor); ?>; color: <?php echo htmlspecialchars($textColor); ?>;">
     <div class="container mx-auto px-4 text-center">
         <?php if ($heading): ?>
-            <h2 class="text-3xl md:text-4xl font-heading mb-6 tracking-wide" style="color: <?php echo htmlspecialchars($textColor); ?>;"><?php echo htmlspecialchars($heading); ?></h2>
+            <h2 class="text-3xl md:text-4xl font-heading mb-4 md:mb-6 tracking-wide" style="color: <?php echo htmlspecialchars($textColor); ?>;"><?php echo htmlspecialchars($heading); ?></h2>
         <?php endif; ?>
 
         <?php if ($content): ?>
-            <div class="philosophy-content text-2xl md:text-3xl max-w-6xl mx-auto  leading-[0.8] md:leading-[1.6] font-light" style="color: <?php echo htmlspecialchars($textColor); ?>;">
-                <?php echo $content; ?>
+            <style>
+                .philosophy-content p:empty,
+                .philosophy-content p:has(> span:empty),
+                .philosophy-content p:has(> br:only-child) {
+                    display: none !important;
+                }
+                .philosophy-content p {
+                    margin-bottom: 1rem;
+                }
+            </style>
+            <div class="philosophy-content text-base md:text-2xl max-w-6xl mx-auto leading-relaxed md:leading-[1.6] font-light mb-6 md:mb-8" style="color: <?php echo htmlspecialchars($textColor); ?>;">
+                <?php echo str_replace('&nbsp;', '', $content); ?>
             </div>
         <?php endif; ?>
 

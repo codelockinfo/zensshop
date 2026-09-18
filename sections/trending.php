@@ -113,9 +113,9 @@ if (file_exists($productsConfigPath)) {
     }
 </style>
 
-<section id="<?php echo $sectionId; ?>" class="pt-5 md:pt-12">
+<section id="<?php echo $sectionId; ?>" class="pt-4 md:pt-5 pb-4">
     <div class="container mx-auto px-4">
-        <div class="text-center mb-4 md:mb-10">
+        <div class="text-center mb-2 md:mb-4">
             <h2 class="text-2xl md:text-4xl font-heading font-bold mb-1.5 md:mb-3 section-heading"><?php echo htmlspecialchars($sectionHeading); ?></h2>
             <p class="text-sm md:text-base max-w-2xl mx-auto section-subheading"><?php echo htmlspecialchars($sectionSubheading); ?></p>
         </div>
