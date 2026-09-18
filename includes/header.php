@@ -422,6 +422,11 @@ $gs_tooltip_text = getGlobalStyle('tooltip_text_color', $globalCardStyles, '#fff
         /* Search Overlay Dynamic Styles */
         #searchOverlay {
             background-color: <?php echo $ss_overlay_bg; ?> !important;
+            -ms-overflow-style: none;  /* IE and Edge */
+            scrollbar-width: none;  /* Firefox */
+        }
+        #searchOverlay::-webkit-scrollbar {
+            display: none;
         }
         #searchOverlay h2, #searchOverlay h3 {
             color: <?php echo $ss_heading_color; ?> !important;
@@ -1618,15 +1623,15 @@ if (!empty($headerMenuItems)) {
     <!-- Search Overlay -->
     <div class="fixed inset-0 bg-white z-[60] overflow-y-auto transition-transform duration-500 ease-in-out transform -translate-y-full invisible" id="searchOverlay">
         
-        <div class="container mx-auto px-4 pt-[100px] md:pt-[110px] pb-8 md:pb-12 relative max-w-6xl">
-            <div class="relative flex items-center justify-center mb-4 md:mb-6">
+        <div id="searchOverlayContent" class="container mx-auto px-4 pb-6 md:pb-8 relative max-w-6xl" style="transition: padding-top 0.3s ease;">
+            <div class="relative flex items-center justify-center mb-1 md:mb-2">
                 <h2 class="text-2xl md:text-3xl font-serif text-center"><?php echo htmlspecialchars($ss_heading_text); ?></h2>
                 <button id="closeSearchBtn" class="absolute right-0 text-gray-400 hover:text-black transition p-2 z-[70] md:hidden">
                     <i class="fas fa-times text-2xl"></i>
                 </button>
             </div>
             
-            <div class="max-w-3xl mx-auto relative mb-6 md:mb-8">
+            <div class="max-w-3xl mx-auto relative mb-2 md:mb-3">
                 <form action="<?php echo url('shop'); ?>" method="GET" class="relative group border border-gray-300 rounded-full focus-within:border-black transition-colors px-4" onclick="document.getElementById('headerSearchInput').focus()">
                     <input type="text" name="search" id="headerSearchInput" placeholder="I'm looking for..." 
                            class="w-full px-4 py-2 md:py-3 text-base md:text-lg font-light bg-transparent text-left focus:outline-none placeholder-gray-400"
@@ -1642,8 +1647,8 @@ if (!empty($headerMenuItems)) {
             </div>
 
             <!-- Trending Search (Always Visible) -->
-            <div class="mb-8 md:mb-8 text-center hidden md:block">
-                <h3 class="text-lg font-serif mb-4 md:mb-4"><?php echo htmlspecialchars($ss_trending_text); ?></h3>
+            <div class="mb-2 md:mb-3 text-center hidden md:block">
+                <h3 class="text-lg font-serif mb-2 md:mb-3"><?php echo htmlspecialchars($ss_trending_text); ?></h3>
                 <div class="flex flex-wrap justify-center gap-3">
                     <?php
                     // Fetch random categories for Trending Search
@@ -1671,7 +1676,7 @@ if (!empty($headerMenuItems)) {
             <div id="searchPopularContent" class="animate-fade-in">
                 <!-- Popular Products -->
                 <div>
-                    <h3 class="text-base md:text-lg font-serif mb-4 md:mb-6 text-center"><?php echo htmlspecialchars($ss_popular_heading); ?></h3>
+                    <h3 class="text-base md:text-lg font-serif mb-2 md:mb-3 text-center"><?php echo htmlspecialchars($ss_popular_heading); ?></h3>
                     
                     <!-- Popular Products Slider -->
                     <div class="relative group/slider">
@@ -1860,8 +1865,20 @@ if (!empty($headerMenuItems)) {
         if (searchBtn && searchOverlay) {
             searchBtn.addEventListener('click', (e) => {
                 e.preventDefault();
+                
+                // Set dynamic padding based on scroll (announcement bar visible or not)
+                const searchContent = document.getElementById('searchOverlayContent');
+                if (searchContent) {
+                    if (window.scrollY > 5) {
+                        searchContent.style.paddingTop = window.innerWidth >= 768 ? '90px' : '80px';
+                    } else {
+                        searchContent.style.paddingTop = window.innerWidth >= 768 ? '140px' : '120px';
+                    }
+                }
+
                 searchOverlay.classList.remove('invisible');
                 document.body.style.overflow = 'hidden'; // Prevent background scrolling
+                document.documentElement.style.overflow = 'hidden'; // Hide the scroll track entirely
                 
                 // Slight delay to allow display change to register before transform
                 requestAnimationFrame(() => {
@@ -1876,6 +1893,7 @@ if (!empty($headerMenuItems)) {
         const closeSearch = () => {
             searchOverlay.classList.add('-translate-y-full');
             document.body.style.overflow = '';
+            document.documentElement.style.overflow = '';
             
             // Wait for transition to finish
             setTimeout(() => {

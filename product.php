@@ -322,7 +322,7 @@ $p_buy_hover_text = $productStyles['buy_now_hover_text_color'] ?? '#ffffff';
     }
 </style>
 
-<section id="product-main-section" class="pt-2 pb-8 md:pt-4 md:pb-12">
+<section id="product-main-section" class="pt-2 pb-2 md:pt-4 md:pb-4">
     <div class="container mx-auto px-4">
         <!-- Breadcrumbs -->
         <nav class="breadcrumb-nav text-sm mb-4">
@@ -935,7 +935,7 @@ $p_buy_hover_text = $productStyles['buy_now_hover_text_color'] ?? '#ffffff';
         </div>
         
         <!-- Customer Reviews -->
-        <div class="max-w-4xl mx-auto mb-12 md:mb-16" id="customer-reviews">
+        <div class="max-w-4xl mx-auto mb-6" id="customer-reviews">
             <h2 class="text-lg md:text-xl font-heading font-bold mb-4 md:mb-6">Customer Reviews</h2>
             
             <div class="grid grid-cols-1 md:grid-cols-3 gap-8 mb-8">
@@ -1016,7 +1016,7 @@ $p_buy_hover_text = $productStyles['buy_now_hover_text_color'] ?? '#ffffff';
         </div>
         
         <!-- Recently Viewed Skeleton -->
-        <div id="recently-viewed-section" class="section-loading mb-16 mt-[25px] md:mt-[60px]" data-product-id="<?php echo $productData['id']; ?>">
+        <div id="recently-viewed-section" class="section-loading mb-2 mt-6 md:mt-8" data-product-id="<?php echo $productData['id']; ?>">
             <div class="text-center mb-8">
                 <div class="h-8 bg-gray-200 rounded w-64 mx-auto mb-2 relative overflow-hidden"><div class="absolute inset-0 animate-shimmer"></div></div>
                 <div class="h-4 bg-gray-200 rounded max-w-2xl mx-auto relative overflow-hidden"><div class="absolute inset-0 animate-shimmer"></div></div>
@@ -1788,7 +1788,7 @@ function loadReviews(isLoadMore = false) {
                     if (data.reviews.length > 0) {
                         reviewsList.innerHTML = reviewsHtml;
                     } else {
-                        reviewsList.innerHTML = '<div class="text-center text-gray-500 py-8"><p>No reviews yet. Be the first to review this product!</p></div>';
+                        reviewsList.innerHTML = '<div class="text-center text-gray-500 py-2"><p>No reviews yet.</p></div>';
                     }
                 } else {
                     reviewsList.insertAdjacentHTML('beforeend', reviewsHtml);
