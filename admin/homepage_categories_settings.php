@@ -96,12 +96,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 if (empty($title)) continue;
                 
                 $imagePath = '';
-                if (isset($_FILES['image']['name'][$i]) && !empty($_FILES['image']['name'][$i])) {
-                    $uploadDir = __DIR__ . '/../assets/images/categories/';
+                // Handle Image Upload
+                if (!empty($_FILES['image']['name'][$i])) {
+                    $uploadDir = __DIR__ . '/../assets/categories/';
                     if (!is_dir($uploadDir)) mkdir($uploadDir, 0777, true);
+                    
                     $filename = time() . '_' . $i . '_' . preg_replace('/[^a-zA-Z0-9.]/', '_', $_FILES['image']['name'][$i]);
                     if (move_uploaded_file($_FILES['image']['tmp_name'][$i], $uploadDir . $filename)) {
-                        $imagePath = 'assets/images/categories/' . $filename;
+                        $imagePath = 'assets/categories/' . $filename;
                     }
                 } else {
                     if ($id) {

@@ -87,12 +87,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         // Image Upload
         $imagePath = $blog['image'] ?? '';
         if (isset($_FILES['image']) && $_FILES['image']['error'] === UPLOAD_ERR_OK) {
-            $uploadDir = __DIR__ . '/../../assets/images/blogs/';
+            $uploadDir = __DIR__ . '/../../assets/blogs/';
             if (!is_dir($uploadDir)) mkdir($uploadDir, 0777, true);
             
             $fname = time() . '_' . preg_replace('/[^a-zA-Z0-9._-]/', '', basename($_FILES['image']['name']));
             if (move_uploaded_file($_FILES['image']['tmp_name'], $uploadDir . $fname)) {
-                $imagePath = 'assets/images/blogs/' . $fname;
+                $imagePath = 'assets/blogs/' . $fname;
             }
         }
 

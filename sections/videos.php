@@ -66,7 +66,7 @@ $sectionId = 'video-section-' . rand(1000, 9999);
     }
 </style>
 
-<section class="pt-4 md:pt-5 pb-4 relative group/section" id="<?php echo $sectionId; ?>">
+<section class="pt-4 md:pt-5 pb-2 md:pb-4 relative group/section" id="<?php echo $sectionId; ?>">
     <div class="container mx-auto px-4">
         
         <div class="text-center mb-2 md:mb-4">

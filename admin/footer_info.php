@@ -84,15 +84,16 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
         // 6. Save to Database (Key-Value Store)
         if (!empty($_FILES['footer_logo_image']['name'])) {
-            // FIX: Use assets/images/uploads to match getImageUrl() expectation
-            $uploadDir = __DIR__ . '/../assets/images/uploads/';
+            // FIX: Use assets/uploads to match .htaccess rewrite rules
+            $uploadDir = __DIR__ . '/../assets/uploads/';
             if (!is_dir($uploadDir)) mkdir($uploadDir, 0777, true);
             
             $fileName = time() . '_' . basename($_FILES['footer_logo_image']['name']);
             $targetPath = $uploadDir . $fileName;
             
             if (move_uploaded_file($_FILES['footer_logo_image']['tmp_name'], $targetPath)) {
-                // Store relative path that works with getImageUrl
+                // Store path with assets/images so frontend and getImageUrl handles it
+                // and .htaccess will redirect it to assets/uploads/
                 $settings['footer_logo_image'] = 'assets/images/uploads/' . $fileName;
             } else {
                 throw new Exception("Failed to upload image.");

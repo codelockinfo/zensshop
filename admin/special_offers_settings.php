@@ -77,16 +77,30 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $display_order = (int)($_POST['display_order'] ?? 0);
         $active = isset($_POST['active']) ? 1 : 0;
         
-        // Handle Image Upload
+        // Handle Desktop Image Upload
         if (!empty($_FILES['image']['name'])) {
-            $uploadDir = __DIR__ . '/../assets/images/special_offers/';
+            $uploadDir = __DIR__ . '/../assets/special_offers/';
             if (!is_dir($uploadDir)) mkdir($uploadDir, 0777, true);
             
-            $filename = time() . '_' . preg_replace('/[^a-zA-Z0-9.]/', '_', $_FILES['image']['name']);
+            $filename = time() . '_desktop_' . preg_replace('/[^a-zA-Z0-9.]/', '_', $_FILES['image']['name']);
             if (move_uploaded_file($_FILES['image']['tmp_name'], $uploadDir . $filename)) {
                 $image = 'assets/images/special_offers/' . $filename;
             } else {
-                $error = "Failed to upload image.";
+                $error = "Failed to upload desktop image.";
+            }
+        }
+        
+        // Handle Mobile Image Upload
+        $mobile_image = '';
+        if (!empty($_FILES['mobile_image']['name'])) {
+            $uploadDir = __DIR__ . '/../assets/special_offers/';
+            if (!is_dir($uploadDir)) mkdir($uploadDir, 0777, true);
+            
+            $mob_filename = time() . '_mobile_' . preg_replace('/[^a-zA-Z0-9.]/', '_', $_FILES['mobile_image']['name']);
+            if (move_uploaded_file($_FILES['mobile_image']['tmp_name'], $uploadDir . $mob_filename)) {
+                $mobile_image = 'assets/images/special_offers/' . $mob_filename;
+            } else {
+                $error = "Failed to upload mobile image.";
             }
         }
         
@@ -102,13 +116,17 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $h = $current['heading'] ?? null;
                 $s = $current['subheading'] ?? null;
 
-                // Update existing
                 $sql = "UPDATE special_offers SET title = ?, link = ?, button_text = ?, display_order = ?, active = ?";
                 $params = [$title, $link, $button_text, $display_order, $active];
                 
                 if ($image) {
                     $sql .= ", image = ?";
                     $params[] = $image;
+                }
+                
+                if ($mobile_image) {
+                    $sql .= ", mobile_image = ?";
+                    $params[] = $mobile_image;
                 }
                 
                 // Preserve heading
@@ -145,8 +163,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     }
 
                     $db->execute(
-                        "INSERT INTO special_offers (title, link, button_text, image, display_order, active, heading, subheading, store_id) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)",
-                        [$title, $link, $button_text, $image, $display_order, $active, $h, $s, $storeId]
+                        "INSERT INTO special_offers (title, link, button_text, image, mobile_image, display_order, active, heading, subheading, store_id) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+                        [$title, $link, $button_text, $image, $mobile_image, $display_order, $active, $h, $s, $storeId]
                     );
                     $_SESSION['flash_success'] = "Offer added successfully!";
                 }
@@ -399,7 +417,7 @@ $s_button_hover_text = $savedStyles['button_hover_text'] ?? '#000000';
                 <?php foreach ($offers as $index => $offer): ?>
                 <tr>
                     <td class="px-6 py-4 whitespace-nowrap">
-                        <img src="<?php echo preg_match('/^https?:\/\//', $offer['image']) ? $offer['image'] : $baseUrl . '/' . $offer['image']; ?>" class="h-16 w-32 object-cover rounded" alt="Offer">
+                        <img src="<?php echo getImageUrl($offer['image']); ?>" class="h-16 w-32 object-cover rounded" alt="Offer">
                     </td>
                     <td class="px-6 py-4">
                         <div class="text-sm font-medium text-gray-900"><?php echo htmlspecialchars($offer['title']); ?></div>
@@ -474,18 +492,34 @@ $s_button_hover_text = $savedStyles['button_hover_text'] ?? '#000000';
                     </label>
                 </div>
                 
-                <div class="col-span-2">
-                    <label class="block text-sm font-bold mb-2">Image (Required)</label>
-                    <div class="relative group cursor-pointer border-2 border-dashed border-gray-300 rounded-lg p-4 bg-gray-50 flex items-center justify-center min-h-[160px] hover:bg-gray-100 transition" onclick="document.getElementById('imageInput').click()">
-                        <img id="previewImg" src="" class="max-h-32 w-auto object-contain hidden" alt="Preview">
+                <!-- Desktop Image -->
+                <div>
+                    <label class="block text-sm font-bold mb-1">🖥️ Desktop Image</label>
+                    <p class="text-xs text-gray-400 mb-2">Landscape / Wide (e.g. 800x500px)</p>
+                    <div class="relative group cursor-pointer border-2 border-dashed border-blue-300 rounded-lg p-3 bg-blue-50 flex items-center justify-center min-h-[130px] hover:bg-blue-100 transition" onclick="document.getElementById('imageInput').click()">
+                        <img id="previewImg" src="" class="max-h-24 w-auto object-contain hidden" alt="Desktop Preview">
                         <div id="placeholderImg" class="text-center">
-                            <i class="fas fa-cloud-upload-alt text-3xl text-gray-400 mb-2"></i>
-                            <p class="text-sm text-gray-500 font-semibold">Click to upload Image</p>
-                            <p class="text-xs text-gray-400 mt-1">Recommended: 600x400px</p>
+                            <i class="fas fa-desktop text-2xl text-blue-400 mb-1"></i>
+                            <p class="text-xs text-blue-500 font-semibold">Click to upload Desktop Image</p>
                         </div>
                         <div class="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-5 rounded-lg transition-all"></div>
                     </div>
                     <input type="file" name="image" id="imageInput" accept="image/*" class="hidden" onchange="previewImage(this, 'previewImg', 'placeholderImg')">
+                </div>
+
+                <!-- Mobile Image -->
+                <div>
+                    <label class="block text-sm font-bold mb-1">📱 Mobile Image</label>
+                    <p class="text-xs text-gray-400 mb-2">Portrait / Tall (e.g. 400x600px)</p>
+                    <div class="relative group cursor-pointer border-2 border-dashed border-green-300 rounded-lg p-3 bg-green-50 flex items-center justify-center min-h-[130px] hover:bg-green-100 transition" onclick="document.getElementById('mobileImageInput').click()">
+                        <img id="previewMobileImg" src="" class="max-h-24 w-auto object-contain hidden" alt="Mobile Preview">
+                        <div id="placeholderMobileImg" class="text-center">
+                            <i class="fas fa-mobile-alt text-2xl text-green-400 mb-1"></i>
+                            <p class="text-xs text-green-500 font-semibold">Click to upload Mobile Image</p>
+                        </div>
+                        <div class="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-5 rounded-lg transition-all"></div>
+                    </div>
+                    <input type="file" name="mobile_image" id="mobileImageInput" accept="image/*" class="hidden" onchange="previewImage(this, 'previewMobileImg', 'placeholderMobileImg')">
                 </div>
             </div>
             
@@ -509,11 +543,13 @@ $s_button_hover_text = $savedStyles['button_hover_text'] ?? '#000000';
         
         var previewImg = document.getElementById('previewImg');
         var placeholderImg = document.getElementById('placeholderImg');
-        if (previewImg) {
-            previewImg.src = '';
-            previewImg.classList.add('hidden');
-        }
+        if (previewImg) { previewImg.src = ''; previewImg.classList.add('hidden'); }
         if (placeholderImg) placeholderImg.classList.remove('hidden');
+
+        var previewMobileImg = document.getElementById('previewMobileImg');
+        var placeholderMobileImg = document.getElementById('placeholderMobileImg');
+        if (previewMobileImg) { previewMobileImg.src = ''; previewMobileImg.classList.add('hidden'); }
+        if (placeholderMobileImg) placeholderMobileImg.classList.remove('hidden');
         
         var modal = document.getElementById('offerModal');
         if (modal) modal.classList.remove('hidden');
@@ -535,6 +571,7 @@ $s_button_hover_text = $savedStyles['button_hover_text'] ?? '#000000';
         document.getElementById('offerOrder').value = offer.display_order;
         document.getElementById('offerActive').checked = offer.active == 1;
         
+        // Load desktop image preview
         if (offer.image) {
             var img = document.getElementById('previewImg');
             var placeholder = document.getElementById('placeholderImg');
@@ -545,6 +582,19 @@ $s_button_hover_text = $savedStyles['button_hover_text'] ?? '#000000';
                 img.classList.remove('hidden');
             }
             if (placeholder) placeholder.classList.add('hidden');
+        }
+        
+        // Load mobile image preview
+        if (offer.mobile_image) {
+            var mobileImg = document.getElementById('previewMobileImg');
+            var mobilePlaceholder = document.getElementById('placeholderMobileImg');
+            var mobileSrc = offer.mobile_image;
+            if (!mobileSrc.startsWith('http')) mobileSrc = window.baseUrl + '/' + mobileSrc;
+            if (mobileImg) {
+                mobileImg.src = mobileSrc;
+                mobileImg.classList.remove('hidden');
+            }
+            if (mobilePlaceholder) mobilePlaceholder.classList.add('hidden');
         }
     };
 

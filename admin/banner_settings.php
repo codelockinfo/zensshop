@@ -60,12 +60,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         // Handle Desktop Image Upload
         if (!empty($_FILES['image_desktop']['name'])) {
             if ($_FILES['image_desktop']['error'] === UPLOAD_ERR_OK) {
-                $uploadDir = __DIR__ . '/../assets/images/banners/';
+                $uploadDir = __DIR__ . '/../assets/banners/';
                 if (!is_dir($uploadDir)) mkdir($uploadDir, 0777, true);
                 
                 $filename = 'desktop_' . time() . '_' . preg_replace('/[^a-zA-Z0-9.]/', '_', $_FILES['image_desktop']['name']);
                 if (move_uploaded_file($_FILES['image_desktop']['tmp_name'], $uploadDir . $filename)) {
-                    $image_desktop = 'assets/images/banners/' . $filename;
+                    $image_desktop = 'assets/banners/' . $filename;
                 } else {
                     $error = "Failed to move uploaded desktop image.";
                 }
@@ -79,12 +79,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         // Handle Mobile Image Upload
         if (!empty($_FILES['image_mobile']['name'])) {
             if ($_FILES['image_mobile']['error'] === UPLOAD_ERR_OK) {
-                $uploadDir = __DIR__ . '/../assets/images/banners/';
+                $uploadDir = __DIR__ . '/../assets/banners/';
                 if (!is_dir($uploadDir)) mkdir($uploadDir, 0777, true);
                 
                 $filename = 'mobile_' . time() . '_' . preg_replace('/[^a-zA-Z0-9.]/', '_', $_FILES['image_mobile']['name']);
                 if (move_uploaded_file($_FILES['image_mobile']['tmp_name'], $uploadDir . $filename)) {
-                    $image_mobile = 'assets/images/banners/' . $filename;
+                    $image_mobile = 'assets/banners/' . $filename;
                 } else {
                     $error = "Failed to move uploaded mobile image.";
                 }

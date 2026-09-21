@@ -76,9 +76,20 @@ if (file_exists($offersConfigPath)) {
         color: <?php echo $styles['button_hover_text']; ?>;
         border-color: <?php echo $styles['button_hover_bg']; ?>;
     }
+    /* Mobile: tall portrait card */
+    #<?php echo $sectionId; ?> .offer-card {
+        aspect-ratio: 3 / 4;
+    }
+    /* Desktop: fixed landscape height */
+    @media (min-width: 768px) {
+        #<?php echo $sectionId; ?> .offer-card {
+            aspect-ratio: unset;
+            height: 260px;
+        }
+    }
 </style>
 
-<section id="<?php echo $sectionId; ?>" class="pt-4 md:pt-5 pb-4">
+<section id="<?php echo $sectionId; ?>" class="pt-4 md:pt-5 pb-2 md:pb-4">
     <div class="container mx-auto px-4">
         <!-- Section Header -->
         <div class="text-center mb-2 md:mb-4">
@@ -102,15 +113,26 @@ if (file_exists($offersConfigPath)) {
 					$link = $baseUrl . '/' . ltrim($link, '/');
 				}
 			?>
-            <div class="relative group overflow-hidden rounded-lg">
-                <img src="<?php echo htmlspecialchars($imgSrc); ?>" alt="<?php echo htmlspecialchars($offer['title']); ?>" 
-                     class="w-full h-64 object-cover group-hover:scale-110 transition-transform duration-500"
-                     onerror="this.src='https://placehold.co/600x600?text=Offer+Image'">
+            <div class="offer-card relative group overflow-hidden rounded-lg">
+                <?php 
+                    $mobileImgSrc = !empty($offer['mobile_image']) ? getImageUrl($offer['mobile_image']) : $imgSrc;
+                ?>
+                <picture>
+                    <!-- Mobile image (shown on screens < 768px) -->
+                    <source media="(max-width: 767px)" srcset="<?php echo htmlspecialchars($mobileImgSrc); ?>">
+                    <!-- Desktop image (shown on screens >= 768px) -->
+                    <source media="(min-width: 768px)" srcset="<?php echo htmlspecialchars($imgSrc); ?>">
+                    <!-- Fallback img -->
+                    <img src="<?php echo htmlspecialchars($imgSrc); ?>" 
+                         alt="<?php echo htmlspecialchars($offer['title']); ?>" 
+                         class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
+                         onerror="this.src='https://placehold.co/600x400?text=Offer+Image'">
+                </picture>
                 <div class="absolute inset-0 transition offer-overlay"></div>
-                <div class="absolute inset-0 flex flex-col items-center justify-center text-white p-3 md:p-6">
-                    <h3 class="text-xl md:text-2xl font-heading font-bold mb-4 text-center offer-title"><?php echo htmlspecialchars($offer['title']); ?></h3>
+                <div class="absolute inset-0 flex flex-col items-center justify-center text-white p-2 md:p-6">
+                    <h3 class="text-sm md:text-2xl font-heading font-bold mb-2 md:mb-4 text-center offer-title leading-tight"><?php echo htmlspecialchars($offer['title']); ?></h3>
                     <a href="<?php echo htmlspecialchars($link); ?>" 
-                       class="inline-block border px-5 md:px-8 py-2 md:py-3 transition offer-btn">
+                       class="inline-block border px-3 md:px-8 py-1.5 md:py-3 text-xs md:text-base transition offer-btn">
                         <?php echo htmlspecialchars($offer['button_text']); ?>
                     </a>
                 </div>

@@ -49,12 +49,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     // File Upload (Banner)
     $bannerImg = $contentData['banner']['image'] ?? '';
     if (isset($_FILES['banner_image']) && $_FILES['banner_image']['error'] === UPLOAD_ERR_OK) {
-        $uploadDir = __DIR__ . '/../assets/images/uploads/';
-        if (!file_exists($uploadDir)) mkdir($uploadDir, 0777, true);
+        $uploadDir = __DIR__ . '/../assets/uploads/';
+        if (!is_dir($uploadDir)) mkdir($uploadDir, 0777, true);
         
         $fname = time() . '_p_' . preg_replace('/[^a-zA-Z0-9._-]/', '', basename($_FILES['banner_image']['name']));
         if (move_uploaded_file($_FILES['banner_image']['tmp_name'], $uploadDir . $fname)) {
-            $bannerImg = 'assets/images/uploads/' . $fname;
+            $bannerImg = 'assets/uploads/' . $fname;
         }
     }
 

@@ -61,14 +61,27 @@ $titleColor = $blogStyling['blog_title_color'] ?? '#111827';
 $descColor = $blogStyling['blog_desc_color'] ?? '#4b5563';
 $readMoreColor = $blogStyling['blog_read_more_color'] ?? '#2563eb';
 ?>
-<div style="background-color: <?php echo $blogBg; ?>;" class="py-12 min-h-screen">
+<div style="background-color: <?php echo $blogBg; ?>;" class="pt-4 pb-8 md:pt-6 md:pb-12 min-h-screen">
     <div class="container mx-auto px-4">
-        <h1 class="text-4xl font-serif text-center mb-4" style="color: <?php echo $blogHeadingColor; ?>;">
-            <?php echo htmlspecialchars($settingsObj->get('blog_heading', 'Our Blog')); ?>
-        </h1>
-        <p class="text-center mb-12 max-w-2xl mx-auto" style="color: <?php echo $blogSubheadingColor; ?>;">
-            <?php echo htmlspecialchars($settingsObj->get('blog_subheading', 'Latest news, updates, and stories from our team.')); ?>
-        </p>
+        <div class="relative mb-4 md:mb-6 text-center flex flex-col items-center">
+            <div class="w-full relative">
+                <h1 class="text-3xl md:text-4xl font-heading font-bold mb-1" style="color: <?php echo $blogHeadingColor; ?>;">
+                    <?php echo htmlspecialchars($settingsObj->get('blog_heading', 'Our Blog')); ?>
+                </h1>
+                
+                <!-- Grid Layout Controls -->
+                <div class="absolute right-0 top-0 hidden lg:flex items-center gap-1 bg-white rounded-lg shadow-sm border border-gray-200 p-1">
+                    <span class="text-xs text-gray-500 font-semibold px-2">Columns:</span>
+                    <button onclick="setBlogGrid(3)" id="btn-grid-3" class="w-8 h-8 text-sm font-bold rounded bg-gray-200 text-gray-800 transition" title="3 Columns">3</button>
+                    <button onclick="setBlogGrid(4)" id="btn-grid-4" class="w-8 h-8 text-sm font-bold rounded hover:bg-gray-100 text-gray-600 transition" title="4 Columns">4</button>
+                    <button onclick="setBlogGrid(5)" id="btn-grid-5" class="w-8 h-8 text-sm font-bold rounded hover:bg-gray-100 text-gray-600 transition" title="5 Columns">5</button>
+                </div>
+            </div>
+            
+            <p class="max-w-2xl mx-auto text-sm md:text-base mt-1" style="color: <?php echo $blogSubheadingColor; ?>;">
+                <?php echo htmlspecialchars($settingsObj->get('blog_subheading', 'Latest news, updates, and stories from our team.')); ?>
+            </p>
+        </div>
 
         <?php if (empty($blogs)): ?>
             <div class="text-center py-20 text-gray-500">
@@ -152,6 +165,34 @@ $readMoreColor = $blogStyling['blog_read_more_color'] ?? '#2563eb';
 </style>
 
 <script>
+// Grid Switcher Logic
+function setBlogGrid(cols) {
+    const skeleton = document.getElementById('blog-skeleton');
+    const cards = document.getElementById('blog-cards');
+    
+    // Update active button state
+    [3, 4, 5].forEach(num => {
+        const btn = document.getElementById('btn-grid-' + num);
+        if (btn) {
+            if (num === cols) {
+                btn.className = 'w-8 h-8 text-sm font-bold rounded bg-gray-200 text-gray-800 transition';
+            } else {
+                btn.className = 'w-8 h-8 text-sm font-bold rounded hover:bg-gray-100 text-gray-600 transition';
+            }
+        }
+    });
+
+    // Update grid columns class
+    const updateGrid = (el) => {
+        if (!el) return;
+        el.classList.remove('lg:grid-cols-3', 'lg:grid-cols-4', 'lg:grid-cols-5');
+        el.classList.add('lg:grid-cols-' + cols);
+    };
+
+    updateGrid(skeleton);
+    updateGrid(cards);
+}
+
 // Hide skeleton and show blog cards when page loads
 window.addEventListener('load', function() {
     const skeleton = document.getElementById('blog-skeleton');
