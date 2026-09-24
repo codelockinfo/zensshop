@@ -517,12 +517,12 @@ $s_arrow_icon = $savedStyles['arrow_icon_color'] ?? '#1f2937';
             <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
                 <div class="col-span-2">
                     <label class="block text-sm font-bold mb-2">Heading</label>
-                    <input type="text" name="heading" id="bannerHeading" class="w-full border p-2 rounded">
+                    <input type="text" name="heading" id="bannerHeading" placeholder="e.g. MEGA SUMMER SALE" class="w-full border p-2 rounded">
                 </div>
                 
                 <div class="col-span-2">
                     <label class="block text-sm font-bold mb-2">Subheading</label>
-                    <input type="text" name="subheading" id="bannerSubheading" class="w-full border p-2 rounded">
+                    <input type="text" name="subheading" id="bannerSubheading" placeholder="e.g. Flat 50% Off on all Pest Control products" class="w-full border p-2 rounded">
                 </div>
                 
                 <div>

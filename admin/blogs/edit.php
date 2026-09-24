@@ -161,13 +161,13 @@ require_once __DIR__ . '/../../includes/admin-header.php';
             <div class="lg:col-span-2 space-y-6">
                 <div>
                     <label class="block text-sm font-bold mb-2 text-gray-700">Post Title</label>
-                    <input type="text" name="title" id="title" value="<?php echo htmlspecialchars($blog['title'] ?? ''); ?>" class="w-full border border-gray-300 p-2.5 rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none transition" required oninput="generateSlug()">
+                    <input type="text" name="title" id="title" value="<?php echo htmlspecialchars($blog['title'] ?? ''); ?>" placeholder="Enter blog post title..." class="w-full border border-gray-300 p-2.5 rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none transition" required oninput="generateSlug()">
                 </div>
                 <div>
                     <label class="block text-sm font-bold mb-2 text-gray-700">Permalink (Slug)</label>
                     <div class="flex items-center">
                         <span class="bg-gray-100 border border-r-0 border-gray-300 p-2.5 rounded-l-lg text-gray-500 text-sm"><?php echo $baseUrl; ?>/blog/</span>
-                        <input type="text" name="slug" id="slug" value="<?php echo htmlspecialchars($blog['slug'] ?? ''); ?>" class="w-full border border-gray-300 p-2.5 rounded-r-lg bg-gray-50 focus:bg-white focus:ring-2 focus:ring-blue-500 focus:outline-none transition">
+                        <input type="text" name="slug" id="slug" value="<?php echo htmlspecialchars($blog['slug'] ?? ''); ?>" placeholder="e.g. my-new-post" class="w-full border border-gray-300 p-2.5 rounded-r-lg bg-gray-50 focus:bg-white focus:ring-2 focus:ring-blue-500 focus:outline-none transition">
                     </div>
                 </div>
                 <div>

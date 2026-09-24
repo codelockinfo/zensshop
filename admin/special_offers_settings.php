@@ -467,7 +467,7 @@ $s_button_hover_text = $savedStyles['button_hover_text'] ?? '#000000';
             <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
                 <div class="col-span-2">
                     <label class="block text-sm font-bold mb-2">Title</label>
-                    <input type="text" name="title" id="offerTitle" class="w-full border p-2 rounded">
+                    <input type="text" name="title" id="offerTitle" placeholder="e.g. Special Combo Pack 30% Off" class="w-full border p-2 rounded">
                 </div>
                 
                 <div>

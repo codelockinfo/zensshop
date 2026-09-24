@@ -993,11 +993,8 @@ $gs_tooltip_text = getGlobalStyle('tooltip_text_color', $globalCardStyles, '#fff
         /* Specific override for the utility class used in PHP */
         #mobile-menu-main .hover\:bg-gray-50:hover, 
         [id^="mobile-menu-sub-"] .hover\:bg-gray-50:hover {
-            color: <?php echo $submenuHover; ?> !important;
-            background-color: <?php echo $submenuItemHoverBg; ?> !important;
-        }
-            color: <?php echo $submenuHover; ?> !important;
-            background-color: <?php echo $submenuItemHoverBg; ?> !important;
+            color: <?php echo $submenuHoverText; ?> !important;
+            background-color: <?php echo $submenuHoverBg; ?> !important;
         }
 
         /* Top Bar Styling */

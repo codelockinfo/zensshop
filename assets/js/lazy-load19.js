@@ -211,7 +211,12 @@ function initializeSectionContent(container) {
     const slideCount = getSlideCount("#videoSectionSlider");
     new Swiper(videoSlider, {
         slidesPerView: 'auto',
-        spaceBetween: 20,
+        spaceBetween: 8,
+        breakpoints: {
+            768: {
+                spaceBetween: 20
+            }
+        },
         loop: slideCount > 4,
         watchOverflow: true,
         centeredSlides: false,

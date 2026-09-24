@@ -14,25 +14,27 @@ $section_bg = $settingsObj->get('features_section_bg', '#ffffff');
 $section_text = $settingsObj->get('features_section_text', '#000000');
 ?>
 
-<section class="py-1 md:py-4" style="background-color: <?php echo htmlspecialchars($section_bg); ?>; color: <?php echo htmlspecialchars($section_text); ?>;">
+<section class="py-3 md:py-6" style="background-color: <?php echo htmlspecialchars($section_bg); ?>; color: <?php echo htmlspecialchars($section_text); ?>;">
     <div class="container mx-auto px-4">
-        <!-- Render as Grid -->
-        <div class="grid grid-cols-1 md:grid-cols-3 gap-3 md:gap-6 text-center max-w-full mx-auto">
+        <!-- Mobile: Horizontal rows | Desktop: 3-column grid -->
+        <div class="flex flex-col md:grid md:grid-cols-3 gap-3 md:gap-6 max-w-full mx-auto">
             <?php foreach ($features as $f): ?>
-            <div class="group flex flex-col items-center p-3 md:p-6 rounded h-full transition-transform hover:-translate-y-1 duration-300" 
-                 style="background-color: <?php echo htmlspecialchars($f['bg_color'] ?? '#ffffff'); ?>; color: <?php echo htmlspecialchars($f['text_color'] ?? '#000000'); ?>;">
+            <div class="group flex flex-row md:flex-col items-center md:items-center p-3 md:p-6 rounded-xl md:rounded transition-transform hover:-translate-y-1 duration-300" 
+                 style="background-color: <?php echo htmlspecialchars($f['bg_color'] ?? $section_bg); ?>; color: <?php echo htmlspecialchars($f['text_color'] ?? '#000000'); ?>;">
                 <!-- Icon Container -->
-                <div class="mb-2 transition-transform duration-500 group-hover:scale-x-[-1]" style="color: inherit;"> 
+                <div class="flex-shrink-0 w-14 h-14 md:w-auto md:h-auto flex items-center justify-center rounded-full bg-gray-100 md:bg-transparent md:mb-3 mr-4 md:mr-0 transition-transform duration-500 group-hover:scale-x-[-1]" style="color: inherit;">
                     <?php echo $f['icon']; ?>
                 </div>
                 
-                <h3 class="text-[18px] font-bold tracking-wide" style="color: <?php echo htmlspecialchars($f['heading_color'] ?? $f['text_color']); ?>;">
-                    <?php echo htmlspecialchars(ucwords(strtolower($f['heading']))); ?>
-                </h3>
-                
-                <p class="text-[14px] leading-relaxed max-w-sm opacity-90">
-                    <?php echo nl2br(htmlspecialchars($f['content'])); ?>
-                </p>
+                <!-- Text -->
+                <div class="flex-1 md:text-center">
+                    <h3 class="text-[15px] md:text-[18px] font-bold tracking-wide leading-tight" style="color: <?php echo htmlspecialchars($f['heading_color'] ?? $f['text_color']); ?>;">
+                        <?php echo htmlspecialchars(ucwords(strtolower($f['heading']))); ?>
+                    </h3>
+                    <p class="text-[13px] md:text-[14px] leading-relaxed opacity-75 mt-0.5">
+                        <?php echo nl2br(htmlspecialchars($f['content'])); ?>
+                    </p>
+                </div>
             </div>
             <?php endforeach; ?>
         </div>
