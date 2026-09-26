@@ -87,12 +87,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         // Image Upload
         $imagePath = $blog['image'] ?? '';
         if (isset($_FILES['image']) && $_FILES['image']['error'] === UPLOAD_ERR_OK) {
-            $uploadDir = __DIR__ . '/../../assets/images/blogs/';
+            $uploadDir = __DIR__ . '/../../assets/blogs/';
             if (!is_dir($uploadDir)) mkdir($uploadDir, 0777, true);
             
             $fname = time() . '_' . preg_replace('/[^a-zA-Z0-9._-]/', '', basename($_FILES['image']['name']));
             if (move_uploaded_file($_FILES['image']['tmp_name'], $uploadDir . $fname)) {
-                $imagePath = 'assets/images/blogs/' . $fname;
+                $imagePath = 'assets/blogs/' . $fname;
             }
         }
 
@@ -161,13 +161,13 @@ require_once __DIR__ . '/../../includes/admin-header.php';
             <div class="lg:col-span-2 space-y-6">
                 <div>
                     <label class="block text-sm font-bold mb-2 text-gray-700">Post Title</label>
-                    <input type="text" name="title" id="title" value="<?php echo htmlspecialchars($blog['title'] ?? ''); ?>" class="w-full border border-gray-300 p-2.5 rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none transition" required oninput="generateSlug()">
+                    <input type="text" name="title" id="title" value="<?php echo htmlspecialchars($blog['title'] ?? ''); ?>" placeholder="Enter blog post title..." class="w-full border border-gray-300 p-2.5 rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none transition" required oninput="generateSlug()">
                 </div>
                 <div>
                     <label class="block text-sm font-bold mb-2 text-gray-700">Permalink (Slug)</label>
                     <div class="flex items-center">
                         <span class="bg-gray-100 border border-r-0 border-gray-300 p-2.5 rounded-l-lg text-gray-500 text-sm"><?php echo $baseUrl; ?>/blog/</span>
-                        <input type="text" name="slug" id="slug" value="<?php echo htmlspecialchars($blog['slug'] ?? ''); ?>" class="w-full border border-gray-300 p-2.5 rounded-r-lg bg-gray-50 focus:bg-white focus:ring-2 focus:ring-blue-500 focus:outline-none transition">
+                        <input type="text" name="slug" id="slug" value="<?php echo htmlspecialchars($blog['slug'] ?? ''); ?>" placeholder="e.g. my-new-post" class="w-full border border-gray-300 p-2.5 rounded-r-lg bg-gray-50 focus:bg-white focus:ring-2 focus:ring-blue-500 focus:outline-none transition">
                     </div>
                 </div>
                 <div>

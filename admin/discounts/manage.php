@@ -5,8 +5,8 @@ require_once __DIR__ . '/../../classes/Database.php';
 $auth = new Auth();
 $auth->requireLogin();
 
-$pageTitle = 'Discounts';
-require_once __DIR__ . '/../../includes/admin-header.php';
+require_once __DIR__ . '/../../includes/functions.php';
+$baseUrl = getBaseUrl();
 
 $db = Database::getInstance();
 $id = $_GET['id'] ?? null;
@@ -48,12 +48,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $description = $_POST['description'] ?? '';
     $type = $_POST['type'] ?? 'percentage';
     $value = $_POST['value'] ?? 0;
-    $minPurchase = $_POST['min_purchase_amount'] ?? null;
-    $maxDiscount = $_POST['max_discount_amount'] ?? null;
-    $usageLimit = $_POST['usage_limit'] ?? null;
-    $usageLimitPerCustomer = $_POST['usage_limit_per_customer'] ?? null;
-    $startDate = $_POST['start_date'] ?? null;
-    $endDate = $_POST['end_date'] ?? null;
+    $minPurchase = !empty($_POST['min_purchase_amount']) ? $_POST['min_purchase_amount'] : null;
+    $maxDiscount = !empty($_POST['max_discount_amount']) ? $_POST['max_discount_amount'] : null;
+    $usageLimit = !empty($_POST['usage_limit']) ? $_POST['usage_limit'] : null;
+    $usageLimitPerCustomer = !empty($_POST['usage_limit_per_customer']) ? $_POST['usage_limit_per_customer'] : null;
+    $startDate = !empty($_POST['start_date']) ? $_POST['start_date'] : null;
+    $endDate = !empty($_POST['end_date']) ? $_POST['end_date'] : null;
     $status = $_POST['status'] ?? 'active';
     
     // Determine Store ID
@@ -68,11 +68,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $db->execute(
                 "UPDATE discounts SET code = ?, name = ?, description = ?, type = ?, value = ?, 
                  min_purchase_amount = ?, max_discount_amount = ?, usage_limit = ?, 
-                 usage_limit_per_customer = ?, start_date = ?, end_date = ?, status = ? WHERE id = ?",
+                 usage_limit_per_customer = ?, start_date = ?, end_date = ?, status = ? WHERE id = ? AND store_id = ?",
                 [$code, $name, $description, $type, $value, $minPurchase, $maxDiscount, 
-                 $usageLimit, $usageLimitPerCustomer, $startDate, $endDate, $status, $id]
+                 $usageLimit, $usageLimitPerCustomer, $startDate, $endDate, $status, $id, $storeId]
             );
-            $success = 'Discount updated successfully!';
+            $_SESSION['flash_success'] = 'Discount updated successfully!';
         } else {
             $db->insert(
                 "INSERT INTO discounts (code, name, description, type, value, min_purchase_amount, 
@@ -81,8 +81,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 [$code, $name, $description, $type, $value, $minPurchase, $maxDiscount, 
                  $usageLimit, $usageLimitPerCustomer, $startDate, $endDate, $status, $storeId]
             );
-            $success = 'Discount created successfully!';
+            $_SESSION['flash_success'] = 'Discount created successfully!';
         }
+        header("Location: " . $baseUrl . '/admin/discounts/manage.php');
+        exit;
     } catch (Exception $e) {
         $error = $e->getMessage();
     }
@@ -90,6 +92,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
 $storeId = $_SESSION['store_id'] ?? null;
 $discounts = $db->fetchAll("SELECT * FROM discounts WHERE store_id = ? ORDER BY created_at DESC", [$storeId]);
+
+$pageTitle = 'Discounts';
+require_once __DIR__ . '/../../includes/admin-header.php';
 ?>
 
 <div class="mb-6">
@@ -99,6 +104,17 @@ $discounts = $db->fetchAll("SELECT * FROM discounts WHERE store_id = ? ORDER BY 
     </p>
 </div>
 
+<?php if ($error): ?>
+    <div class="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative mb-4">
+        <?php echo htmlspecialchars($error); ?>
+    </div>
+<?php endif; ?>
+
+<?php if (isset($_SESSION['flash_success'])): ?>
+    <div class="bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded relative mb-4 flash-message">
+        <?php echo htmlspecialchars($_SESSION['flash_success']); unset($_SESSION['flash_success']); ?>
+    </div>
+<?php endif; ?>
 
 <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
     <!-- Form -->
@@ -111,6 +127,7 @@ $discounts = $db->fetchAll("SELECT * FROM discounts WHERE store_id = ? ORDER BY 
                     <input type="text" 
                            name="code" 
                            required
+                           placeholder="e.g. SUMMER50"
                            value="<?php echo htmlspecialchars($discount['code'] ?? ''); ?>"
                            class="admin-form-input">
                 </div>
@@ -120,6 +137,7 @@ $discounts = $db->fetchAll("SELECT * FROM discounts WHERE store_id = ? ORDER BY 
                     <input type="text" 
                            name="name" 
                            required
+                           placeholder="e.g. Summer Sale 50% Off"
                            value="<?php echo htmlspecialchars($discount['name'] ?? ''); ?>"
                            class="admin-form-input">
                 </div>
@@ -127,6 +145,7 @@ $discounts = $db->fetchAll("SELECT * FROM discounts WHERE store_id = ? ORDER BY 
                 <div class="admin-form-group">
                     <label class="admin-form-label">Description</label>
                     <textarea name="description" 
+                              placeholder="Brief description of this discount (optional)..."
                               class="admin-form-input admin-form-textarea"><?php echo htmlspecialchars($discount['description'] ?? ''); ?></textarea>
                 </div>
                 
@@ -148,6 +167,7 @@ $discounts = $db->fetchAll("SELECT * FROM discounts WHERE store_id = ? ORDER BY 
                                    id="discountValueInput"
                                    step="0.01"
                                    required
+                                   placeholder="e.g. 50"
                                    value="<?php echo $discount['value'] ?? 0; ?>"
                                    class="admin-form-input <?php echo (!empty($discount) && ($discount['type'] ?? '') === 'percentage') ? 'pr-8' : 'pl-8'; ?>">
                             <span id="valueSuffix" class="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 <?php echo (empty($discount) || ($discount['type'] ?? '') === 'fixed') ? 'hidden' : ''; ?>">%</span>
@@ -161,6 +181,7 @@ $discounts = $db->fetchAll("SELECT * FROM discounts WHERE store_id = ? ORDER BY 
                         <input type="number" 
                                name="min_purchase_amount" 
                                step="0.01"
+                               placeholder="e.g. 1000"
                                value="<?php echo $discount['min_purchase_amount'] ?? ''; ?>"
                                class="admin-form-input">
                     </div>
@@ -170,6 +191,7 @@ $discounts = $db->fetchAll("SELECT * FROM discounts WHERE store_id = ? ORDER BY 
                         <input type="number" 
                                name="max_discount_amount" 
                                step="0.01"
+                               placeholder="e.g. 500"
                                value="<?php echo $discount['max_discount_amount'] ?? ''; ?>"
                                class="admin-form-input">
                     </div>
@@ -180,6 +202,7 @@ $discounts = $db->fetchAll("SELECT * FROM discounts WHERE store_id = ? ORDER BY 
                         <label class="admin-form-label">Usage Limit</label>
                         <input type="number" 
                                name="usage_limit" 
+                               placeholder="e.g. 100"
                                value="<?php echo $discount['usage_limit'] ?? ''; ?>"
                                class="admin-form-input">
                     </div>

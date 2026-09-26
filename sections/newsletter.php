@@ -15,7 +15,7 @@ $stylesJson = $settingsObj->get('newsletter_styles', '{"bg_overlay_opacity":"10"
 $styles = json_decode($stylesJson, true);
 $sectionId = 'newsletter-' . rand(1000, 9999);
 
-$bgImage = $data['background_image'] ? getBaseUrl() . '/' . $data['background_image'] : '';
+$bgImage = !empty($data['background_image']) ? getImageUrl($data['background_image']) : '';
 $heading = $data['heading'] ?? 'Join our family';
 $subheading = $data['subheading'] ?? 'Promotions, new products and sales. Directly to your inbox.';
 $btnText = $data['button_text'] ?? 'Subscribe';
@@ -57,14 +57,14 @@ $bgStyle = $bgImage ? "background-image: url('{$bgImage}');" : "background-color
     <div class="absolute inset-0 newsletter-overlay backdrop-blur-[2px]"></div>
     <?php endif; ?>
 
-    <div class="newsletter-card rounded-xl shadow-2xl p-8 md:p-10 max-w-2xl w-full mx-4 relative z-10 text-center">
-        <h2 class="text-3xl font-bold mb-3 newsletter-heading"><?php echo htmlspecialchars($heading); ?></h2>
+    <div class="newsletter-card rounded-xl shadow-2xl p-5 md:p-8 max-w-2xl w-full mx-4 relative z-10 text-center">
+        <h2 class="text-3xl font-bold mb-1 md:mb-2 newsletter-heading"><?php echo htmlspecialchars($heading); ?></h2>
         
         <?php if($subheading): ?>
-        <p class="mb-8 newsletter-subheading"><?php echo htmlspecialchars($subheading); ?></p>
+        <p class="mb-4 md:mb-5 newsletter-subheading"><?php echo htmlspecialchars($subheading); ?></p>
         <?php endif; ?>
 
-        <form id="globalNewsletterForm" method="POST" class="flex flex-col md:flex-row gap-3 mb-6">
+        <form id="globalNewsletterForm" method="POST" class="flex flex-col md:flex-row gap-3 mb-3 md:mb-4">
             <input type="email" name="email" id="newsletterEmail" placeholder="Your email address..." 
                 class="newsletter-input flex-grow border border-gray-300 rounded px-4 py-3 focus:outline-none focus:ring-2 focus:ring-black focus:border-transparent" 
                 required>

@@ -663,7 +663,7 @@ require_once __DIR__ . '/includes/header.php';
                          <img src="<?php echo htmlspecialchars($newsImage); ?>" alt="Newsletter" class="w-100 md:w-100 h-auto object-contain drop-shadow-md hover:scale-105 transition duration-300" onerror="this.src='https://placehold.co/600x600?text=Newsletter+Image'">
                     </div>
                     <div class="w-full md:w-7/12 md:pl-10 lg:pl-16 text-center md:text-left">
-                         <h2 class="text-2xl md:text-3xl lg:text-4xl font-heading mb-4 text-gray-800 font-bold tracking-tight"><?php echo htmlspecialchars($newsTitle); ?></h2>
+                         <h2 class="text-4xl md:text-5xl font-heading uppercase tracking-widest mb-4 text-gray-900"><?php echo htmlspecialchars($newsTitle); ?></h2>
                          <p class="text-gray-500 text-base md:text-lg mb-8 leading-relaxed max-w-lg mx-auto md:mx-0"><?php echo htmlspecialchars($newsText); ?></p>
                          <form id="landingNewsletterForm" class="flex flex-col sm:flex-row w-full gap-3 sm:gap-0">
                              <input type="email" name="email" placeholder="Enter your email" required class="w-full flex-grow px-5 py-3 md:px-6 md:py-4 bg-gray-50 border border-gray-200 rounded-lg sm:rounded-r-none focus:outline-none text-base md:text-lg focus:ring-2 focus:ring-gray-200 transition">

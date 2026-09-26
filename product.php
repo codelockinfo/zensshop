@@ -553,7 +553,7 @@ $p_buy_hover_text = $productStyles['buy_now_hover_text_color'] ?? '#ffffff';
             
             <!-- Product Information -->
             <div>
-                <h1 class="text-xl md:text-3xl font-heading font-bold mb-2.5 md:mb-4"><?php echo htmlspecialchars($productData['name'] ?? 'Product'); ?></h1>
+                <h1 class="text-2xl md:text-4xl font-heading font-extrabold text-gray-900 mb-3 capitalize tracking-tight leading-tight"><?php echo htmlspecialchars($productData['name'] ?? 'Product'); ?></h1>
                 
                 <!-- Rating and Reviews -->
                 <div class="flex items-center space-x-4 mb-4 text-sm cursor-pointer hover:opacity-80 transition" onclick="document.getElementById('customer-reviews').scrollIntoView({ behavior: 'smooth' })">
@@ -580,9 +580,14 @@ $p_buy_hover_text = $productStyles['buy_now_hover_text_color'] ?? '#ffffff';
                 </div>
                 
                 <!-- Price -->
-                <div class="mb-6">
-                    <span id="original-price" class="product-reg-price compare-price text-2xl line-through mr-2 <?php echo !$originalPrice ? 'hidden' : ''; ?>"><?php echo format_price($originalPrice ?: 0, $productData['currency'] ?? 'USD'); ?></span>
-                    <span id="product-price" class="product-sale-price product-price text-2xl font-bold"><?php echo format_price($price, $productData['currency'] ?? 'USD'); ?></span>
+                <div class="mb-6 flex items-center flex-wrap gap-3">
+                    <span id="product-price" class="product-sale-price product-price text-3xl md:text-4xl font-extrabold text-gray-900 tracking-tight"><?php echo format_price($price, $productData['currency'] ?? 'USD'); ?></span>
+                    <?php if ($originalPrice && $originalPrice > $price): ?>
+                    <div class="flex items-center gap-2">
+                        <span id="original-price" class="product-reg-price compare-price text-lg md:text-xl font-medium text-gray-400 line-through"><?php echo format_price($originalPrice, $productData['currency'] ?? 'USD'); ?></span>
+                        <span class="bg-red-600 text-white text-xs font-bold px-2.5 py-1 rounded-md uppercase tracking-wider shadow-sm">Save <?php echo round((($originalPrice - $price) / $originalPrice) * 100); ?>%</span>
+                    </div>
+                    <?php endif; ?>
                 </div>
                 
                 <!-- Description with Read More -->
@@ -714,10 +719,10 @@ $p_buy_hover_text = $productStyles['buy_now_hover_text_color'] ?? '#ffffff';
                     </div>
                 </div>
 
-                <div class="flex flex-col sm:flex-row gap-4 mb-2">
+                <div class="flex flex-col sm:flex-row gap-4 mb-2 mt-4">
                     <button onclick="addToCartFromDetail(<?php echo $productData['product_id']; ?>, this)" 
                             id="productCartAddToCartBtn"
-                            class="flex-1 bg-black text-white py-4 px-6 hover:bg-gray-800 transition font-semibold flex items-center justify-center add-to-cart-btn <?php echo $isOutOfStock ? 'opacity-50 cursor-not-allowed' : ''; ?>"
+                            class="flex-1 text-white py-4 px-8 rounded-lg shadow-md hover:shadow-lg hover:-translate-y-0.5 transition-all duration-300 font-bold uppercase tracking-wider text-sm flex items-center justify-center add-to-cart-btn <?php echo $isOutOfStock ? 'opacity-50 cursor-not-allowed' : ''; ?>"
                             data-loading-text="Adding..."
                             data-product-id="<?php echo $productData['product_id']; ?>"
                             data-product-name="<?php echo htmlspecialchars($productData['name'] ?? ''); ?>"
@@ -733,7 +738,7 @@ $p_buy_hover_text = $productStyles['buy_now_hover_text_color'] ?? '#ffffff';
                     </button>
                     <button onclick="buyNow(<?php echo $productData['product_id']; ?>, this)" 
                             id="productCartBuyNowBtn"
-                            class="flex-1 bg-red-700 text-white py-4 px-6 hover:bg-red-600 transition font-semibold buy-now-btn <?php echo $isOutOfStock ? 'opacity-50 cursor-not-allowed' : ''; ?>"
+                            class="flex-1 text-white py-4 px-8 rounded-lg shadow-md hover:shadow-lg hover:-translate-y-0.5 transition-all duration-300 font-bold uppercase tracking-wider text-sm buy-now-btn <?php echo $isOutOfStock ? 'opacity-50 cursor-not-allowed' : ''; ?>"
                             data-loading-text="Processing..."
                             data-product-id="<?php echo $productData['product_id']; ?>"
                             data-product-name="<?php echo htmlspecialchars($productData['name'] ?? ''); ?>"

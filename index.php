@@ -200,7 +200,6 @@ $sk_widthClass = ($bannerContentWidth == '50') ? 'md:max-w-[50%]' : (($bannerCon
             height: 520px !important;
             min-height: 520px !important;
             max-height: 520px !important;
-            background-color: #000000;
         }
 
         #hero-section .hero-slide {
@@ -211,7 +210,6 @@ $sk_widthClass = ($bannerContentWidth == '50') ? 'md:max-w-[50%]' : (($bannerCon
             align-items: center !important;
             justify-content: center !important;
             position: relative !important;
-            background-color: #000000;
         }
         
         /* Absolute Image Layer */
@@ -226,7 +224,6 @@ $sk_widthClass = ($bannerContentWidth == '50') ? 'md:max-w-[50%]' : (($bannerCon
             display: flex !important;
             align-items: center !important;
             justify-content: center !important;
-            background-color: #000000;
             width: 100% !important;
             height: 100% !important;
         }
@@ -234,8 +231,7 @@ $sk_widthClass = ($bannerContentWidth == '50') ? 'md:max-w-[50%]' : (($bannerCon
         #hero-section .hero-slide .md\:hidden img {
             width: 100% !important;
             height: 100% !important;
-            object-fit: contain !important;
-            background-color: #000000;
+            object-fit: cover !important;
         }
         
         #hero-section .hero-slide .bg-black.bg-opacity-30 {
@@ -1050,4 +1046,4 @@ document.addEventListener('DOMContentLoaded', function() {
 <?php endif; ?>
 <?php require_once __DIR__ . '/includes/footer.php'; ?>
 
-<script src="<?php echo $baseUrl; ?>/assets/js/lazy-load19.js?v=7" defer></script>
+<script src="<?php echo $baseUrl; ?>/assets/js/lazy-load19.js?v=25" defer></script>

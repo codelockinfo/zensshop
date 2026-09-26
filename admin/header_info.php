@@ -40,10 +40,16 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         
         // Handle image upload
         if (!empty($_FILES['logo']['name'])) {
-            $uploadDir = __DIR__ . '/../assets/images/';
+            $uploadDir = __DIR__ . '/../assets/';
             if (!is_dir($uploadDir)) mkdir($uploadDir, 0777, true);
             
-            $filename = 'logo_' . $storeId . '.' . pathinfo($_FILES['logo']['name'], PATHINFO_EXTENSION);
+            // Delete old logo if it exists to save space
+            $oldLogo = $db->fetchOne("SELECT setting_value FROM site_settings WHERE setting_key = 'site_logo' AND store_id = ?", [$storeId])['setting_value'] ?? '';
+            if (!empty($oldLogo) && file_exists($uploadDir . $oldLogo)) {
+                @unlink($uploadDir . $oldLogo);
+            }
+            
+            $filename = 'logo_' . $storeId . '_' . time() . '.' . pathinfo($_FILES['logo']['name'], PATHINFO_EXTENSION);
             
             if (move_uploaded_file($_FILES['logo']['tmp_name'], $uploadDir . $filename)) {
                 $db->execute("INSERT INTO site_settings (setting_key, setting_value, store_id) VALUES ('site_logo', ?, ?) 
@@ -229,7 +235,7 @@ require_once __DIR__ . '/../includes/admin-header.php';
                     <div class="relative group cursor-pointer border-2 border-dashed border-gray-300 rounded-lg p-4 bg-gray-50 flex items-center justify-center min-h-[120px] hover:bg-gray-100 transition" onclick="document.getElementById('logoInput').click()">
                         
                         <img id="logoPreview" 
-                             src="<?php echo !empty($logoPath) ? '../assets/images/' . $logoPath : ''; ?>" 
+                             src="<?php echo !empty($logoPath) ? getImageUrl('assets/images/' . $logoPath) : ''; ?>" 
                              class="max-h-20 object-contain <?php echo !empty($logoPath) ? '' : 'hidden'; ?>">
                              
                         <div id="logoPlaceholder" class="<?php echo !empty($logoPath) ? 'hidden' : ''; ?> text-center">
