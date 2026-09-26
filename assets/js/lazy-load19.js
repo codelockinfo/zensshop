@@ -153,7 +153,12 @@ function initializeSectionContent(container) {
     const slideCount = getSlideCount("#bestSellingSlider");
     new Swiper(bestSelling, {
         slidesPerView: 'auto',
-        spaceBetween: 20,
+        spaceBetween: 8,
+        breakpoints: {
+            768: {
+                spaceBetween: 20
+            }
+        },
         loop: slideCount > 5,
         watchOverflow: true,
         autoplay: { delay: 5000, disableOnInteraction: false },
@@ -187,7 +192,12 @@ function initializeSectionContent(container) {
       const slideCount = getSlideCount("#trendingSlider");
       new Swiper(trending, {
           slidesPerView: 'auto',
-          spaceBetween: 20,
+          spaceBetween: 8,
+        breakpoints: {
+            768: {
+                spaceBetween: 20
+            }
+        },
           loop: slideCount > 5,
           watchOverflow: true,
           autoplay: { delay: 5500, disableOnInteraction: false },
@@ -237,7 +247,12 @@ function initializeSectionContent(container) {
     const slideCount = container.querySelectorAll('.people-bought-slider .swiper-slide').length;
     new Swiper(relatedSlider, {
         slidesPerView: 'auto',
-        spaceBetween: 20,
+        spaceBetween: 8,
+        breakpoints: {
+            768: {
+                spaceBetween: 20
+            }
+        },
         loop: slideCount > 5,
         watchOverflow: true,
         autoplay: { delay: 5000, disableOnInteraction: false },

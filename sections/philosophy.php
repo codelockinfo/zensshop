@@ -35,12 +35,22 @@ if ($linkUrl && !preg_match('/^https?:\/\//', $linkUrl) && strpos($linkUrl, '#')
     // But if it's '#', let's just make it base url + #
     $linkUrl = $baseUrl . $linkUrl;
 }
+
+$bgImgUrl = $baseUrl . '/assets/images/philosophy-bg.png'; 
 ?>
 
-<section class="pt-10 pb-4 md:pt-8 md:pb-4" style="background-color: <?php echo htmlspecialchars($bgColor); ?>; color: <?php echo htmlspecialchars($textColor); ?>;">
-    <div class="container mx-auto px-4 text-center">
+<section class="py-12 md:py-24 lg:py-32 relative overflow-hidden bg-cover bg-center bg-no-repeat min-h-[350px] md:min-h-[500px] flex items-center justify-center" style="background-color: #000000; background-image: url('<?php echo $bgImgUrl; ?>'); color: <?php echo htmlspecialchars($textColor); ?>;">
+    <!-- Dark overlay on small screens to ensure text legibility -->
+    <div class="absolute inset-0 bg-black/40 md:bg-transparent pointer-events-none"></div>
+
+    <div class="container mx-auto px-4 text-center relative z-10">
         <?php if ($heading): ?>
-            <h2 class="text-3xl md:text-4xl font-heading mb-4 md:mb-6 tracking-wide" style="color: <?php echo htmlspecialchars($textColor); ?>;"><?php echo htmlspecialchars($heading); ?></h2>
+            <!-- Tagline with Gold Divider Lines -->
+            <div class="inline-flex items-center justify-center gap-3 mb-4 md:mb-6">
+                <span class="w-8 md:w-16 h-[2px] bg-gradient-to-r from-transparent to-yellow-500"></span>
+                <h2 class="text-xs md:text-sm font-bold tracking-[0.25em] text-yellow-400 uppercase"><?php echo htmlspecialchars($heading); ?></h2>
+                <span class="w-8 md:w-16 h-[2px] bg-gradient-to-l from-transparent to-yellow-500"></span>
+            </div>
         <?php endif; ?>
 
         <?php if ($content): ?>
@@ -51,18 +61,33 @@ if ($linkUrl && !preg_match('/^https?:\/\//', $linkUrl) && strpos($linkUrl, '#')
                     display: none !important;
                 }
                 .philosophy-content p {
-                    margin-bottom: 1rem;
+                    margin-bottom: 0.5rem;
                 }
             </style>
-            <div class="philosophy-content text-base md:text-2xl max-w-6xl mx-auto leading-relaxed md:leading-[1.6] font-light mb-6 md:mb-8" style="color: <?php echo htmlspecialchars($textColor); ?>;">
+            <div class="philosophy-content text-sm md:text-base lg:text-lg max-w-4xl mx-auto leading-relaxed md:leading-loose font-normal opacity-90 mb-6 md:mb-8" style="color: <?php echo htmlspecialchars($textColor); ?>;">
                 <?php echo str_replace('&nbsp;', '', $content); ?>
             </div>
         <?php endif; ?>
 
         <?php if ($linkText): ?>
-            <a href="<?php echo htmlspecialchars($linkUrl); ?>" class="philosophy-link text-sm md:text-md uppercase hover:opacity-80 transition tracking-wider" style="color: <?php echo htmlspecialchars($textColor); ?>; border-bottom: 1px solid <?php echo htmlspecialchars($textColor); ?>; padding-bottom: 2px;">
-                <?php echo htmlspecialchars($linkText); ?>
-            </a>
+            <!-- Custom Slanted Gold Button (Matching Mockup) -->
+            <div class="mt-4 md:mt-6 flex items-center justify-center gap-2">
+                <!-- Slanted Accent Bars on the Left -->
+                <div class="flex gap-1.5 transform -skew-x-[20deg] select-none">
+                    <span class="w-2 md:w-2.5 h-10 md:h-11 bg-gradient-to-b from-yellow-300 via-yellow-400 to-yellow-600 rounded-sm shadow-md"></span>
+                    <span class="w-2 md:w-2.5 h-10 md:h-11 bg-gradient-to-b from-yellow-300 via-yellow-400 to-yellow-600 rounded-sm shadow-md"></span>
+                </div>
+
+                <!-- Slanted Action Button -->
+                <a href="<?php echo htmlspecialchars($linkUrl); ?>" 
+                   class="group relative inline-flex items-center justify-center px-8 md:px-12 py-2.5 md:py-3 transform -skew-x-[20deg] bg-gradient-to-r from-yellow-400 via-amber-400 to-yellow-500 text-black font-extrabold tracking-wider text-sm md:text-base rounded-sm shadow-lg hover:shadow-yellow-500/40 hover:brightness-110 active:scale-95 transition-all duration-300">
+                    <!-- Un-skew inner content so text and icon stay upright -->
+                    <span class="transform skew-x-[20deg] flex items-center gap-2">
+                        <span><?php echo htmlspecialchars($linkText); ?></span>
+                        <i class="fas fa-arrow-right text-xs md:text-sm group-hover:translate-x-1 transition-transform"></i>
+                    </span>
+                </a>
+            </div>
         <?php endif; ?>
     </div>
 </section>
