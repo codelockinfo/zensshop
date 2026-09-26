@@ -351,16 +351,13 @@ if (empty($banners)) {
                     $m_textAlignmentClass = ($bannerAlignmentMobile === 'center') ? 'text-center' : (($bannerAlignmentMobile === 'right') ? 'text-right' : 'text-left');
                     $m_buttonAlignmentClass = ($bannerAlignmentMobile === 'center') ? 'justify-center' : (($bannerAlignmentMobile === 'right') ? 'justify-end' : 'justify-start');
                     
-
-
-                    // Desktop Width Class
                     $widthClass = 'max-w-xl'; // Default
                     if ($bannerContentWidth == '50') $widthClass = 'md:max-w-[50%]';
                     elseif ($bannerContentWidth == '40') $widthClass = 'md:max-w-[40%]';
                     ?>
                     <!-- Slide <?php echo $index + 1; ?> -->
                     <div class="hero-slide <?php echo $index === 0 ? 'active' : ''; ?> relative <?php echo $bannerAdaptiveHeight ? 'h-auto md:h-[700px]' : 'h-[600px] md:h-[700px]'; ?>">
-                        <!-- Desktop Image -->
+                        
                         <?php if($desktopLink): ?>
                         <a href="<?php echo htmlspecialchars($desktopLink); ?>" class="hidden md:block absolute inset-0 z-0">
                             <img src="<?php echo htmlspecialchars($bgImage); ?>" 
@@ -379,7 +376,7 @@ if (empty($banners)) {
                         </div>
                         <?php endif; ?>
                         
-                        <!-- Mobile Image (Fallback to desktop if empty) -->
+                        
                         <?php if($mobileLink): ?>
                         <a href="<?php echo htmlspecialchars($mobileLink); ?>" class="md:hidden absolute inset-0 z-0">
                             <img src="<?php echo htmlspecialchars($bgImageMobile ?: $bgImage); ?>" 

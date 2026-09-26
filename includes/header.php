@@ -1192,7 +1192,7 @@ $gs_tooltip_text = getGlobalStyle('tooltip_text_color', $globalCardStyles, '#fff
     <!-- Google Tag Manager (noscript) -->
     <noscript><iframe src="https://www.googletagmanager.com/ns.html?id=<?php echo htmlspecialchars($gtmId); ?>"
     height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
-    <!-- End Google Tag Manager (noscript) -->
+    
     <?php endif; ?>
     
     <?php if (!isset($isCheckout) || !$isCheckout): ?>
@@ -1403,8 +1403,8 @@ if (!empty($headerMenuItems)) {
     
     <!-- NEW REBUILT MOBILE MENU START -->
     
-    <!-- Dark Overlay (Shared) -->
-    <!-- Dark Overlay (Shared) -->
+    
+    
     <div id="mobile-menu-overlay" 
          class="fixed inset-0 z-40 opacity-0 transition-opacity duration-300 ease-in-out" 
          style=" z-index: 9999;display: none; background-color: rgba(0,0,0,0.8); backdrop-filter: blur(5px); -webkit-backdrop-filter: blur(5px);"
