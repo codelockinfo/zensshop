@@ -145,7 +145,7 @@ $themeColor = ($configGrp['theme_color'] ?? '') ?: '#5F8D76';
 $bodyBg = ($configGrp['body_bg_color'] ?? '') ?: '#ffffff';
 $bodyText = ($configGrp['body_text_color'] ?? '') ?: '#000000';
 
-$heroBg = $heroGrp['bg_color'] ?? '#E8F0E9';
+$heroBg = $heroGrp['bg_color'] ?? '#ffffff';
 $heroText = $heroGrp['text_color'] ?? getContrastColor($heroBg);
 
 // 5. Header Links (Decoded from headerGrp)
@@ -224,12 +224,12 @@ require_once __DIR__ . '/includes/header.php';
     let currentMaxStock = <?php echo (int)($productData['stock_quantity'] ?? 0); ?>;
     
     // Custom Add To Cart for Landing Page
-    function spAddToCart(productId, btn, attributes = {}) {
+    function spAddToCart(productId, btn, attributes = {}, qty = 1) {
         if (btn) setBtnLoading(btn, true);
         fetch(`${LANDING_BASE_URL}/api/cart.php`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ action: 'add', product_id: productId, quantity: 1, variant_attributes: attributes })
+            body: JSON.stringify({ action: 'add', product_id: productId, quantity: qty, variant_attributes: attributes })
         })
         .then(res => res.json())
         .then(data => {
@@ -312,7 +312,7 @@ require_once __DIR__ . '/includes/header.php';
     /* Override font-family for this page if needed, or keep inherited */
     body { font-family: 'Outfit', sans-serif; background-color: var(--body-bg); color: var(--body-text); }
     footer, footer.bg-white { background-color: var(--body-bg) !important; color: var(--body-text) !important; }
-    h1, h2, h3, h4, h5, h6 { font-family: 'Playfair Display', serif; }
+    h1, h2, h3, h4, h5, h6 { font-family: 'Outfit', sans-serif; }
 
     /* Dynamic Theme Colors */
     :root {
@@ -320,7 +320,7 @@ require_once __DIR__ . '/includes/header.php';
         --body-bg: <?php echo htmlspecialchars($bodyBg); ?>;
         --body-text: <?php echo htmlspecialchars($bodyText); ?>;
 
-        --hero-bg: <?php echo htmlspecialchars(($heroGrp['bg_color'] ?? '') ?: '#f9fafb'); ?>;
+        --hero-bg: <?php echo htmlspecialchars(($heroGrp['bg_color'] ?? '') ?: '#ffffff'); ?>;
         --hero-text: <?php echo htmlspecialchars(($heroGrp['text_color'] ?? '') ?: '#111827'); ?>;
 
         --banner-bg: <?php echo htmlspecialchars(($bannerGrp['bg_color'] ?? '') ?: '#ffffff'); ?>;
@@ -329,13 +329,13 @@ require_once __DIR__ . '/includes/header.php';
         --stats-bg: <?php echo htmlspecialchars(($statsGrp['bg_color'] ?? '') ?: '#ffffff'); ?>;
         --stats-text: <?php echo htmlspecialchars(($statsGrp['text_color'] ?? '') ?: '#111827'); ?>;
         
-        --why-bg: <?php echo htmlspecialchars(($whyGrp['bg_color'] ?? '') ?: '#f9fafb'); ?>;
+        --why-bg: <?php echo htmlspecialchars(($whyGrp['bg_color'] ?? '') ?: '#ffffff'); ?>;
         --why-text: <?php echo htmlspecialchars(($whyGrp['text_color'] ?? '') ?: '#111827'); ?>;
         
         --about-bg: <?php echo htmlspecialchars(($aboutGrp['bg_color'] ?? '') ?: '#ffffff'); ?>;
         --about-text: <?php echo htmlspecialchars(($aboutGrp['text_color'] ?? '') ?: '#111827'); ?>;
         
-        --testi-bg: <?php echo htmlspecialchars(($testiGrp['bg_color'] ?? '') ?: '#f9fafb'); ?>;
+        --testi-bg: <?php echo htmlspecialchars(($testiGrp['bg_color'] ?? '') ?: '#ffffff'); ?>;
         --testi-text: <?php echo htmlspecialchars(($testiGrp['text_color'] ?? '') ?: '#111827'); ?>;
         
         --news-bg: <?php echo htmlspecialchars(($newsGrp['bg_color'] ?? '') ?: '#ffffff'); ?>;
@@ -394,76 +394,153 @@ require_once __DIR__ . '/includes/header.php';
         -webkit-box-orient: vertical;
         overflow: hidden;
     }
+    .why-section h2, .why-section h2::after, .why-section h2::before,
+    .about-section h2, .about-section h2::after, .about-section h2::before {
+        text-decoration: none !important;
+        border-bottom: none !important;
+        content: none !important;
+    }
+    .testimonialSwiper {
+        padding-bottom: 3rem !important;
+    }
+    .testimonialSwiper .swiper-pagination {
+        bottom: 0 !important;
+    }
+    .testimonialSwiper .swiper-pagination-bullet {
+        background: #045d36 !important;
+        opacity: 0.25 !important;
+        width: 8px !important;
+        height: 8px !important;
+        transition: all 0.3s ease !important;
+    }
+    .testimonialSwiper .swiper-pagination-bullet-active {
+        opacity: 1 !important;
+        width: 24px !important;
+        border-radius: 4px !important;
+        background: #045d36 !important;
+    }
 </style>
 
 <!-- Main Wrapper -->
 <div class="landing-page-wrapper">
 
     <!-- Hero Section -->
-    <section class="hero-section min-h-screen relative flex items-center pt-8 pb-10 md:py-12">
-        <div class="container mx-auto px-6 grid grid-cols-1 lg:grid-cols-2 gap-16 items-center">
-            <div class="z-10 order-2 lg:order-1 text-center lg:text-left">
-                <h2 class="text-xl font-semibold tracking-widest uppercase mb-4 opacity-60"><?php echo htmlspecialchars($heroSubtitle); ?></h2>
-                <h1 class="text-6xl lg:text-[70px] font-bold mb-8 tracking-tighter lowercase leading-[1.2] line-clamp-3 overflow-hidden text-ellipsis" style="display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical;">
+    <section class="hero-section relative flex items-center pt-4 pb-6 md:pt-6 md:pb-8">
+        <div class="container mx-auto px-6 grid grid-cols-1 lg:grid-cols-2 gap-12 lg:gap-16 items-center">
+            <div class="z-10 order-2 lg:order-1 text-left">
+                <!-- Title -->
+                <h1 class="text-2xl sm:text-3xl md:text-4xl lg:text-[40px] font-semibold mb-3 tracking-tight leading-tight text-gray-900 text-left">
                     <?php echo htmlspecialchars($heroTitle); ?>
-
                 </h1>
-                
-                <?php // Price variables already defined at top ?>
 
-                <div class="mb-6 max-w-xl mx-auto lg:mx-0">
-                    <div id="hero-description-container" class="relative overflow-hidden transition-all duration-300 prose prose-lg max-w-none line-clamp-5 text-left" style="color: inherit;">
-                        <div class="opacity-80 leading-relaxed">
+                <!-- Rating & Sales Social Proof Row -->
+                <div class="flex items-center gap-2 mb-2.5 text-xs text-left justify-start flex-wrap">
+                    <div class="flex text-amber-400 text-xs gap-0.5">
+                        <i class="fas fa-star"></i>
+                        <i class="fas fa-star"></i>
+                        <i class="fas fa-star"></i>
+                        <i class="fas fa-star"></i>
+                        <i class="fas fa-star-half-alt"></i>
+                    </div>
+                    <span class="text-gray-600 font-semibold underline cursor-pointer">2 reviews</span>
+                    <span class="text-gray-300">•</span>
+                    <span class="text-gray-600 font-medium">10 sold in last 18 hours</span>
+                </div>
+
+                <!-- Price Row -->
+                <div class="product-price-container mb-1 sm:mb-1.5 flex items-center gap-3 justify-start text-left max-w-xl">
+                    <?php if ($hasSale): ?>
+                        <span class="text-3xl sm:text-4xl font-extrabold text-[#045d36] tracking-tight"><?php echo format_price($currentSalePrice, $productData['currency'] ?? 'INR'); ?></span>
+                        <span class="text-lg font-bold text-gray-400 line-through opacity-80"><?php echo format_price($originalPrice, $productData['currency'] ?? 'INR'); ?></span>
+                        <span class="bg-red-600 text-white text-xs font-extrabold px-2.5 py-1 rounded shadow-xs uppercase tracking-wider whitespace-nowrap">SAVE <?php echo round((($originalPrice - $currentSalePrice) / $originalPrice) * 100); ?>%</span>
+                    <?php else: ?>
+                        <span class="text-3xl sm:text-4xl font-extrabold text-[#045d36] tracking-tight"><?php echo format_price($originalPrice, $productData['currency'] ?? 'INR'); ?></span>
+                    <?php endif; ?>
+                </div>
+
+                <!-- Description -->
+                <div class="mb-5 max-w-xl text-left">
+                    <div id="hero-description-container" class="relative overflow-hidden transition-all duration-300 prose max-w-none line-clamp-4 text-left" style="color: inherit;">
+                        <div class="text-gray-600 font-normal leading-relaxed text-xs sm:text-sm md:text-base opacity-90 [&>p]:mt-0 [&>p]:mb-2 mt-0 pt-0">
                             <?php echo $heroDescription; ?>
                         </div>
-                        <div id="hero-description-fade" class="absolute bottom-0 left-0 w-full h-16 pointer-events-none transition-opacity duration-300" style="background: linear-gradient(to top, var(--hero-bg), transparent);"></div>
+                        <div id="hero-description-fade" class="absolute bottom-0 left-0 w-full h-12 pointer-events-none transition-opacity duration-300" style="background: linear-gradient(to top, var(--hero-bg), transparent);"></div>
                     </div>
-                    <button id="hero-read-more-btn" class="mt-4 text-sm font-bold uppercase tracking-widest hover:opacity-70 transition-all flex items-center gap-2" style="color: var(--theme-color);">
-                        <span>Read More</span>
-                        <i class="fas fa-chevron-down text-xs transition-transform duration-300"></i>
+                    <button id="hero-read-more-btn" class="mt-2 text-xs font-bold uppercase tracking-widest text-[#045d36] hover:text-[#034729] transition-all flex items-center gap-1.5 group text-left">
+                        <span class="border-b border-[#045d36]/30 group-hover:border-[#045d36]">Read More</span>
+                        <i class="fas fa-chevron-down text-[10px] transition-transform duration-300"></i>
                     </button>
                 </div>
 
-                <div class="product-price-container mb-8 flex items-center gap-4 justify-center lg:justify-start flex-wrap text-left">
-                    <span class="text-2xl font-extrabold text-[#707b8e] uppercase tracking-tight">Price:</span>
-                    <?php if ($hasSale): ?>
-                        <span class="text-2xl font-bold text-gray-400 line-through opacity-80"><?php echo format_price($originalPrice, $productData['currency'] ?? 'INR'); ?></span>
-                        <div class="flex items-center gap-3">
-                            <span class="text-3xl font-black text-[#1a3d32]"><?php echo format_price($currentSalePrice, $productData['currency'] ?? 'INR'); ?></span>
-                            <span class="bg-[#ef4444] text-white text-[12px] font-black px-3 py-1 rounded-md shadow-sm whitespace-nowrap">-<?php echo round((($originalPrice - $currentSalePrice) / $originalPrice) * 100); ?>% OFF</span>
-                        </div>
-                    <?php else: ?>
-                        <span class="text-3xl font-black text-[#000000]"><?php echo format_price($originalPrice, $productData['currency'] ?? 'INR'); ?></span>
-                    <?php endif; ?>
-                 </div>
-                
-                    <div class="grid grid-cols-2 gap-4 lg:flex lg:items-center lg:justify-start">
-                        <button id="special-add-to-cart-btn" onclick="spAddToCart(<?php echo $productData['product_id']; ?>, this, <?php echo htmlspecialchars(json_encode($firstVariant['variant_attributes'] ?? (object)[])); ?>)" 
-                                data-product-id="<?php echo $productData['product_id']; ?>"
-                                data-product-name="<?php echo htmlspecialchars($productData['name'] ?? ''); ?>"
-                                data-product-price="<?php echo $price; ?>"
-                                data-product-slug="<?php echo htmlspecialchars($productData['slug'] ?? ''); ?>"
-                                class="bg-[#1a3d32] btn-accent w-full lg:w-auto px-4 lg:px-6 h-[58px] rounded text-[10px] lg:text-[11px] font-bold tracking-widest uppercase transition transform flex items-center justify-center gap-2 lg:gap-3 <?php echo $isOutOfStock ? 'opacity-50 cursor-not-allowed' : ''; ?>" data-loading-text="Adding..." <?php echo $isOutOfStock ? 'disabled' : ''; ?>>
-                            <i class="fas fa-shopping-cart text-[12px] lg:text-[13px]"></i>
-                            <span class="truncate"><?php echo $isOutOfStock ? 'Out of Stock' : 'Add to cart'; ?></span>
-                        </button>
+                <!-- Quantity Control Row -->
+                <div class="flex items-center gap-3 mb-5 justify-start text-left">
+                    <span class="text-sm font-bold text-gray-900">Quantity:</span>
+                    <div class="flex items-center border border-gray-300 rounded-lg bg-white shadow-xs overflow-hidden h-[42px] px-2 transition hover:border-[#045d36]">
+                        <button type="button" onclick="let q = document.getElementById('sp-qty'); if(parseInt(q.value) > 1) q.value = parseInt(q.value) - 1;" class="w-8 h-full text-gray-500 hover:text-black font-bold text-base flex items-center justify-center cursor-pointer select-none">-</button>
+                        <input type="number" id="sp-qty" value="1" min="1" class="w-10 text-center font-bold text-gray-900 bg-transparent focus:outline-none text-sm border-none" style="-moz-appearance: textfield;">
+                        <button type="button" onclick="let q = document.getElementById('sp-qty'); q.value = parseInt(q.value || 1) + 1;" class="w-8 h-full text-gray-500 hover:text-black font-bold text-base flex items-center justify-center cursor-pointer select-none">+</button>
+                    </div>
+                </div>
 
-                        <?php foreach ($platformItems as $plat): 
-                            $pLink = $plat['link'] ?? '#';
-                            $pImg = !empty($plat['image']) ? getImageUrl($plat['image']) : '';
-                            $pName = $plat['name'] ?? '';
-                            $pBg = $plat['bg'] ?? '#ffffff';
-                            $pText = $plat['text'] ?? '#111827';
-                        ?>
-                        <a href="<?php echo htmlspecialchars($pLink); ?>" target="_blank" class="w-full lg:w-auto h-[58px] px-4 lg:px-6 rounded flex items-center justify-center gap-2 lg:gap-3 shadow-lg hover:shadow-xl transition-all transform hover:-translate-y-1 group border border-gray-100" style="background-color: <?php echo $pBg; ?>; color: <?php echo $pText; ?>;" title="<?php echo htmlspecialchars($pName); ?>">
-                            <?php if ($pImg): ?>
-                                <img src="<?php echo htmlspecialchars($pImg); ?>" alt="" class="h-6 lg:h-8 w-auto object-contain rounded-full">
-                            <?php endif; ?>
-                            <?php if (!empty($pName)): ?>
-                                <span class="font-bold uppercase text-[10px] lg:text-[11px] tracking-widest truncate" style="color: <?php echo $pText; ?>;"><?php echo htmlspecialchars($pName); ?></span>
-                            <?php endif; ?>
-                        </a>
-                        <?php endforeach; ?>
+                <!-- Add To Cart Button Row -->
+                <div class="flex flex-col sm:flex-row items-center gap-3 justify-start mb-4 sm:mb-8 max-w-xl">
+                    <button id="special-add-to-cart-btn" onclick="spAddToCart(<?php echo $productData['product_id']; ?>, this, <?php echo htmlspecialchars(json_encode($firstVariant['variant_attributes'] ?? (object)[])); ?>, parseInt(document.getElementById('sp-qty').value || 1))" 
+                            data-product-id="<?php echo $productData['product_id']; ?>"
+                            data-product-name="<?php echo htmlspecialchars($productData['name'] ?? ''); ?>"
+                            data-product-price="<?php echo $price; ?>"
+                            data-product-slug="<?php echo htmlspecialchars($productData['slug'] ?? ''); ?>"
+                            class="bg-[#045d36] hover:bg-[#034729] text-white w-full sm:w-auto px-10 h-[50px] rounded-xl text-xs sm:text-sm font-extrabold tracking-wider uppercase transition-all shadow-md hover:shadow-lg flex items-center justify-center gap-2.5 <?php echo $isOutOfStock ? 'opacity-50 cursor-not-allowed' : ''; ?>" data-loading-text="Adding..." <?php echo $isOutOfStock ? 'disabled' : ''; ?>>
+                        <i class="fas fa-shopping-cart text-xs sm:text-sm"></i>
+                        <span><?php echo $isOutOfStock ? 'Out of Stock' : 'ADD TO CART'; ?></span>
+                    </button>
+
+                    <?php foreach ($platformItems as $plat): 
+                        $pLink = $plat['link'] ?? '#';
+                        $pImg = !empty($plat['image']) ? getImageUrl($plat['image']) : '';
+                        $pName = $plat['name'] ?? '';
+                        $pBg = $plat['bg'] ?? '#ffffff';
+                        $pText = $plat['text'] ?? '#111827';
+                    ?>
+                    <a href="<?php echo htmlspecialchars($pLink); ?>" target="_blank" class="w-full sm:w-auto h-[50px] px-4 rounded-xl flex items-center justify-center gap-2 shadow-xs hover:shadow transition-all group border border-gray-200" style="background-color: <?php echo $pBg; ?>; color: <?php echo $pText; ?>;" title="<?php echo htmlspecialchars($pName); ?>">
+                        <?php if ($pImg): ?>
+                            <img src="<?php echo htmlspecialchars($pImg); ?>" alt="" class="h-5 w-auto object-contain rounded-full">
+                        <?php endif; ?>
+                        <?php if (!empty($pName)): ?>
+                            <span class="font-bold uppercase text-[10px] tracking-widest truncate" style="color: <?php echo $pText; ?>;"><?php echo htmlspecialchars($pName); ?></span>
+                        <?php endif; ?>
+                    </a>
+                    <?php endforeach; ?>
+                </div>
+
+                <!-- Trust Badges Row -->
+                <div class="grid grid-cols-3 gap-2 sm:gap-4 pt-2 sm:pt-5 max-w-xl mx-auto lg:mx-0 text-left">
+                    <div class="flex flex-col sm:flex-row items-center sm:items-start gap-1.5 sm:gap-3 text-center sm:text-left">
+                        <div class="w-8 h-8 sm:w-10 sm:h-10 rounded-lg bg-emerald-50 text-[#045d36] flex items-center justify-center text-xs sm:text-sm font-bold flex-shrink-0">
+                            <i class="fas fa-truck"></i>
+                        </div>
+                        <div>
+                            <p class="text-[11px] sm:text-xs font-bold text-gray-900 leading-tight">Free Shipping</p>
+                            <p class="text-[9px] sm:text-[11px] text-gray-500 leading-tight mt-0.5 hidden sm:block">Orders over ₹999</p>
+                        </div>
+                    </div>
+                    <div class="flex flex-col sm:flex-row items-center sm:items-start gap-1.5 sm:gap-3 text-center sm:text-left">
+                        <div class="w-8 h-8 sm:w-10 sm:h-10 rounded-lg bg-emerald-50 text-[#045d36] flex items-center justify-center text-xs sm:text-sm font-bold flex-shrink-0">
+                            <i class="fas fa-shield-alt"></i>
+                        </div>
+                        <div>
+                            <p class="text-[11px] sm:text-xs font-bold text-gray-900 leading-tight">Secure Payment</p>
+                            <p class="text-[9px] sm:text-[11px] text-gray-500 leading-tight mt-0.5 hidden sm:block">100% Encrypted</p>
+                        </div>
+                    </div>
+                    <div class="flex flex-col sm:flex-row items-center sm:items-start gap-1.5 sm:gap-3 text-center sm:text-left">
+                        <div class="w-8 h-8 sm:w-10 sm:h-10 rounded-lg bg-emerald-50 text-[#045d36] flex items-center justify-center text-xs sm:text-sm font-bold flex-shrink-0">
+                            <i class="fas fa-undo"></i>
+                        </div>
+                        <div>
+                            <p class="text-[11px] sm:text-xs font-bold text-gray-900 leading-tight">Easy Returns</p>
+                            <p class="text-[9px] sm:text-[11px] text-gray-500 leading-tight mt-0.5 hidden sm:block">7 Days Policy</p>
+                        </div>
+                    </div>
                 </div>
             </div>
             
@@ -485,8 +562,8 @@ require_once __DIR__ . '/includes/header.php';
 
     // 1. Stats Section
     $showStats = $statsGrp['show'] ?? ($landingPage['show_stats'] ?? 1);
-    if ($showStats) {
-        $statsItems = $statsGrp['items'] ?? [];
+    $statsItems = $statsGrp['items'] ?? [];
+    if ($showStats && !empty($statsItems)) {
         ob_start(); ?>
         <section class="py-8 stats-section">
             <div class="container mx-auto px-6">
@@ -563,27 +640,85 @@ require_once __DIR__ . '/includes/header.php';
     // 3. Why Section
     $showWhy = $whyGrp['show'] ?? ($landingPage['show_why'] ?? 1);
     if ($showWhy) {
-        $whyTitle = $whyGrp['title'] ?? 'Why Us?';
+        $whyTitle = $whyGrp['title'] ?? 'WHY US?';
         $whyItems = $whyGrp['items'] ?? [];
         if (empty($whyItems)) {
             $whyItems = [
-                ['icon' => 'fas fa-leaf', 'title' => 'Natural', 'desc' => '100% natural ingredients sourced responsibly.'],
-                ['icon' => 'fas fa-ban', 'title' => 'No Chemicals', 'desc' => 'Free from harmful chemicals and parabens.'],
-                ['icon' => 'fas fa-seedling', 'title' => 'Organic', 'desc' => 'Certified organic compounds for your skin.']
+                [
+                    'title' => 'Effective Protection', 
+                    'desc' => 'Fast and powerful action to eliminate cockroaches and keep your home protected for longer.',
+                    'bg' => 'bg-[#eaf5ed]',
+                    'border' => 'border-[#d6ebd9]',
+                    'shadow' => 'shadow-[#eaf5ed]',
+                    'icon_color' => 'text-[#045d36]',
+                    'svg' => '<svg class="w-10 h-10 text-[#045d36]" fill="currentColor" viewBox="0 0 24 24"><path d="M17 8C8 10 5.9 16.5 4.2 21.8c-.4.4-1.1.1-1.1-.5 0-3.5 1.2-8.6 4.9-12.3C11.5 5.5 17 5 17 5s-.5 5.5-4.5 9.5c.3-.3.6-.6.9-.9C16.5 10.5 17 8 17 8z"/><path d="M12 14c-4 1-7 4.5-8.5 7.5 3-1.5 6.5-4.5 7.5-8.5z"/></svg>'
+                ],
+                [
+                    'title' => 'Safe for Family', 
+                    'desc' => 'Formulated to be safe for your family and pets when used as directed.',
+                    'bg' => 'bg-[#e8f2fc]',
+                    'border' => 'border-[#d2e4f7]',
+                    'shadow' => 'shadow-[#e8f2fc]',
+                    'icon_color' => 'text-[#0f4c81]',
+                    'svg' => '<svg class="w-10 h-10 text-[#0f4c81]" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/></svg>'
+                ],
+                [
+                    'title' => 'Long-Lasting Results', 
+                    'desc' => 'Provides continuous protection to keep cockroaches away and maintain a cleaner, healthier home.',
+                    'bg' => 'bg-[#fef7e7]',
+                    'border' => 'border-[#faecd0]',
+                    'shadow' => 'shadow-[#fef7e7]',
+                    'icon_color' => 'text-[#045d36]',
+                    'svg' => '<svg class="w-10 h-10 text-[#045d36]" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"/></svg>'
+                ]
             ];
+        } else {
+            // Map preset visual metadata to items from DB
+            $meta = [
+                ['bg' => 'bg-[#eaf5ed]', 'border' => 'border-[#d6ebd9]', 'shadow' => 'shadow-[#eaf5ed]', 'svg' => '<svg class="w-10 h-10 text-[#045d36]" fill="currentColor" viewBox="0 0 24 24"><path d="M17 8C8 10 5.9 16.5 4.2 21.8c-.4.4-1.1.1-1.1-.5 0-3.5 1.2-8.6 4.9-12.3C11.5 5.5 17 5 17 5s-.5 5.5-4.5 9.5c.3-.3.6-.6.9-.9C16.5 10.5 17 8 17 8z"/><path d="M12 14c-4 1-7 4.5-8.5 7.5 3-1.5 6.5-4.5 7.5-8.5z"/></svg>'],
+                ['bg' => 'bg-[#e8f2fc]', 'border' => 'border-[#d2e4f7]', 'shadow' => 'shadow-[#e8f2fc]', 'svg' => '<svg class="w-10 h-10 text-[#0f4c81]" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/></svg>'],
+                ['bg' => 'bg-[#fef7e7]', 'border' => 'border-[#faecd0]', 'shadow' => 'shadow-[#fef7e7]', 'svg' => '<svg class="w-10 h-10 text-[#045d36]" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"/></svg>']
+            ];
+            foreach ($whyItems as $idx => &$item) {
+                $m = $meta[$idx % 3];
+                $item['bg'] = $m['bg'];
+                $item['border'] = $m['border'];
+                $item['shadow'] = $m['shadow'];
+                $item['svg'] = $m['svg'];
+            }
         }
         ob_start(); ?>
-        <section class="py-10 md:py-16 why-section">
-            <div class="container mx-auto px-6 text-center">
-                <h2 class="text-5xl font-heading uppercase tracking-widest mb-6"><?php echo htmlspecialchars($whyTitle); ?></h2>
-                <div class="grid grid-cols-1 md:grid-cols-3 gap-16 max-w-6xl mx-auto mt-20">
-                    <?php foreach ($whyItems as $why): ?>
-                    <div class="flex flex-col items-center">
-                        <div class="w-20 h-20 mb-8 text-5xl accent-color">
-                            <i class="<?php echo htmlspecialchars($why['icon'] ?? 'fas fa-check'); ?>"></i>
+        <section class="pt-3 pb-6 md:pt-10 md:pb-16 why-section">
+            <div class="container mx-auto px-4 sm:px-6 text-center">
+                <!-- Header without lines -->
+                <div class="text-center mb-5 md:mb-12">
+                    <h2 class="text-2xl sm:text-3xl md:text-4xl font-semibold uppercase tracking-wider text-[#111827] no-underline" style="text-decoration: none !important; border-bottom: none !important;"><?php echo htmlspecialchars($whyTitle); ?></h2>
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-6 sm:gap-8 max-w-6xl mx-auto">
+                    <?php foreach ($whyItems as $idx => $why): 
+                        $cardStyles = [
+                            ['badge' => 'bg-emerald-50 text-[#045d36] border-emerald-200/80 shadow-emerald-100', 'icon' => 'fas fa-shield-virus'],
+                            ['badge' => 'bg-sky-50 text-[#0f4c81] border-sky-200/80 shadow-sky-100', 'icon' => 'fas fa-user-shield'],
+                            ['badge' => 'bg-amber-50 text-[#b45309] border-amber-200/80 shadow-amber-100', 'icon' => 'fas fa-clock-rotate-left']
+                        ];
+                        $st = $cardStyles[$idx % 3];
+                    ?>
+                    <div class="flex flex-col items-center text-center p-6 sm:p-8 rounded-2xl bg-white border border-gray-100 shadow-sm hover:shadow-xl transition-all duration-300 hover:-translate-y-1.5 group relative">
+                        <!-- Modern Dual Ring Icon Badge -->
+                        <div class="w-16 h-16 sm:w-20 sm:h-20 rounded-2xl <?php echo $st['badge']; ?> border flex items-center justify-center mb-5 shadow-xs transform group-hover:scale-110 transition-transform duration-300">
+                            <?php if (!empty($why['icon'])): ?>
+                                <i class="<?php echo htmlspecialchars($why['icon']); ?> text-2xl sm:text-3xl"></i>
+                            <?php else: ?>
+                                <i class="<?php echo $st['icon']; ?> text-2xl sm:text-3xl"></i>
+                            <?php endif; ?>
                         </div>
-                        <h3 class="font-bold text-2xl mb-4"><?php echo htmlspecialchars($why['title'] ?? ''); ?></h3>
-                        <p class="text-base leading-relaxed max-w-sm opacity-70"><?php echo htmlspecialchars($why['desc'] ?? ''); ?></p>
+
+                        <!-- Title -->
+                        <h3 class="font-semibold text-lg sm:text-xl text-gray-900 mb-2 group-hover:text-[#045d36] transition-colors"><?php echo htmlspecialchars($why['title'] ?? ''); ?></h3>
+
+                        <!-- Description -->
+                        <p class="text-xs sm:text-sm leading-relaxed text-gray-500 max-w-xs opacity-90"><?php echo htmlspecialchars($why['desc'] ?? ''); ?></p>
                     </div>
                     <?php endforeach; ?>
                 </div>
@@ -595,36 +730,48 @@ require_once __DIR__ . '/includes/header.php';
     // 4. About Section
     $showAbout = $aboutGrp['show'] ?? 1;
     if ($showAbout) {
-        $aboutTitle = !empty($aboutGrp['title']) ? $aboutGrp['title'] : 'About Our Product';
+        $aboutTitle = !empty($aboutGrp['title']) ? $aboutGrp['title'] : 'ABOUT OUR PRODUCT';
         $aboutText = !empty($aboutGrp['text']) ? $aboutGrp['text'] : ($productData['description'] ?? '');
+        
+        $aboutImage = '';
         if (!empty($aboutGrp['image'])) {
             $aboutImage = getImageUrl($aboutGrp['image']);
         } else {
-            $aboutImage = $galleryPool[$currentImgIdx % $galleryCount];
-            $currentImgIdx++;
+            $aboutImage = getImageUrl('assets/uploads/newsletter/1790255189_16890dad-1f8b-4948-b97e-511b06933cc1.png');
         }
         ob_start(); ?>
-        <section class="py-10 md:py-16 about-section overflow-hidden">
-            <div class="container mx-auto px-6">
-                <div class="flex flex-col lg:flex-row items-center gap-20">
-                    <div class="lg:w-1/2">
-                        <h2 class="text-4xl md:text-5xl font-heading mb-8 uppercase tracking-widest"><?php echo htmlspecialchars($aboutTitle); ?></h2>
-                        <div class="prose prose-lg opacity-80 leading-relaxed mb-8" style="color: inherit;">
+        <section class="py-6 md:py-10 about-section relative overflow-hidden bg-white">
+            <div class="container mx-auto px-6 relative z-10">
+                <div class="flex flex-col-reverse lg:flex-row items-center gap-8 lg:gap-16">
+                    <!-- Column: Content (Below Image on Mobile, Left on Desktop) -->
+                    <div class="lg:w-1/2 text-center lg:text-left">
+                        <!-- Heading -->
+                        <h2 class="text-2xl sm:text-3xl md:text-4xl font-semibold uppercase tracking-wider text-[#111827] mb-3 sm:mb-6 no-underline" style="text-decoration: none !important; border-bottom: none !important;"><?php echo htmlspecialchars($aboutTitle); ?></h2>
+                        
+                        <!-- Description -->
+                        <div class="text-gray-600 text-sm md:text-base leading-relaxed mb-4 sm:mb-8 max-w-xl mx-auto lg:mx-0 opacity-90 prose">
                             <?php echo $aboutText; ?>
                         </div>
-                        <div class="mt-6">
-                             <button id="special-add-to-cart-btn" onclick="spAddToCart(<?php echo $productData['product_id']; ?>, this)" 
-                                     data-product-id="<?php echo $productData['product_id']; ?>"
-                                     data-product-name="<?php echo htmlspecialchars($productData['name'] ?? ''); ?>"
-                                     data-product-price="<?php echo $price; ?>"
-                                     data-product-slug="<?php echo htmlspecialchars($productData['slug'] ?? ''); ?>"
-                                     class="btn-accent px-10 py-4 rounded text-lg font-medium tracking-wide uppercase transition shadow-lg hover:shadow-xl <?php echo $isOutOfStock ? 'opacity-50 cursor-not-allowed' : ''; ?>" data-loading-text="Adding..." <?php echo $isOutOfStock ? 'disabled' : ''; ?>>
-                                <?php echo $isOutOfStock ? 'Out of Stock' : 'Shop Now'; ?>
-                             </button>
+
+                        <!-- Action Button: SHOP NOW -->
+                        <div class="flex justify-center lg:justify-start">
+                            <button onclick="spAddToCart(<?php echo $productData['product_id']; ?>, this)" 
+                                    class="bg-[#045d36] hover:bg-[#034729] text-white px-8 py-3.5 rounded-xl text-xs sm:text-sm font-extrabold tracking-wider uppercase transition-all shadow-md hover:shadow-lg flex items-center justify-center gap-2 cursor-pointer">
+                                <span>SHOP NOW</span>
+                            </button>
                         </div>
                     </div>
-                    <div class="lg:w-1/2 relative">
-                         <img src="<?php echo htmlspecialchars($aboutImage); ?>" alt="About" class="w-full max-w-xl mx-auto object-cover rounded shadow-2xl bg-white p-6" onerror="this.src='https://placehold.co/600x600?text=About+Image'">
+
+                    <!-- Right Column: Padded White Outer Card with Cream Inner Frame -->
+                    <div class="lg:w-1/2 relative flex justify-center items-center w-full">
+                        <div class="relative w-full max-w-lg lg:max-w-xl bg-white p-4 sm:p-6 rounded-xl shadow-2xl border border-gray-100/80 group">
+                            <div class="w-full aspect-[4/3] bg-[#f7f3e9] rounded-lg p-6 flex items-center justify-center">
+                                <img src="<?php echo htmlspecialchars($aboutImage); ?>" 
+                                     alt="<?php echo htmlspecialchars($aboutTitle); ?>" 
+                                     class="w-full h-full max-h-[320px] object-contain transform group-hover:scale-105 transition duration-500 ease-out" 
+                                     onerror="this.src='<?php echo getImageUrl('assets/uploads/newsletter/1790255189_16890dad-1f8b-4948-b97e-511b06933cc1.png'); ?>'">
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -637,9 +784,9 @@ require_once __DIR__ . '/includes/header.php';
     if ($showTesti) {
         $testiTitle = $testiGrp['title'] ?? 'Testimonials';
         ob_start(); ?>
-        <section class="py-10 md:py-16 testi-section border-t border-gray-100">
+        <section class="py-6 md:py-10 testi-section border-t border-gray-100">
              <div class="container mx-auto px-6 text-center">
-                <h2 class="text-5xl font-heading font-thin mb-20 uppercase tracking-widest"><?php echo htmlspecialchars($testiTitle); ?></h2>
+                <h2 class="text-2xl sm:text-3xl md:text-4xl font-semibold uppercase tracking-wider text-[#111827] mb-8 sm:mb-12 no-underline" style="text-decoration: none !important; border-bottom: none !important;"><?php echo htmlspecialchars($testiTitle); ?></h2>
                 <div id="testimonialsList" class="mx-auto">
                     <div class="text-center text-gray-500 py-12 text-xl">Loading reviews...</div>
                 </div>
@@ -651,26 +798,55 @@ require_once __DIR__ . '/includes/header.php';
     // 6. Newsletter Section
     $showNews = $newsGrp['show'] ?? 1;
     if ($showNews) {
-        $newsTitle = $newsGrp['title'] ?? 'Subscribe News';
-        $newsText = $newsGrp['text'] ?? 'Enter your email below.';
-        $newsImage = $galleryPool[$currentImgIdx % $galleryCount];
-        $currentImgIdx++;
+        $newsTitle = !empty($newsGrp['title']) ? $newsGrp['title'] : 'SUBSCRIBE TO OUR NEWSLETTER';
+        $newsText = !empty($newsGrp['text']) ? $newsGrp['text'] : 'Get exclusive deals, tips, and fast updates directly to your inbox.';
+        
+        $newsImage = '';
+        if (!empty($newsGrp['image'])) {
+            $newsImage = getImageUrl($newsGrp['image']);
+        } elseif (!empty($mainImage)) {
+            $newsImage = $mainImage;
+        } else {
+            $newsImage = getImageUrl('assets/uploads/newsletter/1790255189_16890dad-1f8b-4948-b97e-511b06933cc1.png');
+        }
         ob_start(); ?>
-        <section class="py-10 md:py-16 news-section">
+        <section class="py-6 md:py-10 news-section bg-white">
             <div class="container mx-auto px-4 md:px-6">
-                <div class="flex flex-col md:flex-row items-center justify-between max-w-6xl mx-auto bg-white p-6 md:p-12 lg:p-16 rounded-2xl shadow-lg border border-gray-100/50">
-                    <div class="w-full md:w-5/12 mb-8 md:mb-0 md:pr-10 border-b md:border-b-0 md:border-r border-gray-100 flex justify-center pb-8 md:pb-0">
-                         <img src="<?php echo htmlspecialchars($newsImage); ?>" alt="Newsletter" class="w-100 md:w-100 h-auto object-contain drop-shadow-md hover:scale-105 transition duration-300" onerror="this.src='https://placehold.co/600x600?text=Newsletter+Image'">
+                <div class="flex flex-col md:flex-row items-center justify-between max-w-5xl mx-auto bg-white p-6 sm:p-10 md:p-12 rounded-3xl shadow-xl border border-gray-100 relative overflow-hidden">
+                    <!-- Image Side -->
+                    <div class="w-full md:w-5/12 mb-6 md:mb-0 flex justify-center items-center relative z-10">
+                        <div class="w-48 sm:w-60 md:w-72 aspect-square rounded-2xl bg-emerald-50/60 p-4 flex items-center justify-center border border-emerald-100/60 shadow-xs">
+                             <img src="<?php echo htmlspecialchars($newsImage); ?>" 
+                                  alt="Newsletter" 
+                                  class="w-full h-full object-contain drop-shadow-xl transform hover:scale-105 transition duration-500" 
+                                  onerror="this.src='<?php echo getImageUrl('assets/uploads/newsletter/1790255189_16890dad-1f8b-4948-b97e-511b06933cc1.png'); ?>'">
+                        </div>
                     </div>
-                    <div class="w-full md:w-7/12 md:pl-10 lg:pl-16 text-center md:text-left">
-                         <h2 class="text-4xl md:text-5xl font-heading uppercase tracking-widest mb-4 text-gray-900"><?php echo htmlspecialchars($newsTitle); ?></h2>
-                         <p class="text-gray-500 text-base md:text-lg mb-8 leading-relaxed max-w-lg mx-auto md:mx-0"><?php echo htmlspecialchars($newsText); ?></p>
-                         <form id="landingNewsletterForm" class="flex flex-col sm:flex-row w-full gap-3 sm:gap-0">
-                             <input type="email" name="email" placeholder="Enter your email" required class="w-full flex-grow px-5 py-3 md:px-6 md:py-4 bg-gray-50 border border-gray-200 rounded-lg sm:rounded-r-none focus:outline-none text-base md:text-lg focus:ring-2 focus:ring-gray-200 transition">
-                              <button type="submit" id="special-sub-btn" class="w-full sm:w-auto btn-accent px-8 py-3 md:py-4 rounded-lg sm:rounded-l-none text-sm md:text-base font-bold uppercase transition whitespace-nowrap shadow-md hover:shadow-lg transform active:scale-95" data-loading-text="Subscribing...">Get Started</button>
+
+                    <!-- Content Side -->
+                    <div class="w-full md:w-7/12 md:pl-8 lg:pl-12 text-center md:text-left relative z-10">
+                         <span class="inline-block px-3 py-1 rounded-full text-[10px] sm:text-[11px] font-semibold uppercase tracking-widest bg-emerald-50 text-[#045d36] mb-3">
+                             STAY UPDATED
+                         </span>
+                         <h2 class="text-2xl sm:text-3xl md:text-4xl font-semibold uppercase tracking-wider text-[#111827] mb-3 leading-tight no-underline" style="text-decoration: none !important; border-bottom: none !important;">
+                             <?php echo htmlspecialchars($newsTitle); ?>
+                         </h2>
+                         <p class="text-gray-500 text-xs sm:text-sm md:text-base mb-6 leading-relaxed max-w-lg mx-auto md:mx-0">
+                             <?php echo htmlspecialchars($newsText); ?>
+                         </p>
+                         
+                         <form id="landingNewsletterForm" class="flex flex-col sm:flex-row w-full max-w-md mx-auto md:mx-0 gap-2.5 sm:gap-0">
+                             <input type="email" name="email" placeholder="Enter your email address" required class="w-full flex-grow px-4 py-3 sm:px-5 sm:py-3.5 bg-gray-50 border border-gray-300 rounded-xl sm:rounded-r-none focus:outline-none text-xs sm:text-sm focus:border-[#045d36] transition">
+                             <button type="submit" id="special-sub-btn" class="w-full sm:w-auto bg-[#045d36] hover:bg-[#034729] text-white px-6 py-3 sm:py-3.5 rounded-xl sm:rounded-l-none text-xs sm:text-sm font-extrabold uppercase tracking-wider transition whitespace-nowrap shadow-md hover:shadow-lg flex items-center justify-center gap-2 cursor-pointer" data-loading-text="Subscribing...">
+                                 <span>SUBSCRIBE</span>
+                                 <i class="fas fa-paper-plane text-xs"></i>
+                             </button>
                          </form>
-                         <div id="landingNewsletterMessage" class="hidden text-center text-sm mt-3"></div>
-                         <p class="text-xs text-gray-400 mt-4"><i class="fas fa-lock mr-1"></i> Your privacy is our priority.</p>
+                         <div id="landingNewsletterMessage" class="hidden text-center md:text-left text-xs sm:text-sm mt-3 font-semibold"></div>
+                         <p class="text-[11px] text-gray-400 mt-4 flex items-center justify-center md:justify-start gap-1">
+                             <i class="fas fa-lock text-[10px]"></i> 
+                             <span>Your privacy is 100% protected.</span>
+                         </p>
                     </div>
                 </div>
             </div>
@@ -695,7 +871,7 @@ require_once __DIR__ . '/includes/header.php';
                             const data = await res.json();
                             if (messageDiv) {
                                 messageDiv.textContent = data.message || 'Subscribed!';
-                                messageDiv.className = `text-center text-sm mt-3 ${data.success ? 'text-green-600' : 'text-red-600'}`;
+                                messageDiv.className = `text-center md:text-left text-xs sm:text-sm mt-3 font-semibold ${data.success ? 'text-emerald-600' : 'text-red-600'}`;
                                 messageDiv.classList.remove('hidden');
                             }
                         } catch (err) { console.error(err); }
@@ -731,7 +907,7 @@ require_once __DIR__ . '/includes/header.php';
     (function() {
         const manualReviews = <?php echo json_encode($testiGrp['items'] ?? []); ?>;
         const container = document.getElementById('testimonialsList');
-        const productId = '<?php echo $productData['id']; ?>';
+        const productId = '<?php echo $productData['product_id'] ?? ($productData['id'] ?? ''); ?>';
         const baseUrl = '<?php echo $baseUrl; ?>';
 
         const renderReviews = (reviews) => {
@@ -743,6 +919,8 @@ require_once __DIR__ . '/includes/header.php';
             const createCard = (review, isSlide = false) => {
                 const name = review.name || review.user_name || 'Anonymous';
                 const comment = review.comment || '';
+                const rating = parseInt(review.rating || 5);
+                const stars = '★'.repeat(rating) + '☆'.repeat(5 - rating);
                 
                 // Determine Avatar
                 let imgSrc = `https://ui-avatars.com/api/?name=${encodeURIComponent(name)}&background=random`;
@@ -752,19 +930,25 @@ require_once __DIR__ . '/includes/header.php';
 
                 return `
                     <div class="${isSlide ? 'swiper-slide h-auto' : 'h-full'}">
-                        <div class="flex flex-col items-start bg-gray-50 p-10 rounded-xl relative text-left h-full">
-                            <i class="fas fa-quote-left text-gray-200 text-5xl mb-6"></i>
-                            <p class="text-base text-gray-500 mb-6 italic leading-loose flex-grow">"${escapeHtml(comment)}"</p>
-                            <div class="flex items-center mt-auto w-full pt-4 border-t border-gray-100">
-                                <img src="${imgSrc}" class="w-12 h-12 rounded-full mr-4 shadow-sm object-cover" onerror="this.src='https://ui-avatars.com/api/?name=${encodeURIComponent(name)}&background=random'">
-                                <span class="font-bold text-lg text-gray-800">${escapeHtml(name)}</span>
+                        <div class="flex flex-col items-start bg-gray-50 p-6 sm:p-8 rounded-2xl relative text-left h-full border border-gray-100 shadow-xs">
+                            <div class="flex items-center justify-between w-full mb-4">
+                                <div class="text-amber-400 text-sm font-bold tracking-widest">${stars}</div>
+                                <i class="fas fa-quote-right text-gray-200 text-3xl"></i>
+                            </div>
+                            <p class="text-xs sm:text-sm text-gray-600 mb-6 leading-relaxed flex-grow">"${escapeHtml(comment)}"</p>
+                            <div class="flex items-center mt-auto w-full pt-4 border-t border-gray-200/60">
+                                <img src="${imgSrc}" class="w-10 h-10 rounded-full mr-3 shadow-xs object-cover" onerror="this.src='https://ui-avatars.com/api/?name=${encodeURIComponent(name)}&background=random'">
+                                <div>
+                                    <span class="font-bold text-sm text-gray-900 block leading-tight">${escapeHtml(name)}</span>
+                                    <span class="text-[11px] text-emerald-600 font-semibold flex items-center gap-1"><i class="fas fa-check-circle text-[10px]"></i> Verified Buyer</span>
+                                </div>
                             </div>
                         </div>
                     </div>
                 `;
             };
 
-            const isSlider = reviews.length > 3;
+            const isSlider = reviews.length >= 1;
 
             if (isSlider) {
                 container.innerHTML = `
@@ -896,6 +1080,7 @@ document.addEventListener('scroll', function() {
     const stickyBar = document.getElementById('sticky-bar');
     const heroSection = document.querySelector('.hero-section'); 
     const footer = document.querySelector('footer');
+    const backToTopBtn = document.getElementById('backToTop');
     
     if (!stickyBar || !heroSection) return;
     
@@ -903,7 +1088,6 @@ document.addEventListener('scroll', function() {
     // Calculate trigger point: roughly passed the hero section
     const heroHeight = heroSection.offsetHeight;
     const heroBottom = heroSection.offsetTop + heroHeight;
-    const triggerPoint = heroBottom - 200; 
     
     // Check if we hit footer
     let footerTop = document.documentElement.scrollHeight; 
@@ -912,8 +1096,14 @@ document.addEventListener('scroll', function() {
     // Show if passed hero AND not yet at footer (with buffer)
     if (scrollY > (heroBottom - 100) && (scrollY + window.innerHeight) < (footerTop + 50)) {
         stickyBar.classList.remove('translate-y-full');
+        if (backToTopBtn && window.innerWidth < 768) {
+            backToTopBtn.style.bottom = '80px';
+        }
     } else {
         stickyBar.classList.add('translate-y-full');
+        if (backToTopBtn && window.innerWidth < 768) {
+            backToTopBtn.style.bottom = '20px';
+        }
     }
 });
 

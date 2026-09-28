@@ -826,12 +826,12 @@ $gs_tooltip_text = getGlobalStyle('tooltip_text_color', $globalCardStyles, '#fff
     
     <!-- Custom CSS -->
     <link rel="preload"
-        href="<?php echo $baseUrl; ?>/assets/css/main7.css"
+        href="<?php echo $baseUrl; ?>/assets/css/main7.css?v=<?php echo time(); ?>"
         as="style"
         onload="this.onload=null;this.rel='stylesheet'">
 
     <noscript>
-        <link rel="stylesheet" href="<?php echo $baseUrl; ?>/assets/css/main7.css">
+        <link rel="stylesheet" href="<?php echo $baseUrl; ?>/assets/css/main7.css?v=<?php echo time(); ?>">
     </noscript>
     
     <!-- Dynamic Header Styles -->
