@@ -1,15 +1,11 @@
 <?php
-// Load functions if not already loaded
 if (!function_exists('getBaseUrl')) {
     require_once __DIR__ . '/functions.php';
 }
-
 require_once __DIR__ . '/../classes/Auth.php';
 require_once __DIR__ . '/../classes/CustomerAuth.php';
-
 $auth = new Auth();
 $customerAuth = new CustomerAuth();
-
 $currentUser = $auth->getCurrentUser();
 $currentCustomer = $customerAuth->getCurrentCustomer();
 
@@ -32,11 +28,8 @@ require_once __DIR__ . '/../classes/Settings.php';
 $db = Database::getInstance();
 $settingsObj = new Settings();
 $storeId = getCurrentStoreId();
-
-// Filter content by detected Store ID
 $landingPagesList = $db->fetchAll("SELECT name, slug FROM landing_pages WHERE store_id = ? OR store_id IS NULL ORDER BY name ASC", [$storeId]);
 
-// Fetch Header Menu (Store Specific)
 $headerMenuIdVal = $db->fetchOne("SELECT id FROM menus WHERE location = 'header_main' AND (store_id = ? OR store_id IS NULL) ORDER BY store_id DESC LIMIT 1", [$storeId]);
 $headerMenuItems = [];
 if ($headerMenuIdVal) {
@@ -45,8 +38,6 @@ if ($headerMenuIdVal) {
         $headerMenuItems = buildMenuTree($allItems);
     }
 }
-
-// Fetch Header Settings (Automatic store filtering via Settings class)
 $siteLogoType = $settingsObj->get('site_logo_type', 'image');
 $siteLogoText = $settingsObj->get('site_logo_text', 'CookPro');
 $siteLogo = $settingsObj->get('site_logo', 'logo.png');
@@ -54,16 +45,12 @@ $showSearchIcon = $settingsObj->get('header_icon_search', '1') == '1';
 $showUserIcon = $settingsObj->get('header_icon_user', '1') == '1';
 $showWishlistIcon = $settingsObj->get('header_icon_wishlist', '1') == '1';
 $showCartIcon = $settingsObj->get('header_icon_cart', '1') == '1';
-
-// Fetch SEO & Branding Settings
 $siteTitleSuffix = $settingsObj->get('site_title_suffix', 'CookPro - Elegant Jewelry Store');
 $faviconPng = $settingsObj->get('favicon_png', '');
 $faviconIco = $settingsObj->get('favicon_ico', ''); 
 $globalMetaDesc = $settingsObj->get('global_meta_description', '');
 $globalSchema = $settingsObj->get('global_schema_json', '');
 $headerScripts = $settingsObj->get('header_scripts', '');
-
-// Fetch Top Bar Settings
 $topbarSlidesRaw = $settingsObj->get('topbar_slides', '[]');
 $topbarSlides = json_decode($topbarSlidesRaw, true) ?: [
     ['text' => '100% secure online payment', 'link' => '', 'link_text' => ''],
@@ -71,7 +58,6 @@ $topbarSlides = json_decode($topbarSlidesRaw, true) ?: [
     ['text' => 'Sign up for 10% off your first order.', 'link' => 'register', 'link_text' => 'Sign up']
 
 ];
-
 $topbarLinksRaw = $settingsObj->get('topbar_links', '[]');
 $topbarLinks = json_decode($topbarLinksRaw, true) ?: [
     ['label' => 'Contact Us', 'url' => 'contact'],
@@ -79,8 +65,6 @@ $topbarLinks = json_decode($topbarLinksRaw, true) ?: [
     ['label' => 'Help Center', 'url' => 'help'],
     ['label' => 'Our Store', 'url' => 'store']
 ];
-
-// Fetch Header Visual Styles
 $headerBg = $settingsObj->get('header_bg_color', '#ffffff');
 $headerText = $settingsObj->get('header_text_color', '#000000');
 $submenuBg = $settingsObj->get('submenu_bg_color', '#ffffff');
@@ -92,15 +76,10 @@ $headerHoverBg = $settingsObj->get('header_hover_bg_color', 'transparent');
 $topbarBg = $settingsObj->get('topbar_bg_color', '#000000');
 $topbarText = $settingsObj->get('topbar_text_color', '#ffffff');
 $topbarArrow = $settingsObj->get('topbar_arrow_color', '#9ca3af');
-
-// Fetch Breadcrumb Settings
 $breadcrumbText = $settingsObj->get('breadcrumb_text_color', '#6b7280');
 $breadcrumbHover = $settingsObj->get('breadcrumb_hover_color', '#111827');
-
-// Fetch Search Section Settings
 $searchSectionSettingsJson = $settingsObj->get('search_section_settings', '{}');
 $searchSectionSettings = json_decode($searchSectionSettingsJson, true);
-
 $ss_heading_text = $searchSectionSettings['heading_text'] ?? 'Search Our Site';
 $ss_trending_text = $searchSectionSettings['trending_text'] ?? 'Trending Search';
 $ss_popular_heading = $searchSectionSettings['popular_heading_text'] ?? 'Popular Products';
@@ -117,13 +96,7 @@ $ss_view_all_bg = $searchSectionSettings['view_all_bg_color'] ?? '#000000';
 $ss_view_all_text = $searchSectionSettings['view_all_text_color'] ?? '#ffffff';
 $ss_view_all_hover_bg = $searchSectionSettings['view_all_hover_bg_color'] ?? '#333333';
 $ss_view_all_hover_text = $searchSectionSettings['view_all_hover_text_color'] ?? '#ffffff';
-
-
-
-// Get base URL using the centralized function
 $baseUrl = getBaseUrl();
-
-// Ensure url() function is available
 if (!function_exists('url')) {
     function url($path = '') {
         $baseUrl = getBaseUrl();
@@ -145,39 +118,31 @@ if (!function_exists('url')) {
 <!DOCTYPE html>
 <html lang="en" class="overflow-x-hidden">
 <head>
-    <!-- Swiper CSS -->
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.css" />
     
-    <!-- Swiper JS -->
     <script src="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.js"></script>
 
     <?php 
-    // Google Tag Manager (Head)
     $gtmId = $settingsObj->get('gtm_id', '');
     if (!empty($gtmId)): 
     ?>
-    <!-- Google Tag Manager -->
     <script>(function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':
     new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],
     j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
     'https://www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);
     })(window,document,'script','dataLayer','<?php echo htmlspecialchars($gtmId); ?>');</script>
-    <!-- End Google Tag Manager -->
+    
     <?php endif; ?>
     
 <?php
-// Fetch Global Product Card Styles
 $globalCardStylesJson = $settingsObj->get('global_card_styles', '{}');
 $globalCardStyles = json_decode($globalCardStylesJson, true);
 
-// Utility for styles
 if (!function_exists('getGlobalStyle')) {
     function getGlobalStyle($key, $global, $default) {
         return !empty($global[$key]) ? $global[$key] : $default;
     }
 }
-
-// Assign variables for CSS
 $gs_card_bg = getGlobalStyle('card_bg_color', $globalCardStyles, '#ffffff');
 $gs_card_title = getGlobalStyle('card_title_color', $globalCardStyles, '#1f2937');
 $gs_price = getGlobalStyle('price_color', $globalCardStyles, '#1a3d32');
@@ -197,7 +162,6 @@ $gs_atc_hover_text = getGlobalStyle('atc_btn_hover_text_color', $globalCardStyle
 $gs_tooltip_bg = getGlobalStyle('tooltip_bg_color', $globalCardStyles, '#000000');
 $gs_tooltip_text = getGlobalStyle('tooltip_text_color', $globalCardStyles, '#ffffff');
 ?>
-    <!-- Dynamic Product Card Styles -->
     <style>
         :root {
             --card-bg: <?php echo $gs_card_bg; ?>;
@@ -219,9 +183,6 @@ $gs_tooltip_text = getGlobalStyle('tooltip_text_color', $globalCardStyles, '#fff
             --tooltip-bg: <?php echo $gs_tooltip_bg; ?>;
             --tooltip-text: <?php echo $gs_tooltip_text; ?>;
         }
-
-        /* Standard Product Card Styling */
-        /* Swiper Styles */
         .swiper-button-next,
         .swiper-button-prev {
             background-color: rgba(255, 255, 255, 0.9);
@@ -248,8 +209,6 @@ $gs_tooltip_text = getGlobalStyle('tooltip_text_color', $globalCardStyles, '#fff
         .swiper-pagination-bullet-active {
             background: var(--price-color, #1a3d32) !important;
         }
-
-        /* Swiper spacing fixes */
         .swiper {
             padding-bottom: 8px !important;
             padding-top: 10px !important;
@@ -267,8 +226,6 @@ $gs_tooltip_text = getGlobalStyle('tooltip_text_color', $globalCardStyles, '#fff
             background-color: var(--card-bg) !important;
             border: none !important;
         }
-
-        /* Skeleton Loader */
         .skeleton-loading {
             background-color: #f3f4f6;
             background-image: linear-gradient(90deg, #f3f4f6 0px, #e5e7eb 40px, #f3f4f6 80px);
@@ -331,8 +288,6 @@ $gs_tooltip_text = getGlobalStyle('tooltip_text_color', $globalCardStyles, '#fff
             background-color: var(--btn-hover-bg) !important;
             color: var(--btn-hover-icon) !important;
         }
-        
-        /* Specific override for Wishlist button */
         .product-card .wishlist-btn {
             background-color: var(--btn-bg) !important;
             color: var(--btn-icon) !important;
@@ -342,18 +297,14 @@ $gs_tooltip_text = getGlobalStyle('tooltip_text_color', $globalCardStyles, '#fff
             background-color: var(--btn-hover-bg) !important;
             color: var(--btn-hover-icon) !important;
         }
-        
-        /* Wishlist Active State */
         .product-card .wishlist-btn.bg-black,
         .product-card .wishlist-btn.wishlist-active {
             background-color: var(--btn-active-bg) !important;
             color: var(--btn-active-icon) !important;
         }
-        /* Ensure the icon remains visible in both states */
         .product-card .wishlist-btn i {
             color: inherit !important;
         }
-
         .product-card .atc-btn,
         .product-card .productAddToCartBtn,
         .product-card #shopAddToCartBtn,
@@ -381,8 +332,6 @@ $gs_tooltip_text = getGlobalStyle('tooltip_text_color', $globalCardStyles, '#fff
             color: var(--atc-hover-text) !important;
             border-color: var(--atc-hover-bg) !important;
         }
-
-        /* Specific override for Add to Cart icon in the hover row */
         .product-card .add-to-cart-hover-btn {
             background-color: var(--btn-bg) !important;
             color: var(--btn-icon) !important;
@@ -392,7 +341,6 @@ $gs_tooltip_text = getGlobalStyle('tooltip_text_color', $globalCardStyles, '#fff
             background-color: var(--btn-hover-bg) !important;
             color: var(--btn-hover-icon) !important;
         }
-
         .product-card .product-tooltip {
             background-color: var(--tooltip-bg) !important;
             color: var(--tooltip-text) !important;
@@ -402,14 +350,11 @@ $gs_tooltip_text = getGlobalStyle('tooltip_text_color', $globalCardStyles, '#fff
             border-color: transparent !important;
             border-left-color: var(--tooltip-bg) !important;
         }
-        /* On touch-only devices, disable hover-triggered tooltips so first tap fires the action */
         @media (hover: none) and (pointer: coarse) {
             .product-tooltip {
                 display: none !important;
             }
         }
-
-        /* Breadcrumb Styles */
         nav.breadcrumb-nav, 
         nav.breadcrumb-nav a, 
         nav.breadcrumb-nav span { 
@@ -418,12 +363,10 @@ $gs_tooltip_text = getGlobalStyle('tooltip_text_color', $globalCardStyles, '#fff
         nav.breadcrumb-nav a:hover { 
             color: <?php echo $breadcrumbHover; ?> !important; 
         }
-
-        /* Search Overlay Dynamic Styles */
         #searchOverlay {
             background-color: <?php echo $ss_overlay_bg; ?> !important;
-            -ms-overflow-style: none;  /* IE and Edge */
-            scrollbar-width: none;  /* Firefox */
+            -ms-overflow-style: none; 
+            scrollbar-width: none;  
         }
         #searchOverlay::-webkit-scrollbar {
             display: none;
@@ -458,55 +401,40 @@ $gs_tooltip_text = getGlobalStyle('tooltip_text_color', $globalCardStyles, '#fff
             background-color: <?php echo $ss_view_all_hover_bg; ?> !important;
             color: <?php echo $ss_view_all_hover_text; ?> !important;
         }
-        /* ── Native Scroll-Snap Slider ── */
-
-        /* The scrollable viewport */
         .slider-scroll-track {
             overflow-x: scroll;
-            overflow-y: visible;      /* so arrows above/below are visible */
-            -webkit-overflow-scrolling: touch; /* iOS momentum scrolling */
+            overflow-y: visible;    
+            -webkit-overflow-scrolling: touch;
             scroll-snap-type: x mandatory;
             scroll-behavior: smooth;
-            /* Hide scrollbar cross-browser */
-            scrollbar-width: none;      /* Firefox */
-            -ms-overflow-style: none;   /* IE/Edge */
+            scrollbar-width: none;
+            -ms-overflow-style: none;
         }
         .slider-scroll-track::-webkit-scrollbar {
-            display: none;              /* Chrome/Safari */
+            display: none;            
         }
-
-        /* Each card/item snaps to the left edge */
         .slider-snap-item {
             scroll-snap-align: start;
             flex-shrink: 0;
         }
-
-        /* The flex track inside the viewport */
         .slider-scroll-track > div {
-            /* let flex children be laid out naturally */
             min-width: max-content;
         }
-
-        /* Arrows: always above the scroll track */
         .trending-prev, .trending-next,
         .best-selling-prev, .best-selling-next,
         #videoSectionPrev, #videoSectionNext {
             z-index: 20 !important;
             position: absolute !important;
         }
-
-        /* ── Skeleton Slider: matches actual card slider layout ── */
-        /* Mobile: horizontal scroll row so skeleton exactly matches the real slider */
         .skel-slider-row {
             display: flex;
             gap: 24px;
-            overflow-x: hidden;  /* no scroll handle on skeleton */
+            overflow-x: hidden;
         }
         .skel-card-item {
             flex-shrink: 0;
-            width: 280px;        /* matches min-w-[280px] on actual cards */
+            width: 280px;      
         }
-        /* Desktop: look like a normal grid */
         @media (min-width: 768px) {
             .skel-slider-row {
                 display: grid;
@@ -523,10 +451,6 @@ $gs_tooltip_text = getGlobalStyle('tooltip_text_color', $globalCardStyles, '#fff
             }
         }
     </style>
-
-
-
-    
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title><?php echo isset($pageTitle) ? htmlspecialchars($pageTitle) . ' - ' : ''; ?><?php echo htmlspecialchars($siteTitleSuffix); ?></title>
@@ -561,8 +485,6 @@ $gs_tooltip_text = getGlobalStyle('tooltip_text_color', $globalCardStyles, '#fff
     if (!empty($finalMetaDesc)): ?>
     <meta name="description" content="<?php echo htmlspecialchars($finalMetaDesc); ?>">
     <?php endif; ?>
-
-    <!-- Open Graph / Social Media -->
     <meta property="og:type" content="website">
     <meta property="og:title" content="<?php echo isset($pageTitle) ? htmlspecialchars($pageTitle) . ' - ' : ''; ?><?php echo htmlspecialchars($siteTitleSuffix); ?>">
     <meta property="og:description" content="<?php echo htmlspecialchars($finalMetaDesc); ?>">
@@ -573,7 +495,7 @@ $gs_tooltip_text = getGlobalStyle('tooltip_text_color', $globalCardStyles, '#fff
     $ogImageVal = $settingsObj->get('og_image');
     if ($ogImageVal) {
         $ogImageUrl = getImageUrl($ogImageVal); 
-        // Ensure absolute URL
+        
         if (strpos($ogImageUrl, 'http') !== 0) {
             $ogImageUrl = $baseUrl . '/' . ltrim($ogImageUrl, '/');
         }
@@ -582,7 +504,7 @@ $gs_tooltip_text = getGlobalStyle('tooltip_text_color', $globalCardStyles, '#fff
     <meta name="twitter:card" content="summary_large_image">
     <meta name="twitter:image" content="<?php echo htmlspecialchars($ogImageUrl); ?>">
     <?php } elseif (!empty($siteLogo) && $siteLogoType !== 'text') { 
-        // Fallback to site logo if no specific OG image
+        
         $logoUrl = getImageUrl($siteLogo);
         if (strpos($logoUrl, 'http') !== 0) {
             $logoUrl = $baseUrl . '/' . ltrim($logoUrl, '/');
@@ -595,7 +517,6 @@ $gs_tooltip_text = getGlobalStyle('tooltip_text_color', $globalCardStyles, '#fff
 
     <?php 
     if (!empty($globalSchema)): 
-        // 1. Prepare Dynamic Values
         $siteNameVal = $settingsObj->get('site_name', $settingsObj->get('site_logo_text', 'Zensshop'));
         $siteLogoVal = $settingsObj->get('footer_logo_image', '');
         if ($siteLogoVal) {
@@ -606,8 +527,6 @@ $gs_tooltip_text = getGlobalStyle('tooltip_text_color', $globalCardStyles, '#fff
         $siteDescVal = $settingsObj->get('footer_description', $globalMetaDesc);
         $sitePhoneVal = $settingsObj->get('footer_phone', '');
         $siteEmailVal = $settingsObj->get('footer_email', '');
-
-        // 2. Perform Replacements
         $replacements = [
             '{{SITE_NAME}}' => $siteNameVal,
             '{{SITE_URL}}' => $baseUrl . '/',
@@ -627,23 +546,19 @@ $gs_tooltip_text = getGlobalStyle('tooltip_text_color', $globalCardStyles, '#fff
         <?php echo $globalSchema; ?>
     </script>
     <?php else: 
-        // Fallback: Generate Dynamic Organization Schema from settings
         $orgName = $settingsObj->get('footer_logo_text', $settingsObj->get('site_logo_text', 'Zensshop'));
         $orgLogo = $settingsObj->get('footer_logo_image', '');
         if ($orgLogo) {
             $orgLogo = $baseUrl . '/' . ltrim($orgLogo, '/');
         } else {
-            $orgLogo = $baseUrl . '/assets/images/logo.png'; // Fallback
+            $orgLogo = $baseUrl . '/assets/images/logo.png';
         }
         $orgDesc = $settingsObj->get('footer_description', 'Premium products store.');
         $orgAddress = $settingsObj->get('footer_address', '');
         $orgPhone = $settingsObj->get('footer_phone', '');
         $orgEmail = $settingsObj->get('footer_email', '');
-        
-        // Social links
         $socialJson = $settingsObj->get('footer_social_json', '[]');
         if (empty($socialJson) || $socialJson == '[]') {
-            // Try individual social fields as fallback
             $socials = [];
             $fb = $settingsObj->get('footer_facebook'); if($fb) $socials[] = $fb;
             $ig = $settingsObj->get('footer_instagram'); if($ig) $socials[] = $ig;
@@ -692,13 +607,11 @@ $gs_tooltip_text = getGlobalStyle('tooltip_text_color', $globalCardStyles, '#fff
     <?php endif; ?>
     
     <?php if (!empty($headerScripts)): ?>
-    <!-- Global Header Scripts (Analytics, Pixels, etc.) -->
     <?php echo $headerScripts; ?>
     <?php endif; ?>
 
     <?php
     $bcItems = [];
-    // 1. Home
     $bcItems[] = [
         "@type" => "ListItem",
         "position" => 1,
@@ -708,8 +621,6 @@ $gs_tooltip_text = getGlobalStyle('tooltip_text_color', $globalCardStyles, '#fff
     $pos = 2;
 
     $currentPageFile = basename($_SERVER['PHP_SELF']);
-    
-    // Shop / Category / Product contexts
     if ($currentPageFile === 'shop.php' || (isset($productData) && $currentPageFile === 'product.php')) {
         $bcItems[] = [
             "@type" => "ListItem",
@@ -718,10 +629,7 @@ $gs_tooltip_text = getGlobalStyle('tooltip_text_color', $globalCardStyles, '#fff
             "item" => $baseUrl . '/shop'
         ];
     }
-    
-    // Context: Product Page
     if (isset($productData) && !empty($productData['name'])) {
-         // Try to find category (Check if $productCategories is available in global scope)
          if (isset($productCategories) && !empty($productCategories)) {
              $cat = $productCategories[0];
              $bcItems[] = [
@@ -739,10 +647,9 @@ $gs_tooltip_text = getGlobalStyle('tooltip_text_color', $globalCardStyles, '#fff
             "item" => $baseUrl . '/product?slug=' . $productData['slug']
         ];
     }
-    // Context: Category Page (shop.php?category=...)
     elseif ($currentPageFile === 'shop.php' && !empty($_GET['category'])) {
         $cSlug = $_GET['category'];
-        $cName = ucfirst(str_replace('-', ' ', $cSlug)); // Fallback
+        $cName = ucfirst(str_replace('-', ' ', $cSlug));
         if (isset($db)) {
             $cRow = $db->fetchOne("SELECT name FROM categories WHERE slug = ?", [$cSlug]);
             if ($cRow) $cName = $cRow['name'];
@@ -754,14 +661,10 @@ $gs_tooltip_text = getGlobalStyle('tooltip_text_color', $globalCardStyles, '#fff
             "item" => $baseUrl . '/shop?category=' . $cSlug
         ];
     }
-    // Context: Special Page / Landing Page (Generic or Special Product)
     elseif ((isset($lp) && !empty($lp['name'])) || (isset($landingPage) && !empty($landingPage))) {
-        // Handle $lp (from settings/page.php) or $landingPage (from special-product.php)
         $pName = isset($lp) ? $lp['name'] : ($landingPage['name'] ?? $pageTitle ?? 'Page');
         $pSlug = isset($lp) ? $lp['slug'] : ($landingPage['slug'] ?? $_GET['page'] ?? '');
-        $pUrl = $baseUrl . '/special-product.php?page=' . $pSlug; // Or typically just /page/slug if routed
-        
-        // If routed URL is cleaner, use that. But special-product.php seems to use query param.
+        $pUrl = $baseUrl . '/special-product.php?page=' . $pSlug; 
         
         $bcItems[] = [
             "@type" => "ListItem",
@@ -770,7 +673,6 @@ $gs_tooltip_text = getGlobalStyle('tooltip_text_color', $globalCardStyles, '#fff
             "item" => $pUrl
         ];
     }
-    // Context: Standard Pages
     elseif ($currentPageFile === 'cart.php') {
         $bcItems[] = ["@type" => "ListItem", "position" => $pos++, "name" => "Shopping Cart", "item" => $baseUrl . '/cart'];
     }
@@ -791,40 +693,28 @@ $gs_tooltip_text = getGlobalStyle('tooltip_text_color', $globalCardStyles, '#fff
     }
     </script>
     <?php endif; ?>
-    
-    <!-- Resource Hints -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link rel="preconnect" href="https://cdnjs.cloudflare.com">
     <link rel="preconnect" href="https://cdn.tailwindcss.com">
-    
-    <!-- Critical Fonts Preload -->
     <link rel="preload" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/webfonts/fa-solid-900.woff2" as="font" type="font/woff2" crossorigin>
 
-    <!-- Google Fonts Optimized -->
     <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700&family=Inter:wght@300;400;500;600;700&family=DM+Sans:wght@400;500;700&display=swap" rel="stylesheet" media="print" onload="this.media='all'">
     
-    <!-- Tailwind CSS - Deferred for PageSpeed (Render Blocking Fix) -->
     <style>
-        /* Essential Utility Classes */
         .translate-x-full { transform: translateX(100%); }
         .-translate-x-full { transform: translateX(-100%); }
         .-translate-y-full { transform: translateY(-100%); }
         .hidden { display: none; }
     </style>
-    
-    <!-- Remove 'defer' to ensure Tailwind parses immediately to prevent unstyled content -->
     <script src="https://cdn.tailwindcss.com?plugins=typography" fetchpriority="high"></script>
     
     <script>
-        // Ensure body is visible
         document.addEventListener('DOMContentLoaded', () => {
             document.body.style.visibility = 'visible';
             document.body.style.opacity = '1';
         });
     </script>
-    
-    <!-- Custom CSS -->
     <link rel="preload"
         href="<?php echo $baseUrl; ?>/assets/css/main7.css?v=<?php echo time(); ?>"
         as="style"
@@ -833,24 +723,17 @@ $gs_tooltip_text = getGlobalStyle('tooltip_text_color', $globalCardStyles, '#fff
     <noscript>
         <link rel="stylesheet" href="<?php echo $baseUrl; ?>/assets/css/main7.css?v=<?php echo time(); ?>">
     </noscript>
-    
-    <!-- Dynamic Header Styles -->
     <style>
-        /* Header Background & Text */
         nav.header-shadow {
             background-color: <?php echo $headerBg; ?> !important;
         }
-        /* Main Hover State for Links & Buttons */
         nav.header-shadow .nav-link:hover {
             color: <?php echo $headerHover; ?> !important;
             background-color: <?php echo $headerHoverBg; ?> !important;
             background: <?php echo $headerHoverBg; ?> !important;
-            /* Applying padding expansion to everything *except* action icons */
             padding-left: 8px !important;
             padding-right: 8px !important;
         }
-
-        /* Action Icons (Search, Heart, Account, Cart) - No Padding Effect */
         nav.header-shadow .header-icon:hover {
             color: <?php echo $headerHover; ?> !important;
             background-color: <?php echo $headerHoverBg; ?> !important;
@@ -865,8 +748,6 @@ $gs_tooltip_text = getGlobalStyle('tooltip_text_color', $globalCardStyles, '#fff
         nav.header-shadow .text-black {
             color: <?php echo $headerText; ?> !important;
         }
-        
-        /* Logo State - No Background, with Padding effect */
         nav.header-shadow .site-logo-link {
             color: <?php echo $headerText; ?> !important;
             background: transparent !important;
@@ -886,8 +767,6 @@ $gs_tooltip_text = getGlobalStyle('tooltip_text_color', $globalCardStyles, '#fff
             background: transparent !important;
             background-color: transparent !important;
         }
-
-        /* Top Bar Styles */
         .top-bar {
             background-color: <?php echo $topbarBg; ?> !important;
             color: <?php echo $topbarText; ?> !important;
@@ -904,49 +783,30 @@ $gs_tooltip_text = getGlobalStyle('tooltip_text_color', $globalCardStyles, '#fff
         .top-bar a:hover {
             opacity: 0.8 !important;
         }
-        
-        /* Submenu Background & Text */
         .mega-menu-dropdown .bg-white,
         .absolute .bg-white {
             background-color: <?php echo $submenuBg; ?> !important;
         }
-        
-        /* Submenu Links */
         .mega-menu-dropdown a,
         .absolute .bg-white a,
         nav .absolute a {
             color: <?php echo $submenuText; ?> !important;
         }
-        
-        /* Submenu Hover */
         .mega-menu-dropdown a:hover,
         .absolute .bg-white a:hover,
         nav .absolute a:hover {
             color: <?php echo $submenuHoverText; ?> !important;
             background-color: <?php echo $submenuHoverBg; ?> !important;
         }
-
-        /* Border tweaks for seamless look if colors change */
         .mega-menu-dropdown .border-gray-100,
         .absolute .border-gray-100 {
             border-color: <?php echo $submenuBg; ?> !important; 
         }
-        
-        /* Hover bg for submenus if needed, though usually text color change is enough. 
-           We'll respect the existing hover:bg-gray-50 but might need to adjust if bg is dark.
-           For now, let's leave bg hover as is or make it transparent if conflict.
-        */
-        
-        /* MOBILE MENU STYLING */
-        
-        /* MOBILE MENU STYLING */
-        
-        /* 1. Mobile Menu Header (The 'Menu' bar with close button) maps to Main Header Styles */
         #mobile-menu-main .bg-black,
         [id^="mobile-menu-sub-"] .bg-black {
             background-color: <?php echo $headerBg; ?> !important;
             color: <?php echo $headerText; ?> !important;
-            border-bottom: 1px solid rgba(0,0,0,0.1); /* Subtle divider */
+            border-bottom: 1px solid rgba(0,0,0,0.1); 
         }
         #mobile-menu-main .bg-black span,
         #mobile-menu-main .bg-black button,
@@ -955,32 +815,24 @@ $gs_tooltip_text = getGlobalStyle('tooltip_text_color', $globalCardStyles, '#fff
         [id^="mobile-menu-sub-"] .bg-black i {
             color: <?php echo $headerText; ?> !important;
         }
-
-        /* 2. Mobile Menu Body (The list of links) maps to Submenu Styles */
         #mobile-menu-main,
         #mobile-menu-main .bg-white,
         [id^="mobile-menu-sub-"],
         [id^="mobile-menu-sub-"] .bg-white {
             background-color: <?php echo $submenuBg; ?> !important;
         }
-        
-        /* Links in Mobile Menu */
         #mobile-menu-main a,
         #mobile-menu-main button,
         [id^="mobile-menu-sub-"] a,
         [id^="mobile-menu-sub-"] button {
              color: <?php echo $submenuText; ?> !important;
         }
-        
-        /* Borders between items */
         #mobile-menu-main .border-gray-100,
         #mobile-menu-main .border-b,
         [id^="mobile-menu-sub-"] .border-gray-100,
         [id^="mobile-menu-sub-"] .border-b {
             border-color: rgba(100, 100, 100, 0.1) !important;
         }
-        
-        /* Mobile Menu Hover/Active Background State */
         #mobile-menu-main a:hover,
         #mobile-menu-main button:hover,
         [id^="mobile-menu-sub-"] a:hover,
@@ -990,14 +842,12 @@ $gs_tooltip_text = getGlobalStyle('tooltip_text_color', $globalCardStyles, '#fff
         }
         [id^="mobile-menu-sub-"] a:active,
         [id^="mobile-menu-sub-"] button:active,
-        /* Specific override for the utility class used in PHP */
+       
         #mobile-menu-main .hover\:bg-gray-50:hover, 
         [id^="mobile-menu-sub-"] .hover\:bg-gray-50:hover {
             color: <?php echo $submenuHoverText; ?> !important;
             background-color: <?php echo $submenuHoverBg; ?> !important;
         }
-
-        /* Top Bar Styling */
         .block.bg-black {
             background-color: <?php echo $topbarBg; ?> !important;
             color: <?php echo $topbarText; ?> !important;
@@ -1009,21 +859,16 @@ $gs_tooltip_text = getGlobalStyle('tooltip_text_color', $globalCardStyles, '#fff
             color: <?php echo $topbarArrow; ?> !important;
         }
         .block.bg-black .top-bar-arrow:hover {
-            color: <?php echo $topbarText; ?> !important; /* On hover match text color or keep separate? distinct hover color not requested, assuming text color */
+            color: <?php echo $topbarText; ?> !important;
             opacity: 0.8;
         }
     </style>
-
-    
-    <!-- Font Awesome (Local optimized with font-display:swap) -->
     <link rel="stylesheet" href="<?php echo $baseUrl; ?>/assets/css/fontawesome-custom.css" media="print" onload="this.media='all'">
     <noscript><link rel="stylesheet" href="<?php echo $baseUrl; ?>/assets/css/fontawesome-custom.css"></noscript>
     
-    <!-- TinyMCE Content Styles -->
     <link rel="stylesheet" href="<?php echo $baseUrl; ?>/assets/css/richtext1.css">
 
     <style>
-        /* GTM Tracking Fix: Ensure clicks on icons register on the button */
         #product-card-quick-view-btn i,
         #product-card-add-to-cart-btn i,
         #qvAddToCartBtn i,
@@ -1035,104 +880,55 @@ $gs_tooltip_text = getGlobalStyle('tooltip_text_color', $globalCardStyles, '#fff
             pointer-events: none;
         }
     </style>
-    
     <script>
-    // Make BASE_URL available globally for all frontend pages
     const BASE_URL = '<?php echo $baseUrl; ?>';
-    // Make currency symbol available globally
     const CURRENCY_SYMBOL = '<?php echo defined("CURRENCY_SYMBOL") ? CURRENCY_SYMBOL : "₹"; ?>';
-    
-    // Adjust mega menu position to prevent overflow
     function adjustMegaMenuPosition(menuElement) {
-        // Use requestAnimationFrame for better timing
         requestAnimationFrame(() => {
-            // Reset positioning to default to calculate natural dimensions
             menuElement.style.left = '0px';
             menuElement.style.right = 'auto';
             menuElement.style.transform = 'none';
-            
-            // Get measurements
             const rect = menuElement.getBoundingClientRect();
             const viewportWidth = window.innerWidth;
-            const containerPadding = 20; // Safety padding
+            const containerPadding = 20; 
             
             let shiftX = 0;
-            
-            // Check if menu overflows on the right
             if (rect.right > (viewportWidth - containerPadding)) {
                 shiftX = (viewportWidth - containerPadding) - rect.right;
             }
-            
-            // Apply the right shift first to check if it causes left overflow
             if (shiftX !== 0) {
-                 // Check if this shift pushes it off the left side
                  if ((rect.left + shiftX) < containerPadding) {
-                     // If it does, we need to clamp it.
-                     // Calculate the shift needed to align with left edge
                      shiftX = containerPadding - rect.left;
                  }
             } else {
-                // If no right overflow, check if it naturally overflows left (unlikely with left=0, but possible with transforms)
                 if (rect.left < containerPadding) {
                      shiftX = containerPadding - rect.left;
                 }
             }
-            
-            // Apply the final calculated shift
             if (shiftX !== 0) {
                 menuElement.style.transform = `translateX(${shiftX}px)`;
             }
         });
     }
-    
-    /* 
-    // DISABLED: Conflict with new CSS-based centering
-    // Auto-adjust all mega menus on window resize and hover
-    window.addEventListener('resize', () => {
-        document.querySelectorAll('.mega-menu-dropdown').forEach(menu => {
-            // Check visibility by offsetParent or display style
-            if (menu.offsetParent !== null || window.getComputedStyle(menu).display !== 'none') {
-                 adjustMegaMenuPosition(menu);
-            }
-        });
-    });
-    
-    // Add hover listeners to trigger adjustment immediately when menu opens
-    document.addEventListener('DOMContentLoaded', () => {
-        document.querySelectorAll('.group, .group\\/sub').forEach(group => {
-            group.addEventListener('mouseenter', () => {
-                const menu = group.querySelector('.mega-menu-dropdown');
-                if (menu) adjustMegaMenuPosition(menu);
-            });
-        });
-    });
-    */
     </script>
     <style>
-    /* Multi-level Dropdown Support */
     .group:hover .group-hover\:block { display: block; }
     .group\/sub:hover > .group-hover\/sub\:block { display: block; }
-    
-    /* Mega Menu Viewport Constraint */
     .mega-menu-dropdown {
         max-width: calc(100vw - 40px) !important;
-        /* Default to left align, let JS handle the shift */
         left: 0;
         right: auto;
     }
-    
-    /* For smaller screens, ensure it doesn't break layout */
     @media (max-width: 1024px) {
         .mega-menu-dropdown {
             max-width: 100% !important;
             left: 0 !important;
             right: 0 !important;
-            transform: none !important; /* Disable JS positioning on mobile if used */
+            transform: none !important; 
         }
     }
     </style>
     <style>
-        /* Fixed site header wrapper */
         #siteHeaderFixed {
             position: fixed;
             top: 0;
@@ -1141,7 +937,6 @@ $gs_tooltip_text = getGlobalStyle('tooltip_text_color', $globalCardStyles, '#fff
             z-index: 999;
             width: 100%;
         }
-        /* Announcement bar collapses on scroll */
         #topBarAnnouncement {
             max-height: 80px;
             opacity: 1;
@@ -1186,29 +981,19 @@ $gs_tooltip_text = getGlobalStyle('tooltip_text_color', $globalCardStyles, '#fff
 </head>
 <body class="font-body overflow-x-hidden">
     <?php if (!empty($gtmId)): ?>
-    <!-- Google Tag Manager (noscript) -->
     <noscript><iframe src="https://www.googletagmanager.com/ns.html?id=<?php echo htmlspecialchars($gtmId); ?>"
     height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
-    <!-- End Google Tag Manager (noscript) -->
     <?php endif; ?>
-    
     <?php if (!isset($isCheckout) || !$isCheckout): ?>
-    <!-- Fixed Site Header: Announcement + Nav -->
     <div id="siteHeaderFixed">
-    <!-- Top Bar (Announcement) -->
     <div id="topBarAnnouncement" class="block top-bar text-sm py-1 md:py-3 text-xs md:text-sm">
         <div class="container mx-auto px-4 flex justify-between items-center">
-            <!-- Left side spacer (to balance the right links) -->
             <div class="flex-1 hidden xl:block"></div>
-
-            <!-- Centered Slider Section -->
             <div class="flex-1 flex items-center justify-center space-x-6">
-                <!-- Left Arrow -->
+               
                 <button class="top-bar-arrow top-bar-arrow-left flex-shrink-0 transition" id="topBarPrev" aria-label="Previous">
                     <i class="fas fa-chevron-left text-xs"></i>
                 </button>
-
-                <!-- Slider Window -->
                 <div class="relative overflow-hidden w-full max-w-[450px]">
                     <div class="top-bar-slider flex transition-transform duration-500 ease-in-out" id="topBarSlider">
                         <?php foreach ($topbarSlides as $slide): ?>
@@ -1221,7 +1006,6 @@ $gs_tooltip_text = getGlobalStyle('tooltip_text_color', $globalCardStyles, '#fff
                                             if (!empty($slide['link_text'])) {
                                                 echo htmlspecialchars($slide['link_text']);
                                             } else {
-                                                // Automatic fallback
                                                 if (stripos($slide['text'], 'Sign up') !== false) echo 'Sign up';
                                                 elseif (stripos($slide['text'], 'Shop Now') !== false) echo 'Shop Now';
                                                 else echo 'Learn More';
@@ -1234,19 +1018,14 @@ $gs_tooltip_text = getGlobalStyle('tooltip_text_color', $globalCardStyles, '#fff
                         <?php endforeach; ?>
                     </div>
                 </div>
-
-                <!-- Right Arrow -->
                 <button class="top-bar-arrow top-bar-arrow-right flex-shrink-0 transition" id="topBarNext" aria-label="Next">
                     <i class="fas fa-chevron-right text-xs"></i>
                 </button>
             </div>
-
-            <!-- Right side links -->
             <div class="hidden xl:flex flex-1 items-center justify-end space-x-4 text-xs font-semibold">
                 <?php foreach ($topbarLinks as $link): ?>
                 <a href="<?php echo url($link['url']); ?>" class="transition whitespace-nowrap"><?php echo htmlspecialchars($link['label']); ?></a>
                 <?php endforeach; ?>
-                <!-- Currency/Region Selector -->
                 <div class="relative ml-4 pl-4 border-l border-gray-700 hidden">
                     <?php
                     $currencies = getCurrencies();
@@ -1266,7 +1045,6 @@ $gs_tooltip_text = getGlobalStyle('tooltip_text_color', $globalCardStyles, '#fff
                             <path d="M1 1l4 4 4-4" stroke="currentColor" stroke-width="1.5" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
                         </svg>
                     </button>
-                    <!-- Currency Dropdown -->
                     <div class="absolute right-0 top-full mt-2 bg-white text-black shadow-lg rounded-lg py-1 min-w-[240px] hidden z-50 border border-gray-200" id="currencyDropdown">
                         <?php foreach ($currencies as $curr): ?>
                         <a href="#" class="block px-4 py-2.5 hover:bg-gray-50 transition currency-option" data-flag="<?php echo $curr['flag']; ?>" data-code="<?php echo $curr['code']; ?>" data-currency="<?php echo $curr['name'] . ' (' . $curr['currency_name'] . ' ' . $curr['symbol'] . ')'; ?>">
@@ -1282,14 +1060,10 @@ $gs_tooltip_text = getGlobalStyle('tooltip_text_color', $globalCardStyles, '#fff
                 </div>
             </div>
         </div>
-    </div><!-- /#topBarAnnouncement -->
-    
-    <!-- Main Navigation -->
+    </div>
     <nav class="z-50 header-shadow" id="mainNav">
         <div class="container mx-auto px-4">
             <div class="flex items-center justify-between h-12 md:h-20">
-                <!-- Hamburger Menu  -->
-                <!-- Hamburger Menu  -->
                 <button class="xl:hidden text-black hover:text-gray-600 transition focus:outline-none header-icon" 
                         aria-label="Open mobile menu"
                         aria-controls="mobile-menu-main"
@@ -1309,8 +1083,6 @@ $gs_tooltip_text = getGlobalStyle('tooltip_text_color', $globalCardStyles, '#fff
                                  }">
                     <i class="fas fa-bars text-xl" aria-hidden="true"></i>
                 </button>
-                
-                <!-- Logo (Left on desktop, Centered on mobile/tablet) -->
                 <div class="flex-shrink-0 xl:flex-shrink-0 absolute xl:relative left-1/2 xl:left-auto transform xl:transform-none -translate-x-1/2 xl:translate-x-0">
                     <a href="<?php echo $baseUrl; ?>/" class="flex items-center site-logo-link">
                         <?php if ($siteLogoType === 'text'): ?>
@@ -1323,8 +1095,6 @@ $gs_tooltip_text = getGlobalStyle('tooltip_text_color', $globalCardStyles, '#fff
                         <?php endif; ?>
                     </a>
                 </div>
-                
-                <!-- Desktop Navigation - Centered (Hidden on mobile/tablet, visible on xl+) -->
                 <div class="hidden xl:flex items-center space-x-8 absolute left-1/2 transform -translate-x-1/2 z-10">
 <?php
 if (!empty($headerMenuItems)) {
@@ -1334,25 +1104,20 @@ if (!empty($headerMenuItems)) {
 }
 ?>
                 </div>
-                
-                <!-- Right Icons -->
                 <div class="flex items-center space-x-5">
                     <?php if ($showSearchIcon): ?>
-                    <!-- Search -->
                     <button class="text-black hover:text-gray-600 transition focus:outline-none header-icon" aria-label="Open search" id="searchBtn">
                         <i class="fas fa-search text-lg" aria-hidden="true"></i>
                     </button>
                     <?php endif; ?>
                     
                     <?php if ($showUserIcon): ?>
-                    <!-- User Account - Only visible on xl screens -->
                     <a href="<?php echo url('account'); ?>" class="hidden xl:block text-black hover:text-gray-600 transition header-icon" aria-label="Manage Account">
                         <i class="fas fa-user text-lg" aria-hidden="true"></i>
                     </a>
                     <?php endif; ?>
                     
                     <?php if ($showWishlistIcon): ?>
-                    <!-- Wishlist - Only visible on xl screens -->
                     <a href="<?php echo url('wishlist'); ?>" class="hidden xl:block text-gray-800 hover:text-primary transition relative header-icon" aria-label="View Wishlist">
                         <i class="fas fa-heart text-xl" aria-hidden="true"></i>
                         <span class="wishlist-count absolute -top-1 -right-1.5 font-medium bg-red-500 text-white text-xs rounded-full w-4 h-4 flex items-center justify-center" style="<?php echo ($wishlistCount > 0) ? 'display: flex;' : 'display: none;'; ?>">
@@ -1360,16 +1125,12 @@ if (!empty($headerMenuItems)) {
                         </span>
                     </a>
                     <?php endif; ?>
-                    
                     <?php if ($showCartIcon): ?>
-                    <!-- Cart -->
                     <?php
-                    // Check if we're on checkout or cart page
                     $currentPage = basename($_SERVER['PHP_SELF']);
                     $requestUri = isset($_SERVER['REQUEST_URI']) ? $_SERVER['REQUEST_URI'] : '';
                     $isCheckoutPage = ($currentPage === 'checkout.php' || strpos($requestUri, '/checkout') !== false);
                     $isCartPage = ($currentPage === 'cart.php' || strpos($requestUri, '/cart') !== false);
-                    
                     if ($isCheckoutPage || $isCartPage): ?>
                         <a href="<?php echo url('cart'); ?>" class="text-black hover:text-gray-600 transition relative focus:outline-none header-icon inline-block" aria-label="View Shopping Cart">
                             <i class="fas fa-shopping-cart text-lg" aria-hidden="true"></i>
@@ -1384,8 +1145,6 @@ if (!empty($headerMenuItems)) {
                     <?php endif; ?>
                 </div>
             </div>
-            
-            <!-- Mobile Navigation (Old - Hidden) -->
             <div class="hidden pb-4" id="mobileMenu">
                 <div class="flex flex-col space-y-4">
                     <a href="<?php echo url(''); ?>" class="text-gray-800 hover:text-primary transition">Home</a>
@@ -1396,61 +1155,44 @@ if (!empty($headerMenuItems)) {
                 </div>
             </div>
     </nav>
-    </div><!-- /#siteHeaderFixed -->
-    
-    <!-- NEW REBUILT MOBILE MENU START -->
-    
-    <!-- Dark Overlay (Shared) -->
-    <!-- Dark Overlay (Shared) -->
+    </div>
     <div id="mobile-menu-overlay" 
          class="fixed inset-0 z-40 opacity-0 transition-opacity duration-300 ease-in-out" 
          style=" z-index: 9999;display: none; background-color: rgba(0,0,0,0.8); backdrop-filter: blur(5px); -webkit-backdrop-filter: blur(5px);"
          onclick="closeAllMobileMenus()"></div>
-
-    <!-- Main Menu Drawer -->
     <div id="mobile-menu-main" 
          class="fixed top-0 left-0 bottom-0 w-80 bg-white z-[10001] transform -translate-x-full transition-transform duration-300 ease-in-out flex flex-col overflow-hidden"
          style="z-index: 10001 !important">
-        
-        <!-- Header -->
         <div class="bg-black text-white px-5 py-4 flex items-center justify-between flex-shrink-0">
             <span class="font-bold text-lg tracking-wide">Menu</span>
             <button type="button" aria-label="Close mobile menu" onclick="closeAllMobileMenus()" class="text-white hover:text-gray-300 focus:outline-none p-1">
                 <i class="fas fa-times text-xl"></i>
             </button>
         </div>
-
-        <!-- Scrollable Content -->
         <div class="flex-1 overflow-y-auto bg-white">
             <div class="flex flex-col py-2">
                 <?php 
                 $menuItemCounter = 0;
-                // Render Top Level Items
                 foreach ($headerMenuItems as $item) {
                     $hasChildren = !empty($item['children']);
                     $url = url($item['url'] ?? '#');
                     $name = htmlspecialchars($item['label'] ?? $item['name'] ?? '');
-                    // Use a more robust ID strategy or ensure consistent uniqid if passed from backend
-                    // Fallback to counter if no ID
+                   
                     $itemId = $item['id'] ?? 'top-item-' . $menuItemCounter++;
                     $subId = 'mobile-menu-sub-' . $itemId; 
                     
                     if ($hasChildren) {
-                        // Item with Submenu
                         echo '<button type="button" onclick="openMobileSubmenu(\''.$subId.'\')" class="flex items-center justify-between px-6 py-4 text-gray-800 border-b border-gray-100 hover:bg-gray-50 transition text-left group">';
                         echo '<span class="font-medium group-hover:text-black">'.$name.'</span>';
                         echo '<i class="fas fa-chevron-right text-gray-400 text-sm group-hover:text-black"></i>';
                         echo '</button>';
                     } else {
-                        // Standard Link
                         echo '<a href="'.$url.'" onclick="closeAllMobileMenus()" class="flex items-center justify-between px-6 py-4 text-gray-800 border-b border-gray-100 hover:bg-gray-50 transition group">';
                         echo '<span class="font-medium group-hover:text-black">'.$name.'</span>';
                         echo '</a>';
                     }
                 }
                 ?>
-
-                <!-- Standard Extra Links -->
                 <a href="<?php echo url('wishlist'); ?>" onclick="closeAllMobileMenus()" class="flex items-center justify-between px-6 py-4 text-gray-800 border-b border-gray-100 hover:bg-gray-50 transition group">
                     <div class="flex items-center">
                         <i class="fas fa-heart text-gray-400 mr-3 group-hover:text-black transition"></i>
@@ -1460,7 +1202,6 @@ if (!empty($headerMenuItems)) {
                         <?php echo $wishlistCount; ?>
                     </span>
                 </a>
-                
                 <?php if ($currentCustomer): ?>
                     <a href="<?php echo url('account'); ?>" onclick="closeAllMobileMenus()" class="flex items-center px-6 py-4 text-gray-800 border-b border-gray-100 hover:bg-gray-50 transition group">
                         <i class="fas fa-user text-gray-400 mr-3 group-hover:text-black transition"></i>
@@ -1475,16 +1216,12 @@ if (!empty($headerMenuItems)) {
             </div>
         </div>
     </div>
-
-    <!-- Recursive Submenus Generation -->
     <?php
     if (!function_exists('renderNewMobileSubmenus')) {
         function renderNewMobileSubmenus($items, &$globalCounter) {
             foreach ($items as $item) {
                 if (!empty($item['children'])) {
                     $name = htmlspecialchars($item['label'] ?? $item['name'] ?? '');
-                    
-                    // REPLICATE ID GENERATION EXACTLY
                     $itemId = $item['id'] ?? 'menu-item-' . $globalCounter++;
                     $thisId = 'mobile-menu-sub-' . $itemId;
                     
@@ -1492,8 +1229,6 @@ if (!empty($headerMenuItems)) {
                     <div id="<?php echo $thisId; ?>" 
                          class="fixed top-0 left-0 bottom-0 w-80 bg-white transform -translate-x-full transition-transform duration-300 ease-in-out flex flex-col overflow-hidden"
                          style="z-index: 10002 !important">
-                        
-                        <!-- Header with Back & Close -->
                         <div class="bg-black text-white px-5 py-4 flex items-center justify-between flex-shrink-0">
                             <div class="flex items-center space-x-3">
                                 <button type="button" aria-label="Close submenu" onclick="closeMobileSubmenu('<?php echo $thisId; ?>')" class="text-white hover:text-gray-300 focus:outline-none p-1">
@@ -1505,8 +1240,6 @@ if (!empty($headerMenuItems)) {
                                 <i class="fas fa-times text-xl"></i>
                             </button>
                         </div>
-
-                        <!-- Content -->
                         <div class="flex-1 overflow-y-auto bg-white">
                             <div class="flex flex-col py-2">
                                 <?php
@@ -1532,95 +1265,60 @@ if (!empty($headerMenuItems)) {
                         </div>
                     </div>
                     <?php
-                    // Recurse for deeper levels (Note: deeper levels need their own ID logic if they are to be opened. 
-                    // For now assuming 1 level deep or consistent IDs from DB)
-                    // If we have deeper levels, we need to pass the counter by reference or handle it.
-                    // Since we are iterating strictly in order, the counter should align IF the structure matches.
-                    // However, to be safe for >2 levels, we'd need a more complex ID map. 
-                    // For 2 levels (Main -> Sub), this reference counter works if we iterate top-level again.
-                    // BUT: We are inside a function. 
-                    // BETTER APPROACH: Re-iterate the MAIN list to ensure order effectively.
                     renderNewMobileSubmenus($item['children'], $globalCounter);
                 } else {
-                     // Increment counter for items without children too, to keep alignment if mixed
+                   
                      $globalCounter++;
                 }
             }
         }
     }
-    // RESET COUNTER and Call for top level items
     $submenuCounter = 0;
     renderNewMobileSubmenus($headerMenuItems, $submenuCounter);
     ?>
-
     <script>
-    // --- NEW MOBILE MENU JS CONTROL ---
-    
-    // Ensure functions are on window
-    
-    // Open Main Menu
     window.openMobileMenu = function() {
         const overlay = document.getElementById('mobile-menu-overlay');
         const main = document.getElementById('mobile-menu-main');
         
         if (!overlay || !main) return;
-
-        // 1. Make visible immediately
         overlay.style.display = 'block';
-        main.style.display = 'flex'; // Ensure flex layout
-        
-        // 2. Force browser paint
+        main.style.display = 'flex'; 
         void overlay.offsetWidth;
-        
-        // 3. Start transitions
         overlay.classList.remove('opacity-0');
         main.classList.remove('-translate-x-full');
         
         document.body.style.overflow = 'hidden';
     }
-
-    // Open Specific Submenu (slides OVER the main menu)
     window.openMobileSubmenu = function(id) {
         const sub = document.getElementById(id);
         if (sub) {
             sub.classList.remove('-translate-x-full');
         }
     }
-
-    // Close Specific Submenu (Back Button)
     window.closeMobileSubmenu = function(id) {
         const sub = document.getElementById(id);
         if (sub) {
             sub.classList.add('-translate-x-full');
         }
     }
-
-    // Close EVERYTHING (X Button or Overlay Click)
     window.closeAllMobileMenus = function() {
         const overlay = document.getElementById('mobile-menu-overlay');
         const main = document.getElementById('mobile-menu-main');
-        
-        // 1. Slide out ALL drawers (main and subs)
         const drawers = document.querySelectorAll('[id*="mobile-menu"]');
         drawers.forEach(el => {
             el.classList.add('-translate-x-full');
         });
-
-        // 2. Fade out overlay
         if (overlay) {
             overlay.classList.add('opacity-0');
             setTimeout(() => {
-                overlay.style.display = 'none'; // Use inline style
+                overlay.style.display = 'none'; 
             }, 300);
         }
-
         document.body.style.overflow = '';
     }
     </script>
-    
-    <!-- Search Overlay -->
     <div class="fixed inset-0 bg-white z-[60] overflow-y-auto transition-transform duration-500 ease-in-out transform -translate-y-full invisible" id="searchOverlay">
-        
         <div id="searchOverlayContent" class="container mx-auto px-4 pb-6 md:pb-8 relative max-w-6xl" style="transition: padding-top 0.3s ease;">
             <div class="relative flex items-center justify-center mb-1 md:mb-2">
                 <h2 class="text-2xl md:text-3xl font-serif text-center"><?php echo htmlspecialchars($ss_heading_text); ?></h2>
@@ -1628,7 +1326,6 @@ if (!empty($headerMenuItems)) {
                     <i class="fas fa-times text-2xl"></i>
                 </button>
             </div>
-            
             <div class="max-w-3xl mx-auto relative mb-2 md:mb-3">
                 <form action="<?php echo url('shop'); ?>" method="GET" class="relative group border border-gray-300 rounded-full focus-within:border-black transition-colors px-4" onclick="document.getElementById('headerSearchInput').focus()">
                     <input type="text" name="search" id="headerSearchInput" placeholder="I'm looking for..." 
@@ -1643,13 +1340,10 @@ if (!empty($headerMenuItems)) {
                     </button>
                 </form>
             </div>
-
-            <!-- Trending Search (Always Visible) -->
             <div class="mb-2 md:mb-3 text-center hidden md:block">
                 <h3 class="text-lg font-serif mb-2 md:mb-3"><?php echo htmlspecialchars($ss_trending_text); ?></h3>
                 <div class="flex flex-wrap justify-center gap-3">
                     <?php
-                    // Fetch random categories for Trending Search
                     $trendingCats = [];
                     try {
                         $trendingCats = $db->fetchAll("SELECT name, slug FROM categories WHERE status='active' AND (store_id = ? OR store_id IS NULL) ORDER BY RAND() LIMIT 5", [$storeId]);
@@ -1669,19 +1363,13 @@ if (!empty($headerMenuItems)) {
                     <?php endif; ?>
                 </div>
             </div>
-
-            <!-- Popular Products (Hidden on Search) -->
             <div id="searchPopularContent" class="animate-fade-in">
-                <!-- Popular Products -->
                 <div>
                     <h3 class="text-base md:text-lg font-serif mb-2 md:mb-3 text-center"><?php echo htmlspecialchars($ss_popular_heading); ?></h3>
-                    
-                    <!-- Popular Products Slider -->
                     <div class="relative group/slider">
                         <div class="overflow-hidden px-1">
                             <div id="popularProductsSlider" class="flex transition-transform duration-500 ease-out will-change-transform gap-4">
                                 <?php
-                                // Fetch popular products (random 5 from active products)
                                 $popularProducts = [];
                                 try {
                                     $popularProducts = $db->fetchAll("SELECT id, name, slug, price, sale_price, images, featured_image FROM products WHERE status='active' AND (store_id = ? OR store_id IS NULL) ORDER BY RAND() LIMIT 5", [$storeId]);
@@ -1690,7 +1378,7 @@ if (!empty($headerMenuItems)) {
                                 foreach ($popularProducts as $pp):
                                     $ppPrice = $pp['sale_price'] ?? $pp['price'];
                                     $ppOldPrice = $pp['sale_price'] ? $pp['price'] : null;
-                                    $ppImg = getProductImage($pp); // using helper function from header/functions
+                                    $ppImg = getProductImage($pp);
                                     $currencySymbol = defined('CURRENCY_SYMBOL') ? CURRENCY_SYMBOL : '₹';
                                 ?>
                                 <div class="min-w-[200px] w-[200px] flex-shrink-0">
@@ -1721,8 +1409,6 @@ if (!empty($headerMenuItems)) {
                                 <?php endforeach; ?>
                             </div>
                         </div>
-
-                        <!-- Navigation Arrows (Popular) -->
                         <button class="absolute -left-2 top-1/2 -translate-y-1/2 bg-white shadow-lg border border-gray-100 rounded-full w-10 h-10 flex items-center justify-center text-gray-800 hover:bg-black hover:text-white transition z-10 hidden" id="popularPrev">
                             <i class="fas fa-chevron-left text-sm"></i>
                         </button>
@@ -1730,20 +1416,14 @@ if (!empty($headerMenuItems)) {
                             <i class="fas fa-chevron-right text-sm"></i>
                         </button>
                     </div>
-
                 </div>
             </div>
-
-            <!-- Live Search Results -->
             <div id="headerSearchResults" class="hidden mt-8">
-                 <!-- Results injected via JS -->
             </div>
         </div>
     </div>
-
     <script>
     document.addEventListener('DOMContentLoaded', function() {
-        // ... (Existing variables)
         const searchOverlay = document.getElementById('searchOverlay');
         const searchInput = document.getElementById('headerSearchInput');
         const popularContent = document.getElementById('searchPopularContent');
@@ -1753,46 +1433,32 @@ if (!empty($headerMenuItems)) {
         const searchSubmitBtn = document.getElementById('headerSearchSubmitBtn');
         const searchClearBtn = document.getElementById('headerSearchClearBtn');
         let searchTimeout;
-
-        // --- REUSABLE SLIDER LOGIC ---
         function setupNativeSlider(sliderId, prevId, nextId) {
             const slider = document.getElementById(sliderId);
             const prevBtn = document.getElementById(prevId);
             const nextBtn = document.getElementById(nextId);
-
             if (!slider || !prevBtn || !nextBtn) return;
 
             let currentIndex = 0;
-            const itemWidth = 200; // width of card
-            const gap = 16; // gap-4 = 16px
+            const itemWidth = 200; 
+            const gap = 16;
             let keyHandler = null;
-            
             function updateSlider() {
                 const containerWidth = slider.parentElement.offsetWidth;
                 const totalWidth = slider.scrollWidth;
                 const effectiveItemWidth = itemWidth + gap;
                 const itemsInView = Math.floor(containerWidth / effectiveItemWidth);
                 const maxIndex = Math.max(0, slider.children.length - itemsInView);
-                
-                // Clamp index
                 if (currentIndex < 0) currentIndex = 0;
                 if (currentIndex > maxIndex) currentIndex = maxIndex;
-
                 const translateX = -(currentIndex * effectiveItemWidth);
                 slider.style.transform = `translateX(${translateX}px)`;
-
-                // Update buttons
                 prevBtn.style.display = currentIndex > 0 ? 'flex' : 'none';
                 nextBtn.style.display = currentIndex < maxIndex ? 'flex' : 'none';
             }
-
-            // Click Handlers
             prevBtn.onclick = (e) => { e.preventDefault(); currentIndex--; updateSlider(); };
             nextBtn.onclick = (e) => { e.preventDefault(); currentIndex++; updateSlider(); };
-
-            // Input Handling (Touch, Mouse, Keyboard)
             let startX, currentX, isDragging = false;
-
             const startDrag = (x) => {
                 startX = x;
                 isDragging = true;
@@ -1804,7 +1470,6 @@ if (!empty($headerMenuItems)) {
                 if (!isDragging) return;
                 currentX = x;
             };
-
             const endDrag = (x) => {
                 if (!isDragging) return;
                 isDragging = false;
@@ -1818,53 +1483,32 @@ if (!empty($headerMenuItems)) {
                 }
                 updateSlider();
             };
-
-            // Touch Events
             slider.addEventListener('touchstart', (e) => startDrag(e.touches[0].clientX), {passive: true});
             slider.addEventListener('touchmove', (e) => moveDrag(e.touches[0].clientX), {passive: true});
             slider.addEventListener('touchend', (e) => endDrag(e.changedTouches[0].clientX));
-
-            // Mouse Events
             slider.style.cursor = 'grab';
             slider.addEventListener('mousedown', (e) => { e.preventDefault(); startDrag(e.clientX); });
             slider.addEventListener('mousemove', (e) => { if(isDragging) e.preventDefault(); moveDrag(e.clientX); });
             slider.addEventListener('mouseup', (e) => endDrag(e.clientX));
             slider.addEventListener('mouseleave', (e) => { if (isDragging) endDrag(e.clientX); });
-
-            // Keyboard Navigation
             const handleKeyNav = (e) => {
                 if (document.activeElement.id === 'headerSearchInput') return;
                 if (!document.getElementById('searchOverlay') || document.getElementById('searchOverlay').classList.contains('invisible')) return;
-
-                // Check visibility of this specific slider
-                // If both are present, we might have a conflict, but usually only one is visible
                 const wrapper = slider.closest('#searchPopularContent') || slider.closest('#headerSearchResults');
                 if (wrapper && (wrapper.classList.contains('hidden') || wrapper.style.display === 'none')) return;
-
                 if (e.key === 'ArrowLeft') { e.preventDefault(); currentIndex--; updateSlider(); } 
                 else if (e.key === 'ArrowRight') { e.preventDefault(); currentIndex++; updateSlider(); }
             };
-            
             document.removeEventListener('keydown', slider._keyHandler);
             slider._keyHandler = handleKeyNav;
             document.addEventListener('keydown', handleKeyNav);
-
-            // Initial and Resize
             updateSlider();
             window.addEventListener('resize', updateSlider);
         }
-
-        // Initialize Popular Slider immediately
         setupNativeSlider('popularProductsSlider', 'popularPrev', 'popularNext');
-
-        // --- EXISTING LOGIC ---
-
-        // Open Search
         if (searchBtn && searchOverlay) {
             searchBtn.addEventListener('click', (e) => {
                 e.preventDefault();
-                
-                // Set dynamic padding based on exact header height
                 const searchContent = document.getElementById('searchOverlayContent');
                 if (searchContent) {
                     const headerWrapper = document.getElementById('siteHeaderFixed');
@@ -1874,83 +1518,56 @@ if (!empty($headerMenuItems)) {
                         searchContent.style.paddingTop = window.innerWidth >= 768 ? '100px' : '80px';
                     }
                 }
-
                 searchOverlay.classList.remove('invisible');
-                document.body.style.overflow = 'hidden'; // Prevent background scrolling
-                document.documentElement.style.overflow = 'hidden'; // Hide the scroll track entirely
-                
-                // Slight delay to allow display change to register before transform
+                document.body.style.overflow = 'hidden'; 
+                document.documentElement.style.overflow = 'hidden'; 
                 requestAnimationFrame(() => {
                     searchOverlay.classList.remove('-translate-y-full');
                 });
-                
                 setTimeout(() => searchInput.focus(), 300);
             });
         }
-
-        // Close Search (General Overlay Close)
         const closeSearch = () => {
             searchOverlay.classList.add('-translate-y-full');
             document.body.style.overflow = '';
             document.documentElement.style.overflow = '';
-            
-            // Wait for transition to finish
             setTimeout(() => {
                 searchOverlay.classList.add('invisible');
-                
-                // Reset state
                 searchInput.value = '';
                 if(popularContent) popularContent.classList.remove('hidden');
                 searchResults.classList.add('hidden');
                 searchResults.innerHTML = '';
-                // Reset Icons
                 if(searchSubmitBtn) searchSubmitBtn.classList.remove('hidden');
                 if(searchClearBtn) searchClearBtn.classList.add('hidden');
-            }, 500); // Match duration-500
+            }, 500); 
         };
 
         if (closeBtn) closeBtn.addEventListener('click', closeSearch);
-
-        // Close on ESC
         document.addEventListener('keydown', (e) => {
             if (e.key === 'Escape' && !searchOverlay.classList.contains('invisible')) {
                 closeSearch();
             }
         });
-
-        // Close on Click Outside
         searchOverlay.addEventListener('click', (e) => {
-            // Check if the click target is the overlay itself or the main container wrapper
-            // This prevents closing when clicking inside the functionality
             if (e.target === searchOverlay || e.target.classList.contains('container')) {
                 closeSearch();
             }
         });
-
-        // Clear Button Logic
         if (searchClearBtn) {
             searchClearBtn.addEventListener('click', function() {
                 searchInput.value = '';
                 searchInput.focus();
-                
-                // Toggle Icons
                 searchSubmitBtn.classList.remove('hidden');
                 searchClearBtn.classList.add('hidden');
-
-                // Reset View
                 if(popularContent) popularContent.classList.remove('hidden');
                 searchResults.classList.add('hidden');
                 searchResults.innerHTML = '';
             });
         }
-
-        // Live Search Logic
         if (searchInput && searchResults && popularContent) {
             searchInput.addEventListener('input', function() {
                 const query = this.value.trim();
                 clearTimeout(searchTimeout);
-
-                // Toggle Clear/Submit Buttons
                 if (this.value.length > 0) {
                     if (searchSubmitBtn) searchSubmitBtn.classList.add('hidden');
                     if (searchClearBtn) searchClearBtn.classList.remove('hidden');
@@ -1958,28 +1575,22 @@ if (!empty($headerMenuItems)) {
                     if (searchSubmitBtn) searchSubmitBtn.classList.remove('hidden');
                     if (searchClearBtn) searchClearBtn.classList.add('hidden');
                 }
-
                 if (query.length < 1) {
-                    // Show popular content, hide results
                     popularContent.classList.remove('hidden');
                     searchResults.classList.add('hidden');
                     searchResults.innerHTML = '';
                     return;
                 }
-
-                // Hide popular content, show loading or wait for results
                 popularContent.classList.add('hidden');
-                
                 searchTimeout = setTimeout(() => {
                     const baseUrl = typeof BASE_URL !== 'undefined' ? BASE_URL : '';
                     searchResults.classList.remove('hidden');
                     searchResults.innerHTML = '<div class="text-center py-12"><i class="fas fa-spinner fa-spin text-3xl text-gray-300"></i></div>';
-
                     fetch(`${baseUrl}/api/products.php?search=${encodeURIComponent(query)}&limit=10`)
                         .then(res => res.json())
                         .then(data => {
                             if ((data.success && data.products && data.products.length > 0)) {
-                                // Slider Structure
+                               
                                 let html = `
                                 <div class="mb-4">
                                      <h3 class="text-lg font-serif mb-4 text-gray-900 text-center">Search Results</h3>
@@ -2000,21 +1611,17 @@ if (!empty($headerMenuItems)) {
                                     } else {
                                         priceHtml = `<span class="price-val font-semibold text-sm">${formatPrice(p.price)}</span>`;
                                     }
-
-
                                     let imgSrc = '';
                                     if (p.images) { try { const imgs = JSON.parse(p.images); imgSrc = imgs[0] || ''; } catch(e) {} }
                                     if (!imgSrc && p.featured_image) imgSrc = p.featured_image;
                                     if (imgSrc && !imgSrc.startsWith('http')) imgSrc = baseUrl + '/' + imgSrc.replace(/^\//, '');
                                     if (!imgSrc) imgSrc = baseUrl + '/assets/images/placeholder.png';
                                     const currencySymbol = typeof CURRENCY_SYMBOL !== 'undefined' ? CURRENCY_SYMBOL : '₹';
-                                    
                                     const rating = Math.floor(p.rating || 5);
                                     let ratingHtml = '';
                                     for (let i = 0; i < 5; i++) {
                                         ratingHtml += `<i class="fas fa-star ${i < rating ? '' : 'text-gray-300'}"></i>`;
                                     }
-
                                     html += `
                                         <div class="min-w-[200px] w-[200px] flex-shrink-0">
                                             <a href="${baseUrl}/product?slug=${p.slug}" class="search-product-card block h-full border border-gray-100 rounded-lg shadow-sm hover:shadow-md transition p-3 group">
@@ -2032,11 +1639,9 @@ if (!empty($headerMenuItems)) {
                                         </div>
                                     `;
                                 });
-                                
                                 html += `
                                         </div>
                                     </div>
-                                    
                                     <!-- Navigation Arrows -->
                                     <button class="absolute -left-2 top-1/2 -translate-y-1/2 bg-white shadow-lg border border-gray-100 rounded-full w-10 h-10 flex items-center justify-center text-gray-800 hover:bg-black hover:text-white transition z-10 hidden" id="searchResultPrev">
                                         <i class="fas fa-chevron-left text-sm"></i>
@@ -2045,8 +1650,6 @@ if (!empty($headerMenuItems)) {
                                         <i class="fas fa-chevron-right text-sm"></i>
                                     </button>
                                 </div>`;
-                                
-                                // View All Link
                                 html += `
                                     <div class="text-center mt-8">
                                         <a href="${baseUrl}/shop.php?search=${encodeURIComponent(query)}" class="view-all-search-results inline-block px-8 py-3 bg-black text-white hover:bg-gray-800 transition rounded-full text-sm font-medium hover:font-bold hover:text-white">
@@ -2054,10 +1657,7 @@ if (!empty($headerMenuItems)) {
                                         </a>
                                     </div>
                                 `;
-                                
                                 searchResults.innerHTML = html;
-                                
-                                // Initialize Slider
                                 setTimeout(() => {
                                     setupNativeSlider('searchResultsSlider', 'searchResultPrev', 'searchResultNext');
                                 }, 100);
@@ -2078,7 +1678,6 @@ if (!empty($headerMenuItems)) {
                 }, 300);
             });
         }
-        
         function escapeHtml(text) {
           const map = {
             '&': '&amp;',
@@ -2089,10 +1688,8 @@ if (!empty($headerMenuItems)) {
           };
           return text.replace(/[&<>"']/g, function(m) { return map[m]; });
         }
-
         function formatPrice(val) {
             let symbol = typeof CURRENCY_SYMBOL !== 'undefined' ? CURRENCY_SYMBOL : '₹';
-            // Safety: if symbol is numeric and long (like a bug result), fallback to Rupee
             if (!isNaN(parseInt(symbol)) && String(symbol).length > 2) {
                 symbol = '₹';
             }

@@ -1,5 +1,4 @@
 <?php
-// Disable error reporting in production for better performance
 error_reporting(0);
 ini_set('display_errors', 0);
 ini_set('log_errors', 1);
@@ -8,13 +7,10 @@ $pageTitle = 'Home';
 require_once __DIR__ . '/includes/header.php';
 ?>
 <?php
-// --- VISIBILITY CONFIGURATION ---
 function getSectionConfig($file) {
     $path = __DIR__ . '/admin/' . $file;
     return file_exists($path) ? json_decode(file_get_contents($path), true) : [];
 }
-
-// 1. Banner
 $bannerConfigPath = __DIR__ . '/admin/banner_config.json';
 $bannerConf = file_exists($bannerConfigPath) ? json_decode(file_get_contents($bannerConfigPath), true) : [];
 $showBanner = $bannerConf['show_section'] ?? true;
@@ -23,99 +19,59 @@ $bannerAlignment = $bannerConf['alignment'] ?? 'left';
 $bannerAlignmentMobile = $bannerConf['alignment_mobile'] ?? 'center';
 $bannerContentWidth = $bannerConf['content_width'] ?? '100';
 $bannerAdaptiveHeight = $bannerConf['adaptive_mobile_height'] ?? false;
-
-// Fetch Banner Styles
 $bannerStylesJson = $settingsObj->get('banner_styles', '{"heading_color":"#ffffff","subheading_color":"#f3f4f6","button_bg_color":"#ffffff","button_text_color":"#000000","arrow_bg_color":"#ffffff","arrow_icon_color":"#1f2937"}');
 $bannerStyles = json_decode($bannerStylesJson, true);
-
-// Fetch Best Selling Styles for Skeleton
 $bsStylesJson = $settingsObj->get('best_selling_styles', '{"bg_color":"#ffffff"}');
 $bsStyles = json_decode($bsStylesJson, true);
 $bsBgColor = $bsStyles['bg_color'] ?? '#ffffff';
-
-// Fetch Trending Styles for Skeleton
 $trStylesJson = $settingsObj->get('trending_styles', '{"bg_color":"#ffffff"}');
 $trStyles = json_decode($trStylesJson, true);
 $trBgColor = $trStyles['bg_color'] ?? '#ffffff';
-
-// Fetch Special Offers Styles for Skeleton
-$soStylesJson = $settingsObj->get('special_offers_styles', '{"bg_color":"#f3f4f6"}'); // Default gray-100 is f3f4f6
+$soStylesJson = $settingsObj->get('special_offers_styles', '{"bg_color":"#f3f4f6"}'); 
 $soStyles = json_decode($soStylesJson, true);
 $soBgColor = $soStyles['bg_color'] ?? '#f3f4f6';
-
-// Fetch Newsletter Styles for Skeleton
 $nlStylesJson = $settingsObj->get('newsletter_styles', '{"bg_color":"#f3f4f6"}');
 $nlStyles = json_decode($nlStylesJson, true);
 $nlBgColor = $nlStyles['bg_color'] ?? '#f3f4f6';
-
-// Fetch Videos Styles for Skeleton
 $vidStylesJson = $settingsObj->get('video_section_styles', '{"bg_color":"#ffffff"}');
 $vidStyles = json_decode($vidStylesJson, true);
 $vidBgColor = $vidStyles['bg_color'] ?? '#ffffff';
-
-// Fetch Philosophy Styles for Skeleton (From DB) - Now moved query up
 $philRow = $db->fetchOne("SELECT active, background_color FROM philosophy_section WHERE store_id = ? LIMIT 1", [CURRENT_STORE_ID]);
 $showPhilosophy = $philRow ? ($philRow['active'] == 1) : true;
 $philBgColor = $philRow['background_color'] ?? '#384135';
-
-// Fetch Features Styles for Skeleton
-// Features uses straightforward settings, not JSON
 $featBgColor = $settingsObj->get('features_section_bg', '#ffffff');
-
-// Fetch Footer Features Styles for Skeleton
-// Footer Features uses straightforward settings, not JSON
 $ffBgColor = $settingsObj->get('footer_features_section_bg', '#ffffff');
-
-// 2. Categories
 $catConf = getSectionConfig('category_config.json');
 $showCategories = $catConf['show_section'] ?? true;
 
-// 3. Products
 $prodConf = getSectionConfig('homepage_products_config.json');
 $showBest = $prodConf['show_best_selling_section'] ?? true;
 $showTrend = $prodConf['show_trending_section'] ?? true;
-
-// 4. Special Offers
 $offerConf = getSectionConfig('special_offers_config.json');
 $showOffers = $offerConf['show_section'] ?? true;
-
-// 5. Videos
 $vidConf = getSectionConfig('video_config.json');
 $showVideos = $vidConf['show_section'] ?? true;
-
-// Fetch Categories Styles for Skeleton
 $catStylesJson = $settingsObj->get('homepage_categories_styles', '{"bg_color":"#ffffff"}');
 $catStyles = json_decode($catStylesJson, true);
 $catBgColor = $catStyles['bg_color'] ?? '#ffffff';
 $catConfig = getSectionConfig('category_config.json');
 $catLayoutType = $catConfig['layout_type'] ?? 'grid';
 
-// Fetch from DB primary for Category if available
 $catSectionData = $db->fetchOne("SELECT layout_type FROM section_categories WHERE (store_id = ? OR store_id IS NULL) ORDER BY store_id DESC LIMIT 1", [CURRENT_STORE_ID]);
 if ($catSectionData && !empty($catSectionData['layout_type'])) {
     $catLayoutType = $catSectionData['layout_type'];
 }
 
-// 6. Newsletter
 $newsConf = getSectionConfig('newsletter_config.json');
 $showNewsletter = $newsConf['show_section'] ?? true;
 
-// 7. Philosophy (DB) - Fetched above
-// $philRow fetching moved up
-// $showPhilosophy calculated above
-
-// 8. Features (Settings)
 $showFeatures = $settingsObj->get('features_section_visibility', '1') == '1';
 
-// 9. Footer Features (Settings)
 $showFooterFeatures = $settingsObj->get('footer_features_section_visibility', '1') == '1';
 ?>
 
 <?php if ($showBanner): ?>
-<!-- Hero Section (Loaded First) -->
-<!-- Skeleton Loader for Banner -->
 <?php
-// Translation of settings to classes for Skeleton
 $sk_d_alignmentClass = ($bannerAlignment === 'center') ? 'md:justify-center' : (($bannerAlignment === 'right') ? 'md:justify-end' : 'md:justify-start');
 $sk_m_alignmentClass = ($bannerAlignmentMobile === 'center') ? 'justify-center' : (($bannerAlignmentMobile === 'right') ? 'justify-end' : 'justify-start');
 $sk_widthClass = ($bannerContentWidth == '50') ? 'md:max-w-[50%]' : (($bannerContentWidth == '40') ? 'md:max-w-[40%]' : 'max-w-md');
@@ -302,14 +258,9 @@ $sk_widthClass = ($bannerContentWidth == '50') ? 'md:max-w-[50%]' : (($bannerCon
 
 <section id="hero-section" class="relative overflow-hidden" style="display: none;">
 <?php
-// Fetch banners from database (Store Specific)
 $banners = $db->fetchAll("SELECT * FROM banners WHERE active = 1 AND (store_id = ? OR store_id IS NULL) ORDER BY display_order ASC", [CURRENT_STORE_ID]);
 
-// Fallback to default banners if none exist
-// Fallback banners removed per user request
 if (empty($banners)) {
-    // If no banners, we can either return or show nothing. 
-    // Since this is the first section, let's just ensure $banners is empty so the foreach doesn't run.
     $banners = [];
 }
 ?>
@@ -318,7 +269,6 @@ if (empty($banners)) {
             <div class="hero-track">
                 <?php foreach ($banners as $index => $banner): ?>
                     <?php 
-                    // Helper to resolve link
                     if (!function_exists('resolveBannerLink')) {
                         function resolveBannerLink($url, $base) {
                             if (empty($url)) return '';
@@ -327,36 +277,25 @@ if (empty($banners)) {
                             return $base . '/' . preg_replace('/\.php($|\?)/', '$1', ltrim($url, '/'));
                         }
                     }
-        
-                    // Handle image URL
                     $bgImage = getImageUrl($banner['image_desktop'] ?? '');
-                    // Only process mobile image if it exists, otherwise leave null to trigger fallback
                     $bgImageMobile = !empty($banner['image_mobile']) ? getImageUrl($banner['image_mobile']) : null;
                     
-                    // Handle Links
                     $desktopLink = resolveBannerLink($banner['link'] ?? '', $baseUrl);
                     $mobileLink = resolveBannerLink(($banner['link_mobile'] ?? '') ?: ($banner['link'] ?? ''), $baseUrl);
-
-                    // Desktop Alignment Classes
                     $d_alignmentClass = ($bannerAlignment === 'center') ? 'md:justify-center' : (($bannerAlignment === 'right') ? 'md:justify-end' : 'md:justify-start');
                     $d_textAlignmentClass = ($bannerAlignment === 'center') ? 'md:text-center' : (($bannerAlignment === 'right') ? 'md:text-right' : 'md:text-left');
                     $d_buttonAlignmentClass = ($bannerAlignment === 'center') ? 'md:justify-center' : (($bannerAlignment === 'right') ? 'md:justify-end' : 'md:justify-start');
-
-                    // Mobile Alignment Classes
                     $m_alignmentClass = ($bannerAlignmentMobile === 'center') ? 'justify-center' : (($bannerAlignmentMobile === 'right') ? 'justify-end' : 'justify-start');
                     $m_textAlignmentClass = ($bannerAlignmentMobile === 'center') ? 'text-center' : (($bannerAlignmentMobile === 'right') ? 'text-right' : 'text-left');
                     $m_buttonAlignmentClass = ($bannerAlignmentMobile === 'center') ? 'justify-center' : (($bannerAlignmentMobile === 'right') ? 'justify-end' : 'justify-start');
                     
-
-
-                    // Desktop Width Class
-                    $widthClass = 'max-w-xl'; // Default
+                    $widthClass = 'max-w-xl'; 
                     if ($bannerContentWidth == '50') $widthClass = 'md:max-w-[50%]';
                     elseif ($bannerContentWidth == '40') $widthClass = 'md:max-w-[40%]';
                     ?>
-                    <!-- Slide <?php echo $index + 1; ?> -->
+                  
                     <div class="hero-slide <?php echo $index === 0 ? 'active' : ''; ?> relative <?php echo $bannerAdaptiveHeight ? 'h-auto md:h-[700px]' : 'h-[600px] md:h-[700px]'; ?>">
-                        <!-- Desktop Image -->
+                        
                         <?php if($desktopLink): ?>
                         <a href="<?php echo htmlspecialchars($desktopLink); ?>" class="hidden md:block absolute inset-0 z-0">
                             <img src="<?php echo htmlspecialchars($bgImage); ?>" 
@@ -375,7 +314,7 @@ if (empty($banners)) {
                         </div>
                         <?php endif; ?>
                         
-                        <!-- Mobile Image (Fallback to desktop if empty) -->
+                        
                         <?php if($mobileLink): ?>
                         <a href="<?php echo htmlspecialchars($mobileLink); ?>" class="md:hidden absolute inset-0 z-0">
                             <img src="<?php echo htmlspecialchars($bgImageMobile ?: $bgImage); ?>" 
@@ -417,8 +356,6 @@ if (empty($banners)) {
                 <?php endforeach; ?>
             </div>
         </div>
-        
-        <!-- Navigation Arrows -->
         <?php 
         $showArrows = $bannerConf['show_arrows'] ?? true;
         if (count($banners) > 1 && $showArrows): 
@@ -429,8 +366,6 @@ if (empty($banners)) {
         <button class="hero-next absolute right-2 md:right-4 top-1/2 transform -translate-y-1/2 bg-white/75 hover:bg-white rounded-full w-10 h-10 md:w-12 md:h-12 flex items-center justify-center text-black z-10 transition shadow-lg border border-white backdrop-blur-sm" aria-label="Next slide" style="display: flex !important; opacity: 1 !important;">
             <i class="fas fa-chevron-right text-sm md:text-base" aria-hidden="true"></i>
         </button>
-        
-        <!-- Slide Indicators -->
         <div class="absolute bottom-4 left-1/2 transform -translate-x-1/2 z-20 flex items-center space-x-2">
             <?php foreach ($banners as $index => $banner): ?>
                 <button class="hero-indicator <?php echo $index === 0 ? 'active' : ''; ?>" aria-label="Go to slide <?php echo $index + 1; ?>" data-slide="<?php echo $index; ?>"></button>
@@ -501,13 +436,11 @@ if (empty($banners)) {
 </style>
 
 <script>
-// Hide skeleton and show hero when DOM is ready
 document.addEventListener('DOMContentLoaded', function() {
     const heroSkeleton = document.getElementById('hero-skeleton');
     const heroSection = document.getElementById('hero-section');
     
     if (heroSkeleton && heroSection) {
-        // Show hero after a short delay to allow initial render, but only if it has slides
         const hasSlides = heroSection.querySelector('.hero-slide');
         setTimeout(function() {
             heroSkeleton.style.display = 'none';
@@ -520,8 +453,6 @@ document.addEventListener('DOMContentLoaded', function() {
         }, 300);
     }
 });
-
-// Hero Banner Slider (Infinite + Drag)
 document.addEventListener('DOMContentLoaded', function() {
     const track = document.querySelector('.hero-track');
     const originalSlides = document.querySelectorAll('.hero-slide');
@@ -530,9 +461,7 @@ document.addEventListener('DOMContentLoaded', function() {
     const indicators = document.querySelectorAll('.hero-indicator');
     const sliderContainer = document.querySelector('.hero-slider');
     
-    if (originalSlides.length < 2) return; // Don't initialize slider if only 1 or 0 slides
-
-    // Clone first and last slides for infinite loop effect
+    if (originalSlides.length < 2) return; 
     const firstClone = originalSlides[0].cloneNode(true);
     const lastClone = originalSlides[originalSlides.length - 1].cloneNode(true);
     
@@ -542,8 +471,8 @@ document.addEventListener('DOMContentLoaded', function() {
     track.appendChild(firstClone);
     track.insertBefore(lastClone, originalSlides[0]);
     
-    const allSlides = document.querySelectorAll('.hero-slide'); // Re-query including clones
-    let currentIndex = 1; // Start at 1 (because of first clone)
+    const allSlides = document.querySelectorAll('.hero-slide'); 
+    let currentIndex = 1; 
     let isDragging = false;
     let startPos = 0;
     let currentTranslate = 0;
@@ -551,15 +480,11 @@ document.addEventListener('DOMContentLoaded', function() {
     let slideInterval;
     const totalSlides = originalSlides.length;
     let isTransitioning = false;
-
-    // Set initial position
     track.style.transform = `translateX(-${currentIndex * 100}%)`;
 
     function getPositionX(event) {
         return event.type.includes('mouse') ? event.pageX : event.touches[0].clientX;
     }
-
-    // Touch/Mouse Events
     sliderContainer.addEventListener('mousedown', touchStart);
     sliderContainer.addEventListener('touchstart', touchStart, {passive: true});
 
@@ -573,10 +498,9 @@ document.addEventListener('DOMContentLoaded', function() {
     sliderContainer.addEventListener('touchmove', touchMove, {passive: true}); 
 
     function touchStart(event) {
-        // Ignore if clicking on controls
         if (event.target.closest('.hero-prev') || event.target.closest('.hero-next') || event.target.closest('.hero-indicator')) return;
         
-        if (isTransitioning) return; // Prevent drag during transition
+        if (isTransitioning) return;
         stopAutoSlide();
         isDragging = true;
         startPos = getPositionX(event);
@@ -609,8 +533,6 @@ document.addEventListener('DOMContentLoaded', function() {
         const diff = currentPosition - startPos;
         
         track.style.transition = 'transform 0.5s ease-out';
-
-        // Boundary checks before incrementing
         if (diff < -50) {
             if (currentIndex < allSlides.length - 1) {
                 currentIndex++;
@@ -629,11 +551,9 @@ document.addEventListener('DOMContentLoaded', function() {
         if (!track) return;
         isTransitioning = true;
         track.style.transform = `translateX(-${currentIndex * 100}%)`;
-        
-        // Use a timeout backup in case transitionend failes (e.g. tab inactive)
         const transitionTimeout = setTimeout(() => {
             checkIndex();
-        }, 550); // Slightly longer than 0.5s transition
+        }, 550); 
 
         const onTransitionEnd = () => {
              clearTimeout(transitionTimeout);
@@ -647,7 +567,7 @@ document.addEventListener('DOMContentLoaded', function() {
     
     function checkIndex() {
         isTransitioning = false;
-        track.style.transition = 'none'; // Disable transition for jump
+        track.style.transition = 'none';
         
         if (currentIndex === 0) {
             currentIndex = allSlides.length - 2;
@@ -657,16 +577,9 @@ document.addEventListener('DOMContentLoaded', function() {
             currentIndex = 1;
             track.style.transform = `translateX(-${currentIndex * 100}%)`;
         }
-        
-        // Restore transition after small delay for next move
-        // We don't necessarily need to restore it immediately, only on next action
-        // But safe to restore in a requestAnimationFrame
         requestAnimationFrame(() => {
-             // track.style.transition = 'transform 0.5s ease-out'; 
-             // Don't restore here per se, individual actions will set it to ease-out or none
         });
     }
-
     function moveToNextSlide() {
         if (isTransitioning) return;
         if (currentIndex >= allSlides.length - 1) return;
@@ -674,7 +587,6 @@ document.addEventListener('DOMContentLoaded', function() {
         track.style.transition = 'transform 0.5s ease-out';
         updateSlidePosition();
     }
-
     function moveToPrevSlide() {
         if (isTransitioning) return;
         if (currentIndex <= 0) return;
@@ -682,7 +594,6 @@ document.addEventListener('DOMContentLoaded', function() {
         track.style.transition = 'transform 0.5s ease-out';
         updateSlidePosition();
     }
-    
     function updateIndicators() {
         let realIndex = currentIndex - 1;
         if (realIndex < 0) realIndex = totalSlides - 1;
@@ -696,50 +607,41 @@ document.addEventListener('DOMContentLoaded', function() {
             }
         });
     }
-
-    // Auto Play
     function startAutoSlide() {
         stopAutoSlide();
         slideInterval = setInterval(() => {
             moveToNextSlide();
         }, 5000);
     }
-
     function stopAutoSlide() {
         clearInterval(slideInterval);
     }
-    
-    // Controls
     if (nextBtn) {
         nextBtn.addEventListener('click', (e) => {
-            e.stopPropagation(); // Stop propagation to container
+            e.stopPropagation(); 
             stopAutoSlide();
             moveToNextSlide();
             startAutoSlide();
         });
     }
-
     if (prevBtn) {
         prevBtn.addEventListener('click', (e) => {
-             e.stopPropagation(); // Stop propagation to container
+             e.stopPropagation();
             stopAutoSlide();
             moveToPrevSlide();
             startAutoSlide();
         });
     }
-    
     indicators.forEach((indicator, index) => {
         indicator.addEventListener('click', (e) => {
-            e.stopPropagation(); // Stop propagation to container
+            e.stopPropagation();
             stopAutoSlide();
-            currentIndex = index + 1; // +1 because of first clone
+            currentIndex = index + 1;
             track.style.transition = 'transform 0.5s ease-out';
             updateSlidePosition();
             startAutoSlide();
         });
     });
-
-    // Pause on hover
     sliderContainer.addEventListener('mouseenter', stopAutoSlide);
     sliderContainer.addEventListener('mouseleave', startAutoSlide);
 
@@ -747,17 +649,12 @@ document.addEventListener('DOMContentLoaded', function() {
 });
 
 </script>
-
-<!-- Categories Skeleton -->
 <?php if ($showCategories): ?>
 <div id="categories-section" class="section-loading">
     <section class="pt-5 md:pt-12 pb-1 md:pb-6" style="background-color: <?php echo htmlspecialchars($catBgColor); ?>;">
         <?php
-        // Mirror the same container logic as categories.php
         $skelContainerClass = ($catLayoutType === 'slider') ? 'container mx-auto px-0 md:px-4' : 'container mx-auto px-4';
-
-        // Mirror the exact mobile width class from categories.php using $catMobileSize
-        $skelMobileGridClass  = 'w-[calc(50%-12px)]';  // default 2
+        $skelMobileGridClass  = 'w-[calc(50%-12px)]';  
         $skelMobileSliderClass = 'w-[calc(50%-8px)]';
         if ($catMobileSize == '1') {
             $skelMobileGridClass  = 'w-full';
@@ -769,7 +666,6 @@ document.addEventListener('DOMContentLoaded', function() {
             $skelMobileGridClass  = 'w-[calc(25%-18px)]';
             $skelMobileSliderClass = 'w-[calc(25%-12px)]';
         }
-
         if ($catLayoutType === 'slider') {
             $skelItemClass  = $skelMobileSliderClass . ' md:w-[180px] lg:w-[150px] flex-shrink-0';
             $skelWrapClass  = 'flex gap-1 md:gap-6 w-fit mx-auto overflow-hidden';
@@ -787,16 +683,13 @@ document.addEventListener('DOMContentLoaded', function() {
                     <div class="absolute inset-0 animate-shimmer"></div>
                 </div>
             </div>
-
             <div class="<?php echo $skelWrapClass; ?>">
                 <?php for($i = 0; $i < 6; $i++): ?>
                 <div class="<?php echo $skelItemClass; ?> flex flex-col items-center text-center my-2 px-1">
-                    <!-- Circle image — same max-width as real cat-img-container -->
                     <div class="w-full aspect-square bg-gray-200 rounded-full mb-4 relative overflow-hidden"
                          style="max-width:120px; margin-left:auto; margin-right:auto;">
                         <div class="absolute inset-0 animate-shimmer"></div>
                     </div>
-                    <!-- Title bar -->
                     <div class="h-3 bg-gray-200 rounded w-16 relative overflow-hidden">
                         <div class="absolute inset-0 animate-shimmer"></div>
                     </div>
@@ -807,10 +700,6 @@ document.addEventListener('DOMContentLoaded', function() {
     </section>
 </div>
 <?php endif; ?>
-
-
-
-<!-- Best Selling Skeleton -->
 <?php if ($showBest): ?>
 <div id="best-selling-section" class="section-loading">
     <section class="pt-2 md:pt-12 pb-2 md:pb-4" style="background-color: <?php echo htmlspecialchars($bsBgColor); ?>;">
@@ -823,7 +712,6 @@ document.addEventListener('DOMContentLoaded', function() {
                     <div class="absolute inset-0 animate-shimmer"></div>
                 </div>
             </div>
-            <!-- Skeleton: matches slider layout (horizontal scroll on mobile, grid on desktop) -->
             <div class="skel-slider-row">
                 <?php for($i=0; $i<4; $i++): ?>
                 <div class="skel-card-item">
@@ -850,9 +738,6 @@ document.addEventListener('DOMContentLoaded', function() {
     </section>
 </div>
 <?php endif; ?>
-
-
-<!-- Special Offers Skeleton -->
 <?php if ($showOffers): ?>
 <div id="special-offers-section" class="section-loading">
     <section class="pt-2 md:pt-6 pb-8" style="background-color: <?php echo htmlspecialchars($soBgColor); ?>;">
@@ -876,8 +761,6 @@ document.addEventListener('DOMContentLoaded', function() {
     </section>
 </div>
 <?php endif; ?>
-
-<!-- Videos Skeleton -->
 <?php if ($showVideos): ?>
 <div id="videos-section" class="section-loading">
     <section class="pt-5 md:pt-12 pb-8" style="background-color: <?php echo htmlspecialchars($vidBgColor); ?>;">
@@ -890,7 +773,6 @@ document.addEventListener('DOMContentLoaded', function() {
                     <div class="absolute inset-0 animate-shimmer"></div>
                 </div>
             </div>
-            <!-- Matches actual video slider layout -->
             <div class="skel-slider-row">
                 <?php for($i=0; $i<4; $i++): ?>
                 <div class="skel-card-item" style="height:400px;">
@@ -904,9 +786,6 @@ document.addEventListener('DOMContentLoaded', function() {
     </section>
 </div>
 <?php endif; ?>
-
-
-<!-- Trending Skeleton -->
 <?php if ($showTrend): ?>
 <div id="trending-section" class="section-loading">
     <section class="pt-5 md:pt-12 pb-8" style="background-color: <?php echo htmlspecialchars($trBgColor); ?>;">
@@ -919,7 +798,6 @@ document.addEventListener('DOMContentLoaded', function() {
                     <div class="absolute inset-0 animate-shimmer"></div>
                 </div>
             </div>
-            <!-- Skeleton: matches slider layout -->
             <div class="skel-slider-row">
                 <?php for($i=0; $i<4; $i++): ?>
                 <div class="skel-card-item">
@@ -946,11 +824,6 @@ document.addEventListener('DOMContentLoaded', function() {
     </section>
 </div>
 <?php endif; ?>
-
-
-
-
-<!-- Philosophy Skeleton -->
 <?php if ($showPhilosophy): ?>
 <div id="philosophy-section" class="section-loading pt-8 md:pt-14">
     <section class="py-20" style="background-color: <?php echo htmlspecialchars($philBgColor); ?>;">
@@ -971,13 +844,11 @@ document.addEventListener('DOMContentLoaded', function() {
     </section>
 </div>
 <?php endif; ?>
-
-<!-- Features Skeleton -->
 <?php if ($showFeatures): ?>
 <div id="features-section" class="section-loading">
     <section class="py-16" style="background-color: <?php echo htmlspecialchars($featBgColor); ?>;">
         <div class="container mx-auto px-4">
-            <div class="grid grid-cols-1 md:grid-cols-3 gap-8 text-center">
+            <div class="grid grid-cols-3 gap-2 md:gap-8 text-center">
                 <?php for($i=0; $i<3; $i++): ?>
                 <div class="flex flex-col items-center p-8 space-y-6 bg-gray-50 rounded shadow-sm">
                     <div class="w-16 h-16 bg-gray-200 rounded-full relative overflow-hidden">
@@ -997,8 +868,6 @@ document.addEventListener('DOMContentLoaded', function() {
     </section>
 </div>
 <?php endif; ?>
-
-<!-- Newsletter Skeleton -->
 <?php if ($showNewsletter): ?>
 <div id="newsletter-section" class="section-loading">
     <section class="py-20" style="background-color: <?php echo htmlspecialchars($nlBgColor); ?>;">
@@ -1022,12 +891,11 @@ document.addEventListener('DOMContentLoaded', function() {
     </section>
 </div>
 <?php endif; ?>
-<!-- Footer Features Skeleton -->
 <?php if ($showFooterFeatures): ?>
 <div id="footer-features-section" class="section-loading">
     <section class="py-12" style="background-color: <?php echo htmlspecialchars($ffBgColor); ?>;">
         <div class="container mx-auto px-4">
-            <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6 text-center">
+            <div class="grid grid-cols-2 lg:grid-cols-4 gap-3 md:gap-6 text-center">
                 <?php for($i=0; $i<4; $i++): ?>
                 <div class="p-8 bg-gray-50 rounded space-y-4">
                     <div class="w-12 h-12 bg-gray-200 rounded-full mx-auto relative overflow-hidden">
@@ -1048,5 +916,4 @@ document.addEventListener('DOMContentLoaded', function() {
 </div>
 <?php endif; ?>
 <?php require_once __DIR__ . '/includes/footer.php'; ?>
-
 <script src="<?php echo $baseUrl; ?>/assets/js/lazy-load19.js?v=25" defer></script>

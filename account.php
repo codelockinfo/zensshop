@@ -232,9 +232,9 @@ if (!$isAjax) {
 
     <?php if (!$isAjax): ?>
         <div class="flex flex-col lg:flex-row gap-8 w-full items-start relative">
-            <!-- Sidebar -->
+          
             <div class="w-full lg:w-72 flex-shrink-0 lg:sticky self-start z-10">
-                <!-- Header -->
+           
                 <div class="mb-10">
                     <h1 class="text-4xl font-bold text-gray-900">Your Account</h1>
                     <p class="text-gray-600 mt-2"><?php echo htmlspecialchars($customer['name'] ?? ''); ?></p>
