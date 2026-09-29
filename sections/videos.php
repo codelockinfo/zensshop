@@ -127,6 +127,7 @@ $sectionId = 'video-section-' . rand(1000, 9999);
                             <?php elseif ($isPlayable): ?>
                                 <video 
                                     class="absolute inset-0 w-full h-full object-cover z-0"
+                                    preload="metadata"
                                     autoplay loop muted playsinline
                                     poster="<?php echo htmlspecialchars($poster); ?>">
                                     <?php if($videoSrc): ?>

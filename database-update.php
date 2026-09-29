@@ -15,6 +15,11 @@
 
 require_once __DIR__ . '/classes/Database.php';
 
+// Set content type for clean browser output
+if (php_sapi_name() !== 'cli') {
+    header('Content-Type: text/plain; charset=utf-8');
+}
+
 // Set to true to actually execute the changes, false for dry-run
 $EXECUTE = true;
 
@@ -834,6 +839,9 @@ if (!columnExists($db, 'special_offers', 'heading')) {
 }
 if (!columnExists($db, 'special_offers', 'subheading')) {
     executeSql($db, "ALTER TABLE special_offers ADD COLUMN subheading TEXT DEFAULT NULL AFTER heading", "Add subheading to special_offers", $errors, $success, $EXECUTE);
+}
+if (!columnExists($db, 'special_offers', 'mobile_image')) {
+    executeSql($db, "ALTER TABLE special_offers ADD COLUMN mobile_image VARCHAR(255) DEFAULT NULL AFTER image", "Add mobile_image to special_offers", $errors, $success, $EXECUTE);
 }
 
 if (!columnExists($db, 'section_videos', 'heading')) {

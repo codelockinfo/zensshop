@@ -2223,6 +2223,6 @@ document.addEventListener('DOMContentLoaded', function() {
 </script>
 <?php endif; ?>
 
-<script src="<?php echo $baseUrl; ?>/assets/js/lazy-load19.js?v=6" defer></script>
+<script src="<?php echo $baseUrl; ?>/assets/js/lazy-load20.js?v=6" defer></script>
 <?php require_once __DIR__ . '/includes/footer.php'; ?>
 

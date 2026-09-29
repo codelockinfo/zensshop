@@ -273,6 +273,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['place_order']) && emp
 // Clear output buffer before including header
 ob_end_clean();
 
+// Release session lock so background/concurrent AJAX requests are not blocked during page render
+session_write_close();
+
 $pageTitle = 'Checkout';
 $isCheckout = true;
 require_once __DIR__ . '/includes/header.php';
