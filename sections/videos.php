@@ -155,17 +155,17 @@ $sectionId = 'video-section-' . rand(1000, 9999);
 
                             <!-- Text Content -->
                             <?php if (empty($embed)): ?>
-                            <div class="absolute inset-x-0 bottom-0 p-8 text-center text-white z-20 pointer-events-none">
+                            <div class="absolute inset-x-0 bottom-0 p-4 md:p-8 text-center text-white z-20 pointer-events-none">
                                 <?php if($subtitle): ?>
-                                <p class="text-xs uppercase tracking-widest mb-2 opacity-100 font-semibold text-white drop-shadow-md"><?php echo htmlspecialchars($subtitle); ?></p>
+                                <p class="text-[10px] md:text-xs uppercase tracking-widest mb-1 md:mb-2 opacity-100 font-semibold text-white drop-shadow-md"><?php echo htmlspecialchars($subtitle); ?></p>
                                 <?php endif; ?>
                                 <?php if($title): ?>
-                                <h3 class="text-2xl font-bold mb-4 font-heading leading-tight text-white drop-shadow-lg"><?php echo htmlspecialchars($title); ?></h3>
+                                <h3 class="text-base md:text-2xl font-bold mb-2 md:mb-4 font-heading leading-tight text-white drop-shadow-lg"><?php echo htmlspecialchars($title); ?></h3>
                                 <?php endif; ?>
                                 
                                 <?php if($link !== '#' && !empty($rawLink)): ?>
                                 <!-- Button: Has the Link. Pointer Events Auto to allow click. -->
-                                <a href="<?php echo htmlspecialchars($link); ?>" class="inline-block bg-white text-black text-sm px-6 py-3 rounded-full font-bold hover:bg-gray-100 transition shadow-lg pointer-events-auto">
+                                <a href="<?php echo htmlspecialchars($link); ?>" class="inline-block bg-white text-black text-xs md:text-sm px-4 md:px-6 py-1.5 md:py-3 rounded-full font-bold hover:bg-gray-100 transition shadow-lg pointer-events-auto">
                                     Shop Now
                                 </a>
                                 <?php endif; ?>

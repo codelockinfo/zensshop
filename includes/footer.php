@@ -299,6 +299,24 @@ $qv_policy_color = $qvStyles['policy_color'] ?? '#374151';
         #quickViewModal {
             z-index: 99999 !important;
         }
+        #quickViewModal .custom-scrollbar::-webkit-scrollbar {
+            width: 6px !important;
+        }
+        #quickViewModal .custom-scrollbar::-webkit-scrollbar-track {
+            background: #f1f5f9 !important;
+            border-radius: 9999px !important;
+        }
+        #quickViewModal .custom-scrollbar::-webkit-scrollbar-thumb {
+            background: #045d36 !important;
+            border-radius: 9999px !important;
+        }
+        #quickViewModal .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+            background: #034729 !important;
+        }
+        #quickViewModal .custom-scrollbar {
+            scrollbar-width: thin !important;
+            scrollbar-color: #045d36 #f1f5f9 !important;
+        }
         #quickViewBackdrop {
             z-index: 99998 !important;
         }
@@ -339,20 +357,21 @@ $qv_policy_color = $qvStyles['policy_color'] ?? '#374151';
         /* Mobile: stacked — image is compact/fixed height, content scrolls below */
         @media (max-width: 767px) {
             #quickViewModal #quickViewPanel {
-                height: min(88vh, 600px) !important;
-                max-height: min(88vh, 600px) !important;
+                height: min(88vh, 620px) !important;
+                max-height: min(88vh, 620px) !important;
             }
 
-            /* Image col: fixed 200px - becomes the positioning context for abs children */
+            /* Image col: 240px - becomes the positioning context for abs children */
             #quickViewModal .qv-img-col {
                 flex-shrink: 0 !important;
-                height: 200px !important;
-                min-height: 200px !important;
+                height: 240px !important;
+                min-height: 240px !important;
                 overflow: hidden !important;
                 position: relative !important;
                 border-bottom: 1px solid #f3f4f6 !important;
-                padding: 0 !important;
+                padding: 8px !important;
                 display: block !important;
+                background-color: #f9fafb !important;
             }
 
             /* Collapse the aspect-ratio wrapper — column is now the size reference */
@@ -369,13 +388,17 @@ $qv_policy_color = $qvStyles['policy_color'] ?? '#374151';
                 inset: 0 !important;
                 width: 100% !important;
                 height: 100% !important;
+                display: flex !important;
+                align-items: center !important;
+                justify-content: center !important;
+                padding: 8px !important;
             }
 
-            /* Image fills the link */
+            /* Image fills the link proportionally without clipping/cropping */
             #quickViewModal #qvMainImage {
                 width: 100% !important;
                 height: 100% !important;
-                object-fit: cover !important;
+                object-fit: contain !important;
                 display: block !important;
             }
 
@@ -385,6 +408,7 @@ $qv_policy_color = $qvStyles['policy_color'] ?? '#374151';
                 inset: 0 !important;
                 width: 100% !important;
                 height: 100% !important;
+                object-fit: contain !important;
             }
 
             /* Discount badge */

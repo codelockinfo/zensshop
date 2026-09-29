@@ -130,9 +130,9 @@ if (file_exists($offersConfigPath)) {
                 </picture>
                 <div class="absolute inset-0 transition offer-overlay"></div>
                 <div class="absolute inset-0 flex flex-col items-center justify-center text-white p-2 md:p-6">
-                    <h3 class="text-sm md:text-2xl font-heading font-bold mb-2 md:mb-4 text-center offer-title leading-tight"><?php echo htmlspecialchars($offer['title']); ?></h3>
+                    <h3 class="text-xs md:text-2xl font-heading font-bold mb-1.5 md:mb-4 text-center offer-title leading-tight"><?php echo htmlspecialchars($offer['title']); ?></h3>
                     <a href="<?php echo htmlspecialchars($link); ?>" 
-                       class="inline-block border px-3 md:px-8 py-1.5 md:py-3 text-xs md:text-base transition offer-btn">
+                       class="inline-block border px-3 md:px-8 py-1 md:py-3 text-[11px] md:text-base transition offer-btn">
                         <?php echo htmlspecialchars($offer['button_text']); ?>
                     </a>
                 </div>
