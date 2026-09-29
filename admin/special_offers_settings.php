@@ -79,7 +79,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         
         // Handle Desktop Image Upload
         if (!empty($_FILES['image']['name'])) {
-            $uploadDir = __DIR__ . '/../assets/special_offers/';
+            $uploadDir = __DIR__ . '/../assets/images/special_offers/';
             if (!is_dir($uploadDir)) mkdir($uploadDir, 0777, true);
             
             $filename = time() . '_desktop_' . preg_replace('/[^a-zA-Z0-9.]/', '_', $_FILES['image']['name']);
@@ -93,7 +93,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         // Handle Mobile Image Upload
         $mobile_image = '';
         if (!empty($_FILES['mobile_image']['name'])) {
-            $uploadDir = __DIR__ . '/../assets/special_offers/';
+            $uploadDir = __DIR__ . '/../assets/images/special_offers/';
             if (!is_dir($uploadDir)) mkdir($uploadDir, 0777, true);
             
             $mob_filename = time() . '_mobile_' . preg_replace('/[^a-zA-Z0-9.]/', '_', $_FILES['mobile_image']['name']);
