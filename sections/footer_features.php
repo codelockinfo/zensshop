@@ -11,9 +11,9 @@ $section_text = $settingsObj->get('footer_features_section_text', '#000000');
 
 $count = count($footerFeatures);
 ?>
-<section class="py-8 md:py-14" style="background-color: <?php echo htmlspecialchars($section_bg); ?>; color: <?php echo htmlspecialchars($section_text); ?>;">
+<section class="py-8 md:py-12" style="background-color: <?php echo htmlspecialchars($section_bg); ?>; color: <?php echo htmlspecialchars($section_text); ?>;">
     <div class="container mx-auto px-4 md:px-6">
-                <div class="bg-white rounded-3xl border border-gray-200/70 shadow-2xl p-4 md:p-8 max-w-7xl mx-auto relative overflow-hidden">
+                <div class="bg-white rounded-3xl border border-gray-200/70 shadow-2xl p-6 md:p-10 max-w-7xl mx-auto relative overflow-hidden">
                         <div class="absolute inset-0 overflow-hidden pointer-events-none z-0">
                 <svg class="w-full h-full min-w-[1000px] opacity-80" viewBox="0 0 1440 320" preserveAspectRatio="none" fill="none">
                     <path d="M0,160 C320,300 420,40 720,160 C1020,280 1120,60 1440,160 L1440,320 L0,320 Z" fill="url(#wave3d-grad)"/>                    <path d="M0,160 C320,300 420,40 720,160 C1020,280 1120,60 1440,160" stroke="rgba(255,255,255,0.9)" stroke-width="4"/>
@@ -31,7 +31,7 @@ $count = count($footerFeatures);
                 <?php foreach ($footerFeatures as $index => $f): 
                     $headingLower = strtolower($f['heading']);
                 ?>
-                <div class="group flex flex-col items-center text-center p-3 md:px-6 md:py-4 transition-all duration-300">
+                <div class="group flex flex-col items-center text-center p-4 md:px-6 md:py-6 transition-all duration-300">
                     
                     <div class="relative mb-3 md:mb-6 select-none group-hover:scale-105 transition-transform duration-300">
                         <div class="absolute inset-0 bg-gray-300/40 rounded-full blur-lg scale-110 translate-y-2 pointer-events-none"></div>

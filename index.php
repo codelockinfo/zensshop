@@ -76,7 +76,7 @@ $sk_d_alignmentClass = ($bannerAlignment === 'center') ? 'md:justify-center' : (
 $sk_m_alignmentClass = ($bannerAlignmentMobile === 'center') ? 'justify-center' : (($bannerAlignmentMobile === 'right') ? 'justify-end' : 'justify-start');
 $sk_widthClass = ($bannerContentWidth == '50') ? 'md:max-w-[50%]' : (($bannerContentWidth == '40') ? 'md:max-w-[40%]' : 'max-w-md');
 ?>
-<div id="hero-skeleton" class="relative overflow-hidden <?php echo $bannerAdaptiveHeight ? 'h-auto py-20' : 'h-[600px] md:h-[700px]'; ?> bg-gradient-to-r from-gray-200 via-gray-300 to-gray-200 animate-pulse">
+<div id="hero-skeleton" class="relative overflow-hidden mb-4 md:mb-8 <?php echo $bannerAdaptiveHeight ? 'h-auto py-20' : 'h-[600px] md:h-[700px]'; ?> bg-gradient-to-r from-gray-200 via-gray-300 to-gray-200 animate-pulse">
     <div class="absolute inset-0 bg-gradient-to-r from-transparent via-white to-transparent opacity-50 animate-shimmer"></div>
     <div class="container mx-auto px-4 h-full flex items-center <?php echo $sk_m_alignmentClass . ' ' . $sk_d_alignmentClass; ?>">
         <div class="<?php echo $sk_widthClass; ?> space-y-4">
@@ -256,7 +256,7 @@ $sk_widthClass = ($bannerContentWidth == '50') ? 'md:max-w-[50%]' : (($bannerCon
     }
 </style>
 
-<section id="hero-section" class="relative overflow-hidden" style="display: none;">
+<section id="hero-section" class="relative overflow-hidden mb-4 md:mb-8" style="display: none;">
 <?php
 $banners = $db->fetchAll("SELECT * FROM banners WHERE active = 1 AND (store_id = ? OR store_id IS NULL) ORDER BY display_order ASC", [CURRENT_STORE_ID]);
 
@@ -825,7 +825,7 @@ document.addEventListener('DOMContentLoaded', function() {
 </div>
 <?php endif; ?>
 <?php if ($showPhilosophy): ?>
-<div id="philosophy-section" class="section-loading pt-0">
+<div id="philosophy-section" class="section-loading pt-3 md:pt-6">
     <section class="py-20" style="background-color: <?php echo htmlspecialchars($philBgColor); ?>;">
         <div class="container mx-auto px-4 text-center">
             <div class="h-10 bg-gray-200 rounded w-3/4 md:w-1/2 mx-auto mb-10 relative overflow-hidden">
@@ -846,7 +846,7 @@ document.addEventListener('DOMContentLoaded', function() {
 <?php endif; ?>
 <?php if ($showFeatures): ?>
 <div id="features-section" class="section-loading">
-    <section class="py-16" style="background-color: <?php echo htmlspecialchars($featBgColor); ?>;">
+    <section class="py-8 md:py-12" style="background-color: <?php echo htmlspecialchars($featBgColor); ?>;">
         <div class="container mx-auto px-4">
             <div class="grid grid-cols-3 gap-2 md:gap-8 text-center">
                 <?php for($i=0; $i<3; $i++): ?>
@@ -893,7 +893,7 @@ document.addEventListener('DOMContentLoaded', function() {
 <?php endif; ?>
 <?php if ($showFooterFeatures): ?>
 <div id="footer-features-section" class="section-loading">
-    <section class="py-12" style="background-color: <?php echo htmlspecialchars($ffBgColor); ?>;">
+    <section class="py-8 md:py-12" style="background-color: <?php echo htmlspecialchars($ffBgColor); ?>;">
         <div class="container mx-auto px-4">
             <div class="grid grid-cols-2 lg:grid-cols-4 gap-3 md:gap-6 text-center">
                 <?php for($i=0; $i<4; $i++): ?>
