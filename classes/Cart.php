@@ -69,6 +69,30 @@ class Cart {
             $this->saveCartToCookie($cartItems);
         }
         
+        // Batch fetch all cart products in a single query
+        $productMap = [];
+        $rawProductIds = array_filter(array_column($cartItems, 'product_id'));
+        if (!empty($rawProductIds)) {
+            $uniquePIds = array_unique($rawProductIds);
+            $placeholders = implode(',', array_fill(0, count($uniquePIds), '?'));
+            $sql = "SELECT p.*, c.name as category_name 
+                    FROM products p 
+                    LEFT JOIN categories c ON p.category_id = c.id 
+                    WHERE p.product_id IN ($placeholders) OR p.id IN ($placeholders)";
+            $params = array_merge($uniquePIds, $uniquePIds);
+            if ($currentStoreId && $currentStoreId !== 'DEFAULT') {
+                $sql .= " AND (p.store_id = ? OR p.store_id IS NULL OR p.store_id = '0' OR p.store_id = '')";
+                $params[] = $currentStoreId;
+            }
+            $productsFetched = $this->db->fetchAll($sql, $params);
+            if (is_array($productsFetched)) {
+                foreach ($productsFetched as $pRow) {
+                    $productMap[(string)$pRow['product_id']] = $pRow;
+                    $productMap[(string)$pRow['id']] = $pRow;
+                }
+            }
+        }
+
         // Ensure all items have required fields and proper image URLs
         $validItems = [];
         foreach ($cartItems as $item) {
@@ -77,16 +101,8 @@ class Cart {
                 continue;
             }
             
-            $productId = $item['product_id'];
-            $product = $this->product->getByProductId($productId, $currentStoreId);
-            
-            // Fallback for old auto-increment IDs
-            if (!$product && is_numeric($productId) && $productId < 1000000000) {
-                $product = $this->product->getById($productId, $currentStoreId);
-                if ($product) {
-                    $item['product_id'] = $product['product_id']; // Use 10-digit ID
-                }
-            }
+            $productId = (string)$item['product_id'];
+            $product = $productMap[$productId] ?? null;
 
             // STRICT FILTER: If product doesn't exist, is draft or inactive, skip it
             if (!$product || ($product['status'] ?? 'active') !== 'active') {

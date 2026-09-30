@@ -93,19 +93,14 @@ async function loadSection(id, endpoint) {
   const container = document.getElementById(id);
   if (!container || container.dataset.loaded === "true") return;
 
-  // Caching check
+  // Caching check - enable instant local caching for maximum speed unless rejected
   const isCachingAllowed = () => {
     if (isCachePolicyAllowed !== null) return isCachePolicyAllowed;
+    const hasRejectedCookie = document.cookie.includes("cookie_consent_status=rejected");
+    if (hasRejectedCookie) return (isCachePolicyAllowed = false);
     const consentRaw = localStorage.getItem("cookieConsent");
-    if (!consentRaw) return (isCachePolicyAllowed = false);
-    try {
-      const data = JSON.parse(consentRaw);
-      isCachePolicyAllowed =
-        data && data.value === "allowed" && data.expires > Date.now();
-    } catch (e) {
-      isCachePolicyAllowed = consentRaw === "allowed";
-    }
-    return isCachePolicyAllowed;
+    if (consentRaw === "rejected") return (isCachePolicyAllowed = false);
+    return (isCachePolicyAllowed = true);
   };
 
   // 1. Try to load from Cache first
