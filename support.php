@@ -9,40 +9,40 @@ $pageTitle = 'Customer Support';
 require_once __DIR__ . '/includes/header.php';
 ?>
 
-<div class="container mx-auto px-4 py-12">
+<div class="container mx-auto px-4 pt-3 pb-6 md:pt-4 md:pb-8">
     <div class="max-w-4xl mx-auto">
-        <div class="text-center mb-8">
-            <h1 class="text-3xl font-bold text-gray-900 mb-2">Customer Support</h1>
-            <p class="text-gray-600">Have a question? We're here to help!</p>
+        <div class="text-center mb-4 md:mb-5">
+            <h1 class="text-2xl md:text-3xl font-bold text-gray-900 mb-1.5">Customer Support</h1>
+            <p class="text-sm md:text-base text-gray-600">Have a question? We're here to help!</p>
         </div>
 
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
-            <div class="bg-white p-6 rounded-lg shadow-sm border">
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-3 md:gap-6 mb-4 md:mb-5">
+            <div class="bg-white p-3.5 md:p-6 rounded-lg shadow-sm border">
                 <div class="flex items-center">
-                    <div class="w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center mr-4">
-                        <i class="fas fa-envelope text-blue-600 text-xl"></i>
+                    <div class="w-10 h-10 md:w-12 md:h-12 bg-blue-100 rounded-full flex items-center justify-center mr-3 md:mr-4 flex-shrink-0">
+                        <i class="fas fa-envelope text-blue-600 text-lg md:text-xl"></i>
                     </div>
                     <div>
-                        <h3 class="font-semibold text-gray-900">Email Us</h3>
-                        <p class="text-sm text-gray-600">We'll respond within 24 hours</p>
+                        <h3 class="font-semibold text-gray-900 text-sm md:text-base">Email Us</h3>
+                        <p class="text-xs md:text-sm text-gray-600">We'll respond within 24 hours</p>
                     </div>
                 </div>
             </div>
 
-            <div class="bg-white p-6 rounded-lg shadow-sm border">
+            <div class="bg-white p-3.5 md:p-6 rounded-lg shadow-sm border">
                 <div class="flex items-center">
-                    <div class="w-12 h-12 bg-green-100 rounded-full flex items-center justify-center mr-4">
-                        <i class="fas fa-clock text-green-600 text-xl"></i>
+                    <div class="w-10 h-10 md:w-12 md:h-12 bg-green-100 rounded-full flex items-center justify-center mr-3 md:mr-4 flex-shrink-0">
+                        <i class="fas fa-clock text-green-600 text-lg md:text-xl"></i>
                     </div>
                     <div>
-                        <h3 class="font-semibold text-gray-900">Response Time</h3>
-                        <p class="text-sm text-gray-600">Usually within 2-4 hours</p>
+                        <h3 class="font-semibold text-gray-900 text-sm md:text-base">Response Time</h3>
+                        <p class="text-xs md:text-sm text-gray-600">Usually within 2-4 hours</p>
                     </div>
                 </div>
             </div>
         </div>
 
-        <div class="bg-white rounded-lg shadow-md p-8 pt-4">
+        <div class="bg-white rounded-lg shadow-md p-4 sm:p-6 md:p-8 pt-3">
             <h2 class="text-2xl font-bold mb-3">Send us a message</h2>
             
             <form id="supportForm" class="space-y-3">
@@ -98,20 +98,20 @@ require_once __DIR__ . '/includes/header.php';
         </div>
 
         <!-- FAQ Section -->
-        <div class="mt-12">
-            <h2 class="text-2xl font-bold mb-6 text-center">Frequently Asked Questions</h2>
-            <div class="space-y-4">
-                <div class="bg-white rounded-lg shadow-sm border p-6">
-                    <h3 class="font-semibold text-gray-900 mb-2">How long does shipping take?</h3>
-                    <p class="text-gray-600">Standard shipping typically takes 3-5 business days. Express shipping is available for 1-2 day delivery.</p>
+        <div class="mt-6 md:mt-6">
+            <h2 class="text-xl md:text-2xl font-bold mb-3 md:mb-4 text-center">Frequently Asked Questions</h2>
+            <div class="space-y-3 md:space-y-4">
+                <div class="bg-white rounded-lg shadow-sm border p-4 md:p-6">
+                    <h3 class="font-semibold text-gray-900 mb-1.5 text-sm md:text-base">How long does shipping take?</h3>
+                    <p class="text-xs md:text-sm text-gray-600">Standard shipping typically takes 3-5 business days. Express shipping is available for 1-2 day delivery.</p>
                 </div>
-                <div class="bg-white rounded-lg shadow-sm border p-6">
-                    <h3 class="font-semibold text-gray-900 mb-2">What is your return policy?</h3>
-                    <p class="text-gray-600">We offer a 30-day return policy for most items. Products must be unused and in original packaging.</p>
+                <div class="bg-white rounded-lg shadow-sm border p-4 md:p-6">
+                    <h3 class="font-semibold text-gray-900 mb-1.5 text-sm md:text-base">What is your return policy?</h3>
+                    <p class="text-xs md:text-sm text-gray-600">We offer a 30-day return policy for most items. Products must be unused and in original packaging.</p>
                 </div>
-                <div class="bg-white rounded-lg shadow-sm border p-6">
-                    <h3 class="font-semibold text-gray-900 mb-2">How can I track my order?</h3>
-                    <p class="text-gray-600">Once your order ships, you'll receive a tracking number via email. You can also check your order status in your account.</p>
+                <div class="bg-white rounded-lg shadow-sm border p-4 md:p-6">
+                    <h3 class="font-semibold text-gray-900 mb-1.5 text-sm md:text-base">How can I track my order?</h3>
+                    <p class="text-xs md:text-sm text-gray-600">Once your order ships, you'll receive a tracking number via email. You can also check your order status in your account.</p>
                 </div>
             </div>
         </div>

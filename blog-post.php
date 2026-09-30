@@ -173,7 +173,7 @@ $banner = $blogSettings['banner'];
         $containerClass = 'max-w-full';
     }
     ?>
-    <div class="container mx-auto px-4 <?php echo $containerClass; ?> py-12 mb-16">
+    <div class="container mx-auto px-4 <?php echo $containerClass; ?> pt-3 pb-8 md:pt-4 md:pb-12 mb-8 md:mb-16">
         <article class="prose prose-lg prose-blue mx-auto max-w-none text-gray-700 leading-relaxed font-sans ck-content">
             <?php echo $blog['content']; // Output raw HTML content ?>
         </article>
@@ -188,8 +188,9 @@ $banner = $blogSettings['banner'];
 
 <style>
 /* Additional Typography Styles for Blog Content */
-.ck-content h2 { margin-top: 2em; margin-bottom: 0.8em; font-size: 1.75em; color: #111; line-height: 1.3; }
-.ck-content h3 { margin-top: 1.5em; margin-bottom: 0.8em; font-size: 1.4em; color: #333; }
+.ck-content h1:first-child, .ck-content h2:first-child, .ck-content h3:first-child, .ck-content p:first-child, .ck-content figure:first-child { margin-top: 0 !important; }
+.ck-content h2 { margin-top: 1.25em; margin-bottom: 0.6em; font-size: 1.75em; color: #111; line-height: 1.3; }
+.ck-content h3 { margin-top: 1em; margin-bottom: 0.6em; font-size: 1.4em; color: #333; }
 .ck-content p { margin-bottom: 1.5em; font-size: 1.125rem; line-height: 1.8; }
 .ck-content ul { list-style-type: disc; padding-left: 1.5em; margin-bottom: 1.5em; }
 .ck-content ol { list-style-type: decimal; padding-left: 1.5em; margin-bottom: 1.5em; }
