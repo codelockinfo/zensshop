@@ -16,6 +16,11 @@ $cartCount = $cart->getCount();
 require_once __DIR__ . '/../classes/Wishlist.php';
 $wishlistObj = new Wishlist();
 $wishlistCount = $wishlistObj->getCount();
+
+// Release session lock early so background AJAX requests (cart, sections, analytics) run in parallel without lock contention
+if (session_status() === PHP_SESSION_ACTIVE) {
+    session_write_close();
+}
 ?>
 <script>
     window.INITIAL_WISHLIST_COUNT = <?php echo (int)$wishlistCount; ?>;

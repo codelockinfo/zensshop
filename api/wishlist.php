@@ -23,6 +23,9 @@ error_log("Request URI: " . ($_SERVER['REQUEST_URI'] ?? 'NOT SET'));
 try {
     switch ($method) {
         case 'GET':
+            if (session_status() === PHP_SESSION_ACTIVE) {
+                session_write_close();
+            }
             // Get wishlist items
             $items = $wishlist->getWishlist();
             echo json_encode([
