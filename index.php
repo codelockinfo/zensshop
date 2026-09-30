@@ -651,7 +651,7 @@ document.addEventListener('DOMContentLoaded', function() {
 </script>
 <?php if ($showCategories): ?>
 <div id="categories-section" class="section-loading">
-    <section class="pt-5 md:pt-12 pb-1 md:pb-6" style="background-color: <?php echo htmlspecialchars($catBgColor); ?>;">
+    <section class="pt-1.5 md:pt-2 pb-1 md:pb-6" style="background-color: <?php echo htmlspecialchars($catBgColor); ?>;">
         <?php
         $skelContainerClass = ($catLayoutType === 'slider') ? 'container mx-auto px-0 md:px-4' : 'container mx-auto px-4';
         $skelMobileGridClass  = 'w-[calc(50%-12px)]';  
@@ -675,7 +675,7 @@ document.addEventListener('DOMContentLoaded', function() {
         }
         ?>
         <div class="<?php echo $skelContainerClass; ?>">
-            <div class="text-center mb-4 md:mb-10">
+            <div class="text-center mb-2 md:mb-4">
                 <div class="h-8 bg-gray-200 rounded w-64 mx-auto mb-4 relative overflow-hidden">
                     <div class="absolute inset-0 animate-shimmer"></div>
                 </div>
@@ -702,9 +702,9 @@ document.addEventListener('DOMContentLoaded', function() {
 <?php endif; ?>
 <?php if ($showBest): ?>
 <div id="best-selling-section" class="section-loading">
-    <section class="pt-2 md:pt-12 pb-2 md:pb-4" style="background-color: <?php echo htmlspecialchars($bsBgColor); ?>;">
+    <section class="pt-1.5 md:pt-2 pb-2 md:pb-4" style="background-color: <?php echo htmlspecialchars($bsBgColor); ?>;">
         <div class="container mx-auto px-4">
-            <div class="text-center mb-4 md:mb-10">
+            <div class="text-center mb-2 md:mb-4">
                 <div class="h-8 bg-gray-200 rounded w-64 mx-auto mb-4 relative overflow-hidden">
                     <div class="absolute inset-0 animate-shimmer"></div>
                 </div>
@@ -740,9 +740,9 @@ document.addEventListener('DOMContentLoaded', function() {
 <?php endif; ?>
 <?php if ($showOffers): ?>
 <div id="special-offers-section" class="section-loading">
-    <section class="pt-2 md:pt-6 pb-8" style="background-color: <?php echo htmlspecialchars($soBgColor); ?>;">
+    <section class="pt-1.5 md:pt-2 pb-8" style="background-color: <?php echo htmlspecialchars($soBgColor); ?>;">
         <div class="container mx-auto px-4">
-            <div class="text-center mb-4 md:mb-10">
+            <div class="text-center mb-2 md:mb-4">
                 <div class="h-10 bg-gray-200 rounded w-72 mx-auto mb-3 relative overflow-hidden">
                     <div class="absolute inset-0 animate-shimmer"></div>
                 </div>
@@ -763,9 +763,9 @@ document.addEventListener('DOMContentLoaded', function() {
 <?php endif; ?>
 <?php if ($showVideos): ?>
 <div id="videos-section" class="section-loading">
-    <section class="pt-5 md:pt-12 pb-8" style="background-color: <?php echo htmlspecialchars($vidBgColor); ?>;">
+    <section class="pt-1.5 md:pt-2 pb-8" style="background-color: <?php echo htmlspecialchars($vidBgColor); ?>;">
         <div class="container mx-auto px-4">
-            <div class="text-center mb-4 md:mb-10">
+            <div class="text-center mb-2 md:mb-4">
                 <div class="h-10 bg-gray-200 rounded w-64 mx-auto mb-3 relative overflow-hidden">
                     <div class="absolute inset-0 animate-shimmer"></div>
                 </div>
@@ -788,9 +788,9 @@ document.addEventListener('DOMContentLoaded', function() {
 <?php endif; ?>
 <?php if ($showTrend): ?>
 <div id="trending-section" class="section-loading">
-    <section class="pt-5 md:pt-12 pb-8" style="background-color: <?php echo htmlspecialchars($trBgColor); ?>;">
+    <section class="pt-1.5 md:pt-2 pb-8" style="background-color: <?php echo htmlspecialchars($trBgColor); ?>;">
         <div class="container mx-auto px-4">
-            <div class="text-center mb-4 md:mb-10">
+            <div class="text-center mb-2 md:mb-4">
                 <div class="h-8 bg-gray-200 rounded w-64 mx-auto mb-4 relative overflow-hidden">
                     <div class="absolute inset-0 animate-shimmer"></div>
                 </div>
@@ -825,7 +825,7 @@ document.addEventListener('DOMContentLoaded', function() {
 </div>
 <?php endif; ?>
 <?php if ($showPhilosophy): ?>
-<div id="philosophy-section" class="section-loading pt-3 md:pt-4">
+<div id="philosophy-section" class="section-loading pt-0">
     <section class="py-20" style="background-color: <?php echo htmlspecialchars($philBgColor); ?>;">
         <div class="container mx-auto px-4 text-center">
             <div class="h-10 bg-gray-200 rounded w-3/4 md:w-1/2 mx-auto mb-10 relative overflow-hidden">

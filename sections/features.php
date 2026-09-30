@@ -14,7 +14,7 @@ $section_bg = $settingsObj->get('features_section_bg', '#ffffff');
 $section_text = $settingsObj->get('features_section_text', '#000000');
 ?>
 
-<section class="py-8 md:py-14" style="background-color: <?php echo htmlspecialchars($section_bg); ?>; color: <?php echo htmlspecialchars($section_text); ?>;">
+<section class="py-3 md:py-6" style="background-color: <?php echo htmlspecialchars($section_bg); ?>; color: <?php echo htmlspecialchars($section_text); ?>;">
     <div class="container mx-auto px-4 md:px-6">
         <!-- Main White Outer Card with 3D Wave Graphic Background -->
         <div class="bg-white rounded-3xl border border-gray-200/70 shadow-2xl p-4 md:p-8 max-w-7xl mx-auto relative overflow-hidden">

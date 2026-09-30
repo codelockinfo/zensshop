@@ -23,7 +23,7 @@ if ($linkUrl && !preg_match('/^https?:\/\//', $linkUrl) && strpos($linkUrl, '#')
 }
 $bgImgUrl = $baseUrl . '/assets/images/philosophy-bg.png'; 
 ?>
-<section class="py-4 md:py-8 lg:py-10 relative overflow-hidden bg-[size:100%_100%] bg-center bg-no-repeat min-h-[250px] md:min-h-[360px] flex items-center justify-center" style="background-color: #000000; background-image: url('<?php echo $bgImgUrl; ?>'); color: <?php echo htmlspecialchars($textColor); ?>;">
+<section class="py-6 md:py-16 lg:py-20 relative overflow-hidden bg-[size:100%_100%] bg-center bg-no-repeat min-h-[300px] md:min-h-[440px] flex items-center justify-center" style="background-color: #000000; background-image: url('<?php echo $bgImgUrl; ?>'); color: <?php echo htmlspecialchars($textColor); ?>;">
     <div class="absolute inset-0 bg-black/40 md:bg-transparent pointer-events-none"></div>
     <div class="container mx-auto px-4 text-center relative z-10">
         <?php if ($heading): ?>
