@@ -168,6 +168,124 @@ class Product {
     }
     
     /**
+     * Get count of products matching filters (Optimized for pagination)
+     */
+    public function getCount($filters = []) {
+        $sql = "SELECT COUNT(DISTINCT p.id) as total
+                FROM products p 
+                LEFT JOIN product_categories pc ON p.product_id = pc.product_id
+                LEFT JOIN categories c ON pc.category_id = c.id 
+                WHERE 1=1";
+        $params = [];
+
+        // Store ID filtering
+        $storeId = $filters['store_id'] ?? null;
+        if (!$storeId) {
+            if (defined('CURRENT_STORE_ID')) {
+                $storeId = CURRENT_STORE_ID;
+            } elseif (function_exists('getCurrentStoreId')) {
+                $storeId = getCurrentStoreId();
+            } else {
+                $storeId = $_SESSION['store_id'] ?? null;
+            }
+        }
+
+        if ($storeId && $storeId !== 'DEFAULT') {
+            $sql .= " AND (p.store_id = ? OR p.store_id IS NULL OR p.store_id = '0' OR p.store_id = '')";
+            $params[] = $storeId;
+        }
+
+        if (!empty($filters['status'])) {
+            $sql .= " AND p.status = ?";
+            $params[] = $filters['status'];
+        } else {
+            $sql .= " AND p.status = 'active'";
+        }
+        
+        if (!empty($filters['category_id'])) {
+            $catId = (int)$filters['category_id'];
+            $sql .= " AND (
+                p.category_id = ? 
+                OR p.category_id LIKE ?
+                OR p.category_id LIKE ?
+                OR p.category_id LIKE ?
+                OR p.category_id LIKE ?
+                OR EXISTS (
+                    SELECT 1 FROM product_categories pc2 
+                    WHERE pc2.product_id = p.product_id AND pc2.category_id = ?
+                )
+            )";
+            $params[] = $catId;
+            $params[] = (string)$catId;
+            $params[] = "%," . $catId . ",%";
+            $params[] = "%\"" . $catId . "\"%";
+            $params[] = "%:" . $catId . ",%";
+            $params[] = $catId;
+        }
+        
+        if (!empty($filters['category_slug'])) {
+            $sql .= " AND (
+                EXISTS (
+                    SELECT 1 FROM categories c3 WHERE c3.id = p.category_id AND c3.slug = ?
+                ) 
+                OR EXISTS (
+                    SELECT 1 FROM categories c4 
+                    WHERE c4.slug = ? AND (
+                        p.category_id = CAST(c4.id AS CHAR)
+                        OR p.category_id LIKE CONCAT('%\"', CAST(c4.id AS CHAR), '\"%')
+                        OR p.category_id LIKE CONCAT('%:', CAST(c4.id AS CHAR), ',%')
+                    )
+                )
+                OR EXISTS (
+                    SELECT 1 FROM product_categories pc3 
+                    INNER JOIN categories c2 ON pc3.category_id = c2.id
+                    WHERE pc3.product_id = p.product_id AND c2.slug = ?
+                )
+            )";
+            $params[] = $filters['category_slug'];
+            $params[] = $filters['category_slug'];
+            $params[] = $filters['category_slug'];
+        }
+        
+        if (!empty($filters['featured'])) {
+            $sql .= " AND p.featured = 1";
+        }
+        
+        if (!empty($filters['search'])) {
+            $sql .= " AND (p.name LIKE ? OR p.description LIKE ? OR c.name LIKE ? OR p.brand LIKE ?)";
+            $searchTerm = "%{$filters['search']}%";
+            $params[] = $searchTerm;
+            $params[] = $searchTerm;
+            $params[] = $searchTerm;
+            $params[] = $searchTerm;
+        }
+        
+        if (!empty($filters['stock_status'])) {
+            if ($filters['stock_status'] === 'out_of_stock') {
+                $sql .= " AND (p.stock_status = 'out_of_stock' OR p.stock_quantity <= 0)";
+            } elseif ($filters['stock_status'] === 'in_stock') {
+                $sql .= " AND (p.stock_status = 'in_stock' AND p.stock_quantity > 0)";
+            } else {
+                $sql .= " AND p.stock_status = ?";
+                $params[] = $filters['stock_status'];
+            }
+        }
+
+        if (!empty($filters['min_price'])) {
+            $sql .= " AND COALESCE(NULLIF(p.sale_price, 0), p.price) >= ?";
+            $params[] = $filters['min_price'];
+        }
+
+        if (!empty($filters['max_price'])) {
+            $sql .= " AND COALESCE(NULLIF(p.sale_price, 0), p.price) <= ?";
+            $params[] = $filters['max_price'];
+        }
+
+        $row = $this->db->fetchOne($sql, $params);
+        return (int)($row['total'] ?? 0);
+    }
+    
+    /**
      * Get products by category slug
      */
     public function getByCategory($categorySlug) {

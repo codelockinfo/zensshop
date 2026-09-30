@@ -24,6 +24,11 @@ if (!$isCustomerLoggedIn && !$isAdminLoggedIn) {
     exit;
 }
 
+// Release session lock before calling external shipping API so other requests aren't blocked
+if (session_status() === PHP_SESSION_ACTIVE) {
+    session_write_close();
+}
+
 $delhivery = new Delhivery();
 $result = $delhivery->checkPincode($pincode);
 $result['debug_store_id'] = defined('CURRENT_STORE_ID') ? CURRENT_STORE_ID : 'NOT_DEFINED';

@@ -34,7 +34,7 @@ try {
         $product = $productObj->getById($id, $storeId);
     }
     
-    if (!$product) {
+    if (!$product || ($product['status'] ?? 'active') !== 'active') {
         echo json_encode(['success' => false, 'message' => 'Product not found']);
         exit;
     }

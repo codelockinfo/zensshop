@@ -20,9 +20,33 @@ const sections = [
 const activeSliders = new Map();
 let isCachePolicyAllowed = null;
 
+// Concurrency queue: max 2 section requests concurrently to prevent server worker starvation
+const sectionQueue = [];
+let activeSectionRequests = 0;
+const MAX_CONCURRENT_SECTION_REQUESTS = 2;
+
+function enqueueSection(id, endpoint) {
+  const container = document.getElementById(id);
+  if (!container || container.dataset.loaded === "true" || container.dataset.queued === "true") return;
+  container.dataset.queued = "true";
+  sectionQueue.push({ id, endpoint });
+  processSectionQueue();
+}
+
+function processSectionQueue() {
+  while (activeSectionRequests < MAX_CONCURRENT_SECTION_REQUESTS && sectionQueue.length > 0) {
+    const item = sectionQueue.shift();
+    activeSectionRequests++;
+    loadSection(item.id, item.endpoint).finally(() => {
+      activeSectionRequests--;
+      processSectionQueue();
+    });
+  }
+}
+
 function initLazyLoading() {
   if (!("IntersectionObserver" in window)) {
-    sections.forEach((s) => loadSection(s.id, s.endpoint));
+    sections.forEach((s) => enqueueSection(s.id, s.endpoint));
     return;
   }
 
@@ -32,20 +56,20 @@ function initLazyLoading() {
         if (entry.isIntersecting) {
           const section = sections.find((s) => s.id === entry.target.id);
           if (section) {
-            loadSection(section.id, section.endpoint);
+            enqueueSection(section.id, section.endpoint);
             obs.unobserve(entry.target);
           }
         }
       });
     },
-    { rootMargin: "200px" },
+    { rootMargin: "150px" },
   );
 
   sections.forEach((s) => {
     const el = document.getElementById(s.id);
     if (el) {
       if (s.id === "categories-section") {
-        loadSection(s.id, s.endpoint);
+        enqueueSection(s.id, s.endpoint);
       } else {
         observer.observe(el);
       }

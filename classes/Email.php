@@ -95,6 +95,8 @@ class Email {
                 $mail->SMTPSecure = PHPMailer\PHPMailer\PHPMailer::ENCRYPTION_STARTTLS;
             }
             $mail->Port = $this->smtpPort;
+            $mail->Timeout = 5; // Max 5s timeout to prevent process hangs
+            $mail->Timelimit = 5;
             
             // Recipients
             $mail->setFrom($this->fromEmail, $this->fromName);

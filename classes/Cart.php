@@ -19,7 +19,7 @@ class Cart {
         $this->product = new Product();
         
         // Start session if not already started and headers not sent
-        if (session_status() === PHP_SESSION_NONE && !headers_sent()) {
+        if (session_status() === PHP_SESSION_NONE && !headers_sent() && empty(session_id())) {
             session_start();
         }
     }
@@ -88,8 +88,8 @@ class Cart {
                 }
             }
 
-            // STRICT FILTER: If product doesn't exist or belongs to another store, skip it
-            if (!$product) {
+            // STRICT FILTER: If product doesn't exist, is draft or inactive, skip it
+            if (!$product || ($product['status'] ?? 'active') !== 'active') {
                 continue;
             }
             
@@ -264,6 +264,10 @@ class Cart {
         
         if (!$product) {
             throw new Exception("Product not found");
+        }
+        
+        if (($product['status'] ?? 'active') !== 'active') {
+            throw new Exception("Product is currently unavailable");
         }
         
         if ($product['stock_status'] !== 'in_stock') {

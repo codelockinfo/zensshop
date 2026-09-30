@@ -17,7 +17,7 @@ class Wishlist {
         $this->product = new Product();
         
         // Start session if not already started and headers not sent
-        if (session_status() === PHP_SESSION_NONE && !headers_sent()) {
+        if (session_status() === PHP_SESSION_NONE && !headers_sent() && empty(session_id())) {
             session_start();
         }
     }
