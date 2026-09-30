@@ -135,7 +135,7 @@ require_once __DIR__ . '/includes/header.php';
 </style>
 
 <!-- Breadcrumb and Wishlist Section -->
-<div class="container mx-auto px-4 py-4 md:py-12">
+<div class="container mx-auto px-4 pt-2 pb-4 md:py-12">
     <!-- Wishlist Skeleton -->
     <div id="wishlistSkeleton" class="animate-pulse">
         <!-- Breadcrumb Skeleton -->
@@ -178,7 +178,7 @@ require_once __DIR__ . '/includes/header.php';
 
     <div id="mainWishlistContent" class="hidden">
         <!-- Breadcrumb -->
-        <nav class="breadcrumb-nav text-sm text-gray-600 mb-8 mt-4 md:mt-0">
+        <nav class="breadcrumb-nav text-sm text-gray-600 mb-3 mt-1 md:mt-0 md:mb-8">
             <a href="<?php echo $baseUrl; ?>/" class="hover:text-primary">Home</a>
             <span class="mx-2">></span>
             <span class="text-gray-900">Wishlist</span>
@@ -186,14 +186,14 @@ require_once __DIR__ . '/includes/header.php';
 
         <h1 class="text-2xl md:text-4xl font-heading font-bold text-center mb-2" style="color: <?php echo $styles['heading_color'] ?? '#1f2937'; ?>;"><?php echo htmlspecialchars($pageHeading); ?></h1>
         <?php if (!empty($pageSubheading)): ?>
-        <p class="text-center mb-8 md:mb-12 max-w-2xl mx-auto" style="color: <?php echo $styles['subheading_color'] ?? '#4b5563'; ?>;"><?php echo htmlspecialchars($pageSubheading); ?></p>
+        <p class="text-center mb-4 md:mb-12 max-w-2xl mx-auto" style="color: <?php echo $styles['subheading_color'] ?? '#4b5563'; ?>;"><?php echo htmlspecialchars($pageSubheading); ?></p>
         <?php else: ?>
-        <div class="mb-5 md:mb-12"></div>
+        <div class="mb-3 md:mb-12"></div>
         <?php endif; ?>
         
         <?php if (empty($wishlistItems)): ?>
             <!-- Empty Wishlist -->
-            <div class="text-center py-16">
+            <div class="text-center py-12 md:py-16">
                 <i class="fas fa-heart text-6xl text-gray-300 mb-4"></i>
                 <h2 class="text-2xl font-heading font-bold mb-2">Your wishlist is empty</h2>
                 <p class="text-gray-600 mb-6">Start adding products you love to your wishlist!</p>
@@ -203,7 +203,7 @@ require_once __DIR__ . '/includes/header.php';
             </div>
         <?php else: ?>
             <!-- Wishlist Items -->
-            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-16">
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-6 md:mb-16">
                 <?php foreach ($wishlistItems as $item): ?>
                     <div class="product-card wishlist-card group relative rounded-lg overflow-hidden hover:shadow-lg transition-shadow flex flex-col h-full" data-no-click-redirect="true" style="background-color: <?php echo $w_card_bg_color; ?>;">
                         <div class="absolute top-2 right-2 z-30 flex flex-col items-center gap-2">
@@ -312,13 +312,13 @@ require_once __DIR__ . '/includes/header.php';
         
         <!-- Recently Viewed Section -->
         <?php if (!empty($recentlyViewed)): ?>
-            <div class="mt-20">
-                <h2 class="text-4xl md:text-5xl font-heading font-bold text-center mb-4">Recently Viewed</h2>
-                <p class="text-center text-gray-600 mb-12 max-w-2xl mx-auto">
+            <div class="mt-8 md:mt-20">
+                <h2 class="text-2xl md:text-5xl font-heading font-bold text-center mb-2 md:mb-4">Recently Viewed</h2>
+                <p class="text-center text-gray-600 mb-4 md:mb-12 max-w-2xl mx-auto">
                     Explore your recently viewed items, blending quality and style for a refined living experience.
                 </p>
                 
-                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-16">
+                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-6 md:mb-16">
                     <?php foreach ($recentlyViewed as $recentProduct): 
                         $recentImages = json_decode($recentProduct['images'] ?? '[]', true);
                         $recentImage = getProductImage($recentProduct);
