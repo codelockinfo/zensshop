@@ -135,14 +135,14 @@ require_once __DIR__ . '/includes/header.php';
 </style>
 
 <!-- Breadcrumb and Wishlist Section -->
-<div class="container mx-auto px-4 pt-2 pb-4 md:py-12">
+<div class="container mx-auto px-4 pt-2 pb-4 md:pt-4 md:pb-8">
     <!-- Wishlist Skeleton -->
     <div id="wishlistSkeleton" class="animate-pulse">
         <!-- Breadcrumb Skeleton -->
-        <div class="h-4 bg-gray-200 rounded w-32 mb-8"></div>
+        <div class="h-4 bg-gray-200 rounded w-32 mb-4"></div>
         
         <!-- Title Skeleton -->
-        <div class="h-10 bg-gray-200 rounded w-48 mx-auto mb-12"></div>
+        <div class="h-10 bg-gray-200 rounded w-48 mx-auto mb-6"></div>
         
         <!-- Grid Skeleton -->
         <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-16">
@@ -178,7 +178,7 @@ require_once __DIR__ . '/includes/header.php';
 
     <div id="mainWishlistContent" class="hidden">
         <!-- Breadcrumb -->
-        <nav class="breadcrumb-nav text-sm text-gray-600 mb-3 mt-1 md:mt-0 md:mb-8">
+        <nav class="breadcrumb-nav text-sm text-gray-600 mb-3 mt-1 md:mt-0 md:mb-4">
             <a href="<?php echo $baseUrl; ?>/" class="hover:text-primary">Home</a>
             <span class="mx-2">></span>
             <span class="text-gray-900">Wishlist</span>
@@ -186,9 +186,9 @@ require_once __DIR__ . '/includes/header.php';
 
         <h1 class="text-2xl md:text-4xl font-heading font-bold text-center mb-2" style="color: <?php echo $styles['heading_color'] ?? '#1f2937'; ?>;"><?php echo htmlspecialchars($pageHeading); ?></h1>
         <?php if (!empty($pageSubheading)): ?>
-        <p class="text-center mb-4 md:mb-12 max-w-2xl mx-auto" style="color: <?php echo $styles['subheading_color'] ?? '#4b5563'; ?>;"><?php echo htmlspecialchars($pageSubheading); ?></p>
+        <p class="text-center mb-4 md:mb-6 max-w-2xl mx-auto" style="color: <?php echo $styles['subheading_color'] ?? '#4b5563'; ?>;"><?php echo htmlspecialchars($pageSubheading); ?></p>
         <?php else: ?>
-        <div class="mb-3 md:mb-12"></div>
+        <div class="mb-3 md:mb-6"></div>
         <?php endif; ?>
         
         <?php if (empty($wishlistItems)): ?>

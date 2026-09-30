@@ -393,10 +393,10 @@ nav.bg-white.sticky.top-0 {
 }
 </style>
 
-<section class="py-8 md:py-12 bg-gray-50 min-h-screen">
+<section class="pt-2 pb-6 md:pt-4 md:pb-10 bg-gray-50 min-h-screen">
     <div class="container mx-auto px-4">
         <!-- Header: Logo & Progress -->
-        <div class="max-w-6xl mx-auto mb-8 flex flex-col md:flex-row items-center justify-start gap-8 md:gap-12">
+        <div class="max-w-6xl mx-auto mb-4 md:mb-4 flex flex-col md:flex-row items-center justify-start gap-3 md:gap-12">
             <!-- Logo -->
             <!-- Logo -->
             <a href="<?php echo $baseUrl; ?>/" class="flex items-center">
@@ -492,12 +492,12 @@ nav.bg-white.sticky.top-0 {
                                 <a href="<?php echo url('cart'); ?>" class="text-gray-400 hover:text-black transition-colors" title="Back to Cart">
                                     <i class="fas fa-chevron-left text-xl"></i>
                                 </a>
-                                <h1 class="text-3xl font-bold text-gray-900 checkout-heading">Checkout</h1>
+                                <h1 class="text-xl md:text-2xl font-bold text-gray-900 checkout-heading">Checkout</h1>
                             </div>
                         </div>
 
                         <?php if ($customer): ?>
-                            <div class="bg-blue-50 border border-blue-100 rounded-xl p-4 mb-8 flex items-center space-x-3 checkout-welcome">
+                            <div class="bg-blue-50 border border-blue-100 rounded-xl p-4 mb-4 md:mb-8 flex items-center space-x-3 checkout-welcome">
                                 <div class="w-10 h-10 bg-blue-600 rounded-full flex items-center justify-center text-white">
                                     <i class="fas fa-user"></i>
                                 </div>

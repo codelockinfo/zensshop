@@ -133,7 +133,7 @@ $sectionId = 'cat-section-' . rand(1000, 9999);
     }
 </style>
 
-<section id="<?php echo $sectionId; ?>" class="pt-4 md:pt-5 pb-2 md:pb-4">
+<section id="<?php echo $sectionId; ?>" class="pt-3 md:pt-3 pb-2 md:pb-4">
 <?php
         $containerClass = 'container mx-auto px-4';
         if ($catLayoutType === 'slider') {
