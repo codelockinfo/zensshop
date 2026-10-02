@@ -64,7 +64,7 @@ require_once __DIR__ . '/includes/header.php';
     
     <?php if (!empty($banner['image'])): ?>
     <!-- Skeleton Loader for Banner -->
-    <div id="page-banner-skeleton" class="relative w-full h-auto min-h-[200px] md:min-h-[300px] bg-gradient-to-r from-gray-200 via-gray-300 to-gray-200 animate-pulse">
+    <div id="page-banner-skeleton" class="relative w-full h-[180px] sm:h-[250px] md:h-[300px] bg-gradient-to-r from-gray-200 via-gray-300 to-gray-200 animate-pulse">
         <div class="absolute inset-0 bg-gradient-to-r from-transparent via-white to-transparent opacity-50 animate-shimmer"></div>
         <div class="absolute inset-0 flex items-center justify-center">
             <div class="text-center space-y-4 px-4">
@@ -75,8 +75,8 @@ require_once __DIR__ . '/includes/header.php';
         </div>
     </div>
     
-    <div id="page-banner" class="relative w-full" style="display: none; background-color: <?php echo $banner['bg_color'] ?? '#f3f4f6'; ?>;">
-        <img src="<?php echo getBaseUrl() . '/' . $banner['image']; ?>" alt="Banner" class="w-full h-auto object-contain" onload="hidePageBannerSkeleton()">
+    <div id="page-banner" class="relative w-full overflow-hidden" style="display: none; background-color: <?php echo $banner['bg_color'] ?? '#f3f4f6'; ?>;">
+        <img src="<?php echo getBaseUrl() . '/' . $banner['image']; ?>" alt="Banner" class="w-full h-[180px] sm:h-[250px] md:h-auto object-cover md:object-contain" onload="hidePageBannerSkeleton()">
         <div class="absolute inset-0 flex items-center justify-center">
             <div class="text-center px-4" style="color: <?php echo $banner['text_color'] ?? '#ffffff'; ?>;">
                 <?php if (!empty($banner['heading'])): ?>

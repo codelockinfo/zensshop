@@ -438,13 +438,15 @@ require_once __DIR__ . '/includes/header.php';
 </div>
 
 <script>
-// Skeleton Loader Handling
+// Skeleton Loader Handling (Fast 50ms Timeline)
 document.addEventListener('DOMContentLoaded', function() {
     const skeleton = document.getElementById('wishlistSkeleton');
     const content = document.getElementById('mainWishlistContent');
     if (skeleton && content) {
-        skeleton.classList.add('hidden');
-        content.classList.remove('hidden');
+        setTimeout(function() {
+            skeleton.classList.add('hidden');
+            content.classList.remove('hidden');
+        }, 50);
     }
 });
 </script>
