@@ -403,9 +403,11 @@ require_once __DIR__ . '/../../includes/admin-header.php';
                         location.reload();
                     }
                 } else {
+                    alert(data.message || 'Action failed');
                     console.error('Delhivery Action Failed:', data.message || 'Action failed');
                 }
             } catch (error) {
+                alert('Network error or timeout. Please check your connection and try again.');
                 console.error('Delhivery Network Error:', error);
             } finally {
                 btn.disabled = false;

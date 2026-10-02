@@ -1,7 +1,10 @@
 <?php
 // Frontend Page Viewer
-if (session_status() === PHP_SESSION_NONE) {
+if (session_status() === PHP_SESSION_NONE && empty(session_id())) {
     session_start();
+}
+if (session_status() === PHP_SESSION_ACTIVE) {
+    session_write_close();
 }
 
 require_once __DIR__ . '/classes/Database.php';

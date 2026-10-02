@@ -3,7 +3,7 @@
  * Wishlist Page
  */
 
-if (session_status() === PHP_SESSION_NONE) {
+if (session_status() === PHP_SESSION_NONE && empty(session_id())) {
     session_start();
 }
 // Release session lock immediately so background requests and page render are non-blocking
@@ -108,15 +108,24 @@ if (!empty($wishlistProductIds)) {
 // Get recently viewed products from cookie
 $recentlyViewed = [];
 if (isset($_COOKIE['recently_viewed'])) {
-    $recentlyViewedIds = json_decode($_COOKIE['recently_viewed'], true);
+    $rawRv = $_COOKIE['recently_viewed'];
+    $recentlyViewedIds = json_decode($rawRv, true);
+    if (!is_array($recentlyViewedIds)) {
+        $recentlyViewedIds = json_decode(stripslashes($rawRv), true);
+    }
+    if (!is_array($recentlyViewedIds)) {
+        $recentlyViewedIds = json_decode(urldecode($rawRv), true);
+    }
     if (is_array($recentlyViewedIds) && !empty($recentlyViewedIds)) {
-        // Get last 4 products
-        $recentlyViewedIds = array_slice(array_reverse($recentlyViewedIds), 0, 4);
-        $placeholders = implode(',', array_fill(0, count($recentlyViewedIds), '?'));
-        $recentlyViewed = $db->fetchAll(
-            "SELECT * FROM products WHERE (product_id IN ($placeholders) OR id IN ($placeholders)) AND status = 'active'",
-            array_merge($recentlyViewedIds, $recentlyViewedIds)
-        );
+        $cleanRvIds = array_values(array_filter(array_unique($recentlyViewedIds)));
+        $cleanRvIds = array_slice(array_reverse($cleanRvIds), 0, 4);
+        if (!empty($cleanRvIds)) {
+            $placeholders = implode(',', array_fill(0, count($cleanRvIds), '?'));
+            $recentlyViewed = $db->fetchAll(
+                "SELECT * FROM products WHERE (product_id IN ($placeholders) OR id IN ($placeholders)) AND status = 'active'",
+                array_merge($cleanRvIds, $cleanRvIds)
+            );
+        }
     }
 }
 

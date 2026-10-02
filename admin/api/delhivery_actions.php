@@ -16,9 +16,9 @@ $action = $_REQUEST['action'] ?? $data['action'] ?? '';
 $orderId = $_REQUEST['order_id'] ?? $data['order_id'] ?? '';
 $orderNumber = $_REQUEST['order_number'] ?? $data['order_number'] ?? '';
 
-if (!$action || (!$orderId && !$orderNumber)) {
+if (!$action) {
     if ($_SERVER['REQUEST_METHOD'] === 'GET') die("Missing parameters");
-    echo json_encode(['success' => false, 'message' => 'Missing parameters']);
+    echo json_encode(['success' => false, 'message' => 'Missing action parameter']);
     exit;
 }
 
@@ -27,6 +27,81 @@ $settings = new Settings();
 $delhivery = new Delhivery();
 
 $storeId = $_SESSION['store_id'] ?? null;
+
+function mapDelhiveryStatusToOrderStatus($status, $statusType = '') {
+    $s = strtolower(trim((string)$status));
+    $st = strtoupper(trim((string)$statusType));
+
+    if (strpos($s, 'delivered') !== false || $st === 'DL') {
+        return 'delivered';
+    }
+    if (strpos($s, 'in transit') !== false || strpos($s, 'dispatched') !== false || strpos($s, 'out for delivery') !== false || strpos($s, 'reached') !== false || strpos($s, 'arrived') !== false) {
+        return 'shipped';
+    }
+    if (strpos($s, 'rto') !== false || strpos($s, 'returned') !== false || $st === 'RT') {
+        return 'returned';
+    }
+    if (strpos($s, 'cancel') !== false) {
+        return 'cancelled';
+    }
+    if (strpos($s, 'not picked') !== false || strpos($s, 'pickup scheduled') !== false || strpos($s, 'ready for pickup') !== false) {
+        return 'ready_for_pickup';
+    }
+    if (strpos($s, 'manifest') !== false) {
+        return 'processing';
+    }
+    return null;
+}
+
+// Global Action: Sync all active shipments from Delhivery
+if ($action === 'sync_all_shipments') {
+    if (ob_get_level() > 0) ob_clean();
+    $db = Database::getInstance();
+    $sql = "SELECT id, order_number, tracking_number, order_status FROM orders WHERE tracking_number IS NOT NULL AND (order_status IS NULL OR order_status NOT IN ('delivered', 'cancelled'))";
+    $params = [];
+    if ($storeId) {
+        $sql .= " AND (store_id = ? OR store_id IS NULL)";
+        $params[] = $storeId;
+    }
+    $activeShipments = $db->fetchAll($sql, $params);
+
+    $updated = 0;
+    $details = [];
+
+    foreach ($activeShipments as $ord) {
+        $wb = trim((string)$ord['tracking_number']);
+        if (empty($wb)) continue;
+
+        $tr = $delhivery->track($wb);
+        if (!empty($tr['ShipmentData'][0]['Shipment']['Status']['Status'])) {
+            $dStatus = $tr['ShipmentData'][0]['Shipment']['Status']['Status'];
+            $dStatusType = $tr['ShipmentData'][0]['Shipment']['Status']['StatusType'] ?? '';
+            $newOrderStatus = mapDelhiveryStatusToOrderStatus($dStatus, $dStatusType);
+
+            if ($newOrderStatus && $newOrderStatus !== $ord['order_status']) {
+                $db->execute("UPDATE orders SET order_status = ?, updated_at = NOW() WHERE id = ?", [$newOrderStatus, $ord['id']]);
+                $updated++;
+                $details[] = "Order {$ord['order_number']}: {$ord['order_status']} -> $newOrderStatus";
+            }
+        }
+        usleep(50000); // 50ms pause
+    }
+
+    echo json_encode([
+        'success' => true,
+        'status' => 'success',
+        'updated_count' => $updated,
+        'message' => "Synced " . count($activeShipments) . " shipments. $updated updated.",
+        'details' => $details
+    ]);
+    exit;
+}
+
+if (!$orderId && !$orderNumber) {
+    if ($_SERVER['REQUEST_METHOD'] === 'GET') die("Missing parameters");
+    echo json_encode(['success' => false, 'message' => 'Missing parameters']);
+    exit;
+}
 
 if ($orderNumber) {
     $orderData = $orderObj->getByOrderNumber($orderNumber, $storeId);
@@ -76,11 +151,12 @@ try {
 
             $result = $delhivery->cancel($waybill);
             if ($result['success']) {
-                // Update order: clear tracking number and move status BACK to 'confirmed' so it reappears in Pending AWB
                 $db = Database::getInstance();
-                $db->execute("UPDATE orders SET tracking_number = NULL, order_status = 'confirmed' WHERE id = ?", [$numericOrderId]);
+                // If order was already cancelled, keep it cancelled; otherwise move status BACK to 'confirmed'
+                $newStatus = (strtolower((string)$orderData['order_status']) === 'cancelled') ? 'cancelled' : 'confirmed';
+                $db->execute("UPDATE orders SET tracking_number = NULL, order_status = ? WHERE id = ?", [$newStatus, $numericOrderId]);
 
-                echo json_encode(['success' => true, 'status' => 'success', 'message' => 'Shipment cancelled successfully and order status updated.', 'debug' => $delhivery->lastRequest]);
+                echo json_encode(['success' => true, 'status' => 'success', 'message' => 'Shipment cancelled successfully in Delhivery.', 'debug' => $delhivery->lastRequest]);
             } else {
                 echo json_encode(['success' => false, 'status' => 'error', 'message' => $result['message'] ?? 'Failed to cancel shipment', 'debug' => $delhivery->lastRequest]);
             }
@@ -95,6 +171,17 @@ try {
 
             $result = $delhivery->track($waybill);
             if ($result['success']) {
+                // Auto-sync status if changed
+                if (!empty($result['ShipmentData'][0]['Shipment']['Status']['Status'])) {
+                    $dStatus = $result['ShipmentData'][0]['Shipment']['Status']['Status'];
+                    $dStatusType = $result['ShipmentData'][0]['Shipment']['Status']['StatusType'] ?? '';
+                    $mapped = mapDelhiveryStatusToOrderStatus($dStatus, $dStatusType);
+                    if ($mapped && $mapped !== $orderData['order_status']) {
+                        $db = Database::getInstance();
+                        $db->execute("UPDATE orders SET order_status = ?, updated_at = NOW() WHERE id = ?", [$mapped, $numericOrderId]);
+                    }
+                }
+
                 echo json_encode([
                     'success' => true, 
                     'status' => 'success',
