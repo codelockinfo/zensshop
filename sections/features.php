@@ -14,10 +14,10 @@ $section_bg = $settingsObj->get('features_section_bg', '#ffffff');
 $section_text = $settingsObj->get('features_section_text', '#000000');
 ?>
 
-<section class="py-8 md:py-14" style="background-color: <?php echo htmlspecialchars($section_bg); ?>; color: <?php echo htmlspecialchars($section_text); ?>;">
+<section class="py-8 md:py-12" style="background-color: <?php echo htmlspecialchars($section_bg); ?>; color: <?php echo htmlspecialchars($section_text); ?>;">
     <div class="container mx-auto px-4 md:px-6">
         <!-- Main White Outer Card with 3D Wave Graphic Background -->
-        <div class="bg-white rounded-3xl border border-gray-200/70 shadow-2xl p-4 md:p-8 max-w-7xl mx-auto relative overflow-hidden">
+        <div class="bg-white rounded-3xl border border-gray-200/70 shadow-2xl p-6 md:p-10 max-w-7xl mx-auto relative overflow-hidden">
             
             <!-- 3D Wave SVG Graphic Background -->
             <div class="absolute inset-0 overflow-hidden pointer-events-none z-0">
@@ -42,7 +42,7 @@ $section_text = $settingsObj->get('features_section_text', '#000000');
                 <?php foreach ($features as $index => $f): 
                     $headingLower = strtolower($f['heading']);
                 ?>
-                <div class="group flex flex-col items-center text-center p-2 md:px-8 md:py-4 transition-all duration-300">
+                <div class="group flex flex-col items-center text-center p-4 md:px-8 md:py-6 transition-all duration-300">
                     
                     <!-- 3D Spherical Glass Icon Badge Container -->
                     <div class="relative mb-3 md:mb-6 select-none group-hover:scale-105 transition-transform duration-300">

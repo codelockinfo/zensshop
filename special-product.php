@@ -608,18 +608,18 @@ require_once __DIR__ . '/includes/header.php';
             if (!$desktopAsset && !$mobileAsset) continue; 
             $wrapLink = !empty($banLink) && empty($banBtn);
         ?>
-        <section class="banner-section w-full relative my-4 px-4 md:px-20 py-4">
+        <section class="banner-section w-full relative my-4 px-2 sm:px-4 md:px-20 py-2 md:py-4">
             <?php if ($wrapLink): ?><a href="<?php echo htmlspecialchars($banLink); ?>" class="block"><?php endif; ?>
             <?php if($isDesktopVideo): ?>
-                <video src="<?php echo htmlspecialchars($desktopAsset); ?>" autoplay muted loop playsinline class="block w-full h-auto object-cover <?php echo $mobileAsset ? 'hidden md:block' : ''; ?>"></video>
+                <video src="<?php echo htmlspecialchars($desktopAsset); ?>" autoplay muted loop playsinline class="block w-full h-[180px] sm:h-[260px] md:h-auto object-cover <?php echo $mobileAsset ? 'hidden md:block' : ''; ?>"></video>
             <?php else: ?>
-                <img src="<?php echo htmlspecialchars($desktopAsset); ?>" class="block w-full h-auto <?php echo $mobileAsset ? 'hidden md:block' : ''; ?>" alt="Banner" onerror="this.src='https://placehold.co/1200x600?text=Banner+Image'">
+                <img src="<?php echo htmlspecialchars($desktopAsset); ?>" class="block w-full h-[180px] sm:h-[260px] md:h-auto object-cover <?php echo $mobileAsset ? 'hidden md:block' : ''; ?>" alt="Banner" onerror="this.src='https://placehold.co/1200x600?text=Banner+Image'">
             <?php endif; ?>
             <?php if($mobileAsset): ?>
                 <?php if($isMobileVideo): ?>
-                    <video src="<?php echo htmlspecialchars($mobileAsset); ?>" autoplay muted loop playsinline class="block w-full h-auto object-cover md:hidden"></video>
+                    <video src="<?php echo htmlspecialchars($mobileAsset); ?>" autoplay muted loop playsinline class="block w-full h-[180px] sm:h-[260px] md:h-auto object-cover md:hidden"></video>
                 <?php else: ?>
-                    <img src="<?php echo htmlspecialchars($mobileAsset); ?>" class="block w-full h-auto md:hidden" alt="Banner Mobile" onerror="this.src='https://placehold.co/600x600?text=Banner+Image'">
+                    <img src="<?php echo htmlspecialchars($mobileAsset); ?>" class="block w-full h-[180px] sm:h-[260px] md:h-auto object-cover md:hidden" alt="Banner Mobile" onerror="this.src='https://placehold.co/600x600?text=Banner+Image'">
                 <?php endif; ?>
             <?php endif; ?>
             <?php if ($wrapLink): ?></a><?php endif; ?>
@@ -764,12 +764,12 @@ require_once __DIR__ . '/includes/header.php';
 
                     <!-- Right Column: Padded White Outer Card with Cream Inner Frame -->
                     <div class="lg:w-1/2 relative flex justify-center items-center w-full">
-                        <div class="relative w-full max-w-lg lg:max-w-xl bg-white p-4 sm:p-6 rounded-xl shadow-2xl border border-gray-100/80 group">
-                            <div class="w-full aspect-[4/3] bg-[#f7f3e9] rounded-lg p-6 flex items-center justify-center">
+                        <div class="relative w-full max-w-lg lg:max-w-xl bg-white p-3 sm:p-4 rounded-xl shadow-2xl border border-gray-100/80 group">
+                            <div class="w-full rounded-lg overflow-hidden bg-[#f7f3e9]">
                                 <img src="<?php echo htmlspecialchars($aboutImage); ?>" 
                                      alt="<?php echo htmlspecialchars($aboutTitle); ?>" 
-                                     class="w-full h-full max-h-[320px] object-contain transform group-hover:scale-105 transition duration-500 ease-out" 
-                                     onerror="this.src='<?php echo getImageUrl('assets/uploads/newsletter/1790255189_16890dad-1f8b-4948-b97e-511b06933cc1.png'); ?>'">
+                                     class="w-full h-[220px] sm:h-[280px] md:h-[320px] object-cover rounded-lg transform group-hover:scale-105 transition duration-500 ease-out" 
+                                     onerror="this.onerror=null; this.src='<?php echo getProductImage($productData); ?>';">
                             </div>
                         </div>
                     </div>

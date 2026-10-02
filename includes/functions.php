@@ -105,24 +105,45 @@ function getImageUrl($path) {
     }
     $cleanPath = ltrim($cleanPath, '/');
     
-    // If path doesn't contain 'assets/' or 'uploads/', it might be a root file or belongs in uploads
+    $rootDir = __DIR__ . '/../';
+
+    // 1. Direct check: If file exists as specified
+    if (file_exists($rootDir . $cleanPath)) {
+        return rtrim($baseUrl, '/') . '/' . $cleanPath;
+    }
+
+    // 2. Check under assets/ subdirectories dynamically
+    if (strpos($cleanPath, 'assets/') !== 0) {
+        if (file_exists($rootDir . 'assets/' . $cleanPath)) {
+            return rtrim($baseUrl, '/') . '/assets/' . $cleanPath;
+        }
+        if (file_exists($rootDir . 'assets/uploads/' . $cleanPath)) {
+            return rtrim($baseUrl, '/') . '/assets/uploads/' . $cleanPath;
+        }
+        if (file_exists($rootDir . 'assets/images/' . $cleanPath)) {
+            return rtrim($baseUrl, '/') . '/assets/images/' . $cleanPath;
+        }
+        if (file_exists($rootDir . 'assets/images/uploads/' . $cleanPath)) {
+            return rtrim($baseUrl, '/') . '/assets/images/uploads/' . $cleanPath;
+        }
+    }
+
+    // 3. Fallback path assembly if file check didn't catch it
     if (strpos($cleanPath, 'assets/') === false && strpos($cleanPath, 'uploads/') === false) {
-        // Check if file exists in root (for favicons)
-        if (!file_exists(__DIR__ . '/../' . $cleanPath)) {
-            // Check if it's a known subfolder in assets/images (like special_offers)
-            $firstSegment = explode('/', $cleanPath)[0];
-            if (is_dir(__DIR__ . '/../assets/images/' . $firstSegment)) {
-                $cleanPath = 'assets/images/' . $cleanPath;
-            } else {
-                $cleanPath = 'assets/images/uploads/' . $cleanPath;
-            }
+        $firstSegment = explode('/', $cleanPath)[0];
+        if (is_dir($rootDir . 'assets/images/' . $firstSegment)) {
+            $cleanPath = 'assets/images/' . $cleanPath;
+        } else {
+            $cleanPath = 'assets/images/uploads/' . $cleanPath;
         }
     } elseif (strpos($cleanPath, 'uploads/') === 0) {
-        // If it starts with uploads/, it likely needs assets/images/ prepended
-        $cleanPath = 'assets/images/' . $cleanPath;
+        if (file_exists($rootDir . 'assets/uploads/' . substr($cleanPath, 8))) {
+            $cleanPath = 'assets/uploads/' . substr($cleanPath, 8);
+        } else {
+            $cleanPath = 'assets/images/' . $cleanPath;
+        }
     }
     
-    // Ensure no double slashes during concatenation
     return rtrim($baseUrl, '/') . '/' . ltrim($cleanPath, '/');
 }
 

@@ -200,7 +200,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && !$isLoggedIn) {
 
 if (!$isAjax) {
     require_once __DIR__ . '/includes/header.php';
-    echo '<div class="pt-8 md:pt-15 pb-8 md:pb-20 bg-gray-50 flex flex-col items-center">';
+    echo '<div class="pt-3 md:pt-15 pb-6 md:pb-20 bg-gray-50 flex flex-col items-center">';
     echo '<div class="container mx-auto px-4 ' . ($isLoggedIn ? 'max-w-8xl' : 'max-w-md') . '">';
 }
 ?>
@@ -235,9 +235,9 @@ if (!$isAjax) {
           
             <div class="w-full lg:w-72 flex-shrink-0 lg:sticky self-start z-10">
            
-                <div class="mb-10">
-                    <h1 class="text-4xl font-bold text-gray-900">Your Account</h1>
-                    <p class="text-gray-600 mt-2"><?php echo htmlspecialchars($customer['name'] ?? ''); ?></p>
+                <div class="mb-4 md:mb-10">
+                    <h1 class="text-2xl md:text-4xl font-bold text-gray-900">Your Account</h1>
+                    <p class="text-gray-600 mt-1"><?php echo htmlspecialchars($customer['name'] ?? ''); ?></p>
                 </div>
                 <nav class="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
                     <div class="p-2 space-y-1">
