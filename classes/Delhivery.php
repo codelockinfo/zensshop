@@ -313,9 +313,17 @@ class Delhivery {
 
         // Prioritize specific package remarks over generic 'rmk'
         $errorMsg = $result['packages'][0]['remarks'][0] ?? $result['rmk'] ?? $result['message'] ?? 'Failed to create shipment';
+        
+        // Clean up raw Delhivery server exceptions into clear explanations
+        if (preg_match("/(?:exception\s*')?(\d+)\s+is non serviceable pincode/i", $errorMsg, $matches)) {
+            $errorMsg = "Delivery Unavailable: Pincode {$matches[1]} is not serviceable by Delhivery. Please update the shipping address.";
+        } elseif (stripos($errorMsg, 'Crashing while saving package') !== false) {
+            $errorMsg = preg_replace('/Crashing while saving package due to exception\s*\'?(.*?)\'?\.\s*Package might have been partially saved\./i', '$1', $errorMsg);
+        }
+
         return [
             'success' => false, 
-            'message' => "$errorMsg (Warehouse: $warehouseName)",
+            'message' => trim("$errorMsg (Warehouse: $warehouseName)"),
             'warehouse' => $warehouseName
         ];
     }

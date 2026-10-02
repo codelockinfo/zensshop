@@ -41,10 +41,14 @@ function mapDelhiveryStatusToOrderStatus($status, $statusType = '') {
     if (strpos($s, 'rto') !== false || strpos($s, 'returned') !== false || $st === 'RT') {
         return 'returned';
     }
-    if (strpos($s, 'cancel') !== false) {
+    if (strpos($s, 'cancel') !== false || strpos($s, 'cnl') !== false || $st === 'CN') {
         return 'cancelled';
     }
-    if (strpos($s, 'not picked') !== false || strpos($s, 'pickup scheduled') !== false || strpos($s, 'ready for pickup') !== false) {
+    if (strpos($s, 'not picked') !== false) {
+        // Driver marked not picked or pickup closed; parcel is back in Ready to Ship so seller can re-request pickup or cancel
+        return 'processing';
+    }
+    if (strpos($s, 'pickup scheduled') !== false || strpos($s, 'ready for pickup') !== false) {
         return 'ready_for_pickup';
     }
     if (strpos($s, 'manifest') !== false) {

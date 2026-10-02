@@ -313,6 +313,17 @@ require_once __DIR__ . '/../../includes/admin-header.php';
                 <i class="fas fa-truck mr-2 text-orange-600"></i>
                 Shipping & Logistics
             </h2>
+
+            <!-- Dynamic Action Banner (Error / Success Notification) -->
+            <div id="delhiveryBanner" class="hidden mb-4 p-3 rounded-lg text-xs flex items-start justify-between gap-2 shadow-sm transition-all duration-300">
+                <div class="flex items-start gap-2.5">
+                    <i id="delhiveryBannerIcon" class="fas fa-exclamation-circle text-red-500 mt-0.5 text-sm flex-shrink-0"></i>
+                    <div id="delhiveryBannerText" class="leading-relaxed font-medium"></div>
+                </div>
+                <button type="button" onclick="hideDelhiveryBanner()" class="opacity-60 hover:opacity-100 ml-2 p-0.5 text-gray-500 hover:text-gray-700" title="Dismiss">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
             
             <?php if (empty($orderData['tracking_number'])): ?>
                 <div class="p-4 bg-gray-50 rounded-lg border border-dashed border-gray-300">
@@ -369,10 +380,51 @@ require_once __DIR__ . '/../../includes/admin-header.php';
         </div>
 
         <script>
+        function showDelhiveryBanner(type, message) {
+            const banner = document.getElementById('delhiveryBanner');
+            const icon = document.getElementById('delhiveryBannerIcon');
+            const text = document.getElementById('delhiveryBannerText');
+            if (!banner || !text) return;
+
+            banner.className = 'mb-4 p-3 rounded-lg text-xs flex items-start justify-between gap-2 shadow-sm transition-all duration-300';
+            
+            // Format and humanize common Delhivery error messages
+            let cleanMsg = message || 'An error occurred';
+            if (cleanMsg.includes('is non serviceable pincode')) {
+                const match = cleanMsg.match(/'(\d+)\s+is non serviceable pincode'/i) || cleanMsg.match(/(\d+)\s+is non serviceable pincode/i);
+                const pin = match ? match[1] : '';
+                cleanMsg = pin 
+                    ? `Delivery Unavailable: Pincode <strong>${pin}</strong> is not serviceable by Delhivery. Please check or edit the customer's delivery pincode.`
+                    : cleanMsg;
+            }
+
+            if (type === 'error') {
+                banner.classList.add('bg-red-50', 'border', 'border-red-200', 'text-red-800');
+                if (icon) icon.className = 'fas fa-exclamation-circle text-red-500 mt-0.5 text-sm flex-shrink-0';
+            } else if (type === 'success') {
+                banner.classList.add('bg-green-50', 'border', 'border-green-200', 'text-green-800');
+                if (icon) icon.className = 'fas fa-check-circle text-green-500 mt-0.5 text-sm flex-shrink-0';
+            } else {
+                banner.classList.add('bg-blue-50', 'border', 'border-blue-200', 'text-blue-800');
+                if (icon) icon.className = 'fas fa-info-circle text-blue-500 mt-0.5 text-sm flex-shrink-0';
+            }
+
+            text.innerHTML = cleanMsg;
+            banner.classList.remove('hidden');
+            banner.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+        }
+
+        function hideDelhiveryBanner() {
+            const banner = document.getElementById('delhiveryBanner');
+            if (banner) banner.classList.add('hidden');
+        }
+
         async function handleDelhiveryAction(action, event) {
             const btn = event.currentTarget;
             const originalContent = btn.innerHTML;
             
+            hideDelhiveryBanner();
+
             if (action === 'cancel_shipment' && !confirm('Are you sure you want to cancel this shipment?')) return;
             
             // Special handling for label download: Bypass AJAX and use direct proxy link
@@ -403,11 +455,11 @@ require_once __DIR__ . '/../../includes/admin-header.php';
                         location.reload();
                     }
                 } else {
-                    alert(data.message || 'Action failed');
+                    showDelhiveryBanner('error', data.message || 'Action failed');
                     console.error('Delhivery Action Failed:', data.message || 'Action failed');
                 }
             } catch (error) {
-                alert('Network error or timeout. Please check your connection and try again.');
+                showDelhiveryBanner('error', 'Network error or timeout. Please check your connection and try again.');
                 console.error('Delhivery Network Error:', error);
             } finally {
                 btn.disabled = false;
@@ -734,8 +786,7 @@ window.openQRModal = function(qrtextBase64, orderNum) {
             qrContainer.innerHTML = '<p class="text-red-500 text-xs text-center py-4">Error generating QR: ' + e.message + '</p>';
         }
     } else {
-        console.error('QR Error: Element #qrCodeContainer not found in DOM.');
-        alert('Software Update Required: Please make sure you have uploaded the latest Order Detail file to the server.');
+        console.warn('QR Error: Element #qrCodeContainer not found in DOM.');
     }
     
     if (modal) {
