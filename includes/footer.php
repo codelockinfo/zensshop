@@ -303,11 +303,7 @@ $qv_policy_color = $qvStyles['policy_color'] ?? '#374151';
                 height: min(88vh, 620px) !important;
                 max-height: min(88vh, 620px) !important;
             }
-<<<<<<< HEAD
-=======
 
-            /* Image col: 240px - becomes the positioning context for abs children */
->>>>>>> fedf887399eeef4825dae4c5f000aabe590a756a
             #quickViewModal .qv-img-col {
                 flex-shrink: 0 !important;
                 height: 240px !important;
