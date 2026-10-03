@@ -14,7 +14,6 @@ if (!isset($wishlistIds)) {
     $wishlistIds = array_column($wishlistItems, 'product_id');
 }
 
-// Get the current product ID and its categories
 if (!$productId) {
     echo ''; exit;
 }
@@ -24,7 +23,6 @@ if (!$productData) {
     echo ''; exit;
 }
 
-// Get categories
 $rawCatId = trim($productData['category_id'] ?? '');
 $catIds = [];
 if (!empty($rawCatId)) {

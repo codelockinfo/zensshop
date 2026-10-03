@@ -12,10 +12,8 @@ $columns = [
 
 foreach ($columns as $name => $def) {
     try {
-        // Use try-catch with direct ALTER to be robust
-        // Or check correctly
         $check = $conn->query("SHOW COLUMNS FROM landing_pages LIKE '$name'");
-        $exists = $check->rowCount() > 0; // Correct PDO method
+        $exists = $check->rowCount() > 0; 
         
         if (!$exists) {
             $conn->query("ALTER TABLE landing_pages ADD COLUMN $name $def");

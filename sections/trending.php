@@ -9,7 +9,6 @@ $db = Database::getInstance();
 $product = new Product();
 $wishlistObj = new Wishlist();
 
-// Get Wishlist IDs for checking status
 $wishlistItems = $wishlistObj->getWishlist();
 $wishlistIds = array_column($wishlistItems, 'product_id');
 
@@ -24,7 +23,6 @@ $products = $db->fetchAll(
     [CURRENT_STORE_ID, CURRENT_STORE_ID]
 );
 
-// Fetch dynamic headers if available from any row
 $sectionHeading = 'Trending Jewelry';
 $sectionSubheading = 'Unmatched design—superior performance and customer satisfaction in one.';
 
@@ -38,28 +36,21 @@ if (file_exists($productsConfigPath)) {
     $sectionSubheading = !empty($products[0]['subheading']) ? $products[0]['subheading'] : $sectionSubheading;
 }
 
-// Fallback logic removed per user request
 ?>
 
 <?php if (!empty($products)): 
-    // Fetch Global Styles
     $settingsObj = new Settings();
     $globalStylesJson = $settingsObj->get('global_card_styles', '{}');
     $globalStyles = json_decode($globalStylesJson, true);
     
-    // Fetch Section Styles
     $stylesJson = $settingsObj->get('trending_styles', '{}'); 
     $styles = json_decode($stylesJson, true);
     
-    // Defaults (Global -> specific override if not empty)
-    // Helper to get style with fallback
     if (!function_exists('getStyleTrending')) {
         function getStyleTrending($key, $local, $global, $default) {
             return !empty($local[$key]) ? $local[$key] : (!empty($global[$key]) ? $global[$key] : $default);
         }
     }
-    
-    // Define styles
     $bg_color = getStyleTrending('bg_color', $styles, $globalStyles, '#ffffff');
     $heading_color = getStyleTrending('heading_color', $styles, $globalStyles, '#1f2937');
     $subheading_color = getStyleTrending('subheading_color', $styles, $globalStyles, '#4b5563');
@@ -193,7 +184,6 @@ if (file_exists($productsConfigPath)) {
                                     </a>
 
                                     <?php
-                                    // Set up attributes for first variant
                                     $vData = $product->getVariants($currentId);
                                     $defaultAttributes = [];
                                     if (!empty($vData['variants'])) {
@@ -207,7 +197,6 @@ if (file_exists($productsConfigPath)) {
                                         $defaultAttributes = $defaultVariant['variant_attributes'];
                                     }
                                     $attributesJson = json_encode($defaultAttributes);
-                                    // $oos already defined above
                                     ?>
                                     <button id="product-card-add-to-cart-btn" onclick='addToCart(<?php echo $currentId; ?>, 1, this, <?php echo htmlspecialchars($attributesJson, ENT_QUOTES, 'UTF-8'); ?>)' 
                                             class="productAddToCartBtn product-action-btn w-10 h-10 rounded-full flex items-center justify-center transition shadow-lg add-to-cart-hover-btn relative group opacity-100 md:opacity-0 md:group-hover:opacity-100 <?php echo $oos ? 'opacity-50 cursor-not-allowed' : ''; ?>"

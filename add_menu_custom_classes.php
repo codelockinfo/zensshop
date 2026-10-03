@@ -10,12 +10,9 @@ $db = Database::getInstance();
 
 try {
     echo "Adding custom_classes column to menu_items table...\n";
-    
-    // Check if column already exists
     $columns = $db->fetchAll("SHOW COLUMNS FROM menu_items LIKE 'custom_classes'");
     
     if (empty($columns)) {
-        // Add custom_classes column
         $db->execute("ALTER TABLE menu_items ADD COLUMN custom_classes TEXT DEFAULT NULL AFTER badge_text");
         echo "✓ Added custom_classes column\n";
     } else {

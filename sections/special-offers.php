@@ -7,19 +7,15 @@ require_once __DIR__ . '/../classes/Settings.php';
 $baseUrl = getBaseUrl();
 $db = Database::getInstance();
 
-// Fetch offers from DB
 try {
     $offers = $db->fetchAll("SELECT * FROM special_offers WHERE active = 1 AND (store_id = ? OR store_id IS NULL) ORDER BY display_order ASC", [CURRENT_STORE_ID]);
 } catch (Exception $e) {
     $offers = [];
 }
 
-// Fallback if empty (should not happen due to seeding, but safe)
 if (empty($offers)) {
-    // Optional: Keep hardcoded fallback or verify it's just empty
 }
 
-// Get Section Heading/Subheading (JSON is master)
 $sectionHeading = 'Special Offers';
 $sectionSubheading = 'Grab limited-time deals on our best products.';
 
@@ -29,19 +25,16 @@ if (file_exists($offersConfigPath)) {
     $sectionHeading = $conf['heading'] ?? $sectionHeading;
     $sectionSubheading = $conf['subheading'] ?? $sectionSubheading;
 } elseif (!empty($offers)) {
-    // Fallback to denormalized data in first row
     $sectionHeading = $offers[0]['heading'] ?? $sectionHeading;
     $sectionSubheading = $offers[0]['subheading'] ?? $sectionSubheading;
 }
 ?>
 
 <?php if (!empty($offers)): 
-    // Fetch Styles
+ 
     $settingsObj = new Settings();
     $stylesJson = $settingsObj->get('special_offers_styles', '{"bg_color":"#ffffff","heading_color":"#111827","subheading_color":"#4b5563","card_overlay_opacity":"40","card_text_color":"#ffffff","button_text_color":"#ffffff","button_border_color":"#ffffff","button_hover_bg":"#ffffff","button_hover_text":"#000000"}');
     $styles = json_decode($stylesJson, true);
-    
-    // Defaults to ensure no broken styles
     $styles['card_overlay_opacity'] = $styles['card_overlay_opacity'] ?? '40';
     $styles['bg_color'] = $styles['bg_color'] ?? '#ffffff';
     $styles['heading_color'] = $styles['heading_color'] ?? '#111827';
@@ -104,10 +97,8 @@ if (file_exists($offersConfigPath)) {
         <div class="grid grid-cols-2 md:grid-cols-2 lg:grid-cols-4 gap-3 md:gap-6">
             <?php foreach ($offers as $offer): ?>
             <?php
-				// Resolve Image URL
 				$imgSrc = getImageUrl($offer['image'] ?? '');
 				
-				// Resolve Link URL
 				$link = $offer['link'];
 				if (!empty($link) && !preg_match('/^https?:\/\//', $link)) {
 					$link = $baseUrl . '/' . ltrim($link, '/');
@@ -118,11 +109,8 @@ if (file_exists($offersConfigPath)) {
                     $mobileImgSrc = !empty($offer['mobile_image']) ? getImageUrl($offer['mobile_image']) : $imgSrc;
                 ?>
                 <picture>
-                    <!-- Mobile image (shown on screens < 768px) -->
                     <source media="(max-width: 767px)" srcset="<?php echo htmlspecialchars($mobileImgSrc); ?>">
-                    <!-- Desktop image (shown on screens >= 768px) -->
                     <source media="(min-width: 768px)" srcset="<?php echo htmlspecialchars($imgSrc); ?>">
-                    <!-- Fallback img -->
                     <img src="<?php echo htmlspecialchars($imgSrc); ?>" 
                          alt="<?php echo htmlspecialchars($offer['title']); ?>" 
                          class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"

@@ -21,8 +21,6 @@ if ($isLoggedIn) {
 
 $orderModel = new Order();
 $wishlistModel = new Wishlist();
-
-// Handle POST actions
 if ($isLoggedIn && $_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
     if ($_POST['action'] === 'remove_address') {
         $auth->updateProfile(['shipping_address' => null]);
@@ -54,9 +52,7 @@ if (isset($_GET['success'])) {
 }
 
 $section = $_GET['section'] ?? 'orders';
-$tab = $_GET['tab'] ?? 'all'; // For orders: current, unpaid, all
-
-// Fetch data based on section
+$tab = $_GET['tab'] ?? 'all';
 $orders = [];
 $addresses = [];
 $wishlistItems = [];
@@ -837,7 +833,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 const iconDiv = l.querySelector('div');
                 if(iconDiv) {
                     iconDiv.classList.remove('bg-blue-100');
-                    iconDiv.classList.add('bg-gray-100'); // Assuming default is gray-100 if not blue-100?
+                    iconDiv.classList.add('bg-gray-100'); 
                   
                 }
             });

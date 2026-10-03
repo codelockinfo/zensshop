@@ -7,22 +7,16 @@ $db = Database::getInstance();
 $settingsObj = new Settings();
 $baseUrl = getBaseUrl();
 
-// Store ID Logic
 $storeId = getCurrentStoreId();
-
-// Handle direct access via ?slug=
 if (!empty($_GET['slug'])) {
     require __DIR__ . '/blog-post.php';
     exit;
 }
 
-// Check if Blog is Enabled
 if ($settingsObj->get('enable_blog', '1') != '1') {
     header("Location: " . $baseUrl);
     exit;
 }
-
-// Fetch Published Blogs
 $blogs = $db->fetchAll("SELECT * FROM blogs WHERE status = 'published' AND (store_id = ? OR store_id IS NULL) ORDER BY created_at DESC", [$storeId]);
 
 $pageTitle = 'Blog';
@@ -30,11 +24,9 @@ require_once __DIR__ . '/includes/header.php';
 ?>
 
 <?php
-// Load Consolidated Settings
 $blogStylingJson = $settingsObj->get('blog_page_styling', '');
 $blogStyling = !empty($blogStylingJson) ? json_decode($blogStylingJson, true) : [];
 
-// Fallback to individual keys if JSON is empty
 if (empty($blogStyling)) {
     $blogStyling = [
         'blog_heading' => $settingsObj->get('blog_heading', 'Our Blogs'),
@@ -53,8 +45,6 @@ if (empty($blogStyling)) {
 $blogBg = $blogStyling['blog_page_bg_color'] ?? '#f9fafb';
 $blogHeadingColor = $blogStyling['blog_heading_color'] ?? '#111827';
 $blogSubheadingColor = $blogStyling['blog_subheading_color'] ?? '#4b5563';
-
-// Card Colors
 $cardBg = $blogStyling['blog_card_bg_color'] ?? '#ffffff';
 $dateColor = $blogStyling['blog_date_color'] ?? '#6b7280';
 $titleColor = $blogStyling['blog_title_color'] ?? '#111827';
@@ -68,8 +58,6 @@ $readMoreColor = $blogStyling['blog_read_more_color'] ?? '#2563eb';
                 <h1 class="text-3xl md:text-4xl font-heading font-bold mb-1" style="color: <?php echo $blogHeadingColor; ?>;">
                     <?php echo htmlspecialchars($settingsObj->get('blog_heading', 'Our Blog')); ?>
                 </h1>
-                
-                <!-- Grid Layout Controls -->
                 <div class="absolute right-0 top-0 hidden lg:flex items-center gap-1 bg-white rounded-lg shadow-sm border border-gray-200 p-1">
                     <span class="text-xs text-gray-500 font-semibold px-2">Columns:</span>
                     <button onclick="setBlogGrid(3)" id="btn-grid-3" class="w-8 h-8 text-sm font-bold rounded bg-gray-200 text-gray-800 transition" title="3 Columns">3</button>
@@ -89,7 +77,6 @@ $readMoreColor = $blogStyling['blog_read_more_color'] ?? '#2563eb';
                 <p class="text-xl">No blog posts available at the moment. Check back later!</p>
             </div>
         <?php else: ?>
-            <!-- Skeleton Loaders for Blog Cards -->
             <div id="blog-skeleton" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
                 <?php for ($i = 0; $i < min(6, count($blogs)); $i++): ?>
                 <div class="rounded-xl shadow-sm overflow-hidden animate-pulse" style="background-color: <?php echo $cardBg; ?>;">
@@ -106,8 +93,6 @@ $readMoreColor = $blogStyling['blog_read_more_color'] ?? '#2563eb';
                 </div>
                 <?php endfor; ?>
             </div>
-            
-            <!-- Actual Blog Cards -->
             <div id="blog-cards" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8" style="display: none;">
                 <?php foreach ($blogs as $blog): ?>
                     <article class="rounded-xl shadow-sm hover:shadow-md transition-shadow overflow-hidden group flex flex-col h-full" style="background-color: <?php echo $cardBg; ?>;">
@@ -165,12 +150,10 @@ $readMoreColor = $blogStyling['blog_read_more_color'] ?? '#2563eb';
 </style>
 
 <script>
-// Grid Switcher Logic
 function setBlogGrid(cols) {
     const skeleton = document.getElementById('blog-skeleton');
     const cards = document.getElementById('blog-cards');
     
-    // Update active button state
     [3, 4, 5].forEach(num => {
         const btn = document.getElementById('btn-grid-' + num);
         if (btn) {
@@ -182,7 +165,6 @@ function setBlogGrid(cols) {
         }
     });
 
-    // Update grid columns class
     const updateGrid = (el) => {
         if (!el) return;
         el.classList.remove('lg:grid-cols-3', 'lg:grid-cols-4', 'lg:grid-cols-5');
@@ -193,7 +175,6 @@ function setBlogGrid(cols) {
     updateGrid(cards);
 }
 
-// Hide skeleton and show blog cards when page loads
 window.addEventListener('load', function() {
     const skeleton = document.getElementById('blog-skeleton');
     const cards = document.getElementById('blog-cards');

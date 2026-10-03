@@ -8,7 +8,6 @@ require_once __DIR__ . '/includes/functions.php';
 $baseUrl = getBaseUrl();
 $db = Database::getInstance();
 $settings = new Settings();
-// Get all active categories (Store Specific)
 $categories = $db->fetchAll(
     "SELECT * FROM categories WHERE status = 'active' AND (store_id = ? OR store_id IS NULL) ORDER BY sort_order ASC, name ASC",
     [CURRENT_STORE_ID]
@@ -86,13 +85,10 @@ $s_btn_hover_text = $styles['btn_hover_text_color'] ?? '#ffffff';
             <?php else: ?>
             <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
                 <?php foreach ($categories as $category): 
-                    // Get category image or use placeholder
                     if (!empty($category['image'])) {
-                        // Check if it's a full URL or relative path
                         if (strpos($category['image'], 'http://') === 0 || strpos($category['image'], 'https://') === 0) {
                             $categoryImage = $category['image'];
                         } else {
-                            // Database stores path like 'assets/images/categories/filename.jpg'
                             $categoryImage = $baseUrl . '/' . ltrim($category['image'], '/');
                         }
                     } else {
@@ -106,7 +102,7 @@ $s_btn_hover_text = $styles['btn_hover_text_color'] ?? '#ffffff';
                              alt="<?php echo htmlspecialchars($category['name']); ?>"
                              class="w-full h-full object-contain group-hover:scale-110 transition-transform duration-500"
                              onerror="this.src='https://placehold.co/600x600?text=Category+Image'">
-                        <!-- Collection Name Overlay Button -->
+                  
                         <div class="absolute bottom-0 left-0 right-0 p-4 flex items-center justify-center">
                             <div class="collection-card-btn px-6 py-3 w-full max-w-[85%] shadow-md" style="border-radius: 50px; text-align:center;">
                                 <!-- <h3 class="text-center text-md font-semibold">
