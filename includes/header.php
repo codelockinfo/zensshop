@@ -728,16 +728,14 @@ $gs_tooltip_text = getGlobalStyle('tooltip_text_color', $globalCardStyles, '#fff
             background-color: <?php echo $headerBg; ?> !important;
         }
         nav.header-shadow .nav-link:hover {
-            color: <?php echo $headerHover; ?> !important;
-            background-color: <?php echo $headerHoverBg; ?> !important;
-            background: <?php echo $headerHoverBg; ?> !important;
-            padding-left: 8px !important;
-            padding-right: 8px !important;
+            background-color: transparent !important;
+            background: transparent !important;
+            padding-left: 0 !important;
+            padding-right: 0 !important;
         }
         nav.header-shadow .header-icon:hover {
-            color: <?php echo $headerHover; ?> !important;
-            background-color: <?php echo $headerHoverBg; ?> !important;
-            background: <?php echo $headerHoverBg; ?> !important;
+            background-color: transparent !important;
+            background: transparent !important;
             padding-left: 0 !important;
             padding-right: 0 !important;
         }
@@ -757,8 +755,8 @@ $gs_tooltip_text = getGlobalStyle('tooltip_text_color', $globalCardStyles, '#fff
         }
         
         nav.header-shadow .site-logo-link:hover {
-            padding-left: 8px !important;
-            padding-right: 8px !important;
+            padding-left: 0 !important;
+            padding-right: 0 !important;
         }
 
         nav.header-shadow .site-logo-link *,

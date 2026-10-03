@@ -11,13 +11,10 @@ $db = Database::getInstance();
 $baseUrl = getBaseUrl();
 $success = '';
 $error = '';
-
-// Handle Form Submission
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $action = $_POST['action'] ?? '';
     
     if ($action === 'save_settings') {
-        // Save Heading/Subheading to JSON
         $heading = $_POST['heading'] ?? '';
         $subheading = $_POST['subheading'] ?? '';
         $show_section = isset($_POST['show_section']) ? true : false;
@@ -28,8 +25,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             'show_section' => $show_section
         ];
         file_put_contents(__DIR__ . '/special_offers_config.json', json_encode($offersConfig));
-
-        // Save Color Settings
         $settingsObj = new Settings();
         $styles = [
             'bg_color' => $_POST['bg_color'] ?? '#ffffff',
@@ -43,9 +38,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             'button_hover_text' => $_POST['button_hover_text'] ?? '#000000'
         ];
         $settingsObj->set('special_offers_styles', json_encode($styles), 'homepage');
-        
-        // Also update existing rows in DB for backward compatibility
-        $storeId = $_SESSION['store_id'] ?? null;
+                $storeId = $_SESSION['store_id'] ?? null;
         if (!$storeId && isset($_SESSION['user_email'])) {
              $storeUser = $db->fetchOne("SELECT store_id FROM users WHERE email = ?", [$_SESSION['user_email']]);
              $storeId = $storeUser['store_id'] ?? null;
@@ -77,9 +70,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $display_order = (int)($_POST['display_order'] ?? 0);
         $active = isset($_POST['active']) ? 1 : 0;
         
-        // Handle Desktop Image Upload
         if (!empty($_FILES['image']['name'])) {
-            $uploadDir = __DIR__ . '/../assets/special_offers/';
+            $uploadDir = __DIR__ . '/../assets/images/special_offers/';
             if (!is_dir($uploadDir)) mkdir($uploadDir, 0777, true);
             
             $filename = time() . '_desktop_' . preg_replace('/[^a-zA-Z0-9.]/', '_', $_FILES['image']['name']);
@@ -89,11 +81,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $error = "Failed to upload desktop image.";
             }
         }
-        
-        // Handle Mobile Image Upload
         $mobile_image = '';
         if (!empty($_FILES['mobile_image']['name'])) {
-            $uploadDir = __DIR__ . '/../assets/special_offers/';
+            $uploadDir = __DIR__ . '/../assets/images/special_offers/';
             if (!is_dir($uploadDir)) mkdir($uploadDir, 0777, true);
             
             $mob_filename = time() . '_mobile_' . preg_replace('/[^a-zA-Z0-9.]/', '_', $_FILES['mobile_image']['name']);
@@ -105,13 +95,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         }
         
         if (empty($error)) {
+            $storeId = $_SESSION['store_id'] ?? null;
+            if (!$storeId && isset($_SESSION['user_email'])) {
+                 $storeUser = $db->fetchOne("SELECT store_id FROM users WHERE email = ?", [$_SESSION['user_email']]);
+                 $storeId = $storeUser['store_id'] ?? null;
+            }
+
             if ($id) {
-                // Fetch current heading/subheading to preserve them
-                $storeId = $_SESSION['store_id'] ?? null;
-                if (!$storeId && isset($_SESSION['user_email'])) {
-                     $storeUser = $db->fetchOne("SELECT store_id FROM users WHERE email = ?", [$_SESSION['user_email']]);
-                     $storeId = $storeUser['store_id'] ?? null;
-                }
                 $current = $db->fetchOne("SELECT heading, subheading FROM special_offers WHERE store_id = ? LIMIT 1", [$storeId]);
                 $h = $current['heading'] ?? null;
                 $s = $current['subheading'] ?? null;
@@ -128,8 +118,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     $sql .= ", mobile_image = ?";
                     $params[] = $mobile_image;
                 }
-                
-                // Preserve heading
                 if ($h !== null) {
                     $sql .= ", heading = ?, subheading = ?";
                     $params[] = $h;
@@ -143,24 +131,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $db->execute($sql, $params);
                 $_SESSION['flash_success'] = "Offer updated successfully!";
             } else {
-                // Insert new
                 if (empty($image) && empty($_FILES['image']['name'])) {
                     $error = "Image is required for new offers.";
                 } else {
-                    // Fetch existing settings to apply to new row
-                    if (!$storeId && isset($_SESSION['user_email'])) {
-                         $storeUser = $db->fetchOne("SELECT store_id FROM users WHERE email = ?", [$_SESSION['user_email']]);
-                         $storeId = $storeUser['store_id'] ?? null;
-                    }
                     $current = $db->fetchOne("SELECT heading, subheading FROM special_offers WHERE store_id = ? LIMIT 1", [$storeId]);
                     $h = $current['heading'] ?? 'Special Offers';
                     $s = $current['subheading'] ?? 'Grab limited-time deals on our best products.';
-
-                    // Determine Store ID
-                    if (!$storeId && isset($_SESSION['user_email'])) {
-                         $storeUser = $db->fetchOne("SELECT store_id FROM users WHERE email = ?", [$_SESSION['user_email']]);
-                         $storeId = $storeUser['store_id'] ?? null;
-                    }
 
                     $db->execute(
                         "INSERT INTO special_offers (title, link, button_text, image, mobile_image, display_order, active, heading, subheading, store_id) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
@@ -169,32 +145,33 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     $_SESSION['flash_success'] = "Offer added successfully!";
                 }
             }
-            
-            if (empty($error)) {
-                header("Location: " . $baseUrl . '/admin/offers');
-                exit;
-            }
         }
+
+        if (!empty($error)) {
+            $_SESSION['flash_error'] = $error;
+        }
+
+        header("Location: " . $baseUrl . '/admin/offers');
+        exit;
     }
 }
-
-// Check Flash
 if (isset($_SESSION['flash_success'])) {
     $success = $_SESSION['flash_success'];
     unset($_SESSION['flash_success']);
+}
+if (isset($_SESSION['flash_error'])) {
+    $error = $_SESSION['flash_error'];
+    unset($_SESSION['flash_error']);
 }
 
 $pageTitle = 'Special Offers Settings';
 require_once __DIR__ . '/../includes/admin-header.php';
 
-// Fetch Section Settings
 $storeId = $_SESSION['store_id'] ?? null;
 if (!$storeId && isset($_SESSION['user_email'])) {
      $storeUser = $db->fetchOne("SELECT store_id FROM users WHERE email = ?", [$_SESSION['user_email']]);
      $storeId = $storeUser['store_id'] ?? null;
 }
-
-// Prepare values (JSON is master)
 $savedHeading = 'Special Offers';
 $savedSubheading = 'Grab limited-time deals on our best products.';
 
@@ -220,16 +197,10 @@ $sectionSettings = [
     'heading' => $current_heading,
     'subheading' => $current_subheading
 ];
-
-// Fetch Offers
 $offers = $db->fetchAll("SELECT * FROM special_offers WHERE store_id = ? ORDER BY display_order ASC, created_at DESC", [$storeId]);
-
-// Fetch Style Settings
 $settingsObj = new Settings();
 $savedStylesJson = $settingsObj->get('special_offers_styles', '{"bg_color":"#ffffff","heading_color":"#111827","subheading_color":"#4b5563","card_overlay_opacity":"40","card_text_color":"#ffffff","button_text_color":"#ffffff","button_border_color":"#ffffff","button_hover_bg":"#ffffff","button_hover_text":"#000000"}');
 $savedStyles = json_decode($savedStylesJson, true);
-
-// Style Defaults
 $s_bg_color = $savedStyles['bg_color'] ?? '#ffffff';
 $s_heading_color = $savedStyles['heading_color'] ?? '#111827';
 $s_subheading_color = $savedStyles['subheading_color'] ?? '#4b5563';
@@ -244,8 +215,6 @@ $s_button_hover_text = $savedStyles['button_hover_text'] ?? '#000000';
 <div class="p-6 pl-0">
     <form method="POST" enctype="multipart/form-data">
         <input type="hidden" name="action" value="save_settings">
-
-        <!-- Top Action Bar -->
         <div class="flex justify-between items-center mb-6 bg-white p-4 rounded-lg shadow-sm border border-gray-200 sticky top-0 z-10">
             <div class="flex items-center gap-4">
                 <h1 class="text-2xl font-bold text-gray-800">Special Offers Settings</h1>
@@ -269,8 +238,6 @@ $s_button_hover_text = $savedStyles['button_hover_text'] ?? '#000000';
             <span class="block sm:inline"><?php echo htmlspecialchars($error); ?></span>
         </div>
     <?php endif; ?>
-
-    <!-- Visual Style Settings -->
     <div class="bg-white rounded-lg shadow-sm border border-gray-200 mb-8 overflow-hidden transform transition hover:shadow-md">
         <div class="bg-gray-50 px-6 py-4 border-b border-gray-200">
             <h2 class="text-xl font-semibold text-gray-800">Visual Style</h2>
@@ -350,8 +317,6 @@ $s_button_hover_text = $savedStyles['button_hover_text'] ?? '#000000';
             </div>
         </div>
     </div>
-
-    <!-- Section Settings Card -->
     <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-6 mb-8 transform transition hover:shadow-md">
         <h3 class="text-lg font-bold text-gray-700 mb-4 border-b pb-2">Section Configuration</h3>
         <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -399,8 +364,6 @@ $s_button_hover_text = $savedStyles['button_hover_text'] ?? '#000000';
         </div>
     </div>
     </form>
-
-    <!-- Offers List -->
     <div class="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden">
         <table class="min-w-full divide-y divide-gray-200">
             <thead class="bg-gray-50">
@@ -491,8 +454,6 @@ $s_button_hover_text = $savedStyles['button_hover_text'] ?? '#000000';
                         <span class="ml-2 text-gray-700">Active</span>
                     </label>
                 </div>
-                
-                <!-- Desktop Image -->
                 <div>
                     <label class="block text-sm font-bold mb-1">🖥️ Desktop Image</label>
                     <p class="text-xs text-gray-400 mb-2">Landscape / Wide (e.g. 800x500px)</p>
@@ -506,8 +467,6 @@ $s_button_hover_text = $savedStyles['button_hover_text'] ?? '#000000';
                     </div>
                     <input type="file" name="image" id="imageInput" accept="image/*" class="hidden" onchange="previewImage(this, 'previewImg', 'placeholderImg')">
                 </div>
-
-                <!-- Mobile Image -->
                 <div>
                     <label class="block text-sm font-bold mb-1">📱 Mobile Image</label>
                     <p class="text-xs text-gray-400 mb-2">Portrait / Tall (e.g. 400x600px)</p>
@@ -571,7 +530,6 @@ $s_button_hover_text = $savedStyles['button_hover_text'] ?? '#000000';
         document.getElementById('offerOrder').value = offer.display_order;
         document.getElementById('offerActive').checked = offer.active == 1;
         
-        // Load desktop image preview
         if (offer.image) {
             var img = document.getElementById('previewImg');
             var placeholder = document.getElementById('placeholderImg');
@@ -583,8 +541,6 @@ $s_button_hover_text = $savedStyles['button_hover_text'] ?? '#000000';
             }
             if (placeholder) placeholder.classList.add('hidden');
         }
-        
-        // Load mobile image preview
         if (offer.mobile_image) {
             var mobileImg = document.getElementById('previewMobileImg');
             var mobilePlaceholder = document.getElementById('placeholderMobileImg');
@@ -615,7 +571,7 @@ $s_button_hover_text = $savedStyles['button_hover_text'] ?? '#000000';
     };
 
     window.initOffersJS = function() {
-        // Initialized
+       
     };
     window.initOffersJS();
     </script>

@@ -1,9 +1,5 @@
 <?php
-/**
- * Helper Functions
- */
 
-// Load constants if not already loaded
 if (!defined('SITE_URL')) {
     require_once __DIR__ . '/../config/constants.php';
 }
@@ -235,18 +231,32 @@ function format_currency($amount, $decimals = 2, $currencyCode = 'INR') {
 }
 
 /**
- * Build a tree from flat menu items
+ * Build a tree from flat menu items safely without infinite recursion
  */
-function buildMenuTree(array $elements, $parentId = null) {
+function buildMenuTree(array $elements, $parentId = null, array $visited = [], $depth = 0) {
+    if ($depth > 20) {
+        return [];
+    }
+
     $branch = array();
+    
+    // Normalize target parent ID: treat null, 0, '0', '' as root (0)
+    $targetParent = ($parentId === null || $parentId === 0 || $parentId === '0' || $parentId === '') ? 0 : (int)$parentId;
+
     foreach ($elements as $element) {
-        // Check compatibility for root items (handle NULL and 0 as equivalent for root)
-        $isRootMatch = ($parentId === null && $element['parent_id'] == 0);
-        
-        if ($element['parent_id'] == $parentId || $isRootMatch) {
-            $children = buildMenuTree($elements, $element['id']);
-            if ($children) {
-                $element['children'] = $children;
+        $elementId = isset($element['id']) ? (int)$element['id'] : 0;
+        $elementParent = ($element['parent_id'] === null || $element['parent_id'] === 0 || $element['parent_id'] === '0' || $element['parent_id'] === '') ? 0 : (int)$element['parent_id'];
+
+        if ($elementParent === $targetParent) {
+            // Avoid recursion if elementId is invalid, self-referencing, or already visited in stack
+            if ($elementId > 0 && $elementId !== $targetParent && !in_array($elementId, $visited, true)) {
+                $nextVisited = $visited;
+                $nextVisited[] = $elementId;
+
+                $children = buildMenuTree($elements, $elementId, $nextVisited, $depth + 1);
+                if ($children) {
+                    $element['children'] = $children;
+                }
             }
             $branch[] = $element;
         }
@@ -395,7 +405,7 @@ function renderFrontendMenuItem($item, $landingPagesList = [], $level = 0, $show
         // If user added children in DB, we use the dynamic renderer below.
          ?>
         <div class="relative mega-menu-parent group">
-            <a href="<?php echo $itemUrl; ?>" class="text-black hover:text-red-700 transition flex items-center font-sans text-md nav-link">
+            <a href="<?php echo $itemUrl; ?>" class="text-black transition flex items-center font-sans text-md nav-link">
                 <?php echo $displayLabel; ?>
                 <i class="fas fa-chevron-down text-xs ml-1 transition-transform duration-300 group-hover:-rotate-180"></i>
             </a>
@@ -492,7 +502,7 @@ function renderFrontendMenuItem($item, $landingPagesList = [], $level = 0, $show
             // Use custom classes if provided, otherwise use defaults
             $linkClasses = !empty($item['custom_classes']) 
                 ? $item['custom_classes'] 
-                : 'text-black hover:text-red-700 transition relative flex items-center font-sans text-md nav-link px-1 h-full';
+                : 'text-black transition relative flex items-center font-sans text-md nav-link px-1 h-full';
             ?>
             <div class="<?php echo $parentClass; ?> h-full flex items-center">
                  <a href="<?php echo $itemUrl; ?>" class="<?php echo $linkClasses; ?>">
@@ -646,7 +656,7 @@ function renderFrontendMenuItem($item, $landingPagesList = [], $level = 0, $show
             // Use custom classes if provided, otherwise use defaults
             $leafLinkClasses = !empty($item['custom_classes']) 
                 ? $item['custom_classes'] 
-                : 'text-black hover:text-red-700 transition relative font-sans text-md nav-link px-1';
+                : 'text-black transition relative font-sans text-md nav-link px-1';
              ?>
              <div class="h-full flex items-center">
                 <a href="<?php echo $itemUrl; ?>" class="<?php echo $leafLinkClasses; ?>">

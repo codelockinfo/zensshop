@@ -1,13 +1,10 @@
 <?php
-// Ensure baseUrl is available
 if (!isset($baseUrl) && function_exists('getBaseUrl')) {
     $baseUrl = getBaseUrl();
 } elseif (!isset($baseUrl)) {
     require_once __DIR__ . '/functions.php';
     $baseUrl = getBaseUrl();
 }
-
-// Fetch Footer Data
 require_once __DIR__ . '/../classes/Database.php';
 require_once __DIR__ . '/../classes/Settings.php';
 require_once __DIR__ . '/../classes/CustomerAuth.php';
@@ -16,31 +13,21 @@ $settingsObj = new Settings();
 $customerAuth = new CustomerAuth();
 $customer = $customerAuth->getCurrentCustomer();
 $storeId = getCurrentStoreId();
-
-// Fetch Footer Menus (Store Specific)
-// We now use a SINGLE "Footer Menu" (footer_main)
 $footerMenuIdVal = $db->fetchOne("SELECT id FROM menus WHERE location = 'footer_main' AND (store_id = ? OR store_id IS NULL) ORDER BY store_id DESC LIMIT 1", [$storeId]);
 $footerColumns = [];
 if ($footerMenuIdVal) {
     $rawItems = $db->fetchAll("SELECT * FROM menu_items WHERE menu_id = ? ORDER BY sort_order ASC", [$footerMenuIdVal['id']]);
     $footerColumns = buildMenuTree($rawItems);
 }
-
-// Function helper to get setting easily
 $getFooterSetting = function($key, $default = '') use ($settingsObj) {
     return $settingsObj->get($key, $default);
 };
 
 function renderFooterLinkRecursive($item, $baseUrl) {
     $url = htmlspecialchars(str_replace('SITE_URL', $baseUrl, $item['url']));
-    // Remove .php extension if present
+    
     $url = preg_replace('/\.php($|\?)/', '$1', $url);
     $label = htmlspecialchars($item['label']);
-    
-    // Special check for Social Icons in the "Follow Us" column
-    // Ideally we detect this via parent name, but recursive function doesn't know parent easily without passing it.
-    // For now, render standard link.
-    
     echo "<li><a href=\"$url\" class=\"text-gray-700 hover:text-gray-600 transition text-sm block group/link\">";
     echo "<span class=\"inline-block group-hover/link:translate-x-2 transition-transform duration-300\">$label</span>";
     echo "</a>";
@@ -53,15 +40,11 @@ function renderFooterLinkRecursive($item, $baseUrl) {
     }
     echo "</li>";
 }
-
-// Fetch Footer Visual Styles
-// Fetch Footer Visual Styles (Consolidated JSON)
 $fStylesJson = $getFooterSetting('footer_styles', '[]');
 $fStyles = json_decode($fStylesJson, true);
 $footerBg = $fStyles['bg_color'] ?? $getFooterSetting('footer_bg_color', '#ffffff');
 $footerText = $fStyles['text_color'] ?? $getFooterSetting('footer_text_color', '#000000');
 $footerHover = $fStyles['hover_color'] ?? $getFooterSetting('footer_hover_color', '#000000');
-// Fetch Quick View Visual Styles (Nested in product_page_styles)
 $pStylesJson = $settingsObj->get('product_page_styles', '[]');
 $pStyles = json_decode($pStylesJson, true);
 $qvStyles = $pStyles['quickview'] ?? [];
@@ -98,7 +81,6 @@ $qv_policy_color = $qvStyles['policy_color'] ?? '#374151';
         footer a {
              color: <?php echo $footerText; ?> !important;
         }
-        /* Hover effect for links */
         footer a:hover,
         footer a:hover *,
         footer .group:hover *,
@@ -107,15 +89,10 @@ $qv_policy_color = $qvStyles['policy_color'] ?? '#374151';
             color: <?php echo $footerHover; ?> !important;
             opacity: 1 !important;
         }
-        
-        /* Prevent H3 title color change on hover */
         footer .group:hover h3,
         footer .group:hover h3.nav-link {
             color: <?php echo $footerText; ?> !important;
         }
-
-        
-        /* Social icons hover */
         footer .footer-social-icon:hover {
             background-color: <?php echo $footerHover; ?> !important;
             border-color: <?php echo $footerHover; ?> !important;
@@ -123,22 +100,16 @@ $qv_policy_color = $qvStyles['policy_color'] ?? '#374151';
         footer .footer-social-icon:hover i {
             color: <?php echo $footerBg; ?> !important;
         }
-        
-        /* Cart Drawer Styles */
         <?php
-        // Load Cart Styling (Consolidated)
         $cartStylingJson = $settingsObj->get('cart_page_styling', '');
         $cartStyling = !empty($cartStylingJson) ? json_decode($cartStylingJson, true) : [];
 
-        // Helper function locally for cart drawer/page
         if (!function_exists('getCartStyle')) {
             function getCartStyle($key, $default, $settingsObj, $cartStyling) {
                 if (isset($cartStyling[$key])) return $cartStyling[$key];
                 return $settingsObj->get($key, $default);
             }
         }
-
-        // Fetch Cart Drawer Settings
         $cd_bg_color = getCartStyle('cart_drawer_bg_color', '#ffffff', $settingsObj, $cartStyling);
         $cd_header_color = getCartStyle('cart_drawer_header_text_color', '#111827', $settingsObj, $cartStyling);
         $cd_header_hover = getCartStyle('cart_drawer_header_text_hover_color', '#3b82f6', $settingsObj, $cartStyling);
@@ -160,55 +131,37 @@ $qv_policy_color = $qvStyles['policy_color'] ?? '#374151';
         $cd_checkout_hover_bg = getCartStyle('cart_drawer_checkout_btn_hover_bg', '#1f2937', $settingsObj, $cartStyling);
         $cd_checkout_hover_text = getCartStyle('cart_drawer_checkout_btn_hover_text', '#ffffff', $settingsObj, $cartStyling);
         ?>
-        
-        /* Cart Drawer Divider */
         #sideCart .border-b, #sideCart .border-t {
             border-color: <?php echo $cd_divider_color; ?> !important;
         }
-
-        /* Cart Drawer Close Icon */
         #sideCart button i.fa-times, #sideCart .fa-times {
             color: <?php echo $cd_close_icon_color; ?> !important;
         }
-
-        /* Cart Drawer Background */
         #sideCart {
              background-color: <?php echo $cd_bg_color; ?> !important;
         }
-
-        /* Cart Drawer Header Text */
         #sideCart .side-cart-item h4 a {
             color: <?php echo $cd_header_color; ?> !important;
         }
         #sideCart .side-cart-item h4 a:hover {
             color: <?php echo $cd_header_hover; ?> !important;
         }
-        
-        /* Cart Drawer Price */
         #sideCart .side-cart-item p.text-gray-600,
         #sideCart .side-cart-item .text-right p.font-semibold {
             color: <?php echo $cd_price_color; ?> !important;
         }
-        
-        /* Cart Drawer Quantity */
         #sideCart .side-cart-item .border.rounded span {
             color: <?php echo $cd_qty_color; ?> !important;
         }
-        
-        /* Cart Drawer Trash Icon */
         #sideCart .side-cart-item button.text-red-500 {
             color: <?php echo $cd_trash_color; ?> !important;
         }
         #sideCart .side-cart-item button.text-red-500:hover {
             color: <?php echo $cd_trash_hover; ?> !important;
         }
-        
-        /* Cart Drawer Total */
         #sideCartFooter span.text-xl.font-bold, #sideCartFooter span.text-lg.font-semibold {
             color: <?php echo $cd_total_color; ?> !important;
         }
-        
-        /* Cart Drawer View Cart Button */
         #viewCartBtn {
             background-color: <?php echo $cd_view_bg; ?> !important;
             color: <?php echo $cd_view_text; ?> !important;
@@ -217,8 +170,6 @@ $qv_policy_color = $qvStyles['policy_color'] ?? '#374151';
             background-color: <?php echo $cd_view_hover_bg; ?> !important;
             color: <?php echo $cd_view_hover_text; ?> !important;
         }
-        
-        /* Cart Drawer Checkout Button */
         #checkoutBtn {
             background-color: <?php echo $cd_checkout_bg; ?> !important;
             color: <?php echo $cd_checkout_text; ?> !important;
@@ -227,8 +178,6 @@ $qv_policy_color = $qvStyles['policy_color'] ?? '#374151';
             background-color: <?php echo $cd_checkout_hover_bg; ?> !important;
             color: <?php echo $cd_checkout_hover_text; ?> !important;
         }
-
-        /* Quick View Styles */
         #quickViewBackdrop {
             background-color: <?php echo $qv_overlay; ?> !important;
         }
@@ -294,8 +243,6 @@ $qv_policy_color = $qvStyles['policy_color'] ?? '#374151';
             background-color: <?php echo $qv_buy_hover_bg; ?> !important;
             color: <?php echo $qv_buy_hover_text; ?> !important;
         }
-
-        /* ── Quick View Modal ── */
         #quickViewModal {
             z-index: 99999 !important;
         }
@@ -315,7 +262,6 @@ $qv_policy_color = $qvStyles['policy_color'] ?? '#374151';
             max-height: min(80vh, 660px) !important;
             margin: auto !important;
         }
-        /* Content area fills remaining height */
         #quickViewModal #quickViewContent {
             flex: 1;
             min-height: 0;
@@ -323,27 +269,22 @@ $qv_policy_color = $qvStyles['policy_color'] ?? '#374151';
             display: flex;
             flex-direction: column;
         }
-        /* Inner layout wrapper always fills content height */
         #quickViewModal .qv-layout-inner {
             flex: 1;
             min-height: 0;
             overflow: hidden;
         }
-        /* Desktop: right col scrolls, image col is fixed */
+       
         @media (min-width: 768px) {
             #quickViewModal .qv-img-col {
-                /* let it size naturally based on aspect-ratio */
                 overflow: hidden;
             }
         }
-        /* Mobile: stacked — image is compact/fixed height, content scrolls below */
         @media (max-width: 767px) {
             #quickViewModal #quickViewPanel {
                 height: min(88vh, 600px) !important;
                 max-height: min(88vh, 600px) !important;
             }
-
-            /* Image col: fixed 200px - becomes the positioning context for abs children */
             #quickViewModal .qv-img-col {
                 flex-shrink: 0 !important;
                 height: 200px !important;
@@ -354,71 +295,48 @@ $qv_policy_color = $qvStyles['policy_color'] ?? '#374151';
                 padding: 0 !important;
                 display: block !important;
             }
-
-            /* Collapse the aspect-ratio wrapper — column is now the size reference */
             #quickViewModal .qv-img-col > div:first-child {
                 position: static !important;
                 aspect-ratio: unset !important;
                 height: 100% !important;
                 width: 100% !important;
             }
-
-            /* Image link fills the entire column */
             #quickViewModal #qvMainImageLink {
                 position: absolute !important;
                 inset: 0 !important;
                 width: 100% !important;
                 height: 100% !important;
             }
-
-            /* Image fills the link */
             #quickViewModal #qvMainImage {
                 width: 100% !important;
                 height: 100% !important;
                 object-fit: cover !important;
                 display: block !important;
             }
-
-            /* Video fills the column too */
             #quickViewModal #qvMainVideo {
                 position: absolute !important;
                 inset: 0 !important;
                 width: 100% !important;
                 height: 100% !important;
             }
-
-            /* Discount badge */
             #quickViewModal #qvDiscountBadge {
                 position: absolute !important;
                 top: 8px !important;
                 left: 8px !important;
                 z-index: 10 !important;
             }
-
-            /* Hide thumbnails on mobile — saves space */
             #quickViewModal .qv-img-col .qv-thumbnail-slider {
                 display: none !important;
             }
         }
-
-
-
-
-
-
     </style>
-
     <script>
     function toggleFooterSection(sectionId) {
         if (window.innerWidth >= 768) return;
-
         const content = document.getElementById(sectionId + '-content');
         const icon    = document.getElementById(sectionId + '-icon');
         if (!content || !icon) return;
-
         const isOpen = icon.dataset.open === 'true';
-
-        // Animate icon: scale down, swap class, scale back up
         icon.style.transform = 'scale(0)';
         setTimeout(function() {
             if (isOpen) {
@@ -444,11 +362,9 @@ $qv_policy_color = $qvStyles['policy_color'] ?? '#374151';
         }
     }
     </script>
-    <!-- Footer -->
     <footer class="bg-white text-black relative">
         <div class="container footer-block mx-auto px-4 pt-8">
             <div class="row flex flex-wrap -mx-4">
-                <!-- About Us / Footer Info Column -->
                 <div class="column w-full md:w-1/2 lg:w-1/3 px-4 mb-0 md:mb-8 lg:mb-0">
                     <div class="mb-4">
                         <?php 
@@ -457,16 +373,14 @@ $qv_policy_color = $qvStyles['policy_color'] ?? '#374151';
                         $logoImage = $getFooterSetting('footer_logo_image', '');
                         
                         if ($logoType === 'image' && !empty($logoImage)) {
-                            // Display Logo Image
+                       
                             echo '<a href="'.$baseUrl.'"><img src="'.getImageUrl($logoImage).'" alt="'.htmlspecialchars($logoText).'" class="h-[60px] object-contain"></a>';
                         } else {
-                            // Display Logo Text
                             echo '<a href="'.$baseUrl.'" class="text-xl font-bold font-sans text-black nav-link">'.htmlspecialchars($logoText).'</a>';
                         }
                         ?>
                     </div>
-                
-                    <div class="text-gray-700 text-sm leading-relaxed mb-4"><?php echo $getFooterSetting('footer_description'); ?></div>
+                    <div class="text-gray-700 text-sm leading-relaxed mb-0"><?php echo $getFooterSetting('footer_description'); ?></div>
                     
                     <?php if(!empty($getFooterSetting('footer_learn_more_url'))): ?>
                     <a href="<?php echo htmlspecialchars($getFooterSetting('footer_learn_more_url')); ?>" class="text-black underline hover:no-underline transition text-sm mb-4 inline-block font-semibold">Learn more</a>
@@ -498,10 +412,8 @@ $qv_policy_color = $qvStyles['policy_color'] ?? '#374151';
                         $socialJson = $getFooterSetting('footer_social_json', '[]');
                         $socialLinks = json_decode($socialJson, true) ?: [];
                         
-                        // Fallback to legacy keys if JSON is empty (for backward compatibility during transition)
                         if(empty($socialLinks)) {
-                            // ... previous logic removed for cleanliness, assuming user will save new settings.
-                            // Or we can migrate on the fly. Let's stick to the new system.
+                          
                         }
                         
                         foreach ($socialLinks as $soc):
@@ -513,8 +425,6 @@ $qv_policy_color = $qvStyles['policy_color'] ?? '#374151';
                         <?php endif; endforeach; ?>
                     </div>
                 </div>
-                
-                <!-- Dynamic Footer Columns -->
                 <?php 
                 $colIndex = 0;
                 foreach ($footerColumns as $column): 
@@ -524,7 +434,6 @@ $qv_policy_color = $qvStyles['policy_color'] ?? '#374151';
                     $colIndex++;
                 ?>
                 <div class="column w-full md:w-1/2 lg:w-1/6 px-4 mb-0 md:mb-6 lg:mb-0">
-                    <!-- Header row: clickable on mobile, static on desktop -->
                     <div class="flex items-center justify-between py-4 border-b md:border-none cursor-pointer md:cursor-default md:mb-4"
                          onclick="toggleFooterSection('<?php echo $colId; ?>')">
                         <h3 class="text-base font-bold font-sans text-black select-none"><?php echo htmlspecialchars($colTitle); ?></h3>
@@ -532,14 +441,12 @@ $qv_policy_color = $qvStyles['policy_color'] ?? '#374151';
                             <i class="fas fa-plus footer-acc-icon" id="<?php echo $colId; ?>-icon" data-open="false"></i>
                         </span>
                     </div>
-
-                    <!-- Collapsible content -->
                     <div id="<?php echo $colId; ?>-content"
                          class="overflow-hidden transition-all duration-300 ease-in-out footer-accordion-content"
                          style="max-height:0;">
                         <div class="pb-4">
                     <?php if (stripos($colTitle, 'Follow') !== false): ?>
-                        <!-- Social Icons -->
+                        
                         <div class="flex space-x-3">
                              <?php foreach ($colItems as $item): 
                                  $icon = 'link';
@@ -557,7 +464,6 @@ $qv_policy_color = $qvStyles['policy_color'] ?? '#374151';
                              <?php endforeach; ?>
                         </div>
                     <?php else: ?>
-                        <!-- Standard Links -->
                         <ul class="space-y-2 text-black">
                             <?php foreach ($colItems as $item) { renderFooterLinkRecursive($item, $baseUrl); } ?>
                         </ul>
@@ -568,13 +474,9 @@ $qv_policy_color = $qvStyles['policy_color'] ?? '#374151';
                 <?php endforeach; ?>
 
             </div>
-            
-            <!-- Bottom Bar -->
             <div class="border-t border-gray-300 mt-0 md:mt-8 pt-6 pb-6">
                 <div class="flex flex-col md:flex-row md:flex-nowrap justify-center md:justify-between items-center gap-4 md:gap-8">
-                    <!-- Left Section: Currency & Copyright -->
                     <div class="flex flex-wrap gap-5 md:gap-8 justify-center md:justify-start items-center">
-                        <!-- Currency Selector -->
                         <div class="relative hidden">
                             <?php
                             $currencies = getCurrencies();
@@ -594,7 +496,6 @@ $qv_policy_color = $qvStyles['policy_color'] ?? '#374151';
                                     <path d="M1 1l4 4 4-4" stroke="currentColor" stroke-width="1.5" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
                                 </svg>
                             </button>
-                            <!-- Currency Dropdown -->
                             <div class="absolute left-0 bottom-full mb-3 bg-white text-black shadow-lg rounded-lg py-1 min-w-[240px] hidden z-50 border border-gray-200" id="footerCurrencyDropdown">
                                 <?php foreach ($currencies as $curr): ?>
                                 <a href="#" class="block px-4 py-2.5 hover:bg-gray-50 transition footer-currency-option" data-flag="<?php echo $curr['flag']; ?>" data-code="<?php echo $curr['code']; ?>" data-currency="<?php echo $curr['name'] . ' (' . $curr['currency_name'] . ' ' . $curr['symbol'] . ')'; ?>">
@@ -608,14 +509,10 @@ $qv_policy_color = $qvStyles['policy_color'] ?? '#374151';
                                 <?php endforeach; ?>
                             </div>
                         </div>
-                        
-                        <!-- Copyright -->
                         <div class="text-gray-700 text-sm text-center md:text-left">
                             <?php echo htmlspecialchars($getFooterSetting('footer_copyright', '© ' . date('Y') . ' CookPro store. All rights reserved.')); ?>
                         </div>
                     </div>
-                    
-                    <!-- Right Section: Payment Icons -->
                     <div class="flex flex-wrap gap-2 justify-center md:justify-end items-center">
                         <ul class="list-unstyled flex flex-wrap gap-2 justify-center md:justify-end items-center">
                             <?php 
@@ -634,33 +531,24 @@ $qv_policy_color = $qvStyles['policy_color'] ?? '#374151';
                 </div>
             </div>
         </div>
-        
-        <!-- Back to Top Button -->
         <button id="backToTop" class="fixed bottom-8 right-8 w-12 h-12 bg-black text-white rounded-full flex flex-col items-center justify-center hover:bg-gray-800 transition shadow-lg z-40 hidden" style="gap: 2px;">
             <i class="fas fa-chevron-up text-xs"></i>
         </button>
     </footer>
-
-    <!-- Side Cart -->
     <div class="fixed right-0 top-0 h-full w-full md:w-96 bg-white shadow-2xl z-50 transform translate-x-full transition-transform duration-300" id="sideCart" style="z-index: 999999 !important;">
         <div class="flex flex-col h-full">
-            <!-- Cart Header -->
             <div class="flex items-center justify-between p-6 border-b">
                 <h2 class="text-xl font-heading font-bold">Shopping Cart</h2>
                 <button class="text-gray-500 hover:text-gray-800" id="closeCart" data-aria-label="Close cart">
                     <i class="fas fa-times text-2xl"></i>
                 </button>
             </div>
-            
-            <!-- Cart Items -->
             <div class="flex-1 overflow-y-auto p-6" id="cartItems">
                 <div class="text-center text-gray-500 py-8">
                     <i class="fas fa-shopping-cart text-4xl mb-4"></i>
                     <p>Your cart is empty</p>
                 </div>
             </div>
-            
-            <!-- Cart Footer -->
             <div class="border-t p-6" id="sideCartFooter">
                 <div class="flex justify-between items-center mb-4">
                     <span class="text-lg font-semibold">Total:</span>
@@ -675,23 +563,17 @@ $qv_policy_color = $qvStyles['policy_color'] ?? '#374151';
             </div>
         </div>
     </div>
-    
-    <!-- Cart Overlay -->
     <div class="hidden fixed inset-0 bg-black bg-opacity-50 z-40" id="cartOverlay"></div>
-    
-    <!-- Remove from Cart Confirmation Modal -->
     <div id="removeConfirmModal" class="fixed inset-0 bg-black bg-opacity-50 z-50 hidden items-center justify-center" style="display: none;">
         <div class="bg-white rounded-lg p-6 max-w-md w-full mx-4 relative shadow-xl">
             <button onclick="closeRemoveConfirm()" class="absolute top-4 right-4 text-gray-400 hover:text-gray-600 transition">
                 <i class="fas fa-times text-xl"></i>
             </button>
-            
             <div class="flex flex-col items-center mb-6 pt-4">
                 <img id="removeConfirmImage" src="" alt="Product" class="w-20 h-20 object-cover rounded-lg mb-4 border border-gray-200">
                 <h3 id="removeConfirmName" class="text-base font-semibold text-center mb-4 text-gray-800"></h3>
                 <p class="text-gray-600 text-center text-sm mb-6">Would you like to add this product in wishlist?</p>
             </div>
-            
             <div class="flex space-x-3">
                 <button onclick="confirmRemoveWithWishlist(this)" 
                         class="flex-1 bg-black text-white px-6 py-3 rounded-lg hover:bg-gray-800 transition font-medium text-sm"
@@ -706,27 +588,7 @@ $qv_policy_color = $qvStyles['policy_color'] ?? '#374151';
             </div>
         </div>
     </div>
-    
-    <!-- Notification Modal -->
-    <!-- <div id="notificationModal" class="hidden notification-modal-overlay">
-        <div class="notification-modal">
-            <div class="notification-modal-header">
-                <div class="notification-modal-icon" id="notificationIcon">
-                    <i class="fas fa-check-circle"></i>
-                </div>
-                <h3 class="notification-modal-title" id="notificationTitle">Success</h3>
-            </div>
-            <div class="notification-modal-body">
-                <p class="notification-modal-message" id="notificationMessage"></p>
-            </div>
-            <div class="notification-modal-footer">
-                <button class="notification-modal-btn primary" id="notificationOkBtn" onclick="closeNotificationModal()">OK</button>
-            </div>
-        </div>
-    </div> -->
-    
-    
-    <!-- Scripts -->
+   
     <script src="<?php echo $baseUrl; ?>/assets/js/main6.js?v=2" defer></script>
     <script src="<?php echo $baseUrl; ?>/assets/js/cart21.js?v=1" defer></script>
     <script src="<?php echo $baseUrl; ?>/assets/js/product-cards9.js?v=5" defer></script>
@@ -735,14 +597,10 @@ $qv_policy_color = $qvStyles['policy_color'] ?? '#374151';
     <script src="<?php echo $baseUrl; ?>/assets/js/quickview24.js?v=10" defer></script>
     <script src="<?php echo $baseUrl; ?>/assets/js/add-to-cart4.js?v=3" defer></script>
     
-    <!-- Remove from Cart Confirmation Script -->
     <script>
-    // Remove confirmation modal variables
     let pendingRemoveProductId = null;
     let pendingRemoveProductName = null;
     let pendingRemoveProductImage = null;
-
-    // Show remove confirmation modal
     function showRemoveConfirm(productId, productName, productImage) {
         pendingRemoveProductId = productId;
         pendingRemoveProductName = productName;
@@ -760,8 +618,6 @@ $qv_policy_color = $qvStyles['policy_color'] ?? '#374151';
             modal.style.display = 'flex';
         }
     }
-
-    // Close remove confirmation modal
     function closeRemoveConfirm() {
         const modal = document.getElementById('removeConfirmModal');
         if (modal) {
@@ -772,17 +628,12 @@ $qv_policy_color = $qvStyles['policy_color'] ?? '#374151';
         pendingRemoveProductName = null;
         pendingRemoveProductImage = null;
     }
-
-    // Confirm remove with wishlist (Yes button)
     async function confirmRemoveWithWishlist(btn) {
         if (!pendingRemoveProductId) return;
         
         const productId = pendingRemoveProductId;
-        if (btn) setBtnLoading(btn, true);
-        // closeRemoveConfirm(); // Moved to after process completes
-        
+        if (btn) setBtnLoading(btn, true);        
         try {
-            // First, add to wishlist
             const baseUrl = typeof BASE_URL !== 'undefined' ? BASE_URL : window.location.pathname.split('/').slice(0, -1).join('/') || '';
             const wishlistResponse = await fetch(baseUrl + '/api/wishlist.php', {
                 method: 'POST',
@@ -796,19 +647,15 @@ $qv_policy_color = $qvStyles['policy_color'] ?? '#374151';
             
             const wishlistResult = await wishlistResponse.json();
             
-            // Update wishlist count in header
             if (wishlistResult.success && typeof refreshWishlist === 'function') {
                 await refreshWishlist();
             }
-            
-            // Then remove from cart
             if (typeof removeFromCart === 'function') {
                 await removeFromCart(productId, btn);
                 closeRemoveConfirm();
             }
         } catch (error) {
             console.error('Error adding to wishlist:', error);
-            // Still remove from cart even if wishlist add fails
             if (typeof removeFromCart === 'function') {
                 await removeFromCart(productId, btn);
                 closeRemoveConfirm();
@@ -817,30 +664,23 @@ $qv_policy_color = $qvStyles['policy_color'] ?? '#374151';
             if (btn) setBtnLoading(btn, false);
         }
     }
-
-    // Confirm remove without wishlist (No button)
     async function confirmRemoveWithoutWishlist(btn) {
         if (!pendingRemoveProductId) return;
         
         const productId = pendingRemoveProductId;
         if (btn) setBtnLoading(btn, true);
         
-        // Just remove from cart
         if (typeof removeFromCart === 'function') {
             await removeFromCart(productId, btn);
             closeRemoveConfirm();
             if (btn) setBtnLoading(btn, false);
         }
     }
-
-    // Make functions globally available
     window.showRemoveConfirm = showRemoveConfirm;
     window.closeRemoveConfirm = closeRemoveConfirm;
     window.confirmRemoveWithWishlist = confirmRemoveWithWishlist;
     window.confirmRemoveWithoutWishlist = confirmRemoveWithoutWishlist;
     </script>
-
-<!-- Ask a Question Modal (Shared) -->
 <div id="askQuestionModal" class="fixed inset-0 z-[100] hidden overflow-y-auto" aria-labelledby="modal-title" role="dialog" aria-modal="true">
     <div class="flex items-center justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0">
         <div class="fixed inset-0 bg-black bg-opacity-50 transition-opacity backdrop-blur-sm" aria-hidden="true" onclick="toggleAskQuestionModal(false)"></div>
@@ -901,8 +741,6 @@ function toggleAskQuestionModal(show, productName = '') {
     if (show) {
         modal.classList.remove('hidden');
         document.body.style.overflow = 'hidden';
-        
-        // Update product name in modal
         const nameDisplay = document.getElementById('aq_product_name_display');
         const subjectInput = document.getElementById('aq_subject');
         const productInfo = document.getElementById('aq_product_info');
@@ -915,8 +753,6 @@ function toggleAskQuestionModal(show, productName = '') {
             subjectInput.value = "General Inquiry";
             productInfo.classList.add('hidden');
         }
-
-        // Reset status
         const statusDiv = document.getElementById('aq_status');
         statusDiv.classList.add('hidden');
     } else {
@@ -925,8 +761,6 @@ function toggleAskQuestionModal(show, productName = '') {
     }
 }
 </script>
-
-
 <script>
 document.getElementById('askQuestionForm').addEventListener('submit', async function(e) {
     e.preventDefault();
@@ -934,19 +768,15 @@ document.getElementById('askQuestionForm').addEventListener('submit', async func
     const submitBtn = document.getElementById('aq_submit');
     const statusDiv = document.getElementById('aq_status');
     const origBtnContent = submitBtn.innerHTML;
-    
-    // UI Loading State
     submitBtn.disabled = true;
     submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> <span>Sending...</span>';
     statusDiv.classList.add('hidden');
-    
     const formData = {
         name: document.getElementById('aq_name').value,
         email: document.getElementById('aq_email').value,
         subject: document.getElementById('aq_subject').value,
         message: document.getElementById('aq_message').value
     };
-    
     try {
         const response = await fetch('<?php echo $baseUrl; ?>/api/support.php', {
             method: 'POST',
@@ -961,8 +791,6 @@ document.getElementById('askQuestionForm').addEventListener('submit', async func
             statusDiv.className = 'text-sm p-4 rounded-xl border font-medium bg-green-50 border-green-200 text-green-700';
             statusDiv.classList.remove('hidden');
             this.reset();
-            
-            // Auto close after success
             setTimeout(() => {
                 toggleAskQuestionModal(false);
             }, 3000);
@@ -981,7 +809,6 @@ document.getElementById('askQuestionForm').addEventListener('submit', async func
 </script>
 
 <script>
-    // Global Skeleton Loader for all images
     document.addEventListener('DOMContentLoaded', () => {
         document.querySelectorAll('img').forEach(img => {
             if (!img.complete) {
@@ -997,7 +824,6 @@ document.getElementById('askQuestionForm').addEventListener('submit', async func
 <?php require_once __DIR__ . '/development_popup.php'; ?>
 
 <?php if (isset($pageTitle) && $pageTitle === 'Home'): ?>
-<!-- Cookie Consent Banner -->
 <div id="cookieConsentBanner" class="hidden fixed bottom-6 left-6 right-6 md:left-auto md:max-w-md bg-white/95 backdrop-blur-md p-6 rounded-2xl shadow-2xl z-[100] transform translate-y-20 opacity-0 pointer-events-none transition-all duration-700 border border-gray-100 flex flex-col gap-4">
     <div class="flex items-start gap-4">
         <div class="bg-black text-white p-3 rounded-xl flex-shrink-0">
@@ -1024,8 +850,6 @@ document.getElementById('askQuestionForm').addEventListener('submit', async func
 document.addEventListener('DOMContentLoaded', function() {
     const banner = document.getElementById('cookieConsentBanner');
     const consentMode = 'cookie_consent_status';
-    
-    // Helper to get cookie
     function getCookie(name) {
         let nameEQ = name + "=";
         let ca = document.cookie.split(';');
@@ -1036,8 +860,6 @@ document.addEventListener('DOMContentLoaded', function() {
         }
         return null;
     }
-
-    // Helper to set cookie
     window.setCookie = function(name, value, days) {
         let expires = "";
         if (days) {
@@ -1047,28 +869,26 @@ document.addEventListener('DOMContentLoaded', function() {
         }
         document.cookie = name + "=" + (value || "")  + expires + "; path=/";
     }
-
-    // Check if consent already given or rejected recently
     if (!getCookie(consentMode)) {
         setTimeout(() => {
             banner.classList.remove('hidden');
-            // Force reflow
+            
             banner.offsetHeight;
             banner.classList.remove('opacity-0', 'translate-y-20', 'pointer-events-none');
         }, 2000);
     }
 
     window.handleCookieConsent = function(status) {
-        // Hide banner
+        
         banner.classList.add('opacity-0', 'translate-y-20', 'pointer-events-none');
         setTimeout(() => {
             banner.classList.add('hidden');
         }, 700);
 
         if (status === 'allowed') {
-            setCookie(consentMode, 'allowed', 365); // 1 year
+            setCookie(consentMode, 'allowed', 365);
         } else {
-            setCookie(consentMode, 'rejected', 1); // 1 day
+            setCookie(consentMode, 'rejected', 1); 
         }
     };
 });
@@ -1082,34 +902,28 @@ document.addEventListener('DOMContentLoaded', function() {
             padding-top: 2rem !important;
         }
     }
-    /* Desktop: always show accordion content regardless of inline JS styles */
     @media (min-width: 768px) {
         .footer-accordion-content {
             max-height: none !important;
             overflow: visible !important;
         }
     }
-    /* Mobile: smooth height transition */
     @media (max-width: 767px) {
         .footer-accordion-content {
             transition: max-height 0.35s ease;
         }
     }
-    /* Icon animation: scale pop when swapping + and - */
     .footer-acc-icon {
         display: inline-block;
         transition: transform 0.15s ease;
         transform: scale(1);
     }
-    /* Remove bottom border on the last footer column header (mobile) */
     @media (max-width: 767px) {
         .column:last-child > div:first-child {
             border-bottom: none !important;
         }
     }
-
     #cookieConsentBanner {
         box-shadow: 0 10px 40px -10px rgba(0,0,0,0.2);
     }
 </style>
-
