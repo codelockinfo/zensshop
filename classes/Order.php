@@ -400,6 +400,9 @@ class Order {
     // ... [updateStatus, updatePaymentStatus, updateTracking, update methods unchanged] ...
     public function updateStatus($id, $status, $storeId = null) {
         if (!$storeId) $storeId = $_SESSION['store_id'] ?? null;
+        if (strtolower((string)$status) === 'cancelled') {
+            $this->cancelAssociatedShipment($id);
+        }
         return $this->db->execute("UPDATE orders SET order_status = ? WHERE id = ? AND store_id = ?", [$status, $id, $storeId]);
     }
     public function updatePaymentStatus($id, $status, $storeId = null) {
@@ -412,6 +415,9 @@ class Order {
     }
     public function update($id, $data, $storeId = null) {
         if (!$storeId) $storeId = $_SESSION['store_id'] ?? null;
+        if (isset($data['order_status']) && strtolower((string)$data['order_status']) === 'cancelled') {
+            $this->cancelAssociatedShipment($id);
+        }
         $updates = [];
         $params = [];
         $allowedFields = ['order_status', 'payment_status', 'tracking_number', 'notes', 'customer_name', 'customer_email', 'customer_phone', 'billing_address', 'shipping_address', 'subtotal', 'discount_amount', 'shipping_amount', 'tax_amount', 'total_amount', 'payment_method', 'delivery_date'];
@@ -430,6 +436,29 @@ class Order {
         $params[] = $id;
         $params[] = $storeId;
         return $this->db->execute("UPDATE orders SET " . implode(', ', $updates) . " WHERE id = ? AND store_id = ?", $params);
+    }
+
+    /**
+     * Automatically cancel associated Delhivery shipment if order is cancelled
+     */
+    public function cancelAssociatedShipment($id) {
+        try {
+            $order = is_numeric($id)
+                ? $this->db->fetchOne("SELECT id, order_number, tracking_number, store_id FROM orders WHERE id = ?", [$id])
+                : $this->db->fetchOne("SELECT id, order_number, tracking_number, store_id FROM orders WHERE order_number = ?", [$id]);
+
+            if ($order && !empty($order['tracking_number'])) {
+                $waybill = trim((string)$order['tracking_number']);
+                require_once __DIR__ . '/Delhivery.php';
+                $delhivery = new Delhivery(null, $order['store_id'] ?? null);
+                $cancelResult = $delhivery->cancel($waybill);
+                error_log("Delhivery auto-cancellation for order {$order['order_number']} (AWB: {$waybill}): " . json_encode($cancelResult));
+                return $cancelResult;
+            }
+        } catch (Exception $e) {
+            error_log("Failed to auto-cancel Delhivery shipment for order {$id}: " . $e->getMessage());
+        }
+        return ['success' => false, 'message' => 'No active shipment'];
     }
 
     /**

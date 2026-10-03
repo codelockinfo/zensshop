@@ -313,9 +313,17 @@ class Delhivery {
 
         // Prioritize specific package remarks over generic 'rmk'
         $errorMsg = $result['packages'][0]['remarks'][0] ?? $result['rmk'] ?? $result['message'] ?? 'Failed to create shipment';
+        
+        // Clean up raw Delhivery server exceptions into clear explanations
+        if (preg_match("/(?:exception\s*')?(\d+)\s+is non serviceable pincode/i", $errorMsg, $matches)) {
+            $errorMsg = "Delivery Unavailable: Pincode {$matches[1]} is not serviceable by Delhivery. Please update the shipping address.";
+        } elseif (stripos($errorMsg, 'Crashing while saving package') !== false) {
+            $errorMsg = preg_replace('/Crashing while saving package due to exception\s*\'?(.*?)\'?\.\s*Package might have been partially saved\./i', '$1', $errorMsg);
+        }
+
         return [
             'success' => false, 
-            'message' => "$errorMsg (Warehouse: $warehouseName)",
+            'message' => trim("$errorMsg (Warehouse: $warehouseName)"),
             'warehouse' => $warehouseName
         ];
     }
@@ -451,11 +459,16 @@ class Delhivery {
 
         $result = $this->createPickupRequest($payload);
         
-        if (isset($result['success']) && $result['success']) {
+        $isPickupSuccess = (!empty($result['pickup_id']) || !empty($result['pr_id']) || 
+                           (isset($result['status']) && (strtolower((string)$result['status']) === 'success' || $result['status'] === true)) || 
+                           (!empty($result['success'])));
+
+        if ($isPickupSuccess) {
             // Update order status to 'ready_for_pickup'
             foreach ($activeOrders as $order) {
                 $db->execute("UPDATE orders SET order_status = 'ready_for_pickup' WHERE id = ?", [$order['id']]);
             }
+            $result['success'] = true;
         }
 
         return $result;
@@ -505,11 +518,12 @@ class Delhivery {
      * Cancel a shipment
      */
     public function cancel($waybill) {
+        $waybill = trim((string)$waybill);
         if (empty($waybill)) return ['success' => false, 'message' => 'Waybill required'];
 
         // Use track/staging-express based on mode
         $baseUrl = $this->isTest ? 'https://staging-express.delhivery.com' : 'https://track.delhivery.com';
-        $url = $baseUrl . '/api/p/edit.json';
+        $url = $baseUrl . '/api/p/edit';
         
         $payload = [
             'waybill' => $waybill,
@@ -518,14 +532,34 @@ class Delhivery {
 
         $result = $this->makeRequest($url, 'POST', $payload);
         
-        // Normalize for multiple formats
-        if (isset($result['status']) && ($result['status'] === true || strtolower((string)$result['status']) === 'success')) {
+        // Comprehensive success detection for Delhivery formats
+        $isSuccess = false;
+        $statusVal = strtolower((string)($result['status'] ?? ''));
+        if ($statusVal === 'true' || $statusVal === 'success' || $statusVal === '1') {
+            $isSuccess = true;
+        } elseif (!empty($result['success'])) {
+            $isSuccess = true;
+        }
+
+        $remarks = '';
+        if (isset($result['remarks'])) {
+            $remarks = is_array($result['remarks']) ? implode(', ', $result['remarks']) : (string)$result['remarks'];
+        } elseif (isset($result['remark'])) {
+            $remarks = is_array($result['remark']) ? implode(', ', $result['remark']) : (string)$result['remark'];
+        } elseif (isset($result['message'])) {
+            $remarks = (string)$result['message'];
+        }
+
+        if (stripos($remarks, 'cancel') !== false || stripos($remarks, 'changed successfully') !== false) {
+            $isSuccess = true;
+        }
+
+        if ($isSuccess) {
             $result['success'] = true;
-        } elseif (isset($result['success']) && $result['success']) {
-            $result['success'] = true;
+            $result['message'] = !empty($remarks) ? $remarks : 'Shipment cancelled successfully';
         } else {
             $result['success'] = false;
-            $result['message'] = $result['message'] ?? $result['remarks'][0] ?? $result['error'] ?? 'Cancellation failed';
+            $result['message'] = !empty($remarks) ? $remarks : ($result['error'] ?? 'Cancellation failed');
         }
         
         return $result;
@@ -539,6 +573,9 @@ class Delhivery {
         curl_setopt($ch, CURLOPT_URL, $url);
         curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
         curl_setopt($ch, CURLOPT_FOLLOWLOCATION, true);
+        if (defined('CURLOPT_POSTREDIR') && defined('CURL_REDIR_POST_ALL')) {
+            curl_setopt($ch, CURLOPT_POSTREDIR, CURL_REDIR_POST_ALL);
+        }
         curl_setopt($ch, CURLOPT_CONNECTTIMEOUT, 3); // Max 3s to connect
         curl_setopt($ch, CURLOPT_TIMEOUT, 5); // Max 5s total execution
         if (defined('CURL_IPRESOLVE_V4')) {

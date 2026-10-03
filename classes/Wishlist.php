@@ -66,16 +66,13 @@ class Wishlist {
             $this->saveWishlistToCookie($wishlistItems);
         }
         
-        // Ensure all items have required fields and proper image URLs
-        // Batch fetch all wishlist products in a single query
+        // Batch fetch all wishlist products in a single fast indexed query
         $productMap = [];
         $rawProductIds = array_filter(array_column($wishlistItems, 'product_id'));
         if (!empty($rawProductIds)) {
-            $uniquePIds = array_unique($rawProductIds);
+            $uniquePIds = array_values(array_unique($rawProductIds));
             $placeholders = implode(',', array_fill(0, count($uniquePIds), '?'));
-            $sql = "SELECT p.*, c.name as category_name 
-                    FROM products p 
-                    LEFT JOIN categories c ON p.category_id = c.id 
+            $sql = "SELECT p.* FROM products p 
                     WHERE (p.product_id IN ($placeholders) OR p.id IN ($placeholders))";
             $params = array_merge($uniquePIds, $uniquePIds);
             if ($currentStoreId && $currentStoreId !== 'DEFAULT') {
@@ -154,7 +151,7 @@ class Wishlist {
             $storeId = getCurrentStoreId();
         }
 
-        $sql = "SELECT w.*, p.name, p.price, p.sale_price, p.featured_image, p.slug, p.rating, p.review_count, p.sku, p.stock_status, p.stock_quantity, p.currency
+        $sql = "SELECT w.*, p.name, p.price, p.sale_price, p.featured_image, p.images, p.slug, p.rating, p.review_count, p.sku, p.stock_status, p.stock_quantity, p.currency
               FROM wishlist w
               LEFT JOIN products p ON (w.product_id = p.product_id OR (w.product_id = p.id AND w.product_id < 1000000000))
               WHERE w.user_id = ?";
@@ -173,13 +170,10 @@ class Wishlist {
             $productImage = '';
             if (!empty($item['featured_image'])) {
                 $productImage = $item['featured_image'];
-            } else {
-                $product = $this->product->getByProductId($item['product_id']);
-                if ($product) {
-                    $images = json_decode($product['images'] ?? '[]', true);
-                    if (!empty($images[0])) {
-                        $productImage = $images[0];
-                    }
+            } elseif (!empty($item['images'])) {
+                $images = json_decode($item['images'], true);
+                if (!empty($images[0])) {
+                    $productImage = $images[0];
                 }
             }
             

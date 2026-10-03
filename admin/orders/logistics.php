@@ -26,12 +26,16 @@ $storeId = $_SESSION['store_id'] ?? null;
 if (isset($_GET['ajax_tab'])) {
     $tab = $_GET['ajax_tab'];
     $orders = [];
-    $conditions = "store_id = ?";
-    $params = [$storeId];
+    $conditions = "1=1";
+    $params = [];
+    if ($storeId) {
+        $conditions .= " AND (store_id = ? OR store_id IS NULL)";
+        $params[] = $storeId;
+    }
 
     switch ($tab) {
         case 'pending_awb':
-            $conditions .= " AND tracking_number IS NULL AND order_status = 'confirmed'";
+            $conditions .= " AND tracking_number IS NULL AND (order_status = 'confirmed' OR order_status = 'pending')";
             break;
         case 'ready_to_ship':
             $conditions .= " AND tracking_number IS NOT NULL AND order_status = 'processing'";
@@ -132,12 +136,28 @@ if (isset($_GET['ajax_tab'])) {
                     <span class="text-[10px] font-bold text-gray-500"><?php echo strtoupper($order['payment_method']); ?></span>
                 </td>
                 <td class="p-4 text-right">
-                    <div class="flex justify-end gap-1">
+                    <div class="flex items-center justify-end gap-1.5 flex-wrap">
                         <?php if (!$awb): ?>
-                            <button onclick="window.location='<?php echo $detailUrl; ?>'" class="px-3 py-1 bg-blue-600 text-white text-[10px] font-bold rounded hover:bg-blue-700">CREATE SHIPMENT</button>
+                            <button onclick="createShipmentSingle('<?php echo $order['order_number']; ?>', this)" class="px-2.5 py-1 bg-blue-600 text-white text-[11px] font-bold rounded hover:bg-blue-700 flex items-center gap-1 shadow-sm transition whitespace-nowrap">
+                                <i class="fas fa-plus-circle text-[10px]"></i> Create Shipment
+                            </button>
                         <?php else: ?>
-                            <button onclick="window.open('<?php echo url('admin/api/delhivery_actions?action=download_label&order_number='.$order['order_number']); ?>')" class="w-8 h-8 flex items-center justify-center text-green-600 hover:bg-green-50 rounded-full transition-colors" title="Print Label"><i class="fas fa-print"></i></button>
-                            <button onclick="window.open('https://www.delhivery.com/track/package/<?php echo $awb; ?>')" class="w-8 h-8 flex items-center justify-center text-blue-600 hover:bg-blue-50 rounded-full transition-colors" title="Live Track"><i class="fas fa-search-location"></i></button>
+                            <?php if ($order['order_status'] === 'processing'): ?>
+                                <button onclick="requestPickupSingle('<?php echo $order['order_number']; ?>', this)" class="px-2.5 py-1 bg-orange-600 text-white text-[11px] font-bold rounded hover:bg-orange-700 flex items-center gap-1 shadow-sm transition whitespace-nowrap" title="Add this order to Delhivery pickup">
+                                    <i class="fas fa-truck text-[10px]"></i> Add to Pickup
+                                </button>
+                            <?php endif; ?>
+                            <button onclick="window.open('<?php echo url('admin/api/delhivery_actions?action=download_label&order_number='.$order['order_number']); ?>')" class="w-7 h-7 flex items-center justify-center text-green-600 hover:bg-green-50 rounded-full transition-colors border border-green-200" title="Print Shipping Label">
+                                <i class="fas fa-print text-xs"></i>
+                            </button>
+                            <button onclick="window.open('https://www.delhivery.com/track/package/<?php echo $awb; ?>')" class="w-7 h-7 flex items-center justify-center text-blue-600 hover:bg-blue-50 rounded-full transition-colors border border-blue-200" title="Track on Delhivery">
+                                <i class="fas fa-search-location text-xs"></i>
+                            </button>
+                            <?php if (in_array($order['order_status'], ['processing', 'ready_for_pickup'])): ?>
+                                <button onclick="cancelShipmentSingle('<?php echo $order['order_number']; ?>', this)" class="w-7 h-7 flex items-center justify-center text-red-600 hover:bg-red-50 rounded-full transition-colors border border-red-200" title="Cancel Delhivery Shipment">
+                                    <i class="fas fa-times-circle text-xs"></i>
+                                </button>
+                            <?php endif; ?>
                         <?php endif; ?>
                     </div>
                 </td>
@@ -157,10 +177,16 @@ $delhivery = new Delhivery();
 $tab = $_GET['tab'] ?? 'ready_to_ship';
 
 // Counts for badges (Main Page Load)
-$countPending = $db->fetchOne("SELECT COUNT(*) as count FROM orders WHERE store_id = ? AND tracking_number IS NULL AND order_status = 'confirmed'", [$storeId])['count'];
-$countReady = $db->fetchOne("SELECT COUNT(*) as count FROM orders WHERE store_id = ? AND tracking_number IS NOT NULL AND order_status = 'processing'", [$storeId])['count'];
-$countPickup = $db->fetchOne("SELECT COUNT(*) as count FROM orders WHERE store_id = ? AND order_status = 'ready_for_pickup'", [$storeId])['count'];
-$countAll = $db->fetchOne("SELECT COUNT(*) as count FROM orders WHERE store_id = ? AND tracking_number IS NOT NULL", [$storeId])['count'];
+$baseStoreCondition = $storeId ? " AND (store_id = ? OR store_id IS NULL)" : "";
+$baseStoreParam = $storeId ? [$storeId] : [];
+
+$countPending = $db->fetchOne("SELECT COUNT(*) as count FROM orders WHERE tracking_number IS NULL AND (order_status = 'confirmed' OR order_status = 'pending') $baseStoreCondition", $baseStoreParam)['count'] ?? 0;
+$countReady = $db->fetchOne("SELECT COUNT(*) as count FROM orders WHERE tracking_number IS NOT NULL AND order_status = 'processing' $baseStoreCondition", $baseStoreParam)['count'] ?? 0;
+$countPickup = $db->fetchOne("SELECT COUNT(*) as count FROM orders WHERE order_status = 'ready_for_pickup' $baseStoreCondition", $baseStoreParam)['count'] ?? 0;
+$countTransit = $db->fetchOne("SELECT COUNT(*) as count FROM orders WHERE order_status = 'shipped' $baseStoreCondition", $baseStoreParam)['count'] ?? 0;
+$countRto = $db->fetchOne("SELECT COUNT(*) as count FROM orders WHERE (order_status = 'returned' OR order_status = 'rto') $baseStoreCondition", $baseStoreParam)['count'] ?? 0;
+$countDelivered = $db->fetchOne("SELECT COUNT(*) as count FROM orders WHERE order_status = 'delivered' $baseStoreCondition", $baseStoreParam)['count'] ?? 0;
+$countAll = $db->fetchOne("SELECT COUNT(*) as count FROM orders WHERE tracking_number IS NOT NULL $baseStoreCondition", $baseStoreParam)['count'] ?? 0;
 ?>
 
 <div class="mb-6 flex flex-wrap items-center justify-between gap-4">
@@ -172,10 +198,21 @@ $countAll = $db->fetchOne("SELECT COUNT(*) as count FROM orders WHERE store_id =
         <p class="text-gray-600 text-sm pl-7">Manage your Delhivery shipments and pickups</p>
     </div>
     <div class="flex gap-3">
-        <button onclick="location.reload()" class="bg-white border border-gray-300 text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-50 flex items-center gap-2 text-sm font-semibold">
-            <i class="fas fa-sync-alt"></i> Sync Status
+        <button id="syncStatusBtn" onclick="syncAllShipments()" class="bg-white border border-gray-300 text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-50 flex items-center gap-2 text-sm font-semibold transition-all shadow-sm">
+            <i class="fas fa-sync-alt" id="syncIcon"></i> <span id="syncText">Sync Status</span>
         </button>
     </div>
+</div>
+
+<!-- Inline Banner for Status/Errors (No browser alert popups!) -->
+<div id="logisticsBanner" class="hidden mb-6 p-4 rounded-lg text-sm flex items-start justify-between gap-3 shadow-sm border transition-all duration-300">
+    <div class="flex items-start gap-2.5">
+        <i id="logisticsBannerIcon" class="fas fa-info-circle mt-0.5 text-base flex-shrink-0"></i>
+        <div id="logisticsBannerText" class="leading-relaxed font-medium"></div>
+    </div>
+    <button type="button" onclick="document.getElementById('logisticsBanner').classList.add('hidden')" class="opacity-60 hover:opacity-100 ml-2 p-0.5 text-gray-500 hover:text-gray-700" title="Dismiss">
+        <i class="fas fa-times"></i>
+    </button>
 </div>
 
 <!-- Tabs -->
@@ -198,14 +235,23 @@ $countAll = $db->fetchOne("SELECT COUNT(*) as count FROM orders WHERE store_id =
             <span class="ml-2 px-2 py-0.5 bg-purple-100 text-purple-600 text-[10px] rounded-full font-bold"><?php echo $countPickup; ?></span>
         <?php endif; ?>
     </a>
-    <a href="javascript:void(0)" onclick="loadTabData('in_transit')" data-tab="in_transit" class="tab-btn px-6 py-3 border-b-2 font-medium text-sm whitespace-nowrap border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300">
+    <a href="javascript:void(0)" onclick="loadTabData('in_transit')" data-tab="in_transit" class="tab-btn px-6 py-3 border-b-2 font-medium text-sm whitespace-nowrap <?php echo $tab === 'in_transit' ? 'active border-blue-600 text-blue-600' : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'; ?>">
         In Transit
+        <?php if ($countTransit > 0): ?>
+            <span class="ml-2 px-2 py-0.5 bg-blue-100 text-blue-600 text-[10px] rounded-full font-bold"><?php echo $countTransit; ?></span>
+        <?php endif; ?>
     </a>
-    <a href="javascript:void(0)" onclick="loadTabData('rto')" data-tab="rto" class="tab-btn px-6 py-3 border-b-2 font-medium text-sm whitespace-nowrap border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300">
+    <a href="javascript:void(0)" onclick="loadTabData('rto')" data-tab="rto" class="tab-btn px-6 py-3 border-b-2 font-medium text-sm whitespace-nowrap <?php echo $tab === 'rto' ? 'active border-red-600 text-red-600' : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'; ?>">
         RTO In-Transit
+        <?php if ($countRto > 0): ?>
+            <span class="ml-2 px-2 py-0.5 bg-red-100 text-red-600 text-[10px] rounded-full font-bold"><?php echo $countRto; ?></span>
+        <?php endif; ?>
     </a>
-    <a href="javascript:void(0)" onclick="loadTabData('delivered')" data-tab="delivered" class="tab-btn px-6 py-3 border-b-2 font-medium text-sm whitespace-nowrap border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300">
+    <a href="javascript:void(0)" onclick="loadTabData('delivered')" data-tab="delivered" class="tab-btn px-6 py-3 border-b-2 font-medium text-sm whitespace-nowrap <?php echo $tab === 'delivered' ? 'active border-green-600 text-green-600' : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'; ?>">
         Delivered
+        <?php if ($countDelivered > 0): ?>
+            <span class="ml-2 px-2 py-0.5 bg-green-100 text-green-600 text-[10px] rounded-full font-bold"><?php echo $countDelivered; ?></span>
+        <?php endif; ?>
     </a>
     <a href="javascript:void(0)" onclick="loadTabData('all_shipments')" data-tab="all_shipments" class="tab-btn px-6 py-3 border-b-2 font-medium text-sm whitespace-nowrap <?php echo $tab === 'all_shipments' ? 'active border-gray-800 text-gray-800' : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'; ?>">
         All Shipments
@@ -272,7 +318,7 @@ async function loadTabData(tab) {
     
     // Update Tab UI
     tabs.forEach(t => {
-        t.classList.remove('active', 'border-blue-600', 'text-blue-600', 'border-orange-600', 'text-orange-600', 'border-purple-600', 'text-purple-600', 'border-gray-800', 'text-gray-800');
+        t.classList.remove('active', 'border-blue-600', 'text-blue-600', 'border-orange-600', 'text-orange-600', 'border-purple-600', 'text-purple-600', 'border-red-600', 'text-red-600', 'border-green-600', 'text-green-600', 'border-gray-800', 'text-gray-800');
         t.classList.add('border-transparent', 'text-gray-500');
         
         if (t.dataset.tab === tab) {
@@ -281,6 +327,9 @@ async function loadTabData(tab) {
             let colorClass = 'border-blue-600 text-blue-600';
             if (tab === 'ready_to_ship') colorClass = 'border-orange-600 text-orange-600';
             if (tab === 'ready_for_pickup') colorClass = 'border-purple-600 text-purple-600';
+            if (tab === 'in_transit') colorClass = 'border-blue-600 text-blue-600';
+            if (tab === 'rto') colorClass = 'border-red-600 text-red-600';
+            if (tab === 'delivered') colorClass = 'border-green-600 text-green-600';
             if (tab === 'all_shipments') colorClass = 'border-gray-800 text-gray-800';
             
             colorClass.split(' ').forEach(c => t.classList.add(c));
@@ -467,13 +516,13 @@ window.handleBulkAction = async (action) => {
             });
             const result = await response.json();
             if (result.success) {
-                alert('Pickup requested successfully!');
-                location.reload();
+                showBanner('success', 'Bulk pickup requested successfully! Updating table...');
+                setTimeout(() => location.reload(), 1200);
             } else {
-                alert('Error: ' + result.message);
+                showBanner('error', 'Error requesting pickup: ' + result.message);
             }
         } catch (e) {
-            alert('Connection failure');
+            showBanner('error', 'Connection failure requesting pickup');
         }
     } else if (action === 'print_labels') {
         selectedOrders.forEach((num, index) => {
@@ -481,6 +530,157 @@ window.handleBulkAction = async (action) => {
                 window.open(`<?php echo url('admin/api/delhivery_actions?action=download_label&order_number='); ?>${num}`, '_blank');
             }, index * 500);
         });
+    }
+};
+
+window.showBanner = (type, message) => {
+    const banner = document.getElementById('logisticsBanner');
+    const icon = document.getElementById('logisticsBannerIcon');
+    const text = document.getElementById('logisticsBannerText');
+    if (!banner || !text) return;
+
+    banner.className = 'mb-6 p-4 rounded-lg text-sm flex items-start justify-between gap-3 shadow-sm border transition-all duration-300';
+    if (type === 'error') {
+        banner.classList.add('bg-red-50', 'border-red-200', 'text-red-800');
+        if (icon) icon.className = 'fas fa-exclamation-circle text-red-500 mt-0.5 text-base flex-shrink-0';
+    } else if (type === 'success') {
+        banner.classList.add('bg-green-50', 'border-green-200', 'text-green-800');
+        if (icon) icon.className = 'fas fa-check-circle text-green-500 mt-0.5 text-base flex-shrink-0';
+    } else {
+        banner.classList.add('bg-blue-50', 'border-blue-200', 'text-blue-800');
+        if (icon) icon.className = 'fas fa-info-circle text-blue-500 mt-0.5 text-base flex-shrink-0';
+    }
+
+    text.innerHTML = message;
+    banner.classList.remove('hidden');
+    banner.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+};
+
+window.requestPickupSingle = async (orderNumber, btn) => {
+    const original = btn ? btn.innerHTML : '';
+    if (btn) {
+        btn.disabled = true;
+        btn.innerHTML = '<i class="fas fa-spinner fa-spin text-[10px]"></i> Scheduling...';
+    }
+
+    try {
+        const response = await fetch('<?php echo url("admin/api/delhivery_actions.php"); ?>', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ action: 'request_pickup', order_number: orderNumber })
+        });
+        const result = await response.json();
+        if (result.success) {
+            showBanner('success', `Pickup scheduled successfully for Order <strong>${orderNumber}</strong>! Delhivery driver will arrive for pickup.`);
+            const currentTab = document.querySelector('.tab-btn.active')?.dataset.tab || 'ready_to_ship';
+            setTimeout(() => loadTabData(currentTab), 1200);
+        } else {
+            showBanner('error', `Failed to schedule pickup for ${orderNumber}: ` + (result.message || 'Unknown error'));
+        }
+    } catch (e) {
+        showBanner('error', 'Network error connecting to Delhivery API');
+    } finally {
+        if (btn) {
+            btn.disabled = false;
+            btn.innerHTML = original;
+        }
+    }
+};
+
+window.cancelShipmentSingle = async (orderNumber, btn) => {
+    if (!confirm(`Are you sure you want to cancel the Delhivery shipment for Order ${orderNumber}?`)) return;
+    
+    const original = btn ? btn.innerHTML : '';
+    if (btn) {
+        btn.disabled = true;
+        btn.innerHTML = '<i class="fas fa-spinner fa-spin text-xs"></i>';
+    }
+
+    try {
+        const response = await fetch('<?php echo url("admin/api/delhivery_actions.php"); ?>', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ action: 'cancel_shipment', order_number: orderNumber })
+        });
+        const result = await response.json();
+        if (result.success) {
+            showBanner('success', `Shipment for Order <strong>${orderNumber}</strong> cancelled successfully in Delhivery.`);
+            const currentTab = document.querySelector('.tab-btn.active')?.dataset.tab || 'ready_to_ship';
+            setTimeout(() => loadTabData(currentTab), 1200);
+        } else {
+            showBanner('error', `Failed to cancel shipment for ${orderNumber}: ` + (result.message || 'Error'));
+        }
+    } catch (e) {
+        showBanner('error', 'Network error connecting to Delhivery API');
+    } finally {
+        if (btn) {
+            btn.disabled = false;
+            btn.innerHTML = original;
+        }
+    }
+};
+
+window.createShipmentSingle = async (orderNumber, btn) => {
+    const original = btn ? btn.innerHTML : '';
+    if (btn) {
+        btn.disabled = true;
+        btn.innerHTML = '<i class="fas fa-spinner fa-spin text-[10px]"></i> Generating AWB...';
+    }
+
+    try {
+        const response = await fetch('<?php echo url("admin/api/delhivery_actions.php"); ?>', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ action: 'create_shipment', order_number: orderNumber })
+        });
+        const result = await response.json();
+        if (result.success) {
+            showBanner('success', `Shipment created! AWB <strong>${result.waybill}</strong> generated for Order ${orderNumber}.`);
+            const currentTab = document.querySelector('.tab-btn.active')?.dataset.tab || 'pending_awb';
+            setTimeout(() => loadTabData(currentTab), 1200);
+        } else {
+            showBanner('error', `Failed to create shipment for ${orderNumber}: ` + (result.message || 'Error'));
+        }
+    } catch (e) {
+        showBanner('error', 'Network error connecting to Delhivery API');
+    } finally {
+        if (btn) {
+            btn.disabled = false;
+            btn.innerHTML = original;
+        }
+    }
+};
+
+window.syncAllShipments = async () => {
+    const btn = document.getElementById('syncStatusBtn');
+    const icon = document.getElementById('syncIcon');
+    const text = document.getElementById('syncText');
+    if (btn) btn.disabled = true;
+    if (icon) icon.classList.add('fa-spin');
+    if (text) text.innerText = 'Syncing Delhivery...';
+
+    const banner = document.getElementById('logisticsBanner');
+    if (banner) banner.classList.add('hidden');
+
+    try {
+        const response = await fetch('<?php echo url("admin/api/delhivery_actions.php"); ?>', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ action: 'sync_all_shipments' })
+        });
+        const result = await response.json();
+        if (result.success) {
+            showBanner('success', (result.message || 'Synced successfully with Delhivery!') + ' Updating table...');
+            setTimeout(() => location.reload(), 1200);
+        } else {
+            showBanner('error', 'Sync failed: ' + (result.message || 'Unknown error'));
+        }
+    } catch (e) {
+        showBanner('error', 'Failed to connect to sync API');
+    } finally {
+        if (btn) btn.disabled = false;
+        if (icon) icon.classList.remove('fa-spin');
+        if (text) text.innerText = 'Sync Status';
     }
 };
 </script>
