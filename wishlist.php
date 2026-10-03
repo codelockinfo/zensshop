@@ -3,6 +3,14 @@
  * Wishlist Page
  */
 
+if (session_status() === PHP_SESSION_NONE) {
+    session_start();
+}
+// Release session lock immediately so background requests and page render are non-blocking
+if (session_status() === PHP_SESSION_ACTIVE) {
+    session_write_close();
+}
+
 require_once __DIR__ . '/classes/Wishlist.php';
 require_once __DIR__ . '/classes/Product.php';
 require_once __DIR__ . '/classes/Database.php';
@@ -68,12 +76,34 @@ $w_qv_hover_icon = $styles['quick_view_hover_icon_color'] ?? $g_btn_hover_icon;
 $w_tooltip_bg = $styles['tooltip_bg_color'] ?? $globalStyles['tooltip_bg_color'] ?? '#000000';
 $w_tooltip_text = $styles['tooltip_text_color'] ?? $globalStyles['tooltip_text_color'] ?? '#ffffff';
 
-
-
 // Get wishlist items
 $wishlistItems = $wishlist->getWishlist();
 
-
+// Batch load default variants for wishlist items
+$wishlistProductIds = [];
+if (!empty($wishlistItems) && is_array($wishlistItems)) {
+    foreach ($wishlistItems as $wItem) {
+        if (!empty($wItem['product_id'])) $wishlistProductIds[] = $wItem['product_id'];
+    }
+}
+$defaultVariantsMap = [];
+if (!empty($wishlistProductIds)) {
+    $placeholders = implode(',', array_fill(0, count($wishlistProductIds), '?'));
+    $variantsRows = $db->fetchAll(
+        "SELECT product_id, variant_attributes FROM product_variants 
+         WHERE product_id IN ($placeholders) 
+         ORDER BY is_default DESC, id ASC",
+        $wishlistProductIds
+    );
+    if (!empty($variantsRows) && is_array($variantsRows)) {
+        foreach ($variantsRows as $vRow) {
+            $pId = $vRow['product_id'];
+            if (!isset($defaultVariantsMap[$pId])) {
+                $defaultVariantsMap[$pId] = json_decode($vRow['variant_attributes'] ?? '{}', true) ?: [];
+            }
+        }
+    }
+}
 
 // Get recently viewed products from cookie
 $recentlyViewed = [];
@@ -84,8 +114,8 @@ if (isset($_COOKIE['recently_viewed'])) {
         $recentlyViewedIds = array_slice(array_reverse($recentlyViewedIds), 0, 4);
         $placeholders = implode(',', array_fill(0, count($recentlyViewedIds), '?'));
         $recentlyViewed = $db->fetchAll(
-            "SELECT * FROM products WHERE id IN ($placeholders) AND status = 'active'",
-            $recentlyViewedIds
+            "SELECT * FROM products WHERE (product_id IN ($placeholders) OR id IN ($placeholders)) AND status = 'active'",
+            array_merge($recentlyViewedIds, $recentlyViewedIds)
         );
     }
 }
@@ -135,14 +165,14 @@ require_once __DIR__ . '/includes/header.php';
 </style>
 
 <!-- Breadcrumb and Wishlist Section -->
-<div class="container mx-auto px-4 py-4 md:py-12">
+<div class="container mx-auto px-4 pt-2 pb-4 md:pt-4 md:pb-8">
     <!-- Wishlist Skeleton -->
     <div id="wishlistSkeleton" class="animate-pulse">
         <!-- Breadcrumb Skeleton -->
-        <div class="h-4 bg-gray-200 rounded w-32 mb-8"></div>
+        <div class="h-4 bg-gray-200 rounded w-32 mb-4"></div>
         
         <!-- Title Skeleton -->
-        <div class="h-10 bg-gray-200 rounded w-48 mx-auto mb-12"></div>
+        <div class="h-10 bg-gray-200 rounded w-48 mx-auto mb-6"></div>
         
         <!-- Grid Skeleton -->
         <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-16">
@@ -178,7 +208,7 @@ require_once __DIR__ . '/includes/header.php';
 
     <div id="mainWishlistContent" class="hidden">
         <!-- Breadcrumb -->
-        <nav class="breadcrumb-nav text-sm text-gray-600 mb-8 mt-4 md:mt-0">
+        <nav class="breadcrumb-nav text-sm text-gray-600 mb-3 mt-1 md:mt-0 md:mb-4">
             <a href="<?php echo $baseUrl; ?>/" class="hover:text-primary">Home</a>
             <span class="mx-2">></span>
             <span class="text-gray-900">Wishlist</span>
@@ -186,14 +216,14 @@ require_once __DIR__ . '/includes/header.php';
 
         <h1 class="text-2xl md:text-4xl font-heading font-bold text-center mb-2" style="color: <?php echo $styles['heading_color'] ?? '#1f2937'; ?>;"><?php echo htmlspecialchars($pageHeading); ?></h1>
         <?php if (!empty($pageSubheading)): ?>
-        <p class="text-center mb-8 md:mb-12 max-w-2xl mx-auto" style="color: <?php echo $styles['subheading_color'] ?? '#4b5563'; ?>;"><?php echo htmlspecialchars($pageSubheading); ?></p>
+        <p class="text-center mb-4 md:mb-6 max-w-2xl mx-auto" style="color: <?php echo $styles['subheading_color'] ?? '#4b5563'; ?>;"><?php echo htmlspecialchars($pageSubheading); ?></p>
         <?php else: ?>
-        <div class="mb-5 md:mb-12"></div>
+        <div class="mb-3 md:mb-6"></div>
         <?php endif; ?>
         
         <?php if (empty($wishlistItems)): ?>
             <!-- Empty Wishlist -->
-            <div class="text-center py-16">
+            <div class="text-center py-12 md:py-16">
                 <i class="fas fa-heart text-6xl text-gray-300 mb-4"></i>
                 <h2 class="text-2xl font-heading font-bold mb-2">Your wishlist is empty</h2>
                 <p class="text-gray-600 mb-6">Start adding products you love to your wishlist!</p>
@@ -203,7 +233,7 @@ require_once __DIR__ . '/includes/header.php';
             </div>
         <?php else: ?>
             <!-- Wishlist Items -->
-            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-16">
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-6 md:mb-16">
                 <?php foreach ($wishlistItems as $item): ?>
                     <div class="product-card wishlist-card group relative rounded-lg overflow-hidden hover:shadow-lg transition-shadow flex flex-col h-full" data-no-click-redirect="true" style="background-color: <?php echo $w_card_bg_color; ?>;">
                         <div class="absolute top-2 right-2 z-30 flex flex-col items-center gap-2">
@@ -283,19 +313,8 @@ require_once __DIR__ . '/includes/header.php';
                             <?php 
                             $isOutOfStock = (($item['stock_status'] ?? 'in_stock') === 'out_of_stock' || (isset($item['stock_quantity']) && $item['stock_quantity'] <= 0));
                             
-                            // Get first variant for default attributes
-                            $vData = $product->getVariants($item['product_id']);
-                            $defaultAttributes = [];
-                            if (!empty($vData['variants'])) {
-                                $defaultVariant = $vData['variants'][0];
-                                foreach ($vData['variants'] as $v) {
-                                    if (!empty($v['is_default'])) {
-                                        $defaultVariant = $v;
-                                        break;
-                                    }
-                                }
-                                $defaultAttributes = $defaultVariant['variant_attributes'];
-                            }
+                            // Get default variant attributes from preloaded map
+                            $defaultAttributes = $defaultVariantsMap[$item['product_id']] ?? [];
                             $attributesJson = json_encode($defaultAttributes);
                             ?>
                             <button onclick='event.stopPropagation(); addToCart(<?php echo $item['product_id']; ?>, 1, this, <?php echo htmlspecialchars($attributesJson, ENT_QUOTES, 'UTF-8'); ?>)'
@@ -312,13 +331,13 @@ require_once __DIR__ . '/includes/header.php';
         
         <!-- Recently Viewed Section -->
         <?php if (!empty($recentlyViewed)): ?>
-            <div class="mt-20">
-                <h2 class="text-4xl md:text-5xl font-heading font-bold text-center mb-4">Recently Viewed</h2>
-                <p class="text-center text-gray-600 mb-12 max-w-2xl mx-auto">
+            <div class="mt-8 md:mt-20">
+                <h2 class="text-2xl md:text-5xl font-heading font-bold text-center mb-2 md:mb-4">Recently Viewed</h2>
+                <p class="text-center text-gray-600 mb-4 md:mb-12 max-w-2xl mx-auto">
                     Explore your recently viewed items, blending quality and style for a refined living experience.
                 </p>
                 
-                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-16">
+                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-6 md:mb-16">
                     <?php foreach ($recentlyViewed as $recentProduct): 
                         $recentImages = json_decode($recentProduct['images'] ?? '[]', true);
                         $recentImage = getProductImage($recentProduct);
@@ -419,13 +438,15 @@ require_once __DIR__ . '/includes/header.php';
 </div>
 
 <script>
-// Skeleton Loader Handling
+// Skeleton Loader Handling (Fast 50ms Timeline)
 document.addEventListener('DOMContentLoaded', function() {
     const skeleton = document.getElementById('wishlistSkeleton');
     const content = document.getElementById('mainWishlistContent');
     if (skeleton && content) {
-        skeleton.classList.add('hidden');
-        content.classList.remove('hidden');
+        setTimeout(function() {
+            skeleton.classList.add('hidden');
+            content.classList.remove('hidden');
+        }, 50);
     }
 });
 </script>

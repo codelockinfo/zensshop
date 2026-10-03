@@ -273,6 +273,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['place_order']) && emp
 // Clear output buffer before including header
 ob_end_clean();
 
+// Release session lock so background/concurrent AJAX requests are not blocked during page render
+session_write_close();
+
 $pageTitle = 'Checkout';
 $isCheckout = true;
 require_once __DIR__ . '/includes/header.php';
@@ -390,10 +393,10 @@ nav.bg-white.sticky.top-0 {
 }
 </style>
 
-<section class="py-8 md:py-12 bg-gray-50 min-h-screen">
+<section class="pt-2 pb-6 md:pt-4 md:pb-10 bg-gray-50 min-h-screen">
     <div class="container mx-auto px-4">
         <!-- Header: Logo & Progress -->
-        <div class="max-w-6xl mx-auto mb-8 flex flex-col md:flex-row items-center justify-start gap-8 md:gap-12">
+        <div class="max-w-6xl mx-auto mb-4 md:mb-4 flex flex-col md:flex-row items-center justify-start gap-3 md:gap-12">
             <!-- Logo -->
             <!-- Logo -->
             <a href="<?php echo $baseUrl; ?>/" class="flex items-center">
@@ -489,12 +492,12 @@ nav.bg-white.sticky.top-0 {
                                 <a href="<?php echo url('cart'); ?>" class="text-gray-400 hover:text-black transition-colors" title="Back to Cart">
                                     <i class="fas fa-chevron-left text-xl"></i>
                                 </a>
-                                <h1 class="text-3xl font-bold text-gray-900 checkout-heading">Checkout</h1>
+                                <h1 class="text-xl md:text-2xl font-bold text-gray-900 checkout-heading">Checkout</h1>
                             </div>
                         </div>
 
                         <?php if ($customer): ?>
-                            <div class="bg-blue-50 border border-blue-100 rounded-xl p-4 mb-8 flex items-center space-x-3 checkout-welcome">
+                            <div class="bg-blue-50 border border-blue-100 rounded-xl p-4 mb-4 md:mb-8 flex items-center space-x-3 checkout-welcome">
                                 <div class="w-10 h-10 bg-blue-600 rounded-full flex items-center justify-center text-white">
                                     <i class="fas fa-user"></i>
                                 </div>
@@ -537,6 +540,7 @@ nav.bg-white.sticky.top-0 {
                                        title="Please enter a valid name (letters only)"
                                        onkeypress="return (event.charCode >= 65 && event.charCode <= 90) || (event.charCode >= 97 && event.charCode <= 122) || event.charCode === 32 || event.charCode === 46 || event.charCode === 45"
                                        value="<?php echo htmlspecialchars($_POST['customer_name'] ?? ($customer['name'] ?? '')); ?>"
+                                       placeholder="Enter full name"
                                        class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent checkout-input">
                             </div>
                             
@@ -546,6 +550,7 @@ nav.bg-white.sticky.top-0 {
                                        pattern="[a-z0-9\._%+\-]+@[a-z0-9\.\-]+\.[a-z]{2,}$"
                                        title="Please enter a valid email address (e.g., user@example.com)"
                                        value="<?php echo htmlspecialchars($_POST['customer_email'] ?? ($customer['email'] ?? '')); ?>"
+                                       placeholder="Enter email address"
                                        class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent checkout-input">
                             </div>
                             
@@ -605,17 +610,13 @@ nav.bg-white.sticky.top-0 {
                                         }
 
                                         foreach ($phoneCodes as $code => $data) {
-                                            $flag = $data[2]; // Use ISO code (index 2) instead of Flag Emoji (index 0) to fix encoding/display issues
-                                            $display = $flag . ' ' . $code;
+                                            $display = $code;
                                             $length = $data[3] ?? 10;
                                             $selected = ($selectedCode === $code) ? 'selected' : '';
                                             echo "<option value=\"{$code}\" data-length=\"{$length}\" {$selected}>{$display}</option>\n";
                                         }
                                         ?>
                                     </select>
-                                    <div class="absolute left-3 top-1/2 transform -translate-y-1/2 pointer-events-none">
-                                        <i class="fas fa-chevron-down text-gray-400 text-xs"></i>
-                                    </div>
                                     <input type="tel" name="phone" id="phoneInput" required 
                                            value="<?php echo htmlspecialchars($_POST['phone'] ?? ''); ?>"
                                            placeholder="Mobile number"
@@ -656,6 +657,7 @@ nav.bg-white.sticky.top-0 {
                                 <label class="block text-sm font-semibold mb-2 text-gray-700">Address</label>
                                 <input type="text" name="address" required minlength="5"
                                        value="<?php echo htmlspecialchars($_POST['address'] ?? ''); ?>"
+                                       placeholder="Enter address"
                                        class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent checkout-input">
                             </div>
                             
@@ -667,6 +669,7 @@ nav.bg-white.sticky.top-0 {
                                            title="Please enter a valid city name (letters only)"
                                            onkeypress="return (event.charCode >= 65 && event.charCode <= 90) || (event.charCode >= 97 && event.charCode <= 122) || event.charCode === 32"
                                            value="<?php echo htmlspecialchars($_POST['city'] ?? ''); ?>"
+                                           placeholder="Enter city"
                                            class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent checkout-input">
                                 </div>
                                 <div>
@@ -676,6 +679,7 @@ nav.bg-white.sticky.top-0 {
                                            title="Please enter a valid state name (letters only)"
                                            onkeypress="return (event.charCode >= 65 && event.charCode <= 90) || (event.charCode >= 97 && event.charCode <= 122) || event.charCode === 32"
                                            value="<?php echo htmlspecialchars($_POST['state'] ?? $customer['shipping_address']['state'] ?? ''); ?>"
+                                           placeholder="Enter state"
                                            class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent checkout-input"
                                            onblur="recalculateTaxes()">
                                 </div>

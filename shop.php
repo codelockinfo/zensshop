@@ -6,6 +6,10 @@ ob_start();
 if (session_status() == PHP_SESSION_NONE) {
     session_start();
 }
+// Release session lock immediately to prevent blocking concurrent requests
+if (session_status() === PHP_SESSION_ACTIVE) {
+    session_write_close();
+}
 
 
 require_once __DIR__ . '/classes/Database.php';
@@ -164,10 +168,8 @@ if ($stockStatus) {
 
 $filters['sort'] = $sort;
 
-// Get total count (without limit) - Optimization: Don't fetch everything!
-$allProducts = $product->getAll($filters, true); // Pass true to only get count if we had a count method, but for now let's just use what we have or fix getAll
-// For now, let's keep it simple but fix the memory issue if getAll returns too much
-$totalProducts = count($allProducts);
+// Get total count using fast COUNT query (never fetch all products into memory)
+$totalProducts = $product->getCount($filters);
 $totalPages = ceil($totalProducts / $perPage);
 
 // Get paginated products
@@ -178,24 +180,50 @@ $products = $product->getAll($filters);
 // Get current Store ID safely
 $currentStoreId = defined('CURRENT_STORE_ID') ? CURRENT_STORE_ID : ($_SESSION['store_id'] ?? null);
 
+// Batch load default variants for all displayed products to avoid N+1 queries in the loop
+$displayedProductIds = [];
+if (!empty($products) && is_array($products)) {
+    foreach ($products as $pItem) {
+        if (!empty($pItem['product_id'])) $displayedProductIds[] = $pItem['product_id'];
+        elseif (!empty($pItem['id'])) $displayedProductIds[] = $pItem['id'];
+    }
+}
+$defaultVariantsMap = [];
+if (!empty($displayedProductIds)) {
+    $placeholders = implode(',', array_fill(0, count($displayedProductIds), '?'));
+    $variantsRows = $db->fetchAll(
+        "SELECT product_id, variant_attributes FROM product_variants 
+         WHERE product_id IN ($placeholders) 
+         ORDER BY is_default DESC, id ASC",
+        $displayedProductIds
+    );
+    if (!empty($variantsRows) && is_array($variantsRows)) {
+        foreach ($variantsRows as $vRow) {
+            $pId = $vRow['product_id'];
+            if (!isset($defaultVariantsMap[$pId])) {
+                $defaultVariantsMap[$pId] = json_decode($vRow['variant_attributes'] ?? '{}', true) ?: [];
+            }
+        }
+    }
+}
+
 // Get all categories for sidebar (only show categories with products)
 $categories = $db->fetchAll("SELECT c.*, 
-                               (SELECT COUNT(DISTINCT p.id) 
-                                FROM products p 
-                                LEFT JOIN product_categories pc ON p.product_id = pc.product_id
-                                WHERE p.status = 'active' AND (
-                                    p.category_id = c.id 
-                                    OR p.category_id LIKE CONCAT('%\"', c.id, '\"%')
-                                    OR p.category_id LIKE CONCAT('%:', c.id, ',%')
-                                    OR pc.category_id = c.id
-                                )
-                               ) as product_count 
+                               COUNT(DISTINCT p.id) as product_count 
                                FROM categories c 
+                               LEFT JOIN product_categories pc ON pc.category_id = c.id
+                               LEFT JOIN products p ON (
+                                   (p.category_id = c.id OR p.product_id = pc.product_id OR p.id = pc.product_id)
+                                   AND p.status = 'active'
+                                   AND (p.store_id = ? OR p.store_id IS NULL OR p.store_id = '0' OR p.store_id = '' OR ? = 'DEFAULT')
+                               )
                                WHERE c.status = 'active' AND (c.store_id = ? OR c.store_id IS NULL OR ? = 'DEFAULT')
+                               GROUP BY c.id
                                HAVING product_count > 0
-                               ORDER BY c.sort_order ASC, c.name ASC", [$currentStoreId, $currentStoreId]);
+                               ORDER BY c.sort_order ASC, c.name ASC", 
+                               [$currentStoreId, $currentStoreId, $currentStoreId, $currentStoreId]);
 
-// Get stock counts
+// Get stock counts and price range in a single fast query
 $categoryJoin = " AND (
     p.category_id IN (SELECT id FROM categories WHERE slug = ? AND (store_id = ? OR store_id IS NULL OR ? = 'DEFAULT')) 
     OR EXISTS (
@@ -208,27 +236,25 @@ $categoryJoin = " AND (
     OR EXISTS (SELECT 1 FROM product_categories pc2 INNER JOIN categories c2 ON pc2.category_id = c2.id WHERE pc2.product_id = p.product_id AND c2.slug = ? AND (c2.store_id = ? OR c2.store_id IS NULL OR ? = 'DEFAULT'))
 )";
 
-$inStockCount = $db->fetchOne("SELECT COUNT(DISTINCT p.id) as count 
-                                FROM products p 
-                                WHERE p.status = 'active' AND (p.stock_status = 'in_stock' AND p.stock_quantity > 0) AND (p.store_id = ? OR p.store_id IS NULL OR p.store_id = '0' OR p.store_id = '' OR ? = 'DEFAULT')" . 
-                                ($categorySlug ? $categoryJoin : ""),
-                                array_merge([$currentStoreId, $currentStoreId], $categorySlug ? [$categorySlug, $currentStoreId, $currentStoreId, $categorySlug, $categorySlug, $currentStoreId, $currentStoreId] : []))['count'] ?? 0;
+$statsQuery = "SELECT 
+    COUNT(DISTINCT CASE WHEN (p.stock_status = 'in_stock' AND p.stock_quantity > 0) THEN p.id END) as in_stock,
+    COUNT(DISTINCT CASE WHEN (p.stock_status = 'out_of_stock' OR p.stock_quantity <= 0) THEN p.id END) as out_of_stock,
+    MIN(COALESCE(NULLIF(p.sale_price, 0), p.price)) as min_price,
+    MAX(COALESCE(NULLIF(p.sale_price, 0), p.price)) as max_price
+FROM products p 
+WHERE p.status = 'active' AND (p.store_id = ? OR p.store_id IS NULL OR p.store_id = '0' OR p.store_id = '' OR ? = 'DEFAULT')" . 
+($categorySlug ? $categoryJoin : "");
 
-$outOfStockCount = $db->fetchOne("SELECT COUNT(DISTINCT p.id) as count 
-                                   FROM products p 
-                                   WHERE p.status = 'active' AND (p.stock_status = 'out_of_stock' OR p.stock_quantity <= 0) AND (p.store_id = ? OR p.store_id IS NULL OR p.store_id = '0' OR p.store_id = '' OR ? = 'DEFAULT')" . 
-                                   ($categorySlug ? $categoryJoin : ""),
-                                   array_merge([$currentStoreId, $currentStoreId], $categorySlug ? [$categorySlug, $currentStoreId, $currentStoreId, $categorySlug, $categorySlug, $currentStoreId, $currentStoreId] : []))['count'] ?? 0;
+$statsParams = array_merge(
+    [$currentStoreId, $currentStoreId], 
+    $categorySlug ? [$categorySlug, $currentStoreId, $currentStoreId, $categorySlug, $categorySlug, $currentStoreId, $currentStoreId] : []
+);
 
-// Get price range
-$priceRange = $db->fetchOne("SELECT MIN(COALESCE(NULLIF(p.sale_price, 0), p.price)) as min_price, 
-                              MAX(COALESCE(NULLIF(p.sale_price, 0), p.price)) as max_price 
-                              FROM products p 
-                              WHERE p.status = 'active' AND (p.store_id = ? OR p.store_id IS NULL OR ? = 'DEFAULT')" . 
-                              ($categorySlug ? $categoryJoin : ""),
-                              array_merge([$currentStoreId, $currentStoreId], $categorySlug ? [$categorySlug, $currentStoreId, $currentStoreId, $categorySlug, $categorySlug, $currentStoreId, $currentStoreId] : []));
-$minPriceRange = $priceRange['min_price'] ?? 0;
-$maxPriceRange = $priceRange['max_price'] ?? 1000;
+$stats = $db->fetchOne($statsQuery, $statsParams);
+$inStockCount = (int)($stats['in_stock'] ?? 0);
+$outOfStockCount = (int)($stats['out_of_stock'] ?? 0);
+$minPriceRange = $stats['min_price'] ?? 0;
+$maxPriceRange = $stats['max_price'] ?? 1000;
 
 // Handle AJAX Request
 if (isset($_GET['ajax'])) {
@@ -282,19 +308,8 @@ if (isset($_GET['ajax'])) {
                             echo '<span class="product-tooltip">Quick View</span>';
                         echo '</a>';
 
-                        // Get first variant for default attributes
-                        $vData = $product->getVariants($currentId);
-                        $defaultAttributes = [];
-                        if (!empty($vData['variants'])) {
-                            $defaultVariant = $vData['variants'][0];
-                            foreach ($vData['variants'] as $v) {
-                                if (!empty($v['is_default'])) {
-                                    $defaultVariant = $v;
-                                    break;
-                                }
-                            }
-                            $defaultAttributes = $defaultVariant['variant_attributes'];
-                        }
+                        // Use pre-batched default variant attributes
+                        $defaultAttributes = $defaultVariantsMap[$currentId] ?? [];
                         $attributesJson = json_encode($defaultAttributes);
                         $isOutOfStock = ($item['stock_status'] === 'out_of_stock' || (isset($item['stock_quantity']) && $item['stock_quantity'] <= 0));
 
@@ -771,19 +786,8 @@ button.active {
                                 </button>
                                 
                                 <?php
-                                // Get first variant for default attributes
-                                $vData = $product->getVariants($currentId);
-                                $defaultAttributes = [];
-                                if (!empty($vData['variants'])) {
-                                    $defaultVariant = $vData['variants'][0];
-                                    foreach ($vData['variants'] as $v) {
-                                        if (!empty($v['is_default'])) {
-                                            $defaultVariant = $v;
-                                            break;
-                                        }
-                                    }
-                                    $defaultAttributes = $defaultVariant['variant_attributes'];
-                                }
+                                // Use pre-batched default variant attributes
+                                $defaultAttributes = $defaultVariantsMap[$currentId] ?? [];
                                 $attributesJson = json_encode($defaultAttributes);
                                 $isOutOfStock = ($item['stock_status'] === 'out_of_stock' || (isset($item['stock_quantity']) && $item['stock_quantity'] <= 0));
                                 ?>

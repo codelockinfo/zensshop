@@ -17,6 +17,9 @@ if (session_status() === PHP_SESSION_NONE) {
 }
 
 require_once __DIR__ . '/../config/constants.php';
+// Release session lock immediately so all lazy-loaded sections and cart requests run in parallel without blocking each other
+session_write_close();
+
 require_once __DIR__ . '/../classes/Database.php';
 require_once __DIR__ . '/../includes/functions.php';
 $db = Database::getInstance();

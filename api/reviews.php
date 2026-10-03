@@ -129,9 +129,10 @@ try {
             // Build query with pagination
             $sql = "SELECT id, user_name, user_email, rating, title, comment, created_at 
                     FROM reviews 
-                    WHERE product_id = ? AND TRIM(LOWER(status)) = 'approved' 
+                    WHERE (product_id = ? OR product_id = (SELECT id FROM products WHERE product_id = ? LIMIT 1) OR product_id = (SELECT product_id FROM products WHERE id = ? LIMIT 1)) 
+                      AND TRIM(LOWER(status)) = 'approved' 
                     $orderBy";
-            $params = [$productId];
+            $params = [$productId, $productId, $productId];
             
             if ($limit > 0) {
                 $sql .= " LIMIT ? OFFSET ?";
@@ -143,8 +144,8 @@ try {
             
             // Get total count for pagination
             $totalReviews = $db->fetchOne(
-                "SELECT COUNT(*) as total FROM reviews WHERE product_id = ? AND TRIM(LOWER(status)) = 'approved'",
-                [$productId]
+                "SELECT COUNT(*) as total FROM reviews WHERE (product_id = ? OR product_id = (SELECT id FROM products WHERE product_id = ? LIMIT 1) OR product_id = (SELECT product_id FROM products WHERE id = ? LIMIT 1)) AND TRIM(LOWER(status)) = 'approved'",
+                [$productId, $productId, $productId]
             );
             
             echo json_encode([

@@ -54,7 +54,11 @@ class Notification {
                 ]);
                 curl_setopt($ch, CURLOPT_POST, true);
                 curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode($slackData));
-                curl_setopt($ch, CURLOPT_TIMEOUT, 3); // 3 seconds timeout so it doesn't block
+                curl_setopt($ch, CURLOPT_CONNECTTIMEOUT, 2); // Max 2 seconds to establish connection
+                curl_setopt($ch, CURLOPT_TIMEOUT, 3); // Max 3 seconds total
+                if (defined('CURL_IPRESOLVE_V4')) {
+                    curl_setopt($ch, CURLOPT_IPRESOLVE, CURL_IPRESOLVE_V4); // Force IPv4 to prevent IPv6 DNS hang on servers
+                }
                 
                 // Fix for local WAMP SSL Certificate issues
                 curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);

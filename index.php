@@ -76,7 +76,7 @@ $sk_d_alignmentClass = ($bannerAlignment === 'center') ? 'md:justify-center' : (
 $sk_m_alignmentClass = ($bannerAlignmentMobile === 'center') ? 'justify-center' : (($bannerAlignmentMobile === 'right') ? 'justify-end' : 'justify-start');
 $sk_widthClass = ($bannerContentWidth == '50') ? 'md:max-w-[50%]' : (($bannerContentWidth == '40') ? 'md:max-w-[40%]' : 'max-w-md');
 ?>
-<div id="hero-skeleton" class="relative overflow-hidden <?php echo $bannerAdaptiveHeight ? 'h-auto py-20' : 'h-[600px] md:h-[700px]'; ?> bg-gradient-to-r from-gray-200 via-gray-300 to-gray-200 animate-pulse">
+<div id="hero-skeleton" class="relative overflow-hidden mb-4 md:mb-8 <?php echo $bannerAdaptiveHeight ? 'h-auto py-20' : 'h-[600px] md:h-[700px]'; ?> bg-gradient-to-r from-gray-200 via-gray-300 to-gray-200 animate-pulse">
     <div class="absolute inset-0 bg-gradient-to-r from-transparent via-white to-transparent opacity-50 animate-shimmer"></div>
     <div class="container mx-auto px-4 h-full flex items-center <?php echo $sk_m_alignmentClass . ' ' . $sk_d_alignmentClass; ?>">
         <div class="<?php echo $sk_widthClass; ?> space-y-4">
@@ -256,7 +256,7 @@ $sk_widthClass = ($bannerContentWidth == '50') ? 'md:max-w-[50%]' : (($bannerCon
     }
 </style>
 
-<section id="hero-section" class="relative overflow-hidden" style="display: none;">
+<section id="hero-section" class="relative overflow-hidden mb-4 md:mb-8" style="display: none;">
 <?php
 $banners = $db->fetchAll("SELECT * FROM banners WHERE active = 1 AND (store_id = ? OR store_id IS NULL) ORDER BY display_order ASC", [CURRENT_STORE_ID]);
 
@@ -300,6 +300,7 @@ if (empty($banners)) {
                         <a href="<?php echo htmlspecialchars($desktopLink); ?>" class="hidden md:block absolute inset-0 z-0">
                             <img src="<?php echo htmlspecialchars($bgImage); ?>" 
                                  class="w-full h-full object-cover" 
+                                 decoding="async" 
                                  <?php echo $index === 0 ? 'fetchpriority="high" loading="eager"' : 'loading="lazy"'; ?> 
                                  alt="<?php echo htmlspecialchars($banner['heading'] ?? 'Banner Image'); ?>"
                                  onerror="this.src='https://placehold.co/1200x600?text=Banner+Image'">
@@ -308,6 +309,7 @@ if (empty($banners)) {
                         <div class="absolute inset-0 hidden md:block z-0 h-full w-full">
                             <img src="<?php echo htmlspecialchars($bgImage); ?>" 
                                  class="w-full h-full object-cover" 
+                                 decoding="async" 
                                  <?php echo $index === 0 ? 'fetchpriority="high" loading="eager"' : 'loading="lazy"'; ?> 
                                  alt="<?php echo htmlspecialchars($banner['heading'] ?? 'Banner Image'); ?>"
                                  onerror="this.src='https://placehold.co/1200x600?text=Banner+Image'">
@@ -319,6 +321,7 @@ if (empty($banners)) {
                         <a href="<?php echo htmlspecialchars($mobileLink); ?>" class="md:hidden absolute inset-0 z-0">
                             <img src="<?php echo htmlspecialchars($bgImageMobile ?: $bgImage); ?>" 
                                  class="w-full h-full object-cover" 
+                                 decoding="async" 
                                  <?php echo $index === 0 ? 'fetchpriority="high" loading="eager"' : 'loading="lazy"'; ?> 
                                  alt="<?php echo htmlspecialchars($banner['heading'] ?? 'Banner Image'); ?>"
                                  onerror="this.src='https://placehold.co/1200x600?text=Banner+Image'">
@@ -327,6 +330,7 @@ if (empty($banners)) {
                         <div class="absolute inset-0 md:hidden z-0 h-full w-full">
                             <img src="<?php echo htmlspecialchars($bgImageMobile ?: $bgImage); ?>" 
                                  class="w-full h-full object-cover" 
+                                 decoding="async" 
                                  <?php echo $index === 0 ? 'fetchpriority="high" loading="eager"' : 'loading="lazy"'; ?> 
                                  alt="<?php echo htmlspecialchars($banner['heading'] ?? 'Banner Image'); ?>"
                                  onerror="this.src='https://placehold.co/1200x600?text=Banner+Image'">
@@ -651,7 +655,7 @@ document.addEventListener('DOMContentLoaded', function() {
 </script>
 <?php if ($showCategories): ?>
 <div id="categories-section" class="section-loading">
-    <section class="pt-5 md:pt-12 pb-1 md:pb-6" style="background-color: <?php echo htmlspecialchars($catBgColor); ?>;">
+    <section class="pt-1.5 md:pt-2 pb-1 md:pb-6" style="background-color: <?php echo htmlspecialchars($catBgColor); ?>;">
         <?php
         $skelContainerClass = ($catLayoutType === 'slider') ? 'container mx-auto px-0 md:px-4' : 'container mx-auto px-4';
         $skelMobileGridClass  = 'w-[calc(50%-12px)]';  
@@ -675,7 +679,7 @@ document.addEventListener('DOMContentLoaded', function() {
         }
         ?>
         <div class="<?php echo $skelContainerClass; ?>">
-            <div class="text-center mb-4 md:mb-10">
+            <div class="text-center mb-2 md:mb-4">
                 <div class="h-8 bg-gray-200 rounded w-64 mx-auto mb-4 relative overflow-hidden">
                     <div class="absolute inset-0 animate-shimmer"></div>
                 </div>
@@ -702,9 +706,9 @@ document.addEventListener('DOMContentLoaded', function() {
 <?php endif; ?>
 <?php if ($showBest): ?>
 <div id="best-selling-section" class="section-loading">
-    <section class="pt-2 md:pt-12 pb-2 md:pb-4" style="background-color: <?php echo htmlspecialchars($bsBgColor); ?>;">
+    <section class="pt-1.5 md:pt-2 pb-2 md:pb-4" style="background-color: <?php echo htmlspecialchars($bsBgColor); ?>;">
         <div class="container mx-auto px-4">
-            <div class="text-center mb-4 md:mb-10">
+            <div class="text-center mb-2 md:mb-4">
                 <div class="h-8 bg-gray-200 rounded w-64 mx-auto mb-4 relative overflow-hidden">
                     <div class="absolute inset-0 animate-shimmer"></div>
                 </div>
@@ -740,9 +744,9 @@ document.addEventListener('DOMContentLoaded', function() {
 <?php endif; ?>
 <?php if ($showOffers): ?>
 <div id="special-offers-section" class="section-loading">
-    <section class="pt-2 md:pt-6 pb-8" style="background-color: <?php echo htmlspecialchars($soBgColor); ?>;">
+    <section class="pt-1.5 md:pt-2 pb-8" style="background-color: <?php echo htmlspecialchars($soBgColor); ?>;">
         <div class="container mx-auto px-4">
-            <div class="text-center mb-4 md:mb-10">
+            <div class="text-center mb-2 md:mb-4">
                 <div class="h-10 bg-gray-200 rounded w-72 mx-auto mb-3 relative overflow-hidden">
                     <div class="absolute inset-0 animate-shimmer"></div>
                 </div>
@@ -763,9 +767,9 @@ document.addEventListener('DOMContentLoaded', function() {
 <?php endif; ?>
 <?php if ($showVideos): ?>
 <div id="videos-section" class="section-loading">
-    <section class="pt-5 md:pt-12 pb-8" style="background-color: <?php echo htmlspecialchars($vidBgColor); ?>;">
+    <section class="pt-1.5 md:pt-2 pb-8" style="background-color: <?php echo htmlspecialchars($vidBgColor); ?>;">
         <div class="container mx-auto px-4">
-            <div class="text-center mb-4 md:mb-10">
+            <div class="text-center mb-2 md:mb-4">
                 <div class="h-10 bg-gray-200 rounded w-64 mx-auto mb-3 relative overflow-hidden">
                     <div class="absolute inset-0 animate-shimmer"></div>
                 </div>
@@ -788,9 +792,9 @@ document.addEventListener('DOMContentLoaded', function() {
 <?php endif; ?>
 <?php if ($showTrend): ?>
 <div id="trending-section" class="section-loading">
-    <section class="pt-5 md:pt-12 pb-8" style="background-color: <?php echo htmlspecialchars($trBgColor); ?>;">
+    <section class="pt-1.5 md:pt-2 pb-8" style="background-color: <?php echo htmlspecialchars($trBgColor); ?>;">
         <div class="container mx-auto px-4">
-            <div class="text-center mb-4 md:mb-10">
+            <div class="text-center mb-2 md:mb-4">
                 <div class="h-8 bg-gray-200 rounded w-64 mx-auto mb-4 relative overflow-hidden">
                     <div class="absolute inset-0 animate-shimmer"></div>
                 </div>
@@ -825,7 +829,7 @@ document.addEventListener('DOMContentLoaded', function() {
 </div>
 <?php endif; ?>
 <?php if ($showPhilosophy): ?>
-<div id="philosophy-section" class="section-loading pt-8 md:pt-14">
+<div id="philosophy-section" class="section-loading pt-3 md:pt-6">
     <section class="py-20" style="background-color: <?php echo htmlspecialchars($philBgColor); ?>;">
         <div class="container mx-auto px-4 text-center">
             <div class="h-10 bg-gray-200 rounded w-3/4 md:w-1/2 mx-auto mb-10 relative overflow-hidden">
@@ -846,7 +850,7 @@ document.addEventListener('DOMContentLoaded', function() {
 <?php endif; ?>
 <?php if ($showFeatures): ?>
 <div id="features-section" class="section-loading">
-    <section class="py-16" style="background-color: <?php echo htmlspecialchars($featBgColor); ?>;">
+    <section class="py-8 md:py-12" style="background-color: <?php echo htmlspecialchars($featBgColor); ?>;">
         <div class="container mx-auto px-4">
             <div class="grid grid-cols-3 gap-2 md:gap-8 text-center">
                 <?php for($i=0; $i<3; $i++): ?>
@@ -893,7 +897,7 @@ document.addEventListener('DOMContentLoaded', function() {
 <?php endif; ?>
 <?php if ($showFooterFeatures): ?>
 <div id="footer-features-section" class="section-loading">
-    <section class="py-12" style="background-color: <?php echo htmlspecialchars($ffBgColor); ?>;">
+    <section class="py-8 md:py-12" style="background-color: <?php echo htmlspecialchars($ffBgColor); ?>;">
         <div class="container mx-auto px-4">
             <div class="grid grid-cols-2 lg:grid-cols-4 gap-3 md:gap-6 text-center">
                 <?php for($i=0; $i<4; $i++): ?>
@@ -916,4 +920,4 @@ document.addEventListener('DOMContentLoaded', function() {
 </div>
 <?php endif; ?>
 <?php require_once __DIR__ . '/includes/footer.php'; ?>
-<script src="<?php echo $baseUrl; ?>/assets/js/lazy-load19.js?v=25" defer></script>
+<script src="<?php echo $baseUrl; ?>/assets/js/lazy-load21.js?v=25" defer></script>

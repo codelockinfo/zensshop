@@ -9,10 +9,21 @@ function setupCartUI() {
     
     if (cartBtn) {
         cartBtn.addEventListener('click', function() {
-            refreshCart();
+            // Open drawer instantly (0ms) using in-memory / DOM items
             sideCart.classList.remove('translate-x-full');
             cartOverlay.classList.remove('hidden');
             document.body.style.overflow = 'hidden';
+            
+            // If cart items are not yet loaded, load them
+            if (!cartData || cartData.length === 0) {
+                loadCart();
+                if (!cartData || cartData.length === 0) {
+                    refreshCart(true); // Show skeleton only when completely empty on first open
+                }
+            } else {
+                // Background silent revalidation without wiping the UI with skeletons
+                refreshCart(false);
+            }
         });
     }
     
@@ -67,15 +78,17 @@ function loadCart() {
     updateCartCount();
 }
 
-async function refreshCart() {
-    renderCartSkeleton();
+async function refreshCart(showSkeleton = false) {
+    // Only show skeleton if explicitly requested and cart is currently empty
+    if (showSkeleton && (!cartData || cartData.length === 0)) {
+        renderCartSkeleton();
+    }
     
     try {
         let baseUrl = (typeof BASE_URL !== 'undefined') ? BASE_URL : (window.location.pathname.split('/').slice(0, -1).join('/') || '');
         baseUrl = baseUrl.replace(/\/$/, '');
-        console.log('[CART] Refreshing from:', baseUrl + '/api/cart.php');
         
-        const response = await fetch(baseUrl + '/api/cart.php?t=' + new Date().getTime(), {
+        const response = await fetch(baseUrl + '/api/cart.php', {
             method: 'GET',
             headers: {
                 'Content-Type': 'application/json'
@@ -85,6 +98,7 @@ async function refreshCart() {
         const data = await response.json();
         
         if (data.success && Array.isArray(data.cart)) {
+            const hasChanged = JSON.stringify(cartData) !== JSON.stringify(data.cart);
             cartData = data.cart;
             
             if (data.cookie_data) {
@@ -97,14 +111,19 @@ async function refreshCart() {
                 }
             }
             
-            updateCartUI();
+            // Only update DOM if the cart changed or we had rendered a skeleton
+            if (hasChanged || showSkeleton) {
+                updateCartUI();
+            }
             updateCartCount();
-        } else {
+        } else if (!cartData || cartData.length === 0) {
             loadCart();
         }
     } catch (error) {
         console.error('Error refreshing cart:', error);
-        loadCart();
+        if (!cartData || cartData.length === 0) {
+            loadCart();
+        }
     }
 }
 

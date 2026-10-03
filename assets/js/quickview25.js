@@ -161,7 +161,7 @@ function renderQuickView(t) {
             <div class="relative block group overflow-hidden rounded-xl w-full bg-gray-50" style="aspect-ratio:1/1;">
                 ${discountBadge ? `<div class="absolute top-2 left-2 z-10 shadow-sm" id="qvDiscountBadge">${discountBadge}</div>` : '<div id="qvDiscountBadge"></div>'}
                 <a href="${productUrl}" class="absolute inset-0 w-full h-full flex items-center justify-center ${isFirstVideo ? 'hidden' : ''}" id="qvMainImageLink">
-                    <img id="qvMainImage" src="${firstImg}" alt="${t.name}" class="w-full h-full object-cover transition duration-500 group-hover:scale-105" onerror="this.src='https://placehold.co/600x600?text=Product+Image'">
+                    <img id="qvMainImage" src="${firstImg}" alt="${t.name}" class="w-full h-full object-contain transition duration-500 group-hover:scale-105" onerror="this.src='https://placehold.co/600x600?text=Product+Image'">
                 </a>
                 <video id="qvMainVideo" src="${isFirstVideo ? firstImg : ''}" controls class="absolute inset-0 w-full h-full object-contain bg-black ${isFirstVideo ? '' : 'hidden'}"></video>
             </div>`;
@@ -259,7 +259,7 @@ function renderQuickView(t) {
                 ${thumbsHtml}
             </div>
             <!-- Right: Details — SCROLLABLE -->
-            <div class="flex-1 min-h-0 overflow-y-auto p-4 md:p-6 bg-white custom-scrollbar flex flex-col justify-center" style="-webkit-overflow-scrolling:touch;">
+            <div class="flex-1 min-h-0 overflow-y-auto p-4 md:p-6 bg-white custom-scrollbar flex flex-col justify-start" style="-webkit-overflow-scrolling:touch;">
 
                 <h2 id="qvTitle" class="text-xl md:text-2xl font-heading font-bold text-gray-900 mb-2 mt-4 pr-8 leading-snug">${t.name}</h2>
                 <div class="flex flex-wrap items-center gap-3 mb-3 text-sm">
@@ -394,7 +394,7 @@ window.switchQVImage = function(url, btn, isVideo) {
         if (mainVid) { mainVid.src = url; mainVid.classList.remove('hidden'); mainVid.play().catch(function(){}); }
     } else {
         if (mainVid) { mainVid.pause(); mainVid.classList.add('hidden'); }
-        if (mainImg) { mainImg.src = url; mainImg.classList.remove('hidden','object-contain'); mainImg.classList.add('object-cover'); }
+        if (mainImg) { mainImg.src = url; mainImg.classList.remove('hidden','object-cover'); mainImg.classList.add('object-contain'); }
     }
     document.querySelectorAll(".qv-thumb").forEach(function(t) { t.classList.remove("border-primary"); t.classList.add("border-transparent"); });
     if (btn) { btn.classList.remove("border-transparent"); btn.classList.add("border-primary"); }

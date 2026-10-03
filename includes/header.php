@@ -16,6 +16,11 @@ $cartCount = $cart->getCount();
 require_once __DIR__ . '/../classes/Wishlist.php';
 $wishlistObj = new Wishlist();
 $wishlistCount = $wishlistObj->getCount();
+
+// Release session lock early so background AJAX requests (cart, sections, analytics) run in parallel without lock contention
+if (session_status() === PHP_SESSION_ACTIVE) {
+    session_write_close();
+}
 ?>
 <script>
     window.INITIAL_WISHLIST_COUNT = <?php echo (int)$wishlistCount; ?>;
@@ -118,9 +123,14 @@ if (!function_exists('url')) {
 <!DOCTYPE html>
 <html lang="en" class="overflow-x-hidden">
 <head>
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.css" />
-    
-    <script src="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.js"></script>
+<?php
+$currentPage = basename($_SERVER['PHP_SELF']);
+$needsSwiper = in_array($currentPage, ['index.php', 'special-product.php', 'shop.php', 'product.php']);
+?>
+<?php if ($needsSwiper): ?>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.js" defer></script>
+<?php endif; ?>
 
     <?php 
     $gtmId = $settingsObj->get('gtm_id', '');
@@ -461,23 +471,26 @@ $gs_tooltip_text = getGlobalStyle('tooltip_text_color', $globalCardStyles, '#fff
     <?php
     $faviconUrl = '';
     
-    if (!empty($faviconIco)) {
+    if (!empty($faviconPng)) {
+        $faviconUrl = htmlspecialchars(getImageUrl($faviconPng));
+    } elseif (!empty($faviconIco)) {
         if (file_exists(__DIR__ . '/../' . $faviconIco)) {
             $faviconUrl = $baseUrl . '/' . $faviconIco;
         } else {
             $faviconUrl = htmlspecialchars(getImageUrl($faviconIco));
         }
-    } elseif (!empty($faviconPng)) {
-        $faviconUrl = htmlspecialchars(getImageUrl($faviconPng));
     } elseif (file_exists(__DIR__ . '/../favicon.ico')) {
         $faviconUrl = $baseUrl . '/favicon.ico';
     } else {
         $faviconUrl = $baseUrl . '/favicon.ico';
     }
     
-    $favType = (strpos($faviconUrl, '.png') !== false) ? 'image/png' : 'image/x-icon';
+    $favType = (strpos($faviconUrl, '.png') !== false || strpos($faviconUrl, '.jpg') !== false) ? 'image/png' : 'image/x-icon';
+    $faviconUrlWithV = $faviconUrl . (strpos($faviconUrl, '?') === false ? '?v=' . time() : '&v=' . time());
     ?>
-    <link rel="icon" type="<?php echo $favType; ?>" sizes="64x64" href="<?php echo $faviconUrl; ?>">
+    <link rel="icon" type="<?php echo $favType; ?>" sizes="64x64" href="<?php echo $faviconUrlWithV; ?>">
+    <link rel="shortcut icon" href="<?php echo $faviconUrlWithV; ?>">
+    <link rel="apple-touch-icon" href="<?php echo $faviconUrlWithV; ?>">
 
 
     <?php 
@@ -693,13 +706,17 @@ $gs_tooltip_text = getGlobalStyle('tooltip_text_color', $globalCardStyles, '#fff
     }
     </script>
     <?php endif; ?>
-    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="dns-prefetch" href="//cdn.jsdelivr.net">
+    <link rel="dns-prefetch" href="//cdnjs.cloudflare.com">
+    <link rel="dns-prefetch" href="//fonts.googleapis.com">
+    <link rel="dns-prefetch" href="//fonts.gstatic.com">
+    <link rel="preconnect" href="https://fonts.googleapis.com" crossorigin>
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link rel="preconnect" href="https://cdnjs.cloudflare.com">
-    <link rel="preconnect" href="https://cdn.tailwindcss.com">
+    <link rel="preconnect" href="https://cdnjs.cloudflare.com" crossorigin>
+    <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
     <link rel="preload" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/webfonts/fa-solid-900.woff2" as="font" type="font/woff2" crossorigin>
 
-    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700&family=Inter:wght@300;400;500;600;700&family=DM+Sans:wght@400;500;700&display=swap" rel="stylesheet" media="print" onload="this.media='all'">
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700&family=Inter:wght@300;400;500;600;700&family=DM+Sans:wght@400;500;700&display=swap" rel="stylesheet">
     
     <style>
         .translate-x-full { transform: translateX(100%); }
@@ -707,22 +724,8 @@ $gs_tooltip_text = getGlobalStyle('tooltip_text_color', $globalCardStyles, '#fff
         .-translate-y-full { transform: translateY(-100%); }
         .hidden { display: none; }
     </style>
-    <script src="https://cdn.tailwindcss.com?plugins=typography" fetchpriority="high"></script>
-    
-    <script>
-        document.addEventListener('DOMContentLoaded', () => {
-            document.body.style.visibility = 'visible';
-            document.body.style.opacity = '1';
-        });
-    </script>
-    <link rel="preload"
-        href="<?php echo $baseUrl; ?>/assets/css/main7.css"
-        as="style"
-        onload="this.onload=null;this.rel='stylesheet'">
-
-    <noscript>
-        <link rel="stylesheet" href="<?php echo $baseUrl; ?>/assets/css/main7.css">
-    </noscript>
+    <script src="https://cdn.tailwindcss.com?plugins=typography"></script>
+    <link rel="stylesheet" href="<?php echo $baseUrl; ?>/assets/css/main8.css?v=<?php echo time(); ?>">
     <style>
         nav.header-shadow {
             background-color: <?php echo $headerBg; ?> !important;

@@ -24,6 +24,9 @@ error_log("Request URI: " . ($_SERVER['REQUEST_URI'] ?? 'NOT SET'));
 try {
     switch ($method) {
         case 'GET':
+            // Release session lock early so cart GET is non-blocking
+            session_write_close();
+            
             // Get cart items
             $items = $cart->getCart();
             // Include cookie_data in GET response too for consistency
@@ -90,6 +93,9 @@ try {
             error_log("   Quantity: $quantity");
             error_log("   Cart Total: $" . number_format($cartTotal, 2));
             
+            // Release session lock before notifications so next request (e.g. checkout redirect) is not blocked
+            session_write_close();
+
             // Trigger Notification (which auto-sends to Slack)
             require_once __DIR__ . '/../includes/functions.php';
             require_once __DIR__ . '/../classes/Notification.php';

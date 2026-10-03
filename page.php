@@ -64,7 +64,7 @@ require_once __DIR__ . '/includes/header.php';
     
     <?php if (!empty($banner['image'])): ?>
     <!-- Skeleton Loader for Banner -->
-    <div id="page-banner-skeleton" class="relative w-full h-auto min-h-[200px] md:min-h-[300px] bg-gradient-to-r from-gray-200 via-gray-300 to-gray-200 animate-pulse">
+    <div id="page-banner-skeleton" class="relative w-full h-[180px] sm:h-[250px] md:h-[300px] bg-gradient-to-r from-gray-200 via-gray-300 to-gray-200 animate-pulse">
         <div class="absolute inset-0 bg-gradient-to-r from-transparent via-white to-transparent opacity-50 animate-shimmer"></div>
         <div class="absolute inset-0 flex items-center justify-center">
             <div class="text-center space-y-4 px-4">
@@ -75,8 +75,8 @@ require_once __DIR__ . '/includes/header.php';
         </div>
     </div>
     
-    <div id="page-banner" class="relative w-full" style="display: none; background-color: <?php echo $banner['bg_color'] ?? '#f3f4f6'; ?>;">
-        <img src="<?php echo getBaseUrl() . '/' . $banner['image']; ?>" alt="Banner" class="w-full h-auto object-contain" onload="hidePageBannerSkeleton()">
+    <div id="page-banner" class="relative w-full overflow-hidden" style="display: none; background-color: <?php echo $banner['bg_color'] ?? '#f3f4f6'; ?>;">
+        <img src="<?php echo getBaseUrl() . '/' . $banner['image']; ?>" alt="Banner" class="w-full h-[180px] sm:h-[250px] md:h-auto object-cover md:object-contain" onload="hidePageBannerSkeleton()">
         <div class="absolute inset-0 flex items-center justify-center">
             <div class="text-center px-4" style="color: <?php echo $banner['text_color'] ?? '#ffffff'; ?>;">
                 <?php if (!empty($banner['heading'])): ?>
@@ -123,12 +123,12 @@ require_once __DIR__ . '/includes/header.php';
 
     <?php 
     $layout = $contentData['settings']['layout'] ?? 'standard';
-    $containerClass = 'container mx-auto px-4 py-8'; // Default (Wide)
+    $containerClass = 'container mx-auto px-4 py-3 md:py-8'; // Default (Wide)
     
     if ($layout === 'standard') {
-        $containerClass = 'container mx-auto px-4 py-8'; // Removed all max-w constraints to fill container completely
+        $containerClass = 'container mx-auto px-4 py-3 md:py-8'; // Removed all max-w constraints to fill container completely
     } elseif ($layout === 'full_width') {
-        $containerClass = 'w-full py-8 px-4 md:px-8';
+        $containerClass = 'w-full py-3 md:py-8 px-4 md:px-8';
     }
     ?>
 
@@ -149,28 +149,42 @@ require_once __DIR__ . '/includes/header.php';
 }
 
 .ck-content h2 { 
-    margin-top: 2em; 
-    margin-bottom: 0.8em; 
+    margin-top: 1em; 
+    margin-bottom: 0.5em; 
     font-size: 1.75em; 
     color: #111; 
     line-height: 1.3;
     word-wrap: break-word;
 }
+.ck-content h2:first-child, .ck-content h3:first-child {
+    margin-top: 0 !important;
+}
 
 .ck-content h3 { 
-    margin-top: 1.5em; 
-    margin-bottom: 0.8em; 
+    margin-top: 1em; 
+    margin-bottom: 0.5em; 
     font-size: 1.4em; 
     color: #333;
     word-wrap: break-word;
 }
 
 .ck-content p { 
-    margin-bottom: 1.5em; 
-    font-size: 1.125rem; 
-    line-height: 1.8;
+    margin-bottom: 1em; 
+    font-size: 1rem; 
+    line-height: 1.6;
     word-wrap: break-word;
     overflow-wrap: break-word;
+}
+.ck-content p:last-child {
+    margin-bottom: 0 !important;
+}
+
+@media (max-width: 767px) {
+    .ck-content h1 { font-size: 1.25rem !important; line-height: 1.3 !important; }
+    .ck-content h2 { font-size: 1.125rem !important; line-height: 1.3 !important; margin-top: 0.75em !important; margin-bottom: 0.4em !important; }
+    .ck-content h3 { font-size: 1rem !important; line-height: 1.3 !important; margin-top: 0.75em !important; margin-bottom: 0.4em !important; }
+    .ck-content h4 { font-size: 0.9375rem !important; line-height: 1.3 !important; }
+    .ck-content p, .ck-content li { font-size: 0.84rem !important; line-height: 1.5 !important; margin-bottom: 0.5em !important; }
 }
 
 .ck-content ul { 

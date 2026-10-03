@@ -51,7 +51,7 @@ $bgStyle = $bgImage ? "background-image: url('{$bgImage}');" : "background-color
     }
 </style>
 
-<section id="<?php echo $sectionId; ?>" class="pt-10 pb-4 md:pt-20 md:pb-8 bg-cover bg-center bg-no-repeat relative flex items-center justify-center min-h-[400px]" style="<?php echo $bgStyle; ?>">
+<section id="<?php echo $sectionId; ?>" class="py-8 md:py-12 bg-cover bg-center bg-no-repeat relative flex items-center justify-center min-h-[360px]" style="<?php echo $bgStyle; ?>">
     <!-- Overlay if image is used -->
     <?php if($bgImage): ?>
     <div class="absolute inset-0 newsletter-overlay backdrop-blur-[2px]"></div>

@@ -6,7 +6,7 @@ class CustomerAuth {
     
     public function __construct() {
         $this->db = Database::getInstance();
-        if (session_status() === PHP_SESSION_NONE) {
+        if (session_status() === PHP_SESSION_NONE && empty(session_id())) {
             session_start();
         }
         $this->checkRememberMe();

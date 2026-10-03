@@ -125,9 +125,9 @@ $cp_continue_hover_text = getCartStyle('cart_page_continue_btn_hover_text', '#11
     }
 </style>
 
-<section class="pt-6 pb-12 md:pt-8 md:pb-16 bg-gray-50 min-h-screen">
+<section class="pt-2 pb-8 md:pt-4 md:pb-12 bg-gray-50 min-h-screen">
     <div class="container mx-auto px-4">
-        <h1 class="text-2xl md:text-4xl font-heading font-bold mb-6">Shopping Cart</h1>
+        <h1 class="text-2xl md:text-4xl font-heading font-bold mb-3 md:mb-4">Shopping Cart</h1>
         <?php 
             // Determine currency for totals (use first item's currency or default)
             $cartCurrency = !empty($cartItems) ? ($cartItems[0]['currency'] ?? 'USD') : 'USD';
@@ -187,49 +187,46 @@ $cp_continue_hover_text = getCartStyle('cart_page_continue_btn_hover_text', '#11
                     $attributesEscaped = htmlspecialchars($attributesJson, ENT_QUOTES, 'UTF-8');
                 ?>
                 <div class="cart-item-wrapper" data-product-id="<?php echo $item['product_id']; ?>" data-attributes='<?php echo $attributesEscaped; ?>'>
-                    <div class="bg-white rounded-lg p-6 flex flex-col md:flex-row items-start md:items-center space-y-4 md:space-y-0 md:space-x-6 cart-item cart-page-product-card" data-product-id="<?php echo $item['product_id']; ?>">
-                        <a href="<?php echo $productUrl; ?>">
-                            <img src="<?php echo getImageUrl($item['image'] ?? ''); ?>" 
-                                 alt="<?php echo htmlspecialchars($item['name']); ?>" 
-                                 class="w-32 h-32 object-cover rounded"
-                                 onerror="this.src='https://placehold.co/600x600?text=Product+Image'">
-                        </a>
-                        <div class="flex-1">
-                            <h3 class="text-base md:text-xl font-semibold mb-1 line-clamp-2" style="display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; text-overflow: ellipsis;" title="<?php echo htmlspecialchars($item['name']); ?>">
-                                <a href="<?php echo $productUrl; ?>" class="hover:text-primary transition">
-                                    <?php echo htmlspecialchars($item['name']); ?>
-                                </a>
-                            </h3>
-                            <?php if (!empty($variantAttributes)): ?>
-                                <div class="mb-2 space-y-0.5">
-                                    <?php foreach ($variantAttributes as $key => $v): ?>
-                                        <p class="text-sm text-gray-500"><?php echo htmlspecialchars($key); ?>: <span class="font-medium"><?php echo htmlspecialchars($v); ?></span></p>
-                                    <?php endforeach; ?>
-                                </div>
-                            <?php endif; ?>
-                            <p class="text-gray-600">Price: <span class="item-price"><?php echo format_price($item['price'], $item['currency'] ?? 'USD'); ?></span></p>
-                            <?php if (!empty($item['is_taxable'])): ?>
-                                <!-- <div class="flex items-center space-x-2 mt-1">
-                                    <span class="text-[10px] bg-gray-100 text-gray-600 px-1.5 py-0.5 rounded">GST: <?php echo number_format($item['gst_percent'], 2); ?>%</span>
-                                    <?php if (!empty($item['hsn_code'])): ?>
-                                        <span class="text-[10px] text-gray-400">HSN: <?php echo htmlspecialchars($item['hsn_code']); ?></span>
-                                    <?php endif; ?>
-                                </div> -->
-                            <?php endif; ?>
+                    <div class="bg-white rounded-lg p-4 md:p-6 flex flex-col md:flex-row items-start md:items-center justify-between gap-4 md:gap-6 cart-item cart-page-product-card" data-product-id="<?php echo $item['product_id']; ?>">
+                        <!-- Image & Product Info (Row on mobile, flex child on desktop) -->
+                        <div class="flex flex-row items-start gap-4 flex-1 w-full min-w-0">
+                            <a href="<?php echo $productUrl; ?>" class="flex-shrink-0">
+                                <img src="<?php echo getImageUrl($item['image'] ?? ''); ?>" 
+                                     alt="<?php echo htmlspecialchars($item['name']); ?>" 
+                                     class="w-24 h-24 md:w-32 md:h-32 object-cover rounded"
+                                     onerror="this.src='https://placehold.co/600x600?text=Product+Image'">
+                            </a>
+                            <div class="flex-1 min-w-0">
+                                <h3 class="text-sm md:text-xl font-semibold mb-1 line-clamp-2" style="display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; text-overflow: ellipsis;" title="<?php echo htmlspecialchars($item['name']); ?>">
+                                    <a href="<?php echo $productUrl; ?>" class="hover:text-primary transition">
+                                        <?php echo htmlspecialchars($item['name']); ?>
+                                    </a>
+                                </h3>
+                                <?php if (!empty($variantAttributes)): ?>
+                                    <div class="mb-1 space-y-0.5">
+                                        <?php foreach ($variantAttributes as $key => $v): ?>
+                                            <p class="text-xs md:text-sm text-gray-500"><?php echo htmlspecialchars($key); ?>: <span class="font-medium"><?php echo htmlspecialchars($v); ?></span></p>
+                                        <?php endforeach; ?>
+                                    </div>
+                                <?php endif; ?>
+                                <p class="text-xs md:text-base text-gray-600">Price: <span class="item-price"><?php echo format_price($item['price'], $item['currency'] ?? 'USD'); ?></span></p>
+                            </div>
                         </div>
-                        <div class="flex items-center space-x-4">
+
+                        <!-- Quantity, Total & Delete Action -->
+                        <div class="flex items-center justify-between md:justify-end gap-3 md:gap-4 w-full md:w-auto pt-2 md:pt-0 border-t md:border-t-0 border-gray-100">
                             <div class="flex items-center border rounded">
                                 <button onclick='decrementCartItem(<?php echo $item['product_id']; ?>, this, <?php echo $attributesEscaped; ?>)' 
-                                        class="px-4 py-2 hover:bg-gray-100" data-loading-text="">-</button>
-                                <span class="w-12 text-center py-2 item-quantity font-semibold" data-product-id="<?php echo $item['product_id']; ?>" data-attributes='<?php echo $attributesEscaped; ?>'><?php echo $item['quantity']; ?></span>
+                                        class="px-3 md:px-4 py-1.5 md:py-2 hover:bg-gray-100" data-loading-text="">-</button>
+                                <span class="w-10 md:w-12 text-center py-1.5 md:py-2 item-quantity font-semibold text-sm md:text-base" data-product-id="<?php echo $item['product_id']; ?>" data-attributes='<?php echo $attributesEscaped; ?>'><?php echo $item['quantity']; ?></span>
                                 <button onclick='incrementCartItem(<?php echo $item['product_id']; ?>, this, <?php echo $attributesEscaped; ?>)' 
-                                        class="px-4 py-2 hover:bg-gray-100" data-loading-text="">+</button>
+                                        class="px-3 md:px-4 py-1.5 md:py-2 hover:bg-gray-100" data-loading-text="">+</button>
                             </div>
-                            <p class="text-base md:text-xl font-bold w-24 text-right item-total">
+                            <p class="text-base md:text-xl font-bold w-20 md:w-24 text-right item-total">
                                 <span><?php echo format_price($item['price'] * $item['quantity'], $item['currency'] ?? 'USD'); ?></span>
                             </p>
                             <button onclick='showInlineRemoveConfirm(<?php echo $item['product_id']; ?>, <?php echo $attributesEscaped; ?>)' 
-                                    class="text-red-500 hover:text-red-700">
+                                    class="text-red-500 hover:text-red-700 p-1">
                                 <i class="fas fa-trash text-lg md:text-xl"></i>
                             </button>
                         </div>

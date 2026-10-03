@@ -58,29 +58,11 @@ class Delhivery {
         // Delhivery has multiple API versions and authentication patterns. 
         // We try a wide variety to ensure compatibility with all account types.
         $attempts = [
-            // Attempt 1: Standard Client API (Most common)
+            // Attempt 1: Standard Client API (Header Token)
             ['url' => $this->baseUrl . '/c/api/pin-codes/json/?filter_codes=' . urlencode($pincode), 'auth_type' => 'Token'],
             
-            // Attempt 2: Standard Client API with URL Token (Needed for some accounts)
-            ['url' => $this->baseUrl . '/c/api/pin-codes/json/?token=' . $this->token . '&filter_codes=' . urlencode($pincode), 'auth_type' => 'Token'],
-            
-            // Attempt 3: Unified API domain (track.delhivery.com)
-            ['url' => 'https://track.delhivery.com/c/api/pin-codes/json/?filter_codes=' . urlencode($pincode), 'auth_type' => 'Token'],
-
-            // Attempt 4: Multi-Store / CL-API domain (cl-api.delhivery.com)
-            ['url' => 'https://cl-api.delhivery.com/c/api/pin-codes/json/?filter_codes=' . urlencode($pincode), 'auth_type' => 'Token'],
-            
-            // Attempt 5: Bearer Token (New 2024/25 standard)
-            ['url' => $this->baseUrl . '/c/api/pin-codes/json/?filter_codes=' . urlencode($pincode), 'auth_type' => 'Bearer'],
-
-            // Attempt 7: Legacy express domain
-            ['url' => 'https://express.delhivery.com/c/api/pin-codes/json/?filter_codes=' . urlencode($pincode), 'auth_type' => 'Token'],
-
-            // Attempt 8: Header 'Token' instead of 'Authorization' (Found in some docs)
-            ['url' => $this->baseUrl . '/c/api/pin-codes/json/?filter_codes=' . urlencode($pincode), 'auth_type' => 'CustomTokenHeader'],
-
-            // Attempt 9: Path without /c/ (Unified API style)
-            ['url' => $this->baseUrl . '/api/pin-codes/json/?filter_codes=' . urlencode($pincode), 'auth_type' => 'Token']
+            // Attempt 2: Standard Client API with URL Token
+            ['url' => $this->baseUrl . '/c/api/pin-codes/json/?token=' . $this->token . '&filter_codes=' . urlencode($pincode), 'auth_type' => 'Token']
         ];
 
         $allAttempts = [];
@@ -557,7 +539,11 @@ class Delhivery {
         curl_setopt($ch, CURLOPT_URL, $url);
         curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
         curl_setopt($ch, CURLOPT_FOLLOWLOCATION, true);
-        curl_setopt($ch, CURLOPT_TIMEOUT, 30); // Added timeout as per snippet
+        curl_setopt($ch, CURLOPT_CONNECTTIMEOUT, 3); // Max 3s to connect
+        curl_setopt($ch, CURLOPT_TIMEOUT, 5); // Max 5s total execution
+        if (defined('CURL_IPRESOLVE_V4')) {
+            curl_setopt($ch, CURLOPT_IPRESOLVE, CURL_IPRESOLVE_V4);
+        }
         
         curl_setopt($ch, CURLOPT_USERAGENT, 'Delhivery-PHP-API-Client/1.0');
         // SSL Verification Fix for Local Environments
