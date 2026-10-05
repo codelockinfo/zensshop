@@ -11,14 +11,11 @@ $product = new Product();
 
 echo "Adding sample products...\n\n";
 
-// Get categories
 $categories = $db->fetchAll("SELECT * FROM categories WHERE status = 'active' LIMIT 6");
 if (empty($categories)) {
     echo "No categories found. Please run setup-database.php first.\n";
     exit;
 }
-
-// Sample products data
 $sampleProducts = [
     [
         'name' => 'Rings Wrapped in 4 Rows',
@@ -119,7 +116,7 @@ $sampleProducts = [
     [
         'name' => 'Double Pendant - 18K Gold',
         'description' => 'Delicate gold necklace with two small pendants.',
-        'category_id' => $categories[2]['id'] ?? null, // Necklaces
+        'category_id' => $categories[2]['id'] ?? null,
         'price' => 320.00,
         'sale_price' => null,
         'stock_quantity' => 20,
@@ -219,25 +216,19 @@ $errors = 0;
 
 foreach ($sampleProducts as $item) {
     try {
-        // Generate slug
         $slug = strtolower(trim($item['name']));
         $slug = preg_replace('/[^a-z0-9-]+/', '-', $slug);
         $slug = preg_replace('/-+/', '-', $slug);
         $slug = trim($slug, '-');
-        
-        // Ensure uniqueness
         $originalSlug = $slug;
         $counter = 1;
         while ($db->fetchOne("SELECT id FROM products WHERE slug = ?", [$slug])) {
             $slug = $originalSlug . '-' . $counter;
             $counter++;
         }
-        
-        // Prepare images
         $imagesJson = json_encode($item['images']);
         $featuredImage = $item['images'][0] ?? null;
         
-        // Insert product
         $productId = $db->insert(
             "INSERT INTO products 
             (name, slug, description, category_id, price, sale_price, stock_quantity, stock_status, 

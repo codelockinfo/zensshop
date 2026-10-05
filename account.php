@@ -13,7 +13,7 @@ $customer = null;
 if ($isLoggedIn) {
     $customer = $auth->getCurrentCustomer();
     if (!$customer) {
-        // Session is valid but customer record not found for this store
+      
         $auth->logout();
         $isLoggedIn = false;
     }
@@ -21,8 +21,6 @@ if ($isLoggedIn) {
 
 $orderModel = new Order();
 $wishlistModel = new Wishlist();
-
-// Handle POST actions
 if ($isLoggedIn && $_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
     if ($_POST['action'] === 'remove_address') {
         $auth->updateProfile(['shipping_address' => null]);
@@ -33,8 +31,6 @@ if ($isLoggedIn && $_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action
             'name' => $_POST['name'],
             'phone' => $_POST['phone']
         ];
-        // Only allow email update if it's not a google login (optional, but good practice). 
-        // For now, let's allow it as requested.
         if (!empty($_POST['email'])) {
             $updateData['email'] = $_POST['email'];
         }
@@ -52,15 +48,11 @@ if ($isLoggedIn && $_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action
     header('Location: ?section=addresses');
     exit;
 }
-// Remove success param on refresh/load so it doesn't persist
 if (isset($_GET['success'])) {
-    // We'll handle this with JS to clean the URL
 }
 
 $section = $_GET['section'] ?? 'orders';
-$tab = $_GET['tab'] ?? 'all'; // For orders: current, unpaid, all
-
-// Fetch data based on section
+$tab = $_GET['tab'] ?? 'all';
 $orders = [];
 $addresses = [];
 $wishlistItems = [];
@@ -76,25 +68,19 @@ if ($isLoggedIn) {
         if ($tab === 'unpaid') {
             $filters['payment_status'] = 'pending';
         } elseif ($tab === 'current') {
-            // Current could mean pending/processing/shipped
-            // For simplicity, just show all for now or filter by status
+
         }
         $orders = $orderModel->getAll($filters);
-        
-        // Fetch cancellation/refund requests for these orders
-        $db = Database::getInstance();
+                $db = Database::getInstance();
         $orderIds = array_column($orders, 'id');
         $requests = [];
         if (!empty($orderIds)) {
             $placeholders = implode(',', array_fill(0, count($orderIds), '?'));
-            // Sort by ID DESC so that later requests for the same order overwrite earlier ones in the associative array
             $reqData = $db->fetchAll("SELECT order_id, type, cancel_status FROM ordercancel WHERE order_id IN ($placeholders) AND customer_id = ? ORDER BY id ASC", [...$orderIds, $customer['customer_id']]);
             foreach ($reqData as $rd) {
                 $requests[$rd['order_id']] = $rd;
             }
         }
-        
-        // Get full items for each order
         foreach ($orders as &$o) {
             $o['items'] = $orderModel->getOrderItems($o['order_number']);
             $o['request'] = $requests[$o['id']] ?? null;
@@ -102,7 +88,6 @@ if ($isLoggedIn) {
     }
 
     if ($section === 'addresses') {
-        // 1. Get unique shipping addresses from past orders (Store Specific)
         $pastOrders = $orderModel->getAll([
             'user_id' => $customer['customer_id'],
             'store_id' => CURRENT_STORE_ID
@@ -118,8 +103,6 @@ if ($isLoggedIn) {
             }
         }
         $orderAddresses = $uniqueAddresses;
-        
-        // 2. Current saved address
         $savedAddress = $customer['shipping_address'] ?? null;
     }
 
@@ -135,7 +118,6 @@ if ($isLoggedIn) {
     }
 
     if ($section === 'details') {
-        // Calculate total spend (Store Specific)
         $allOrders = $orderModel->getAll([
             'user_id' => $customer['customer_id'],
             'store_id' => CURRENT_STORE_ID
@@ -145,9 +127,7 @@ if ($isLoggedIn) {
                 $totalSpend += $ord['total_amount'];
             }
         }
-        
-        // If phone is missing, try to get from last order to pre-fill
-        if (empty($customer['phone'])) {
+                if (empty($customer['phone'])) {
             $lastOrder = $orderModel->getAll([
                 'user_id' => $customer['customer_id'], 
                 'store_id' => CURRENT_STORE_ID,
@@ -166,10 +146,8 @@ $isAjax = (isset($_GET['ajax']) && $_GET['ajax'] == '1') ||
           (isset($_POST['ajax']) && $_POST['ajax'] == '1') || 
           (isset($_SERVER['HTTP_X_REQUESTED_WITH']) && strtolower($_SERVER['HTTP_X_REQUESTED_WITH']) === 'xmlhttprequest');
 
-// Handle Auth POSTs early to prevent "headers already sent"
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && !$isLoggedIn) {
     $requestUri = $_SERVER['REQUEST_URI'] ?? '';
-    // Check if it's likely one of our auth forms being submitted to this page
     $isLoginSub = isset($_POST['email']) && isset($_POST['password']);
     $isRegSub = isset($_POST['email']) && isset($_POST['password']) && isset($_POST['name']);
     $isForgotSub = isset($_POST['email']) && !isset($_POST['password']);
@@ -178,9 +156,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && !$isLoggedIn) {
         $initialAuth = 'login';
         if (strpos($requestUri, 'register') !== false || isset($_GET['register']) || isset($_GET['signup'])) $initialAuth = 'register';
         elseif (strpos($requestUri, 'forgot-password') !== false || isset($_GET['forgot-password'])) $initialAuth = 'forgot-password';
-        
-        // Use output buffering to catch any HTML from the included file
-        // so it doesn't send headers before we're ready
         ob_start();
         include __DIR__ . '/' . $initialAuth . '.php';
         
@@ -188,16 +163,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && !$isLoggedIn) {
             ob_end_flush();
             exit;
         } else {
-            // Check if login was successful (it would have redirected/exited)
-            // If we're here, it failed. Discard the form HTML from the buffer
-            // so we can render the full page wrapper properly below.
             ob_end_clean();
         }
     }
 }
-
-
-
 if (!$isAjax) {
     require_once __DIR__ . '/includes/header.php';
     echo '<div class="pt-3 md:pt-15 pb-6 md:pb-20 bg-gray-50 flex flex-col items-center">';
@@ -221,7 +190,6 @@ if (!$isAjax) {
     .custom-scrollbar::-webkit-scrollbar-thumb:hover {
         background: #3b82f6;
     }
-    /* Firefox */
     .custom-scrollbar {
         scrollbar-width: thin;
         scrollbar-color: #cbd5e1 #f1f5f9;
@@ -294,13 +262,9 @@ if (!$isAjax) {
                         </div>
                     </nav>
                 </div>
-
-                <!-- Content Area -->
                 <div class="w-full flex-1 min-w-0 overflow-hidden" id="accountContent">
     <?php endif; ?>
                     <?php if ($section === 'orders'): ?>
-
-                    <!-- Orders Section -->
                     <div class="mb-8 p-1 bg-gray-200 rounded-xl flex flex-wrap md:inline-flex w-full md:w-auto">
                         <a href="?section=orders&tab=current" class="flex-1 text-center md:flex-none px-4 md:px-8 py-2 rounded-lg font-semibold transition text-sm md:text-base <?php echo $tab === 'current' ? 'bg-white shadow-sm' : 'text-gray-600 hover:text-black'; ?>">Current</a>
                         <a href="?section=orders&tab=unpaid" class="flex-1 text-center md:flex-none px-4 md:px-8 py-2 rounded-lg font-semibold transition text-sm md:text-base <?php echo $tab === 'unpaid' ? 'bg-white shadow-sm' : 'text-gray-600 hover:text-black'; ?>">Unpaid</a>
@@ -403,9 +367,6 @@ if (!$isAjax) {
                                                     <?php 
                                                     $req = $order['request'] ?? null;
                                                     $reqStatus = $req['cancel_status'] ?? null;
-                                                    
-                                                    // Show request status if it's pending or approved
-                                                    // If it's rejected, we show the status AND allow retrying if status permits
                                                     if ($req && ($reqStatus === 'pending' || $reqStatus === 'approved')): 
                                                         $labelClass = $reqStatus === 'approved' ? 'bg-green-100 text-green-600 border-green-200' : 'bg-gray-100 text-gray-500';
                                                         $labelText = $reqStatus === 'approved' ? ucfirst($req['type'] ?? 'Request') . ' Approved' : 'Processing...';
@@ -433,8 +394,6 @@ if (!$isAjax) {
                                                 </div>
                                             </div>
                                         </div>
-
-                                        <!-- Order Items -->
                                         <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                                             <?php foreach ($order['items'] as $item): ?>
                                                 <div class="flex items-center gap-4 bg-gray-50 p-4 rounded-2xl">
@@ -474,10 +433,9 @@ if (!$isAjax) {
                     <?php endif; ?>
 
                 <?php elseif ($section === 'addresses'): ?>
-                    <!-- Addresses Section -->
+                  
                     <h2 class="text-2xl font-bold mb-6">Your addresses</h2>
                     
-                    <!-- Saved Address -->
                     <?php if ($savedAddress): ?>
                         <div class="mb-10">
                             <h3 class="text-gray-400 font-bold uppercase tracking-widest text-[10px] mb-4">Default Shipping Address</h3>
@@ -490,16 +448,14 @@ if (!$isAjax) {
                                         <?php 
                                             $addr = json_decode($savedAddress, true);
                                             if (is_array($addr)) {
-                                                // Name
+                                               
                                                 $name = trim(($addr['first_name']??'') . ' ' . ($addr['last_name']??''));
                                                 if ($name) echo htmlspecialchars($name) . '<br>';
                                                 
-                                                // Street
                                                 $street = $addr['street'] ?? $addr['address'] ?? $addr['address_line1'] ?? '';
                                                 if (!empty($addr['address_line2'])) $street .= ', ' . $addr['address_line2'];
                                                 if ($street) echo htmlspecialchars($street) . '<br>';
                                                 
-                                                // City, State, Zip
                                                 $parts = [];
                                                 if (!empty($addr['city'])) $parts[] = $addr['city'];
                                                 if (!empty($addr['state'])) $parts[] = $addr['state'];
@@ -507,8 +463,6 @@ if (!$isAjax) {
                                                 elseif (!empty($addr['postal_code'])) $parts[] = $addr['postal_code'];
                                                 
                                                 if (!empty($parts)) echo htmlspecialchars(implode(', ', $parts));
-
-                                                // Country
                                                 if (!empty($addr['country'])) echo '<br>' . htmlspecialchars($addr['country']);
                                             } else {
                                                 echo nl2br(htmlspecialchars($savedAddress));
@@ -526,8 +480,6 @@ if (!$isAjax) {
                             </div>
                         </div>
                     <?php endif; ?>
-
-                    <!-- Recent Addresses -->
                     <h3 class="text-gray-400 font-bold uppercase tracking-widest text-[10px] mb-4"><?php echo $savedAddress ? 'Other Recent Addresses' : 'Recent Addresses from Orders'; ?></h3>
                     <?php 
                     $hasOtherAddresses = false;
@@ -557,16 +509,13 @@ if (!$isAjax) {
                                         <?php 
                                             $addr = json_decode($addrStr, true);
                                             if (is_array($addr)) {
-                                                // Name
                                                 $name = trim(($addr['first_name']??'') . ' ' . ($addr['last_name']??''));
                                                 if ($name) echo htmlspecialchars($name) . '<br>';
                                                 
-                                                // Street
                                                 $street = $addr['street'] ?? $addr['address'] ?? $addr['address_line1'] ?? '';
                                                 if (!empty($addr['address_line2'])) $street .= ', ' . $addr['address_line2'];
                                                 if ($street) echo htmlspecialchars($street) . '<br>';
                                                 
-                                                // City, State, Zip
                                                 $parts = [];
                                                 if (!empty($addr['city'])) $parts[] = $addr['city'];
                                                 if (!empty($addr['state'])) $parts[] = $addr['state'];
@@ -575,7 +524,6 @@ if (!$isAjax) {
                                                 
                                                 if (!empty($parts)) echo htmlspecialchars(implode(', ', $parts));
 
-                                                // Country
                                                 if (!empty($addr['country'])) echo '<br>' . htmlspecialchars($addr['country']);
                                             } else {
                                                 echo nl2br(htmlspecialchars($addrStr));
@@ -596,7 +544,6 @@ if (!$isAjax) {
                     <?php endif; ?>
 
                 <?php elseif ($section === 'details'): ?>
-                    <!-- Customer Details Section -->
                     <h2 class="text-2xl font-bold mb-6">My Details</h2>
 
                     <?php if (isset($_GET['success'])): ?>
@@ -604,14 +551,11 @@ if (!$isAjax) {
                         Details updated successfully!
                     </div>
                     <script>
-                        // Clean URL immediately
                         const url = new URL(window.location);
                         url.searchParams.delete('success');
                         window.history.replaceState({}, '', url);
                     </script>
                     <?php endif; ?>
-
-                    <!-- Total Spend Card -->
                     <div class="bg-gradient-to-r from-gray-900 to-black rounded-2xl p-8 text-white mb-8 shadow-lg">
                         <div class="flex items-center justify-between">
                             <div>
@@ -623,8 +567,6 @@ if (!$isAjax) {
                             </div>
                         </div>
                     </div>
-
-                    <!-- Edit Details Form -->
                     <div class="bg-white rounded-2xl border border-gray-100 p-8">
                         <h3 class="text-lg font-bold text-gray-900 mb-6">Personal Information</h3>
                         
@@ -667,7 +609,7 @@ if (!$isAjax) {
                     </div>
 
                 <?php elseif ($section === 'payments'): ?>
-                    <!-- Payments Section -->
+                  
                     <h2 class="text-2xl font-bold mb-6">Your payment history</h2>
                     <?php if (empty($paymentOrders)): ?>
                         <div class="bg-white rounded-2xl p-12 text-center border border-gray-100">
@@ -714,7 +656,7 @@ if (!$isAjax) {
                     <?php endif; ?>
 
                 <?php elseif ($section === 'wishlist'): ?>
-                     <!-- Wishlist Section -->
+                     
                      <h2 class="text-2xl font-bold mb-6">Your Wishlist</h2>
                      <?php if (empty($wishlistItems)): ?>
                         <div class="bg-white rounded-2xl p-12 text-center border border-gray-100">
@@ -725,9 +667,7 @@ if (!$isAjax) {
                      <?php else: ?>
                         <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                             <?php foreach ($wishlistItems as $product): ?>
-                                <!-- Product Card (simplified) -->
                                 <div class="bg-white rounded-2xl overflow-hidden border border-gray-100 shadow-sm transition hover:shadow-md relative group">
-                                    <!-- Remove Button -->
                                     <form method="POST" action="?section=wishlist" class="absolute top-2 right-2 z-10">
                                         <input type="hidden" name="action" value="remove_wishlist">
                                         <input type="hidden" name="product_id" value="<?php echo $product['product_id']; ?>">
@@ -756,7 +696,6 @@ if (!$isAjax) {
                      <?php endif; ?>
 
                 <?php elseif ($section === 'support'): ?>
-                    <!-- Customer Support Section -->
                     <h2 class="text-2xl font-bold mb-6">Customer Support</h2>
                     
                     <div class="bg-white rounded-2xl border border-gray-100 p-8 mb-6">
@@ -799,8 +738,6 @@ if (!$isAjax) {
                             </button>
                         </form>
                     </div>
-
-                    <!-- Quick Help -->
                     <div class="bg-gradient-to-r from-gray-50 to-blue-50 rounded-2xl p-6 border border-blue-100">
                         <h3 class="font-bold text-gray-900 mb-4">Quick Help</h3>
                         <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -825,13 +762,12 @@ if (!$isAjax) {
 
                 <?php endif; ?>
                 <?php if (!$isAjax): ?>
-                    </div> <!-- End accountContent -->
-                </div> <!-- End flex group -->
+                    </div>
+                </div>
                 <?php endif; ?>
 <?php else: ?>
 <?php if (!$isAjax): ?><div id="authContainer" class="w-full"><?php endif; ?>
                 <?php 
-                // Determine which form to show based on URL or query params
                 $initialAuth = 'login';
                 $requestUri = $_SERVER['REQUEST_URI'];
                 $isRegister = strpos($requestUri, 'register') !== false || isset($_GET['register']) || isset($_GET['signup']);
@@ -839,9 +775,6 @@ if (!$isAjax) {
 
                 if ($isRegister) $initialAuth = 'register';
                 elseif ($isForgot) $initialAuth = 'forgot-password';
-                
-                // Set ajax flag so the included file doesn't render header/footer
-                // Set method to GET so inclusion only renders the view, not re-process the POST
                 $origMethod = $_SERVER['REQUEST_METHOD'];
                 $_SERVER['REQUEST_METHOD'] = 'GET';
                 include __DIR__ . '/' . $initialAuth . '.php'; 
@@ -863,10 +796,7 @@ if (!$isAjax) {
 <script>
 document.addEventListener('DOMContentLoaded', () => {
     const contentDiv = document.getElementById('accountContent');
-    
-    // Function to handle navigation
     async function loadAccountSection(url) {
-        // Show Loader
         contentDiv.innerHTML = `
             <div class="w-full h-full flex flex-col items-center justify-center py-20 min-h-[400px] text-center">
                 <div class="relative">
@@ -875,8 +805,6 @@ document.addEventListener('DOMContentLoaded', () => {
                 <p class="text-gray-500 font-medium">Loading...</p>
             </div>
         `;
-
-        // Update URL
         if(url !== window.location.href) {
             window.history.pushState(null, '', url);
         }
@@ -888,79 +816,53 @@ document.addEventListener('DOMContentLoaded', () => {
             const html = await res.text();
             contentDiv.innerHTML = html;
             
-            // Re-initialize any specific plugins if needed (like sliders)
             
         } catch(e) {
             console.error(e);
             contentDiv.innerHTML = '<p class="text-center text-red-500 py-10">Error loading content. Please refresh.</p>';
         }
     }
-
-    // Sidebar clicking
     document.querySelectorAll('.account-sidebar-link').forEach(link => {
         link.addEventListener('click', (e) => {
             e.preventDefault();
             const href = e.currentTarget.href;
-            
-            // Update Sidebar UI
             document.querySelectorAll('.account-sidebar-link').forEach(l => {
-                // Remove active classes
+                
                 l.classList.remove('bg-blue-50', 'text-blue-600');
                 l.classList.add('text-gray-600', 'hover:bg-gray-50');
                 
-                // Reset icon background
                 const iconDiv = l.querySelector('div');
                 if(iconDiv) {
                     iconDiv.classList.remove('bg-blue-100');
-                    iconDiv.classList.add('bg-gray-100'); // Assuming default is gray-100 if not blue-100?
-                    // Actually, looking at code: 
-                    // Active: div bg-blue-100
-                    // Inactive: div bg-blue-100 (Wait, they are all bg-blue-100 in the HTML?)
-                    // Let's re-check the HTML.
-                    /* 
-                       Line 163: <div class="w-8 h-8 rounded-lg bg-blue-100 ...">
-                       They seem to ALWAYS be bg-blue-100 regardless of active state in the original code?
-                       Line 162: active ? 'bg-blue-50 text-blue-600' : 'text-gray-600 hover:bg-gray-50'
-                       So only the link background changes.
-                    */
+                    iconDiv.classList.add('bg-gray-100'); 
+                  
                 }
             });
-            
-            // Add active classes to clicked
             e.currentTarget.classList.remove('text-gray-600', 'hover:bg-gray-50');
             e.currentTarget.classList.add('bg-blue-50', 'text-blue-600');
             
             loadAccountSection(href);
         });
     });
-    
-    // Delegation for inner tabs (Orders tabs, pagination if any)
-    contentDiv.addEventListener('click', (e) => {
+        contentDiv.addEventListener('click', (e) => {
         const link = e.target.closest('a');
         if(link && link.href && link.href.includes('?section=')) {
-             // Avoid actions like "remove address" forms which are buttons/forms, but if they are links:
              if (!link.classList.contains('no-ajax') && !link.target) {
                  e.preventDefault();
                  loadAccountSection(link.href);
              }
         }
     });
-
-    // Handle Back/Forward
     window.addEventListener('popstate', () => {
         const url = window.location.href;
         if (document.getElementById('accountContent')) {
             loadAccountSection(url);
         } else if (document.getElementById('authContainer')) {
-            loadAuthForm(url, false); // Don't update URL again
+            loadAuthForm(url, false);
         }
     });
-
-
-    // Auth Loading and Switching
     const authContainer = document.getElementById('authContainer');
     if (authContainer) {
-        // Initialize components inside auth container (like Google Sign-In)
         function initAuthComponents(container) {
             if (window.google && window.google.accounts && window.google.accounts.id) {
                 const gLoad = container.querySelector('#g_id_onload');
@@ -1004,8 +906,6 @@ document.addEventListener('DOMContentLoaded', () => {
                 });
                 const html = await res.text();
                 authContainer.innerHTML = html;
-                
-                // Re-initialize components
                 initAuthComponents(authContainer);
 
             } catch (e) {
@@ -1013,10 +913,6 @@ document.addEventListener('DOMContentLoaded', () => {
                 authContainer.innerHTML = '<p class="text-center text-red-500 py-10">Error loading. Please refresh.</p>';
             }
         }
-
-
-
-        // Event Delegation for Clicks (Switching Forms)
         authContainer.addEventListener('click', (e) => {
             const link = e.target.closest('a');
             if (link) {
@@ -1027,14 +923,10 @@ document.addEventListener('DOMContentLoaded', () => {
                 }
             }
         });
-
-        // Event Delegation for Form Submissions
         authContainer.addEventListener('submit', async (e) => {
             const form = e.target.closest('form');
             if (!form) return;
-            
-            // Skip if it's not an auth form handler (e.g. if we add other forms later)
-            if (form.id === 'accountSupportForm') return; 
+                        if (form.id === 'accountSupportForm') return; 
 
             e.preventDefault();
             const btn = form.querySelector('button[type="submit"]');
@@ -1058,7 +950,6 @@ document.addEventListener('DOMContentLoaded', () => {
                     if (data.redirect) {
                         window.location.href = data.redirect;
                     } else {
-                        // If it's forgot-password, just reload the form to show next step
                         if (window.location.pathname.includes('forgot-password') || (form.action && form.action.includes('forgot-password'))) {
                             loadAuthForm('forgot-password');
                         } else {
@@ -1066,7 +957,6 @@ document.addEventListener('DOMContentLoaded', () => {
                         }
                     }
                 } else {
-                    // Show error
                     let errDiv = authContainer.querySelector('.bg-red-50');
                     if (!errDiv) {
                         errDiv = document.createElement('div');
@@ -1085,12 +975,8 @@ document.addEventListener('DOMContentLoaded', () => {
                 btn.innerHTML = origHtml;
             }
         });
-
-        // Initialize the components for the server-side rendered form
         initAuthComponents(authContainer);
     }
-
-    // Shared Auth Helpers
 
     window.togglePassword = function(inputId, btn) {
         const input = document.getElementById(inputId);
@@ -1118,10 +1004,6 @@ document.addEventListener('DOMContentLoaded', () => {
             form.dispatchEvent(new Event('submit', { cancelable: true, bubbles: true }));
         }
     };
-
-    // Support Form Handling (Event Delegation)
-
-
     document.addEventListener('submit', async (e) => {
         if (e.target && e.target.id === 'accountSupportForm') {
             e.preventDefault();
@@ -1179,9 +1061,6 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 });
 </script>
-
-
-<!-- Cancel Order Modals -->
 <div id="cancelReasonModal" class="fixed inset-0 bg-black/50 hidden items-center justify-center z-50">
     <div class="bg-white rounded-2xl p-6 w-full max-w-md mx-4 relative animate-[fadeIn_0.2s_ease-out]">
         <button onclick="closeCancelModals()" class="absolute top-4 right-4 text-gray-400 hover:text-black">
@@ -1192,7 +1071,7 @@ document.addEventListener('DOMContentLoaded', () => {
         <p class="text-gray-500 text-sm mb-6">Please select a reason for cancellation.</p>
         
         <div class="space-y-3 max-h-[60vh] overflow-y-auto pr-2" id="reasonList">
-            <!-- Populated by JS -->
+           
         </div>
     </div>
 </div>

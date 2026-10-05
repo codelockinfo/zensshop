@@ -1,13 +1,7 @@
 <?php
-/**
- * Category Page - Display products by category
- */
 
-// Start output buffering to prevent headers already sent errors
 ob_start();
 
-
-// Process redirects BEFORE any output
 require_once __DIR__ . '/classes/Product.php';
 require_once __DIR__ . '/classes/Database.php';
 require_once __DIR__ . '/includes/functions.php';
@@ -20,26 +14,21 @@ $wishlistObj = new Wishlist();
 $wishlistItems = $wishlistObj->getWishlist();
 $wishlistIds = array_column($wishlistItems, 'product_id');
 
-// Get category slug from URL
 $categorySlug = $_GET['slug'] ?? '';
 $sort = trim($_GET['sort'] ?? 'created_at DESC');
 
 if (empty($categorySlug)) {
-    ob_end_clean(); // Clear any buffered output
+    ob_end_clean();
     header('Location: ' . url('collections.php'));
     exit;
 }
-
-// Get current Store ID
 $storeId = defined('CURRENT_STORE_ID') ? CURRENT_STORE_ID : ($_SESSION['store_id'] ?? null);
 
-// Get category info (Store Specific or Global)
 $category = $db->fetchOne(
     "SELECT * FROM categories WHERE slug = ? AND status = 'active' AND (store_id = ? OR store_id IS NULL OR ? = 'DEFAULT')",
     [$categorySlug, $storeId, $storeId]
 );
 
-// If not found with strict slug, try case-insensitive check
 if (!$category) {
     $category = $db->fetchOne(
         "SELECT * FROM categories WHERE LOWER(slug) = LOWER(?) AND status = 'active'",
@@ -48,12 +37,11 @@ if (!$category) {
 }
 
 if (!$category) {
-    ob_end_clean(); // Clear any buffered output
+    ob_end_clean(); 
     header('Location: ' . url('collections.php'));
     exit;
 }
 
-// Get products for this category with sorting
 $filters = [
     'category_slug' => $categorySlug,
     'sort' => $sort,
@@ -62,7 +50,6 @@ $filters = [
 ];
 $products = $product->getAll($filters);
 
-// Handle AJAX Request for sorting
 if (isset($_GET['ajax'])) {
     ob_end_clean();
     if (empty($products)) {
@@ -80,8 +67,6 @@ if (isset($_GET['ajax'])) {
             $finalPrice = $price;
             $currentId = !empty($item['product_id']) ? $item['product_id'] : $item['id'];
             $inWishlist = in_array($currentId, $wishlistIds);
-
-            // Get first variant for default attributes
             $vData = $product->getVariants($item['product_id']);
             $defaultAttributes = [];
             if (!empty($vData['variants'])) {
@@ -172,19 +157,14 @@ if (isset($_GET['ajax'])) {
     }
     exit;
 }
-
-// Clear output buffer before including header
 ob_end_clean();
 
 $pageTitle = 'Category';
 require_once __DIR__ . '/includes/header.php';
-
-// Get category image (prefer banner if available, then fallback to image)
 $catImageRaw = !empty($category['banner']) ? $category['banner'] : ($category['image'] ?? null);
 $categoryImage = getImageUrl($catImageRaw);
 
 if (empty($catImageRaw)) {
-    // Use placeholder if absolutely no image
     $categoryImage = 'data:image/svg+xml;base64,' . base64_encode('<svg width="1200" height="400" viewBox="0 0 1200 400" xmlns="http://www.w3.org/2000/svg"><rect width="1200" height="400" fill="#F3F4F6"/><circle cx="600" cy="200" r="80" fill="#9B7A8A"/><path d="M400 350C400 300 500 250 600 250C700 250 800 300 800 350" fill="#9B7A8A"/></svg>');
 }
 
@@ -192,22 +172,14 @@ if (empty($catImageRaw)) {
 
 <section class="py-16 md:py-24 bg-white min-h-screen">
     <div class="container mx-auto px-4">
-        
-        <!-- Category Skeleton -->
         <div id="categorySkeleton" class="animate-pulse">
-            <!-- Breadcrumbs Skeleton -->
             <div class="h-4 bg-gray-200 rounded w-1/3 mb-8"></div>
-
-            <!-- Banner Skeleton -->
             <div class="w-full h-[300px] bg-gray-200 rounded-lg mb-12"></div>
 
-            <!-- Toolbar Skeleton -->
             <div class="flex flex-col md:flex-row justify-between items-center mb-8 border-b pb-6 gap-4">
                 <div class="h-6 bg-gray-200 rounded w-48"></div>
                 <div class="h-10 bg-gray-200 rounded w-64"></div>
             </div>
-
-            <!-- Grid Skeleton -->
             <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
                 <?php for($i=0; $i<8; $i++): ?>
                 <div class="bg-white rounded-lg overflow-hidden shadow-md p-4 space-y-4">
@@ -223,7 +195,6 @@ if (empty($catImageRaw)) {
         </div>
 
         <div id="mainCategoryContent" class="hidden">
-            <!-- Breadcrumbs -->
             <nav class="breadcrumb-nav text-sm mb-8">
                 <a href="<?php echo url(''); ?>">Home</a>
                 <span>></span> 
@@ -231,8 +202,6 @@ if (empty($catImageRaw)) {
                 <span>></span> 
                 <span><?php echo htmlspecialchars($category['name']); ?></span>
             </nav>
-
-            <!-- Category Hero Section -->
             <div class="mb-12">
                 <div class="relative overflow-hidden rounded-lg" style="height: 300px;">
                     <img src="<?php echo htmlspecialchars($categoryImage); ?>" 
@@ -253,8 +222,6 @@ if (empty($catImageRaw)) {
                     </div>
                 </div>
             </div>
-
-            <!-- Sorting and Toolbar -->
             <div class="flex flex-col md:flex-row justify-between items-center mb-8 gap-4 border-b pb-6">
                 <div class="text-gray-600">
                     <span id="resultsCount">Showing <?php echo count($products); ?> products</span>
@@ -284,7 +251,6 @@ if (empty($catImageRaw)) {
                         $currentId = !empty($item['product_id']) ? $item['product_id'] : $item['id'];
                         $inWishlist = in_array($currentId, $wishlistIds);
 
-                        // Get first variant for default attributes
                         $vData = $product->getVariants($item['product_id']);
                         $defaultAttributes = [];
                         if (!empty($vData['variants'])) {
@@ -388,7 +354,6 @@ if (empty($catImageRaw)) {
 </section>
 
 <script>
-// Skeleton Loader Handling
 document.addEventListener('DOMContentLoaded', function() {
     const skeleton = document.getElementById('categorySkeleton');
     const content = document.getElementById('mainCategoryContent');
@@ -404,8 +369,6 @@ function applySort() {
     const sortSelect = document.getElementById('sortSelect');
     const sortValue = sortSelect.value;
     const grid = document.getElementById('productsGrid');
-    
-    // Show loading state
     grid.style.opacity = '0.5';
     grid.style.pointerEvents = 'none';
     
@@ -415,10 +378,8 @@ function applySort() {
     const queryString = params.toString();
     const newUrl = window.location.pathname + '?' + queryString;
     
-    // Update browser URL without reload
     history.pushState({}, '', newUrl);
     
-    // Fetch products via AJAX
     fetch(newUrl + '&ajax=1')
         .then(response => response.text())
         .then(html => {
@@ -426,12 +387,9 @@ function applySort() {
             grid.style.opacity = '1';
             grid.style.pointerEvents = 'auto';
             
-            // Re-initialize product cards for newly added elements
             if (typeof initializeProductCards === 'function') {
                 initializeProductCards();
             }
-            
-            // Update results count
             const productsCount = grid.querySelectorAll('.product-card').length;
             const countDisplay = document.getElementById('resultsCount');
             if (countDisplay) {

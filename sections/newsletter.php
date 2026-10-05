@@ -2,13 +2,9 @@
 require_once __DIR__ . '/../classes/Database.php';
 
 $db = Database::getInstance();
-
-// Fetch settings
 $data = $db->fetchOne("SELECT * FROM section_newsletter LIMIT 1");
 
 if (!$data) return;
-
-// Fetch Styles
 require_once __DIR__ . '/../classes/Settings.php';
 $settingsObj = new Settings();
 $stylesJson = $settingsObj->get('newsletter_styles', '{"bg_overlay_opacity":"10","heading_color":"#111827","subheading_color":"#4b5563","button_bg_color":"#000000","button_text_color":"#ffffff"}');
@@ -20,8 +16,6 @@ $heading = $data['heading'] ?? 'Join our family';
 $subheading = $data['subheading'] ?? 'Promotions, new products and sales. Directly to your inbox.';
 $btnText = $data['button_text'] ?? 'Subscribe';
 $footer = $data['footer_content'] ?? '';
-
-// Determine Background Style
 $bgStyle = $bgImage ? "background-image: url('{$bgImage}');" : "background-color: #f3f4f6;";
 ?>
 
@@ -39,7 +33,6 @@ $bgStyle = $bgImage ? "background-image: url('{$bgImage}');" : "background-color
         background-color: <?php echo $styles['button_bg_color']; ?> !important;
         color: <?php echo $styles['button_text_color']; ?> !important;
     }
-    /* Hover state for button: slightly lighten or darken */
     #<?php echo $sectionId; ?> .newsletter-btn:hover {
         opacity: 0.9;
     }

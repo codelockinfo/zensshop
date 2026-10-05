@@ -14,11 +14,9 @@ if (!isset($wishlistIds)) {
     $wishlistIds = array_column($wishlistItems, 'product_id');
 }
 
-// Get recently viewed (from cookie)
 $recentIds = isset($_COOKIE['recently_viewed']) ? json_decode($_COOKIE['recently_viewed'], true) : [];
 if (!is_array($recentIds)) { $recentIds = []; }
 
-// Exclude current product if provided
 if ($productId) {
     $recentIds = array_filter($recentIds, function($id) use ($productId) {
         return $id != $productId;
@@ -36,7 +34,6 @@ $recentlyViewed = $db->fetchAll(
     array_merge($recentIds, $recentIds)
 );
 
-// Final filter to be absolutely sure the current product is not shown
 if ($productId) {
     $recentlyViewed = array_filter($recentlyViewed, function($item) use ($productId) {
         return $item['id'] != $productId && $item['product_id'] != $productId;

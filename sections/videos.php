@@ -1,5 +1,4 @@
 <?php
-// Ensure dependencies are loaded for standalone access
 require_once __DIR__ . '/../config/constants.php';
 require_once __DIR__ . '/../classes/Database.php';
 require_once __DIR__ . '/../includes/functions.php';
@@ -7,13 +6,8 @@ require_once __DIR__ . '/../classes/Settings.php';
 
 $baseUrl = getBaseUrl();
 $db = Database::getInstance();
-
-// Fetch videos from database (Store Specific)
 $videos = $db->fetchAll("SELECT * FROM section_videos WHERE (store_id = ? OR store_id IS NULL) ORDER BY sort_order ASC", [CURRENT_STORE_ID]);
 
-// Fallback logic removed per user request - do not show section if empty
-
-// If no videos, do not show the section
 if (empty($videos)) {
     return;
 }
@@ -32,7 +26,6 @@ if (file_exists($videoConfigPath)) {
     $sectionSubheading = $videos[0]['subheading'] ?? $sectionSubheading;
 }
 
-// Fetch Styles
 $settingsObj = new Settings();
 $stylesJson = $settingsObj->get('video_styles', '{"bg_color":"#ffffff","heading_color":"#1f2937","subheading_color":"#4b5563","arrow_bg_color":"#ffffff","arrow_icon_color":"#1f2937"}');
 $styles = json_decode($stylesJson, true);

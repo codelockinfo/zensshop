@@ -6,8 +6,6 @@ require_once __DIR__ . '/classes/Cart.php';
 $cart = new Cart();
 $cartItems = $cart->getCart();
 $cartTotal = $cart->getTotal();
-
-// Calculate estimated tax (Intrastate default)
 $taxTotal = 0;
 foreach ($cartItems as $item) {
     if (!empty($item['is_taxable']) && !empty($item['gst_percent'])) {
@@ -19,11 +17,9 @@ foreach ($cartItems as $item) {
 ?>
 
 <?php
-// Load Cart Page Styling (Consolidated)
 $cartStylingJson = $settingsObj->get('cart_page_styling', '');
 $cartStyling = !empty($cartStylingJson) ? json_decode($cartStylingJson, true) : [];
 
-// Helper function locally for cart page
 function getCartStyle($key, $default, $settingsObj, $cartStyling) {
     if (isset($cartStyling[$key])) return $cartStyling[$key];
     return $settingsObj->get($key, $default);
@@ -129,7 +125,6 @@ $cp_continue_hover_text = getCartStyle('cart_page_continue_btn_hover_text', '#11
     <div class="container mx-auto px-4">
         <h1 class="text-2xl md:text-4xl font-heading font-bold mb-3 md:mb-4">Shopping Cart</h1>
         <?php 
-            // Determine currency for totals (use first item's currency or default)
             $cartCurrency = !empty($cartItems) ? ($cartItems[0]['currency'] ?? 'USD') : 'USD';
         ?>
         
@@ -175,7 +170,6 @@ $cp_continue_hover_text = getCartStyle('cart_page_continue_btn_hover_text', '#11
         </div>
 
         <div id="mainCartContent" class="grid grid-cols-1 lg:grid-cols-3 gap-8 hidden">
-            <!-- Cart Items -->
             <div class="lg:col-span-2 space-y-4" id="cartItemsContainer">
                 <?php foreach ($cartItems as $item): 
                     $productSlug = $item['slug'] ?? '';
@@ -188,7 +182,6 @@ $cp_continue_hover_text = getCartStyle('cart_page_continue_btn_hover_text', '#11
                 ?>
                 <div class="cart-item-wrapper" data-product-id="<?php echo $item['product_id']; ?>" data-attributes='<?php echo $attributesEscaped; ?>'>
                     <div class="bg-white rounded-lg p-4 md:p-6 flex flex-col md:flex-row items-start md:items-center justify-between gap-4 md:gap-6 cart-item cart-page-product-card" data-product-id="<?php echo $item['product_id']; ?>">
-                        <!-- Image & Product Info (Row on mobile, flex child on desktop) -->
                         <div class="flex flex-row items-start gap-4 flex-1 w-full min-w-0">
                             <a href="<?php echo $productUrl; ?>" class="flex-shrink-0">
                                 <img src="<?php echo getImageUrl($item['image'] ?? ''); ?>" 
@@ -231,7 +224,6 @@ $cp_continue_hover_text = getCartStyle('cart_page_continue_btn_hover_text', '#11
                             </button>
                         </div>
                     </div>
-                    <!-- Inline Remove Confirmation -->
                     <div class="remove-confirm-inline bg-white rounded-lg p-6 flex items-center space-x-4 shadow-md border border-gray-300 hidden" data-product-id="<?php echo $item['product_id']; ?>" data-attributes='<?php echo $attributesEscaped; ?>'>
                         <img src="<?php echo getImageUrl($item['image'] ?? ''); ?>" 
                              alt="<?php echo htmlspecialchars($item['name']); ?>" 
@@ -329,7 +321,6 @@ document.addEventListener('DOMContentLoaded', function() {
 </script>
 
 <script>
-// Helper functions to increment/decrement cart items
 function incrementCartItem(productId, btn, attributes = {}) {
     const attributesJson = JSON.stringify(attributes);
     const quantitySpan = document.querySelector(`.item-quantity[data-product-id="${productId}"][data-attributes='${attributesJson}']`);
@@ -352,8 +343,6 @@ function decrementCartItem(productId, btn, attributes = {}) {
         }
     }
 }
-
-// Inline Remove Confirm Functions
 function showInlineRemoveConfirm(productId, attributes = {}) {
     const attributesJson = JSON.stringify(attributes);
     const wrapper = document.querySelector(`.cart-item-wrapper[data-product-id="${productId}"][data-attributes='${attributesJson}']`);
@@ -383,7 +372,6 @@ function cancelInlineRemoveConfirm(productId, attributes = {}) {
 async function confirmInlineRemoveWithWishlist(productId, btn, attributes = {}) {
     const baseUrl = typeof BASE_URL !== 'undefined' ? BASE_URL : window.location.pathname.split('/').slice(0, -1).join('/') || '';
     try {
-        // Add to wishlist
         const wishlistResponse = await fetch(baseUrl + '/api/wishlist.php', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
@@ -391,12 +379,9 @@ async function confirmInlineRemoveWithWishlist(productId, btn, attributes = {}) 
         });
         const wishlistResult = await wishlistResponse.json();
         
-        // Update wishlist count
         if (wishlistResult.success && typeof refreshWishlist === 'function') {
             await refreshWishlist();
         }
-        
-        // Remove from cart
         if (typeof removeFromCart === 'function') {
             await removeFromCart(productId, btn, attributes);
         }
@@ -413,8 +398,6 @@ async function confirmInlineRemoveWithoutWishlist(productId, btn, attributes = {
         await removeFromCart(productId, btn, attributes);
     }
 }
-
-// Make functions globally available
 window.incrementCartItem = incrementCartItem;
 window.decrementCartItem = decrementCartItem;
 window.showInlineRemoveConfirm = showInlineRemoveConfirm;

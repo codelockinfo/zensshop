@@ -1,9 +1,4 @@
 <?php
-/**
- * Checkout Page
- */
-
-// Start output buffering to prevent headers already sent errors
 ob_start();
 
 require_once __DIR__ . '/includes/functions.php';
@@ -16,42 +11,32 @@ $baseUrl = getBaseUrl();
 $cart = new Cart();
 $order = new Order();
 $auth = new CustomerAuth();
-
-// Require login for checkout
 if (!$auth->isLoggedIn()) {
     ob_end_clean();
     header('Location: ' . url('login?redirect=checkout'));
     exit;
 }
-
-// Get cart items
 $cartItems = $cart->getCart();
 $cartTotal = $cart->getTotal();
 
 $customer = null;
 if ($auth->isLoggedIn()) {
     $customer = $auth->getCurrentCustomer();
-    // Ensure store_id is in session if not already (for users logged in before the fix)
     if (!isset($_SESSION['store_id']) && $customer && isset($customer['store_id'])) {
         $_SESSION['store_id'] = $customer['store_id'];
     }
 }
 
-// Fetch checkout payment icons from database using Settings class
 require_once __DIR__ . '/classes/Settings.php';
 $settingsManager = new Settings();
 $checkoutPaymentIconsJson = $settingsManager->get('checkout_payment_icons_json', '[]');
 $checkoutPaymentIcons = json_decode($checkoutPaymentIconsJson, true) ?: [];
 
-
-// Redirect if cart is empty
 if (empty($cartItems)) {
     ob_end_clean();
     header('Location: ' . url('cart'));
     exit;
 }
-
-// Track checkout start via Slack/Notification
 if ($_SERVER['REQUEST_METHOD'] === 'GET' && !isset($_SESSION['checkout_tracked_' . md5(json_encode($cartItems))])) {
     require_once __DIR__ . '/classes/Notification.php';
     $cartCurrency = !empty($cartItems) ? ($cartItems[0]['currency'] ?? 'INR') : 'INR';
@@ -63,18 +48,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET' && !isset($_SESSION['checkout_tracked_'
 $error = '';
 $success = false;
 $orderId = null;
-$shippingAmount = 0.00; // Default shipping
+$shippingAmount = 0.00; 
 $discountAmount = 0;
 $discountCode = '';
-
-// Process discount code
-$discountError = ''; // Specific error for discount field
+$discountError = ''; 
 if (isset($_POST['remove_discount'])) {
     unset($_SESSION['checkout_discount_code']);
     $discountCode = '';
     $discountAmount = 0;
 } elseif (isset($_POST['apply_discount']) || isset($_POST['place_order']) || isset($_SESSION['checkout_discount_code'])) {
-    // Prefer POST, then Session
     $codeToValidate = '';
     if (isset($_POST['apply_discount']) || isset($_POST['place_order'])) {
         $codeToValidate = trim($_POST['discount_code'] ?? '');
@@ -89,116 +71,78 @@ if (isset($_POST['remove_discount'])) {
             $currentTotal = $cart->getTotal();
             $userId = $customer['id'] ?? null;
             $discountAmount = $discountManager->calculateAmount($codeToValidate, $currentTotal, $userId);
-            // If successful, save to session and variables
             $_SESSION['checkout_discount_code'] = $codeToValidate;
             $discountCode = $codeToValidate;
         } catch (Exception $e) {
-            // If explicitly applying, show specific error
             if (isset($_POST['apply_discount'])) {
                 $discountError = $e->getMessage();
             }
-            // If just loading from session and it fails (e.g. cart invalid now), clear session
             if (isset($_SESSION['checkout_discount_code']) && !isset($_POST['apply_discount'])) {
                 unset($_SESSION['checkout_discount_code']);
             }
-            // Reset logic
             $discountCode = ''; 
             $discountAmount = 0;
         }
     }
 }
-
-// Generate CSRF token if not exists
 if (empty($_SESSION['csrf_token'])) {
     $_SESSION['csrf_token'] = bin2hex(random_bytes(32));
 }
-
-// Rate Limiting (Prevent spam submissions)
 if (isset($_SESSION['last_checkout_attempt']) && (time() - $_SESSION['last_checkout_attempt'] < 5)) {
-    // If request is within 5 seconds of previous one
     $error = "Please wait a moment before trying again.";
 }
 $_SESSION['last_checkout_attempt'] = time();
-
-// Process order if form is submitted
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['place_order']) && empty($error)) {
     try {
-        // 1. Honeypot Check (Anti-Bot)
-        // If this hidden field is filled, it's a bot
+       
         if (!empty($_POST['hp_website_check'])) {
-            // Silently fail or throw error (Silent is better to confuse bots, but for UX we just stop)
             throw new Exception("Security check failed.");
         }
-
-        // 2. CSRF Check
         if (!isset($_POST['csrf_token']) || $_POST['csrf_token'] !== $_SESSION['csrf_token']) {
             throw new Exception("Security check failed. Please refresh the page.");
         }
-
-        // 3. Validate required fields
         $required = ['customer_name', 'customer_email', 'phone', 'country'];
         foreach ($required as $field) {
             if (empty($_POST[$field])) {
                 throw new Exception("Please fill in all required fields");
             }
         }
-
-        // 4. Strict Server-Side Validation
         if (!filter_var($_POST['customer_email'], FILTER_VALIDATE_EMAIL)) {
              throw new Exception("Invalid email address format.");
         }
-        
-        // Basic phone validation (allow +, spaces, dashes, digits, min 7 chars)
         if (!preg_match('/^[\+]?[(]?[0-9]{3}[)]?[-\s\.]?[0-9]{3}[-\s\.]?[0-9]{4,6}$/', trim($_POST['phone']))) {
-             // Relaxed check to avoid blocking valid international formats too aggressively
-             // Just checking if it has at least 7 digits
+             
              if (strlen(preg_replace('/[^0-9]/', '', $_POST['phone'])) < 7) {
                  throw new Exception("Please enter a valid phone number.");
              }
         }
-        
-        // Block Direct POST for Online Payments (Must go through API/JS)
-        $paymentMethod = $_POST['payment_method'] ?? 'cash_on_delivery';
+                $paymentMethod = $_POST['payment_method'] ?? 'cash_on_delivery';
         if ($paymentMethod === 'credit_card' || $paymentMethod === 'razorpay') {
              throw new Exception("Online payments must be processed via the secure payment window. Please click 'Pay Now'.");
         }
-
-        // Get user ID if logged in
         $userId = null;
         if ($auth->isLoggedIn()) {
             $currentUser = $auth->getCurrentCustomer();
             $userId = $currentUser['customer_id'] ?? null;
-            
-            // Force re-match if ID is legacy/invalid
             if ($userId && $userId < 1000000000) {
                 $userId = null;
             }
         }
-        
-        // Combine phone code and phone number
         $phoneCode = sanitize_input($_POST['phone_code'] ?? '+1');
         $phoneNumber = sanitize_input(trim($_POST['phone'] ?? ''));
         $fullPhone = $phoneCode . ' ' . $phoneNumber;
-        
-        // Dynamic Shipping Cost Calculation
         if (($_POST['delivery_type'] ?? '') !== 'pickup') {
             require_once __DIR__ . '/includes/shipping_helper.php';
-            // Validate serviceability and get cost
-            // If API fails or pincode invalid, it throws exception which is caught by main try-catch
             $shippingAmount = getDelhiveryShippingCost(trim($_POST['zip']), $paymentMethod);
         } else {
             $shippingAmount = 0;
         }
-
-        // COD Charge
         $codCharge = 0;
         if ($paymentMethod === 'cash_on_delivery') {
             require_once __DIR__ . '/classes/Settings.php';
             $stManager = new Settings();
             $codCharge = (float)$stManager->get('cod_charge', 0);
         }
-        
-        // Prepare order data with sanitization
         $orderData = [
             'user_id' => $userId,
             'customer_name' => sanitize_input(trim($_POST['customer_name'])),
@@ -226,7 +170,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['place_order']) && emp
             'tax_amount' => 0,
             'payment_method' => $paymentMethod
         ];
-        // Prepare order items from cart
         foreach ($cartItems as $item) {
             $orderData['items'][] = [
                 'product_id' => $item['product_id'],
@@ -237,13 +180,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['place_order']) && emp
                 'variant_attributes' => $item['variant_attributes'] ?? []
             ];
         }
-        
-        // Create order
         $orderResponse = $order->create($orderData);
         $orderId = $orderResponse['id'];
         $orderNumber = $orderResponse['order_number'];
         
-        // Auto-create Delhivery Shipment
         try {
             require_once __DIR__ . '/classes/Delhivery.php';
             $delhivery = new Delhivery();
@@ -254,14 +194,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['place_order']) && emp
         } catch (Exception $e) {
             error_log("Failed to auto-create Delhivery shipment for order " . $orderNumber . ": " . $e->getMessage());
         }
-
-        // Clear cart
         $cart->clear();
-        
-        // Clear output buffer before redirect
         ob_end_clean();
-        
-        // Redirect to thank you page
         header('Location: ' . url("order-success.php?order_number={$orderNumber}"));
         exit;
         
@@ -269,38 +203,28 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['place_order']) && emp
         $error = $e->getMessage();
     }
 }
-
-// Clear output buffer before including header
 ob_end_clean();
-
-// Release session lock so background/concurrent AJAX requests are not blocked during page render
 session_write_close();
 
 $pageTitle = 'Checkout';
 $isCheckout = true;
 require_once __DIR__ . '/includes/header.php';
-
-// Re-fetch settings locally to ensure variables exist if header doesn't pass them
 $settingsObj = new Settings();
 $logoType = $settingsObj->get('footer_logo_type', 'image');
 $logoText = $settingsObj->get('footer_logo_text', 'HomeproX');
 $logo = $settingsObj->get('footer_logo_image', null);
-
-// Calculate totals
 $subtotal = $cartTotal;
 $finalShipping = isset($_POST['delivery_type']) && $_POST['delivery_type'] === 'pickup' ? 0 : $shippingAmount;
 $tax = 0;
 $isCodEnabled = (int)$settingsObj->get('enable_cod', 0);
 $codChargeValue = (float)$settingsObj->get('cod_charge', 0);
-$selectedPaymentMethod = $_POST['payment_method'] ?? 'credit_card'; // Default to online
+$selectedPaymentMethod = $_POST['payment_method'] ?? 'credit_card'; 
 $codAdjustment = ($selectedPaymentMethod === 'cash_on_delivery') ? $codChargeValue : 0;
 
 $total = $subtotal + $finalShipping - $discountAmount + $tax + $codAdjustment;
-// Load Checkout Page Styling (Consolidated)
 $checkoutStylingJson = $settingsObj->get('checkout_page_styling', '');
 $checkoutStyling = !empty($checkoutStylingJson) ? json_decode($checkoutStylingJson, true) : [];
 
-// Helper function locally for checkout page
 function getCheckoutStyle($key, $default, $settingsObj, $checkoutStyling) {
     if (isset($checkoutStyling[$key])) return $checkoutStyling[$key];
     return $settingsObj->get($key, $default);
@@ -308,13 +232,10 @@ function getCheckoutStyle($key, $default, $settingsObj, $checkoutStyling) {
 ?>
 
 <style>
-/* Hide announcement bar and header on checkout page */
 .bg-black.text-white.text-sm.py-2,
 nav.bg-white.sticky.top-0 {
     display: none !important;
 }
-
-/* Dynamic Checkout Styles */
 :root {
     --checkout-prog-active-bg: <?php echo getCheckoutStyle('checkout_progress_active_bg', '#2563eb', $settingsObj, $checkoutStyling); ?>;
     --checkout-prog-active-text: <?php echo getCheckoutStyle('checkout_progress_active_text', '#ffffff', $settingsObj, $checkoutStyling); ?>;
@@ -345,9 +266,6 @@ nav.bg-white.sticky.top-0 {
     background-color: var(--checkout-prog-active-bg) !important;
     color: var(--checkout-prog-active-text) !important;
 }
-/* For completed/inactive steps, we might want different styling */
-/* Current design has 'completed' as primary color. Let's map inactive settings to 'other' steps if needed, 
-   but for now let's just use it generic or for future steps */
 .checkout-step-inactive {
     background-color: var(--checkout-prog-inactive-bg) !important;
     color: var(--checkout-prog-inactive-text) !important;
@@ -395,10 +313,8 @@ nav.bg-white.sticky.top-0 {
 
 <section class="pt-2 pb-6 md:pt-4 md:pb-10 bg-gray-50 min-h-screen">
     <div class="container mx-auto px-4">
-        <!-- Header: Logo & Progress -->
         <div class="max-w-6xl mx-auto mb-4 md:mb-4 flex flex-col md:flex-row items-center justify-start gap-3 md:gap-12">
-            <!-- Logo -->
-            <!-- Logo -->
+        
             <a href="<?php echo $baseUrl; ?>/" class="flex items-center">
                 <?php if ($logoType == 'image' && !empty($logo)): ?>
                     <img src="<?php echo getImageUrl($logo); ?>" alt="<?php echo htmlspecialchars($logoText); ?>" class="h-[60px] w-auto object-contain">
@@ -406,10 +322,8 @@ nav.bg-white.sticky.top-0 {
                     <span class="text-2xl md:text-3xl font-heading font-bold text-black"><?php echo htmlspecialchars($logoText); ?></span>
                 <?php endif; ?>
             </a>
-
-            <!-- Progress Indicator -->
             <div class="flex items-center space-x-2 md:space-x-4 overflow-x-auto min-w-max">
-                <!-- Cart Step -->
+                
                 <div class="flex items-center">
                     <div class="w-6 h-6 md:w-8 md:h-8 rounded-full bg-primary text-white flex items-center justify-center font-semibold text-xs md:text-sm">
                         <i class="fas fa-check"></i>
@@ -417,8 +331,6 @@ nav.bg-white.sticky.top-0 {
                     <span class="ml-2 font-semibold text-gray-700 text-xs md:text-base">Cart</span>
                 </div>
                 <div class="w-6 md:w-12 h-0.5 bg-primary"></div>
-                
-                <!-- Review Step -->
                 <div class="flex items-center">
                     <div class="w-6 h-6 md:w-8 md:h-8 rounded-full bg-primary text-white flex items-center justify-center font-semibold text-xs md:text-sm">
                         <i class="fas fa-check"></i>
@@ -426,8 +338,6 @@ nav.bg-white.sticky.top-0 {
                     <span class="ml-2 font-semibold text-gray-700 text-xs md:text-base">Review</span>
                 </div>
                 <div class="w-6 md:w-12 h-0.5 bg-primary"></div>
-                
-                <!-- Checkout Step -->
                 <div class="flex items-center">
                     <div class="w-6 h-6 md:w-8 md:h-8 rounded-full bg-blue-600 text-white flex items-center justify-center font-semibold text-xs md:text-sm checkout-step-active">
                         3
@@ -436,8 +346,6 @@ nav.bg-white.sticky.top-0 {
                 </div>
             </div>
         </div>
-
-        <!-- Error Message Container (Updated with transitions) -->
         <div id="errorMessageContainer" class="hidden mb-6 max-w-6xl mx-auto transition-all duration-500 ease-in-out opacity-0 transform -translate-y-4">
             <div class="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded">
                 <div class="flex items-center justify-between">
@@ -448,8 +356,6 @@ nav.bg-white.sticky.top-0 {
                 </div>
             </div>
         </div>
-        
-        <!-- Success Message Container -->
         <div id="successMessageContainer" class="hidden mb-6 max-w-6xl mx-auto">
             <div class="bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded">
                 <div class="flex items-center justify-between">
@@ -466,16 +372,14 @@ nav.bg-white.sticky.top-0 {
             <?php echo htmlspecialchars($error); ?>
         </div> -->
         <script>
-            // Auto-hide error after 5 seconds
             setTimeout(function() {
                 const errorMsg = document.getElementById('php-error-msg');
                 if (errorMsg) {
                     errorMsg.style.opacity = '0';
-                    setTimeout(() => errorMsg.style.display = 'none', 500); // Wait for fade out
+                    setTimeout(() => errorMsg.style.display = 'none', 500);
                 }
             }, 5000);
 
-            // Prevent resubmission prompt on reload (PRG pattern via JS history)
             if (window.history.replaceState) {
                 window.history.replaceState(null, null, window.location.href);
             }
@@ -484,7 +388,6 @@ nav.bg-white.sticky.top-0 {
 
         <form id="checkoutForm" method="POST" action="<?php echo url('checkout'); ?>" class="max-w-6xl mx-auto">
             <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
-                <!-- Left Section: Shipping Information -->
                 <div class="lg:col-span-2">
                     <div class="bg-white rounded-lg p-4 sm:p-6 md:p-8">
                         <div class="flex items-center justify-between mb-4">
@@ -513,7 +416,6 @@ nav.bg-white.sticky.top-0 {
                             Shipping Information
                         </h2>
                         
-                        <!-- Delivery Options -->
                         <div class="flex flex-col sm:flex-row gap-4 mb-8">
                             <label class="flex-1 cursor-pointer">
                                 <input type="radio" name="delivery_type" value="delivery" checked class="hidden delivery-option" onchange="updateShipping()">
@@ -530,8 +432,6 @@ nav.bg-white.sticky.top-0 {
                                 </div>
                             </label>
                         </div>
-                        
-                        <!-- Form Fields -->
                         <div class="space-y-4">
                             <div>
                                 <label class="block text-sm font-semibold mb-2 text-gray-700">Full name</label>
@@ -559,33 +459,31 @@ nav.bg-white.sticky.top-0 {
                                 <div class="flex relative w-full">
                                     <select name="phone_code" id="phoneCodeSelect" class="px-3 py-3 border border-gray-300 rounded-l-lg focus:outline-none focus:ring-2 focus:ring-primary bg-gray-50 appearance-none cursor-pointer checkout-input" style="min-width: 90px;">
                                         <?php
-                                        // Comprehensive phone country codes with lengths
-                                        // Format: [Flag, Code, ISO, Length]
+                                      
                                         $phoneCodes = [
-                                            '+91' => ['🇮🇳', '+91', 'IN', 10], // India
-                                            '+1' => ['🇺🇸', '+1', 'US', 10],   // USA/Canada
-                                            '+44' => ['��', '+44', 'GB', 10], // UK (excluding 0)
-                                            '+61' => ['��', '+61', 'AU', 9],  // Australia (mobile often 9)
-                                            '+49' => ['��', '+49', 'DE', 11], // Germany
-                                            '+33' => ['��', '+33', 'FR', 9],  // France
-                                            '+86' => ['��', '+86', 'CN', 11], // China
-                                            '+81' => ['��', '+81', 'JP', 10], // Japan
-                                            '+971' => ['��', '+971', 'AE', 9], // UAE
-                                            '+966' => ['🇸�', '+966', 'SA', 9], // Saudi Arabia
-                                            '+7' => ['��', '+7', 'RU', 10],   // Russia
-                                            '+55' => ['��', '+55', 'BR', 11], // Brazil
-                                            '+20' => ['��', '+20', 'EG', 10], // Egypt
-                                            '+27' => ['��', '+27', 'ZA', 9],  // South Africa
-                                            '+90' => ['��', '+90', 'TR', 10], // Turkey
-                                            '+39' => ['��', '+39', 'IT', 10], // Italy
-                                            '+34' => ['🇪🇸', '+34', 'ES', 9],  // Spain
-                                            '+65' => ['��', '+65', 'SG', 8],  // Singapore
-                                            '+60' => ['��', '+60', 'MY', 9],  // Malaysia
-                                            '+62' => ['��', '+62', 'ID', 11], // Indonesia (can vary 10-12)
-                                            '+63' => ['��', '+63', 'PH', 10], // Philippines
-                                            '+92' => ['��', '+92', 'PK', 10], // Pakistan
-                                            '+880' => ['🇧�', '+880', 'BD', 10], // Bangladesh
-                                            // Defaults/Others
+                                            '+91' => ['🇮🇳', '+91', 'IN', 10], 
+                                            '+1' => ['🇺🇸', '+1', 'US', 10],   
+                                            '+44' => ['��', '+44', 'GB', 10],
+                                            '+61' => ['��', '+61', 'AU', 9], 
+                                            '+49' => ['��', '+49', 'DE', 11], 
+                                            '+33' => ['��', '+33', 'FR', 9],  
+                                            '+86' => ['��', '+86', 'CN', 11], 
+                                            '+81' => ['��', '+81', 'JP', 10], 
+                                            '+971' => ['��', '+971', 'AE', 9], 
+                                            '+966' => ['🇸�', '+966', 'SA', 9], 
+                                            '+7' => ['��', '+7', 'RU', 10],   
+                                            '+55' => ['��', '+55', 'BR', 11], 
+                                            '+20' => ['��', '+20', 'EG', 10],
+                                            '+27' => ['��', '+27', 'ZA', 9],  
+                                            '+90' => ['��', '+90', 'TR', 10], 
+                                            '+39' => ['��', '+39', 'IT', 10], 
+                                            '+34' => ['🇪🇸', '+34', 'ES', 9], 
+                                            '+65' => ['��', '+65', 'SG', 8], 
+                                            '+60' => ['��', '+60', 'MY', 9], 
+                                            '+62' => ['��', '+62', 'ID', 11], 
+                                            '+63' => ['��', '+63', 'PH', 10], 
+                                            '+92' => ['��', '+92', 'PK', 10], 
+                                            '+880' => ['🇧�', '+880', 'BD', 10],
                                             '+41' => ['��', '+41', 'CH', 9],
                                             '+31' => ['��', '+31', 'NL', 9],
                                             '+32' => ['🇧�', '+32', 'BE', 9],
@@ -601,12 +499,9 @@ nav.bg-white.sticky.top-0 {
                                             '+54' => ['��', '+54', 'AR', 10],
                                         ];
                                         
-                                        $selectedCode = $_POST['phone_code'] ?? '+91'; // Default to India
-                                        
-                                        // Fallback if specific country isn't in top list, add generic
+                                        $selectedCode = $_POST['phone_code'] ?? '+91'; 
                                         if (!array_key_exists($selectedCode, $phoneCodes)) {
-                                             // If it was one of the many others not listed above explicitly with length
-                                             // We will just treat it as flexible if not found, or default 10
+                                             
                                         }
 
                                         foreach ($phoneCodes as $code => $data) {
@@ -639,16 +534,12 @@ nav.bg-white.sticky.top-0 {
                                             phoneInput.setAttribute('pattern', '[0-9]{' + length + '}');
                                             phoneInput.setAttribute('title', 'Please enter a valid ' + length + '-digit mobile number');
                                             phoneInput.setAttribute('placeholder', 'Enter your number');
-                                            
-                                            // Optional: truncate value if too long
                                             if (phoneInput.value.length > length) {
                                                 phoneInput.value = phoneInput.value.slice(0, length);
                                             }
                                         }
-                                        
-                                        // Run on change and on load
                                         phoneSelect.addEventListener('change', updatePhoneValidation);
-                                        updatePhoneValidation(); // Set initial state
+                                        updatePhoneValidation(); 
                                     });
                                 </script>
                             </div>
@@ -710,13 +601,10 @@ nav.bg-white.sticky.top-0 {
                         </div>
                     </div>
                 </div>
-                
-                <!-- Right Section: Review Cart -->
                 <div class="lg:col-span-1">
                     <div class="bg-white rounded-lg p-6 sticky top-4 checkout-summary">
                         <h2 class="text-xl font-bold mb-6 checkout-heading">Review your cart</h2>
                         
-                        <!-- Cart Items -->
                         <div class="space-y-4 mb-6">
                             <?php foreach ($cartItems as $item): ?>
                             <div class="flex items-center space-x-3">
@@ -741,12 +629,7 @@ nav.bg-white.sticky.top-0 {
                             </div>
                             <?php endforeach; ?>
                         </div>
-                        
-                        <!-- Discount Code -->
-                        <!-- Discount Code -->
-                        <!-- Discount Code -->
                         <div class="mb-6" id="discountSection">
-                            <!-- Applied State -->
                             <div id="appliedState" class="<?php echo $discountAmount > 0 ? '' : 'hidden'; ?>">
                                 <input type="hidden" name="discount_code" id="hiddenDiscountCode" value="<?php echo htmlspecialchars($discountCode); ?>">
                                 <div class="flex items-center justify-between py-1 px-5 bg-[#e5e7eb] border border-gray-300 rounded-lg">
@@ -760,8 +643,6 @@ nav.bg-white.sticky.top-0 {
                                 </div>
                                 <p class="text-xs text-gray-600 mt-2 ml-1">Discount applied successfully!</p>
                             </div>
-
-                            <!-- Input State -->
                             <div id="inputState" class="<?php echo $discountAmount > 0 ? 'hidden' : ''; ?>">
                                 <div class="flex flex-col sm:flex-row gap-2">
                                     <input type="text" id="discountInput" 
@@ -777,8 +658,6 @@ nav.bg-white.sticky.top-0 {
                                 <p id="discountErrorMsg" class="text-sm text-red-500 mt-2 ml-1 hidden"></p>
                             </div>
                         </div>
-                        
-                        <!-- Order Summary -->
                         <div class="border-t pt-4 space-y-2 mb-6">
                             <div class="flex justify-between text-sm">
                                 <span class="text-gray-600">Subtotal</span>
@@ -788,8 +667,6 @@ nav.bg-white.sticky.top-0 {
                                 <span class="text-gray-600">Shipping</span>
                                 <span id="summaryShipping" class="font-semibold"><?php echo format_currency($finalShipping); ?></span>
                             </div>
-                            
-                            <!-- Tax Section -->
                             <div id="taxSummarySection" class="hidden space-y-2">
                                 <div class="flex justify-between text-sm">
                                     <span class="text-gray-600">Tax</span>
@@ -912,7 +789,6 @@ nav.bg-white.sticky.top-0 {
 </section>
 
 <script>
-// Update delivery option styling
 document.querySelectorAll('.delivery-option').forEach(radio => {
     radio.addEventListener('change', function() {
         document.querySelectorAll('.delivery-option-card').forEach(card => {
@@ -935,8 +811,6 @@ document.querySelectorAll('.delivery-option').forEach(radio => {
         }
     });
 });
-
-// Global state for calculations
 window.cartTotal = <?php echo $cartTotal; ?>;
 window.currentDiscountAmount = <?php echo $discountAmount; ?>;
 window.currentDiscountCode = '<?php echo $discountCode; ?>';
@@ -947,9 +821,6 @@ window.systemCodEnabled = <?php echo $isCodEnabled ? 'true' : 'false'; ?>;
 
 async function recalculateTaxes() {
     const state = document.getElementById('customerStateInput').value.trim();
-
-    // Allow calculation even if state is empty (defaults to Intrastate/Store State)
-    // if (!state) return;
 
     try {
         const response = await fetch('<?php echo $baseUrl; ?>/api/calculate-tax.php', {
@@ -980,8 +851,6 @@ async function recalculateTaxes() {
         console.error('Tax calc error:', e);
     }
 }
-
-// Initial tax calculation
 document.addEventListener('DOMContentLoaded', () => {
     recalculateTaxes();
 });
@@ -998,17 +867,14 @@ function updateShipping() {
     const shipping = deliveryType === 'pickup' ? 0 : window.defaultShipping;
     const codCharge = (paymentMethod === 'cash_on_delivery') ? window.codChargeValue : 0;
     
-    // Ensure total doesn't go negative
     const total = Math.max(0, window.cartTotal + shipping + window.currentTaxAmount - window.currentDiscountAmount + codCharge);
     
-    // Update DOM
     const shippingEl = document.getElementById('summaryShipping');
     const totalEl = document.getElementById('summaryTotal');
     
     if (shippingEl) shippingEl.innerText = '₹' + (Number.isInteger(shipping) ? shipping.toFixed(0) : shipping.toFixed(2));
     if (totalEl) totalEl.innerText = '₹' + (Number.isInteger(total) ? total.toFixed(0) : total.toFixed(2));
 
-    // Update COD Charge Row
     const codRow = document.getElementById('codChargeRow');
     const codSummaryVal = document.getElementById('summaryCodCharge');
     if (codCharge > 0) {
@@ -1017,8 +883,6 @@ function updateShipping() {
     } else {
         codRow.classList.add('hidden');
     }
-
-    // Update Pay Button Attributes for Tracking
     const payBtn = document.getElementById('razorpayPayButton');
     const cityInput = document.querySelector('input[name="city"]');
     if (payBtn) {
@@ -1063,7 +927,6 @@ function updatePaymentMethodUI() {
             circle.classList.add('border-blue-600', 'bg-blue-600');
             circle.classList.remove('border-gray-300');
             
-            // Toggle Buttons
             if (radio.value === 'cash_on_delivery') {
                 document.getElementById('razorpayPayButton').classList.add('hidden');
                 document.getElementById('codPlaceOrderButton').classList.remove('hidden');
@@ -1086,10 +949,7 @@ function updatePaymentMethodUI() {
     updateShipping();
 }
 
-
-// Listen for input changes to update tracking attributes immediately
 document.addEventListener('DOMContentLoaded', function() {
-    // Pincode Serviceability Check
     const zipInput = document.getElementById('zipInput');
     const cityInput = document.getElementById('cityInput');
     const stateInput = document.getElementById('customerStateInput');
@@ -1118,27 +978,18 @@ document.addEventListener('DOMContentLoaded', function() {
                     
                     if (data.success && data.is_serviceable) {
                         
-                        // Update Shipping if calculated
                         if (data.shipping_cost !== undefined) {
                             window.defaultShipping = parseFloat(data.shipping_cost);
                             updateShipping();
                         }
-
-                        // Handle COD Row Visibility
                         const codLabel = document.getElementById('payment_cod_label');
                         if (codLabel) {
-                            // If system COD is enabled, we keep the option visible
-                            // to avoid confusing the merchant/customer if the courier API 
-                            // returns false due to test mode or specific account limits.
-                            // Priority 1: System-wide COD toggle from API response
-                            // Priority 2: Initial system toggle from page load (fallback)
                             const isCodAllowedBySystem = data.system_cod_enabled !== undefined ? !!data.system_cod_enabled : window.systemCodEnabled;
                             
                             if (isCodAllowedBySystem) {
                                 codLabel.classList.remove('hidden');
                             } else {
                                 codLabel.classList.add('hidden');
-                                // If COD was selected but now disabled, switch to online
                                 const codRadio = codLabel.querySelector('input');
                                 if (codRadio && codRadio.checked) {
                                     const onlineRadio = document.querySelector('input[name="payment_method"][value="credit_card"]');
@@ -1153,15 +1004,12 @@ document.addEventListener('DOMContentLoaded', function() {
                         zipStatus.innerHTML = '<i class="fas fa-check-circle mr-1"></i> Delivery available to ' + data.city;
                         zipStatus.className = 'mt-2 text-xs text-green-600';
                         
-                        // Auto-fill City and State
                         if (cityInput) {
                             cityInput.value = data.city;
-                            // Trigger input event for tracking attributes
                             cityInput.dispatchEvent(new Event('input'));
                         }
                         if (stateInput) {
                             stateInput.value = data.state;
-                            // Trigger recalculate taxes if state changed
                             recalculateTaxes();
                         }
                         
@@ -1171,7 +1019,6 @@ document.addEventListener('DOMContentLoaded', function() {
                         zipStatus.innerHTML = '<i class="fas fa-times-circle mr-1"></i> ' + errorMsg;
                         zipStatus.className = 'mt-2 text-xs text-red-600';
                         
-                        // Only disable if user is asking for delivery
                         const deliveryTypeInput = document.querySelector('input[name="delivery_type"]:checked');
                         const deliveryType = deliveryTypeInput ? deliveryTypeInput.value : 'delivery';
                         if (deliveryType === 'delivery') {
@@ -1180,7 +1027,6 @@ document.addEventListener('DOMContentLoaded', function() {
                     }
                 } catch (error) {
                     console.error('Serviceability check error:', error);
-                    // Handle session timeout or auth required (data was not parsed in catch block usually, but fetch might succeed with 403)
                     zipStatus.innerHTML = '<i class="fas fa-exclamation-triangle mr-1"></i> Error checking serviceability';
                     zipStatus.className = 'mt-2 text-xs text-orange-600';
                 }
@@ -1188,28 +1034,22 @@ document.addEventListener('DOMContentLoaded', function() {
                 zipStatus.innerHTML = '';
             }
         });
-        
-        // Ensure buttons are re-enabled if user switches to pickup after a bad pincode
         document.querySelectorAll('input[name="delivery_type"]').forEach(radio => {
             radio.addEventListener('change', function() {
                 if (this.value === 'pickup') {
                     enablePaymentButtons(true);
                 } else {
-                    // Re-trigger zip check logic if switching back to delivery
                     zipInput.dispatchEvent(new Event('input'));
                 }
             });
         });
     }
 
-    // City Update logic already exists below, but we'll ensure it works with our new cityInput ID
     if (cityInput && payBtn) {
         cityInput.addEventListener('input', function() {
             payBtn.setAttribute('data-city', this.value);
         });
     }
-
-    // Discount Code Update
     const discountInput = document.getElementById('discountInput');
     const applyBtn = document.getElementById('btnApplyDiscount');
     if (discountInput && applyBtn) {
@@ -1218,30 +1058,19 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
 });
-
-
-    
-
-    
-
-
-// Error/Success Message Functions
 let errorMessageTimeout = null;
 let successMessageTimeout = null;
 
 function setBtnLoading(btn, isLoading) {
     if (isLoading) {
-        // Save original text if not already saved
         if (!btn.dataset.originalText) {
             btn.dataset.originalText = btn.innerHTML;
         }
-        // "Louder" button state: Pulsing, distinct text, spinner
         btn.innerHTML = '<i class="fas fa-circle-notch fa-spin mr-2"></i>Processing Order...';
         btn.disabled = true;
         btn.classList.add('opacity-90', 'cursor-not-allowed', 'animate-pulse');
         
     } else {
-        // Restore original text
         if (btn.dataset.originalText) {
             btn.innerHTML = btn.dataset.originalText;
         }
@@ -1254,13 +1083,10 @@ function showErrorMessage(message) {
     const container = document.getElementById('errorMessageContainer');
     const text = document.getElementById('errorMessageText');
     if (container && text) {
-        // Clear any existing timeout for auto-hide
         if (errorMessageTimeout) {
             clearTimeout(errorMessageTimeout);
             errorMessageTimeout = null;
         }
-        
-        // Clear any pending hide animation
         if (container._hideTimeout) {
             clearTimeout(container._hideTimeout);
             container._hideTimeout = null;
@@ -1268,17 +1094,9 @@ function showErrorMessage(message) {
         
         text.textContent = message;
         container.classList.remove('hidden');
-        
-        // Force reflow to enable transition
         void container.offsetWidth;
-        
-        // Animate in
         container.classList.remove('opacity-0', '-translate-y-4');
-        
-        // Scroll to top to show error
         window.scrollTo({ top: 0, behavior: 'smooth' });
-        
-        // Auto-hide after 5 seconds
         errorMessageTimeout = setTimeout(function() {
             hideErrorMessage();
         }, 5000);
@@ -1288,18 +1106,11 @@ function showErrorMessage(message) {
 function hideErrorMessage() {
     const container = document.getElementById('errorMessageContainer');
     if (container) {
-        // Animate out
         container.classList.add('opacity-0', '-translate-y-4');
-        
-        // Clear any pending hide animation
         if (container._hideTimeout) clearTimeout(container._hideTimeout);
-
-        // Wait for transition before setting display:none
         container._hideTimeout = setTimeout(() => {
             container.classList.add('hidden');
-        }, 500); // 500ms matches duration-500
-
-        // Clear timeout if message is manually closed
+        }, 500);
         if (errorMessageTimeout) {
             clearTimeout(errorMessageTimeout);
             errorMessageTimeout = null;
@@ -1311,7 +1122,6 @@ function showSuccessMessage(message) {
     const container = document.getElementById('successMessageContainer');
     const text = document.getElementById('successMessageText');
     if (container && text) {
-        // Clear any existing timeout
         if (successMessageTimeout) {
             clearTimeout(successMessageTimeout);
             successMessageTimeout = null;
@@ -1319,10 +1129,7 @@ function showSuccessMessage(message) {
         
         text.textContent = message;
         container.classList.remove('hidden');
-        // Scroll to top to show success
         window.scrollTo({ top: 0, behavior: 'smooth' });
-        
-        // Auto-hide after 5 seconds
         successMessageTimeout = setTimeout(function() {
             hideSuccessMessage();
         }, 5000);
@@ -1333,23 +1140,15 @@ function hideSuccessMessage() {
     const container = document.getElementById('successMessageContainer');
     if (container) {
         container.classList.add('hidden');
-        // Clear timeout if message is manually closed
         if (successMessageTimeout) {
             clearTimeout(successMessageTimeout);
             successMessageTimeout = null;
         }
     }
 }
-
-// Razorpay Integration
 const razorpayBaseUrl = '<?php echo $baseUrl; ?>';
-
-// NOTE: We do not define const for amounts here as they are dynamic (window.cartTotal etc)
-
 document.getElementById('razorpayPayButton').addEventListener('click', async function(e) {
     e.preventDefault();
-    
-    // Validate form fields
     const customerName = document.querySelector('input[name="customer_name"]').value.trim();
     const customerEmail = document.querySelector('input[name="customer_email"]').value.trim();
     const customerPhone = document.querySelector('input[name="phone"]').value.trim();
@@ -1361,35 +1160,25 @@ document.getElementById('razorpayPayButton').addEventListener('click', async fun
     const country = document.querySelector('input[name="country"]').value.trim();
     const deliveryTypeInput = document.querySelector('input[name="delivery_type"]:checked');
     const deliveryType = deliveryTypeInput ? deliveryTypeInput.value : 'delivery';
-    
-    // Hide any previous error messages
     hideErrorMessage();
-    
-    // Check validation - specifically checking 'country' now instead of countryCode
     if (!customerName || !customerEmail || !customerPhone || !address || !city || !state || !zip || !country) {
         console.error('[RAZORPAY] Validation failed: Missing required fields');
         showErrorMessage('Please fill in all required fields');
         return;
     }
-    
-    // Validate email
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     if (!emailRegex.test(customerEmail)) {
         console.error('[RAZORPAY] Validation failed: Invalid email address');
         showErrorMessage('Please enter a valid email address');
         return;
     }
-    
-    // Calculate final shipping and total based on delivery type USING GLOBAL VARIABLES
     const finalShipping = deliveryType === 'pickup' ? 0 : window.defaultShipping;
     const finalTotal = Math.max(0, window.cartTotal + finalShipping + window.currentTaxAmount - window.currentDiscountAmount);
     
-    // Disable button to prevent double clicks
     const button = this;
     setBtnLoading(button, true);
     
     try {
-        // Create Razorpay order
         const requestData = {
             customer_name: customerName,
             customer_email: customerEmail,
@@ -1415,8 +1204,6 @@ document.getElementById('razorpayPayButton').addEventListener('click', async fun
             setBtnLoading(button, false);
             return;
         }
-        
-        // Prepare order data for verification
         const orderInfo = {
             customer_name: customerName,
             customer_email: customerEmail,
@@ -1440,8 +1227,6 @@ document.getElementById('razorpayPayButton').addEventListener('click', async fun
             shipping_amount: finalShipping,
             tax_amount: 0
         };
-        
-        // Razorpay options
         const options = {
             key: orderData.razorpay_key,
             amount: orderData.amount,
@@ -1450,7 +1235,6 @@ document.getElementById('razorpayPayButton').addEventListener('click', async fun
             order_id: orderData.order_id,
             handler: async function(response) {
                 try {
-                    // Verify payment
                     const verifyResponse = await fetch(razorpayBaseUrl + '/api/razorpay/verify-payment.php', {
                         method: 'POST',
                         headers: {
@@ -1467,14 +1251,11 @@ document.getElementById('razorpayPayButton').addEventListener('click', async fun
                     const verifyData = await verifyResponse.json();
                     
                     if (verifyData.success) {
-                        // Ensure order_id exists
                         if (!verifyData.order_id) {
                             throw new Error('Order ID not received from server');
                         }
                         
-                        // Redirect to success page with order number
                         const successUrl = razorpayBaseUrl + '/order-success?order_number=' + encodeURIComponent(verifyData.order_number);
-                        // Use window.location.replace to prevent back button issues
                         window.location.replace(successUrl);
                     } else {
                         showErrorMessage(verifyData.message || 'Payment verification failed');
@@ -1510,8 +1291,6 @@ document.getElementById('razorpayPayButton').addEventListener('click', async fun
         setBtnLoading(button, false);
     }
 });
-
-/* Discount Code Handler */
 document.getElementById('btnApplyDiscount').addEventListener('click', function() {
     handleDiscount('apply');
 });
@@ -1528,12 +1307,10 @@ function handleDiscount(action) {
 
     if (discountTimeout) clearTimeout(discountTimeout);
     
-    // Validate apply
     if (action === 'apply' && !input.value.trim()) {
         if(errorMsg) {
             errorMsg.textContent = 'Please enter a discount code';
             errorMsg.classList.remove('hidden');
-            // Auto hide after 5 seconds
             discountTimeout = setTimeout(() => {
                 errorMsg.classList.add('hidden');
             }, 5000);
@@ -1542,13 +1319,9 @@ function handleDiscount(action) {
         }
         return;
     }
-    
-    // Clear errors
     if (errorMsg) errorMsg.classList.add('hidden');
     
     setBtnLoading(btn, true);
-    
-    // Prepare Data
     const data = {
         action: action,
         code: action === 'apply' ? input.value.trim() : ''
@@ -1564,24 +1337,21 @@ function handleDiscount(action) {
         setBtnLoading(btn, false);
         
         if (res.success) {
-            // Update UI State
             if (action === 'apply') {
                 document.getElementById('appliedState').classList.remove('hidden');
                 document.getElementById('inputState').classList.add('hidden');
                 document.getElementById('appliedCodeText').textContent = res.code;
                 document.getElementById('hiddenDiscountCode').value = res.code;
-                window.currentDiscountCode = res.code; // Update JS global
+                window.currentDiscountCode = res.code; 
                 showSuccessMessage(res.message);
             } else {
                 document.getElementById('appliedState').classList.add('hidden');
                 document.getElementById('inputState').classList.remove('hidden');
-                input.value = ''; // Clear input
+                input.value = '';
                 document.getElementById('hiddenDiscountCode').value = '';
-                window.currentDiscountCode = ''; // Update JS global
+                window.currentDiscountCode = '';
                 showSuccessMessage('Discount removed');
             }
-            
-            // Update Discount Row DOM
             const discountRow = document.getElementById('summaryDiscountRow');
             const discountAmountEl = document.getElementById('summaryDiscountAmount');
             
@@ -1591,20 +1361,14 @@ function handleDiscount(action) {
             } else {
                 if (discountRow) discountRow.classList.add('hidden');
             }
-            
-            // Update Global discount variable for `updateShipping` and Razorpay
             window.currentDiscountAmount = parseFloat(res.discount_amount);
-             
-            // Trigger recalculation (which handles shipping + new discount)
             updateShipping();
             
         } else {
-            // Error handling
             if (action === 'apply') {
                  if (errorMsg) {
                      errorMsg.textContent = res.message;
                      errorMsg.classList.remove('hidden');
-                     // Auto hide after 5 seconds
                      discountTimeout = setTimeout(() => {
                          errorMsg.classList.add('hidden');
                      }, 5000);
@@ -1623,8 +1387,6 @@ function handleDiscount(action) {
     });
 }
 </script>
-
-<!-- Razorpay Checkout Script -->
 <script src="https://checkout.razorpay.com/v1/checkout.js"></script>
 
 <style>
@@ -1685,10 +1447,8 @@ function handleDiscount(action) {
 </style>
 
 <script>
-// Handle form submission for COD button loading
 document.getElementById('checkoutForm').addEventListener('submit', function(e) {
     const codBtn = document.getElementById('codPlaceOrderButton');
-    // Only show loading if COD button is visible
     if (codBtn && !codBtn.classList.contains('hidden')) {
         setBtnLoading(codBtn, true);
     }
