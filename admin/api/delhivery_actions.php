@@ -83,7 +83,11 @@ if ($action === 'sync_all_shipments') {
             $newOrderStatus = mapDelhiveryStatusToOrderStatus($dStatus, $dStatusType);
 
             if ($newOrderStatus && $newOrderStatus !== $ord['order_status']) {
-                $db->execute("UPDATE orders SET order_status = ?, updated_at = NOW() WHERE id = ?", [$newOrderStatus, $ord['id']]);
+                if ($newOrderStatus === 'delivered') {
+                    $db->execute("UPDATE orders SET order_status = 'delivered', payment_status = CASE WHEN payment_method = 'cash_on_delivery' THEN 'paid' ELSE payment_status END, updated_at = NOW() WHERE id = ?", [$ord['id']]);
+                } else {
+                    $db->execute("UPDATE orders SET order_status = ?, updated_at = NOW() WHERE id = ?", [$newOrderStatus, $ord['id']]);
+                }
                 $updated++;
                 $details[] = "Order {$ord['order_number']}: {$ord['order_status']} -> $newOrderStatus";
             }
@@ -175,20 +179,40 @@ try {
 
             $result = $delhivery->track($waybill);
             if ($result['success']) {
-                // Auto-sync status if changed
+                $newStatus = $orderData['order_status'];
+                $newPaymentStatus = $orderData['payment_status'] ?? 'pending';
+
                 if (!empty($result['ShipmentData'][0]['Shipment']['Status']['Status'])) {
                     $dStatus = $result['ShipmentData'][0]['Shipment']['Status']['Status'];
                     $dStatusType = $result['ShipmentData'][0]['Shipment']['Status']['StatusType'] ?? '';
                     $mapped = mapDelhiveryStatusToOrderStatus($dStatus, $dStatusType);
+                    $db = Database::getInstance();
+
                     if ($mapped && $mapped !== $orderData['order_status']) {
-                        $db = Database::getInstance();
-                        $db->execute("UPDATE orders SET order_status = ?, updated_at = NOW() WHERE id = ?", [$mapped, $numericOrderId]);
+                        if ($mapped === 'delivered') {
+                            $db->execute("UPDATE orders SET order_status = 'delivered', payment_status = CASE WHEN payment_method = 'cash_on_delivery' THEN 'paid' ELSE payment_status END, updated_at = NOW() WHERE id = ?", [$numericOrderId]);
+                            if (($orderData['payment_method'] ?? '') === 'cash_on_delivery') {
+                                $newPaymentStatus = 'paid';
+                            }
+                        } else {
+                            $db->execute("UPDATE orders SET order_status = ?, updated_at = NOW() WHERE id = ?", [$mapped, $numericOrderId]);
+                        }
+                        $newStatus = $mapped;
+                    }
+
+                    // Also auto-fix payment for already-delivered COD orders if still pending
+                    $isNowDelivered = ($mapped === 'delivered') || ($orderData['order_status'] === 'delivered');
+                    if ($isNowDelivered && ($orderData['payment_method'] ?? '') === 'cash_on_delivery' && strtolower((string)($orderData['payment_status'] ?? '')) !== 'paid') {
+                        $db->execute("UPDATE orders SET payment_status = 'paid', updated_at = NOW() WHERE id = ?", [$numericOrderId]);
+                        $newPaymentStatus = 'paid';
                     }
                 }
 
                 echo json_encode([
                     'success' => true, 
                     'status' => 'success',
+                    'new_order_status' => $newStatus,
+                    'new_payment_status' => $newPaymentStatus,
                     'data' => $result, 
                     'debug' => $delhivery->lastRequest
                 ]);

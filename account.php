@@ -341,9 +341,10 @@ if (!$isAjax) {
                                             <div>
                                                 <p class="text-gray-400 font-bold uppercase tracking-widest text-[10px] mb-2">Tracking Number</p>
                                                 <?php if (!empty($order['tracking_number'])): ?>
-                                                    <p class="font-bold text-blue-600 cursor-pointer hover:underline" onclick="window.open('https://www.delhivery.com/track/package/<?php echo urlencode($order['tracking_number']); ?>', '_blank')">
-                                                        <?php echo htmlspecialchars($order['tracking_number']); ?>
-                                                    </p>
+                                                    <a href="https://www.delhivery.com/track/package/<?php echo urlencode($order['tracking_number']); ?>" target="_blank" class="font-bold text-blue-600 hover:underline flex items-center gap-1.5" title="Track on Delhivery">
+                                                        <span><?php echo htmlspecialchars($order['tracking_number']); ?></span>
+                                                        <i class="fas fa-external-link-alt text-xs text-blue-400"></i>
+                                                    </a>
                                                 <?php else: ?>
                                                     <p class="font-bold text-gray-400">Not assigned yet</p>
                                                 <?php endif; ?>

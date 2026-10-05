@@ -25,15 +25,17 @@ class Delhivery {
         // Settings::get() has built-in store_id fallback chain
         // Trim the token when fetching it from Settings
         $rawToken = $token ?: trim($this->settings->get('delhivery_api_token', '', $storeId));
-        $mode = $this->settings->get('delhivery_mode', 'test', $storeId);
+        $mode = $this->settings->get('delhivery_mode', 'live', $storeId);
         
-        // Final fallback for mode if still empty
-        if (empty($mode)) $mode = 'test';
+        // Default to 'live' if empty or set to test (user does not use staging and has production key only)
+        if (empty($mode) || $mode === 'test') {
+            $mode = 'live';
+        }
         
         // Trim any accidental spaces (redundant now, but harmless)
         $this->token = trim($rawToken);
         $this->isTest = ($mode === 'test');
-        $this->baseUrl = ($mode === 'live') ? 'https://track.delhivery.com' : 'https://staging-express.delhivery.com';
+        $this->baseUrl = ($mode === 'test') ? 'https://staging-express.delhivery.com' : 'https://track.delhivery.com';
         $this->expressUrl = $this->baseUrl;
     }
 
@@ -246,6 +248,27 @@ class Delhivery {
         $fName  = substr($fName, 0, 30);
         $fAdd   = !empty($fAdd) ? $fAdd : 'Address Not Provided';
 
+        // Calculate package dimensions (Length x Width x Height in cm)
+        $shipLength = !empty($items[0]['length']) && (float)$items[0]['length'] > 0 ? (float)$items[0]['length'] : 10;
+        $shipWidth  = !empty($items[0]['width']) && (float)$items[0]['width'] > 0 ? (float)$items[0]['width'] : 10;
+        $shipHeight = !empty($items[0]['height']) && (float)$items[0]['height'] > 0 ? (float)$items[0]['height'] : 10;
+
+        // Calculate total order dead weight in GRAMS (Delhivery /api/cmu/create.json expects weight in gms)
+        $totalWeightKg = (float)($orderData['total_weight'] ?? 0);
+        if ($totalWeightKg <= 0 && !empty($items)) {
+            foreach ($items as $item) {
+                $pWeight = (float)($item['weight'] ?? 0);
+                $pQty = (int)($item['quantity'] ?? 1);
+                $totalWeightKg += ($pWeight * $pQty);
+            }
+        }
+        if ($totalWeightKg <= 0) {
+            $totalWeightKg = 0.5; // Fallback to standard 0.5 kg (500 gm)
+        }
+        // In local DB product weight is in KG (e.g. 0.50). If < 50, convert to grams (0.5 kg -> 500 gm).
+        $weightInGrams = ($totalWeightKg < 50) ? round($totalWeightKg * 1000) : round($totalWeightKg);
+        $finalWeightGrams = max(50, (int)$weightInGrams);
+
         $dataPayload = [
             'shipments' => [
                 [
@@ -274,9 +297,10 @@ class Delhivery {
                     'seller_inv' => '',
                     'quantity' => (string)$totalQty,
                     'waybill' => '',
-                    'shipment_width' => number_format((float)($items[0]['width'] > 0 ? $items[0]['width'] : 10), 2, '.', ''),
-                    'shipment_height' => number_format((float)($items[0]['height'] > 0 ? $items[0]['height'] : 10), 2, '.', ''),
-                    'weight' => number_format((float)($orderData['total_weight'] ?: 0.5), 2, '.', ''),
+                    'shipment_length' => number_format((float)$shipLength, 2, '.', ''),
+                    'shipment_width' => number_format((float)$shipWidth, 2, '.', ''),
+                    'shipment_height' => number_format((float)$shipHeight, 2, '.', ''),
+                    'weight' => (string)$finalWeightGrams,
                     'shipping_mode' => 'Surface',
                     'address_type' => 'home'
                 ]

@@ -158,6 +158,27 @@ class Email {
     }
     
     /**
+     * Send tracking verification OTP email
+     */
+    public function sendTrackingOTP($to, $otp, $awb, $orderNumber = '') {
+        $siteName = $this->settings->get('site_name', SITE_NAME, $this->storeId);
+        $subject = "Your Shipment Tracking OTP - " . $siteName;
+        $orderInfo = !empty($orderNumber) ? "for Order <strong>#$orderNumber</strong> (AWB: <strong>$awb</strong>)" : "for AWB <strong>$awb</strong>";
+        $content = "
+            <h1 style='text-align: center; color: #111827; font-size: 24px; margin-bottom: 8px;'>Shipment Verification Code</h1>
+            <p style='text-align: center; color: #4b5563; font-size: 15px;'>Use the one-time code below to access complete tracking details $orderInfo on <strong>$siteName</strong>.</p>
+            <div style='background: #f3f4f6; padding: 25px; text-align: center; border-radius: 12px; margin: 24px 0; border: 1px dashed #d1d5db;'>
+                <div style='font-size: 38px; font-weight: 800; color: #111827; letter-spacing: 8px; font-family: monospace;'>{$otp}</div>
+                <div style='font-size: 12px; color: #6b7280; margin-top: 8px;'>Valid for 10 minutes</div>
+            </div>
+            <p style='color: #6b7280; font-size: 13px; text-align: center;'>If you did not request this tracking verification, please ignore this email.</p>
+        ";
+        
+        $message = $this->getEmailTemplate($subject, $content);
+        return $this->send($to, $subject, $message);
+    }
+    
+    /**
      * Send order confirmation email
      */
     public function sendOrderConfirmation($to, $orderNumber, $customerName, $totalAmount, $items, $orderDetails = []) {

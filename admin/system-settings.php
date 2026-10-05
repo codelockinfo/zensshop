@@ -761,13 +761,16 @@ unset($_SESSION['error']);
                 <div class="grid grid-cols-1 gap-4">
                     <?php 
                     $delhiveryFields = [
-                        'delhivery_mode' => ['label' => 'Delhivery Mode', 'type' => 'select', 'options' => ['test' => 'Test (Staging)', 'live' => 'Live (Production)'], 'group' => 'api'],
+                        'delhivery_mode' => ['label' => 'Delhivery Mode', 'type' => 'select', 'options' => ['live' => 'Live (Production)', 'test' => 'Test (Staging)'], 'group' => 'api'],
                         'delhivery_api_token' => ['label' => 'Delhivery API Token', 'placeholder' => 'Enter your Delhivery Token', 'type' => 'password', 'group' => 'api'],
                         'delhivery_warehouse_name' => ['label' => 'Delhivery Warehouse Name (Pickup Location Name)', 'placeholder' => 'Must match Warehouse Name in Delhivery One', 'group' => 'api'],
                         'delhivery_source_pincode' => ['label' => 'Warehouse Pincode', 'placeholder' => 'e.g. 395006 (Required for shipping calculation)', 'group' => 'api'],
                     ];
                     foreach ($delhiveryFields as $key => $field): 
                          $val = $settings->get($key, '');
+                         if ($key === 'delhivery_mode' && (empty($val) || $val === 'test')) {
+                             $val = 'live'; // User uses production key only
+                         }
                     ?>
                         <div>
                             <label class="block text-sm font-medium text-gray-700 mb-1"><?php echo $field['label']; ?></label>

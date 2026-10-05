@@ -150,7 +150,7 @@ if (isset($_GET['ajax_tab'])) {
                             <button onclick="window.open('<?php echo url('admin/api/delhivery_actions?action=download_label&order_number='.$order['order_number']); ?>')" class="w-7 h-7 flex items-center justify-center text-green-600 hover:bg-green-50 rounded-full transition-colors border border-green-200" title="Print Shipping Label">
                                 <i class="fas fa-print text-xs"></i>
                             </button>
-                            <button onclick="window.open('https://www.delhivery.com/track/package/<?php echo $awb; ?>')" class="w-7 h-7 flex items-center justify-center text-blue-600 hover:bg-blue-50 rounded-full transition-colors border border-blue-200" title="Track on Delhivery">
+                            <button onclick="window.open('https://www.delhivery.com/track/package/<?php echo $awb; ?>', '_blank')" class="w-7 h-7 flex items-center justify-center text-blue-600 hover:bg-blue-50 rounded-full transition-colors border border-blue-200" title="Track on Delhivery Official Site">
                                 <i class="fas fa-search-location text-xs"></i>
                             </button>
                             <?php if (in_array($order['order_status'], ['processing', 'ready_for_pickup'])): ?>
@@ -219,39 +219,27 @@ $countAll = $db->fetchOne("SELECT COUNT(*) as count FROM orders WHERE tracking_n
 <div class="flex border-b border-gray-200 mb-6 overflow-x-auto" id="logisticsTabs">
     <a href="javascript:void(0)" onclick="loadTabData('pending_awb')" data-tab="pending_awb" class="tab-btn px-6 py-3 border-b-2 font-medium text-sm whitespace-nowrap <?php echo $tab === 'pending_awb' ? 'active border-blue-600 text-blue-600' : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'; ?>">
         Pending AWB
-        <?php if ($countPending > 0): ?>
-            <span class="ml-2 px-2 py-0.5 bg-blue-100 text-blue-600 text-[10px] rounded-full font-bold"><?php echo $countPending; ?></span>
-        <?php endif; ?>
+        <span id="badge-pending_awb" class="ml-2 px-2 py-0.5 bg-blue-100 text-blue-600 text-[10px] rounded-full font-bold <?php echo $countPending > 0 ? '' : 'hidden'; ?>"><?php echo $countPending; ?></span>
     </a>
     <a href="javascript:void(0)" onclick="loadTabData('ready_to_ship')" data-tab="ready_to_ship" class="tab-btn px-6 py-3 border-b-2 font-medium text-sm whitespace-nowrap <?php echo $tab === 'ready_to_ship' ? 'active border-orange-600 text-orange-600' : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'; ?>">
         Ready To Ship
-        <?php if ($countReady > 0): ?>
-            <span class="ml-2 px-2 py-0.5 bg-orange-100 text-orange-600 text-[10px] rounded-full font-bold"><?php echo $countReady; ?></span>
-        <?php endif; ?>
+        <span id="badge-ready_to_ship" class="ml-2 px-2 py-0.5 bg-orange-100 text-orange-600 text-[10px] rounded-full font-bold <?php echo $countReady > 0 ? '' : 'hidden'; ?>"><?php echo $countReady; ?></span>
     </a>
     <a href="javascript:void(0)" onclick="loadTabData('ready_for_pickup')" data-tab="ready_for_pickup" class="tab-btn px-6 py-3 border-b-2 font-medium text-sm whitespace-nowrap <?php echo $tab === 'ready_for_pickup' ? 'active border-purple-600 text-purple-600' : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'; ?>">
         Ready For Pickup
-        <?php if ($countPickup > 0): ?>
-            <span class="ml-2 px-2 py-0.5 bg-purple-100 text-purple-600 text-[10px] rounded-full font-bold"><?php echo $countPickup; ?></span>
-        <?php endif; ?>
+        <span id="badge-ready_for_pickup" class="ml-2 px-2 py-0.5 bg-purple-100 text-purple-600 text-[10px] rounded-full font-bold <?php echo $countPickup > 0 ? '' : 'hidden'; ?>"><?php echo $countPickup; ?></span>
     </a>
     <a href="javascript:void(0)" onclick="loadTabData('in_transit')" data-tab="in_transit" class="tab-btn px-6 py-3 border-b-2 font-medium text-sm whitespace-nowrap <?php echo $tab === 'in_transit' ? 'active border-blue-600 text-blue-600' : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'; ?>">
         In Transit
-        <?php if ($countTransit > 0): ?>
-            <span class="ml-2 px-2 py-0.5 bg-blue-100 text-blue-600 text-[10px] rounded-full font-bold"><?php echo $countTransit; ?></span>
-        <?php endif; ?>
+        <span id="badge-in_transit" class="ml-2 px-2 py-0.5 bg-blue-100 text-blue-600 text-[10px] rounded-full font-bold <?php echo $countTransit > 0 ? '' : 'hidden'; ?>"><?php echo $countTransit; ?></span>
     </a>
     <a href="javascript:void(0)" onclick="loadTabData('rto')" data-tab="rto" class="tab-btn px-6 py-3 border-b-2 font-medium text-sm whitespace-nowrap <?php echo $tab === 'rto' ? 'active border-red-600 text-red-600' : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'; ?>">
         RTO In-Transit
-        <?php if ($countRto > 0): ?>
-            <span class="ml-2 px-2 py-0.5 bg-red-100 text-red-600 text-[10px] rounded-full font-bold"><?php echo $countRto; ?></span>
-        <?php endif; ?>
+        <span id="badge-rto" class="ml-2 px-2 py-0.5 bg-red-100 text-red-600 text-[10px] rounded-full font-bold <?php echo $countRto > 0 ? '' : 'hidden'; ?>"><?php echo $countRto; ?></span>
     </a>
     <a href="javascript:void(0)" onclick="loadTabData('delivered')" data-tab="delivered" class="tab-btn px-6 py-3 border-b-2 font-medium text-sm whitespace-nowrap <?php echo $tab === 'delivered' ? 'active border-green-600 text-green-600' : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'; ?>">
         Delivered
-        <?php if ($countDelivered > 0): ?>
-            <span class="ml-2 px-2 py-0.5 bg-green-100 text-green-600 text-[10px] rounded-full font-bold"><?php echo $countDelivered; ?></span>
-        <?php endif; ?>
+        <span id="badge-delivered" class="ml-2 px-2 py-0.5 bg-green-100 text-green-600 text-[10px] rounded-full font-bold <?php echo $countDelivered > 0 ? '' : 'hidden'; ?>"><?php echo $countDelivered; ?></span>
     </a>
     <a href="javascript:void(0)" onclick="loadTabData('all_shipments')" data-tab="all_shipments" class="tab-btn px-6 py-3 border-b-2 font-medium text-sm whitespace-nowrap <?php echo $tab === 'all_shipments' ? 'active border-gray-800 text-gray-800' : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'; ?>">
         All Shipments
@@ -439,8 +427,29 @@ async function startTrackingFetch() {
                 
                 // Update Badge
                 if (statusCell) {
-                    const statusClass = status.includes('Delivered') ? 'bg-green-100 text-green-700' : 'bg-blue-100 text-blue-700';
+                    const isDelivered = status.toLowerCase().includes('delivered');
+                    const statusClass = isDelivered ? 'bg-green-100 text-green-700' : 'bg-blue-100 text-blue-700';
                     statusCell.innerHTML = `<span class="status-pill text-[10px] ${statusClass}">${status}</span>`;
+
+                    if (isDelivered) {
+                        const activeTabBtn = document.querySelector('.tab-btn.active');
+                        if (activeTabBtn && activeTabBtn.dataset.tab === 'in_transit') {
+                            const transitBadge = document.getElementById('badge-in_transit');
+                            const delBadge = document.getElementById('badge-delivered');
+                            if (transitBadge && !transitBadge.dataset.adjusted) {
+                                transitBadge.dataset.adjusted = '1';
+                                const val = Math.max(0, parseInt(transitBadge.innerText || '1') - 1);
+                                transitBadge.innerText = val;
+                                if (val === 0) transitBadge.classList.add('hidden');
+                            }
+                            if (delBadge && !delBadge.dataset.adjusted) {
+                                delBadge.dataset.adjusted = '1';
+                                const val = parseInt(delBadge.innerText || '0') + 1;
+                                delBadge.innerText = val;
+                                delBadge.classList.remove('hidden');
+                            }
+                        }
+                    }
                 }
                 
                 // Update Last Update info

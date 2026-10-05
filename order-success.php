@@ -323,7 +323,10 @@ nav.bg-white.sticky.top-0 {
                         <?php if (!empty($orderData['tracking_number'])): ?>
                         <div class="mt-6 pt-6 border-t border-gray-200">
                             <label class="block text-sm font-medium text-gray-700 mb-2">Tracking Number:</label>
-                            <p class="text-sm text-gray-900 font-mono"><?php echo htmlspecialchars($orderData['tracking_number']); ?></p>
+                            <a href="https://www.delhivery.com/track/package/<?php echo urlencode($orderData['tracking_number']); ?>" target="_blank" class="inline-flex items-center gap-2 text-sm text-blue-600 font-mono font-bold hover:underline" title="Track on Delhivery">
+                                <span><?php echo htmlspecialchars($orderData['tracking_number']); ?></span>
+                                <i class="fas fa-external-link-alt text-xs text-blue-400"></i>
+                            </a>
                         </div>
                         <?php else: ?>
                         <div class="mt-6 pt-6 border-t border-gray-200">

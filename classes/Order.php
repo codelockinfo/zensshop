@@ -403,7 +403,16 @@ class Order {
         if (strtolower((string)$status) === 'cancelled') {
             $this->cancelAssociatedShipment($id);
         }
-        return $this->db->execute("UPDATE orders SET order_status = ? WHERE id = ? AND store_id = ?", [$status, $id, $storeId]);
+        if (strtolower((string)$status) === 'delivered') {
+            return $this->db->execute(
+                "UPDATE orders 
+                 SET order_status = 'delivered', 
+                     payment_status = CASE WHEN payment_method = 'cash_on_delivery' THEN 'paid' ELSE payment_status END 
+                 WHERE id = ? AND (store_id = ? OR ? IS NULL)", 
+                [$id, $storeId, $storeId]
+            );
+        }
+        return $this->db->execute("UPDATE orders SET order_status = ? WHERE id = ? AND (store_id = ? OR ? IS NULL)", [$status, $id, $storeId, $storeId]);
     }
     public function updatePaymentStatus($id, $status, $storeId = null) {
         if (!$storeId) $storeId = $_SESSION['store_id'] ?? null;
@@ -421,6 +430,12 @@ class Order {
         $updates = [];
         $params = [];
         $allowedFields = ['order_status', 'payment_status', 'tracking_number', 'notes', 'customer_name', 'customer_email', 'customer_phone', 'billing_address', 'shipping_address', 'subtotal', 'discount_amount', 'shipping_amount', 'tax_amount', 'total_amount', 'payment_method', 'delivery_date'];
+        
+        // Auto-mark COD paid if status is changed to delivered and payment_status is not explicitly specified
+        if (isset($data['order_status']) && strtolower((string)$data['order_status']) === 'delivered' && !isset($data['payment_status'])) {
+            $updates[] = "payment_status = CASE WHEN payment_method = 'cash_on_delivery' THEN 'paid' ELSE payment_status END";
+        }
+
         foreach ($allowedFields as $field) {
             if (array_key_exists($field, $data)) {
                 if ($field === 'billing_address' || $field === 'shipping_address') {

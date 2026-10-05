@@ -42,6 +42,15 @@ if (!$orderData) {
     exit;
 }
 
+// Auto-mark COD orders as paid if order is delivered
+if (strtolower((string)($orderData['order_status'] ?? '')) === 'delivered' 
+    && ($orderData['payment_method'] ?? '') === 'cash_on_delivery' 
+    && strtolower((string)($orderData['payment_status'] ?? '')) !== 'paid') {
+    $db = Database::getInstance();
+    $db->execute("UPDATE orders SET payment_status = 'paid', updated_at = NOW() WHERE id = ?", [$orderData['id']]);
+    $orderData['payment_status'] = 'paid';
+}
+
 // Decode addresses
 $billingAddress = !empty($orderData['billing_address']) ? json_decode($orderData['billing_address'], true) : null;
 $shippingAddress = !empty($orderData['shipping_address']) ? json_decode($orderData['shipping_address'], true) : null;
@@ -129,7 +138,7 @@ require_once __DIR__ . '/../../includes/admin-header.php';
                     <?php endif; ?>
                 </div>
                 <div class="text-right">
-                    <span class="px-3 py-1 rounded text-sm font-medium <?php 
+                    <span id="headerOrderStatusBadge" class="px-3 py-1 rounded text-sm font-medium <?php 
                         echo $orderData['order_status'] === 'delivered' ? 'bg-green-100 text-green-800' : 
                             ($orderData['order_status'] === 'cancelled' ? 'bg-red-100 text-red-800' : 
                             ($orderData['order_status'] === 'shipped' ? 'bg-blue-100 text-blue-800' : 
@@ -143,7 +152,7 @@ require_once __DIR__ . '/../../includes/admin-header.php';
             <div class="grid grid-cols-2 gap-4 pt-4 border-t">
                 <div>
                     <p class="text-sm text-gray-500">Payment Status</p>
-                    <p class="font-medium <?php echo $orderData['payment_status'] === 'paid' ? 'text-green-600' : 'text-yellow-600'; ?>">
+                    <p id="headerPaymentStatusText" class="font-medium <?php echo $orderData['payment_status'] === 'paid' ? 'text-green-600' : 'text-yellow-600'; ?>">
                         <?php echo ucfirst($orderData['payment_status']); ?>
                     </p>
                 </div>
@@ -361,19 +370,31 @@ require_once __DIR__ . '/../../includes/admin-header.php';
                         </div>
                     </div>
                     
-                    <div id="trackingStatusContainer" class="p-3 bg-blue-50 rounded border border-blue-100 text-sm">
-                        <i class="fas fa-sync fa-spin mr-2"></i> Fetching status...
-                    </div>
+                    <?php if (strtolower((string)($orderData['order_status'] ?? '')) === 'delivered'): ?>
+                        <div id="trackingStatusContainer" class="p-3 bg-green-50 rounded border border-green-200 text-sm">
+                            <span class="font-bold text-green-800 flex items-center gap-1.5"><i class="fas fa-check-circle text-green-600"></i> Delivered to consignee</span>
+                            <span class="text-xs text-green-600">Shipment completed</span>
+                        </div>
+                    <?php else: ?>
+                        <div id="trackingStatusContainer" class="p-3 bg-blue-50 rounded border border-blue-100 text-sm">
+                            <i class="fas fa-sync fa-spin mr-2"></i> Fetching status...
+                        </div>
+                    <?php endif; ?>
 
-                    <div class="flex flex-col gap-2">
+                        <a href="https://www.delhivery.com/track/package/<?php echo urlencode($orderData['tracking_number']); ?>" target="_blank" 
+                           class="w-full text-center bg-slate-100 hover:bg-slate-200 text-slate-800 py-2 rounded text-sm font-semibold transition flex items-center justify-center">
+                            <i class="fas fa-external-link-alt mr-2 text-xs"></i> Track on Delhivery Website
+                        </a>
                         <button onclick="handleDelhiveryAction('track_shipment', event)" 
                                  class="w-full bg-blue-600 text-white py-2 rounded text-sm font-semibold hover:bg-blue-700 transition">
-                            <i class="fas fa-search-location mr-2"></i> Track Live Status
+                            <i class="fas fa-sync mr-2"></i> Sync Status with Delhivery
                         </button>
-                        <button onclick="handleDelhiveryAction('cancel_shipment', event)" 
+                        <?php if (!in_array(strtolower((string)($orderData['order_status'] ?? '')), ['delivered', 'cancelled'])): ?>
+                        <button id="cancelShipmentBtn" onclick="handleDelhiveryAction('cancel_shipment', event)" 
                                  class="w-full bg-white border border-red-200 text-red-600 py-2 rounded text-sm font-semibold hover:bg-red-50 transition">
                             <i class="fas fa-times-circle mr-2"></i> Cancel Shipment
                         </button>
+                        <?php endif; ?>
                     </div>
                 </div>
             <?php endif; ?>
@@ -447,10 +468,17 @@ require_once __DIR__ . '/../../includes/admin-header.php';
                 const data = await response.json();
                 if (data.success) {
                     if (action === 'track_shipment') {
-                        // Display tracking data in console
-                        console.log('Delhivery Live Tracking Data:', data.data);
-                        // Also proactively open the live webpage
-                        window.open(`https://www.delhivery.com/track/package/<?php echo $orderData['tracking_number'] ?? ''; ?>`, '_blank');
+                        showDelhiveryBanner('success', 'Status synchronized with Delhivery live tracking!');
+                        if (data.new_order_status) {
+                            updateOrderStatusUI(data.new_order_status, data.new_payment_status);
+                        }
+                        if (data.data && data.data.ShipmentData && data.data.ShipmentData[0]) {
+                            const ship = data.data.ShipmentData[0].Shipment;
+                            const statusDiv = document.getElementById('trackingStatusContainer');
+                            if (statusDiv) {
+                                statusDiv.innerHTML = `<span class="font-bold text-blue-800">${ship.Status.Status || 'Active'}</span><br><span class="text-xs text-gray-500">${ship.Status.Instructions || ''}</span>`;
+                            }
+                        }
                     } else {
                         location.reload();
                     }
@@ -464,6 +492,27 @@ require_once __DIR__ . '/../../includes/admin-header.php';
             } finally {
                 btn.disabled = false;
                 btn.innerHTML = originalContent;
+            }
+        }
+
+        function updateOrderStatusUI(newStatus, newPaymentStatus) {
+            const badge = document.getElementById('headerOrderStatusBadge');
+            if (badge && newStatus) {
+                badge.innerText = newStatus.charAt(0).toUpperCase() + newStatus.slice(1);
+                badge.className = 'px-3 py-1 rounded text-sm font-medium ' + (
+                    newStatus === 'delivered' ? 'bg-green-100 text-green-800' :
+                    (newStatus === 'cancelled' ? 'bg-red-100 text-red-800' :
+                    (newStatus === 'shipped' ? 'bg-blue-100 text-blue-800' : 'bg-yellow-100 text-yellow-800'))
+                );
+            }
+            const payText = document.getElementById('headerPaymentStatusText');
+            if (payText && newPaymentStatus) {
+                payText.innerText = newPaymentStatus.charAt(0).toUpperCase() + newPaymentStatus.slice(1);
+                payText.className = 'font-medium ' + (newPaymentStatus === 'paid' ? 'text-green-600' : 'text-yellow-600');
+            }
+            if (newStatus === 'delivered') {
+                const cancelBtn = document.getElementById('cancelShipmentBtn');
+                if (cancelBtn) cancelBtn.classList.add('hidden');
             }
         }
 
@@ -481,6 +530,9 @@ require_once __DIR__ . '/../../includes/admin-header.php';
                 if (data.success && data.data && data.data.ShipmentData && data.data.ShipmentData[0]) {
                     const ship = data.data.ShipmentData[0].Shipment;
                     statusDiv.innerHTML = `<span class="font-bold text-blue-800">${ship.Status.Status || 'Active'}</span><br><span class="text-xs text-gray-500">${ship.Status.Instructions || ''}</span>`;
+                    if (data.new_order_status) {
+                        updateOrderStatusUI(data.new_order_status, data.new_payment_status);
+                    }
                 } else {
                     const errorMsg = data.message || 'Status unavailable';
                     statusDiv.innerHTML = `<span class="text-gray-500 italic"><i class="fas fa-info-circle mr-1"></i> ${errorMsg}</span>`;
