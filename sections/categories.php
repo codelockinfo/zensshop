@@ -161,7 +161,7 @@ $sectionId = 'cat-section-' . rand(1000, 9999);
                         <div class="swiper-slide !w-[120px] md:!w-[150px] text-center">
                             <a href="<?php echo htmlspecialchars($link); ?>" class="group block w-full px-1">
                                 <div class="relative mb-3 overflow-hidden rounded-full aspect-square cat-img-container shadow-sm border border-gray-100">
-                                    <img src="<?php echo htmlspecialchars($image); ?>" alt="<?php echo htmlspecialchars($category['title']); ?>" 
+                                    <img src="<?php echo htmlspecialchars($image); ?>" alt="<?php echo htmlspecialchars(!empty($category['title']) ? $category['title'] : 'Category'); ?>" 
                                          class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-300"
                                          onerror="this.src='https://placehold.co/600x600?text=Category+Image'">
                                 </div>
@@ -195,7 +195,7 @@ $sectionId = 'cat-section-' . rand(1000, 9999);
                 ?>
                 <a href="<?php echo htmlspecialchars($link); ?>" class="group text-center <?php echo $mobileGridClass; ?> md:w-[30%] lg:w-[14%] flex-shrink-0">
                     <div class="relative mb-4 overflow-hidden rounded-full aspect-square mx-auto">
-                        <img src="<?php echo htmlspecialchars($image); ?>" alt="<?php echo htmlspecialchars($category['title']); ?>" 
+                        <img src="<?php echo htmlspecialchars($image); ?>" alt="<?php echo htmlspecialchars(!empty($category['title']) ? $category['title'] : 'Category'); ?>" 
                              class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-300"
                              onerror="this.src='https://placehold.co/600x600?text=Category+Image'">
                     </div>

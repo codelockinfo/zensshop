@@ -394,7 +394,10 @@ $qv_policy_color = $qvStyles['policy_color'] ?? '#374151';
                     <div class="mb-4">
                         <?php 
                         $logoType = $getFooterSetting('footer_logo_type', 'text');
-                        $logoText = $getFooterSetting('footer_logo_text', 'CookPro');
+                        $logoText = $getFooterSetting('footer_logo_text', '');
+                        if (empty($logoText) || $logoText === 'CookPro') {
+                            $logoText = !empty($siteLogoText) ? $siteLogoText : 'HomeProX';
+                        }
                         $logoImage = $getFooterSetting('footer_logo_image', '');
                         
                         if ($logoType === 'image' && !empty($logoImage)) {
@@ -510,7 +513,7 @@ $qv_policy_color = $qvStyles['policy_color'] ?? '#374151';
                             <button class="flex items-center gap-2 text-black hover:text-gray-600 transition cursor-pointer focus:outline-none whitespace-nowrap" id="footerCurrencySelector">
                                 <span class="flex items-center gap-2">
                                     <span class="rounded-full border border-gray-300 overflow-hidden" style="width: 20px; height: 20px; display: inline-flex; align-items: center; justify-content: center;">
-                                        <img src="<?php echo $selectedCurrency['flag']; ?>" alt="<?php echo $selectedCurrency['name']; ?>" id="footerSelectedFlagImg" class="w-full h-full object-cover" style="width: 20px; height: 20px;">
+                                        <img src="<?php echo $selectedCurrency['flag']; ?>" alt="<?php echo htmlspecialchars($selectedCurrency['name'] . ' Flag'); ?>" id="footerSelectedFlagImg" class="w-full h-full object-cover" style="width: 20px; height: 20px;">
                                     </span>
                                     <span class="text-sm">
                                         <span class="text-gray-500" id="footerCountryCode"></span>
@@ -526,7 +529,7 @@ $qv_policy_color = $qvStyles['policy_color'] ?? '#374151';
                                 <a href="#" class="block px-4 py-2.5 hover:bg-gray-50 transition footer-currency-option" data-flag="<?php echo $curr['flag']; ?>" data-code="<?php echo $curr['code']; ?>" data-currency="<?php echo $curr['name'] . ' (' . $curr['currency_name'] . ' ' . $curr['symbol'] . ')'; ?>">
                                     <span class="flex items-center gap-2">
                                         <span class="rounded-full border border-gray-300 overflow-hidden" style="width: 20px; height: 20px; display: inline-flex; align-items: center; justify-content: center;">
-                                            <img src="<?php echo $curr['flag']; ?>" alt="<?php echo $curr['name']; ?>" class="w-full h-full object-cover" style="width: 20px; height: 20px;">
+                                            <img src="<?php echo $curr['flag']; ?>" alt="<?php echo htmlspecialchars($curr['name'] . ' Flag'); ?>" class="w-full h-full object-cover" style="width: 20px; height: 20px;">
                                         </span>
                                         <span class="text-sm"><?php echo $curr['name'] . ' (' . $curr['currency_name'] . ' ' . $curr['symbol'] . ')'; ?></span>
                                     </span>
@@ -595,7 +598,7 @@ $qv_policy_color = $qvStyles['policy_color'] ?? '#374151';
                 <i class="fas fa-times text-xl"></i>
             </button>
             <div class="flex flex-col items-center mb-6 pt-4">
-                <img id="removeConfirmImage" src="" alt="Product" class="w-20 h-20 object-cover rounded-lg mb-4 border border-gray-200">
+                <img id="removeConfirmImage" src="" alt="Product item" class="w-20 h-20 object-cover rounded-lg mb-4 border border-gray-200">
                 <h3 id="removeConfirmName" class="text-base font-semibold text-center mb-4 text-gray-800"></h3>
                 <p class="text-gray-600 text-center text-sm mb-6">Would you like to add this product in wishlist?</p>
             </div>

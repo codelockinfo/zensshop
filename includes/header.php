@@ -43,14 +43,21 @@ if ($headerMenuIdVal) {
         $headerMenuItems = buildMenuTree($allItems);
     }
 }
+$siteNameVal = $settingsObj->get('site_name', '');
 $siteLogoType = $settingsObj->get('site_logo_type', 'image');
-$siteLogoText = $settingsObj->get('site_logo_text', 'CookPro');
+$siteLogoText = $settingsObj->get('site_logo_text', '');
+if (empty($siteLogoText) || $siteLogoText === 'CookPro') {
+    $siteLogoText = !empty($siteNameVal) ? $siteNameVal : 'HomeProX';
+}
 $siteLogo = $settingsObj->get('site_logo', 'logo.png');
 $showSearchIcon = $settingsObj->get('header_icon_search', '1') == '1';
 $showUserIcon = $settingsObj->get('header_icon_user', '1') == '1';
 $showWishlistIcon = $settingsObj->get('header_icon_wishlist', '1') == '1';
 $showCartIcon = $settingsObj->get('header_icon_cart', '1') == '1';
-$siteTitleSuffix = $settingsObj->get('site_title_suffix', 'CookPro - Elegant Jewelry Store');
+$siteTitleSuffix = $settingsObj->get('site_title_suffix', '');
+if (empty($siteTitleSuffix) || $siteTitleSuffix === 'CookPro - Elegant Jewelry Store') {
+    $siteTitleSuffix = !empty($siteNameVal) ? $siteNameVal . ' - Online Store' : 'HomeProX';
+}
 $faviconPng = $settingsObj->get('favicon_png', '');
 $faviconIco = $settingsObj->get('favicon_ico', ''); 
 $globalMetaDesc = $settingsObj->get('global_meta_description', '');
@@ -1035,7 +1042,7 @@ $gs_tooltip_text = getGlobalStyle('tooltip_text_color', $globalCardStyles, '#fff
                     <button class="flex items-center gap-2 hover:text-gray-300 transition cursor-pointer focus:outline-none whitespace-nowrap" id="currencySelector">
                         <span class="flex items-center gap-2">
                             <span class="rounded-full border border-gray-300 overflow-hidden" style="width: 20px; height: 20px; display: inline-flex; align-items: center; justify-content: center;">
-                                <img src="<?php echo $selectedCurrency['flag']; ?>" alt="<?php echo $selectedCurrency['name']; ?>" id="selectedFlagImg" class="w-full h-full object-cover" style="width: 20px; height: 20px;">
+                                <img src="<?php echo $selectedCurrency['flag']; ?>" alt="<?php echo htmlspecialchars($selectedCurrency['name'] . ' Flag'); ?>" id="selectedFlagImg" class="w-full h-full object-cover" style="width: 20px; height: 20px;">
                             </span>
                             <span class="text-sm">
                                 <span class="text-gray-400" id="countryCode"></span>
@@ -1051,7 +1058,7 @@ $gs_tooltip_text = getGlobalStyle('tooltip_text_color', $globalCardStyles, '#fff
                         <a href="#" class="block px-4 py-2.5 hover:bg-gray-50 transition currency-option" data-flag="<?php echo $curr['flag']; ?>" data-code="<?php echo $curr['code']; ?>" data-currency="<?php echo $curr['name'] . ' (' . $curr['currency_name'] . ' ' . $curr['symbol'] . ')'; ?>">
                             <span class="flex items-center gap-2">
                                 <span class="rounded-full border border-gray-300 overflow-hidden" style="width: 20px; height: 20px; display: inline-flex; align-items: center; justify-content: center;">
-                                    <img src="<?php echo $curr['flag']; ?>" alt="<?php echo $curr['name']; ?>" class="w-full h-full object-cover" style="width: 20px; height: 20px;">
+                                    <img src="<?php echo $curr['flag']; ?>" alt="<?php echo htmlspecialchars($curr['name'] . ' Flag'); ?>" class="w-full h-full object-cover" style="width: 20px; height: 20px;">
                                 </span>
                                 <span class="text-sm"><?php echo $curr['name'] . ' (' . $curr['currency_name'] . ' ' . $curr['symbol'] . ')'; ?></span>
                             </span>
@@ -1090,9 +1097,9 @@ $gs_tooltip_text = getGlobalStyle('tooltip_text_color', $globalCardStyles, '#fff
                             <span class="text-3xl font-heading font-bold text-black"><?php echo htmlspecialchars($siteLogoText); ?></span>
                         <?php else: ?>
                             <img src="<?php echo $baseUrl; ?>/assets/images/<?php echo htmlspecialchars($siteLogo); ?>" 
-                                 alt="Site Logo" 
+                                 alt="<?php echo htmlspecialchars(!empty($siteLogoText) ? $siteLogoText : 'HomeProX'); ?>" 
                                  class="h-10 md:h-14 object-contain"
-                                 onerror="this.parentElement.innerHTML='<span class=\'text-3xl font-heading font-bold text-black\'>CookProo</span>'">
+                                 onerror="this.parentElement.innerHTML='<span class=\'text-3xl font-heading font-bold text-black\'>' + <?php echo json_encode(!empty($siteLogoText) ? $siteLogoText : 'HomeProX'); ?> + '</span>'">
                         <?php endif; ?>
                     </a>
                 </div>
@@ -1627,7 +1634,7 @@ if (!empty($headerMenuItems)) {
                                         <div class="min-w-[200px] w-[200px] flex-shrink-0">
                                             <a href="${baseUrl}/product?slug=${p.slug}" class="search-product-card block h-full border border-gray-100 rounded-lg shadow-sm hover:shadow-md transition p-3 group">
                                                 <div class="relative overflow-hidden rounded-lg mb-3 aspect-[3/4]">
-                                                    <img src="${imgSrc}" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" onerror="this.src='${baseUrl}/assets/images/placeholder.png'">
+                                                    <img src="${imgSrc}" alt="${(p.name || 'Product').replace(/"/g, '&quot;')}" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" onerror="this.src='${baseUrl}/assets/images/placeholder.png'">
                                                 </div>
                                                 <h4 class="font-medium text-sm mb-1 truncate group-hover:text-primary transition">${p.name}</h4>
                                                 <div class="flex items-center gap-2 mb-1">

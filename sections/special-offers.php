@@ -112,7 +112,7 @@ if (file_exists($offersConfigPath)) {
                     <source media="(max-width: 767px)" srcset="<?php echo htmlspecialchars($mobileImgSrc); ?>">
                     <source media="(min-width: 768px)" srcset="<?php echo htmlspecialchars($imgSrc); ?>">
                     <img src="<?php echo htmlspecialchars($imgSrc); ?>" 
-                         alt="<?php echo htmlspecialchars($offer['title']); ?>" 
+                         alt="<?php echo htmlspecialchars(!empty($offer['title']) ? $offer['title'] : 'Special Offer'); ?>" 
                          class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
                          onerror="this.src='https://placehold.co/600x400?text=Offer+Image'">
                 </picture>

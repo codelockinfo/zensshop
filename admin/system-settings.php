@@ -226,7 +226,13 @@ unset($_SESSION['error']);
                      <input type="hidden" name="group_site_title_suffix" value="seo">
                 </div>
 
-                <!-- Favicon PNG (Browser) -->
+                <div class="md:col-span-2">
+                     <label class="block text-sm font-medium text-gray-700 mb-2">Homepage H1 Heading (SEO)</label>
+                     <input type="text" name="setting_homepage_h1" value="<?php echo htmlspecialchars($settings->get('homepage_h1', '')); ?>" class="w-full px-4 py-2 border rounded focus:ring-2 focus:ring-green-500" placeholder="e.g. HomeProX - Leading Pest & Cockroach Control Solutions">
+                     <p class="text-xs text-gray-500 mt-1">Primary H1 heading for the homepage. If left empty, it will automatically use the active banner heading or site title.</p>
+                     <input type="hidden" name="group_homepage_h1" value="seo">
+                </div>
+
                 <div>
                      <label class="block text-sm font-medium text-gray-700 mb-2">Favicon (Browser Tab - PNG/JPG)</label>
                      <?php $favPng = $settings->get('favicon_png'); ?>

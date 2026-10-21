@@ -127,7 +127,7 @@ $sectionId = 'video-section-' . rand(1000, 9999);
                                     <source src="<?php echo htmlspecialchars($videoSrc); ?>" type="video/mp4">
                                     <?php endif; ?>
                                     <?php if($poster): ?>
-                                    <img src="<?php echo htmlspecialchars($poster); ?>" alt="<?php echo htmlspecialchars($title); ?>" class="w-full h-full object-cover">
+                                    <img src="<?php echo htmlspecialchars($poster); ?>" alt="<?php echo htmlspecialchars(!empty($title) ? $title : 'Video'); ?>" class="w-full h-full object-cover">
                                     <?php endif; ?>
                                 </video>
                                 <div class="absolute inset-0 bg-gradient-to-t from-black/80 via-black/10 to-transparent opacity-60 pointer-events-none z-10"></div>
@@ -137,7 +137,7 @@ $sectionId = 'video-section-' . rand(1000, 9999);
                                 <!-- Image Card: No Link on Card itself -->
                                 <div class="absolute inset-0 block w-full h-full">
                                     <?php if($poster): ?>
-                                        <img src="<?php echo htmlspecialchars($poster); ?>" alt="<?php echo htmlspecialchars($title); ?>" class="w-full h-full object-cover transform group-hover:scale-110 transition-transform duration-700">
+                                        <img src="<?php echo htmlspecialchars($poster); ?>" alt="<?php echo htmlspecialchars(!empty($title) ? $title : 'Video'); ?>" class="w-full h-full object-cover transform group-hover:scale-110 transition-transform duration-700">
                                     <?php else: ?>
                                         <div class="w-full h-full bg-gray-200 flex items-center justify-center">
                                             <i class="fas fa-play text-4xl text-gray-400"></i>

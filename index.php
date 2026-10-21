@@ -68,6 +68,36 @@ $showNewsletter = $newsConf['show_section'] ?? true;
 $showFeatures = $settingsObj->get('features_section_visibility', '1') == '1';
 
 $showFooterFeatures = $settingsObj->get('footer_features_section_visibility', '1') == '1';
+
+$banners = $db->fetchAll("SELECT * FROM banners WHERE active = 1 AND (store_id = ? OR store_id IS NULL) ORDER BY display_order ASC", [CURRENT_STORE_ID]);
+if (empty($banners)) {
+    $banners = [];
+}
+
+$customH1 = trim($settingsObj->get('homepage_h1', ''));
+$firstBannerHeading = '';
+foreach ($banners as $b) {
+    if (!empty(trim($b['heading'] ?? ''))) {
+        $firstBannerHeading = trim($b['heading']);
+        break;
+    }
+}
+
+$hasRenderedH1 = false;
+$standaloneH1Text = '';
+
+if (!empty($customH1)) {
+    $standaloneH1Text = $customH1;
+} elseif (empty($firstBannerHeading)) {
+    $standaloneH1Text = !empty($siteTitleSuffix) ? $siteTitleSuffix : (!empty($siteLogoText) ? $siteLogoText : 'HomeProX');
+}
+?>
+
+<?php if (!empty($standaloneH1Text)): ?>
+<h1 class="sr-only" style="position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0, 0, 0, 0); white-space: nowrap; border-width: 0;"><?php echo htmlspecialchars($standaloneH1Text); ?></h1>
+<?php 
+$hasRenderedH1 = true;
+endif; 
 ?>
 
 <?php if ($showBanner): ?>
@@ -86,8 +116,6 @@ $sk_widthClass = ($bannerContentWidth == '50') ? 'md:max-w-[50%]' : (($bannerCon
             <div class="h-10 bg-gray-400 rounded w-40 animate-pulse mt-6"></div>
         </div>
     </div>
-</div>
-
 </div>
 
 <style>
@@ -144,7 +172,6 @@ $sk_widthClass = ($bannerContentWidth == '50') ? 'md:max-w-[50%]' : (($bannerCon
     }
     <?php endif; ?>
 
-    /* Mobile Banner Fixed Height Styles */
     @media (max-width: 768px) {
         #hero-skeleton {
             height: 520px !important;
@@ -257,13 +284,6 @@ $sk_widthClass = ($bannerContentWidth == '50') ? 'md:max-w-[50%]' : (($bannerCon
 </style>
 
 <section id="hero-section" class="relative overflow-hidden mb-4 md:mb-8" style="display: none;">
-<?php
-$banners = $db->fetchAll("SELECT * FROM banners WHERE active = 1 AND (store_id = ? OR store_id IS NULL) ORDER BY display_order ASC", [CURRENT_STORE_ID]);
-
-if (empty($banners)) {
-    $banners = [];
-}
-?>
     <div class="hero-slider relative">
         <div class="hero-view-port">
             <div class="hero-track">
@@ -292,6 +312,12 @@ if (empty($banners)) {
                     $widthClass = 'max-w-xl'; 
                     if ($bannerContentWidth == '50') $widthClass = 'md:max-w-[50%]';
                     elseif ($bannerContentWidth == '40') $widthClass = 'md:max-w-[40%]';
+
+                    $bannerAlt = !empty(trim($banner['heading'] ?? '')) 
+                        ? trim($banner['heading']) 
+                        : (!empty(trim($banner['subheading'] ?? '')) 
+                            ? trim($banner['subheading']) 
+                            : (!empty($siteTitleSuffix) ? $siteTitleSuffix : (!empty($siteLogoText) ? $siteLogoText : 'HomeProX')));
                     ?>
                   
                     <div class="hero-slide <?php echo $index === 0 ? 'active' : ''; ?> relative <?php echo $bannerAdaptiveHeight ? 'h-auto md:h-[700px]' : 'h-[600px] md:h-[700px]'; ?>">
@@ -302,7 +328,7 @@ if (empty($banners)) {
                                  class="w-full h-full object-cover" 
                                  decoding="async" 
                                  <?php echo $index === 0 ? 'fetchpriority="high" loading="eager"' : 'loading="lazy"'; ?> 
-                                 alt="<?php echo htmlspecialchars($banner['heading'] ?? 'Banner Image'); ?>"
+                                 alt="<?php echo htmlspecialchars($bannerAlt); ?>"
                                  onerror="this.src='https://placehold.co/1200x600?text=Banner+Image'">
                         </a>
                         <?php else: ?>
@@ -311,7 +337,7 @@ if (empty($banners)) {
                                  class="w-full h-full object-cover" 
                                  decoding="async" 
                                  <?php echo $index === 0 ? 'fetchpriority="high" loading="eager"' : 'loading="lazy"'; ?> 
-                                 alt="<?php echo htmlspecialchars($banner['heading'] ?? 'Banner Image'); ?>"
+                                 alt="<?php echo htmlspecialchars($bannerAlt); ?>"
                                  onerror="this.src='https://placehold.co/1200x600?text=Banner+Image'">
                         </div>
                         <?php endif; ?>
@@ -323,7 +349,7 @@ if (empty($banners)) {
                                  class="w-full h-full object-cover" 
                                  decoding="async" 
                                  <?php echo $index === 0 ? 'fetchpriority="high" loading="eager"' : 'loading="lazy"'; ?> 
-                                 alt="<?php echo htmlspecialchars($banner['heading'] ?? 'Banner Image'); ?>"
+                                 alt="<?php echo htmlspecialchars($bannerAlt); ?>"
                                  onerror="this.src='https://placehold.co/1200x600?text=Banner+Image'">
                         </a>
                         <?php else: ?>
@@ -332,7 +358,7 @@ if (empty($banners)) {
                                  class="w-full h-full object-cover" 
                                  decoding="async" 
                                  <?php echo $index === 0 ? 'fetchpriority="high" loading="eager"' : 'loading="lazy"'; ?> 
-                                 alt="<?php echo htmlspecialchars($banner['heading'] ?? 'Banner Image'); ?>"
+                                 alt="<?php echo htmlspecialchars($bannerAlt); ?>"
                                  onerror="this.src='https://placehold.co/1200x600?text=Banner+Image'">
                         </div>
                         <?php endif; ?>
@@ -344,7 +370,12 @@ if (empty($banners)) {
                                 <?php endif; ?>
                                 
                                 <?php if (!empty($banner['heading'])): ?>
-                                    <h1 class="text-4xl md:text-5xl font-heading font-bold mb-6 banner-heading"><?php echo htmlspecialchars($banner['heading']); ?></h1>
+                                    <?php if (!$hasRenderedH1): ?>
+                                        <h1 class="text-4xl md:text-5xl font-heading font-bold mb-6 banner-heading"><?php echo htmlspecialchars($banner['heading']); ?></h1>
+                                        <?php $hasRenderedH1 = true; ?>
+                                    <?php else: ?>
+                                        <h2 class="text-4xl md:text-5xl font-heading font-bold mb-6 banner-heading"><?php echo htmlspecialchars($banner['heading']); ?></h2>
+                                    <?php endif; ?>
                                 <?php endif; ?>
                                 
                                 <?php if (!empty($banner['button_text'])): ?>
