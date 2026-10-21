@@ -1,4 +1,7 @@
 <?php
+if (!headers_sent()) {
+    header('X-Robots-Tag: index, follow');
+}
 if (!function_exists('getBaseUrl')) {
     require_once __DIR__ . '/functions.php';
 }
@@ -21,12 +24,6 @@ $wishlistCount = $wishlistObj->getCount();
 if (session_status() === PHP_SESSION_ACTIVE) {
     session_write_close();
 }
-?>
-<script>
-    window.INITIAL_WISHLIST_COUNT = <?php echo (int)$wishlistCount; ?>;
-    window.INITIAL_CART_COUNT = <?php echo (int)$cartCount; ?>;
-</script>
-<?php
 
 require_once __DIR__ . '/../classes/Database.php';
 require_once __DIR__ . '/../classes/Settings.php';
@@ -470,6 +467,51 @@ $gs_tooltip_text = getGlobalStyle('tooltip_text_color', $globalCardStyles, '#fff
     </style>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <script>
+        window.INITIAL_WISHLIST_COUNT = <?php echo (int)$wishlistCount; ?>;
+        window.INITIAL_CART_COUNT = <?php echo (int)$cartCount; ?>;
+    </script>
+    <?php
+    // SEO Robots Tag
+    $metaRobots = $settingsObj->get('meta_robots', 'index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1');
+    if (empty(trim($metaRobots))) {
+        $metaRobots = 'index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1';
+    }
+
+    // SEO Keywords (100% Dynamic: per-page -> admin store setting -> dynamic fallback)
+    $globalKeywords = $settingsObj->get('global_meta_keywords', '');
+    if (!empty($metaKeywords)) {
+        $finalKeywords = $metaKeywords;
+    } elseif (!empty($globalKeywords)) {
+        $finalKeywords = $globalKeywords;
+    } else {
+        $cleanSuffixParts = array_filter(array_map('trim', preg_split('/[,|&-]/', $siteTitleSuffix)));
+        $autoKeywordsList = array_unique(array_merge([$siteLogoText], $cleanSuffixParts, ['online shopping', 'best price', 'buy online']));
+        $finalKeywords = implode(', ', array_filter($autoKeywordsList));
+    }
+
+    // SEO Publisher & Author
+    $publisherName = $settingsObj->get('publisher_name', '');
+    if (empty($publisherName)) {
+        $publisherName = !empty($siteLogoText) ? $siteLogoText : 'HomeProX';
+    }
+    $publisherUrl = $settingsObj->get('publisher_url', '');
+    if (empty($publisherUrl)) {
+        $protocol = (isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] === 'on') ? 'https://' : 'http://';
+        $hostVal = $_SERVER['HTTP_HOST'] ?? 'homeprox.in';
+        if (strpos($hostVal, 'localhost') !== false) {
+            $publisherUrl = $baseUrl . '/';
+        } else {
+            $publisherUrl = 'https://' . explode(':', $hostVal)[0] . '/';
+        }
+    }
+    ?>
+    <meta name="robots" content="<?php echo htmlspecialchars($metaRobots); ?>">
+    <meta name="keywords" content="<?php echo htmlspecialchars($finalKeywords); ?>">
+    <meta name="publisher" content="<?php echo htmlspecialchars($publisherName); ?>">
+    <meta name="author" content="<?php echo htmlspecialchars($publisherName); ?>">
+    <link rel="publisher" href="<?php echo htmlspecialchars($publisherUrl); ?>">
+    <meta property="article:publisher" content="<?php echo htmlspecialchars($publisherUrl); ?>">
     <title><?php echo isset($pageTitle) ? htmlspecialchars($pageTitle) . ' - ' : ''; ?><?php echo htmlspecialchars($siteTitleSuffix); ?></title>
     <?php if (isset($_SERVER['HTTP_HOST']) && strpos($_SERVER['HTTP_HOST'], 'localhost') === false): ?>
     <link rel="canonical" href="https://homeprox.in<?php echo $_SERVER['REQUEST_URI']; ?>">

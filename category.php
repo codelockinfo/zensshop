@@ -159,7 +159,12 @@ if (isset($_GET['ajax'])) {
 }
 ob_end_clean();
 
-$pageTitle = 'Category';
+$catName = $category['name'] ?? 'Category';
+$pageTitle = $catName;
+$metaKeywords = $catName . ', ' . $catName . ' collection, buy ' . $catName . ' online';
+if (!empty($category['description'])) {
+    $metaDescription = strip_tags($category['description']);
+}
 require_once __DIR__ . '/includes/header.php';
 $catImageRaw = !empty($category['banner']) ? $category['banner'] : ($category['image'] ?? null);
 $categoryImage = getImageUrl($catImageRaw);

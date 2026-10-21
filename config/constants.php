@@ -7,6 +7,10 @@ if (session_status() === PHP_SESSION_NONE && empty(session_id())) {
     session_start();
 }
 
+if (!headers_sent()) {
+    header('X-Robots-Tag: index, follow');
+}
+
 // Set default timezone
 date_default_timezone_set('Asia/Kolkata');
 

@@ -311,8 +311,20 @@ $productSchema = [
 
 $customSchema = json_encode($productSchema, JSON_UNESCAPED_SLASHES | JSON_PRETTY_PRINT);
 
-// Now include header
+// Dynamic SEO metadata per product
 $pageTitle = $productData['name'];
+$prodCatName = $category['name'] ?? '';
+$metaKeywords = implode(', ', array_filter([
+    $productData['name'],
+    $prodCatName,
+    'buy ' . $productData['name'] . ' online',
+    $productData['name'] . ' price'
+]));
+if (empty($metaDescription)) {
+    $metaDescription = !empty($productData['short_description']) 
+        ? strip_tags($productData['short_description']) 
+        : (!empty($productData['description']) ? mb_substr(strip_tags($productData['description']), 0, 160) : '');
+}
 require_once __DIR__ . '/includes/header.php';
 
 $discount = $originalPrice && $originalPrice > 0 ? round((($originalPrice - $price) / $originalPrice) * 100) : 0;

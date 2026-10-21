@@ -331,7 +331,6 @@ unset($_SESSION['error']);
                 }
                 </script>
 
-                <!-- Global Meta Description -->
                 <div class="md:col-span-2">
                      <label class="block text-sm font-medium text-gray-700 mb-2">Global Meta Description</label>
                      <textarea name="setting_global_meta_description" rows="2" class="w-full px-4 py-2 border rounded focus:ring-2 focus:ring-green-500"><?php echo htmlspecialchars($settings->get('global_meta_description', '')); ?></textarea>
@@ -339,7 +338,35 @@ unset($_SESSION['error']);
                      <input type="hidden" name="group_global_meta_description" value="seo">
                 </div>
 
-                <!-- Global Schema JSON -->
+                <div class="md:col-span-2">
+                     <label class="block text-sm font-medium text-gray-700 mb-2">Global Meta Keywords (SEO)</label>
+                     <input type="text" name="setting_global_meta_keywords" value="<?php echo htmlspecialchars($settings->get('global_meta_keywords', '')); ?>" class="w-full px-4 py-2 border rounded focus:ring-2 focus:ring-green-500" placeholder="e.g. pest control, cockroach spray, anti roach spray, home protection, KILL-IT">
+                     <p class="text-xs text-gray-500 mt-1">Comma-separated keywords for search engines and SEO audits.</p>
+                     <input type="hidden" name="group_global_meta_keywords" value="seo">
+                </div>
+
+                <!-- Robots Tag Directive -->
+                <div>
+                     <label class="block text-sm font-medium text-gray-700 mb-2">Robots Tag Directive</label>
+                     <input type="text" name="setting_meta_robots" value="<?php echo htmlspecialchars($settings->get('meta_robots', 'index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1')); ?>" class="w-full px-4 py-2 border rounded focus:ring-2 focus:ring-green-500" placeholder="index, follow">
+                     <p class="text-xs text-gray-500 mt-1">Controls indexing (e.g. <code>index, follow, max-image-preview:large</code>).</p>
+                     <input type="hidden" name="group_meta_robots" value="seo">
+                </div>
+
+                <div>
+                     <label class="block text-sm font-medium text-gray-700 mb-2">Publisher / Brand Name</label>
+                     <input type="text" name="setting_publisher_name" value="<?php echo htmlspecialchars($settings->get('publisher_name', '')); ?>" class="w-full px-4 py-2 border rounded focus:ring-2 focus:ring-green-500" placeholder="e.g. HomeProX">
+                     <p class="text-xs text-gray-500 mt-1">Used in <code>&lt;meta name="publisher"&gt;</code> and <code>&lt;meta name="author"&gt;</code> tags.</p>
+                     <input type="hidden" name="group_publisher_name" value="seo">
+                </div>
+
+                <div class="md:col-span-2">
+                     <label class="block text-sm font-medium text-gray-700 mb-2">Publisher URL / Social Profile</label>
+                     <input type="text" name="setting_publisher_url" value="<?php echo htmlspecialchars($settings->get('publisher_url', '')); ?>" class="w-full px-4 py-2 border rounded focus:ring-2 focus:ring-green-500" placeholder="e.g. https://homeprox.in or Facebook brand page">
+                     <p class="text-xs text-gray-500 mt-1">Used in <code>&lt;link rel="publisher"&gt;</code> and <code>&lt;meta property="article:publisher"&gt;</code>.</p>
+                     <input type="hidden" name="group_publisher_url" value="seo">
+                </div>
+
                 <div class="md:col-span-2">
                      <label class="block text-sm font-medium text-gray-700 mb-2">Global Schema (JSON)</label>
                      <textarea name="setting_global_schema_json" rows="4" class="font-mono text-sm w-full px-4 py-2 border rounded focus:ring-2 focus:ring-green-500 bg-gray-50"><?php echo htmlspecialchars($settings->get('global_schema_json', '')); ?></textarea>
@@ -347,7 +374,6 @@ unset($_SESSION['error']);
                      <input type="hidden" name="group_global_schema_json" value="seo">
                 </div>
                 
-                <!-- Google Analytics / Header Scripts -->
                 <div class="md:col-span-2">
                      <label class="block text-sm font-medium text-gray-700 mb-2">Google Analytics / Header Scripts</label>
                      <textarea name="setting_header_scripts" rows="5" class="font-mono text-sm w-full px-4 py-2 border rounded focus:ring-2 focus:ring-green-500 bg-gray-50"><?php echo htmlspecialchars($settings->get('header_scripts', '')); ?></textarea>
