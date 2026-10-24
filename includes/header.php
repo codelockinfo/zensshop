@@ -1,4 +1,4 @@
-<?php
+﻿<?php
 if (!headers_sent()) {
     header('X-Robots-Tag: index, follow');
 }
@@ -127,6 +127,8 @@ if (!function_exists('url')) {
 <!DOCTYPE html>
 <html lang="en" class="overflow-x-hidden">
 <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <?php
 $currentPage = basename($_SERVER['PHP_SELF']);
 $needsSwiper = in_array($currentPage, ['index.php', 'special-product.php', 'shop.php', 'product.php']);
@@ -465,8 +467,6 @@ $gs_tooltip_text = getGlobalStyle('tooltip_text_color', $globalCardStyles, '#fff
             }
         }
     </style>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <script>
         window.INITIAL_WISHLIST_COUNT = <?php echo (int)$wishlistCount; ?>;
         window.INITIAL_CART_COUNT = <?php echo (int)$cartCount; ?>;
@@ -513,9 +513,13 @@ $gs_tooltip_text = getGlobalStyle('tooltip_text_color', $globalCardStyles, '#fff
     <link rel="publisher" href="<?php echo htmlspecialchars($publisherUrl); ?>">
     <meta property="article:publisher" content="<?php echo htmlspecialchars($publisherUrl); ?>">
     <title><?php echo isset($pageTitle) ? htmlspecialchars($pageTitle) . ' - ' : ''; ?><?php echo htmlspecialchars($siteTitleSuffix); ?></title>
-    <?php if (isset($_SERVER['HTTP_HOST']) && strpos($_SERVER['HTTP_HOST'], 'localhost') === false): ?>
-    <link rel="canonical" href="https://homeprox.in<?php echo $_SERVER['REQUEST_URI']; ?>">
-    <?php endif; ?>
+    <?php
+    $canonicalHost = $_SERVER['HTTP_HOST'] ?? 'homeprox.in';
+    $canonicalUrl = (strpos($canonicalHost, 'localhost') !== false) 
+        ? $baseUrl . $_SERVER['REQUEST_URI'] 
+        : 'https://homeprox.in' . $_SERVER['REQUEST_URI'];
+    ?>
+    <link rel="canonical" href="<?php echo htmlspecialchars($canonicalUrl); ?>">
     
     <?php
     $faviconUrl = '';
@@ -547,35 +551,41 @@ $gs_tooltip_text = getGlobalStyle('tooltip_text_color', $globalCardStyles, '#fff
     if (!empty($finalMetaDesc)): ?>
     <meta name="description" content="<?php echo htmlspecialchars($finalMetaDesc); ?>">
     <?php endif; ?>
-    <meta property="og:type" content="website">
-    <meta property="og:title" content="<?php echo isset($pageTitle) ? htmlspecialchars($pageTitle) . ' - ' : ''; ?><?php echo htmlspecialchars($siteTitleSuffix); ?>">
-    <meta property="og:description" content="<?php echo htmlspecialchars($finalMetaDesc); ?>">
-    <meta property="og:url" content="<?php echo $baseUrl . $_SERVER['REQUEST_URI']; ?>">
-    <meta property="og:site_name" content="<?php echo htmlspecialchars($siteLogoText); ?>">
-    
     <?php 
+    $socialTitle = (isset($pageTitle) && !empty($pageTitle) ? htmlspecialchars($pageTitle) . ' - ' : '') . htmlspecialchars($siteTitleSuffix);
+    $socialImage = '';
     $ogImageVal = $settingsObj->get('og_image');
     if ($ogImageVal) {
         $ogImageUrl = getImageUrl($ogImageVal); 
-        
         if (strpos($ogImageUrl, 'http') !== 0) {
             $ogImageUrl = $baseUrl . '/' . ltrim($ogImageUrl, '/');
         }
-    ?>
-    <meta property="og:image" content="<?php echo htmlspecialchars($ogImageUrl); ?>">
-    <meta name="twitter:card" content="summary_large_image">
-    <meta name="twitter:image" content="<?php echo htmlspecialchars($ogImageUrl); ?>">
-    <?php } elseif (!empty($siteLogo) && $siteLogoType !== 'text') { 
-        
+        $socialImage = $ogImageUrl;
+    } elseif (!empty($siteLogo) && $siteLogoType !== 'text') { 
         $logoUrl = getImageUrl($siteLogo);
         if (strpos($logoUrl, 'http') !== 0) {
             $logoUrl = $baseUrl . '/' . ltrim($logoUrl, '/');
         }
+        $socialImage = $logoUrl;
+    }
     ?>
-    <meta property="og:image" content="<?php echo htmlspecialchars($logoUrl); ?>">
-    <meta name="twitter:card" content="summary">
-    <meta name="twitter:image" content="<?php echo htmlspecialchars($logoUrl); ?>">
-    <?php } ?>
+    <!-- Open Graph / Facebook -->
+    <meta property="og:type" content="website">
+    <meta property="og:title" content="<?php echo $socialTitle; ?>">
+    <meta property="og:description" content="<?php echo htmlspecialchars($finalMetaDesc); ?>">
+    <meta property="og:url" content="<?php echo $baseUrl . $_SERVER['REQUEST_URI']; ?>">
+    <meta property="og:site_name" content="<?php echo htmlspecialchars($siteLogoText); ?>">
+    <?php if (!empty($socialImage)): ?>
+    <meta property="og:image" content="<?php echo htmlspecialchars($socialImage); ?>">
+    <?php endif; ?>
+
+    <!-- Twitter / X Card -->
+    <meta name="twitter:card" content="<?php echo !empty($socialImage) ? 'summary_large_image' : 'summary'; ?>">
+    <meta name="twitter:title" content="<?php echo $socialTitle; ?>">
+    <meta name="twitter:description" content="<?php echo htmlspecialchars($finalMetaDesc); ?>">
+    <?php if (!empty($socialImage)): ?>
+    <meta name="twitter:image" content="<?php echo htmlspecialchars($socialImage); ?>">
+    <?php endif; ?>
 
     <?php 
     if (!empty($globalSchema)): 
@@ -1114,7 +1124,7 @@ $gs_tooltip_text = getGlobalStyle('tooltip_text_color', $globalCardStyles, '#fff
     <nav class="z-50 header-shadow" id="mainNav">
         <div class="container mx-auto px-4">
             <div class="flex items-center justify-between h-12 md:h-20">
-                <button class="xl:hidden text-black hover:text-gray-600 transition focus:outline-none header-icon" 
+                <button class="lg:hidden text-black hover:text-gray-600 transition focus:outline-none header-icon" 
                         aria-label="Open mobile menu"
                         aria-controls="mobile-menu-main"
                         aria-expanded="false"
@@ -1133,7 +1143,7 @@ $gs_tooltip_text = getGlobalStyle('tooltip_text_color', $globalCardStyles, '#fff
                                  }">
                     <i class="fas fa-bars text-xl" aria-hidden="true"></i>
                 </button>
-                <div class="flex-shrink-0 xl:flex-shrink-0 absolute xl:relative left-1/2 xl:left-auto transform xl:transform-none -translate-x-1/2 xl:translate-x-0">
+                <div class="flex-shrink-0 lg:flex-shrink-0 absolute lg:relative left-1/2 lg:left-auto transform lg:transform-none -translate-x-1/2 lg:translate-x-0">
                     <a href="<?php echo $baseUrl; ?>/" class="flex items-center site-logo-link">
                         <?php if ($siteLogoType === 'text'): ?>
                             <span class="text-3xl font-heading font-bold text-black"><?php echo htmlspecialchars($siteLogoText); ?></span>
@@ -1145,7 +1155,7 @@ $gs_tooltip_text = getGlobalStyle('tooltip_text_color', $globalCardStyles, '#fff
                         <?php endif; ?>
                     </a>
                 </div>
-                <div class="hidden xl:flex items-center space-x-8 absolute left-1/2 transform -translate-x-1/2 z-10">
+                <div class="hidden lg:flex items-center space-x-8 absolute left-1/2 transform -translate-x-1/2 z-10">
 <?php
 if (!empty($headerMenuItems)) {
     foreach ($headerMenuItems as $item) {
@@ -1162,7 +1172,7 @@ if (!empty($headerMenuItems)) {
                     <?php endif; ?>
                     
                     <?php if ($showUserIcon): ?>
-                    <a href="<?php echo url('account'); ?>" class="hidden xl:block text-black hover:text-gray-600 transition header-icon" aria-label="Manage Account">
+                    <a href="<?php echo url('account'); ?>" class="hidden lg:block text-black hover:text-gray-600 transition header-icon" aria-label="Manage Account">
                         <i class="fas fa-user text-lg" aria-hidden="true"></i>
                     </a>
                     <?php endif; ?>

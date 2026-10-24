@@ -93,12 +93,6 @@ if (!empty($customH1)) {
 }
 ?>
 
-<?php if (!empty($standaloneH1Text)): ?>
-<h1 class="sr-only" style="position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0, 0, 0, 0); white-space: nowrap; border-width: 0;"><?php echo htmlspecialchars($standaloneH1Text); ?></h1>
-<?php 
-$hasRenderedH1 = true;
-endif; 
-?>
 
 <?php if ($showBanner): ?>
 <?php
@@ -926,6 +920,137 @@ document.addEventListener('DOMContentLoaded', function() {
     </section>
 </div>
 <?php endif; ?>
+<!-- SEO Brand Story & FAQ Section -->
+<section class="py-12 md:py-16 bg-gray-50 border-t border-gray-200" id="homeprox-seo-content">
+    <div class="container mx-auto px-4 max-w-5xl">
+        <!-- Brand Overview -->
+        <div class="mb-12">
+            <?php if (!$hasRenderedH1): ?>
+            <h1 class="text-2xl md:text-3xl font-heading font-bold text-gray-900 mb-4 tracking-tight">HomeProX &ndash; India''s Trusted Cockroach &amp; Pest Control Solutions</h1>
+            <?php $hasRenderedH1 = true; ?>
+            <?php else: ?>
+            <h2 class="text-2xl md:text-3xl font-heading font-bold text-gray-900 mb-4 tracking-tight">HomeProX &ndash; India''s Trusted Cockroach &amp; Pest Control Solutions</h2>
+            <?php endif; ?>
+            <p class="text-gray-700 leading-relaxed mb-4 text-base md:text-lg">
+                At <strong>HomeProX</strong>, we are committed to helping families maintain hygienic, pest-free, and healthy living environments. Cockroaches, crawling insects, and household pests are not only a nuisance but also primary carriers of harmful bacteria, allergens, and food contaminants. Our specialized <strong>KILL-IT</strong> and <strong>KILL-IT+</strong> product range has been formulated with advanced knockdown action to tackle household pest infestations swiftly and effectively.
+            </p>
+            <p class="text-gray-700 leading-relaxed text-base md:text-lg">
+                Whether you are dealing with persistent cockroaches nesting behind kitchen modular cabinets, hidden crevices around dishwashers, drainage outlets, or appliance corners, HomeProX delivers targeted solutions engineered for real Indian household conditions. Combining rapid knockdown power with long-lasting barrier protection, our sprays offer continuous defense so your home stays cleaner, safer, and protected around the clock.
+            </p>
+        </div>
+
+        <!-- 4 Key Advantages Grid -->
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-14">
+            <div class="bg-white p-6 rounded-xl border border-gray-200 shadow-sm hover:shadow-md transition">
+                <div class="w-12 h-12 bg-red-100 text-red-600 rounded-lg flex items-center justify-center text-xl mb-4">
+                    <i class="fas fa-bolt"></i>
+                </div>
+                <h3 class="text-lg font-bold text-gray-900 mb-2">Instant Knockdown</h3>
+                <p class="text-gray-600 text-sm leading-relaxed">
+                    Fast-acting active ingredients deliver instant elimination upon contact, preventing crawling pests from escaping deeper into crevices.
+                </p>
+            </div>
+            <div class="bg-white p-6 rounded-xl border border-gray-200 shadow-sm hover:shadow-md transition">
+                <div class="w-12 h-12 bg-blue-100 text-blue-600 rounded-lg flex items-center justify-center text-xl mb-4">
+                    <i class="fas fa-crosshairs"></i>
+                </div>
+                <h3 class="text-lg font-bold text-gray-900 mb-2">Deep Crevice Reach</h3>
+                <p class="text-gray-600 text-sm leading-relaxed">
+                    Engineered nozzle design allows precise spray application inside hard-to-reach pipe gaps, wall cracks, and under-sink drainage junctions.
+                </p>
+            </div>
+            <div class="bg-white p-6 rounded-xl border border-gray-200 shadow-sm hover:shadow-md transition">
+                <div class="w-12 h-12 bg-green-100 text-green-600 rounded-lg flex items-center justify-center text-xl mb-4">
+                    <i class="fas fa-shield-alt"></i>
+                </div>
+                <h3 class="text-lg font-bold text-gray-900 mb-2">Long-Lasting Barrier</h3>
+                <p class="text-gray-600 text-sm leading-relaxed">
+                    Forms an invisible protective film on treated surfaces that disrupts pest cycles and deters new cockroach colonies for weeks.
+                </p>
+            </div>
+            <div class="bg-white p-6 rounded-xl border border-gray-200 shadow-sm hover:shadow-md transition">
+                <div class="w-12 h-12 bg-yellow-100 text-yellow-600 rounded-lg flex items-center justify-center text-xl mb-4">
+                    <i class="fas fa-leaf"></i>
+                </div>
+                <h3 class="text-lg font-bold text-gray-900 mb-2">Odor-Controlled</h3>
+                <p class="text-gray-600 text-sm leading-relaxed">
+                    Designed for indoor domestic comfort, minimizing harsh lingering chemical fumes while maintaining maximum insecticidal efficacy.
+                </p>
+            </div>
+        </div>
+
+        <!-- FAQ Section -->
+        <div>
+            <div class="text-center mb-8">
+                <h2 class="text-2xl md:text-3xl font-heading font-bold text-gray-900 mb-2 tracking-tight">Frequently Asked Questions (FAQs)</h2>
+                <p class="text-gray-600 text-sm md:text-base">Everything you need to know about HomeProX cockroach sprays and proper home application</p>
+            </div>
+
+            <div class="space-y-4">
+                <details class="group bg-white rounded-xl border border-gray-200 p-5 shadow-sm transition hover:border-gray-300" open>
+                    <summary class="flex justify-between items-center font-bold text-gray-900 cursor-pointer list-none text-base md:text-lg">
+                        <span>What is the difference between KILL-IT and KILL-IT+ Cockroach Sprays?</span>
+                        <span class="transition group-open:rotate-180 ml-4 text-gray-500">
+                            <i class="fas fa-chevron-down text-sm"></i>
+                        </span>
+                    </summary>
+                    <p class="text-gray-600 mt-3 text-sm md:text-base leading-relaxed">
+                        KILL-IT is formulated for quick contact extermination of visible cockroaches and routine weekly protection. KILL-IT+ is an enhanced, high-residual formula specifically developed for severe infestations, dense nesting sites, and long-term perimeter defense around kitchen plumbing and moisture-prone dark spaces.
+                    </p>
+                </details>
+
+                <details class="group bg-white rounded-xl border border-gray-200 p-5 shadow-sm transition hover:border-gray-300">
+                    <summary class="flex justify-between items-center font-bold text-gray-900 cursor-pointer list-none text-base md:text-lg">
+                        <span>How often should I apply HomeProX pest spray in my kitchen?</span>
+                        <span class="transition group-open:rotate-180 ml-4 text-gray-500">
+                            <i class="fas fa-chevron-down text-sm"></i>
+                        </span>
+                    </summary>
+                    <p class="text-gray-600 mt-3 text-sm md:text-base leading-relaxed">
+                        For active cockroach infestations, spray targeted hotspots (behind the refrigerator, under the kitchen sink, inside dry cabinet corners, and near dustbins) once daily for 3 to 5 consecutive days. Once the infestation clears, a preventive application once every 10 to 14 days will ensure complete protection.
+                    </p>
+                </details>
+
+                <details class="group bg-white rounded-xl border border-gray-200 p-5 shadow-sm transition hover:border-gray-300">
+                    <summary class="flex justify-between items-center font-bold text-gray-900 cursor-pointer list-none text-base md:text-lg">
+                        <span>Is KILL-IT spray safe for homes with children and pets?</span>
+                        <span class="transition group-open:rotate-180 ml-4 text-gray-500">
+                            <i class="fas fa-chevron-down text-sm"></i>
+                        </span>
+                    </summary>
+                    <p class="text-gray-600 mt-3 text-sm md:text-base leading-relaxed">
+                        Yes, when used according to label instructions. We advise ventilating the room well during spraying and keeping children and pets outside the application area for 20 to 30 minutes until the mist dries. Avoid spraying directly onto open food items, cooking utensils, or pet feeding bowls.
+                    </p>
+                </details>
+
+                <details class="group bg-white rounded-xl border border-gray-200 p-5 shadow-sm transition hover:border-gray-300">
+                    <summary class="flex justify-between items-center font-bold text-gray-900 cursor-pointer list-none text-base md:text-lg">
+                        <span>How does a knockdown spray compare to cockroach chalk and gels?</span>
+                        <span class="transition group-open:rotate-180 ml-4 text-gray-500">
+                            <i class="fas fa-chevron-down text-sm"></i>
+                        </span>
+                    </summary>
+                    <p class="text-gray-600 mt-3 text-sm md:text-base leading-relaxed">
+                        Cockroach gels and chalk rely on insects feeding on or contacting bait points, which can take several days to reduce populations. KILL-IT knockdown sprays provide immediate elimination on contact and penetrate narrow cracks and deep drainage cavities where chalk and gel dots cannot reach.
+                    </p>
+                </details>
+
+                <details class="group bg-white rounded-xl border border-gray-200 p-5 shadow-sm transition hover:border-gray-300">
+                    <summary class="flex justify-between items-center font-bold text-gray-900 cursor-pointer list-none text-base md:text-lg">
+                        <span>What are the shipping timelines and delivery coverage across India?</span>
+                        <span class="transition group-open:rotate-180 ml-4 text-gray-500">
+                            <i class="fas fa-chevron-down text-sm"></i>
+                        </span>
+                    </summary>
+                    <p class="text-gray-600 mt-3 text-sm md:text-base leading-relaxed">
+                        HomeProX ships nationwide to over 26,000+ pincodes across India. All orders are packed securely and dispatched within 24 to 48 business hours with live online courier tracking. Standard delivery takes 3 to 5 business days depending on your delivery location.
+                    </p>
+                </details>
+            </div>
+        </div>
+    </div>
+</section>
+
 <?php if ($showFooterFeatures): ?>
 <div id="footer-features-section" class="section-loading">
     <section class="py-8 md:py-12" style="background-color: <?php echo htmlspecialchars($ffBgColor); ?>;">
