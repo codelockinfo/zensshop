@@ -141,7 +141,52 @@ if ($isLoggedIn) {
 }
 
 
-$pageTitle = 'Your Account';
+// Account page is private user area - noindex, follow prevents duplicate content in search engines
+$metaRobots = 'noindex, follow';
+$canonicalUrl = (strpos($_SERVER['HTTP_HOST'] ?? '', 'localhost') !== false ? getBaseUrl() : 'https://homeprox.in') . '/account';
+
+if (!$isLoggedIn) {
+    if (isset($_GET['register']) || isset($_GET['signup'])) {
+        $pageTitle = 'Create Account';
+        $metaDescription = 'Create your HomeProX customer account to manage orders, addresses, and wishlist.';
+    } elseif (isset($_GET['forgot-password'])) {
+        $pageTitle = 'Reset Password';
+        $metaDescription = 'Reset your HomeProX account password securely.';
+    } elseif (isset($_GET['redirect']) && $_GET['redirect'] === 'checkout') {
+        $pageTitle = 'Checkout Login';
+        $metaDescription = 'Sign in or register to complete your order checkout securely.';
+    } else {
+        $pageTitle = 'Sign In';
+        $metaDescription = 'Sign in to your HomeProX customer account.';
+    }
+} else {
+    switch ($section) {
+        case 'orders':
+            $pageTitle = 'My Orders';
+            $metaDescription = 'View and track your HomeProX orders and shipments.';
+            break;
+        case 'addresses':
+            $pageTitle = 'Saved Addresses';
+            $metaDescription = 'Manage your saved shipping and delivery addresses.';
+            break;
+        case 'wishlist':
+            $pageTitle = 'My Wishlist';
+            $metaDescription = 'View and manage your saved products in your wishlist.';
+            break;
+        case 'details':
+            $pageTitle = 'Profile & Settings';
+            $metaDescription = 'Manage your HomeProX account profile and contact details.';
+            break;
+        case 'payments':
+            $pageTitle = 'Payment Methods';
+            $metaDescription = 'View your recent order payment statuses and history.';
+            break;
+        default:
+            $pageTitle = 'My Account';
+            $metaDescription = 'Manage your HomeProX customer account.';
+            break;
+    }
+}
 $isAjax = (isset($_GET['ajax']) && $_GET['ajax'] == '1') || 
           (isset($_POST['ajax']) && $_POST['ajax'] == '1') || 
           (isset($_SERVER['HTTP_X_REQUESTED_WITH']) && strtolower($_SERVER['HTTP_X_REQUESTED_WITH']) === 'xmlhttprequest');

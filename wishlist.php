@@ -130,6 +130,7 @@ if (isset($_COOKIE['recently_viewed'])) {
 }
 
 $pageTitle = 'Wishlist';
+$metaRobots = 'noindex, follow';
 require_once __DIR__ . '/includes/header.php';
 ?>
 

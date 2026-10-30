@@ -33,7 +33,6 @@ $staticPages = [
     'support' => ['priority' => '0.8', 'freq' => 'monthly'],
     'collections' => ['priority' => '0.7', 'freq' => 'monthly'],
     'blog' => ['priority' => '0.7', 'freq' => 'weekly'],
-    'category' => ['priority' => '0.6', 'freq' => 'monthly'],
     'privacy-policy' => ['priority' => '0.5', 'freq' => 'monthly'],
     'terms-conditions' => ['priority' => '0.5', 'freq' => 'monthly'],
     'shipping-policy' => ['priority' => '0.5', 'freq' => 'monthly'],

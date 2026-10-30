@@ -473,7 +473,7 @@ $gs_tooltip_text = getGlobalStyle('tooltip_text_color', $globalCardStyles, '#fff
     </script>
     <?php
     // SEO Robots Tag
-    $metaRobots = $settingsObj->get('meta_robots', 'index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1');
+    $metaRobots = (isset($metaRobots) && !empty($metaRobots)) ? $metaRobots : $settingsObj->get('meta_robots', 'index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1');
     if (empty(trim($metaRobots))) {
         $metaRobots = 'index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1';
     }
@@ -512,12 +512,38 @@ $gs_tooltip_text = getGlobalStyle('tooltip_text_color', $globalCardStyles, '#fff
     <meta name="author" content="<?php echo htmlspecialchars($publisherName); ?>">
     <link rel="publisher" href="<?php echo htmlspecialchars($publisherUrl); ?>">
     <meta property="article:publisher" content="<?php echo htmlspecialchars($publisherUrl); ?>">
-    <title><?php echo isset($pageTitle) ? htmlspecialchars($pageTitle) . ' - ' : ''; ?><?php echo htmlspecialchars($siteTitleSuffix); ?></title>
+    <title><?php echo (isset($pageTitle) && !empty($pageTitle) && trim(strtolower($pageTitle)) !== 'home') ? htmlspecialchars($pageTitle) . ' - ' : ''; ?><?php echo htmlspecialchars($siteTitleSuffix); ?></title>
     <?php
     $canonicalHost = $_SERVER['HTTP_HOST'] ?? 'homeprox.in';
-    $canonicalUrl = (strpos($canonicalHost, 'localhost') !== false) 
-        ? $baseUrl . $_SERVER['REQUEST_URI'] 
-        : 'https://homeprox.in' . $_SERVER['REQUEST_URI'];
+    if (!isset($canonicalUrl) || empty($canonicalUrl)) {
+        $isLocal = (strpos($canonicalHost, 'localhost') !== false);
+        $siteDomain = $isLocal ? $baseUrl : 'https://homeprox.in';
+        $reqUri = $_SERVER['REQUEST_URI'] ?? '/';
+        $parts = parse_url($reqUri);
+        $path = $parts['path'] ?? '/';
+        if ($isLocal && strpos($path, '/zensshop') === 0) {
+            $path = substr($path, strlen('/zensshop'));
+            if ($path === '' || $path === false) $path = '/';
+        }
+        $path = preg_replace('/\.php$/', '', $path);
+        $cleanPath = trim($path, '/');
+        if (in_array($cleanPath, ['account', 'cart', 'checkout', 'order-success', 'wishlist'])) {
+            $canonicalUrl = $siteDomain . '/' . $cleanPath;
+        } else {
+            $allowedParams = ['slug', 'category'];
+            $keptParams = [];
+            if (!empty($parts['query'])) {
+                parse_str($parts['query'], $rawParams);
+                foreach ($allowedParams as $ap) {
+                    if (isset($rawParams[$ap]) && $rawParams[$ap] !== '') {
+                        $keptParams[$ap] = $rawParams[$ap];
+                    }
+                }
+            }
+            $cleanQuery = !empty($keptParams) ? '?' . http_build_query($keptParams) : '';
+            $canonicalUrl = $siteDomain . ($cleanPath !== '' ? '/' . $cleanPath : '/') . $cleanQuery;
+        }
+    }
     ?>
     <link rel="canonical" href="<?php echo htmlspecialchars($canonicalUrl); ?>">
     
@@ -1148,7 +1174,7 @@ $gs_tooltip_text = getGlobalStyle('tooltip_text_color', $globalCardStyles, '#fff
                     <i class="fas fa-bars text-xl" aria-hidden="true"></i>
                 </button>
                 <div class="flex-shrink-0 lg:flex-shrink-0 absolute lg:relative left-1/2 lg:left-auto transform lg:transform-none -translate-x-1/2 lg:translate-x-0">
-                    <a href="<?php echo $baseUrl; ?>/" class="flex items-center site-logo-link">
+                    <a href="<?php echo $baseUrl; ?>/" class="flex items-center site-logo-link" aria-label="<?php echo htmlspecialchars(!empty($siteLogoText) ? $siteLogoText : 'HomeProX'); ?> Home">
                         <?php if ($siteLogoType === 'text'): ?>
                             <span class="text-3xl font-heading font-bold text-black"><?php echo htmlspecialchars($siteLogoText); ?></span>
                         <?php else: ?>
@@ -1209,15 +1235,7 @@ if (!empty($headerMenuItems)) {
                     <?php endif; ?>
                 </div>
             </div>
-            <div class="hidden pb-4" id="mobileMenu">
-                <div class="flex flex-col space-y-4">
-                    <a href="<?php echo url(''); ?>" class="text-gray-800 hover:text-primary transition">Home</a>
-                    <a href="<?php echo url('shop'); ?>" class="text-gray-800 hover:text-primary transition">Shop</a>
-                    <a href="<?php echo url('products'); ?>" class="text-gray-800 hover:text-primary transition">Products</a>
-                    <a href="<?php echo url('pages'); ?>" class="text-gray-800 hover:text-primary transition">Pages</a>
-                    <a href="<?php echo url('blog'); ?>" class="text-gray-800 hover:text-primary transition">Blog</a>
-                </div>
-            </div>
+            
     </nav>
     </div>
     <div id="mobile-menu-overlay" 

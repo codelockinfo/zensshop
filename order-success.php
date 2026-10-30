@@ -41,6 +41,7 @@ $shippingDate = (clone $orderDate)->modify('+6 days')->format('M j');
 $deliveryDate = (clone $orderDate)->modify('+7 days')->format('M j');
 
 $pageTitle = 'Order Confirmation';
+$metaRobots = 'noindex, follow';
 // Treat as checkout page to hide standard header elements
 $isCheckout = true;
 require_once __DIR__ . '/includes/header.php';

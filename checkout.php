@@ -207,6 +207,7 @@ ob_end_clean();
 session_write_close();
 
 $pageTitle = 'Checkout';
+$metaRobots = 'noindex, follow';
 $isCheckout = true;
 require_once __DIR__ . '/includes/header.php';
 $settingsObj = new Settings();

@@ -402,7 +402,7 @@ $qv_policy_color = $qvStyles['policy_color'] ?? '#374151';
                         
                         if ($logoType === 'image' && !empty($logoImage)) {
                        
-                            echo '<a href="'.$baseUrl.'"><img src="'.getImageUrl($logoImage).'" alt="'.htmlspecialchars($logoText).'" class="h-[60px] object-contain"></a>';
+                            echo '<a href="'.$baseUrl.'" aria-label="'.htmlspecialchars(!empty($logoText) ? $logoText : 'HomeProX').' Home"><img src="'.getImageUrl($logoImage).'" alt="'.htmlspecialchars($logoText).'" class="h-[60px] object-contain"></a>';
                         } else {
                             echo '<a href="'.$baseUrl.'" class="text-xl font-bold font-sans text-black nav-link">'.htmlspecialchars($logoText).'</a>';
                         }
@@ -447,8 +447,9 @@ $qv_policy_color = $qvStyles['policy_color'] ?? '#374151';
                         foreach ($socialLinks as $soc):
                             if (!empty($soc['url'])):
                         ?>
-                        <a href="<?php echo htmlspecialchars($soc['url']); ?>" class="footer-social-icon relative w-8 h-8 rounded-full border border-gray-300 flex items-center justify-center transition group">
-                            <i class="<?php echo htmlspecialchars($soc['icon']); ?>"></i>
+                        <a href="<?php echo htmlspecialchars($soc['url']); ?>" aria-label="<?php echo htmlspecialchars($soc['name'] ?? 'Social Link'); ?>" title="<?php echo htmlspecialchars($soc['name'] ?? 'Social Link'); ?>" class="footer-social-icon relative w-8 h-8 rounded-full border border-gray-300 flex items-center justify-center transition group">
+                            <i class="<?php echo htmlspecialchars($soc['icon']); ?>" aria-hidden="true"></i>
+                            <span class="sr-only"><?php echo htmlspecialchars($soc['name'] ?? 'Social Link'); ?></span>
                         </a>
                         <?php endif; endforeach; ?>
                     </div>
@@ -486,8 +487,9 @@ $qv_policy_color = $qvStyles['policy_color'] ?? '#374151';
                                  elseif(strpos($lbl,'twit')!==false || strpos($lbl,'x')!==false) $icon='twitter';
                                  elseif(strpos($lbl,'pin')!==false) $icon='pinterest-p';
                              ?>
-                             <a href="<?php echo htmlspecialchars($item['url']); ?>" class="footer-social-icon relative group w-10 h-10 rounded-full border border-gray-300 bg-white flex items-center justify-center transition">
-                                <i class="fab fa-<?php echo $icon; ?> text-base text-gray-700"></i>
+                             <a href="<?php echo htmlspecialchars($item['url']); ?>" aria-label="<?php echo htmlspecialchars($item['label'] ?? ucfirst($icon)); ?>" title="<?php echo htmlspecialchars($item['label'] ?? ucfirst($icon)); ?>" class="footer-social-icon relative group w-10 h-10 rounded-full border border-gray-300 bg-white flex items-center justify-center transition">
+                                <i class="fab fa-<?php echo $icon; ?> text-base text-gray-700" aria-hidden="true"></i>
+                                <span class="sr-only"><?php echo htmlspecialchars($item['label'] ?? ucfirst($icon)); ?></span>
                              </a>
                              <?php endforeach; ?>
                         </div>

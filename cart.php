@@ -1,5 +1,6 @@
 <?php
 $pageTitle = 'Shopping Cart';
+$metaRobots = 'noindex, follow';
 require_once __DIR__ . '/includes/header.php';
 require_once __DIR__ . '/classes/Cart.php';
 

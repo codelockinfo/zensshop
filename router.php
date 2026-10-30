@@ -29,6 +29,20 @@ if (empty($slug)) {
     exit;
 }
 
+// 301 Redirects for legacy routes
+if ($slug === 'products') {
+    header('Location: ' . url('shop'), true, 301);
+    exit;
+}
+if ($slug === 'pages') {
+    header('Location: ' . url(''), true, 301);
+    exit;
+}
+if ($slug === 'category') {
+    header('Location: ' . url('collections'), true, 301);
+    exit;
+}
+
 $db = Database::getInstance();
 $storeId = getCurrentStoreId();
 
