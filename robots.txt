@@ -2,3 +2,4 @@ User-agent: *
 Allow: /
 
 Sitemap: https://homeprox.in/sitemap.xml
+Sitemap: https://homeprox.in/sitemap.php

@@ -4,6 +4,7 @@ ini_set('display_errors', 0);
 ini_set('log_errors', 1);
 
 $pageTitle = 'Home';
+$metaDescription = "Shop HomeProX KILL-IT & KILL-IT+ cockroach sprays in India. Instant knockdown power, deep crevice reach & long-lasting barrier protection for your home.";
 require_once __DIR__ . '/includes/header.php';
 ?>
 <?php
@@ -1044,6 +1045,29 @@ document.addEventListener('DOMContentLoaded', function() {
                     </summary>
                     <p class="text-gray-600 mt-3 text-sm md:text-base leading-relaxed">
                         HomeProX ships nationwide to over 26,000+ pincodes across India. All orders are packed securely and dispatched within 24 to 48 business hours with live online courier tracking. Standard delivery takes 3 to 5 business days depending on your delivery location.
+                    </p>
+                </details>
+                <details class="group bg-white rounded-xl border border-gray-200 p-5 shadow-sm transition hover:border-gray-300">
+                    <summary class="flex justify-between items-center font-bold text-gray-900 cursor-pointer list-none text-base md:text-lg">
+                        <span>How should I store HomeProX pest control spray cans safely?</span>
+                        <span class="transition group-open:rotate-180 ml-4 text-gray-500">
+                            <i class="fas fa-chevron-down text-sm"></i>
+                        </span>
+                    </summary>
+                    <p class="text-gray-600 mt-3 text-sm md:text-base leading-relaxed">
+                        Store spray cans in a cool, dry, and well-ventilated area away from direct sunlight, gas burners, open flames, and heat sources above 50&deg;C. Always store the bottles upright and strictly out of reach of children and domestic pets.
+                    </p>
+                </details>
+
+                <details class="group bg-white rounded-xl border border-gray-200 p-5 shadow-sm transition hover:border-gray-300">
+                    <summary class="flex justify-between items-center font-bold text-gray-900 cursor-pointer list-none text-base md:text-lg">
+                        <span>Can HomeProX sprays be used in commercial kitchens and offices?</span>
+                        <span class="transition group-open:rotate-180 ml-4 text-gray-500">
+                            <i class="fas fa-chevron-down text-sm"></i>
+                        </span>
+                    </summary>
+                    <p class="text-gray-600 mt-3 text-sm md:text-base leading-relaxed">
+                        Yes, HomeProX KILL-IT and KILL-IT+ are widely used across residential homes, offices, cloud kitchens, pantry corners, and warehouse storage. For food preparation areas, apply strictly after closing hours along baseboards, entry cracks, and plumbing junctions.
                     </p>
                 </details>
             </div>

@@ -539,7 +539,7 @@ $gs_tooltip_text = getGlobalStyle('tooltip_text_color', $globalCardStyles, '#fff
     }
     
     $favType = (strpos($faviconUrl, '.png') !== false || strpos($faviconUrl, '.jpg') !== false) ? 'image/png' : 'image/x-icon';
-    $faviconUrlWithV = $faviconUrl . (strpos($faviconUrl, '?') === false ? '?v=' . time() : '&v=' . time());
+    $faviconUrlWithV = $faviconUrl . (strpos($faviconUrl, '?') === false ? '?v=1.0' : '&v=1.0');
     ?>
     <link rel="icon" type="<?php echo $favType; ?>" sizes="64x64" href="<?php echo $faviconUrlWithV; ?>">
     <link rel="shortcut icon" href="<?php echo $faviconUrlWithV; ?>">
@@ -548,6 +548,10 @@ $gs_tooltip_text = getGlobalStyle('tooltip_text_color', $globalCardStyles, '#fff
 
     <?php 
     $finalMetaDesc = !empty($metaDescription) ? $metaDescription : $globalMetaDesc;
+    if (empty($finalMetaDesc) || strlen(trim($finalMetaDesc)) < 135) {
+        $defaultBrand = !empty($siteLogoText) ? $siteLogoText : "HomeProX";
+        $finalMetaDesc = "Shop " . $defaultBrand . " premium cockroach and pest control sprays in India. Instant knockdown action, deep crevice reach, and long-lasting barrier protection.";
+    }
     if (!empty($finalMetaDesc)): ?>
     <meta name="description" content="<?php echo htmlspecialchars($finalMetaDesc); ?>">
     <?php endif; ?>
@@ -784,7 +788,7 @@ $gs_tooltip_text = getGlobalStyle('tooltip_text_color', $globalCardStyles, '#fff
         .hidden { display: none; }
     </style>
     <script src="https://cdn.tailwindcss.com?plugins=typography"></script>
-    <link rel="stylesheet" href="<?php echo $baseUrl; ?>/assets/css/main8.css?v=<?php echo time(); ?>">
+    <link rel="stylesheet" href="<?php echo $baseUrl; ?>/assets/css/main8.css?v=<?php echo @filemtime(__DIR__ . "/../assets/css/main8.css") ?: "8.1"; ?>">
     <style>
         nav.header-shadow {
             background-color: <?php echo $headerBg; ?> !important;
