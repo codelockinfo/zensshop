@@ -22,12 +22,22 @@ $wishlistIds = array_column($wishlistItems, 'product_id'); // Extract IDs
 // Get base URL for redirects
 $baseUrl = getBaseUrl();
 
+// 1. If accessed directly via product.php instead of clean /product, permanently redirect (301)
+$reqUri = $_SERVER['REQUEST_URI'] ?? '';
+if (strpos($reqUri, 'product.php') !== false) {
+    ob_end_clean();
+    $queryString = $_SERVER['QUERY_STRING'] ?? '';
+    $cleanRedirect = $baseUrl . '/product' . (!empty($queryString) ? '?' . $queryString : '');
+    header('Location: ' . $cleanRedirect, true, 301);
+    exit;
+}
+
 // Get product slug from URL
 $slug = $_GET['slug'] ?? '';
 
 if (empty($slug)) {
-    ob_end_clean(); // Clear any buffered output
-    header('Location: ' . $baseUrl . '/');
+    ob_end_clean();
+    header('Location: ' . $baseUrl . '/shop', true, 301);
     exit;
 }
 
@@ -35,8 +45,9 @@ if (empty($slug)) {
 $productData = $product->getBySlug($slug);
 
 if (!$productData || $productData['status'] !== 'active') {
-    ob_end_clean(); // Clear any buffered output
-    header('Location: ' . $baseUrl . '/');
+    ob_end_clean();
+    http_response_code(404);
+    require __DIR__ . '/not-found.php';
     exit;
 }
 
@@ -312,12 +323,19 @@ $productSchema = [
 $customSchema = json_encode($productSchema, JSON_UNESCAPED_SLASHES | JSON_PRETTY_PRINT);
 
 // Dynamic SEO metadata per product
-$pageTitle = $productData['name'];
-if (!empty($productData['sku']) && stripos($pageTitle, $productData['sku']) === false) {
-    $pageTitle .= ' - ' . $productData['sku'];
-} elseif (preg_match('/-(\d+)$/', $productData['slug'], $matches)) {
-    $pageTitle .= ' (Pack of ' . $matches[1] . ')';
+$pageTitle = trim($productData['name']);
+
+// Differentiate titles if slug contains a pack/numeric differentiator or unique SKU
+if (preg_match('/-(\d+)$/', $productData['slug'], $matches)) {
+    $num = (int)$matches[1];
+    $packLabel = ($num > 1) ? "Pack of $num" : "Single Pack";
+    if (stripos($pageTitle, "pack") === false && stripos($pageTitle, "$num") === false) {
+        $pageTitle .= " ($packLabel)";
+    }
+} elseif (!empty($productData['sku']) && strcasecmp(trim($pageTitle), trim($productData['sku'])) !== 0 && stripos($pageTitle, $productData['sku']) === false) {
+    $pageTitle .= ' - ' . trim($productData['sku']);
 }
+
 $prodCatName = $category['name'] ?? '';
 $metaKeywords = implode(', ', array_filter([
     $productData['name'],
@@ -325,11 +343,26 @@ $metaKeywords = implode(', ', array_filter([
     'buy ' . $productData['name'] . ' online',
     $productData['name'] . ' price'
 ]));
+
 if (empty($metaDescription)) {
     $metaDescription = !empty($productData['short_description']) 
         ? strip_tags($productData['short_description']) 
         : (!empty($productData['description']) ? mb_substr(strip_tags($productData['description']), 0, 160) : '');
 }
+if (!empty($metaDescription)) {
+    $metaDescription = trim(preg_replace('/\s+/', ' ', $metaDescription));
+}
+if (preg_match('/-(\d+)$/', $productData['slug'], $matches)) {
+    $num = (int)$matches[1];
+    $packSuffix = ($num > 1) ? "Pack of $num" : "Single Pack";
+    if (!empty($metaDescription) && stripos($metaDescription, $packSuffix) === false) {
+        $metaDescription .= " - Available in $packSuffix at HomeProX.";
+    }
+}
+
+// Self-referencing canonical URL in preferred HTTPS format
+$canonicalUrl = (strpos($_SERVER['HTTP_HOST'] ?? '', 'localhost') !== false ? $baseUrl : 'https://homeprox.in') . '/product?slug=' . urlencode($productData['slug']);
+
 require_once __DIR__ . '/includes/header.php';
 
 $discount = $originalPrice && $originalPrice > 0 ? round((($originalPrice - $price) / $originalPrice) * 100) : 0;

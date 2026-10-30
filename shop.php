@@ -307,7 +307,7 @@ if (isset($_GET['ajax'])) {
                             echo '<span class="product-tooltip">' . ($inWishlist ? 'Remove from Wishlist' : 'Add to Wishlist') . '</span>';
                         echo '</button>';
 
-                        echo '<a id="product-card-quick-view-btn" href="' . $baseUrl . '/product.php?slug=' . urlencode($itemSlug) . '" class="product-action-btn w-10 h-10 rounded-full flex items-center justify-center transition shadow-lg quick-view-btn relative group opacity-100 md:opacity-0 md:group-hover:opacity-100" data-product-id="' . $currentId . '" data-product-name="' . htmlspecialchars($itemName) . '" data-product-price="' . $finalPrice . '" data-product-slug="' . htmlspecialchars($itemSlug) . '">';
+                        echo '<a id="product-card-quick-view-btn" href="' . $baseUrl . '/product?slug=' . urlencode($itemSlug) . '" class="product-action-btn w-10 h-10 rounded-full flex items-center justify-center transition shadow-lg quick-view-btn relative group opacity-100 md:opacity-0 md:group-hover:opacity-100" data-product-id="' . $currentId . '" data-product-name="' . htmlspecialchars($itemName) . '" data-product-price="' . $finalPrice . '" data-product-slug="' . htmlspecialchars($itemSlug) . '">';
                             echo '<i class="fas fa-eye" aria-hidden="true"></i>';
                             echo '<span class="product-tooltip">Quick View</span>';
                         echo '</a>';
@@ -401,9 +401,11 @@ if ($category) {
     $metaDescription = !empty($category['description']) 
         ? strip_tags($category['description']) 
         : "Explore " . $catName . " pest control products at HomeProX. Fast knockdown sprays, baits, and home protection solutions.";
+    $canonicalUrl = (strpos($_SERVER['HTTP_HOST'] ?? '', 'localhost') !== false ? $baseUrl : 'https://homeprox.in') . '/shop?category=' . urlencode($category['slug']);
 } else {
     $pageTitle = 'Shop All Products';
     $metaDescription = "Shop the complete HomeProX collection of anti-cockroach sprays, bait gels, and pest defense products for a clean, pest-free home.";
+    $canonicalUrl = (strpos($_SERVER['HTTP_HOST'] ?? '', 'localhost') !== false ? $baseUrl : 'https://homeprox.in') . '/shop';
 }
 
 require_once __DIR__ . '/includes/header.php';

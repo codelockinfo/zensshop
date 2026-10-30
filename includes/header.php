@@ -1,6 +1,7 @@
 ﻿<?php
 if (!headers_sent()) {
-    header('X-Robots-Tag: index, follow');
+    $xRobots = (isset($metaRobots) && !empty($metaRobots)) ? $metaRobots : 'index, follow';
+    header('X-Robots-Tag: ' . $xRobots);
 }
 if (!function_exists('getBaseUrl')) {
     require_once __DIR__ . '/functions.php';
@@ -573,8 +574,13 @@ $gs_tooltip_text = getGlobalStyle('tooltip_text_color', $globalCardStyles, '#fff
 
 
     <?php 
-    $finalMetaDesc = !empty($metaDescription) ? trim($metaDescription) : trim($globalMetaDesc);
-    if (empty($finalMetaDesc)) {
+    $currentUri = trim($_SERVER['REQUEST_URI'] ?? '', '/');
+    $isHomePage = (basename($_SERVER['PHP_SELF'] ?? '') === 'index.php' || empty($currentUri) || $currentUri === 'index.php');
+    if (!empty($metaDescription)) {
+        $finalMetaDesc = trim($metaDescription);
+    } elseif ($isHomePage && !empty($globalMetaDesc)) {
+        $finalMetaDesc = trim($globalMetaDesc);
+    } else {
         $defaultBrand = !empty($siteLogoText) ? $siteLogoText : "HomeProX";
         $pageLabel = (isset($pageTitle) && !empty($pageTitle) && trim(strtolower($pageTitle)) !== 'home') ? $pageTitle : $defaultBrand;
         $finalMetaDesc = $pageLabel . " - Explore premium pest and cockroach control products from " . $defaultBrand . " in India. Instant action and long-lasting protection.";

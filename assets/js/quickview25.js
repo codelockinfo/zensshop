@@ -149,7 +149,7 @@ function renderQuickView(t) {
     }
 
     var baseUrl = (typeof BASE_URL !== "undefined") ? BASE_URL : (window.location.pathname.split("/").slice(0, -1).join("/") || "");
-    var productUrl = baseUrl + "/product.php?slug=" + t.slug;
+    var productUrl = baseUrl + "/product?slug=" + encodeURIComponent(t.slug);
 
     // Main image HTML
     var mainImgHtml = "";

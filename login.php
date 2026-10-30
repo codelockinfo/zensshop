@@ -21,12 +21,7 @@ $isAjax = (isset($_GET['ajax']) && $_GET['ajax'] == '1') ||
           (isset($_POST['ajax']) && $_POST['ajax'] == '1') || 
           (isset($_SERVER['HTTP_X_REQUESTED_WITH']) && strtolower($_SERVER['HTTP_X_REQUESTED_WITH']) === 'xmlhttprequest');
 
-if (!$isAjax && !$auth->isLoggedIn() && !defined('IS_ACCOUNT_PAGE')) {
-    $queryString = $_SERVER['QUERY_STRING'] ?? '';
-    $redirectUrl = url('account') . ($queryString ? '?' . $queryString : '');
-    header('Location: ' . $redirectUrl);
-    exit;
-}
+// Standalone login view allowed with noindex, follow
 
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
@@ -60,6 +55,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 }
 
 $pageTitle = 'Login';
+$metaRobots = 'noindex, follow';
+$metaDescription = 'Sign in to your HomeProX customer account.';
+$canonicalUrl = (strpos($_SERVER['HTTP_HOST'] ?? '', 'localhost') !== false ? getBaseUrl() : 'https://homeprox.in') . '/login';
+
+if (!defined('IS_ACCOUNT_PAGE')) {
+    require_once __DIR__ . '/includes/header.php';
+}
 ?>
 
 
@@ -82,7 +84,8 @@ $pageTitle = 'Login';
 }
 </style>
 
-<div class="relative overflow-hidden w-full">
+<div class="min-h-[75vh] flex items-center justify-center py-12 px-4 bg-gray-50">
+<div class="relative overflow-hidden w-full flex justify-center">
 
     <!-- Background Decor -->
     <div class="floating-element bg-purple-400 w-96 h-96 -top-20 -left-20 animate-pulse"></div>
@@ -250,7 +253,7 @@ $pageTitle = 'Login';
                 <div class="mt-4 text-center">
                     <p class="text-gray-500 text-sm">
                         Don't have an account? 
-                        <a href="?register" class="text-black font-bold hover:underline">Sign Up</a>
+                        <a href="<?php echo url('account?register'); ?>" class="text-black font-bold hover:underline">Sign Up</a>
                     </p>
                 </div>
             </div>
@@ -274,5 +277,10 @@ function togglePassword(inputId, btn) {
     }
 }
 </script>
-
-
+</div>
+</div>
+<?php
+if (!defined('IS_ACCOUNT_PAGE')) {
+    require_once __DIR__ . '/includes/footer.php';
+}
+?>

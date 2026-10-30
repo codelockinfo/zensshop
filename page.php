@@ -59,15 +59,33 @@ $seo = $contentData['seo'] ?? [];
 $pageTitle = $seo['meta_title'] ?: $page['title'];
 $metaDescription = $seo['meta_description'] ?? '';
 if (empty($metaDescription)) {
-    $cleanText = !empty($htmlContent) ? trim(strip_tags($htmlContent)) : '';
-    if (!empty($cleanText)) {
-        $cleanText = preg_replace('/\s+/', ' ', $cleanText);
-        $metaDescription = mb_substr($cleanText, 0, 155);
-        if (mb_strlen($cleanText) > 155) $metaDescription .= '...';
+    $slugDescriptions = [
+        'privacy-policy' => "Review HomeProX's Privacy Policy. Learn how we safeguard your personal details, order records, and online transactions securely.",
+        'shipping-info' => "Explore HomeProX shipping policies, delivery timelines across India, dispatch procedures, and order handling standards.",
+        'track-your-order' => "Track your HomeProX order delivery status in real-time. Enter your details to view dispatch updates and courier tracking.",
+        'our-story' => "Learn about HomeProX, our commitment to high-efficacy pest control, and how we protect Indian households from cockroaches.",
+        'terms-of-service' => "Read the official terms and conditions for ordering HomeProX pest control products, website usage, and customer guarantees.",
+        'return-policy' => "Review HomeProX return, replacement, and refund policies for all cockroach control sprays and pest protection products.",
+        'refund-policy' => "Review HomeProX return, replacement, and refund policies for all cockroach control sprays and pest protection products."
+    ];
+    
+    if (isset($slugDescriptions[$slug])) {
+        $metaDescription = $slugDescriptions[$slug];
     } else {
-        $metaDescription = "Read " . htmlspecialchars($page['title']) . " at HomeProX. Official policies, customer information, and pest control guidelines.";
+        $cleanText = !empty($htmlContent) ? trim(strip_tags($htmlContent)) : '';
+        if (!empty($cleanText) && strlen($cleanText) > 30) {
+            $cleanText = preg_replace('/\s+/', ' ', $cleanText);
+            $metaDescription = mb_substr($cleanText, 0, 155);
+            if (mb_strlen($cleanText) > 155) $metaDescription .= '...';
+        } else {
+            $metaDescription = htmlspecialchars($page['title']) . " - Official information, policy guidelines, and customer updates from HomeProX Pest Control.";
+        }
     }
 }
+
+// Canonical URL for CMS page
+$baseUrl = getBaseUrl();
+$canonicalUrl = (strpos($_SERVER['HTTP_HOST'] ?? '', 'localhost') !== false ? $baseUrl : 'https://homeprox.in') . '/' . $slug;
 
 require_once __DIR__ . '/includes/header.php';
 ?>
