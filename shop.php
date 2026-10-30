@@ -391,6 +391,17 @@ if (isset($_GET['ajax'])) {
     exit; // Stop executing script
 }
 
+if ($category) {
+    $catName = htmlspecialchars($category['name']);
+    $pageTitle = $catName . ' - Shop';
+    $metaDescription = !empty($category['description']) 
+        ? strip_tags($category['description']) 
+        : "Explore " . $catName . " pest control products at HomeProX. Fast knockdown sprays, baits, and home protection solutions.";
+} else {
+    $pageTitle = 'Shop All Products';
+    $metaDescription = "Shop the complete HomeProX collection of anti-cockroach sprays, bait gels, and pest defense products for a clean, pest-free home.";
+}
+
 require_once __DIR__ . '/includes/header.php';
 ?>
 

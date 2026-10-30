@@ -573,10 +573,11 @@ $gs_tooltip_text = getGlobalStyle('tooltip_text_color', $globalCardStyles, '#fff
 
 
     <?php 
-    $finalMetaDesc = !empty($metaDescription) ? $metaDescription : $globalMetaDesc;
-    if (empty($finalMetaDesc) || strlen(trim($finalMetaDesc)) < 135) {
+    $finalMetaDesc = !empty($metaDescription) ? trim($metaDescription) : trim($globalMetaDesc);
+    if (empty($finalMetaDesc)) {
         $defaultBrand = !empty($siteLogoText) ? $siteLogoText : "HomeProX";
-        $finalMetaDesc = "Shop " . $defaultBrand . " premium cockroach and pest control sprays in India. Instant knockdown action, deep crevice reach, and long-lasting barrier protection.";
+        $pageLabel = (isset($pageTitle) && !empty($pageTitle) && trim(strtolower($pageTitle)) !== 'home') ? $pageTitle : $defaultBrand;
+        $finalMetaDesc = $pageLabel . " - Explore premium pest and cockroach control products from " . $defaultBrand . " in India. Instant action and long-lasting protection.";
     }
     if (!empty($finalMetaDesc)): ?>
     <meta name="description" content="<?php echo htmlspecialchars($finalMetaDesc); ?>">
@@ -619,7 +620,9 @@ $gs_tooltip_text = getGlobalStyle('tooltip_text_color', $globalCardStyles, '#fff
 
     <?php 
     if (!empty($globalSchema)): 
-        $siteNameVal = $settingsObj->get('site_name', $settingsObj->get('site_logo_text', 'Zensshop'));
+        $siteNameVal = trim($settingsObj->get('site_name', ''));
+        if (empty($siteNameVal)) $siteNameVal = trim($settingsObj->get('site_logo_text', ''));
+        if (empty($siteNameVal)) $siteNameVal = !empty($siteLogoText) ? trim($siteLogoText) : 'HomeProX';
         $siteLogoVal = $settingsObj->get('footer_logo_image', '');
         if ($siteLogoVal) {
             $siteLogoVal = $baseUrl . '/' . ltrim($siteLogoVal, '/');
@@ -648,7 +651,9 @@ $gs_tooltip_text = getGlobalStyle('tooltip_text_color', $globalCardStyles, '#fff
         <?php echo $globalSchema; ?>
     </script>
     <?php else: 
-        $orgName = $settingsObj->get('footer_logo_text', $settingsObj->get('site_logo_text', 'Zensshop'));
+        $orgName = trim($settingsObj->get('footer_logo_text', ''));
+        if (empty($orgName)) $orgName = trim($settingsObj->get('site_logo_text', ''));
+        if (empty($orgName)) $orgName = !empty($siteLogoText) ? trim($siteLogoText) : 'HomeProX';
         $orgLogo = $settingsObj->get('footer_logo_image', '');
         if ($orgLogo) {
             $orgLogo = $baseUrl . '/' . ltrim($orgLogo, '/');
@@ -699,6 +704,21 @@ $gs_tooltip_text = getGlobalStyle('tooltip_text_color', $globalCardStyles, '#fff
     ?>
     <script type="application/ld+json">
         <?php echo json_encode($orgSchema, JSON_UNESCAPED_SLASHES | JSON_PRETTY_PRINT); ?>
+    </script>
+    <?php endif; ?>
+
+    <?php
+    $isHomePage = (basename($_SERVER['PHP_SELF'] ?? '') === 'index.php' || empty(trim($_SERVER['REQUEST_URI'] ?? '', '/')));
+    if ($isHomePage):
+        $siteNameForSchema = !empty($siteNameVal) ? $siteNameVal : (!empty($siteLogoText) ? $siteLogoText : 'HomeProX');
+    ?>
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "WebSite",
+      "name": <?php echo json_encode($siteNameForSchema); ?>,
+      "url": <?php echo json_encode($baseUrl . '/'); ?>
+    }
     </script>
     <?php endif; ?>
 

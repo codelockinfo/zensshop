@@ -6,6 +6,7 @@ $customerAuth = new CustomerAuth();
 $customer = $customerAuth->getCurrentCustomer();
 
 $pageTitle = 'Customer Support';
+$metaDescription = "Need help with HomeProX cockroach control products or existing orders? Contact our support team for prompt assistance and guidance.";
 require_once __DIR__ . '/includes/header.php';
 ?>
 

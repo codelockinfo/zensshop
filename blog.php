@@ -20,6 +20,7 @@ if ($settingsObj->get('enable_blog', '1') != '1') {
 $blogs = $db->fetchAll("SELECT * FROM blogs WHERE status = 'published' AND (store_id = ? OR store_id IS NULL) ORDER BY created_at DESC", [$storeId]);
 
 $pageTitle = 'Blog';
+$metaDescription = "Discover HomeProX articles, pest control tips, and expert guides to help you eliminate cockroaches and maintain a healthy, pest-free home.";
 require_once __DIR__ . '/includes/header.php';
 ?>
 

@@ -313,6 +313,11 @@ $customSchema = json_encode($productSchema, JSON_UNESCAPED_SLASHES | JSON_PRETTY
 
 // Dynamic SEO metadata per product
 $pageTitle = $productData['name'];
+if (!empty($productData['sku']) && stripos($pageTitle, $productData['sku']) === false) {
+    $pageTitle .= ' - ' . $productData['sku'];
+} elseif (preg_match('/-(\d+)$/', $productData['slug'], $matches)) {
+    $pageTitle .= ' (Pack of ' . $matches[1] . ')';
+}
 $prodCatName = $category['name'] ?? '';
 $metaKeywords = implode(', ', array_filter([
     $productData['name'],

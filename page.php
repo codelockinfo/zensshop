@@ -58,6 +58,16 @@ $seo = $contentData['seo'] ?? [];
 
 $pageTitle = $seo['meta_title'] ?: $page['title'];
 $metaDescription = $seo['meta_description'] ?? '';
+if (empty($metaDescription)) {
+    $cleanText = !empty($htmlContent) ? trim(strip_tags($htmlContent)) : '';
+    if (!empty($cleanText)) {
+        $cleanText = preg_replace('/\s+/', ' ', $cleanText);
+        $metaDescription = mb_substr($cleanText, 0, 155);
+        if (mb_strlen($cleanText) > 155) $metaDescription .= '...';
+    } else {
+        $metaDescription = "Read " . htmlspecialchars($page['title']) . " at HomeProX. Official policies, customer information, and pest control guidelines.";
+    }
+}
 
 require_once __DIR__ . '/includes/header.php';
 ?>
