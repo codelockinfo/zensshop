@@ -867,6 +867,34 @@ $gs_tooltip_text = getGlobalStyle('tooltip_text_color', $globalCardStyles, '#fff
             padding-right: 0 !important;
         }
 
+        /* Responsive Header Fallbacks */
+        @media (min-width: 1024px) {
+            #mobileMenuBtn {
+                display: none !important;
+            }
+            .desktop-nav-menu {
+                display: flex !important;
+            }
+            .site-logo-container {
+                position: relative !important;
+                left: auto !important;
+                transform: none !important;
+            }
+        }
+        @media (max-width: 1023px) {
+            #mobileMenuBtn {
+                display: flex !important;
+            }
+            .desktop-nav-menu {
+                display: none !important;
+            }
+            .site-logo-container {
+                position: absolute !important;
+                left: 50% !important;
+                transform: translateX(-50%) !important;
+            }
+        }
+
         nav.header-shadow a, 
         nav.header-shadow button,
         nav.header-shadow .header-icon,
@@ -1208,7 +1236,7 @@ $gs_tooltip_text = getGlobalStyle('tooltip_text_color', $globalCardStyles, '#fff
                                  }">
                     <i class="fas fa-bars text-xl" aria-hidden="true"></i>
                 </button>
-                <div class="flex-shrink-0 lg:flex-shrink-0 absolute lg:relative left-1/2 lg:left-auto transform lg:transform-none -translate-x-1/2 lg:translate-x-0">
+                <div class="site-logo-container flex-shrink-0 lg:flex-shrink-0 absolute lg:relative left-1/2 lg:left-auto transform lg:transform-none -translate-x-1/2 lg:translate-x-0">
                     <a href="<?php echo $baseUrl; ?>/" class="flex items-center site-logo-link" aria-label="<?php echo htmlspecialchars(!empty($siteLogoText) ? $siteLogoText : 'HomeProX'); ?> Home">
                         <?php if ($siteLogoType === 'text'): ?>
                             <span class="text-3xl font-heading font-bold text-black"><?php echo htmlspecialchars($siteLogoText); ?></span>
@@ -1220,7 +1248,7 @@ $gs_tooltip_text = getGlobalStyle('tooltip_text_color', $globalCardStyles, '#fff
                         <?php endif; ?>
                     </a>
                 </div>
-                <div class="hidden lg:flex items-center space-x-8 absolute left-1/2 transform -translate-x-1/2 z-10">
+                <div class="desktop-nav-menu hidden lg:flex items-center space-x-8 absolute left-1/2 transform -translate-x-1/2 z-10">
 <?php
 if (!empty($headerMenuItems)) {
     foreach ($headerMenuItems as $item) {
@@ -1270,7 +1298,7 @@ if (!empty($headerMenuItems)) {
                     <?php endif; ?>
                 </div>
             </div>
-            
+        </div>
     </nav>
     </div>
     <div id="mobile-menu-overlay" 
