@@ -646,6 +646,11 @@ $gs_tooltip_text = getGlobalStyle('tooltip_text_color', $globalCardStyles, '#fff
         foreach ($replacements as $tag => $val) {
             $globalSchema = str_replace($tag, $val, $globalSchema);
         }
+        if (!empty($globalSchema) && strpos($globalSchema, '"WebSite"') !== false) {
+            $sName = !empty($siteNameVal) ? $siteNameVal : 'HomeProX';
+            $globalSchema = preg_replace('/"@type"\s*:\s*"WebSite"(\s*,\s*"name"\s*:\s*"")/', '"@type": "WebSite", "name": "' . $sName . '"', $globalSchema);
+            $globalSchema = preg_replace('/"name"\s*:\s*""(\s*,\s*"@type"\s*:\s*"WebSite")/', '"name": "' . $sName . '", "@type": "WebSite"', $globalSchema);
+        }
     ?>
     <script type="application/ld+json">
         <?php echo $globalSchema; ?>
@@ -708,9 +713,19 @@ $gs_tooltip_text = getGlobalStyle('tooltip_text_color', $globalCardStyles, '#fff
     <?php endif; ?>
 
     <?php
-    $isHomePage = (basename($_SERVER['PHP_SELF'] ?? '') === 'index.php' || empty(trim($_SERVER['REQUEST_URI'] ?? '', '/')));
-    if ($isHomePage):
-        $siteNameForSchema = !empty($siteNameVal) ? $siteNameVal : (!empty($siteLogoText) ? $siteLogoText : 'HomeProX');
+    $siteNameForSchema = 'HomeProX';
+    if (!empty(trim($settingsObj->get('site_name', '')))) {
+        $siteNameForSchema = trim($settingsObj->get('site_name'));
+    } elseif (!empty(trim($settingsObj->get('site_logo_text', '')))) {
+        $siteNameForSchema = trim($settingsObj->get('site_logo_text'));
+    } elseif (!empty(trim($siteLogoText))) {
+        $siteNameForSchema = trim($siteLogoText);
+    }
+    
+    // Always provide valid WebSite schema on home page
+    $currentReq = trim($_SERVER['REQUEST_URI'] ?? '', '/');
+    $isHomePage = (basename($_SERVER['PHP_SELF'] ?? '') === 'index.php' || empty($currentReq) || $currentReq === 'index.php');
+    if ($isHomePage && (empty($globalSchema) || strpos($globalSchema, '"WebSite"') === false)):
     ?>
     <script type="application/ld+json">
     {

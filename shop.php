@@ -146,6 +146,10 @@ if ($categorySlug) {
     $filters['category_slug'] = $categorySlug;
     // Get category info for hero section
     $category = $db->fetchOne("SELECT * FROM categories WHERE slug = ? AND status = 'active'", [$categorySlug]);
+    if (!$category) {
+        header('Location: ' . $baseUrl . '/shop', true, 301);
+        exit;
+    }
 } else {
     $category = null;
 }
